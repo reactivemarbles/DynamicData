@@ -1,0 +1,117 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace DynamicData.Operators
+{
+    /// <summary>
+    /// An error container used to report errors from within dynamic data operators
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    public sealed class Error<TObject, TKey>: IKeyValue<TObject,TKey>, IEquatable<Error<TObject, TKey>>
+    {
+        private readonly TKey _key;
+        private readonly TObject _value;
+        private readonly Exception _exception;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        public Error(Exception exception, TObject value, TKey key)
+        {
+            _exception = exception;
+            _value = value;
+            _key = key;
+        }
+
+        /// <summary>
+        /// Gets the key.
+        /// </summary>
+        public TKey Key
+        {
+            get { return _key; }
+        }
+
+        /// <summary>
+        /// Gets the object.
+        /// </summary>
+        public TObject Value
+        {
+            get { return _value; }
+        }
+
+        /// <summary>
+        /// The exception.
+        /// </summary>
+        public Exception Exception
+        {
+            get { return _exception; }
+        }
+
+
+
+        #region Equality members
+
+        public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right)
+        {
+            return !Equals(left, right);
+        }
+
+
+        public bool Equals(Error<TObject, TKey> other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return EqualityComparer<TKey>.Default.Equals(_key, other._key) && EqualityComparer<TObject>.Default.Equals(_value, other._value) && Equals(_exception, other._exception);
+        }
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <returns>
+        /// true if <paramref name="obj"/> and this instance are the same type and represent the same value; otherwise, false.
+        /// </returns>
+        /// <param name="obj">Another object to compare to. </param>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is Error<TObject, TKey> && Equals((Error<TObject, TKey>) obj);
+        }
+
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A 32-bit signed integer that is the hash code for this instance.
+        /// </returns>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hashCode = EqualityComparer<TKey>.Default.GetHashCode(_key);
+                hashCode = (hashCode*397) ^ EqualityComparer<TObject>.Default.GetHashCode(_value);
+                hashCode = (hashCode*397) ^ (_exception != null ? _exception.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Returns the fully qualified type name of this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.String"/> containing a fully qualified type name.
+        /// </returns>
+        public override string ToString()
+        {
+            return string.Format("Key: {0}, Value: {1}, Exception: {2}", Key, Value, Exception);
+        }
+    }
+}

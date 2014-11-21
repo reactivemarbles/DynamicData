@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{4E7ED660-E8AA-483A-AD52-00C1AFCB1E7C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DynamicData.Tests</RootNamespace>
+    <AssemblyName>DynamicData.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <TargetFrameworkProfile />
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release40|AnyCPU'">
+    <OutputPath>bin\Release\Net40\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release45|AnyCPU'">
+    <OutputPath>bin\Release\Net45\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Reactive.Testing, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Testing.2.2.5\lib\net40\Microsoft.Reactive.Testing.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net40\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net40\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net40\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net40\System.Reactive.PlatformServices.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
+      <Visible>False</Visible>
+    </CodeAnalysisDependentAssemblyPaths>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Domain\PersonEmployment.cs" />
+    <Compile Include="Domain\PersonSorter.cs" />
+    <Compile Include="Domain\PersonWithEmployment.cs" />
+    <Compile Include="Domain\PersonWithRelations.cs" />
+    <Compile Include="Domain\Pet.cs" />
+    <Compile Include="Domain\RandomPersonGenerator.cs" />
+    <Compile Include="Domain\SelfObservingPerson.cs" />
+    <Compile Include="Operators\AutoRemoveFixture.cs" />
+    <Compile Include="Operators\EnumerableEx.cs" />
+    <Compile Include="Operators\IgnoreUpdateFixture.cs" />
+    <Compile Include="Operators\IncludeUpdateFixture.cs" />
+    <Compile Include="Operators\SizeExpiryFixture.cs" />
+    <Compile Include="Operators\SortFixture.cs" />
+    <Compile Include="Operators\CacheOnDemandFixture.cs" />
+    <Compile Include="Operators\WatcherFixture.cs" />
+    <Compile Include="Operators\FilterControllerFixture.cs" />
+    <Compile Include="Operators\PageFixture.cs" />
+    <Compile Include="Operators\SortControllerFixture.cs" />
+    <Compile Include="Operators\DisposeManyFixture.cs" />
+    <Compile Include="Operators\FilterParallelFixture.cs" />
+    <Compile Include="Operators\GroupFromDistinctFixture.cs" />
+    <Compile Include="Operators\SubscribeManyFixture.cs" />
+    <Compile Include="Operators\TransformFixtureParallel.cs" />
+    <Compile Include="Operators\TransformSafeFixture.cs" />
+    <Compile Include="Operators\TransformSafeParallelFixture.cs" />
+    <Compile Include="Operators\WatchFixture.cs" />
+    <Compile Include="Performance\PlaygroundFixture.cs" />
+    <Compile Include="TestPagedUpdateCollectionResult.cs" />
+    <Compile Include="TestSortedUpdateCollectionResult.cs" />
+    <Compile Include="TestUpdateCollectionResult.cs" />
+    <Compile Include="Kernal\CacheUpdaterFixture.cs" />
+    <Compile Include="Kernal\SourceUpdaterFixture.cs" />
+    <Compile Include="Kernal\DistinctUpdateCollectionFixture.cs" />
+    <Compile Include="Kernal\DistinctUpdateFixture.cs" />
+    <Compile Include="Kernal\ErrorHandlingFixture.cs" />
+    <Compile Include="Operators\FilterFixture.cs" />
+    <Compile Include="Kernal\OptionFixture.cs" />
+    <Compile Include="Operators\TimeExpiryFixture.cs" />
+    <Compile Include="Kernal\KeyValueFixture.cs" />
+    <Compile Include="Kernal\UpdateCollectionFixture.cs" />
+    <Compile Include="Kernal\UniqueUpdateCollectionFixture.cs" />
+    <Compile Include="Kernal\UpdateFixture.cs" />
+    <Compile Include="Operators\DistinctFixture.cs" />
+    <Compile Include="Operators\GroupFixture.cs" />
+    <Compile Include="Domain\Person.cs" />
+    <Compile Include="Domain\PersonNoKey.cs" />
+    <Compile Include="Domain\PersonWithGender.cs" />
+    <Compile Include="Operators\MonitorStatusFixture.cs" />
+    <Compile Include="Operators\TransformFixture.cs" />
+    <Compile Include="Performance\PerformanceMeasures.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestOperators.cs" />
+    <Compile Include="TestVirtualUpdateCollectionResult.cs" />
+    <Compile Include="Utilities\SelectManyExtensions.cs" />
+    <Compile Include="Operators\SourceCacheFixture.cs" />
+    <Compile Include="Utilities\Timer.cs" />
+    <Compile Include="Operators\TransformManyFixture.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DynamicData\DynamicData.csproj">
+      <Project>{1a16225e-1adf-4805-b3fa-9b065b1a779a}</Project>
+      <Name>DynamicData</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <Target Name="AfterBuild">
+    <!-- Load up the information from the assembly -->
+    <GetAssemblyIdentity AssemblyFiles="$(OutputPath)$(AssemblyName).dll">
+      <Output TaskParameter="Assemblies" ItemName="OutputAssemblyInfo" />
+    </GetAssemblyIdentity>
+    <Message Text="Info: %(OutputAssemblyInfo.Version)" />
+  </Target>
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+</Project>

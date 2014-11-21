@@ -1,0 +1,69 @@
+﻿using System;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using DynamicData.Kernel;
+using DynamicData.Operators;
+
+namespace DynamicData.Controllers
+{
+    /// <summary>
+    /// Dynamic page controller
+    /// </summary>
+    public sealed class PageController: IDisposable
+    {
+        private readonly ISubject<IPageRequest> _subject = new ReplaySubject<IPageRequest>(1);
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        public PageController()
+        {
+        //    OnNext(PageRequest.Default);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        public PageController(IPageRequest request)
+        {
+            if (request == null) throw new ArgumentNullException("request");
+
+            OnNext(request);
+        }
+
+        /// <summary>
+        /// Request to change a page
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <exception cref="System.ArgumentNullException">request</exception>
+        public void Change(IPageRequest request)
+        {
+            if (request == null) throw new ArgumentNullException("request");
+            OnNext(request);
+        }
+
+        private void OnNext(IPageRequest request)
+        {
+            _subject.OnNext(request);
+        }
+
+        /// <summary>
+        /// Observable which is fired when a  page request has been made
+        /// </summary>
+        /// <value>
+        /// The changed.
+        /// </value>
+        public IObservable<IPageRequest> Changed
+        {
+            get { return _subject.AsObservable(); }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _subject.OnCompleted();
+        }
+    }
+}

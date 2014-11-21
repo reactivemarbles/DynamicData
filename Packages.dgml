@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DirectedGraph GraphDirection="TopToBottom" Layout="Sugiyama" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+  <Nodes>
+    <Node Id="DynamicData" Category="Project" Bounds="169.505,111.92,90.5966666666667,25.96" Label="DynamicData" />
+    <Node Id="DynamicData.Tests" Category="Project" Bounds="148.796666666667,-6,120.013333333333,25.96" Label="DynamicData.Tests" UseManualLocation="True" />
+    <Node Id="NUnit 2.6.2" Category="Package" Bounds="175.363333333333,55.96,78.88,25.96" Label="NUnit 2.6.2" />
+    <Node Id="Rx-Core 2.1.30214.0" Category="Package" Bounds="107.183333333333,223.84,125.24,25.96" Label="Rx-Core 2.1.30214.0" />
+    <Node Id="Rx-Interfaces 2.1.30214.0" Category="Package" Bounds="0,279.8,151.606666666667,25.96" Label="Rx-Interfaces 2.1.30214.0" />
+    <Node Id="Rx-Linq 2.1.30214.0" Category="Package" Bounds="106.431666666667,167.88,122.743333333333,25.96" Label="Rx-Linq 2.1.30214.0" />
+    <Node Id="Rx-Main 2.1.30214.0" Category="Package" Bounds="12.3483333333333,111.92,126.91,25.96" Label="Rx-Main 2.1.30214.0" />
+    <Node Id="Rx-PlatformServices 2.1.30214.0" Category="Package" Bounds="259.895,167.88,187.816666666667,25.96" Label="Rx-PlatformServices 2.1.30214.0" />
+    <Node Id="Rx-Testing 2.1.30214.0" Category="Package" Bounds="6.39499999999993,55.96,138.816666666667,25.96" Label="Rx-Testing 2.1.30214.0" />
+  </Nodes>
+  <Links>
+    <Link Source="DynamicData" Target="Rx-Linq 2.1.30214.0" Category="Installed Package" Bounds="184.493316650391,137.880004882813,19.4082946777344,23.1082611083984" />
+    <Link Source="DynamicData" Target="Rx-PlatformServices 2.1.30214.0" Category="Installed Package" Bounds="247.044570922852,137.880004882813,66.1687164306641,26.6388397216797" />
+    <Link Source="DynamicData.Tests" Target="NUnit 2.6.2" Category="Installed Package" Bounds="210.060271077424,19.9599995422363,2.61863580538665,27.0417436203506" />
+    <Link Source="DynamicData.Tests" Target="Rx-Testing 2.1.30214.0" Category="Installed Package" Bounds="111.82373240802,19.9599995422363,69.1173570992652,32.1992523365206" />
+    <Link Source="Rx-Core 2.1.30214.0" Target="Rx-Interfaces 2.1.30214.0" Category="Package Dependency" Bounds="105.340126037598,249.800003051758,42.659782409668,25.3961944580078" />
+    <Link Source="Rx-Linq 2.1.30214.0" Target="Rx-Core 2.1.30214.0" Category="Package Dependency" Bounds="168.267242431641,193.839996337891,0.750732421875,21.0057525634766" />
+    <Link Source="Rx-Linq 2.1.30214.0" Target="Rx-Interfaces 2.1.30214.0" Category="Package Dependency" Bounds="75.803337097168,193.839996337891,70.6604690551758,76.9599914550781" />
+    <Link Source="Rx-Main 2.1.30214.0" Target="Rx-Core 2.1.30214.0" Category="Package Dependency" Bounds="75.803337097168,137.880004882813,64.4632034301758,81.3561706542969" />
+    <Link Source="Rx-Main 2.1.30214.0" Target="Rx-Interfaces 2.1.30214.0" Category="Package Dependency" Bounds="43.8033332824707,137.880004882813,24.5775566101074,134.107177734375" />
+    <Link Source="Rx-Main 2.1.30214.0" Target="Rx-Linq 2.1.30214.0" Category="Package Dependency" Bounds="97.1428604125977,137.880004882813,41.6316757202148,25.3229064941406" />
+    <Link Source="Rx-Main 2.1.30214.0" Target="Rx-PlatformServices 2.1.30214.0" Category="Package Dependency" Bounds="137.889694213867,137.397674560547,142.608139038086,28.706298828125" />
+    <Link Source="Rx-PlatformServices 2.1.30214.0" Target="Rx-Core 2.1.30214.0" Category="Package Dependency" Bounds="221.092971801758,193.839996337891,90.0312957763672,27.3812561035156" />
+    <Link Source="Rx-PlatformServices 2.1.30214.0" Target="Rx-Interfaces 2.1.30214.0" Category="Package Dependency" Bounds="139.212417602539,193.839996337891,193.715286254883,83.8803405761719" />
+    <Link Source="Rx-Testing 2.1.30214.0" Target="Rx-Main 2.1.30214.0" Category="Package Dependency" Bounds="75.803337097168,81.9199981689453,0,21" />
+  </Links>
+  <Categories>
+    <Category Id="Installed Package" />
+    <Category Id="Package" />
+    <Category Id="Package Dependency" />
+    <Category Id="Project" />
+  </Categories>
+  <Properties>
+    <Property Id="Bounds" DataType="System.Windows.Rect" />
+    <Property Id="Expression" DataType="System.String" />
+    <Property Id="GraphDirection" DataType="Microsoft.VisualStudio.Diagrams.Layout.LayoutOrientation" />
+    <Property Id="GroupLabel" DataType="System.String" />
+    <Property Id="IsEnabled" DataType="System.Boolean" />
+    <Property Id="Label" Label="Label" Description="Displayable label of an Annotatable object" DataType="System.String" />
+    <Property Id="Layout" DataType="System.String" />
+    <Property Id="TargetType" DataType="System.Type" />
+    <Property Id="UseManualLocation" DataType="System.Boolean" />
+    <Property Id="Value" DataType="System.String" />
+    <Property Id="ValueLabel" DataType="System.String" />
+  </Properties>
+  <Styles>
+    <Style TargetType="Node" GroupLabel="Project" ValueLabel="True">
+      <Condition Expression="HasCategory('Project')" />
+      <Setter Property="Background" Value="Blue" />
+    </Style>
+    <Style TargetType="Link" GroupLabel="Package Dependency" ValueLabel="True">
+      <Condition Expression="HasCategory('Package Dependency')" />
+      <Setter Property="Background" Value="Yellow" />
+    </Style>
+  </Styles>
+</DirectedGraph>
