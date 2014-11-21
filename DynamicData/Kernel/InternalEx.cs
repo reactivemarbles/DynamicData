@@ -11,10 +11,8 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Kernel
 {
-    public static class ÌnternalExtensions
+    public static class InternalEx
     {
-
-
         internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source)
         {
             return source ?? Enumerable.Empty<T>();
@@ -147,31 +145,6 @@ namespace DynamicData.Kernel
                     scheduleNext(next);
             });
         }
-
-        ///// <summary>
-        ///// Schedules a recurring action.
-        ///// </summary>
-        ///// <remarks>
-        /////  I took this from 
-        ///// http://www.zerobugbuild.com/?p=259
-        ///// </remarks>
-        ///// <param name="scheduler">The scheduler.</param>
-        ///// <param name="interval">The interval.</param>
-        ///// <param name="action">The action.</param>
-        ///// <returns></returns>
-        //public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, TimeSpan initialInterval, Func<Action, TimeSpan> action)
-        //{
-        //    return scheduler.Schedule(initialInterval, scheduleNext =>
-        //    {
-        //        Console.WriteLine("Running recurring action");
-        //        var xx = action();
-        //        Console.WriteLine("Running recurring action done");
-        //        var next = interval();
-        //        Console.WriteLine("Next action in {0}", next);
-        //        scheduleNext(next);
-        //    });
-        //}
-
     }
 
  

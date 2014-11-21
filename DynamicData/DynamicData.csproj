@@ -145,7 +145,7 @@
     <Compile Include="Operators\SortReason.cs" />
     <Compile Include="Operators\UniqueComparer.cs" />
     <Compile Include="SourceCache.cs" />
-    <Compile Include="Kernel\ÌnternalExtensions.cs" />
+    <Compile Include="Kernel\InternalEx.cs" />
     <Compile Include="MissingKeyException.cs" />
     <Compile Include="Operators\Error.cs" />
     <Compile Include="Operators\FastGrouper.cs" />
