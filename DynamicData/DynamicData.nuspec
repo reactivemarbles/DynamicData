@@ -10,10 +10,11 @@
         <owners />
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>
-          A powerful and comprehensive caching and data manipulation solution which removes the tedium of maintaining collections.
-          The heart of the system is an observable cache and linq extensions enable filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more...
+          Bring the power of Rx to collections using Dynamic Data. 
+          A comprehensive caching and data manipulation solution which introduces data centric observable collections.
+          Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more...
         </description>
-        <tags>DynamicData Dynamic Rx Reactive Observable Cache Binding ObservableCache </tags>
+        <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableCollection Collection Linq</tags>
     </metadata>
     <files>
         <file src="bin\Release\Net40\DynamicData.dll" target="lib\net40\DynamicData.dll" />

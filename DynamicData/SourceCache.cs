@@ -10,7 +10,7 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public sealed class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey> 
+    public  class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey> 
     {
         private readonly ObservableCache<TObject, TKey> _innnerCache;
 

@@ -102,6 +102,7 @@
     <Compile Include="Binding\PageParameterData.cs" />
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
     <Compile Include="ConnectionStatus.cs" />
+    <Compile Include="Controllers\GroupController.cs" />
     <Compile Include="Controllers\PageController.cs" />
     <Compile Include="Controllers\SortController.cs" />
     <Compile Include="Diagnostics\DiagnosticOperators.cs" />
@@ -218,6 +219,7 @@
     <Compile Include="Operators\VirtualResponse.cs" />
     <Compile Include="Operators\VirtualRequest.cs" />
     <Compile Include="Operators\VirtualChangeSet.cs" />
+    <Compile Include="SourceList.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DynamicData.nuspec">
