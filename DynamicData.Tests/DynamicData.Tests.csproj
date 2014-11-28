@@ -108,6 +108,7 @@
     <Compile Include="Operators\AutoRemoveFixture.cs" />
     <Compile Include="Operators\DeferUntilLoadedFixture.cs" />
     <Compile Include="Operators\EnumerableEx.cs" />
+    <Compile Include="Operators\GroupControllerFixture.cs" />
     <Compile Include="Operators\IgnoreUpdateFixture.cs" />
     <Compile Include="Operators\IncludeUpdateFixture.cs" />
     <Compile Include="Operators\SizeExpiryFixture.cs" />
