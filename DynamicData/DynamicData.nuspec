@@ -10,9 +10,9 @@
         <owners />
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>
-          Bring the power of Rx to collections using Dynamic Data. 
-          A comprehensive caching and data manipulation solution which introduces data centric observable collections.
-          Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more...
+          Bring the power of Rx to collections using Dynamic Data.
+          Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
+          Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
         </description>
         <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableCollection Collection Linq</tags>
     </metadata>
