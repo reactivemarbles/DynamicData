@@ -5,7 +5,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Operators
 {
-    internal class FilteredIndexCalulator<TObject, TKey>
+    internal class FilteredIndexCalculator<TObject, TKey>
     {
         
         public IList<Change<TObject, TKey>> Calculate(IKeyValueCollection<TObject, TKey> currentItems,

@@ -157,7 +157,7 @@
     <Compile Include="Operators\PagedChangeSet.cs" />
     <Compile Include="Operators\PageRequest.cs" />
     <Compile Include="Operators\PageResponse.cs" />
-    <Compile Include="Kernel\FilteredIndexCalulator.cs" />
+    <Compile Include="Kernel\FilteredIndexCalculator.cs" />
     <Compile Include="Kernel\Optional.cs" />
     <Compile Include="IGroup.cs" />
     <Compile Include="IGroupChangeSet.cs" />

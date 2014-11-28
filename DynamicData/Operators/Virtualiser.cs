@@ -13,7 +13,7 @@ namespace DynamicData.Operators
     {
         #region Fields
 
-        private readonly FilteredIndexCalulator<TObject, TKey> _changedCalulator = new FilteredIndexCalulator<TObject, TKey>();
+        private readonly FilteredIndexCalculator<TObject, TKey> _changedCalculator = new FilteredIndexCalculator<TObject, TKey>();
 
         private IKeyValueCollection<TObject, TKey> _all =new KeyValueCollection<TObject, TKey>();
         private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
@@ -72,7 +72,7 @@ namespace DynamicData.Operators
             _current = new KeyValueCollection<TObject, TKey>(virualised, _all.Comparer, SortReason.DataChanged,_all.Optimisations);
 
             ////check for changes within the current virtualised page.  Notify if there have been changes or if the overall count has changed
-            var notifications = _changedCalulator.Calculate(_current, previous, updates);
+            var notifications = _changedCalculator.Calculate(_current, previous, updates);
             if (notifications.Count == 0 && (previous.Count != _current.Count))
             {
                 return null;
