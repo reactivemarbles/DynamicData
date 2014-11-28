@@ -2022,7 +2022,7 @@ namespace DynamicData
                 (
                     observer =>
                         {
-                            var grouper = new FastGrouper<TObject, TKey, TGroupKey>(groupSelectorKey, parallelisationOptions ?? new ParallelisationOptions());
+                            var grouper = new FastGrouper<TObject, TKey, TGroupKey>(groupSelectorKey);
 
                             var  groups = source.Select(grouper.Update)
                                 .Where(changes=>changes.Count!=0).Publish();
@@ -2030,7 +2030,6 @@ namespace DynamicData
                             var subscriber = groups.SubscribeSafer(observer);
                             var disposer = groups.DisposeMany().Subscribe();
                            
-
                             var connected = groups.Connect();
 
                             return Disposable.Create(() =>
@@ -2041,6 +2040,63 @@ namespace DynamicData
                             });
                         });
         }
+
+        /// <summary>
+        ///  Groups the source on the value returned by group selector factory. 
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="groupSelectorKey">The group selector key.</param>
+        /// <param name="groupController">The group controller which enables reapplying the group</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// groupSelectorKey
+        /// or
+        /// groupController
+        /// </exception>
+        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(
+                this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, GroupController groupController)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (groupSelectorKey == null) throw new ArgumentNullException("groupSelectorKey");
+            if (groupController == null) throw new ArgumentNullException("groupController");
+
+            return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
+                (
+                    observer =>
+                    {
+
+                        var locker = new object();
+                        var grouper = new FastGrouper<TObject, TKey, TGroupKey>(groupSelectorKey);
+
+                        var regroup = groupController.Regrouped
+                            .Synchronize(locker)
+                            .Select(_ => grouper.Regroup());
+                        
+                        var groups = source
+                                 .Synchronize(locker)
+                                .Select(grouper.Update)
+                                 .Synchronize(locker);
+
+                        var published = groups.Merge(regroup).Where(changes => changes.Count != 0).Publish();
+                        var subscriber = published.SubscribeSafe(observer);
+                        var disposer = published.DisposeMany().Subscribe();
+                        
+                        var connected = published.Connect();
+
+                        return Disposable.Create(() =>
+                        {
+                            connected.Dispose();
+                            disposer.Dispose();
+                            subscriber.Dispose();
+                        });
+                    });
+        }
+
 
         #endregion
 

@@ -1,23 +1,25 @@
 ﻿using System;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 
 namespace DynamicData.Controllers
 {
-    internal class GroupController<TObject, TGroupKey>
+    public sealed class GroupController: IDisposable
     {
-        private readonly Func<TObject, TGroupKey> _groupSelector;
-        private readonly ISubject<Func<TObject, TGroupKey>> _groupSubject = new Subject<Func<TObject, TGroupKey>>();
         private readonly ISubject<Unit> _regroupSubject = new ReplaySubject<Unit>();
 
-        public GroupController(Func<TObject, TGroupKey> groupSelector)
+        private readonly IDisposable _cleanUp;
+    
+
+
+        public GroupController()
         {
-            if (groupSelector == null) throw new ArgumentNullException("groupSelector");
-            _groupSelector = groupSelector;
+            _cleanUp = Disposable.Create(() => _regroupSubject.OnCompleted());
         }
 
-        public void ReapplyGroup()
+        public void RefreshGroup()
         {
             _regroupSubject.OnNext(Unit.Default);
         }
@@ -27,5 +29,9 @@ namespace DynamicData.Controllers
             get { return _regroupSubject.AsObservable(); }
         }
 
+        public void Dispose()
+        {
+           _cleanUp.Dispose();
+        }
     }
 }

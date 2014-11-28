@@ -14,7 +14,6 @@ namespace DynamicData.Operators
         private readonly Func<TObject, TGroupKey> _groupSelectorKey;
         private readonly IDictionary<TKey, ItemWithGroup> _itemCache = new Dictionary<TKey, ItemWithGroup>();
         private readonly object _locker = new object();
-        private readonly ParallelisationOptions _parallelisationOptions;
 
         private struct ItemWithGroup
         {
@@ -111,11 +110,9 @@ namespace DynamicData.Operators
 
         #region Construction
 
-        public FastGrouper(Func<TObject, TGroupKey> groupSelectorKey, ParallelisationOptions parallelisationOptions)
+        public FastGrouper(Func<TObject, TGroupKey> groupSelectorKey)
         {
             _groupSelectorKey = groupSelectorKey;
-
-            _parallelisationOptions = parallelisationOptions;
         }
 
         #endregion
@@ -125,6 +122,13 @@ namespace DynamicData.Operators
         public IGroupChangeSet<TObject, TKey, TGroupKey> Update(IChangeSet<TObject, TKey> updates)
         {
             return HandleUpdates(updates);
+        }
+
+        public IGroupChangeSet<TObject, TKey, TGroupKey> Regroup()
+        {
+            //re-evaluate all items in the group
+            var items = _itemCache.Select(item => new Change<TObject, TKey>(ChangeReason.Evaluate, item.Key, item.Value.Item));
+            return HandleUpdates(new ChangeSet<TObject, TKey>(items));
         }
 
         private GroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IChangeSet<TObject, TKey> updates)
