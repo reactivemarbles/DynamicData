@@ -1,4 +1,5 @@
-﻿using DynamicData.Kernel;
+﻿using System;
+using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
@@ -47,6 +48,37 @@ namespace DynamicData.Tests.Kernal
         {
             var option = Optional.None<IChangeSet<Person, string>>();
             Assert.IsFalse(option.HasValue, "HasValue should be false");
+        }
+
+
+        [Test]
+        public void OptionIfHasValueInvokedIfOptionHasValue()
+        {
+            Optional<Person> source = new Person("A",1);
+            
+            bool ifactioninvoked = false;
+            bool elseactioninvoked = false;
+
+            source.IfHasValue(p => ifactioninvoked = true)
+                    .Else(() => elseactioninvoked=true);
+
+            Assert.IsTrue(ifactioninvoked, "If action should  be invoked");
+            Assert.IsFalse(elseactioninvoked, "Else action should not be invoked");
+        }
+
+        [Test]
+        public void OptionElseInvokedIfOptionHasNoValue()
+        {
+            Optional<Person> source = null;
+
+            bool ifactioninvoked = false;
+            bool elseactioninvoked = false;
+
+            source.IfHasValue(p => ifactioninvoked = true)
+                .Else(() => elseactioninvoked = true);
+
+            Assert.IsFalse(ifactioninvoked, "If action should not be invoked");
+            Assert.IsTrue(elseactioninvoked, "Else action should  be invoked");
         }
 
 

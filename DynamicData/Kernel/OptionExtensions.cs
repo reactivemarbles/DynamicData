@@ -52,6 +52,8 @@ namespace DynamicData.Kernel
         }
 
 
+
+
         /// <summary>
         /// Converts the option value if it has a value, otherwise returns the result of the fallback converter
         /// </summary>
@@ -134,5 +136,19 @@ namespace DynamicData.Kernel
             return !Equals(result, null) ? result : Optional.None<T>();
         }
 
+
+        /// <summary>
+        /// Invokes the specified action when 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="action">The action.</param>
+        /// <returns></returns>
+        public static OptionElse IfHasValue<T>(this Optional<T> source,  Action<T> action)
+        {
+            if (!source.HasValue) return new OptionElse();
+            action(source.Value);
+            return OptionElse.NoAction;
+        }
     }
 }

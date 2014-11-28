@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
 
@@ -16,15 +17,7 @@ namespace DynamicData.Operators
 
         public void Dispose()
         {
-            _cache.Items.ForEach(t =>
-                                 {
-                                     var disposable = (t as IDisposable);
-                                     if (disposable != null)
-                                     {
-                                         disposable.Dispose();
-                                     }
-                                 });
-
+            _cache.Items.OfType<IDisposable>().ForEach(t => t.Dispose());
             _cache.Clear();
         }
 
@@ -39,18 +32,10 @@ namespace DynamicData.Operators
                 {
                     case ChangeReason.Update:
                     {
-                        if (!previous.HasValue)
-                        {
-                            Observable.Throw<MissingKeyException>(
-                                new MissingKeyException("Unknown key {0}".FormatWith(update.Key)));
-                        }
                         if (previous.HasValue)
                         {
                             var disposable = update.Previous.Value as IDisposable;
-                            if (disposable != null)
-                            {
-                                disposable.Dispose();
-                            }
+                            if (disposable != null) disposable.Dispose();
                         }
                     }
 
@@ -58,15 +43,12 @@ namespace DynamicData.Operators
                     case ChangeReason.Remove:
                     {
                         var disposable = current as IDisposable;
-                        if (disposable != null)
-                        {
-                            disposable.Dispose();
-                        }
+                        if (disposable != null) disposable.Dispose();
+                        
                     }
                         break;
                 }
             }
-
             _updater.Clone(updates);
         }
     }

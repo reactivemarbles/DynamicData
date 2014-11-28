@@ -85,18 +85,18 @@ namespace DynamicData.Kernel
         {
             get
             {
-                 return _data.ToArray();
+                 return _data;
             }
         }
 
         public IEnumerable<TObject> Items
         {
-            get { return _data.Values.ToArray(); }
+            get { return _data.Values; }
         }
 
         public IEnumerable<TKey> Keys
         {
-            get { return _data.Keys.ToArray(); }
+            get { return _data.Keys; }
         }
     }
 }

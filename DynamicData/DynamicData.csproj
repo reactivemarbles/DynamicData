@@ -123,6 +123,7 @@
     </Compile>
     <Compile Include="Kernel\KeyComparer.cs" />
     <Compile Include="Kernel\KeyValueCollection.cs" />
+    <Compile Include="Kernel\OptionElse.cs" />
     <Compile Include="ObservableCache.cs" />
     <Compile Include="Operators\ComparerOptions.cs" />
     <Compile Include="IIntermediateCache.cs" />

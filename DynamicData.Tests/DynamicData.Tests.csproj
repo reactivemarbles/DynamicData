@@ -106,6 +106,7 @@
     <Compile Include="Domain\RandomPersonGenerator.cs" />
     <Compile Include="Domain\SelfObservingPerson.cs" />
     <Compile Include="Operators\AutoRemoveFixture.cs" />
+    <Compile Include="Operators\DeferUntilLoadedFixture.cs" />
     <Compile Include="Operators\EnumerableEx.cs" />
     <Compile Include="Operators\IgnoreUpdateFixture.cs" />
     <Compile Include="Operators\IncludeUpdateFixture.cs" />

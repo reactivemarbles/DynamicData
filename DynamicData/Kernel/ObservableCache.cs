@@ -14,11 +14,8 @@ namespace DynamicData.Kernel
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    internal sealed class ObservableCache<TObject, TKey> :  IObservableCache<TObject, TKey>
-                                     
+    internal sealed class ObservableCache<TObject, TKey> :  IObservableCache<TObject, TKey>                   
     {
-
-
         #region Fields
 
         private readonly Func<TObject, TKey> _keySelector;
@@ -35,6 +32,7 @@ namespace DynamicData.Kernel
             : this()
         {
             var loader = source.Synchronize(_locker)
+                                .FinallySafe(_updates.OnCompleted)
                                 .Select(updates =>
                                             {
                                                 var updater = new IntermediateUpdater<TObject, TKey>(_cache);

@@ -396,16 +396,7 @@ namespace DynamicData
                         var result = published.SubscribeSafe(observer);
                         var connected = published.Connect();
 
-                        return new SingleAssignmentDisposable
-                        {
-                            Disposable = Disposable.Create(() =>
-                            {
-                                connected.Dispose();
-                                subscriptions.Dispose();
-                                result.Dispose();
-                    
-                            })
-                        };
+                        return new CompositeDisposable(subscriptions,connected,result);
                     });
         }
         /// <summary>
@@ -658,9 +649,22 @@ namespace DynamicData
 
         }
 
+        /// <summary>
+        /// Defer the subscribtion until loaded and skip initial changeset
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> SkipInitial<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            return source.DeferUntilLoaded().Skip(1);
+        }
 
         /// <summary>
-        /// Defer the stream until loaded
+        /// Defer the subscription until the stream has been inflated with data
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -668,45 +672,32 @@ namespace DynamicData
         /// <returns></returns>
         public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
+            if (source == null) throw new ArgumentNullException("source");
+
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
                     observer =>
                     {
                         var published = source.Publish();
-                        var locker = new object();
-                        IDisposable sourceDisposer = null;
 
-                        Action<ConnectionStatus> subscribeAction = u =>
-                        {
-                            lock (locker)
-                            {
-                                sourceDisposer = published.SubscribeSafer(observer);
-                            }
-
-                        };
-
-                        var monitorSubscriber = source.MonitorStatus()
+                       var subscriber = published.MonitorStatus()
                                             .Where(status => status == ConnectionStatus.Loaded)
                                             .Take(1)
-                                            .Subscribe(subscribeAction);
+                                            .Select(_=>new ChangeSet<TObject,TKey>())
+                                            .Concat(source)
+                                            .NotEmpty()
+                                            .SubscribeSafe(observer);
 
                         var connected = published.Connect();
 
                         return Disposable.Create(() =>
                         {
-                            lock (sourceDisposer)
-                            {
-                                sourceDisposer.Dispose();
-                            }
                             connected.Dispose();
-                            monitorSubscriber.Dispose();
+                            subscriber.Dispose();
                         });
                     }
                 );
-
         }
-
-
 
         #endregion
         
@@ -769,7 +760,7 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <returns></returns>
-        public static IObservable<IQuery<TObject, TKey>> DataQuery<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        public static IObservable<IQuery<TObject, TKey>> Query<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             return Observable.Create<IQuery<TObject, TKey>>
                 (
@@ -811,7 +802,7 @@ namespace DynamicData
             TAccumulate seed, 
             Func<IEnumerable<TObject>, TAccumulate> accumulator)
         {
-            return source.DataQuery().Select(q=>q.Items.ToList()).Scan(seed, (state, result) => accumulator(result));
+            return source.Query().Select(q=>q.Items.ToList()).Scan(seed, (state, result) => accumulator(result));
         }
 
 
@@ -832,7 +823,7 @@ namespace DynamicData
             TAccumulate seed,
             Func<TAccumulate, IEnumerable<TObject>, TAccumulate> accumulator)
         {
-            return source.DataQuery().Select(q => q.Items.ToList()).Scan(seed, accumulator);
+            return source.Query().Select(q => q.Items.ToList()).Scan(seed, accumulator);
         }
 
         /// <summary>
@@ -852,7 +843,7 @@ namespace DynamicData
             TAccumulate seed,
             Func<IEnumerable<TObject>, TAccumulate> accumulator)
         {
-            return source.DataQuery().Select(q => q.Items).Aggregate(seed, (state, result) => accumulator(result));
+            return source.Query().Select(q => q.Items).Aggregate(seed, (state, result) => accumulator(result));
         }
 
 
@@ -873,7 +864,7 @@ namespace DynamicData
             TAccumulate seed,
             Func<TAccumulate, IEnumerable<TObject>, TAccumulate> accumulator)
         {
-            return source.DataQuery().Select(q => q.Items).Aggregate(seed, accumulator);
+            return source.Query().Select(q => q.Items).Aggregate(seed, accumulator);
         }
 
 

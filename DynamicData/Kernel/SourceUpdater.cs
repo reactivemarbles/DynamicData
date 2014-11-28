@@ -8,7 +8,7 @@ namespace DynamicData.Kernel
     {
         private readonly ICache<TObject, TKey> _cache;
         private readonly IKeySelector<TObject, TKey> _keySelector;
-        private readonly Queue<Change<TObject, TKey>> _queue = new Queue<Change<TObject, TKey>>();
+        private   ChangeSet<TObject, TKey> _queue = new  ChangeSet<TObject, TKey>();
 
         public SourceUpdater(ICache<TObject, TKey> cache, IKeySelector<TObject, TKey> keySelector)
         {
@@ -58,7 +58,7 @@ namespace DynamicData.Kernel
         {
             TKey key = _keySelector.GetKey(item);
             var previous = _cache.Lookup(key);
-            _queue.Enqueue(previous.HasValue
+            _queue.Add(previous.HasValue
                                ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
                                : new Change<TObject, TKey>(ChangeReason.Add, key, item));
             _cache.AddOrUpdate(item, key);
@@ -67,7 +67,7 @@ namespace DynamicData.Kernel
         public void Evaluate()
         {
             var requery = _cache.KeyValues.Select(t => new Change<TObject, TKey>(ChangeReason.Evaluate, t.Key, t.Value));
-            requery.ForEach(_queue.Enqueue);
+            requery.ForEach(_queue.Add);
         }
 
         public void Evaluate(IEnumerable<TObject> items)
@@ -89,7 +89,7 @@ namespace DynamicData.Kernel
             var existing = _cache.Lookup(key);
             if (existing.HasValue)
             {
-                _queue.Enqueue(new Change<TObject, TKey>(ChangeReason.Evaluate, key, item));
+                _queue.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, item));
             }
         }
 
@@ -98,7 +98,7 @@ namespace DynamicData.Kernel
             var existing = _cache.Lookup(key);
             if (existing.HasValue)
             {
-                _queue.Enqueue(new Change<TObject, TKey>(ChangeReason.Evaluate, key, existing.Value));
+                _queue.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, existing.Value));
             }
         }
 
@@ -125,7 +125,7 @@ namespace DynamicData.Kernel
             Optional<TObject> existing = _cache.Lookup(key);
             if (existing.HasValue)
             {
-                _queue.Enqueue(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
+                _queue.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
                 _cache.Remove(key);
             }
         }
@@ -133,9 +133,8 @@ namespace DynamicData.Kernel
 
         public void Clear()
         {
-            var toremove = _cache.KeyValues.Select(
-                    t => new Change<TObject, TKey>(ChangeReason.Remove, t.Key, t.Value));
-            toremove.ForEach(_queue.Enqueue);
+            var toremove = _cache.KeyValues.Select(t => new Change<TObject, TKey>(ChangeReason.Remove, t.Key, t.Value));
+            toremove.ForEach(_queue.Add);
             _cache.Clear();
         }
 
@@ -176,10 +175,9 @@ namespace DynamicData.Kernel
 
         public IChangeSet<TObject, TKey> AsChangeSet()
         {
-
-            var updates =  new ChangeSet<TObject, TKey>( _queue.ToArray());
-            _queue.Clear();
-            return updates;
+            var result = _queue;
+            _queue=  new ChangeSet<TObject, TKey>();
+            return result;
         }
     }
 

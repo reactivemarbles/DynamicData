@@ -159,7 +159,7 @@ namespace DynamicData.Tests.Performance
                                     source.BatchUpdate(updater => updater.AddOrUpdate(new Person("Sample", 10)));
                                    
                                 }
-                            , 100, "DataQuery with {0} items (1 subscriber)".FormatWith(number));
+                            , 100, "Query with {0} items (1 subscriber)".FormatWith(number));
 
             source.Dispose();
         }

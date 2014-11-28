@@ -28,17 +28,15 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="observable">The observable.</param>
-        /// <param name="keySelector">The key selector.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
         /// or
         /// keySelector
         /// </exception>
-        public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<IEnumerable<TObject>> observable, Func<TObject, TKey> keySelector)
+        public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<IEnumerable<TObject>> observable)
         {
             if (source == null) throw new ArgumentNullException("source");
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
 
             return observable.Subscribe(source.AddOrUpdate);
         }
@@ -49,18 +47,15 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="observable">The observable.</param>
-        /// <param name="keySelector">The key selector.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
         /// or
         /// keySelector
         /// </exception>
-        public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<TObject> observable, Func<TObject, TKey> keySelector)
+        public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<TObject> observable)
         {
             if (source == null) throw new ArgumentNullException("source");
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
-
             return observable.Subscribe(source.AddOrUpdate);
         }
 
@@ -86,18 +81,17 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException("source");
             if (sizeLimit<=0) throw new ArgumentException("Size limit must be greater than zero");
 
+
             return Observable.Create<IEnumerable<KeyValuePair<TKey,TObject>>>(observer =>
             {
-                scheduler = scheduler ?? Scheduler.Default;
 
                 var autoRemover = source.Connect()
                         .FinallySafe(observer.OnCompleted)
                         .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now))
                         .AsObservableCache();
-
-
+                
                 var sizeChecker = autoRemover.Connect()
-                    .ObserveOn(scheduler)
+                    .ObserveOn(scheduler ?? Scheduler.Default)
                     .Select(changes =>
                             {
                                 var itemstoexpire = autoRemover.KeyValues
@@ -114,8 +108,7 @@ namespace DynamicData
                         {
                             //remove from cache and notify which items have been auto removed
                             source.Remove(toRemove.Select(kv => kv.Key));
-                            observer.OnNext(toRemove.Select(kv => new KeyValuePair<TKey,TObject>(kv.Key, kv.Value))
-                                .ToList());
+                            observer.OnNext(toRemove);
                         }
                         catch (Exception ex)
                         {
@@ -126,8 +119,9 @@ namespace DynamicData
 
                 return Disposable.Create(() =>
                 {
-                    sizeChecker.Dispose();
                     autoRemover.Dispose();
+                    sizeChecker.Dispose();
+                   
                 });
 
             });
@@ -200,8 +194,7 @@ namespace DynamicData
             return Observable.Create<IEnumerable<KeyValuePair<TKey,TObject>>>(observer =>
             {
                 scheduler = scheduler ?? Scheduler.Default;
-                var autoRemover = source.Connect()
-                
+                return source.Connect()
                     .ForAutoRemove(timeSelector, pollingInterval, scheduler)
                     .FinallySafe(observer.OnCompleted)
                     .Subscribe(toRemove =>
@@ -209,22 +202,17 @@ namespace DynamicData
                         try
                         {
                             //remove from cache and notify which items have been auto removed
-                            source.Remove(toRemove.Select(kv => kv.Key));
-                            observer.OnNext(toRemove.Select(kv => new KeyValuePair<TKey,TObject>(kv.Key, kv.Value))
-                                .ToList());
+                            var keyValuePairs = toRemove as KeyValuePair<TKey, TObject>[] ?? toRemove.ToArray();
+                         
+                            
+                            source.Remove(keyValuePairs.Select(kv => kv.Key));
+                            observer.OnNext(keyValuePairs);
                         }
                         catch (Exception ex)
                         {
                             observer.OnError(ex);
                         }
                     });
-
-                return Disposable.Create(() =>
-                {
-
-                   // removalSubscripion.Dispose();
-                    autoRemover.Dispose();
-                });
 
             });
         }

@@ -35,7 +35,7 @@ namespace DynamicData.Kernel
     /// </summary>
     /// <typeparam name="T">The underlying value type of the <see cref="T:System.Nullable`1"/> generic type.</typeparam><filterpriority>1</filterpriority>
     [Serializable]
-    public struct Optional<T>
+    public struct Optional<T> : IEquatable<Optional<T>>
     {
         private readonly bool _hasValue;
         private readonly T _value;
@@ -53,9 +53,7 @@ namespace DynamicData.Kernel
         /// <param name="value">The value.</param>
         internal Optional(T value)
         {
-// ReSharper disable CompareNonConstrainedGenericWithNull
-            if (value==null)
-// ReSharper restore CompareNonConstrainedGenericWithNull
+            if (ReferenceEquals(value,null))
             {
                 _hasValue = false;
                 _value = default(T);
@@ -135,7 +133,11 @@ namespace DynamicData.Kernel
 
         public bool Equals(Optional<T> other)
         {
-            return EqualityComparer<T>.Default.Equals(_value, other._value) && _hasValue.Equals(other._hasValue);
+            if (!HasValue) return !other.HasValue;
+
+            if (!other.HasValue) return false;
+
+            return EqualityComparer<T>.Default.Equals(_value, other._value);
         }
 
         public override bool Equals(object obj)

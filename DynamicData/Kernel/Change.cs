@@ -171,7 +171,7 @@ namespace DynamicData.Kernel
 
         public override string ToString()
         {
-            return string.Format("Reason: {0}, Key: {1}, SortedItems: {2}, Previous: {3}", Reason, Key, Current, Previous);
+            return string.Format("{0}, Key: {1}, Current: {2}, Previous: {3}", Reason, Key, Current, Previous);
         }
 
         #endregion

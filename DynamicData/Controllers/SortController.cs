@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using DynamicData.Kernel;
 
 namespace DynamicData.Controllers
 {
@@ -15,7 +14,7 @@ namespace DynamicData.Controllers
     {
         private readonly ISubject<IComparer<T> > _sortSubject = new ReplaySubject<IComparer<T>>(1);
         private readonly ISubject<Unit> _resortSubject = new Subject<Unit>();
-        private readonly IComparer<T> _defaultSort;
+        private  IComparer<T> _defaultSort;
         private IComparer<T> _currentSort;
 
 
@@ -27,21 +26,19 @@ namespace DynamicData.Controllers
         public SortController(IComparer<T>  defaultSort)
         {
             if (defaultSort == null) throw new ArgumentNullException("defaultSort");
-            _defaultSort = defaultSort;
-            _currentSort = defaultSort;
-            Invoke(_currentSort);
+            SetDefaultSort(defaultSort);
+            Change(defaultSort);
         }
 
-
         /// <summary>
-        /// Changes the sort comparer.
+        /// Sets the default sort.
         /// </summary>
-        /// <param name="comparer">The comparer.</param>
-        /// <exception cref="System.ArgumentNullException">comparer</exception>
-        public void Change(IComparer<T>  comparer)
+        /// <param name="defaultSort">The default sort.</param>
+        /// <exception cref="System.ArgumentNullException">defaultSort</exception>
+        public void SetDefaultSort(IComparer<T> defaultSort)
         {
-            if (comparer == null) throw new ArgumentNullException("comparer");
-            Invoke(comparer);
+            if (defaultSort == null) throw new ArgumentNullException("defaultSort");
+            _defaultSort = defaultSort;
         }
 
         /// <summary>
@@ -50,7 +47,6 @@ namespace DynamicData.Controllers
         public void Reset()
         {
             Change(_defaultSort);
-          //  _sortSubject.OnNext(_defaultSort);
         }
 
         /// <summary>
@@ -61,11 +57,18 @@ namespace DynamicData.Controllers
             _resortSubject.OnNext(Unit.Default);
         }
 
-        private void Invoke(IComparer<T> comparer)
+        /// <summary>
+        /// Changes the sort comparer.
+        /// </summary>
+        /// <param name="comparer">The comparer.</param>
+        /// <exception cref="System.ArgumentNullException">comparer</exception>
+        public void Change(IComparer<T> comparer)
         {
+            if (comparer == null) throw new ArgumentNullException("comparer");
             _currentSort = comparer;
-           _sortSubject.OnNext(_currentSort);
+            _sortSubject.OnNext(_currentSort);
         }
+
 
         /// <summary>
         /// Observable which is fired when the sort comparer is changed

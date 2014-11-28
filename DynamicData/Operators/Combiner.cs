@@ -68,6 +68,7 @@ namespace DynamicData.Operators
 
         private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
         {
+            //child caches have been updated before we reached this point.
             var updater = new IntermediateUpdater<TObject, TKey>(_combinedCache);
 
             foreach (var update in updates)
@@ -77,7 +78,6 @@ namespace DynamicData.Operators
                 {
                     case ChangeReason.Add:
                     case ChangeReason.Update:
-                    case ChangeReason.Remove:
 
                         {
                             // get the current key.
@@ -85,7 +85,7 @@ namespace DynamicData.Operators
                             Optional<TObject> cached = updater.Lookup(key);
                             bool contained = cached.HasValue;
 
-                            bool match = ContainedInCaches(key);
+                            bool match = MatchesConstraint(key);
 
                             if (match)
                             {
@@ -110,6 +110,44 @@ namespace DynamicData.Operators
                             }
                         }
                         break;
+                   
+                    case ChangeReason.Remove:
+                    {
+                        var cached = updater.Lookup(key);
+                        var contained = cached.HasValue;
+                        bool shouldBeIncluded = MatchesConstraint(key);
+
+                        if (shouldBeIncluded)
+                        {
+                            var firstOne = _sourceCaches.Select(s => s.Lookup(key))
+                                .SelectValues()
+                                .First();
+
+                            if (!cached.HasValue)
+                            {
+                                updater.AddOrUpdate(firstOne,key);
+                            }
+                            else if (!ReferenceEquals(firstOne,cached.Value))
+                            {
+                                updater.AddOrUpdate(firstOne,key);
+                            }
+                            else
+                            {
+                                if (contained)
+                                    updater.Remove(key);
+                            }
+                        }
+                        else
+                        {
+                           if (contained)
+                               updater.Remove(key);
+                        }
+
+                    }
+
+
+                        break;
+
                     case ChangeReason.Evaluate:
                         {
                             updater.Evaluate( key);
@@ -124,7 +162,7 @@ namespace DynamicData.Operators
             // return up
         }
 
-        private bool ContainedInCaches(TKey key)
+        private bool MatchesConstraint(TKey key)
         {
             switch (_type)
             {
