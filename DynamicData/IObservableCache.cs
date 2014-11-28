@@ -12,7 +12,7 @@ namespace DynamicData
     public interface IObservableCache<TObject, TKey> : IDisposable
     {      
         /// <summary>
-        /// Returns an observable of any changes which match the specified key.  The sequence starts with the inital match in the cache (if there is one).
+        /// Returns an observable of any changes which match the specified key.  The sequence starts with the inital item in the cache (if there is one).
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns></returns>
