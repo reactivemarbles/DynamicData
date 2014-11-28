@@ -213,7 +213,6 @@
     <Compile Include="IVirtualParameters.cs" />
     <Compile Include="IVirtualRequest.cs" />
     <Compile Include="IVirtualChangeSet.cs" />
-    <Compile Include="Operators\VirtualChangeReason.cs" />
     <Compile Include="Controllers\VirtualisingController.cs" />
     <Compile Include="Operators\Virtualiser.cs" />
     <Compile Include="Operators\VirtualResponse.cs" />
