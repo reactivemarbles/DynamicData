@@ -6,6 +6,9 @@ using System.Reactive.Subjects;
 
 namespace DynamicData.Controllers
 {
+    /// <summary>
+    /// Controller used to force the groups to be re-asssed
+    /// </summary>
     public sealed class GroupController: IDisposable
     {
         private readonly ISubject<Unit> _regroupSubject = new ReplaySubject<Unit>();
