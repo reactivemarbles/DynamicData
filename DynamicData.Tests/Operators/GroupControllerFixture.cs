@@ -8,11 +8,7 @@ namespace DynamicData.Tests.Operators
     [TestFixture]
     public class GroupControllerFixture
     {
-        private const string Under20 = "Under20";
-        private const string Under60 = "21 to 59";
-        private const string Pensioner = "Pensioners";
-
-        public enum AgeBracket
+        private enum AgeBracket
         {
             Under20,
             Adult,
@@ -22,8 +18,7 @@ namespace DynamicData.Tests.Operators
         private readonly Func<Person, AgeBracket> _grouper = p =>
                                                              {
                                                                  if (p.Age <= 19) return AgeBracket.Under20;
-                                                                 if (p.Age <= 60) return AgeBracket.Adult;
-                                                                 return AgeBracket.Pensioner;
+                                                                 return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
                                                              };
 
         private ISourceCache<Person, string> _source;

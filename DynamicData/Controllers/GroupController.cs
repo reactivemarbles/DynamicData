@@ -7,27 +7,30 @@ using System.Reactive.Subjects;
 namespace DynamicData.Controllers
 {
     /// <summary>
-    /// Controller used to force the groups to be re-asssed
+    /// Controller used to inject meta data into a group stream.
     /// </summary>
     public sealed class GroupController: IDisposable
     {
         private readonly ISubject<Unit> _regroupSubject = new ReplaySubject<Unit>();
-
         private readonly IDisposable _cleanUp;
-    
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GroupController"/> class.
+        /// </summary>
         public GroupController()
         {
             _cleanUp = Disposable.Create(() => _regroupSubject.OnCompleted());
         }
 
+        /// <summary>
+        /// Force all items to re-evaluate whether which group the should belong in
+        /// </summary>
         public void RefreshGroup()
         {
             _regroupSubject.OnNext(Unit.Default);
         }
 
-        public IObservable<Unit> Regrouped
+        internal IObservable<Unit> Regrouped
         {
             get { return _regroupSubject.AsObservable(); }
         }
