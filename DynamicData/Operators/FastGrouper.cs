@@ -110,7 +110,7 @@ namespace DynamicData.Operators
 
         public IGroupChangeSet<TObject, TKey, TGroupKey> Update(IChangeSet<TObject, TKey> updates)
         {
-            return HandleUpdates2(updates);
+            return HandleUpdates(updates);
         }
 
         public IGroupChangeSet<TObject, TKey, TGroupKey> Regroup()
@@ -118,7 +118,7 @@ namespace DynamicData.Operators
             //re-evaluate all items in the group
             var items = _itemCache.Select(item => new Change<TObject, TKey>(ChangeReason.Evaluate, item.Key, item.Value.Item));
             //}
-            return HandleUpdates2(new ChangeSet<TObject, TKey>(items));
+            return HandleUpdates2(new ChangeSet<TObject, TKey>(items),true);
         }
 
         private GroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates2(IChangeSet<TObject, TKey> changes, bool isEvaluating = false)
@@ -134,10 +134,10 @@ namespace DynamicData.Operators
             foreach (var group in groupedChanges)
             {
 
-                if (!isEvaluating)
-                {
+
                     //1. Get child cache and update entire in 1 batch, reporting on any groups to be added or removed
                     var changeSet = new ChangeSet<TObject, TKey>(group.Select(g => g.Change));
+                    
                     var cachewithaddflag = GetCache(group.Key);
                     var cache = cachewithaddflag.Item1;
                     bool added = cachewithaddflag.Item2;
@@ -153,7 +153,6 @@ namespace DynamicData.Operators
                             cache));
                     }
 
-                }
 
                 //2. Iterate updates and remove any orphaned items from old groups. i.e. the where grouping has change
                 //3. Maintain item group
