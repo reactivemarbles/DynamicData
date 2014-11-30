@@ -32,10 +32,7 @@ namespace DynamicData.Tests.Operators
             _source = new SourceCache<Person, string>(p => p.Name);
             _controller =new GroupController();
             _grouped = _source.Connect().Group(_grouper, _controller).AsObservableCache();
-
-
-
-        }
+       }
 
             
         [Test]
