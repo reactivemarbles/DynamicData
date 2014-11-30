@@ -100,7 +100,7 @@ namespace DynamicData.Tests.Performance
         {
             SetStream();
             Person[] items = Enumerable.Range(1, number).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
-            _stream.Group(p => p.Age / 100, options).Subscribe(u => { });
+            _stream.Group(p => p.Age / 100).Subscribe(u => { });
 
             Timer.ToConsole(() => _source.BatchUpdate(updater => updater.AddOrUpdate(items)), 1,
                             "{0} group".FormatWith(number));
@@ -111,7 +111,7 @@ namespace DynamicData.Tests.Performance
             SetStream();
             IEnumerable<IDisposable> disposables = Enumerable.Empty<IDisposable>();
             Person[] items = Enumerable.Range(100, number).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
-            _stream.Group(p => p.Age/10, options).Subscribe(u =>
+            _stream.Group(p => p.Age/10).Subscribe(u =>
                 {
                     disposables = u.Select(update => update.Current.Cache.Connect().Subscribe());
                 });

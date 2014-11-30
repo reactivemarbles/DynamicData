@@ -2009,10 +2009,8 @@ namespace DynamicData
         /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="groupSelectorKey">The group selector key.</param>
-        /// <param name="parallelisationOptions">Specifiy paralleisation options</param>
         /// <returns></returns>
-        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(
-            this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey,ParallelisationOptions parallelisationOptions=null)
+        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey)
 
      {
             if (source == null) throw new ArgumentNullException("source");
@@ -2058,8 +2056,8 @@ namespace DynamicData
         /// or
         /// groupController
         /// </exception>
-        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(
-                this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, GroupController groupController)
+        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, 
+            Func<TObject, TGroupKey> groupSelectorKey, GroupController groupController)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (groupSelectorKey == null) throw new ArgumentNullException("groupSelectorKey");
@@ -2073,16 +2071,17 @@ namespace DynamicData
                         var locker = new object();
                         var grouper = new FastGrouper<TObject, TKey, TGroupKey>(groupSelectorKey);
 
+                        var groups = source
+                            .Synchronize(locker)
+                            .Select(grouper.Update)
+                            .Where(changes => changes.Count != 0);
+
                         var regroup = groupController.Regrouped
                             .Synchronize(locker)
-                            .Select(_ => grouper.Regroup());
-                        
-                        var groups = source
-                                 .Synchronize(locker)
-                                .Select(grouper.Update)
-                                 .Synchronize(locker);
+                            .Select(_ => grouper.Regroup())
+                            .Where(changes => changes.Count != 0);
 
-                        var published = groups.Merge(regroup).Where(changes => changes.Count != 0).Publish();
+                        var published = groups.Merge(regroup).Publish();
                         var subscriber = published.SubscribeSafe(observer);
                         var disposer = published.DisposeMany().Subscribe();
                         
