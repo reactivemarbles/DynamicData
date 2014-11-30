@@ -60,6 +60,21 @@ namespace DynamicData.Tests.Operators
         }
 
         [Test]
+        public void UpdateAnItemWillChangedThegroup()
+        {
+            bool called = false;
+            IDisposable subscriber = _source.Connect().Group(p => p.Age)
+                                            .Subscribe(updates =>
+                                            {
+                                                called = true;
+                                            });
+            _source.AddOrUpdate(new Person("Person1", 20));
+            _source.AddOrUpdate(new Person("Person1", 21));
+            subscriber.Dispose();
+            Assert.IsTrue(called, "No update has been invoked");
+        }
+
+        [Test]
         public void Remove()
         {
             bool called = false;

@@ -106,7 +106,7 @@ namespace DynamicData.Tests.Performance
                             "{0} group".FormatWith(number));
         }
 
-        private void GroupAndSubscribe(int number, ParallelisationOptions options)
+        private void GroupAndSubscribe(int number)
         {
             SetStream();
             IEnumerable<IDisposable> disposables = Enumerable.Empty<IDisposable>();
@@ -432,14 +432,14 @@ namespace DynamicData.Tests.Performance
             for (int i = 0; i < 6; i++)
             {
                 double value = i == 0 ? 1 : Math.Pow(10, i);
-                GroupAndSubscribe((int) value, new ParallelisationOptions(ParallelType.None));
+                GroupAndSubscribe((int) value);
             }
             Console.WriteLine();
 
             for (int i = 0; i < 6; i++)
             {
                 double value = i == 0 ? 1 : Math.Pow(10, i);
-                GroupAndSubscribe((int) value, new ParallelisationOptions(ParallelType.Parallelise));
+                GroupAndSubscribe((int) value);
             }
             Console.WriteLine();
 
@@ -447,7 +447,7 @@ namespace DynamicData.Tests.Performance
             for (int i = 0; i < 6; i++)
             {
                 double value = i == 0 ? 1 : Math.Pow(10, i);
-                GroupAndSubscribe((int) value, new ParallelisationOptions(ParallelType.ParalledOrdered));
+                GroupAndSubscribe((int) value);
             }
         }
 
