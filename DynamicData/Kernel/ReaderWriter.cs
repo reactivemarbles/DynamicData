@@ -89,15 +89,11 @@ namespace DynamicData.Kernel
             }
             return new Continuation<IChangeSet<TObject, TKey>>(result);
         }
-
-
-
+        
         #endregion
 
         #region Accessors
-
-
-
+        
         public IEnumerable<TKey> Keys
         {
             get
