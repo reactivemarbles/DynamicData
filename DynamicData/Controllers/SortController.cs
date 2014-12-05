@@ -27,7 +27,7 @@ namespace DynamicData.Controllers
         {
             if (defaultSort == null) throw new ArgumentNullException("defaultSort");
             SetDefaultSort(defaultSort);
-            Change(defaultSort);
+            
         }
 
         /// <summary>
@@ -39,6 +39,7 @@ namespace DynamicData.Controllers
         {
             if (defaultSort == null) throw new ArgumentNullException("defaultSort");
             _defaultSort = defaultSort;
+            Change(defaultSort);
         }
 
         /// <summary>
@@ -96,6 +97,7 @@ namespace DynamicData.Controllers
         public void Dispose()
         {
             _sortSubject.OnCompleted();
+            _resortSubject.OnCompleted();
         }
     }
 }

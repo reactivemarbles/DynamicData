@@ -118,13 +118,16 @@
     <Compile Include="Experimental\SubjectWithRefCount.cs" />
     <Compile Include="IObservableCacheWithStatus.cs" />
     <Compile Include="Kernel\CacheEx.cs" />
-    <Compile Include="Kernel\ConcurrentCache.cs" />
+    <Compile Include="Kernel\Continuation.cs" />
+    <Compile Include="Kernel\DoubleCheck.cs" />
     <Compile Include="Kernel\IKeyValueCollection.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Kernel\IReaderWriter.cs" />
     <Compile Include="Kernel\KeyComparer.cs" />
     <Compile Include="Kernel\KeyValueCollection.cs" />
     <Compile Include="Kernel\OptionElse.cs" />
+    <Compile Include="Kernel\ReaderWriter.cs" />
     <Compile Include="ObservableCache.cs" />
     <Compile Include="Operators\ComparerOptions.cs" />
     <Compile Include="IIntermediateCache.cs" />

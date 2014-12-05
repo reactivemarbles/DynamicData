@@ -8,9 +8,8 @@ using DynamicData.Operators;
 
 namespace DynamicData.Kernel
 {
-
     /// <summary>
-    /// 
+    /// An observable cache
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -18,32 +17,27 @@ namespace DynamicData.Kernel
     {
         #region Fields
 
-        private readonly Func<TObject, TKey> _keySelector;
-        private readonly ICache<TObject, TKey> _cache = new ConcurrentCache<TObject, TKey>();
         private readonly IDisposable _disposer;
         private readonly object _locker = new object();
         private readonly ISubject<IChangeSet<TObject, TKey>> _updates = new Subject<IChangeSet<TObject, TKey>>();
+        private readonly IReaderWriter<TObject, TKey> _readerWriter;
 
         #endregion
 
         #region Construction
 
         public ObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
-            : this()
         {
-            var loader = source.Synchronize(_locker)
-                                .FinallySafe(_updates.OnCompleted)
-                                .Select(updates =>
-                                            {
-                                                var updater = new IntermediateUpdater<TObject, TKey>(_cache);
-                                                updater.Update(updates);
-                                                return updater.AsChangeSet();
-                                            })
-                                .NotEmpty()
-                                .Subscribe(_updates.OnNext);
+            _readerWriter = new ReaderWriter<TObject, TKey>();
 
-            _disposer = Disposable.Create(() =>
-                                              {
+            var loader = source.Synchronize(_locker)
+                            .FinallySafe(_updates.OnCompleted)
+                            .Subscribe(changes => _readerWriter.Write(changes)
+                                                        .Then(InvokeNext, _updates.OnError)
+                                      );
+
+
+            _disposer = Disposable.Create(() => {
                                                   loader.Dispose();
                                                   _updates.OnCompleted();
                                               });
@@ -51,7 +45,8 @@ namespace DynamicData.Kernel
 
         public ObservableCache(Func<TObject, TKey> keySelector=null)
         {
-            _keySelector = keySelector;
+            _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
+
             _disposer = Disposable.Create(() => _updates.OnCompleted());
         }
 
@@ -62,75 +57,64 @@ namespace DynamicData.Kernel
        internal void UpdateFromIntermediate(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
         {
             if (updateAction == null) throw new ArgumentNullException("updateAction");
-
-            lock (_locker)
-            {
-                try
-                {
-                    var updater = new IntermediateUpdater<TObject, TKey>(_cache);
-                    updateAction(updater);
-                    var notifications = updater.AsChangeSet();
-                    _updates.OnNext(notifications);
-                }
-                catch (Exception ex)
-                {
-                    _updates.OnError(ex);
-                }
-            }
+            
+           _readerWriter.Write(updateAction)
+                 .Then(InvokeNext, _updates.OnError);
         }
-
 
         internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
         {
-            if (_keySelector == null) throw new InvalidOperationException("Must construct with keySelector");
             if (updateAction == null) throw new ArgumentNullException("updateAction");
+           
+            _readerWriter.Write(updateAction)
+                  .Then(InvokeNext, _updates.OnError);
+        }
 
-            lock (_locker)
+        private void InvokeNext(IChangeSet<TObject, TKey> changes)
+        {
+            if (changes.Count == 0) return;
+
+            lock (KeyValues)
             {
                 try
                 {
-                    var updater = new SourceUpdater<TObject, TKey>(_cache, new KeySelector<TObject, TKey>(_keySelector));
-                    updateAction(updater);
 
-                    var notifications = updater.AsChangeSet();
-                    if (notifications.Count != 0)
-                        _updates.OnNext(notifications);
-             }
+                    _updates.OnNext(changes);
+                }
                 catch (Exception ex)
                 {
                     _updates.OnError(ex);
                 }
             }
         }
-        
         #endregion
 
         #region Accessors
        
         public Optional<TObject> Lookup(TKey key)
         {
-            return _cache.Lookup(key);
+            return _readerWriter.Lookup(key);
         }
 
         public IEnumerable<TKey> Keys
         {
-            get { return _cache.Keys; }
+            get { return _readerWriter.Keys; }
         }
 
         public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues
         {
-            get { return _cache.KeyValues; }
+            get { return _readerWriter.KeyValues; }
         }
 
         public IEnumerable<TObject> Items
         {
-            get { return _cache.Items; }
+            get { return _readerWriter.Items; }
 
         }
 
         public int Count
         {
-            get { return _cache.Count; }
+            get { return _readerWriter.Count; }
         }
 
         #endregion
@@ -157,7 +141,7 @@ namespace DynamicData.Kernel
                                     }
                                 };
 
-                                var initial = _cache.Lookup(key);
+                                var initial = _readerWriter.Lookup(key);
                                 if (initial.HasValue)
                                 {
                                     nextAction(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
@@ -225,10 +209,7 @@ namespace DynamicData.Kernel
 
         internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null)
         {
-            lock (_locker)
-            {
-               return  _cache.AsInitialUpdates(filter);
-           }
+               return  _readerWriter.AsInitialUpdates(filter);
         }
         #endregion
 
