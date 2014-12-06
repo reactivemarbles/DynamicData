@@ -5,7 +5,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Operators
 {
-    internal sealed class FastGrouper<TObject, TKey, TGroupKey>
+    internal sealed class Grouper<TObject, TKey, TGroupKey>
     {
         #region fields
 
@@ -99,7 +99,7 @@ namespace DynamicData.Operators
 
         #region Construction
 
-        public FastGrouper(Func<TObject, TGroupKey> groupSelectorKey)
+        public Grouper(Func<TObject, TGroupKey> groupSelectorKey)
         {
             _groupSelectorKey = groupSelectorKey;
         }
@@ -117,7 +117,7 @@ namespace DynamicData.Operators
         {
             //re-evaluate all items in the group
             var items = _itemCache.Select(item => new Change<TObject, TKey>(ChangeReason.Evaluate, item.Key, item.Value.Item));
-            return HandleUpdates(new ChangeSet<TObject, TKey>(items), true);
+            return HandleUpdates2(new ChangeSet<TObject, TKey>(items), true);
         }
 
         private GroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates2(IChangeSet<TObject, TKey> changes, bool isEvaluating = false)

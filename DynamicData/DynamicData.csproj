@@ -129,7 +129,6 @@
     <Compile Include="Kernel\OptionElse.cs" />
     <Compile Include="Kernel\ReaderWriter.cs" />
     <Compile Include="ObservableCache.cs" />
-    <Compile Include="Operators\ComparerOptions.cs" />
     <Compile Include="IIntermediateCache.cs" />
     <Compile Include="IObservableCache.cs" />
     <Compile Include="IPagedChangeSet.cs" />
@@ -153,7 +152,7 @@
     <Compile Include="Kernel\InternalEx.cs" />
     <Compile Include="MissingKeyException.cs" />
     <Compile Include="Operators\Error.cs" />
-    <Compile Include="Operators\FastGrouper.cs" />
+    <Compile Include="Operators\Grouper.cs" />
     <Compile Include="Operators\ManagedGroup.cs" />
     <Compile Include="Operators\IndexCalculator.cs" />
     <Compile Include="Operators\Paginator.cs" />

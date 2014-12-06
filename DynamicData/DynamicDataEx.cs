@@ -2001,7 +2001,7 @@ namespace DynamicData
                 (
                     observer =>
                         {
-                            var grouper = new FastGrouper<TObject, TKey, TGroupKey>(groupSelectorKey);
+                            var grouper = new Grouper<TObject, TKey, TGroupKey>(groupSelectorKey);
 
                             var  groups = source.Select(grouper.Update)
                                 .Where(changes=>changes.Count!=0).Publish();
@@ -2050,7 +2050,7 @@ namespace DynamicData
                     {
 
                         var locker = new object();
-                        var grouper = new FastGrouper<TObject, TKey, TGroupKey>(groupSelectorKey);
+                        var grouper = new Grouper<TObject, TKey, TGroupKey>(groupSelectorKey);
 
                         var groups = source
                             .Synchronize(locker)
