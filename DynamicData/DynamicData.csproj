@@ -169,13 +169,11 @@
     <Compile Include="IQuery.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Kernel\CacheCloner.cs" />
     <Compile Include="Kernel\DistinctChangeSet.cs" />
     <Compile Include="Kernel\IKeySelector.cs" />
     <Compile Include="Kernel\KeySelector.cs" />
     <Compile Include="Kernel\KeySelectorException.cs" />
-    <Compile Include="Operators\Cloner.cs" />
-    <Compile Include="Operators\DynamicDisposer.cs" />
+    <Compile Include="Operators\OnBeingRemoved.cs" />
     <Compile Include="Operators\DynamicSubscriber.cs" />
     <Compile Include="Kernel\Cache.cs">
       <SubType>Code</SubType>
@@ -191,11 +189,11 @@
     <Compile Include="ISourceUpdater.cs" />
     <Compile Include="Kernel\Change.cs" />
     <Compile Include="DynamicDataEx.cs" />
-    <Compile Include="Operators\ChangeableFilterer.cs" />
+    <Compile Include="Operators\DynamicFilter.cs" />
     <Compile Include="Operators\CombineOperator.cs" />
     <Compile Include="Operators\Combiner.cs" />
     <Compile Include="Controllers\FilterController.cs" />
-    <Compile Include="Operators\DefaultFilterer.cs" />
+    <Compile Include="Operators\StaticFilter.cs" />
     <Compile Include="Operators\Sorter.cs" />
     <Compile Include="Operators\DistinctCalculator.cs" />
     <Compile Include="Operators\GroupChangeSet.cs" />

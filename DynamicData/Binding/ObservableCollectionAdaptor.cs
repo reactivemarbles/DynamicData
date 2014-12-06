@@ -15,15 +15,12 @@ namespace DynamicData.Binding
         private bool _loaded;
 
         private readonly Cache<TObject, TKey> _cache = new Cache<TObject, TKey>();
-        private readonly CacheCloner<TObject, TKey> _cloner;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object"/> class.
         /// </summary>
         public ObservableCollectionAdaptor(int refreshThreshold = 25)
         {
             _refreshThreshold = refreshThreshold;
-            _cloner = new CacheCloner<TObject, TKey>(_cache);
         }
 
         /// <summary>
@@ -33,9 +30,9 @@ namespace DynamicData.Binding
         /// <param name="collection">The collection.</param>
         public void Adapt(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
         {
-            _cloner.Clone(changes);
+            _cache.Clone(changes);
 
-            if (changes.Count > _refreshThreshold)
+            if (changes.Count > _refreshThreshold || !_loaded)
             {
                 _loaded = true;
                 using (collection.SuspendNotifications())

@@ -28,32 +28,6 @@ namespace DynamicData.Kernel
             _parallelisationOptions = parallelisationOptions;
         }
 
-        public IEnumerable<TObject> Items
-        {
-            get { return _cache.Items; }
-        }
-
-        public IEnumerable<TKey> Keys
-        {
-            get { return _cache.Keys; }
-        }
-
-        public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues
-        {
-            get { return _cache.KeyValues; }
-        }
-
-        public int Count
-        {
-            get { return _cache.Count; }
-        }
-
-        public Optional<TObject> Lookup(TKey key)
-        {
-            return _cache.Lookup(key);
-        }
-
-
         public IChangeSet<TObject, TKey> Evaluate(IEnumerable<KeyValuePair<TKey,TObject>> items)
         {
             //this is an internal method only so we can be sure there are no duplicate keys in the result
@@ -62,25 +36,19 @@ namespace DynamicData.Kernel
                 {
                     var exisiting = _cache.Lookup(kv.Key);
                     var matches = _filter(kv.Value);
-                    Optional<Change<TObject, TKey>> change = Optional.None<Change<TObject, TKey>>();
-
+                 
                     if (matches)
                     {
                         if (!exisiting.HasValue)
-                        {
-                            change = new Change<TObject, TKey>(ChangeReason.Add, kv.Key, kv.Value);
-                        }
+                           return new Change<TObject, TKey>(ChangeReason.Add, kv.Key, kv.Value);
                     }
                     else
                     {
                         if (exisiting.HasValue)
-                        {
-                            change = new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, exisiting);
-       
-                        }
+                            return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, exisiting);
                    }
 
-                    return change;
+                    return Optional.None<Change<TObject, TKey>>();
                 };
 
             var keyValues = items as KeyValuePair<TKey,TObject>[] ?? items.ToArray();
@@ -89,21 +57,9 @@ namespace DynamicData.Kernel
                              ? keyValues.Parallelise(_parallelisationOptions).Select(factory).SelectValues()
                              : keyValues.Select(factory).SelectValues();
 
-            var collection = new ChangeSet<TObject, TKey>(result);
-            foreach (var update in collection)
-            {
-                switch (update.Reason)
-                {
-                    case ChangeReason.Add:
-                    case ChangeReason.Update:
-                        _cache.AddOrUpdate(update.Current, update.Key);
-                        break;
-                    case ChangeReason.Remove:
-                        _cache.Remove(update.Key);
-                        break;
-                }
-            }
-            return collection;
+            var changes = new ChangeSet<TObject, TKey>(result);
+            _cache.Clone(changes);
+            return changes;
 
         }
         
@@ -126,6 +82,8 @@ namespace DynamicData.Kernel
 
         private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> result)
         {
+            //alas, have to process one item at a time as an item can be included multiple
+            //times in any batch
             var updates = new List<Change<TObject, TKey>>();
             foreach (var item in result)
             {

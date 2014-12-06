@@ -74,11 +74,10 @@ namespace DynamicData.Kernel
         {
             if (changes.Count == 0) return;
 
-            lock (KeyValues)
+            lock (_locker)
             {
                 try
                 {
-
                     _updates.OnNext(changes);
                 }
                 catch (Exception ex)
@@ -143,9 +142,7 @@ namespace DynamicData.Kernel
 
                                 var initial = _readerWriter.Lookup(key);
                                 if (initial.HasValue)
-                                {
                                     nextAction(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
-                                }
                                 
                                 return  _updates.FinallySafe(observer.OnCompleted).Subscribe(changes =>
                                 {
@@ -169,8 +166,7 @@ namespace DynamicData.Kernel
                         lock (_locker)
                         {
                             var initial = GetInitialUpdates();
-                            if (initial.Count > 0)
-                                observer.OnNext(initial);
+                            if (initial.Count > 0) observer.OnNext(initial);
 
                             return _updates.FinallySafe(observer.OnCompleted)
                                         .SubscribeSafe(observer);
@@ -191,7 +187,7 @@ namespace DynamicData.Kernel
                         {
                             lock (_locker)
                             {
-                                var filterer = new DefaultFilterer<TObject, TKey>(filter, parallelisationOptions);
+                                var filterer = new StaticFilter<TObject, TKey>(filter, parallelisationOptions);
                                 var filtered = filterer.Filter(GetInitialUpdates());
                                 if (filtered.Count!=0)
                                     observer.OnNext(filtered);

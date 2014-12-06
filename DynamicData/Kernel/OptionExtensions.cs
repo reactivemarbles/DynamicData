@@ -76,6 +76,20 @@ namespace DynamicData.Kernel
             return source.HasValue ? converter(source.Value) : fallbackConverter();
         }
 
+        /// <summary>
+        /// Converts the specified source.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="converter">The converter.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">converter</exception>
+        public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter)
+        {
+            if (converter == null) throw new ArgumentNullException("converter");
+            return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
+        }
 
 
         /// <summary>
@@ -130,7 +144,7 @@ namespace DynamicData.Kernel
         /// <param name="source">The source.</param>
         /// <param name="selector">The selector.</param>
         /// <returns></returns>
-        public static Optional<T> Lookup<T>(this IEnumerable<T> source, Func<T, bool> selector)
+        public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         {
             var result = source.FirstOrDefault(selector);
             return !Equals(result, null) ? result : Optional.None<T>();

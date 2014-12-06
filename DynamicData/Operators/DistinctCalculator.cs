@@ -12,13 +12,11 @@ namespace DynamicData.Operators
         private readonly object _locker = new object();
         private readonly Func<TObject, TValue> _valueSelector;
         private readonly HashSet<TValue> _values = new HashSet<TValue>();
-        private readonly  CacheCloner<TObject, TKey> _cloner;
 
         public DistinctCalculator(Func<TObject, TValue> valueSelector, ParallelisationOptions parallelisationOptions=null)
         {
             _parallelisationOptions = parallelisationOptions ?? new ParallelisationOptions();
             _valueSelector = valueSelector;
-            _cloner = new CacheCloner<TObject, TKey>(_cache);
         }
 
 
@@ -27,7 +25,7 @@ namespace DynamicData.Operators
             DistinctChangeSet<TValue> changes;
             lock (_locker)
             {
-                _cloner.Clone(updates);
+                _cache.Clone(updates);
 
                 var current = _cache.Items.Parallelise(_parallelisationOptions).Select(i => _valueSelector(i)).Distinct().ToHashSet();
                 HashSet<TValue> previous = _values;

@@ -331,7 +331,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// ONly includes the update when the condition is met.
+        /// Only includes the update when the condition is met.
         /// The first parameter in the ignore function is the current value and the second parameter is the previous value
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -434,21 +434,56 @@ namespace DynamicData
                         var result = published.SubscribeSafe(observer);
                         var connected = published.Connect();
 
-                        return new SingleAssignmentDisposable
-                        {
-                            Disposable = Disposable.Create(() =>
+                        return Disposable.Create(() =>
                             {
                                 connected.Dispose();
                                 subscriptions.Dispose();
                                 result.Dispose();
 
-                            })
-                        };
+                            });
                     });
         }
 
         /// <summary>
-        /// Disposes each item when required.
+        /// Callback for each item as and when it is being removed from the stream
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="removeAction">The remove action.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// removeAction
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (removeAction == null) throw new ArgumentNullException("removeAction");
+            return Observable.Create<IChangeSet<TObject, TKey>>
+                (
+                    observer =>
+                    {
+                        var disposer = new OnBeingRemoved<TObject, TKey>(t =>
+                        {
+                            var d = t as IDisposable;
+                            if (d != null) d.Dispose();
+                        });
+                        var subscriber = source
+                            .Do(disposer.RegisterForRemoval, observer.OnError)
+                            .SubscribeSafer(observer);
+
+                        return Disposable.Create(() =>
+                        {
+                            subscriber.Dispose();
+                            disposer.Dispose();
+                        });
+                    });
+        }
+
+        /// <summary>
+        /// Disposes each item when no longer required.
         /// 
         /// NB: Individual items are disposed when removed or replaced. All items
         /// are disposed when the stream is disposed
@@ -461,24 +496,12 @@ namespace DynamicData
         /// <returns>A continuation of the original stream</returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
- 
         {
-            if (source == null) throw new ArgumentNullException("source");
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        var disposer = new DynamicDisposer<TObject, TKey>();
-                        var subscriber = source
-                            .Do(disposer.SetForDisposable, observer.OnError)
-                            .SubscribeSafer(observer);
-
-                        return Disposable.Create(() =>
-                                                     {
-                                                         subscriber.Dispose();
-                                                         disposer.Dispose();
-                                                     });
-                    });
+            return source.OnItemRemoved(t =>
+                                        {
+                                            var d = t as IDisposable;
+                                            if (d != null) d.Dispose();
+                                        });
         }
 
 
@@ -497,8 +520,7 @@ namespace DynamicData
          {
              if (reasons == null) throw new ArgumentNullException("reasons");
              if (!reasons.Any()) throw new ArgumentException("Must select at least one reason");
-
-             var hashed = new HashSet<ChangeReason>(reasons);
+            var hashed = new HashSet<ChangeReason>(reasons);
 
              return source.Select(updates =>
                  {
@@ -575,8 +597,7 @@ namespace DynamicData
             return source
                 .Buffer(timeSpan, scheduler ?? Scheduler.Default)
                 .Where(x=>x.Count!=0)
-                .Select(updates => new ChangeSet<TObject, TKey>(updates.SelectMany(u => u)))
-                ;
+                .Select(updates => new ChangeSet<TObject, TKey>(updates.SelectMany(u => u)));
 
         }
 
@@ -918,24 +939,17 @@ namespace DynamicData
 
 
 
-        internal static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, 
-            ICache<TObject,TKey> cache)
+        internal static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ICache<TObject,TKey> cache)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (cache == null) throw new ArgumentNullException("cache");
             
             return Observable.Create<IChangeSet<TObject, TKey>>
                                 (
-                                    observer =>
-                                    {
-                                        var cloner = new Cloner<TObject, TKey>(cache);
-                                        return source
-                                            .Select(cloner.Update)
-                                            .NotEmpty()
-                                            .SubscribeSafer(observer);
-
-                                    });
-
+                                    observer => source
+                                        .Do(cache.Clone)
+                                        .NotEmpty()
+                                        .SubscribeSafe(observer));
                         }
 
         internal static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
@@ -945,17 +959,15 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var cloner = new Cloner<TObject, TKey>();
+                        var cache = new Cache<TObject, TKey>();
                         return source
-                            .Select(cloner.Update)
-                            .NotEmpty()
-                            .SubscribeSafer(observer);
+                             .NotEmpty()
+                             .Do(cache.Clone)
+                             .SubscribeSafe(observer);
 
                     });
 
         }
-
-
 
         #endregion
 
@@ -1165,13 +1177,7 @@ namespace DynamicData
                             var result = sizeLimiter.Update(changes);
 
                             var removes = result.Where(c => c.Reason == ChangeReason.Remove);
-                            root.BatchUpdate(updater =>
-                            {
-                                removes.ForEach(c => updater.Remove(c.Key));
-                            });
-
-                            //TODO: Re-implement UniqueChangeSet - will prevent items
-                            //being added and removed on the same changeset
+                            root.BatchUpdate(updater => removes.ForEach(c => updater.Remove(c.Key)));
                             return result;
                         })
                         .FinallySafe(observer.OnCompleted)
@@ -1224,8 +1230,7 @@ namespace DynamicData
         }
 
         #endregion
-
-
+        
         #region  Filter
 
         /// <summary>
@@ -1263,14 +1268,12 @@ namespace DynamicData
                 (
                     observer =>
                         {
-                            var filterer = new DefaultFilterer<TObject, TKey>(filter, parallelisationOptions ?? new ParallelisationOptions());
-                            var subscriber = source
+                            var filterer = new StaticFilter<TObject, TKey>(filter, parallelisationOptions ?? new ParallelisationOptions());
+                            return source
                                 .Select(filterer.Filter)
                                 .NotEmpty()
                                  .FinallySafe(observer.OnCompleted)
                                 .SubscribeSafer(observer);
-
-                            return Disposable.Create(() =>{subscriber.Dispose();});
                         });
         }
 
@@ -1297,20 +1300,17 @@ namespace DynamicData
                 (
                     observer =>
                         {
-                            var filterer = new ChangeableFilterer<TObject, TKey>( parallelisationOptions ?? new ParallelisationOptions());
-
-                            var locker = new Object();
+                            var filterer = new DynamicFilter<TObject, TKey>( parallelisationOptions ?? new ParallelisationOptions());
+                            var locker = new object();
 
                             var filter = filterController.FilterChanged.Synchronize(locker).Select(filterer.ApplyFilter);
                             var evaluate = filterController.EvaluateChanged.Synchronize(locker).Select(filterer.Evaluate);
                             var data = source.Synchronize(locker).Select(filterer.Update);
 
-                            var subscriber = filter.Merge(evaluate).Merge(data)
+                            return filter.Merge(evaluate).Merge(data)
                                 .NotEmpty()
                                 .FinallySafe(observer.OnCompleted)
                                 .SubscribeSafer(observer);
-
-                            return Disposable.Create(subscriber.Dispose);
                         });
         }
 
@@ -1387,7 +1387,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var sorter = new Sorter<TObject, TKey>(sortOptimisations,comparer);
+                        var sorter = new Sorter<TObject, TKey>(sortOptimisations, comparer, resetThreshold);
                         var locker = new object();
                         return source.Synchronize(locker)
                             .Select(sorter.Sort)
@@ -1423,14 +1423,14 @@ namespace DynamicData
                         var locker = new object();
                       
                         var comparerChanged = sortController
-                            .ComparerChanged.Synchronize(locker).Select(sorter.Sort);
+                            .ComparerChanged
+                            .Synchronize(locker).Select(sorter.Sort);
 
                         var sortAgain = sortController
                             .SortAgain
                             .Synchronize(locker).Select(_ => sorter.Sort());
 
                         var dataChanged = source.Synchronize(locker)
-                                       // .Unique()
                                         .Select(sorter.Sort);
 
                         return comparerChanged
@@ -1561,7 +1561,7 @@ namespace DynamicData
                                 observer.OnCompleted();
                             }
 
-                            return Disposable.Create(() => subscriber.Dispose());
+                            return subscriber;
                         });
         }
 
@@ -1724,15 +1724,10 @@ namespace DynamicData
                     observer =>
                     {
                         var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), errorHandler);
-                        var subscriber = source
-                            .Select(updates =>
-                            {
-                                return transformer.Transform(updates, transformFactory);
-                            })
+                        return source
+                            .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
                             .SubscribeSafer(observer);
-
-                        return Disposable.Create(() => subscriber.Dispose());
                     });
         }
 
@@ -1769,13 +1764,11 @@ namespace DynamicData
                     observer =>
                     {
                         var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), errorHandler);
-                        var subscriber = source
+                        return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
                             .Finally(observer.OnCompleted)
                             .SubscribeSafer(observer);
-
-                        return Disposable.Create(() => subscriber.Dispose());
                     });
         }
 
@@ -1810,13 +1803,11 @@ namespace DynamicData
                     observer =>
                     {
                         var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), null);
-                        var subscriber = source
+                        return source
                             .Select(updates=> transformer.Transform(updates, transformFactory))
                             .NotEmpty()
                             .Finally(observer.OnCompleted)
                             .SubscribeSafer(observer);
-                        
-                        return Disposable.Create(() => subscriber.Dispose());
                     });
         }
 
@@ -1843,25 +1834,15 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException("source");
             if (transformFactory == null) throw new ArgumentNullException("transformFactory");
 
-
-         //   var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), null);
-       //     return source.Select(updates => transformer.Transform(updates, transformFactory)).NotEmpty();
-             //  .SubscribeSafer(observer);
-
             return Observable.Create<IChangeSet<TDestination, TKey>>
                 (
                     observer =>
                     {
                         var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), null);
-                        var subscriber = source
-                            .Select(updates =>
-                                {
-                                    return transformer.Transform(updates, transformFactory);
-                                })
+                        return source
+                            .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
                             .SubscribeSafer(observer);
-
-                        return Disposable.Create(() => subscriber.Dispose());
                     });
         }
         
@@ -2227,7 +2208,7 @@ namespace DynamicData
                                 observer.OnCompleted();
                             }
                         },
-                        ex => observer.OnError(ex), () => observer.OnCompleted());
+                        observer.OnError, observer.OnCompleted);
 
                     var connected = published.Connect();
 
@@ -2302,10 +2283,9 @@ namespace DynamicData
                                 observer.OnCompleted();
                             }
                         },
-                        ex => observer.OnError(ex), () => observer.OnCompleted());
+                        observer.OnError, observer.OnCompleted);
 
                     var connected = published.Connect();
-
                     var subscriber = published.SubscribeSafe(observer);
 
                     return Disposable.Create(() =>

@@ -4,6 +4,12 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
+    public interface IConnectableCache<TObject, TKey>
+    {
+    
+    }
+
+
     /// <summary>
     /// A cache for observing and querying stateful data.
     /// </summary>
@@ -25,7 +31,7 @@ namespace DynamicData
         IObservable<IChangeSet<TObject, TKey>> Connect();
 
         /// <summary>
-        /// Returns a filtered stream of cache changes preceeded with the initital filtered state
+        /// Returns a filtered stream of cache changes preceeded with the initial filtered state
         /// </summary>
         /// <param name="filter">The filter.</param>
         /// <param name="parallelisationOptions">Option to parallise the filter operation  Only applies if the filter parameter is not null</param>

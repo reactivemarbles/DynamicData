@@ -53,8 +53,7 @@ namespace DynamicData.Operators
             lock (_locker)
             {
                 //update cache for the individual source
-                var updater = new CacheCloner<TObject, TKey>(cache);
-                updater.Clone(updates);
+                cache.Clone(updates);
 
                 //update combined 
                 notifications = UpdateCombined(updates);
@@ -130,11 +129,6 @@ namespace DynamicData.Operators
                             else if (!ReferenceEquals(firstOne,cached.Value))
                             {
                                 updater.AddOrUpdate(firstOne,key);
-                            }
-                            else
-                            {
-                                if (contained)
-                                    updater.Remove(key);
                             }
                         }
                         else

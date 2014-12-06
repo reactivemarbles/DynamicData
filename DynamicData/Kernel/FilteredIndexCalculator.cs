@@ -110,6 +110,8 @@ namespace DynamicData.Operators
                         var old = previousList.IndexOf(current);
                         int newposition = GetInsertPositionLinear(previousList, current, currentItems.Comparer);
 
+                        if (old == -1) continue;
+
                         if (old < newposition)
                         {
                             newposition--;

@@ -22,6 +22,49 @@ namespace DynamicData
     public static class ObservableCache
     {
         /// <summary>
+        /// Populates a source into the specified cache.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="detination">The detination.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// detination
+        /// </exception>
+        public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> detination)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (detination == null) throw new ArgumentNullException("detination");
+
+            return source.Subscribe(changes => detination.BatchUpdate(updater => updater.Update(changes)));
+        }
+
+        /// <summary>
+        /// Populates a source into the specified cache
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="detination">The detination.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// detination
+        /// </exception>
+        public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> detination)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (detination == null) throw new ArgumentNullException("detination");
+
+            return source.Subscribe(changes => detination.BatchUpdate(updater => updater.Update(changes)));
+        }
+
+
+        /// <summary>
         /// Populate a cache from an obserable stream.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -37,7 +80,6 @@ namespace DynamicData
         public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<IEnumerable<TObject>> observable)
         {
             if (source == null) throw new ArgumentNullException("source");
-
             return observable.Subscribe(source.AddOrUpdate);
         }
         /// <summary>
@@ -203,8 +245,6 @@ namespace DynamicData
                         {
                             //remove from cache and notify which items have been auto removed
                             var keyValuePairs = toRemove as KeyValuePair<TKey, TObject>[] ?? toRemove.ToArray();
-                         
-                            
                             source.Remove(keyValuePairs.Select(kv => kv.Key));
                             observer.OnNext(keyValuePairs);
                         }
