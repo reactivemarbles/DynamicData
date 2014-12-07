@@ -1,8 +1,6 @@
 DynamicData
 ===========
 
-Dynamic data for dotNet
-
 Bring the power of Rx to collections using Dynamic Data. 
 
 Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.

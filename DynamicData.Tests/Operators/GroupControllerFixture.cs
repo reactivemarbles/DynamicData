@@ -24,8 +24,7 @@ namespace DynamicData.Tests.Operators
         private ISourceCache<Person, string> _source;
         private GroupController  _controller;
         private IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
-
-
+        
         [SetUp]
         public void Initialise()
         {
@@ -38,7 +37,6 @@ namespace DynamicData.Tests.Operators
         [Test]
         public void RegroupRecaluatesGroupings()
         {
-
             var p1 = new Person("P1", 10);
             var p2 = new Person("P2", 15);
             var p3 = new Person("P3", 30);

@@ -1,11 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FA1A9CD2-C275-49EB-9ABA-8F6F5BEDD7AF}"
-	ProjectSection(SolutionItems) = preProject
-		ToDo.txt = ToDo.txt
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicData", "DynamicData\DynamicData.csproj", "{1A16225E-1ADF-4805-B3FA-9B065B1A779A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicData.Tests", "DynamicData.Tests\DynamicData.Tests.csproj", "{4E7ED660-E8AA-483A-AD52-00C1AFCB1E7C}"

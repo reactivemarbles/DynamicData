@@ -2048,7 +2048,6 @@ namespace DynamicData
                 (
                     observer =>
                     {
-
                         var locker = new object();
                         var grouper = new Grouper<TObject, TKey, TGroupKey>(groupSelectorKey);
 
