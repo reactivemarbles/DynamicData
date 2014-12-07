@@ -117,7 +117,7 @@ namespace DynamicData.Operators
         {
             //re-evaluate all items in the group
             var items = _itemCache.Select(item => new Change<TObject, TKey>(ChangeReason.Evaluate, item.Key, item.Value.Item));
-            return HandleUpdates(new ChangeSet<TObject, TKey>(items), true);
+            return HandleUpdates2(new ChangeSet<TObject, TKey>(items), true);
         }
 
         private GroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates2(IChangeSet<TObject, TKey> changes, bool isEvaluating = false)
@@ -243,13 +243,21 @@ namespace DynamicData.Operators
                 }
             }
 
-            //iii) Adds which has resulted from an evealute (i.e. where the grouped item has changed inline)
+            ////iii) Adds which has resulted from an evalute (i.e. where the grouped item has changed inline)
+            //var addedDueToInlineChanges = regularupdates.Where(u => u.Reason == ChangeReason.Evaluate)
+            //        .Select(iwg => new { Current = iwg, Previous = _itemCache.Lookup(iwg.Key) })
+            //        .Where(x => x.Previous.HasValue && !Equals(x.Current.GroupKey, x.Previous.Value.GroupKey))
+            //        .GroupBy(x => x.Previous.Value.GroupKey)
+            //        .ToList();
+
+            ////iii) Adds which has resulted from an evalute (i.e. where the grouped item has changed inline)
             var addedDueToInlineChanges = regularupdates
                 .Where(u => u.Reason == ChangeReason.Evaluate)
                 .GroupBy(iwg => iwg.GroupKey);
 
             foreach (var item in addedDueToInlineChanges)
             {
+
                 var group = item;
                 var cachewithaddflag = GetCache(group.Key);
                 var cache = cachewithaddflag.Item1;
