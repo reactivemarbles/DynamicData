@@ -4,19 +4,13 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-    public interface IConnectableCache<TObject, TKey>
-    {
-    
-    }
-
-
     /// <summary>
-    /// A cache for observing and querying stateful data.
+    /// A cache for observing and querying stateful collection data.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public interface IObservableCache<TObject, TKey> : IDisposable
-    {      
+    public interface IConnectableCache<TObject, TKey>
+    {
         /// <summary>
         /// Returns an observable of any changes which match the specified key.  The sequence starts with the inital item in the cache (if there is one).
         /// </summary>
@@ -37,6 +31,16 @@ namespace DynamicData
         /// <param name="parallelisationOptions">Option to parallise the filter operation  Only applies if the filter parameter is not null</param>
         /// <returns></returns>
         IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions = null);
+    }
+
+
+    /// <summary>
+    /// A cache for observing and querying stateful data.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    public interface IObservableCache<TObject, TKey> :IConnectableCache<TObject, TKey>,  IDisposable
+    {      
 
         /// <summary>
         /// Gets the keys

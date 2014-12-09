@@ -14,11 +14,13 @@ namespace DynamicData
     {
 
         /// <summary>
-        /// Fast lookup of an object matching specified key.
+        /// Lookup a single item using the specified key.
         /// </summary>
+        /// <remarks>
+        /// Fast indexed lookup
+        /// </remarks>
         /// <param name="key">The key.</param>
-        /// <returns>An optional value</returns>
-        Optional<TObject> Lookup(TKey key);
+         Optional<TObject> Lookup(TKey key);
 
 
         /// <summary>

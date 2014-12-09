@@ -131,13 +131,21 @@ namespace DynamicData.Kernel
         
         #region Equality members
 
+        public static bool operator ==(Optional<T> left, Optional<T> right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Optional<T> left, Optional<T> right)
+        {
+            return !left.Equals(right);
+        }
+
         public bool Equals(Optional<T> other)
         {
             if (!HasValue) return !other.HasValue;
-
             if (!other.HasValue) return false;
-
-            return EqualityComparer<T>.Default.Equals(_value, other._value);
+            return _hasValue.Equals(other._hasValue) && EqualityComparer<T>.Default.Equals(_value, other._value);
         }
 
         public override bool Equals(object obj)
@@ -157,7 +165,7 @@ namespace DynamicData.Kernel
         {
             unchecked
             {
-                return (EqualityComparer<T>.Default.GetHashCode(_value) * 397) ^ _hasValue.GetHashCode();
+                return (_hasValue.GetHashCode()*397) ^ EqualityComparer<T>.Default.GetHashCode(_value);
             }
         }
 

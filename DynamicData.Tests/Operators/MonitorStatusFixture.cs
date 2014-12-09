@@ -47,11 +47,16 @@ namespace DynamicData.Tests.Operators
             bool invoked = false;
             var status = ConnectionStatus.Pending;
             var subject = new Subject<int>();
+            Exception exception;
+
             var subscription = subject.MonitorStatus().Subscribe(s =>
             {
                 invoked = true;
                 status = s;
-            });
+            }, ex =>
+               {
+                   exception = ex;
+               });
 
             subject.OnError(new Exception("Test"));
             subscription.Dispose();

@@ -180,21 +180,6 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException("source");
             return source.SubscribeSafe(observer);
-            return source.Subscribe(updates =>
-            {
-                try
-                {
-                    observer.OnNext(updates);
-                }
-                catch (Exception ex)
-                {
-                    observer.OnError(ex);
-                }
-            }, ex =>
-            {
-                observer.OnError(ex);
-            }, observer.OnCompleted);
-
         }
 
 
@@ -214,10 +199,11 @@ namespace DynamicData
                     var statusSubject = new Subject<ConnectionStatus>();
                     var status = ConnectionStatus.Pending;
 
-                    Action error = () =>
+                    Action<Exception> error = (ex) =>
                         {
                             status = ConnectionStatus.Errored;
                             statusSubject.OnNext(status);
+                            observer.OnError(ex);
                         };
 
                     Action completion = () =>
@@ -234,7 +220,7 @@ namespace DynamicData
                         statusSubject.OnNext(status);
                     };
 
-                    var monitor = source.Subscribe(_ => updated(), ex=>error(),completion);
+                    var monitor = source.Subscribe(_ => updated(), error,completion);
 
                     var subscriber = statusSubject
                                 .StartWith(status)
@@ -1000,6 +986,26 @@ namespace DynamicData
         }
 
 
+        /// <summary>
+        /// Automatically removes items from the stream on the next poll after the time specified by
+        /// the time selector elapses 
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The cache.</param>
+        /// <param name="timeSelector">The time selector.  Return null if the item should never be removed</param>
+        /// <param name="pollingInterval">The polling interval.  if this value is specified,  items are expired on an interval.
+        /// This will result in a loss of accuracy of the time which the item is expired but is less computationally expensive.
+        /// </param>
+        /// <returns>An observable of anumerable of the kev values which has been removed</returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// timeSelector</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> AutoRemove<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval)
+        {
+            return AutoRemove<TObject, TKey>(source, timeSelector, pollingInterval, null);
+        }
 
         /// <summary>
         /// Automatically removes items from the stream on the next poll after the time specified by
