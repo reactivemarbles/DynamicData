@@ -343,7 +343,53 @@ namespace DynamicData
             }).NotEmpty();
         }
 
+        /// <summary>
+        /// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
+        /// when it is no longer part of the stream.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="observableSelector">The observable selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// observableSelector</exception>
+        public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (observableSelector == null) throw new ArgumentNullException("observableSelector");
 
+            return Observable.Create<TDestination>
+                (
+                    observer => source.SubscribeMany(t => observableSelector(t).SubscribeSafe(observer))
+                        .Subscribe());
+        }
+
+        /// <summary>
+        /// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
+        /// when it is no longer part of the stream.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="observableSelector">The observable selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// observableSelector</exception>
+        public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject,TKey, IObservable<TDestination>> observableSelector)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (observableSelector == null) throw new ArgumentNullException("observableSelector");
+
+            return Observable.Create<TDestination>
+                (
+                    observer => source.SubscribeMany((t,v) => observableSelector(t,v).SubscribeSafe(observer))
+                        .Subscribe());
+        }
 
         /// <summary>
         /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed
@@ -371,8 +417,6 @@ namespace DynamicData
                     observer =>
                     {
                         var published = source.Publish();
-
-                        //syphon stream and wrap in auto disposing container
                         var subscriptions = published
                                             .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory),
                                                     parallelisationOptions ?? ParallelisationOptions.None)

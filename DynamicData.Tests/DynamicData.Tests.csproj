@@ -112,6 +112,8 @@
     <Compile Include="Operators\GroupControllerForFilteredItemsFixture.cs" />
     <Compile Include="Operators\IgnoreUpdateFixture.cs" />
     <Compile Include="Operators\IncludeUpdateFixture.cs" />
+    <Compile Include="Operators\MergeManyFixture.cs" />
+    <Compile Include="Operators\MergeManyWithKeyOverloadFixture.cs" />
     <Compile Include="Operators\SizeExpiryFixture.cs" />
     <Compile Include="Operators\SortFixture.cs" />
     <Compile Include="Operators\CacheOnDemandFixture.cs" />

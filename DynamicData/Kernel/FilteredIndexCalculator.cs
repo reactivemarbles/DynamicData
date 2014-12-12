@@ -108,10 +108,12 @@ namespace DynamicData.Operators
                     {
                         var current = new KeyValuePair<TKey,TObject>(u.Key, u.Current);
                         var old = previousList.IndexOf(current);
-                        int newposition = GetInsertPositionLinear(previousList, current, currentItems.Comparer);
 
                         if (old == -1) continue;
 
+                        int newposition = GetInsertPositionLinear(previousList, current, currentItems.Comparer);
+
+                       
                         if (old < newposition)
                         {
                             newposition--;
