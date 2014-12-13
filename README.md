@@ -4,7 +4,7 @@ Bring the power of Rx to collections using Dynamic Data.
 
 ### What is it?
 
-A comprehensive library of reactive extensions, which are used to manage in-memory collections. As the source data changes operators self-maintain.
+A comprehensive library of reactive extensions, which are used to manage in-memory collections. As the source collection changes the operators receive a changeset which enables them to self-maintain.
 
 ### Why use it?
 
@@ -24,15 +24,17 @@ The following snippet connects to a stream of live trades, creates a proxy for e
 
 ```csharp
 //some code to maintain the source (not shown)
- var myoperation = mySource.Connect() 
-                .Filter(trade=>trade.Status == TradeStatus.Live) 
-                .Transform(trade => new TradeProxy(trade))
-                .Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
-                .DisposeMany()
-                 //more operations...
-                .Subscribe(changeSet=>//do something with the result)
+var myoperation = mySource.Connect() 
+            .Filter(trade=>trade.Status == TradeStatus.Live) 
+            .Transform(trade => new TradeProxy(trade))
+            .Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
+            .DisposeMany()
+             //more operations...
+            .Subscribe(changeSet=>//do something with the result)
 ```
 Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
+
+There is so much more...
 
 ### Ok I'll give it a go
 
