@@ -8,7 +8,7 @@ A comprehensive library of reactive extensions, which are used to manage in-memo
 
 ### Why use it?
 
-There are over 40 linq extensions which enable filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal to name a few.
+There are over 40 linq extensions which enable filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management to name a few.
 
 It is no exageration to say it saves thousands of lines of code.
 
@@ -32,7 +32,7 @@ The following snippet connects to a stream of live trades, creates a proxy for e
                  //more operations...
                 .Subscribe(changeSet=>//do something with the result)
 ```
-Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures and items are disposed when no longer part of the stream.
+Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
 
 ### Ok I'll give it a go
 
