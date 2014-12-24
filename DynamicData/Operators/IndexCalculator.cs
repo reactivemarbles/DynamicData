@@ -48,9 +48,8 @@ namespace DynamicData.Operators
         {
             //for the first batch of changes may have arrived before the comparer was set.
             //therefore infer the first batch of changes from the cache
-            var sorted = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
-            _list.AddRange(sorted);
-            var initialItems = sorted.Select((t,index) => new Change<TObject, TKey>(ChangeReason.Add, t.Key, t.Value,index));
+            _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
+            var initialItems = _list.Select((t, index) => new Change<TObject, TKey>(ChangeReason.Add, t.Key, t.Value, index));
             return new ChangeSet<TObject, TKey>(initialItems);
         }
 
@@ -69,11 +68,7 @@ namespace DynamicData.Operators
         public IChangeSet<TObject, TKey> ChangeComparer(KeyValueComparer<TObject, TKey> comparer)
         {
             _comparer = comparer;
-
-            var sorted = _list.OrderBy(kv => kv, _comparer).ToList();
-            _list.Clear();
-            _list.AddRange(sorted);
-
+            _list = _list.OrderBy(kv => kv, _comparer).ToList();
            return ChangeSet<TObject, TKey>.Empty;
         }
 

@@ -15,8 +15,6 @@ namespace DynamicData.Operators
 {
     internal class Sorter<TObject, TKey>
     {
-        #region Fields
-
         private readonly Cache<TObject, TKey> _cache = new Cache<TObject, TKey>();
         private readonly IntermediateUpdater<TObject, TKey> _updater;
         private readonly SortOptimisations _optimisations;
@@ -27,11 +25,7 @@ namespace DynamicData.Operators
         private IKeyValueCollection<TObject, TKey> _sorted = new KeyValueCollection<TObject, TKey>();
         private bool _haveReceivedData = false;
         private bool _initialised = false;
-       private IndexCalculator<TObject, TKey> _calculator;
-
-        #endregion
-
-        #region Construction
+        private IndexCalculator<TObject, TKey> _calculator;
 
         public Sorter(SortOptimisations optimisations,  
             IComparer<TObject> comparer=null,
@@ -42,10 +36,6 @@ namespace DynamicData.Operators
             _updater = new IntermediateUpdater<TObject, TKey>(_cache);
             _comparer = new KeyValueComparer<TObject, TKey>(comparer);
         }
-
-        #endregion
-
-        #region Sorting
 
 
         /// <summary>
@@ -176,7 +166,5 @@ namespace DynamicData.Operators
             _sorted = new KeyValueCollection<TObject, TKey>(_calculator.List, _comparer, sortReason, _optimisations);
             return new SortedChangeSet<TObject, TKey>(_sorted, changeSet);
         }
-
-        #endregion
     }
 }

@@ -26,8 +26,7 @@ namespace DynamicData
         }
         
         #region Delegated Members
-
-
+        
 
         /// <summary>
         /// Add, update and remove api via an action method. Enables the consumer to perform queries and updates

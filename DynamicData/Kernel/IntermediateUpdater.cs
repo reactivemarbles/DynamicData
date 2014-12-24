@@ -33,7 +33,7 @@ namespace DynamicData.Kernel
 
         public Optional<TObject> Lookup(TKey key)
         {
-            Optional<TObject> item = _cache.Lookup(key);
+            var item = _cache.Lookup(key);
             return item.HasValue ? item.Value : Optional.None<TObject>();
         }
 
@@ -61,15 +61,12 @@ namespace DynamicData.Kernel
 
         public void AddOrUpdate(TObject item, TKey key)
         {
-            Optional<TObject> previous = _cache.Lookup(key);
+            var previous = _cache.Lookup(key);
             _cache.AddOrUpdate(item, key);
             _queue.Add(previous.HasValue
                                ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
                                : new Change<TObject, TKey>(ChangeReason.Add, key, item));
         }
-
-        #region Evaluate
-
 
         public void Evaluate()
         {
@@ -84,15 +81,12 @@ namespace DynamicData.Kernel
 
         public void Evaluate(TKey key)
         {
-            Optional<TObject> existing = _cache.Lookup(key);
+            var existing = _cache.Lookup(key);
             if (existing.HasValue)
-            {
                 _queue.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, existing.Value));
-            }
+            
         }
 
-
-        #endregion
 
         public void Remove(IEnumerable<TObject> items, Func<TObject, TKey> keySelector)
         {
@@ -109,7 +103,7 @@ namespace DynamicData.Kernel
 
         public void Remove(TKey key)
         {
-            Optional<TObject> existing = _cache.Lookup(key);
+            var existing = _cache.Lookup(key);
             if (existing.HasValue)
             {
                 _queue.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
@@ -128,12 +122,12 @@ namespace DynamicData.Kernel
         {
             get { return _cache.Count; }
         }
-        
 
-        public void Update(IChangeSet<TObject, TKey> updates)
+
+        public void Update(IChangeSet<TObject, TKey> changes)
         {
-            if (updates == null) throw new ArgumentNullException("updates");
-            foreach (var item in updates)
+            if (changes == null) throw new ArgumentNullException("changes");
+            foreach (var item in changes)
             {
                 switch (item.Reason)
                 {
@@ -144,11 +138,22 @@ namespace DynamicData.Kernel
                         }
                         break;
                     case ChangeReason.Remove:
+                    {
+                        var existing = _cache.Lookup(item.Key);
+                        if (existing.HasValue)
+                        {
+                            _queue.Add(item);
+                            _cache.Remove(item.Key);
+                        }
+                    }
                         Remove(item.Key);
                         break;
                     case ChangeReason.Evaluate:
-                        Evaluate(item.Key);
+                    {
+                        var existing = _cache.Lookup(item.Key);
+                        if (existing.HasValue) _queue.Add(item);
                         break;
+                    }
                 }
             }
         }

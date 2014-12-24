@@ -65,7 +65,7 @@ namespace DynamicData.Controllers
         ///     Evaluates the filter for items specified by the item selector.
         /// </summary>
         /// <param name="itemSelector">The item selector.</param>
-        public void EvaluateSelection(Func<T, bool> itemSelector)
+        public void Reevaluate(Func<T, bool> itemSelector)
         {
             if (itemSelector == null) throw new ArgumentNullException("itemSelector");
             _reevaluteSubject.OnNext(itemSelector);

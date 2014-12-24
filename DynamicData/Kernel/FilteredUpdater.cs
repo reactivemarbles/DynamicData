@@ -127,7 +127,7 @@ namespace DynamicData.Kernel
                         if (exisiting.HasValue)
                         {
                             _cache.Remove(u.Key);
-                            change = new Change<TObject, TKey>(ChangeReason.Remove, key, u.Current, exisiting);
+                            change = u; //new Change<TObject, TKey>(ChangeReason.Remove, key, u.Current, exisiting);
                         }
 
                         break;

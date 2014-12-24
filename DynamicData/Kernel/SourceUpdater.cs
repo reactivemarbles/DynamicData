@@ -36,7 +36,7 @@ namespace DynamicData.Kernel
         
         public Optional<TObject> Lookup(TKey key)
         {
-            Optional<TObject> item = _cache.Lookup(key);
+            var item = _cache.Lookup(key);
             return item.HasValue ? item.Value : Optional.None<TObject>();
         }
 
@@ -53,10 +53,21 @@ namespace DynamicData.Kernel
 
             items.ForEach(AddOrUpdate);
         }
+
+
         
         public void AddOrUpdate(TObject item)
         {
             TKey key = _keySelector.GetKey(item);
+            var previous = _cache.Lookup(key);
+            _queue.Add(previous.HasValue
+                               ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
+                               : new Change<TObject, TKey>(ChangeReason.Add, key, item));
+            _cache.AddOrUpdate(item, key);
+        }
+
+        public void AddOrUpdate(TObject item, TKey key)
+        {
             var previous = _cache.Lookup(key);
             _queue.Add(previous.HasValue
                                ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
@@ -88,18 +99,16 @@ namespace DynamicData.Kernel
             TKey key = _keySelector.GetKey(item);
             var existing = _cache.Lookup(key);
             if (existing.HasValue)
-            {
                 _queue.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, item));
-            }
+          
         }
 
         public void Evaluate(TKey key)
         {
             var existing = _cache.Lookup(key);
             if (existing.HasValue)
-            {
                 _queue.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, existing.Value));
-            }
+  
         }
 
         public void Remove(IEnumerable<TObject> items)
@@ -122,12 +131,10 @@ namespace DynamicData.Kernel
 
         public void Remove(TKey key)
         {
-            Optional<TObject> existing = _cache.Lookup(key);
-            if (existing.HasValue)
-            {
-                _queue.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
-                _cache.Remove(key);
-            }
+            var existing = _cache.Lookup(key);
+            if (!existing.HasValue) return;
+            _queue.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
+            _cache.Remove(key);
         }
 
 
@@ -160,15 +167,25 @@ namespace DynamicData.Kernel
                     case ChangeReason.Update:
                     case ChangeReason.Add:
                         {
-                            AddOrUpdate(item.Current);
+                            AddOrUpdate(item.Current, item.Key);
                         }
                         break;
                     case ChangeReason.Remove:
-                        Remove(item.Current);
+                    {
+                        var existing = _cache.Lookup(item.Key);
+                        if (existing.HasValue)
+                        {
+                            _queue.Add(item);
+                            _cache.Remove(item.Key);
+                        }
                         break;
+                    }
                     case ChangeReason.Evaluate:
-                        Evaluate(item.Current);
+                    {
+                        var existing = _cache.Lookup(item.Key);
+                        if (existing.HasValue) _queue.Add(item);
                         break;
+                    }
                 }
             }
         }
