@@ -19,7 +19,7 @@ namespace DynamicData.Kernel
 
         private readonly IDisposable _disposer;
         private readonly object _locker = new object();
-        private readonly ISubject<IChangeSet<TObject, TKey>> _updates = new Subject<IChangeSet<TObject, TKey>>();
+        private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
         private readonly IReaderWriter<TObject, TKey> _readerWriter;
 
         #endregion
@@ -31,15 +31,15 @@ namespace DynamicData.Kernel
             _readerWriter = new ReaderWriter<TObject, TKey>();
 
             var loader = source.Synchronize(_locker)
-                            .FinallySafe(_updates.OnCompleted)
+                            .FinallySafe(_changes.OnCompleted)
                             .Subscribe(changes => _readerWriter.Write(changes)
-                                                        .Then(InvokeNext, _updates.OnError)
+                                                        .Then(InvokeNext, _changes.OnError)
                                       );
 
 
             _disposer = Disposable.Create(() => {
                                                   loader.Dispose();
-                                                  _updates.OnCompleted();
+                                                  _changes.OnCompleted();
                                               });
         }
 
@@ -47,7 +47,7 @@ namespace DynamicData.Kernel
         {
             _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
 
-            _disposer = Disposable.Create(() => _updates.OnCompleted());
+            _disposer = Disposable.Create(() => _changes.OnCompleted());
         }
 
         #endregion
@@ -59,7 +59,7 @@ namespace DynamicData.Kernel
             if (updateAction == null) throw new ArgumentNullException("updateAction");
             
            _readerWriter.Write(updateAction)
-                 .Then(InvokeNext, _updates.OnError);
+                 .Then(InvokeNext, _changes.OnError);
         }
 
         internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
@@ -67,7 +67,7 @@ namespace DynamicData.Kernel
             if (updateAction == null) throw new ArgumentNullException("updateAction");
            
             _readerWriter.Write(updateAction)
-                  .Then(InvokeNext, _updates.OnError);
+                  .Then(InvokeNext, _changes.OnError);
         }
 
         private void InvokeNext(IChangeSet<TObject, TKey> changes)
@@ -78,11 +78,11 @@ namespace DynamicData.Kernel
             {
                 try
                 {
-                    _updates.OnNext(changes);
+                    _changes.OnNext(changes);
                 }
                 catch (Exception ex)
                 {
-                    _updates.OnError(ex);
+                    _changes.OnError(ex);
                 }
             }
         }
@@ -144,7 +144,7 @@ namespace DynamicData.Kernel
                                 if (initial.HasValue)
                                     nextAction(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
                                 
-                                return  _updates.FinallySafe(observer.OnCompleted).Subscribe(changes =>
+                                return  _changes.FinallySafe(observer.OnCompleted).Subscribe(changes =>
                                 {
                                     var matches = changes.Where(update => update.Key.Equals(key));
                                     foreach (var match in matches)
@@ -168,7 +168,7 @@ namespace DynamicData.Kernel
                             var initial = GetInitialUpdates();
                             if (initial.Count > 0) observer.OnNext(initial);
 
-                            return _updates.FinallySafe(observer.OnCompleted)
+                            return _changes.FinallySafe(observer.OnCompleted)
                                         .SubscribeSafe(observer);
                         }
                     });
@@ -192,7 +192,7 @@ namespace DynamicData.Kernel
                                 if (filtered.Count!=0)
                                     observer.OnNext(filtered);
 
-                                return _updates
+                                return _changes
                                     .FinallySafe(observer.OnCompleted)
                                     .Select(filterer.Filter)
                                     .NotEmpty()

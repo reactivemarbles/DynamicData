@@ -51,29 +51,23 @@ namespace DynamicData
             if (subscribeAction == null) throw new ArgumentNullException("subscribeAction");
             if (errorAction == null) throw new ArgumentNullException("errorAction");
 
-            return Observable.Create<T>(o =>
-                                        {
-                                            var subscription = source.FinallySafe(o.OnCompleted)
-                                                .Subscribe(t =>
-                                                           {
-                                                               try
-                                                               {
-                                                                   subscribeAction(t);
-                                                               }
-                                                               catch (Exception ex)
-                                                               {
-                                                                   errorAction(ex);
-                                                                   o.OnCompleted();
-                                                               }
-                                                           }, o.OnError, o.OnCompleted);
-
-                                            return Disposable.Create(() => subscription.Dispose());
-
-                                        }).Subscribe();
+            return Observable.Create<T>(o => source.FinallySafe(o.OnCompleted)
+                .Subscribe(t =>
+                           {
+                               try
+                               {
+                                   subscribeAction(t);
+                               }
+                               catch (Exception ex)
+                               {
+                                   errorAction(ex);
+                                   o.OnCompleted();
+                               }
+                           }, o.OnError, o.OnCompleted)).Subscribe();
         }
 
         /// <summary>
-        /// Ensure that finally is always called
+        /// Ensure that finally is always called. Thanks to Lee Campbell for this
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
@@ -1352,7 +1346,6 @@ namespace DynamicData
                         {
                             var filterer = new DynamicFilter<TObject, TKey>( parallelisationOptions ?? new ParallelisationOptions());
                             var locker = new object();
-
                             var filter = filterController.FilterChanged.Synchronize(locker).Select(filterer.ApplyFilter);
                             var evaluate = filterController.EvaluateChanged.Synchronize(locker).Select(filterer.Evaluate);
                             var data = source.Synchronize(locker).Select(filterer.Update);

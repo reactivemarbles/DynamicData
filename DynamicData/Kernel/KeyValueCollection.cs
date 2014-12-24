@@ -8,7 +8,6 @@ namespace DynamicData.Kernel
 {
     internal class KeyValueCollection<TObject, TKey> : IKeyValueCollection<TObject, TKey>
     {
-        private readonly KeyComparer<TObject, TKey> _keyComparer = new KeyComparer<TObject, TKey>();
         private readonly List<KeyValuePair<TKey,TObject>> _items;
         private readonly IComparer<KeyValuePair<TKey,TObject>> _comparer;
         private readonly SortReason _sortReason;
@@ -17,7 +16,8 @@ namespace DynamicData.Kernel
 
         public KeyValueCollection(IEnumerable<KeyValuePair<TKey,TObject>> items, 
             IComparer<KeyValuePair<TKey,TObject>> comparer, 
-            SortReason sortReason, SortOptimisations optimisations)
+            SortReason sortReason, 
+            SortOptimisations optimisations)
         {
             if (items == null) throw new ArgumentNullException("items");
             _items = items.ToList();

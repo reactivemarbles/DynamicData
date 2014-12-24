@@ -113,7 +113,6 @@
     <Compile Include="Experimental\Watcher.cs" />
     <Compile Include="Experimental\ExperimentalEx.cs" />
     <Compile Include="Experimental\IWatcher.cs" />
-    <Compile Include="Experimental\ISortedCache.cs" />
     <Compile Include="Experimental\ISubjectWithRefCount.cs" />
     <Compile Include="Experimental\SubjectWithRefCount.cs" />
     <Compile Include="IObservableCacheWithStatus.cs" />
