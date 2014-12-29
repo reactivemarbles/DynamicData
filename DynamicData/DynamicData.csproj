@@ -79,8 +79,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Rx-Linq.2.2.5\lib\net40\System.Reactive.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.PlatformServices, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="System.Reactive.PlatformServices">
       <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net40\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
@@ -198,9 +197,9 @@
     <Compile Include="Operators\IndexedItem.cs" />
     <Compile Include="Kernel\SortedChangeSet.cs" />
     <Compile Include="ISortedChangeSet.cs" />
-    <Compile Include="ParallelEx.cs" />
-    <Compile Include="ParallelisationOptions.cs" />
-    <Compile Include="ParallelType.cs" />
+    <Compile Include="Parallel\ParallelEx.cs" />
+    <Compile Include="Parallel\ParallelisationOptions.cs" />
+    <Compile Include="Parallel\ParallelType.cs" />
     <Compile Include="Kernel\UniqueChangeSet.cs" />
     <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ChangeSet.cs" />

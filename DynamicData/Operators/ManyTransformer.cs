@@ -51,8 +51,6 @@ namespace DynamicData.Operators
 
                 //TODO: Get rid of the dictionary as it could throw (use proper tranformer)
                 var transformed = changes
-                    .AsParallel()
-                    .AsOrdered()
                     .Where(update => update.Reason == ChangeReason.Add || update.Reason == ChangeReason.Update)
                     .Select(update => new
                         {

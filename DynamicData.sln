@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicData", "DynamicData\DynamicData.csproj", "{1A16225E-1ADF-4805-B3FA-9B065B1A779A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicData.Tests", "DynamicData.Tests\DynamicData.Tests.csproj", "{4E7ED660-E8AA-483A-AD52-00C1AFCB1E7C}"
@@ -12,10 +14,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{3034F7
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicData.Portable", "DynamicData\DynamicData.Portable.csproj", "{FE903921-6C55-40E3-9A16-4127ECACC12C}"
+EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = TwentyEight8.Reactive.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -99,11 +100,44 @@ Global
 		{4E7ED660-E8AA-483A-AD52-00C1AFCB1E7C}.Release45|Mixed Platforms.Build.0 = Release45|Any CPU
 		{4E7ED660-E8AA-483A-AD52-00C1AFCB1E7C}.Release45|x64.ActiveCfg = Release45|Any CPU
 		{4E7ED660-E8AA-483A-AD52-00C1AFCB1E7C}.Release45|x86.ActiveCfg = Release45|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Deploy|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Deploy|Any CPU.Build.0 = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Deploy|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Deploy|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Deploy|x64.ActiveCfg = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Deploy|x86.ActiveCfg = Debug|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release|x64.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release|x86.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release40|Any CPU.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release40|Any CPU.Build.0 = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release40|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release40|Mixed Platforms.Build.0 = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release40|x64.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release40|x86.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release45|Any CPU.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release45|Any CPU.Build.0 = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release45|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release45|Mixed Platforms.Build.0 = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release45|x64.ActiveCfg = Release|Any CPU
+		{FE903921-6C55-40E3-9A16-4127ECACC12C}.Release45|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35;packages\Unity.Interception.2.1.505.2\lib\NET35
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = TwentyEight8.Reactive.vsmdi
 	EndGlobalSection
 EndGlobal

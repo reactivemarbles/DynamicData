@@ -392,7 +392,6 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="subscriptionFactory">The subsription function</param>
-        /// <param name="parallelisationOptions">The parallelisation options.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
@@ -401,7 +400,7 @@ namespace DynamicData
         /// Subscribes to each item when it is added or updates and unsubcribes when it is removed
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                Func<TObject, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions=null)
+            Func<TObject, IDisposable> subscriptionFactory)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (subscriptionFactory == null) throw new ArgumentNullException("subscriptionFactory");
@@ -412,17 +411,18 @@ namespace DynamicData
                     {
                         var published = source.Publish();
                         var subscriptions = published
-                                            .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory),
-                                                    parallelisationOptions ?? ParallelisationOptions.None)
+                                            .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory))
                                             .DisposeMany()
                                             .Subscribe();
-                        
+
                         var result = published.SubscribeSafe(observer);
                         var connected = published.Connect();
 
-                        return new CompositeDisposable(subscriptions,connected,result);
+                        return new CompositeDisposable(subscriptions, connected, result);
                     });
         }
+
+
         /// <summary>
         /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed
         /// </summary>
@@ -430,7 +430,6 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="subscriptionFactory">The subsription function</param>
-        /// <param name="parallelisationOptions">The parallelisation options.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
@@ -439,7 +438,7 @@ namespace DynamicData
         /// Subscribes to each item when it is added or updates and unsubcribes when it is removed
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-        Func<TObject, TKey, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions=null)
+        Func<TObject, TKey, IDisposable> subscriptionFactory)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (subscriptionFactory == null) throw new ArgumentNullException("subscriptionFactory");
@@ -450,8 +449,7 @@ namespace DynamicData
                     {
                         var published = source.Publish();
                         var subscriptions = published
-                                            .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory),
-                                                parallelisationOptions ?? ParallelisationOptions.None)
+                                            .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory))
                                             .DisposeMany()
                                             .Subscribe();
 
@@ -459,14 +457,16 @@ namespace DynamicData
                         var connected = published.Connect();
 
                         return Disposable.Create(() =>
-                            {
-                                connected.Dispose();
-                                subscriptions.Dispose();
-                                result.Dispose();
+                        {
+                            connected.Dispose();
+                            subscriptions.Dispose();
+                            result.Dispose();
 
-                            });
+                        });
                     });
         }
+
+
 
         /// <summary>
         /// Callback for each item as and when it is being removed from the stream
@@ -995,7 +995,6 @@ namespace DynamicData
 
         #endregion
 
-
         #region Auto removal
 
 
@@ -1288,38 +1287,23 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
             this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
         {
-            return Filter(source, filter, ParallelisationOptions.None);
-        }
-
-        /// <summary>
-        /// Filters the stream using the specified predicate
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="filter">The filter.</param>
-        /// <param name="parallelisationOptions">The parallelisation options.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
-            this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
-        {
             if (source == null) throw new ArgumentNullException("source");
             if (filter == null)
                 return source.Clone();
 
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
-                        {
-                            var filterer = new StaticFilter<TObject, TKey>(filter, parallelisationOptions ?? new ParallelisationOptions());
-                            return source
-                                .Select(filterer.Filter)
-                                .NotEmpty()
-                                 .FinallySafe(observer.OnCompleted)
-                                .SubscribeSafer(observer);
-                        });
+            return Observable.Create<IChangeSet<TObject, TKey>>(
+                observer =>
+                {
+                    var filterer = new StaticFilter<TObject, TKey>(filter,  ParallelisationOptions.None);
+                    return source
+                        .Select(filterer.Filter)
+                        .NotEmpty()
+                        .FinallySafe(observer.OnCompleted)
+                        .SubscribeSafer(observer);
+                });
         }
+
+
 
 
         /// <summary>
@@ -1329,13 +1313,11 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="filterController">The filter.</param>
-        /// <param name="parallelisationOptions">Options for parallelising the application of the filter</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
             this IObservable<IChangeSet<TObject, TKey>> source,
-            FilterController<TObject> filterController,
-            ParallelisationOptions parallelisationOptions = null)
+            FilterController<TObject> filterController)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (filterController == null) throw new ArgumentNullException("filterController");
@@ -1344,7 +1326,7 @@ namespace DynamicData
                 (
                     observer =>
                         {
-                            var filterer = new DynamicFilter<TObject, TKey>( parallelisationOptions ?? new ParallelisationOptions());
+                            var filterer = new DynamicFilter<TObject, TKey>(ParallelisationOptions.None);
                             var locker = new object();
                             var filter = filterController.FilterChanged.Synchronize(locker).Select(filterer.ApplyFilter);
                             var evaluate = filterController.EvaluateChanged.Synchronize(locker).Select(filterer.Evaluate);
@@ -1609,7 +1591,77 @@ namespace DynamicData
         }
 
         #endregion
-        
+
+        #region  Transform
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TKey, TDestination> transformFactory)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (transformFactory == null) throw new ArgumentNullException("transformFactory");
+
+            return Observable.Create<IChangeSet<TDestination, TKey>>
+                (
+                    observer =>
+                    {
+                        var transformer = new Transformer<TDestination, TSource, TKey>(ParallelisationOptions.None, null);
+                        return source
+                            .Select(updates => transformer.Transform(updates, transformFactory))
+                            .NotEmpty()
+                            .Finally(observer.OnCompleted)
+                            .SubscribeSafer(observer);
+                    });
+        }
+
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TDestination> transformFactory)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (transformFactory == null) throw new ArgumentNullException("transformFactory");
+
+            return Observable.Create<IChangeSet<TDestination, TKey>>
+                (
+                    observer =>
+                    {
+                        var transformer = new Transformer<TDestination, TSource, TKey>(ParallelisationOptions.None, null);
+                        return source
+                            .Select(updates => transformer.Transform(updates, transformFactory))
+                            .NotEmpty()
+                            .SubscribeSafer(observer);
+                    });
+        }
+
+        #endregion
+
         #region Transform many
 
         /// <summary>
@@ -1746,7 +1798,6 @@ namespace DynamicData
         /// <param name="errorHandler">Provides the option to safely handle errors without killing the stream.
         ///  If not specified the stream will terminate as per rx convention.
         /// </param>
-        /// <param name="parallelisationOptions">The parallelisation options.</param>
         /// <returns>
         /// A transformed update collection
         /// </returns>
@@ -1755,8 +1806,7 @@ namespace DynamicData
         /// transformFactory</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TDestination> transformFactory,
-             Action<Error<TSource, TKey>> errorHandler,
-            ParallelisationOptions parallelisationOptions=null)
+             Action<Error<TSource, TKey>> errorHandler)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (transformFactory == null) throw new ArgumentNullException("transformFactory");
@@ -1766,7 +1816,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), errorHandler);
+                        var transformer = new Transformer<TDestination, TSource, TKey>(ParallelisationOptions.None, errorHandler);
                         return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
@@ -1786,7 +1836,6 @@ namespace DynamicData
         /// <param name="errorHandler">Provides the option to safely handle errors without killing the stream.
         ///  If not specified the stream will terminate as per rx convention.
         /// </param>
-        /// <param name="parallelisationOptions">The parallelisation options to be used on the transforms</param>
         /// <returns>
         /// A transformed update collection
         /// </returns>
@@ -1795,8 +1844,7 @@ namespace DynamicData
         /// transformFactory</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TKey, TDestination> transformFactory,
-            Action<Error<TSource, TKey>> errorHandler,
-            ParallelisationOptions parallelisationOptions = null)
+            Action<Error<TSource, TKey>> errorHandler)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (transformFactory == null) throw new ArgumentNullException("transformFactory");
@@ -1806,7 +1854,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), errorHandler);
+                        var transformer = new Transformer<TDestination, TSource, TKey>(ParallelisationOptions.None, errorHandler);
                         return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
@@ -1815,80 +1863,6 @@ namespace DynamicData
                     });
         }
 
-        #endregion
-
-        #region  Transform
-
-        /// <summary>
-        /// Projects each update item to a new form using the specified transform function
-        /// </summary>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="transformFactory">The transform factory.</param>
-        /// <param name="parallelisationOptions">The parallelisation options to be used on the transforms</param>
-        /// <returns>
-        /// A transformed update collection
-        /// </returns>
-        /// <exception cref="System.ArgumentNullException">source
-        /// or
-        /// transformFactory</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
-            Func<TSource,TKey, TDestination> transformFactory,
-            ParallelisationOptions parallelisationOptions=null)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (transformFactory == null) throw new ArgumentNullException("transformFactory");
-
-            return Observable.Create<IChangeSet<TDestination, TKey>>
-                (
-                    observer =>
-                    {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), null);
-                        return source
-                            .Select(updates=> transformer.Transform(updates, transformFactory))
-                            .NotEmpty()
-                            .Finally(observer.OnCompleted)
-                            .SubscribeSafer(observer);
-                    });
-        }
-
-
-        /// <summary>
-        /// Projects each update item to a new form using the specified transform function
-        /// </summary>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="transformFactory">The transform factory.</param>
-        /// <param name="parallelisationOptions">The parallelisation options.</param>
-        /// <returns>
-        /// A transformed update collection
-        /// </returns>
-        /// <exception cref="System.ArgumentNullException">source
-        /// or
-        /// transformFactory</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
-            Func<TSource, TDestination> transformFactory,
-            ParallelisationOptions parallelisationOptions=null)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (transformFactory == null) throw new ArgumentNullException("transformFactory");
-
-            return Observable.Create<IChangeSet<TDestination, TKey>>
-                (
-                    observer =>
-                    {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(parallelisationOptions ?? new ParallelisationOptions(), null);
-                        return source
-                            .Select(updates => transformer.Transform(updates, transformFactory))
-                            .NotEmpty()
-                            .SubscribeSafer(observer);
-                    });
-        }
-        
         #endregion
 
         #region Distinct values
@@ -2343,6 +2317,5 @@ namespace DynamicData
 
 
         #endregion
-
     }
 }

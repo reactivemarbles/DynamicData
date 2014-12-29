@@ -21,7 +21,7 @@ namespace DynamicData.Tests.Operators
 
             _source =new SourceCache<Person, string>(p=>p.Name);
 
-            var pTransform = _source.Connect().Transform(_transformFactory,new ParallelisationOptions(ParallelType.ParalledOrdered));
+            var pTransform = _source.Connect().Transform(_transformFactory);
             _results = new TestChangeSetResult<PersonWithGender, string>(pTransform);
         }
 

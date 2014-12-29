@@ -5,12 +5,16 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
+
+    //Allow parallel for Net4 and Net45 only
+#if !SILVERLIGHT && !PORTABLE && !PORTABLE40
+    
     /// <summary>
     /// Parallelisation extensions for DynamicData
     /// </summary>
     public static class ParallelEx
     {
-        #region Parallisation
+        #region Parallelisation
 
 
         internal static bool ShouldParallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
@@ -90,4 +94,6 @@ namespace DynamicData
         #endregion
 
     }
+
+#endif
 }

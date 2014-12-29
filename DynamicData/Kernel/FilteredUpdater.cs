@@ -52,10 +52,15 @@ namespace DynamicData.Kernel
                 };
 
             var keyValues = items as KeyValuePair<TKey,TObject>[] ?? items.ToArray();
-            
-            var result = keyValues.ShouldParallelise(_parallelisationOptions)
-                             ? keyValues.Parallelise(_parallelisationOptions).Select(factory).SelectValues()
-                             : keyValues.Select(factory).SelectValues();
+
+            //TODO: abstract this class and inherit for proper platform enlightenment
+            #if !SILVERLIGHT && !PORTABLE && !PORTABLE40
+                        var result = keyValues.ShouldParallelise(_parallelisationOptions)
+                 ? keyValues.Parallelise(_parallelisationOptions).Select(factory).SelectValues()
+                 : keyValues.Select(factory).SelectValues();
+            #else
+                var result =  keyValues.Select(factory).SelectValues();
+            #endif
 
             var changes = new ChangeSet<TObject, TKey>(result);
             _cache.Clone(changes);
@@ -72,12 +77,20 @@ namespace DynamicData.Kernel
 
         private IEnumerable<UpdateWithFilter> WithFilter(IChangeSet<TObject, TKey> updates)
         {
-            if (updates.ShouldParallelise(_parallelisationOptions))
-            {
-                return updates.Parallelise(_parallelisationOptions)
-                           .Select(u => new UpdateWithFilter(_filter(u.Current), u)).ToArray();
-            }
-            return updates.Select(u => new UpdateWithFilter(_filter(u.Current), u)).ToArray();
+
+            //TODO: abstract this class and inherit for proper platform enlightenment
+            #if !SILVERLIGHT && !PORTABLE && !PORTABLE40
+                    if (updates.ShouldParallelise(_parallelisationOptions))
+                    {
+                        return updates.Parallelise(_parallelisationOptions)
+                                   .Select(u => new UpdateWithFilter(_filter(u.Current), u)).ToArray();
+                    }
+                    return updates.Select(u => new UpdateWithFilter(_filter(u.Current), u)).ToArray();
+            #else
+                    return updates.Select(u => new UpdateWithFilter(_filter(u.Current), u)).ToArray();
+            #endif
+
+
         }
 
         private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> result)

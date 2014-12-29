@@ -95,7 +95,7 @@ namespace DynamicData.Tests.Kernal
                                     Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
                                     Thread.Sleep(TimeSpan.FromSeconds(1));
                                     return new TransformEntityWithError(e);
-                                },new ParallelisationOptions(ParallelType.ParalledOrdered,2))
+                                })
 
                             .Finally(() => completed = true)
                             .Subscribe(updates => { Console.WriteLine(); }, ex => error = true);

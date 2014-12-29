@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reactive.Linq;
-using System.Threading;
 
 namespace DynamicData.Diagnostics
 {
@@ -86,31 +85,31 @@ namespace DynamicData.Diagnostics
         }
 
 
-        /// <summary>
-        ///  Records the thread on which the work was done
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<ThreadHolder<T>> ThreadStamp<T>(this IObservable<T> source)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.Select(o => new ThreadHolder<T>(o, Thread.CurrentThread));
-        }
+        ///// <summary>
+        /////  Records the thread on which the work was done
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="source">The source.</param>
+        ///// <returns></returns>
+        ///// <exception cref="System.ArgumentNullException">source</exception>
+        //public static IObservable<ThreadHolder<T>> ThreadStamp<T>(this IObservable<T> source)
+        //{
+        //    if (source == null) throw new ArgumentNullException("source");
+        //    return source.Select(o => new ThreadHolder<T>(o, Thread.CurrentThread));
+        //}
 
-        /// <summary>
-        /// Removes the thread stamp.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<T> RemoveThreadStamp<T>(this IObservable<ThreadHolder<T>> source)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.Select(o => o.Value);
-        }
+        ///// <summary>
+        ///// Removes the thread stamp.
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="source">The source.</param>
+        ///// <returns></returns>
+        ///// <exception cref="System.ArgumentNullException">source</exception>
+        //public static IObservable<T> RemoveThreadStamp<T>(this IObservable<ThreadHolder<T>> source)
+        //{
+        //    if (source == null) throw new ArgumentNullException("source");
+        //    return source.Select(o => o.Value);
+        //}
 
         /// <summary>
         /// Accumulates update statistics

@@ -15,7 +15,7 @@ namespace DynamicData.Operators
 
         public DistinctCalculator(Func<TObject, TValue> valueSelector, ParallelisationOptions parallelisationOptions=null)
         {
-            _parallelisationOptions = parallelisationOptions ?? new ParallelisationOptions();
+            _parallelisationOptions = parallelisationOptions ?? ParallelisationOptions.None;
             _valueSelector = valueSelector;
         }
 
@@ -27,7 +27,12 @@ namespace DynamicData.Operators
             {
                 _cache.Clone(updates);
 
-                var current = _cache.Items.Parallelise(_parallelisationOptions).Select(i => _valueSelector(i)).Distinct().ToHashSet();
+                //TODO: abstract this class and inherit for proper platform enlightenment
+                #if !SILVERLIGHT && !PORTABLE && !PORTABLE40
+                        var current = _cache.Items.Parallelise(_parallelisationOptions).Select(i => _valueSelector(i)).Distinct().ToHashSet();
+                #else
+                        var current = _cache.Items.Select(i => _valueSelector(i)).Distinct().ToHashSet();
+                #endif
                 HashSet<TValue> previous = _values;
 
                 //maintain

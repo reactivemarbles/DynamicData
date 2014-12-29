@@ -81,15 +81,29 @@ namespace DynamicData.Operators
             return notifications;
         }
 
-        private IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory)
-        {
-            //do transform first.
-            var transformed = updates.ShouldParallelise(_parallelisationOptions) 
-                            ? updates.Parallelise(_parallelisationOptions).Select(factory).ToArray() 
-                            : updates.Select(factory).ToArray();
 
-            return ProcessUpdates( transformed);
-        }
+        //TODO: abstract this class and inherit for proper platform enlightenment
+        #if !SILVERLIGHT && !PORTABLE && !PORTABLE40
+            private IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory)
+            {
+
+                //do transform first.
+                var transformed = updates.ShouldParallelise(_parallelisationOptions) 
+                                ? updates.Parallelise(_parallelisationOptions).Select(factory).ToArray() 
+                                : updates.Select(factory).ToArray();
+
+                return ProcessUpdates( transformed);
+            }
+        #else
+            private IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory)
+            {
+
+                //do transform first.
+                var transformed =  updates.Select(factory).ToArray();
+
+                return ProcessUpdates(transformed);
+            }
+        #endif  
 
         private IChangeSet<TDestination, TKey> ProcessUpdates(TransformedItem[] transformedItems)
         {

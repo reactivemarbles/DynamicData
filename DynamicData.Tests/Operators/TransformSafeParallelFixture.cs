@@ -31,7 +31,7 @@ namespace DynamicData.Tests.Operators
             _source = new SourceCache<Person, string>(p=>p.Name);
             _errors = new List<Error<Person, string>>();
 
-            var safeTransform = _source.Connect().TransformSafe(_transformFactory, error => _errors.Add(error),new ParallelisationOptions(ParallelType.ParalledOrdered));
+            var safeTransform = _source.Connect().TransformSafe(_transformFactory, error => _errors.Add(error));
             _results = new TestChangeSetResult<PersonWithGender, string>(safeTransform);
         }
 
