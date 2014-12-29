@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
