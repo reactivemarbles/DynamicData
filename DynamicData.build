@@ -3,12 +3,8 @@
 <Project  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">  
     
 
-  <Target Name="Net40" >  
-    <MSBuild Projects="DynamicData.sln"   Properties="Configuration=Release40" />  
-  </Target>  
-   
-  <Target Name="Net45" >  
-    <MSBuild Projects="DynamicData.sln"   Properties="Configuration=Release45" />  
+  <Target Name="Release" >  
+    <MSBuild Projects="DynamicData.sln"   Properties="Configuration=Release" />  
   </Target>  
    
 </Project>  
