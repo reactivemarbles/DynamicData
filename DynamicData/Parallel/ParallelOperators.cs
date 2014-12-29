@@ -7,7 +7,7 @@ using DynamicData.Operators;
 namespace DynamicData
 {
 //Allow parallel for Net4 and Net45 only
-#if !SILVERLIGHT && !PORTABLE && !PORTABLE40
+#if  !PORTABLE && !PORTABLE40
     
     public static class ParallelOperators
     {

@@ -19,7 +19,7 @@ namespace DynamicData
 
         internal static bool ShouldParallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
         {
-            return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.ParalledOrdered)
+            return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered)
                    && (option.Threshold >= 0 && source.Count >= option.Threshold);
         }
 
@@ -31,7 +31,7 @@ namespace DynamicData
                 case ParallelType.Parallelise:
                     return source.AsParallel();
 
-                case ParallelType.ParalledOrdered:
+                case ParallelType.Ordered:
                     return source.AsParallel().AsOrdered();
                 default:
                     throw new ArgumentException("Should not parallelise!  Call ShouldParallelise() first");
@@ -40,7 +40,7 @@ namespace DynamicData
 
         internal static bool ShouldParallelise<TObject, TKey>(this IEnumerable<KeyValuePair<TKey,TObject>> source, ParallelisationOptions option)
         {
-            return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.ParalledOrdered)
+            return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered)
                    && (option.Threshold >= 0 && source.Skip(option.Threshold).Any());
         }
 
@@ -52,7 +52,7 @@ namespace DynamicData
                 case ParallelType.Parallelise:
                     return source.AsParallel();
 
-                case ParallelType.ParalledOrdered:
+                case ParallelType.Ordered:
                     return source.AsParallel().AsOrdered();
                 default:
                     throw new ArgumentException("Should not parallelise!  Call ShouldParallelise() first");
@@ -75,7 +75,7 @@ namespace DynamicData
                         return parallelise;
                     }
 
-                case ParallelType.ParalledOrdered:
+                case ParallelType.Ordered:
                     {
                         var parallelise = source as T[] ?? source.ToArray();
                         if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)

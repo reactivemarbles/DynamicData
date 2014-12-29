@@ -22,7 +22,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\Portable-Net45+Win8+WP8+WPA81\</OutputPath>
+    <OutputPath>bin\Debug\portable-net45+winrt45+wp8+wpa81\</OutputPath>
     <DefineConstants>TRACE;DEBUG;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -30,10 +30,11 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\Release\portable-net45+winrt45+wp8+wpa81\</OutputPath>
     <DefineConstants>TRACE;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Binding\IEvaluateAware.cs" />

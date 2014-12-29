@@ -16,6 +16,6 @@ namespace DynamicData
         /// <summary>
         /// Parallelisation will take place whilst preserving the enumerable order
         /// </summary>
-        ParalledOrdered
+        Ordered
     }
 }
