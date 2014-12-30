@@ -17,12 +17,12 @@
         <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableCollection Collection Linq</tags>
     </metadata>
     <files>
-        <file src="bin\Release\Net40\DynamicData.dll" target="lib\net40\DynamicData.dll" />
-        <file src="bin\Release\Net40\DynamicData.pdb" target="lib\net40\DynamicData.pdb" />
-        <file src="bin\Release\Net40\DynamicData.xml" target="lib\net40\DynamicData.xml" />
-        <file src="bin\Release\Net40\DynamicData.dll" target="lib\net45\DynamicData.dll" />
-        <file src="bin\Release\Net40\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
-        <file src="bin\Release\Net40\DynamicData.xml" target="lib\net45\DynamicData.xml" />
+        <file src="bin\Release\DynamicData.dll" target="lib\net40\DynamicData.dll" />
+        <file src="bin\Release\DynamicData.pdb" target="lib\net40\DynamicData.pdb" />
+        <file src="bin\Release\DynamicData.xml" target="lib\net40\DynamicData.xml" />
+        <file src="bin\Release\DynamicData.dll" target="lib\net45\DynamicData.dll" />
+        <file src="bin\Release\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
+        <file src="bin\Release\DynamicData.xml" target="lib\net45\DynamicData.xml" />
 
         <file src="bin\Release\portable-net40+sl5+win8+wp8\DynamicData.dll" target="lib\portable-net40+sl5+win8+wp8\DynamicData.dll" />
         <file src="bin\Release\portable-net40+sl5+win8+wp8\DynamicData.pdb" target="lib\portable-net40+sl5+win8+wp8\DynamicData.pdb" />

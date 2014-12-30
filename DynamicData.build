@@ -6,7 +6,6 @@
   <Target Name="Release" >  
     <MSBuild Projects="DynamicData.sln"   Properties="Configuration=Release" />  
   </Target>  
-   
 </Project>  
 
 
