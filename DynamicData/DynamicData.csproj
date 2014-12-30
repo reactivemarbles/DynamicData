@@ -120,6 +120,7 @@
     <Compile Include="Operators\SortOptimisations.cs" />
     <Compile Include="Operators\SortReason.cs" />
     <Compile Include="Operators\UniqueComparer.cs" />
+    <Compile Include="Parallel\ParallelOperators.cs" />
     <Compile Include="SourceCache.cs" />
     <Compile Include="Kernel\InternalEx.cs" />
     <Compile Include="MissingKeyException.cs" />

@@ -6,9 +6,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
 
-    //Allow parallel for Net4 and Net45 only
-#if PLINQ
-    
+
     /// <summary>
     /// Parallelisation extensions for DynamicData
     /// </summary>
@@ -95,5 +93,4 @@ namespace DynamicData
 
     }
 
-#endif
 }
