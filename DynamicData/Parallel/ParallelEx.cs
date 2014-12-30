@@ -7,7 +7,7 @@ namespace DynamicData
 {
 
     //Allow parallel for Net4 and Net45 only
-#if !SILVERLIGHT && !PORTABLE && !PORTABLE40
+#if PLINQ
     
     /// <summary>
     /// Parallelisation extensions for DynamicData

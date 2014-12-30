@@ -3,6 +3,8 @@ namespace DynamicData
     /// <summary>
     /// Options to specify parallelisation of stream operations
     /// </summary>
+    
+    
     public class ParallelisationOptions
     {
         private readonly ParallelType _type = ParallelType.None;

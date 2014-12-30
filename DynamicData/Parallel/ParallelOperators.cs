@@ -6,12 +6,11 @@ using DynamicData.Operators;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
-//Allow parallel for Net4 and Net45 only
-#if  !PORTABLE && !PORTABLE40
-    
+    //Allow parallel for Net4 and Net45 only
+
     public static class ParallelOperators
     {
-        #region Subscribe Many
+    #region Subscribe Many
 
         /// <summary>
         /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed
@@ -99,7 +98,7 @@ namespace DynamicData
 
         #endregion
 
-        #region  Transform
+    #region  Transform
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
@@ -171,7 +170,7 @@ namespace DynamicData
 
         #endregion
 
-        #region Transform safe
+    #region Transform safe
 
 
         /// <summary>
@@ -255,7 +254,7 @@ namespace DynamicData
 
         #endregion
 
-        #region Filter
+    #region Filter
 
         /// <summary>
         /// Filters the stream using the specified predicate
@@ -289,5 +288,4 @@ namespace DynamicData
         #endregion
     }
 
-#endif
 }

@@ -154,9 +154,7 @@
     <Compile Include="Operators\Virtualiser.cs" />
     <Compile Include="Operators\VirtualRequest.cs" />
     <Compile Include="Operators\VirtualResponse.cs" />
-    <Compile Include="Parallel\ParallelEx.cs" />
     <Compile Include="Parallel\ParallelisationOptions.cs" />
-    <Compile Include="Parallel\ParallelOperators.cs" />
     <Compile Include="Parallel\ParallelType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SourceCache.cs" />
