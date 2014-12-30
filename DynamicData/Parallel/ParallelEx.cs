@@ -5,8 +5,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
-
     /// <summary>
     /// Parallelisation extensions for DynamicData
     /// </summary>
@@ -90,7 +88,6 @@ namespace DynamicData
         }
 
         #endregion
-
     }
 
 }

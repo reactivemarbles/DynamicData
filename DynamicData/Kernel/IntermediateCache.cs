@@ -41,9 +41,9 @@ namespace DynamicData.Kernel
         }
 
 
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions = null)
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
         {
-            return _innnerCache.Connect(filter, parallelisationOptions);
+            return _innnerCache.Connect(filter);
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Connect()

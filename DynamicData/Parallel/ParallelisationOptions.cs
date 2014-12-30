@@ -1,10 +1,8 @@
 namespace DynamicData
 {
     /// <summary>
-    /// Options to specify parallelisation of stream operations
+    /// Options to specify parallelisation of stream operations.  Only applicable for .Net4 and .Net45 builds 
     /// </summary>
-    
-    
     public class ParallelisationOptions
     {
         private readonly ParallelType _type = ParallelType.None;

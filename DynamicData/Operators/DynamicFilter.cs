@@ -12,15 +12,13 @@ namespace DynamicData.Operators
     /// <typeparam name="TKey">The type of the key.</typeparam>
     internal sealed class DynamicFilter<TObject, TKey> //: IFilterer<TObject,TKey>
     {
-        private  FilteredUpdater<TObject, TKey> _filteredUpdater;
+        private  IFilter<TObject, TKey> _filteredUpdater;
         private readonly Cache<TObject, TKey> _all = new Cache<TObject, TKey>();
         private readonly Cache<TObject, TKey> _filtered = new Cache<TObject, TKey>();
-        private readonly ParallelisationOptions _parallelisationOptions;
         
-        internal DynamicFilter(ParallelisationOptions parallelisationOptions)
+        internal DynamicFilter()
         {
-            _parallelisationOptions = parallelisationOptions ?? new ParallelisationOptions();
-            _filteredUpdater= new FilteredUpdater<TObject, TKey>(_filtered, x=>false, _parallelisationOptions);
+            _filteredUpdater= new FilteredUpdater<TObject, TKey>(_filtered, x=>false);
         }
         
         public IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates)
@@ -32,7 +30,7 @@ namespace DynamicData.Operators
 
         public IChangeSet<TObject, TKey> ApplyFilter(Func<TObject, bool> filter)
         {
-            _filteredUpdater = new FilteredUpdater<TObject, TKey>(_filtered, filter, _parallelisationOptions);
+            _filteredUpdater = new FilteredUpdater<TObject, TKey>(_filtered, filter);
             return Reevaluate(_all.KeyValues);
         }
 

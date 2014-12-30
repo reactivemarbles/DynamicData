@@ -1294,7 +1294,7 @@ namespace DynamicData
             return Observable.Create<IChangeSet<TObject, TKey>>(
                 observer =>
                 {
-                    var filterer = new StaticFilter<TObject, TKey>(filter,  ParallelisationOptions.None);
+                    var filterer = new StaticFilter<TObject, TKey>(filter);
                     return source
                         .Select(filterer.Filter)
                         .NotEmpty()
@@ -1326,7 +1326,7 @@ namespace DynamicData
                 (
                     observer =>
                         {
-                            var filterer = new DynamicFilter<TObject, TKey>(ParallelisationOptions.None);
+                            var filterer = new DynamicFilter<TObject, TKey>();
                             var locker = new object();
                             var filter = filterController.FilterChanged.Synchronize(locker).Select(filterer.ApplyFilter);
                             var evaluate = filterController.EvaluateChanged.Synchronize(locker).Select(filterer.Evaluate);
@@ -1618,7 +1618,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(ParallelisationOptions.None, null);
+                        var transformer = new Transformer<TDestination, TSource, TKey>(null);
                         return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
@@ -1652,7 +1652,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(ParallelisationOptions.None, null);
+                        var transformer = new Transformer<TDestination, TSource, TKey>( null);
                         return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
@@ -1750,7 +1750,7 @@ namespace DynamicData
                             {
                                 var children = updates.SelectMany(u =>
                                     {
-                                        IEnumerable<TDestination> many = manyselector(u.Current);
+                                        var many = manyselector(u.Current);
                                         return many.Select(m => new TransformedItem<TDestination>(u.Reason, m));
                                     });
 
@@ -1816,7 +1816,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(ParallelisationOptions.None, errorHandler);
+                        var transformer = new Transformer<TDestination, TSource, TKey>( errorHandler);
                         return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
@@ -1854,7 +1854,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(ParallelisationOptions.None, errorHandler);
+                        var transformer = new Transformer<TDestination, TSource, TKey>(errorHandler);
                         return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
@@ -1883,18 +1883,16 @@ namespace DynamicData
         /// </remarks>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IDistinctChangeSet<TValue>> DistinctValues<TObject, TKey, TValue>(
-            this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector, ParallelisationOptions parallelisationOptions = null)
+            this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (valueSelector == null) throw new ArgumentNullException("valueSelector");
 
-            parallelisationOptions = parallelisationOptions ?? new ParallelisationOptions();
-
             return Observable.Create<IDistinctChangeSet<TValue>>
                 (
                     observer =>
-                        {
-                            var distinctObserver = new DistinctCalculator<TObject, TKey, TValue>(valueSelector, parallelisationOptions);
+                    {
+                        var distinctObserver = new DistinctCalculator<TObject, TKey, TValue>(valueSelector);
                             var subscriber = source
                                 .Select(distinctObserver.Calculate)
                                 .Where(updates=>updates.Count != 0)

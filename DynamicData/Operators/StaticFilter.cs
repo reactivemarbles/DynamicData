@@ -5,17 +5,22 @@ namespace DynamicData.Operators
 {
     internal class StaticFilter<TObject, TKey>
     {
-        private readonly FilteredUpdater<TObject, TKey> _updater;
-        private  readonly   Cache<TObject, TKey> _cache = new Cache<TObject, TKey>();
+        private readonly IFilter<TObject, TKey> _filter;
 
-        public StaticFilter(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
+
+        public StaticFilter(IFilter<TObject, TKey> filter)
         {
-            _updater = new FilteredUpdater<TObject, TKey>(_cache, filter, parallelisationOptions);
+            _filter = filter;
+        }
+
+        public StaticFilter(Func<TObject, bool> filter)
+        {
+            _filter = new FilteredUpdater<TObject, TKey>(new Cache<TObject, TKey>(), filter);
         }
 
         public IChangeSet<TObject, TKey> Filter(IChangeSet<TObject, TKey> updates)
         {
-              return _updater.Update(updates);
+            return _filter.Update(updates);
         }
     }
 }

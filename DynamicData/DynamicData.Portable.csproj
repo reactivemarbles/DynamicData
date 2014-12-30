@@ -60,7 +60,6 @@
     <Compile Include="Diagnostics\TimeTakenHolder.cs" />
     <Compile Include="DynamicDataEx.cs" />
     <Compile Include="Experimental\ExperimentalEx.cs" />
-    <Compile Include="Experimental\ISortedCache.cs" />
     <Compile Include="Experimental\ISubjectWithRefCount.cs" />
     <Compile Include="Experimental\IWatcher.cs" />
     <Compile Include="Experimental\SubjectWithRefCount.cs" />
@@ -81,6 +80,7 @@
     <Compile Include="IVirtualChangeSet.cs" />
     <Compile Include="IVirtualParameters.cs" />
     <Compile Include="IVirtualRequest.cs" />
+    <Compile Include="Kernel\AbstractFilter.cs" />
     <Compile Include="Kernel\AnomynousObservableCache.cs" />
     <Compile Include="Kernel\AnomynousQuery.cs" />
     <Compile Include="Kernel\Cache.cs" />
@@ -94,6 +94,7 @@
     <Compile Include="Kernel\FilteredIndexCalculator.cs" />
     <Compile Include="Kernel\FilteredUpdater.cs" />
     <Compile Include="Kernel\ICache.cs" />
+    <Compile Include="Kernel\IFilter.cs" />
     <Compile Include="Kernel\IIntermediateUpdater.cs" />
     <Compile Include="Kernel\IKeySelector.cs" />
     <Compile Include="Kernel\IKeyValueCollection.cs" />
@@ -118,6 +119,7 @@
     <Compile Include="Kernel\UniqueChangeSet.cs" />
     <Compile Include="MissingKeyException.cs" />
     <Compile Include="ObservableCache.cs" />
+    <Compile Include="Operators\AbstractTransformer.cs" />
     <Compile Include="Operators\CombineOperator.cs" />
     <Compile Include="Operators\Combiner.cs" />
     <Compile Include="Operators\ComparerOptions.cs" />
@@ -154,8 +156,6 @@
     <Compile Include="Operators\Virtualiser.cs" />
     <Compile Include="Operators\VirtualRequest.cs" />
     <Compile Include="Operators\VirtualResponse.cs" />
-    <Compile Include="Parallel\ParallelisationOptions.cs" />
-    <Compile Include="Parallel\ParallelType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SourceCache.cs" />
     <Compile Include="SourceList.cs" />

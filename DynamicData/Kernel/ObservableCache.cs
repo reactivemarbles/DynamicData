@@ -174,12 +174,11 @@ namespace DynamicData.Kernel
                     });
         }
 
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions = null)
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
         {
 
             if (filter == null) throw new ArgumentNullException("filter");
 
-            parallelisationOptions = parallelisationOptions ?? new ParallelisationOptions();
 
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
@@ -187,7 +186,7 @@ namespace DynamicData.Kernel
                         {
                             lock (_locker)
                             {
-                                var filterer = new StaticFilter<TObject, TKey>(filter, parallelisationOptions);
+                                var filterer = new StaticFilter<TObject, TKey>(filter);
                                 var filtered = filterer.Filter(GetInitialUpdates());
                                 if (filtered.Count!=0)
                                     observer.OnNext(filtered);

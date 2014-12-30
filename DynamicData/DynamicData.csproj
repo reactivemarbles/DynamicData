@@ -89,9 +89,11 @@
     <Compile Include="Experimental\ISubjectWithRefCount.cs" />
     <Compile Include="Experimental\SubjectWithRefCount.cs" />
     <Compile Include="IObservableCacheWithStatus.cs" />
+    <Compile Include="Kernel\AbstractFilter.cs" />
     <Compile Include="Kernel\CacheEx.cs" />
     <Compile Include="Kernel\Continuation.cs" />
     <Compile Include="Kernel\DoubleCheck.cs" />
+    <Compile Include="Kernel\IFilter.cs" />
     <Compile Include="Kernel\IKeyValueCollection.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -113,14 +115,20 @@
     <Compile Include="Kernel\QueuedAction.cs" />
     <Compile Include="Kernel\QueuedItem.cs" />
     <Compile Include="Kernel\KeyValueComparer.cs" />
+    <Compile Include="Operators\AbstractTransformer.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Operators\IIndexCalculator.cs" />
     <Compile Include="Operators\IPageRequest.cs" />
     <Compile Include="Operators\IPageResponse.cs" />
+    <Compile Include="Operators\PlinqTransformer.cs" />
     <Compile Include="Operators\SizeLimiter.cs" />
     <Compile Include="Operators\SortOptimisations.cs" />
     <Compile Include="Operators\SortReason.cs" />
     <Compile Include="Operators\UniqueComparer.cs" />
     <Compile Include="Parallel\ParallelOperators.cs" />
+    <Compile Include="Parallel\PLinqFilteredUpdater.cs" />
+    <Compile Include="Parallel\PlinqTransformer.cs" />
     <Compile Include="SourceCache.cs" />
     <Compile Include="Kernel\InternalEx.cs" />
     <Compile Include="MissingKeyException.cs" />

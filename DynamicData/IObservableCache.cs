@@ -28,9 +28,8 @@ namespace DynamicData
         /// Returns a filtered stream of cache changes preceeded with the initial filtered state
         /// </summary>
         /// <param name="filter">The filter.</param>
-        /// <param name="parallelisationOptions">Option to parallise the filter operation  Only applies if the filter parameter is not null</param>
         /// <returns></returns>
-        IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions = null);
+        IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter);
     }
 
 
