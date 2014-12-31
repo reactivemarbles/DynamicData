@@ -1,6 +1,6 @@
 ## Dynamic Data
 
-Bring the power of Rx to collections using Dynamic Data. 
+Dynamic data is a library which brings the power of reactive (RX) to collections.
 
 ### What is it?
 
