@@ -45,8 +45,11 @@ And what's more is this is the tip of the iceberg.
 ### Ok I'll give it a go
 
 Install from Nuget:  https://www.nuget.org/packages/DynamicData
+
 Sample wpf project: https://github.com/RolandPheasant/TradingDemo 
+
 Blog: http://dynamicdataproject.wordpress.com
+
 Feel free to feedback on twitter: [@RolandPheasant](https://twitter.com/RolandPheasant)
 
 
