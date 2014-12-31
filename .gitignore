@@ -30,3 +30,4 @@ _ReSharper*/
 *.[Pp]ublish.xml
 *.resharper
 [Pp]ackages*/
+*.DotSettings

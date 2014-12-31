@@ -32,7 +32,7 @@ var myoperation = mySource.Connect()
 ```
 Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
 
-The following example produces a stream which is grouped by status. In this case, an observable cache is created for each unique status.  When there are no items in a group the group is removed.
+The following snippet produces a stream which is grouped by status. In this case, an observable cache is created for each unique status.  Groups are automatically maintained and when there are no items in a group the group is removed.
 
 ```csharp
 var myoperation = mySource.Connect() 
@@ -40,14 +40,14 @@ var myoperation = mySource.Connect()
 			.Subscribe(changeSet=>//do something with the result)
 ```
 
-There are a myriad of operators and 
+And what's more is this is the tip of the iceberg.
 
 ### Ok I'll give it a go
 
 Install from Nuget:  https://www.nuget.org/packages/DynamicData
 Sample wpf project: https://github.com/RolandPheasant/TradingDemo 
 Blog: http://dynamicdataproject.wordpress.com
-Feel free to feedback on twitter:  [@RolandPheasant](https://twitter.com/RolandPheasant)
+Feel free to feedback on twitter: [@RolandPheasant](https://twitter.com/RolandPheasant)
 
 
 
