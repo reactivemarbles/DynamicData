@@ -8,7 +8,7 @@ A comprehensive library of reactive extensions, which are used to manage in-memo
 
 ### Why use it?
 
-It makes the management of in memory-data easy and is no exageration to say it can save thousands of lines of code.
+It makes the management of in-memory data easy and is no exageration to say it can save thousands of lines of code.
 
 ### Go on then show me
 
