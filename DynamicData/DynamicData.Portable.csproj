@@ -84,7 +84,6 @@
     <Compile Include="Kernel\AnomynousObservableCache.cs" />
     <Compile Include="Kernel\AnomynousQuery.cs" />
     <Compile Include="Kernel\Cache.cs" />
-    <Compile Include="Kernel\CacheCloner.cs" />
     <Compile Include="Kernel\CacheEx.cs" />
     <Compile Include="Kernel\Change.cs" />
     <Compile Include="Kernel\ChangeSet.cs" />

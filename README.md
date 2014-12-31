@@ -8,9 +8,7 @@ A comprehensive library of reactive extensions, which are used to manage in-memo
 
 ### Why use it?
 
-There are over 40 linq extensions which enable filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management to name a few.
-
-It is no exageration to say it saves thousands of lines of code.
+It makes the management of in memory-data easy.  It is no exageration to say it saves thousands of lines of code.
 
 ### Go on then show me
 

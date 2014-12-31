@@ -76,29 +76,6 @@ namespace DynamicData.Operators
         }
 
 
-//        //TODO: abstract this class and inherit for proper platform enlightenment
-//#if PLINQ
-//        private IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory)
-//        {
-
-//            //do transform first.
-//            var transformed = updates.ShouldParallelise(_parallelisationOptions)
-//                            ? updates.Parallelise(_parallelisationOptions).Select(factory).ToArray()
-//                            : updates.Select(factory).ToArray();
-
-//            return ProcessUpdates(transformed);
-//        }
-//#else
-//            private IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory)
-//            {
-
-//                //do transform first.
-//                var transformed =  updates.Select(factory).ToArray();
-
-//                return ProcessUpdates(transformed);
-//            }
-//#endif
-
         protected abstract IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory);
 
         protected IChangeSet<TDestination, TKey> ProcessUpdates(TransformedItem[] transformedItems)

@@ -21,7 +21,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{3F134FB4-A65D-4CFD-A161-644BB18D05C7}"
 	ProjectSection(SolutionItems) = preProject
 		DynamicData.build = DynamicData.build
-		DynamicData.nuspec = DynamicData.nuspec
+		DynamicData\DynamicData.nuspec = DynamicData\DynamicData.nuspec
 	EndProjectSection
 EndProject
 Global
