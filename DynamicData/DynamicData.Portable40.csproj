@@ -122,14 +122,11 @@
     <Compile Include="Operators\AbstractTransformer.cs" />
     <Compile Include="Operators\CombineOperator.cs" />
     <Compile Include="Operators\Combiner.cs" />
-    <Compile Include="Operators\ComparerOptions.cs" />
-    <Compile Include="Operators\Copy of FastGrouper.cs" />
     <Compile Include="Operators\DistinctCalculator.cs" />
     <Compile Include="Operators\DynamicFilter.cs" />
     <Compile Include="Operators\DynamicSubscriber.cs" />
     <Compile Include="Operators\Error.cs" />
     <Compile Include="Operators\ExpirableItem.cs" />
-    <Compile Include="Operators\Group.cs" />
     <Compile Include="Operators\GroupChangeSet.cs" />
     <Compile Include="Operators\Grouper.cs" />
     <Compile Include="Operators\IIndexCalculator.cs" />

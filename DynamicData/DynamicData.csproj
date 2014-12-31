@@ -121,7 +121,6 @@
     <Compile Include="Operators\IIndexCalculator.cs" />
     <Compile Include="Operators\IPageRequest.cs" />
     <Compile Include="Operators\IPageResponse.cs" />
-    <Compile Include="Operators\PlinqTransformer.cs" />
     <Compile Include="Operators\SizeLimiter.cs" />
     <Compile Include="Operators\SortOptimisations.cs" />
     <Compile Include="Operators\SortReason.cs" />
