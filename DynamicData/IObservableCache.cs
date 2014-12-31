@@ -5,7 +5,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
     /// <summary>
-    /// A cache for observing and querying stateful collection data.
+    /// A cache for observing and querying in memory data
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -25,7 +25,7 @@ namespace DynamicData
         IObservable<IChangeSet<TObject, TKey>> Connect();
 
         /// <summary>
-        /// Returns a filtered stream of cache changes preceeded with the initial filtered state
+        /// Returns a filtered changeset of cache changes preceeded with the initial state
         /// </summary>
         /// <param name="filter">The filter.</param>
         /// <returns></returns>
@@ -34,13 +34,12 @@ namespace DynamicData
 
 
     /// <summary>
-    /// A cache for observing and querying stateful data.
+    ///   /// A cache for observing and querying in memory data. With additional data access operators
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public interface IObservableCache<TObject, TKey> :IConnectableCache<TObject, TKey>,  IDisposable
     {      
-
         /// <summary>
         /// Gets the keys
         /// </summary>

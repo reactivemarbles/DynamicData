@@ -8,7 +8,7 @@ A comprehensive library of reactive extensions, which are used to manage in-memo
 
 ### Why use it?
 
-It makes the management of in memory-data easy.  It is no exageration to say it saves thousands of lines of code.
+It makes the management of in memory-data easy and is no exageration to say it can save thousands of lines of code.
 
 ### Go on then show me
 
@@ -32,11 +32,24 @@ var myoperation = mySource.Connect()
 ```
 Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
 
-There is so much more...
+The following example produces a stream which is grouped by status. In this case, an observable cache is created for each unique status.  When there are no items in a group the group is removed.
+
+```csharp
+var myoperation = mySource.Connect() 
+            .Group(trade=>trade.Status) 
+			.Subscribe(changeSet=>//do something with the result)
+```
+
+There are a myriad of operators and 
 
 ### Ok I'll give it a go
 
-Go to nuget https://www.nuget.org/packages/DynamicData/ and install or take a fork from here. Additionally I am building a sample wpf project https://github.com/RolandPheasant/TradingDemo which is blogged about at http://dynamicdataproject.wordpress.com
+Install from Nuget:  https://www.nuget.org/packages/DynamicData
+Sample wpf project: https://github.com/RolandPheasant/TradingDemo 
+Blog: http://dynamicdataproject.wordpress.com
+Feel free to feedback on twitter:  [@RolandPheasant](https://twitter.com/RolandPheasant)
+
+
 
 
 

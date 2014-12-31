@@ -3,10 +3,12 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
+
+
     /// <summary>
-    /// A collection representing a batch of updates in the underlying streams.
+    /// A collection of changes.
     /// 
-    /// Updates are always published in the order.
+    /// Changes are always published in the order.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
