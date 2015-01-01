@@ -1,6 +1,6 @@
 ## Dynamic Data
 
-Dynamic data is a library which brings the power of reactive (RX) to collections.
+Dynamic data is a portable class library which brings the power of reactive (RX) to collections.
 
 ### What is it?
 
