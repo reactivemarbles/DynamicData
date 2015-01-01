@@ -72,7 +72,6 @@
     <Compile Include="IIntermediateCache.cs" />
     <Compile Include="IKeyValue.cs" />
     <Compile Include="IObservableCache.cs" />
-    <Compile Include="IObservableCacheWithStatus.cs" />
     <Compile Include="IPagedChangeSet.cs" />
     <Compile Include="IQuery.cs" />
     <Compile Include="ISortedChangeSet.cs" />

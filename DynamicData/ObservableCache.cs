@@ -47,11 +47,9 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="detination">The detination.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// source
+        /// <exception cref="System.ArgumentNullException">source
         /// or
-        /// detination
-        /// </exception>
+        /// detination</exception>
         public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> detination)
         {
             if (source == null) throw new ArgumentNullException("source");

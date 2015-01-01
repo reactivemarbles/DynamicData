@@ -88,7 +88,6 @@
     <Compile Include="Experimental\IWatcher.cs" />
     <Compile Include="Experimental\ISubjectWithRefCount.cs" />
     <Compile Include="Experimental\SubjectWithRefCount.cs" />
-    <Compile Include="IObservableCacheWithStatus.cs" />
     <Compile Include="Kernel\AbstractFilter.cs" />
     <Compile Include="Kernel\CacheEx.cs" />
     <Compile Include="Kernel\Continuation.cs" />

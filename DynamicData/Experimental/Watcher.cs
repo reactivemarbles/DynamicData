@@ -101,14 +101,9 @@ namespace DynamicData.Experimental
                     });
         }
 
-
-        #region Overrides of IDisposable
-
          public  void Dispose()
         {
             _disposer.Dispose();
         }
-
-        #endregion
     }
 }
