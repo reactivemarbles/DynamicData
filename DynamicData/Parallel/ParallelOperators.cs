@@ -7,8 +7,10 @@ using DynamicData.Operators;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
-    //Allow parallel for Net4 and Net45 only
 
+    /// <summary>
+    /// PLinq operators or Net4 and Net45 only
+    /// </summary>
     public static class ParallelOperators
     {
         #region Subscribe Many

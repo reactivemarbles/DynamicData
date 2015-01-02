@@ -33,11 +33,8 @@ namespace DynamicData.Experimental
 
             var sourceSubscriber = source.Synchronize(_locker).Subscribe(updates => updates.ForEach(update =>
             {
-                var subscriber = _subscribers.Lookup(update.Key);
-                if (subscriber.HasValue)
-                {
-                    _scheduler.Schedule(() => subscriber.Value.OnNext(update));
-                }
+                _subscribers.Lookup(update.Key)
+                    .IfHasValue(subscriber => subscriber.OnNext(update));
             }));
 
             _disposer = Disposable.Create(() =>
