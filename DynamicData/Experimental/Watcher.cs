@@ -31,13 +31,14 @@ namespace DynamicData.Experimental
                 .SubscribeMany((t,k) => Disposable.Create(t.OnCompleted))
                 .Subscribe();
 
-            var sourceSubscriber = source
-                    .Synchronize(_locker)
-                    .Subscribe(updates => updates.ForEach(update =>
-                        {
-                            _subscribers.Lookup(update.Key)
-                                .IfHasValue(subscriber => subscriber.OnNext(update));
-                        }));
+            var sourceSubscriber = source.Synchronize(_locker).Subscribe(updates => updates.ForEach(update =>
+            {
+                var subscriber = _subscribers.Lookup(update.Key);
+                if (subscriber.HasValue)
+                {
+                    _scheduler.Schedule(() => subscriber.Value.OnNext(update));
+                }
+            }));
 
             _disposer = Disposable.Create(() =>
             {

@@ -101,12 +101,12 @@ namespace DynamicData.Tests.Operators
         public void Remove()
         {
             var person = new Person("Adult1", 50);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
             _source.Remove(person.Key);
 
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(11).Ticks);
             Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(0, _results.Data.Count, "Should be 0 item in the cache");
 
