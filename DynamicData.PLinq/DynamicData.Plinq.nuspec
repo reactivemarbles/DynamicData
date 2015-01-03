@@ -13,6 +13,9 @@
       Extensions which enable parallelisation of Dyanmic Data operators.
     </description>
     <tags>DynamicData Dynamic Plinq Data Rx Reactive Observable Cache Binding ObservableCache ObservableCollection Collection Linq</tags>
+    <dependencies>
+      <dependency id="DynamicData" />
+    </dependencies>
   </metadata>
   <files>
     <file src="bin\Release\DynamicData.Plinq.dll" target="lib\net45\DynamicData.Plinq.dll" />
