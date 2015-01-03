@@ -18,6 +18,8 @@
     <file src="bin\Release\DynamicData.Plinq.dll" target="lib\net45\DynamicData.Plinq.dll" />
     <file src="bin\Release\DynamicData.Plinq.pdb" target="lib\net45\DynamicData.Plinq.pdb" />
     <file src="bin\Release\DynamicData.Plinq.xml" target="lib\net45\DynamicData.Plinq.xml" />
-
   </files>
+  <dependencies>
+    <dependency id="DynamicData"  />
+  </dependencies>
 </package>
