@@ -1,5 +1,5 @@
 using System.Linq;
-using DynamicData.Kernel;
+using DynamicData.PLinq;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
@@ -16,9 +16,6 @@ namespace DynamicData.Tests.Operators
         {
             _source =new SourceCache<Person, string>(p=>p.Key);
             _results = new TestChangeSetResult<Person, string>(_source.Connect().Filter(p => p.Age > 20,new ParallelisationOptions(ParallelType.Ordered)));
-
-            //var grouped = _source.Updates.Group(x => x.Name);
-            //var xxx = new TestChangeSetResult<IGroup<Person, string, string>, string>(grouped);
         }
 
         [TearDown]

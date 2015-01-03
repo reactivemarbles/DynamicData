@@ -1,69 +1,42 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{1A16225E-1ADF-4805-B3FA-9B065B1A779A}</ProjectGuid>
+    <ProjectGuid>{FE903921-6C55-40E3-9A16-4127ECACC12C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DynamicData</RootNamespace>
     <AssemblyName>DynamicData</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
-    <TargetFrameworkProfile />
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;PLINQ</DefineConstants>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\portable-net45+winrt45+wp8+wpa81\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <DocumentationFile>bin\Debug\DynamicData.XML</DocumentationFile>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Debug\portable-net45+winrt45+wp8+wpa81\DynamicData.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;PLINQ</DefineConstants>
+    <OutputPath>bin\Release\portable-net45+winrt45+wp8+wpa81\</OutputPath>
+    <DefineConstants>TRACE;PORTABLE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <DocumentationFile>bin\Release\DynamicData.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.XML</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Rx-Core.2.2.5\lib\net40\System.Reactive.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Interfaces, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net40\System.Reactive.Interfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.Linq, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net40\System.Reactive.Linq.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reactive.PlatformServices">
-      <HintPath>..\packages\Rx-PlatformServices.2.2.5\lib\net40\System.Reactive.PlatformServices.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="Binding\IEvaluateAware.cs" />
     <Compile Include="Binding\IIndexAware.cs" />
@@ -74,143 +47,138 @@
     <Compile Include="Binding\ObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\ObservableCollectionExtended.cs" />
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
+    <Compile Include="ChangeReason.cs" />
     <Compile Include="ConnectionStatus.cs" />
+    <Compile Include="Controllers\FilterController.cs" />
     <Compile Include="Controllers\GroupController.cs" />
     <Compile Include="Controllers\PageController.cs" />
     <Compile Include="Controllers\SortController.cs" />
-    <Compile Include="Diagnostics\DiagnosticOperators.cs" />
-    <Compile Include="Diagnostics\ThreadHolder.cs" />
-    <Compile Include="Diagnostics\TimeTakenHolder.cs" />
+    <Compile Include="Controllers\VirtualisingController.cs" />
     <Compile Include="Diagnostics\ChangeStatistics.cs" />
     <Compile Include="Diagnostics\ChangeSummary.cs" />
-    <Compile Include="Experimental\Watcher.cs" />
+    <Compile Include="Diagnostics\DiagnosticOperators.cs" />
+    <Compile Include="Diagnostics\TimeTakenHolder.cs" />
+    <Compile Include="DynamicDataEx.cs" />
     <Compile Include="Experimental\ExperimentalEx.cs" />
-    <Compile Include="Experimental\IWatcher.cs" />
     <Compile Include="Experimental\ISubjectWithRefCount.cs" />
+    <Compile Include="Experimental\IWatcher.cs" />
     <Compile Include="Experimental\SubjectWithRefCount.cs" />
-    <Compile Include="Kernel\AbstractFilter.cs" />
-    <Compile Include="Kernel\CacheEx.cs" />
-    <Compile Include="Kernel\Continuation.cs" />
-    <Compile Include="Kernel\DoubleCheck.cs" />
-    <Compile Include="Kernel\IFilter.cs" />
-    <Compile Include="Kernel\IKeyValueCollection.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Kernel\IReaderWriter.cs" />
-    <Compile Include="Kernel\KeyComparer.cs" />
-    <Compile Include="Kernel\KeyValueCollection.cs" />
-    <Compile Include="Kernel\OptionElse.cs" />
-    <Compile Include="Kernel\ReaderWriter.cs" />
-    <Compile Include="ObservableCache.cs" />
+    <Compile Include="Experimental\Watcher.cs" />
+    <Compile Include="IChangeSet.cs" />
+    <Compile Include="IDistinctChangeSet.cs" />
+    <Compile Include="IGroup.cs" />
+    <Compile Include="IGroupChangeSet.cs" />
     <Compile Include="IIntermediateCache.cs" />
+    <Compile Include="IKeyValue.cs" />
     <Compile Include="IObservableCache.cs" />
     <Compile Include="IPagedChangeSet.cs" />
+    <Compile Include="IQuery.cs" />
+    <Compile Include="ISortedChangeSet.cs" />
     <Compile Include="ISourceCache.cs" />
+    <Compile Include="ISourceUpdater.cs" />
+    <Compile Include="IVirtualChangeSet.cs" />
+    <Compile Include="IVirtualParameters.cs" />
+    <Compile Include="IVirtualRequest.cs" />
+    <Compile Include="Kernel\AbstractFilter.cs" />
     <Compile Include="Kernel\AnomynousObservableCache.cs" />
     <Compile Include="Kernel\AnomynousQuery.cs" />
+    <Compile Include="Kernel\Cache.cs" />
+    <Compile Include="Kernel\CacheEx.cs" />
+    <Compile Include="Kernel\Change.cs" />
+    <Compile Include="Kernel\ChangeSet.cs" />
+    <Compile Include="Kernel\Continuation.cs" />
+    <Compile Include="Kernel\DistinctChangeSet.cs" />
+    <Compile Include="Kernel\DoubleCheck.cs" />
+    <Compile Include="Kernel\FilteredIndexCalculator.cs" />
+    <Compile Include="Kernel\FilteredUpdater.cs" />
+    <Compile Include="Kernel\ICache.cs" />
+    <Compile Include="Kernel\IFilter.cs" />
+    <Compile Include="Kernel\IIntermediateUpdater.cs" />
+    <Compile Include="Kernel\IKeySelector.cs" />
+    <Compile Include="Kernel\IKeyValueCollection.cs" />
     <Compile Include="Kernel\IntermediateCache.cs" />
+    <Compile Include="Kernel\IntermediateUpdater.cs" />
+    <Compile Include="Kernel\InternalEx.cs" />
+    <Compile Include="Kernel\IReaderWriter.cs" />
+    <Compile Include="Kernel\KeyComparer.cs" />
+    <Compile Include="Kernel\KeySelector.cs" />
+    <Compile Include="Kernel\KeySelectorException.cs" />
+    <Compile Include="Kernel\KeyValueCollection.cs" />
+    <Compile Include="Kernel\KeyValueComparer.cs" />
     <Compile Include="Kernel\ObservableCache.cs" />
+    <Compile Include="Kernel\Optional.cs" />
+    <Compile Include="Kernel\OptionElse.cs" />
     <Compile Include="Kernel\OptionExtensions.cs" />
     <Compile Include="Kernel\QueuedAction.cs" />
     <Compile Include="Kernel\QueuedItem.cs" />
-    <Compile Include="Kernel\KeyValueComparer.cs" />
-    <Compile Include="Operators\AbstractTransformer.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Kernel\ReaderWriter.cs" />
+    <Compile Include="Kernel\SortedChangeSet.cs" />
+    <Compile Include="Kernel\SourceUpdater.cs" />
+    <Compile Include="Kernel\UniqueChangeSet.cs" />
+    <Compile Include="MissingKeyException.cs" />
+    <Compile Include="ObservableCache.cs" />
+    <Compile Include="Operators\AbstractTransformer.cs" />
+    <Compile Include="Operators\CombineOperator.cs" />
+    <Compile Include="Operators\Combiner.cs" />
+    <Compile Include="Operators\DistinctCalculator.cs" />
+    <Compile Include="Operators\DynamicFilter.cs" />
+    <Compile Include="Operators\DynamicSubscriber.cs" />
+    <Compile Include="Operators\Error.cs" />
+    <Compile Include="Operators\ExpirableItem.cs" />
+    <Compile Include="Operators\GroupChangeSet.cs" />
+    <Compile Include="Operators\Grouper.cs" />
     <Compile Include="Operators\IIndexCalculator.cs" />
+    <Compile Include="Operators\IndexCalculator.cs" />
+    <Compile Include="Operators\IndexedItem.cs" />
     <Compile Include="Operators\IPageRequest.cs" />
     <Compile Include="Operators\IPageResponse.cs" />
-    <Compile Include="Operators\SizeLimiter.cs" />
-    <Compile Include="Operators\SortOptimisations.cs" />
-    <Compile Include="Operators\SortReason.cs" />
-    <Compile Include="Operators\UniqueComparer.cs" />
-    <Compile Include="Parallel\ParallelOperators.cs" />
-    <Compile Include="Parallel\PLinqFilteredUpdater.cs" />
-    <Compile Include="Parallel\PlinqTransformer.cs" />
-    <Compile Include="SourceCache.cs" />
-    <Compile Include="Kernel\InternalEx.cs" />
-    <Compile Include="MissingKeyException.cs" />
-    <Compile Include="Operators\Error.cs" />
-    <Compile Include="Operators\Grouper.cs" />
     <Compile Include="Operators\ManagedGroup.cs" />
-    <Compile Include="Operators\IndexCalculator.cs" />
-    <Compile Include="Operators\Paginator.cs" />
-    <Compile Include="Operators\ExpirableItem.cs" />
+    <Compile Include="Operators\ManyTransformer.cs" />
+    <Compile Include="Operators\OnBeingRemoved.cs" />
     <Compile Include="Operators\PagedChangeSet.cs" />
     <Compile Include="Operators\PageRequest.cs" />
     <Compile Include="Operators\PageResponse.cs" />
-    <Compile Include="Kernel\FilteredIndexCalculator.cs" />
-    <Compile Include="Kernel\Optional.cs" />
-    <Compile Include="IGroup.cs" />
-    <Compile Include="IGroupChangeSet.cs" />
-    <Compile Include="IDistinctChangeSet.cs" />
-    <Compile Include="IQuery.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Kernel\DistinctChangeSet.cs" />
-    <Compile Include="Kernel\IKeySelector.cs" />
-    <Compile Include="Kernel\KeySelector.cs" />
-    <Compile Include="Kernel\KeySelectorException.cs" />
-    <Compile Include="Operators\OnBeingRemoved.cs" />
-    <Compile Include="Operators\DynamicSubscriber.cs" />
-    <Compile Include="Kernel\Cache.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Kernel\IntermediateUpdater.cs" />
-    <Compile Include="Kernel\FilteredUpdater.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Kernel\ICache.cs" />
-    <Compile Include="Kernel\IIntermediateUpdater.cs" />
-    <Compile Include="Kernel\SourceUpdater.cs" />
-    <Compile Include="IKeyValue.cs" />
-    <Compile Include="ISourceUpdater.cs" />
-    <Compile Include="Kernel\Change.cs" />
-    <Compile Include="DynamicDataEx.cs" />
-    <Compile Include="Operators\DynamicFilter.cs" />
-    <Compile Include="Operators\CombineOperator.cs" />
-    <Compile Include="Operators\Combiner.cs" />
-    <Compile Include="Controllers\FilterController.cs" />
-    <Compile Include="Operators\StaticFilter.cs" />
+    <Compile Include="Operators\Paginator.cs" />
+    <Compile Include="Operators\SizeLimiter.cs" />
     <Compile Include="Operators\Sorter.cs" />
-    <Compile Include="Operators\DistinctCalculator.cs" />
-    <Compile Include="Operators\GroupChangeSet.cs" />
-    <Compile Include="Operators\IndexedItem.cs" />
-    <Compile Include="Kernel\SortedChangeSet.cs" />
-    <Compile Include="ISortedChangeSet.cs" />
-    <Compile Include="Parallel\ParallelEx.cs" />
-    <Compile Include="Parallel\ParallelisationOptions.cs" />
-    <Compile Include="Parallel\ParallelType.cs" />
-    <Compile Include="Kernel\UniqueChangeSet.cs" />
-    <Compile Include="IChangeSet.cs" />
-    <Compile Include="Kernel\ChangeSet.cs" />
+    <Compile Include="Operators\SortOptimisations.cs" />
+    <Compile Include="Operators\SortReason.cs" />
+    <Compile Include="Operators\StaticFilter.cs" />
     <Compile Include="Operators\TransformedItem.cs" />
-    <Compile Include="Operators\ManyTransformer.cs" />
     <Compile Include="Operators\Transformer.cs" />
-    <Compile Include="ChangeReason.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="IVirtualParameters.cs" />
-    <Compile Include="IVirtualRequest.cs" />
-    <Compile Include="IVirtualChangeSet.cs" />
-    <Compile Include="Controllers\VirtualisingController.cs" />
-    <Compile Include="Operators\Virtualiser.cs" />
-    <Compile Include="Operators\VirtualResponse.cs" />
-    <Compile Include="Operators\VirtualRequest.cs" />
+    <Compile Include="Operators\UniqueComparer.cs" />
     <Compile Include="Operators\VirtualChangeSet.cs" />
+    <Compile Include="Operators\Virtualiser.cs" />
+    <Compile Include="Operators\VirtualRequest.cs" />
+    <Compile Include="Operators\VirtualResponse.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SourceCache.cs" />
     <Compile Include="SourceList.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="DynamicData.nuspec">
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\portable-net45+winrt45+wp8+wpa81\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\portable-net45+winrt45+wp8+wpa81\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\portable-net45+winrt45+wp8+wpa81\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
@@ -218,5 +186,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
 </Project>

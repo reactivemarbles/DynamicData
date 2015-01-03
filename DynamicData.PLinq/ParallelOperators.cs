@@ -1,7 +1,6 @@
 using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Kernel;
 using DynamicData.Operators;
 using DynamicData.PLinq;
 
