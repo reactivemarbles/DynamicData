@@ -20,9 +20,18 @@
     <file src="bin\Release\DynamicData.dll" target="lib\net40\DynamicData.dll" />
     <file src="bin\Release\DynamicData.pdb" target="lib\net40\DynamicData.pdb" />
     <file src="bin\Release\DynamicData.xml" target="lib\net40\DynamicData.xml" />
-    <file src="bin\Release\DynamicData.dll" target="lib\net45\DynamicData.dll" />
+    
+    <!--<file src="bin\Release\DynamicData.dll" target="lib\net45\DynamicData.dll" />
     <file src="bin\Release\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
-    <file src="bin\Release\DynamicData.xml" target="lib\net45\DynamicData.xml" />
+    <file src="bin\Release\DynamicData.xml" target="lib\net45\DynamicData.xml" />-->
+
+
+    <file src="..\DynamicData.Plinq\bin\Release\DynamicData.Plinq.dll" target="lib\net45\DynamicData.Plinq.dll" />
+    <file src="..\DynamicData.Plinq\bin\Release\DynamicData.Plinq.pdb" target="lib\net45\DynamicData.Plinq.pdb" />
+    <file src="..\DynamicData.Plinq\bin\Release\DynamicData.Plinq.xml" target="lib\net45\DynamicData.Plinq.xml" />
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\net45\DynamicData.dll" />
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" target="lib\net45\DynamicData.xml" />
 
     <file src="bin\Release\portable-net40+sl5+win8+wp8\DynamicData.dll" target="lib\portable-net40+sl5+win8+wp8\DynamicData.dll" />
     <file src="bin\Release\portable-net40+sl5+win8+wp8\DynamicData.pdb" target="lib\portable-net40+sl5+win8+wp8\DynamicData.pdb" />
