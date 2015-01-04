@@ -77,7 +77,6 @@
     <Compile Include="Controllers\PageController.cs" />
     <Compile Include="Controllers\SortController.cs" />
     <Compile Include="Diagnostics\DiagnosticOperators.cs" />
-    <Compile Include="Diagnostics\ThreadHolder.cs" />
     <Compile Include="Diagnostics\TimeTakenHolder.cs" />
     <Compile Include="Diagnostics\ChangeStatistics.cs" />
     <Compile Include="Diagnostics\ChangeSummary.cs" />
