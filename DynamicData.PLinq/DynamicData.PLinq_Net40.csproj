@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ParallelEx.cs" />
     <Compile Include="ParallelisationOptions.cs" />
     <Compile Include="ParallelOperators.cs" />
     <Compile Include="ParallelType.cs" />
