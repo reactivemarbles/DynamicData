@@ -139,7 +139,7 @@ namespace DynamicData
                          }
 
                         // ReSharper disable once PossibleNullReferenceException (never the case!)
-                         var subscriber = cache.Connect().Subscribe();
+                         var subscriber = cache.Connect().SubscribeSafe(observer);
 
                          return Disposable.Create(() =>
                          {

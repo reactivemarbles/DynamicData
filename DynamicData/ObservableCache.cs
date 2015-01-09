@@ -240,6 +240,7 @@ namespace DynamicData
                         {
                             //remove from cache and notify which items have been auto removed
                             var keyValuePairs = toRemove as KeyValuePair<TKey, TObject>[] ?? toRemove.ToArray();
+                            if (keyValuePairs.Length == 0) return;
                             source.Remove(keyValuePairs.Select(kv => kv.Key));
                             observer.OnNext(keyValuePairs);
                         }
