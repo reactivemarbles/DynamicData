@@ -31,3 +31,5 @@ _ReSharper*/
 *.resharper
 [Pp]ackages*/
 *.DotSettings
+DynamicData.sln.GhostDoc.xml
+UpgradeLog.htm
