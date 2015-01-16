@@ -319,6 +319,21 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Removes the specified key from the cache.
+        /// If the item is not contained in the cache then the operation does nothing.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="key">The key.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void RemoveKey<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            source.BatchUpdate(updater => updater.RemoveKey(key));
+        }
+
+        /// <summary>
         /// Removes the specified items from the cache. 
         /// 
         /// Any items not contained in the cache are ignored
@@ -348,6 +363,22 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException("source");
             source.BatchUpdate(updater => updater.Remove(keys));
+        }
+
+        /// <summary>
+        /// Removes the specified keys from the cache. 
+        /// 
+        /// Any keys not contained in the cache are ignored
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="keys">The keys.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void RemoveKeys<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            source.BatchUpdate(updater => updater.RemoveKeys(keys));
         }
 
 

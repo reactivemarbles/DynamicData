@@ -79,6 +79,12 @@ namespace DynamicData
 
 
         /// <summary>
+        /// Overload of remove due to ambiguous method when TObject and TKey are of the same type
+        /// </summary>
+        /// <param name="key">The key.</param>
+        void RemoveKeys(IEnumerable<TKey> key);
+
+        /// <summary>
         /// Removes the specified item.
         /// </summary>
         /// <param name="item">The item.</param>
@@ -89,7 +95,13 @@ namespace DynamicData
         /// </summary>
         /// <param name="key">The key.</param>
         void Remove(TKey key);
-        
+
+        /// <summary>
+        /// Overload of remove due to ambiguous method when TObject and TKey are of the same type
+        /// </summary>
+        /// <param name="key">The key.</param>
+        void RemoveKey(TKey key);
+
         /// <summary>
         /// Clears all items from the underlying cache.
         /// </summary>

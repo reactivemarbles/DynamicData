@@ -46,7 +46,10 @@
     <Compile Include="Binding\ISortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\ObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\ObservableCollectionExtended.cs" />
+    <Compile Include="Binding\SortDirection.cs" />
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
+    <Compile Include="Binding\SortExpression.cs" />
+    <Compile Include="Binding\SortExpressionComparer.cs" />
     <Compile Include="ChangeReason.cs" />
     <Compile Include="ConnectionStatus.cs" />
     <Compile Include="Controllers\FilterController.cs" />
@@ -65,6 +68,7 @@
     <Compile Include="Experimental\SubjectWithRefCount.cs" />
     <Compile Include="Experimental\Watcher.cs" />
     <Compile Include="IChangeSet.cs" />
+    <Compile Include="IChangeSetAdaptor.cs" />
     <Compile Include="IDistinctChangeSet.cs" />
     <Compile Include="IGroup.cs" />
     <Compile Include="IGroupChangeSet.cs" />
@@ -74,6 +78,7 @@
     <Compile Include="IPagedChangeSet.cs" />
     <Compile Include="IQuery.cs" />
     <Compile Include="ISortedChangeSet.cs" />
+    <Compile Include="ISortedChangeSetAdaptor.cs" />
     <Compile Include="ISourceCache.cs" />
     <Compile Include="ISourceUpdater.cs" />
     <Compile Include="IVirtualChangeSet.cs" />

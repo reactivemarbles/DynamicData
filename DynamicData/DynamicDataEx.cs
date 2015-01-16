@@ -2311,5 +2311,50 @@ namespace DynamicData
 
 
         #endregion
+
+        #region Adaptor
+
+        /// <summary>
+        /// Inject side effects into the stream using the specified adaptor
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="adaptor">The adaptor.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// destination
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Adapt<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,IChangeSetAdaptor<TObject, TKey> adaptor)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (adaptor == null) throw new ArgumentNullException("adaptor");
+
+            return source.Do(adaptor.Adapt);
+        }
+
+        /// <summary>
+        /// Inject side effects into the stream using the specified sorted adaptor
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="adaptor">The adaptor.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// destination
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Adapt<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, ISortedChangeSetAdaptor<TObject, TKey> adaptor)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (adaptor == null) throw new ArgumentNullException("adaptor");
+
+            return source.Do(adaptor.Adapt);
+        }
+        #endregion
     }
 }

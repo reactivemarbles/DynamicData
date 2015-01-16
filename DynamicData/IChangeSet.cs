@@ -3,8 +3,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
-
     /// <summary>
     /// A collection of changes.
     /// 

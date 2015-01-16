@@ -123,6 +123,12 @@ namespace DynamicData.Kernel
             keys.ForEach(Remove);
         }
 
+        public void RemoveKeys(IEnumerable<TKey> keys)
+        {
+            if (keys == null) throw new ArgumentNullException("keys");
+            keys.ForEach(RemoveKey);
+        }
+
         public void Remove(TObject item)
         {
             TKey key = _keySelector.GetKey(item);
@@ -135,6 +141,11 @@ namespace DynamicData.Kernel
             if (!existing.HasValue) return;
             _queue.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
             _cache.Remove(key);
+        }
+
+        public void RemoveKey(TKey key)
+        {
+            Remove(key);
         }
 
 

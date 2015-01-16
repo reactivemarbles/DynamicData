@@ -3,6 +3,9 @@ using  DynamicData.Kernel;
 
 namespace DynamicData.Binding
 {
+
+
+
     /// <summary>
     /// Represents an adaptor which is used to update observable collection from
     /// a changeset stream
