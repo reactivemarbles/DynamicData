@@ -38,7 +38,7 @@ var myoperation = mySource.Connect()
             .Group(trade=>trade.Status) //This is different frm Rx GroupBy
 ```
 
-And what's more is this is the tip of the iceberg.
+And what's more is this is the tip of the iceberg - there are about 40 operators all bourne from pragmatic experience.
 
 ### Ok I'll give it a go
 
