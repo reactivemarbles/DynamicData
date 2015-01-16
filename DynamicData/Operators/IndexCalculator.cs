@@ -112,14 +112,14 @@ namespace DynamicData.Operators
         /// Dynamic calculation of moved items which produce a result which can be enumerated through in order
         /// </summary>
         /// <returns></returns>
-        public IChangeSet<TObject, TKey> Calculate(IEnumerable<Change<TObject, TKey>> changes)
+        public IChangeSet<TObject, TKey> Calculate(IChangeSet<TObject, TKey> changes)
         {
             var result = new List<Change<TObject, TKey>>();
 
           //  var notEvaluates = changes.Where(c => c.Reason != ChangeReason.Evaluate).ToList();
 
-            var enumerable = changes as IList<Change<TObject, TKey>> ?? changes.ToList();
-            foreach (var u in enumerable)
+
+            foreach (var u in changes)
             {
                 var current = new KeyValuePair<TKey,TObject>(u.Key,u.Current);
 
@@ -170,7 +170,7 @@ namespace DynamicData.Operators
 
 
             //for evaluates, check whether the change forces a new position
-            var evaluates = enumerable.Where(c => c.Reason == ChangeReason.Evaluate)
+            var evaluates = changes.Where(c => c.Reason == ChangeReason.Evaluate)
                 .OrderByDescending(x => new KeyValuePair<TKey,TObject>(x.Key, x.Current), _comparer)
                 .ToList();
 

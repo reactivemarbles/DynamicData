@@ -16,7 +16,7 @@ namespace DynamicData.Operators
         /// Dynamic calculation of changed items which produce a result which can be enumerated through in order
         /// </summary>
         /// <returns></returns>
-        IChangeSet<TObject, TKey> Calculate(IEnumerable<Change<TObject, TKey>> changes);
+        IChangeSet<TObject, TKey> Calculate(IChangeSet<TObject, TKey> changes);
 
         /// <summary>
         /// Changes the comparer.
