@@ -14,7 +14,7 @@ namespace DynamicData.Tests.Operators
     {
         private ISourceCache<Person, string> _cache;
         private SortController<Person> _sortController;
-        private TestSortedChangeSetResult<Person, string> _results;
+        private SortedChangeSetAggregator<Person, string> _results;
 
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private SortExpressionComparer<Person> _comparer;
@@ -30,7 +30,7 @@ namespace DynamicData.Tests.Operators
             _cache = new SourceCache<Person, string>(p => p.Name);
             _sortController = new SortController<Person>(_comparer);
             
-            _results = new TestSortedChangeSetResult<Person, string>
+            _results = new SortedChangeSetAggregator<Person, string>
                 (
                     _cache.Connect().Sort(_sortController)
                 );

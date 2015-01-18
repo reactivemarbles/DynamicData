@@ -12,7 +12,7 @@ namespace DynamicData.Tests.Operators
     class SizeExpiryFixture
     {
         private ISourceCache<Person, string> _source;
-        private TestChangeSetResult<Person, string> _results;
+        private ChangeSetAggregator<Person, string> _results;
         private TestScheduler _scheduler;
         private IDisposable _sizeLimiter;
 
@@ -25,7 +25,7 @@ namespace DynamicData.Tests.Operators
             _scheduler = new TestScheduler();
             _source =new SourceCache<Person, string>(p=>p.Key);
             _sizeLimiter = _source.LimitSizeTo(10, _scheduler).Subscribe();
-            _results = new TestChangeSetResult<Person, string>(_source.Connect());
+            _results = new ChangeSetAggregator<Person, string>(_source.Connect());
 
 
         }

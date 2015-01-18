@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Diagnostics;
-using DynamicData.Kernel;
 
 namespace DynamicData.Tests
 {
-    public class TestChangeSetResult<TObject, TKey> : IDisposable
+    public class DistinctChangeSetAggregator<TValue> : IDisposable
     {
-        private readonly IList<IChangeSet<TObject, TKey>> _messages = new List<IChangeSet<TObject, TKey>>();
-        private  ChangeSummary _summary;
-        private Exception _error;
         private readonly IDisposable _disposer;
+        private readonly IObservableCache<TValue, TValue> _data;
+        private readonly IList<IChangeSet<TValue, TValue>> _messages = new List<IChangeSet<TValue, TValue>>();
+        private ChangeSummary _summary;
+        private Exception _error;
 
-        private readonly IObservableCache<TObject, TKey> _data;
 
-        public TestChangeSetResult(IObservable<IChangeSet<TObject, TKey>> source)
+        public DistinctChangeSetAggregator(IObservable<IDistinctChangeSet<TValue>> source)
         {
             var published = source.Publish();
 
@@ -27,22 +26,22 @@ namespace DynamicData.Tests
 
             var connected = published.Connect();
             _disposer = Disposable.Create(() =>
-                                              {
-                                                  connected.Dispose();
-                                                  summariser.Dispose();
-                                                  results.Dispose();
-                                                  error.Dispose();
-                                              });
+            {
+                connected.Dispose();
+                summariser.Dispose();
+                results.Dispose();
+                error.Dispose();
+            });
         }
 
 
 
-        public IObservableCache<TObject, TKey> Data
+        public IObservableCache<TValue, TValue> Data
         {
             get { return _data; }
         }
 
-        public IList<IChangeSet<TObject, TKey>> Messages
+        public IList<IChangeSet<TValue, TValue>> Messages
         {
             get { return _messages; }
         }

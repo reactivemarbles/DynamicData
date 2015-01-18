@@ -9,13 +9,13 @@ namespace DynamicData.Tests.Operators
     public class FilterFixture
     {
         private ISourceCache<Person, string> _source;
-        private TestChangeSetResult<Person, string> _results;
+        private ChangeSetAggregator<Person, string> _results;
         
         [SetUp]
         public void Initialise()
         {
             _source = new SourceCache<Person, string>(p=>p.Name);
-            _results = new TestChangeSetResult<Person, string>(_source.Connect(p => p.Age > 20));
+            _results = new ChangeSetAggregator<Person, string>(_source.Connect(p => p.Age > 20));
   }
 
         [TearDown]

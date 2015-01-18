@@ -12,7 +12,7 @@ namespace DynamicData.Tests.Operators
     public class TransformSafeParallelFixture
     {
         private ISourceCache<Person, string> _source;
-        private TestChangeSetResult<PersonWithGender, string> _results;
+        private ChangeSetAggregator<PersonWithGender, string> _results;
         private IList<Error<Person, string>> _errors;
 
         private readonly Func<Person, PersonWithGender> _transformFactory = p =>
@@ -32,7 +32,7 @@ namespace DynamicData.Tests.Operators
             _errors = new List<Error<Person, string>>();
 
             var safeTransform = _source.Connect().TransformSafe(_transformFactory, error => _errors.Add(error));
-            _results = new TestChangeSetResult<PersonWithGender, string>(safeTransform);
+            _results = new ChangeSetAggregator<PersonWithGender, string>(safeTransform);
         }
 
         [TearDown]

@@ -33,6 +33,16 @@ namespace DynamicData
     }
 
 
+    ///// <summary>
+    ///// Observable cache where the key and value are the same.
+    ///// </summary>
+    ///// <typeparam name="TValue">The type of the value.</typeparam>
+    //public interface IObservableCache<TValue> : IObservableCache<TValue, TValue>
+    //{
+
+
+    //}
+
     /// <summary>
     ///   /// A cache for observing and querying in memory data. With additional data access operators
     /// </summary>

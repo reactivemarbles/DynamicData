@@ -7,54 +7,77 @@ namespace DynamicData.Operators
 {
     internal sealed class DistinctCalculator<TObject, TKey, TValue>
     {
-    //    private readonly ParallelisationOptions _parallelisationOptions;
-        private readonly Cache<TObject, TKey> _cache = new Cache<TObject, TKey>();
-        private readonly object _locker = new object();
         private readonly Func<TObject, TValue> _valueSelector;
-        private readonly HashSet<TValue> _values = new HashSet<TValue>();
-
+        private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
+        private readonly IDictionary<TKey, TValue> _itemCache = new Dictionary<TKey, TValue>();
+       
         public DistinctCalculator(Func<TObject, TValue> valueSelector)
         {
-           // _parallelisationOptions = parallelisationOptions ?? ParallelisationOptions.None;
+            if (valueSelector == null) throw new ArgumentNullException("valueSelector");
             _valueSelector = valueSelector;
         }
-
-
+        
         public IDistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> updates)
         {
-            DistinctChangeSet<TValue> changes;
-            lock (_locker)
+            var result = new List<Change<TValue, TValue>>();
+
+            Action<TValue> addAction = value => _valueCounters.Lookup(value)
+                .IfHasValue(count => _valueCounters[value] = count + 1)
+                .Else(() =>
+                {
+                    _valueCounters[value] = 1;
+                    result.Add(new Change<TValue, TValue>(ChangeReason.Add, value,value));
+                });
+
+            Action<TValue> removeAction = value =>
             {
-                _cache.Clone(updates);
+                var counter = _valueCounters.Lookup(value);
+                if (!counter.HasValue) return;
 
-                ////TODO: abstract this class and inherit for proper platform enlightenment
-                //#if !SILVERLIGHT && !PORTABLE && !PORTABLE40
-                //        var current = _cache.Items.Parallelise(_parallelisationOptions).Select(i => _valueSelector(i)).Distinct().ToHashSet();
-                //#else
-               
-                //#endif
-                HashSet<TValue> previous = _values;
-                var current = _cache.Items.Select(i => _valueSelector(i)).Distinct().ToHashSet();
-                //maintain
-                var additions = current.Except(previous).Select(v => new Change<TValue,TValue>(ChangeReason.Add, v,v));
-                var removals = previous.Except(current).Select(v =>new Change<TValue,TValue>(ChangeReason.Remove, v,v));
-                changes = new DistinctChangeSet<TValue>(additions.Union(removals));
+                //decrement counter
+                var newCount = counter.Value - 1;
+                _valueCounters[value] = newCount;
+                if (newCount!=0) return;
 
-                changes.ForEach(change =>
+                //if there are none, then remove and notify
+                _valueCounters.Remove(value);
+                result.Add(new Change<TValue, TValue>(ChangeReason.Remove, value, value));
+            };
+
+            updates.ForEach(change =>
+            {
+                var key = change.Key;
+                switch (change.Reason)
+                {
+                    case ChangeReason.Add:
                     {
-                        switch (change.Reason)
-                        {
-                            case ChangeReason.Add:
-                                _values.Add(change.Current);
-                                break;
-                            case ChangeReason.Remove:
-                                _values.Remove(change.Current);
-                                break;
-                        }
-                    });
-            }
-
-            return changes;
+                        var value = _valueSelector(change.Current);
+                        addAction(value);
+                        _itemCache[key] = value;
+                        break;
+                    }
+                    case ChangeReason.Evaluate:
+                    case ChangeReason.Update:
+                    {
+                        var value = _valueSelector(change.Current);
+                        var previous = _itemCache[key];
+                        if (value.Equals(previous)) return;
+                        
+                        removeAction(previous);
+                        addAction(value);
+                        _itemCache[key] = value;
+                        break;
+                    }
+                    case ChangeReason.Remove:
+                    {
+                        var previous = _itemCache[key];
+                        removeAction(previous);
+                        _itemCache.Remove(key);
+                        break;
+                    }                   
+                }
+            });
+            return new DistinctChangeSet<TValue>(result);
         }
     }
 }

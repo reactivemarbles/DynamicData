@@ -30,7 +30,7 @@ namespace DynamicData.Tests.Operators
     public class SortFixture
     {
         private ISourceCache<Person, string> _source;
-        private TestSortedChangeSetResult<Person, string> _results;
+        private SortedChangeSetAggregator<Person, string> _results;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private IComparer<Person> _comparer;
 
@@ -44,7 +44,7 @@ namespace DynamicData.Tests.Operators
             };
 
             _source = new SourceCache<Person, string>(p => p.Key);
-            _results = new TestSortedChangeSetResult<Person, string>
+            _results = new SortedChangeSetAggregator<Person, string>
                 (
                     _source.Connect().Sort(_comparer)
                 );

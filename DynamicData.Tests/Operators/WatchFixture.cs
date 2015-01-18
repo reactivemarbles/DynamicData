@@ -25,13 +25,13 @@ namespace DynamicData.Tests.Operators
         }
         
         private ISourceCache<DisposableObject, int> _source;
-        private TestChangeSetResult<DisposableObject, int> _results;
+        private ChangeSetAggregator<DisposableObject, int> _results;
 
         [SetUp]
         public void Initialise()
         {
             _source = new SourceCache<DisposableObject, int>(p=>p.Id);
-            _results = new TestChangeSetResult<DisposableObject, int>(_source.Connect().DisposeMany());
+            _results = new ChangeSetAggregator<DisposableObject, int>(_source.Connect().DisposeMany());
         }
 
         [TearDown]

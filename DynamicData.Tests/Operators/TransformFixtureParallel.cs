@@ -9,7 +9,7 @@ namespace DynamicData.Tests.Operators
     public class TransformFixtureParallel
     {
         private ISourceCache<Person, string> _source;
-        private TestChangeSetResult<PersonWithGender, string> _results;
+        private ChangeSetAggregator<PersonWithGender, string> _results;
         private readonly Func<Person, PersonWithGender> _transformFactory = p =>
                                                                                 {
                                                                                     string gender = p.Age % 2 == 0 ? "M" : "F";
@@ -22,7 +22,7 @@ namespace DynamicData.Tests.Operators
             _source =new SourceCache<Person, string>(p=>p.Name);
 
             var pTransform = _source.Connect().Transform(_transformFactory);
-            _results = new TestChangeSetResult<PersonWithGender, string>(pTransform);
+            _results = new ChangeSetAggregator<PersonWithGender, string>(pTransform);
         }
 
         [TearDown]

@@ -11,7 +11,7 @@ namespace DynamicData.Tests.Operators
     class AutoRemoveFixture
     {
         private ISourceCache<Person, string> _source;
-        private TestChangeSetResult<Person, string> _results;
+        private ChangeSetAggregator<Person, string> _results;
 
         private TestScheduler _scheduler;
 
@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Operators
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
-            _results = new TestChangeSetResult<Person, string>(_source.Connect());
+            _results = new ChangeSetAggregator<Person, string>(_source.Connect());
         }
 
         [TearDown]

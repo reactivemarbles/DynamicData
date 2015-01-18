@@ -12,7 +12,7 @@ namespace DynamicData.Tests.Operators
     [TestFixture]
     public class SourceCacheFixture
     {
-        private TestChangeSetResult<Person, string> _results;
+        private ChangeSetAggregator<Person, string> _results;
         private ISourceCache<Person, string> _source;
 
 
@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Operators
         public void MyTestInitialize()
         {
             _source = new SourceCache<Person, string>(p=>p.Key); 
-             _results= new TestChangeSetResult<Person, string>(_source.Connect());
+             _results= new ChangeSetAggregator<Person, string>(_source.Connect());
         }
 
         [TearDown]

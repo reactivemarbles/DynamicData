@@ -17,7 +17,6 @@ namespace DynamicData.Kernel
             _exception = exception;
         }
 
-
         public void Then(Action<T> onComplete)
         {
             if (onComplete == null) throw new ArgumentNullException("onComplete");

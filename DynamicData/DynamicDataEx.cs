@@ -1865,14 +1865,12 @@ namespace DynamicData
 
         /// <summary>
         ///     Selects distinct values from the source.
-        ///     NB: 
         /// </summary>
         /// <typeparam name="TObject">The tyoe object from which the distinct values are selected</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <typeparam name="TValue">The type of the value.</typeparam>
         /// <param name="source">The soure.</param>
         /// <param name="valueSelector">The value selector.</param>
-        /// <param name="parallelisationOptions"> </param>
         /// <returns></returns>
         /// <remarks>
         /// Due to it's nature only adds or removes can be returned

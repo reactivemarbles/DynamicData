@@ -33,13 +33,13 @@ namespace DynamicData.Tests.Operators
         }
         
         private ISourceCache<SubscribeableObject, int> _source;
-        private TestChangeSetResult<SubscribeableObject, int> _results;
+        private ChangeSetAggregator<SubscribeableObject, int> _results;
 
         [SetUp]
         public void Initialise()
         {
             _source = new SourceCache<SubscribeableObject, int>(p=>p.Id);
-            _results = new TestChangeSetResult<SubscribeableObject, int>(
+            _results = new ChangeSetAggregator<SubscribeableObject, int>(
                                                 _source.Connect().SubscribeMany(subscribeable =>
                                                 {
                                                     subscribeable.Subscribe();

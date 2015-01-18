@@ -7,13 +7,13 @@ namespace DynamicData.Tests.Operators
     public class IgnoreUpdateFixture
     {
         private ISourceCache<Person, string> _source;
-        private TestChangeSetResult<Person, string> _results;
+        private ChangeSetAggregator<Person, string> _results;
 
         [SetUp]
         public void MyTestInitialize()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
-            _results = new TestChangeSetResult<Person, string>
+            _results = new ChangeSetAggregator<Person, string>
                 (
                      _source.Connect().IgnoreUpdateWhen((current,previous)=>current == previous)
                 );

@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Diagnostics;
-using DynamicData.Kernel;
 
 namespace DynamicData.Tests
 {
-    public class TestVirtualChangeSetResult<TObject, TKey> : IDisposable
+    public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
     {
         private readonly IList<IVirtualChangeSet<TObject, TKey>> _messages = new List<IVirtualChangeSet<TObject, TKey>>();
         private ChangeSummary _summary;
@@ -16,7 +15,7 @@ namespace DynamicData.Tests
 
         private readonly IObservableCache<TObject, TKey> _data;
 
-        public TestVirtualChangeSetResult(IObservable<IVirtualChangeSet<TObject, TKey>> source)
+        public VirtualChangeSetAggregator(IObservable<IVirtualChangeSet<TObject, TKey>> source)
         {
             var published = source.Publish();
 

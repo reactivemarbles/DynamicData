@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Operators
 {
-
+    //TODO: Sort this mess out and make better tests
 
 
     [TestFixture]

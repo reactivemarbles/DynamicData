@@ -6,15 +6,16 @@ using DynamicData.Diagnostics;
 
 namespace DynamicData.Tests
 {
-    public class TestPagedChangeSetResult<TObject, TKey> : IDisposable
+    public class ChangeSetAggregator<TObject, TKey> : IDisposable
     {
-        private readonly IObservableCache<TObject, TKey> _data;
         private readonly IDisposable _disposer;
-        private readonly IList<IPagedChangeSet<TObject, TKey>> _messages = new List<IPagedChangeSet<TObject, TKey>>();
+        private readonly IObservableCache<TObject, TKey> _data;
+        private readonly IList<IChangeSet<TObject, TKey>> _messages = new List<IChangeSet<TObject, TKey>>();
+        private  ChangeSummary _summary;
         private Exception _error;
-        private ChangeSummary _summary;
 
-        public TestPagedChangeSetResult(IObservable<IPagedChangeSet<TObject, TKey>> source)
+
+        public ChangeSetAggregator(IObservable<IChangeSet<TObject, TKey>> source)
         {
             var published = source.Publish();
 
@@ -24,15 +25,15 @@ namespace DynamicData.Tests
             var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
 
             var connected = published.Connect();
-
             _disposer = Disposable.Create(() =>
-            {
-                connected.Dispose();
-                summariser.Dispose();
-                results.Dispose();
-                error.Dispose();
-            });
+                                              {
+                                                  connected.Dispose();
+                                                  summariser.Dispose();
+                                                  results.Dispose();
+                                                  error.Dispose();
+                                              });
         }
+
 
 
         public IObservableCache<TObject, TKey> Data
@@ -40,7 +41,7 @@ namespace DynamicData.Tests
             get { return _data; }
         }
 
-        public IList<IPagedChangeSet<TObject, TKey>> Messages
+        public IList<IChangeSet<TObject, TKey>> Messages
         {
             get { return _messages; }
         }

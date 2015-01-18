@@ -9,7 +9,7 @@ namespace DynamicData.Tests.Operators
     public class FilterControllerFixture
     {
         private ISourceCache<Person, string> _source; 
-        private TestChangeSetResult<Person, string> _results;
+        private ChangeSetAggregator<Person, string> _results;
         private FilterController<Person> _filter;
 
         [SetUp]
@@ -17,7 +17,7 @@ namespace DynamicData.Tests.Operators
         {
             _source = new SourceCache<Person, string>(p=>p.Key);
             _filter = new FilterController<Person>(p=>p.Age>20);
-            _results = new TestChangeSetResult<Person, string>(_source.Connect(_filter));
+            _results = new ChangeSetAggregator<Person, string>(_source.Connect(_filter));
         }
 
         [TearDown]

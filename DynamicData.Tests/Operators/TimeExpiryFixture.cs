@@ -13,7 +13,7 @@ namespace DynamicData.Tests.Operators
     {
         private ISourceCache<Person, string> _cache;
         private IDisposable _remover;
-        private TestChangeSetResult<Person, string> _results;
+        private ChangeSetAggregator<Person, string> _results;
 
         private TestScheduler _scheduler;
 
@@ -23,7 +23,7 @@ namespace DynamicData.Tests.Operators
             _scheduler = new TestScheduler();
 
             _cache = new SourceCache<Person, string>(p=>p.Key);
-            _results = new TestChangeSetResult<Person, string>(_cache.Connect());
+            _results = new ChangeSetAggregator<Person, string>(_cache.Connect());
             _remover = _cache.AutoRemove(p=>TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
         }
 

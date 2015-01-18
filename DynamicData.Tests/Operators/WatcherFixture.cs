@@ -23,7 +23,7 @@ namespace DynamicData.Tests.Operators
     {
         private TestScheduler _scheduler = new TestScheduler();
         private ISourceCache<Person, string> _source;
-        private TestChangeSetResult<SelfObservingPerson, string> _results;
+        private ChangeSetAggregator<SelfObservingPerson, string> _results;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private IWatcher<Person, string> _watcher;
 
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Operators
             _source = new SourceCache<Person, string>(p => p.Key);
             _watcher = _source.Connect().AsWatcher(_scheduler);
 
-            _results = new TestChangeSetResult<SelfObservingPerson, string>
+            _results = new ChangeSetAggregator<SelfObservingPerson, string>
                 (
                 _source.Connect()
                     .Transform(p => new SelfObservingPerson(_watcher.Watch(p.Key).Select(w => w.Current)))
