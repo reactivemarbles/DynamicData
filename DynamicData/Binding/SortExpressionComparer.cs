@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace DynamicData.Binding
 {
     /// <summary>
-    /// Class for constructing sort expressions 
+    /// Generic sort expression to help create inline sorting for the .Sort(IComparer comparer) operator
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class SortExpressionComparer<T> : List<SortExpression<T>>, IComparer<T>
@@ -27,22 +27,42 @@ namespace DynamicData.Binding
             return 0;
         }
 
+        /// <summary>
+        /// Create an ascending sort expression
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <returns></returns>
         public static SortExpressionComparer<T> Ascending(Func<T, IComparable> expression)
         {
             return new SortExpressionComparer<T> { new SortExpression<T>(expression) };
         }
 
+        /// <summary>
+        /// Create an descending sort expression.
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <returns></returns>
         public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression)
         {
             return new SortExpressionComparer<T> { new SortExpression<T>(expression, SortDirection.Descending) };
         }
 
+        /// <summary>
+        /// Adds an additional ascending sort expression
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <returns></returns>
         public SortExpressionComparer<T> ThenByAscending(Func<T, IComparable> expression)
         {
             Add(new SortExpression<T>(expression));
             return this;
         }
 
+        /// <summary>
+        ///  Adds an additional desccending sort expression
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <returns></returns>
         public SortExpressionComparer<T> ThenByDescending(Func<T, IComparable> expression)
         {
             Add(new SortExpression<T>(expression, SortDirection.Descending));
