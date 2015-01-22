@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Controllers;
-using DynamicData.Kernel;
 using DynamicData.Operators;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;

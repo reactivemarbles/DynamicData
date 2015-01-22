@@ -18,7 +18,8 @@ First create a source of data:
 //use  SourceList<T> to compare items on hash code otherwise use SourceCache<TObject,TKey>.
 var mySource = new SourceList<Trade>();
 ```
-The following snippet connects to a stream of live trades, creates a proxy for each trade and orders the results by most recent first. As the source is modified the result of ‘myoperation’ will automatically reflect changes.
+
+This example connects to a stream of live trades, creates a proxy for each trade and orders the results by most recent first. As the source is modified the result of ‘myoperation’ will automatically reflect changes.
 
 ```csharp
 //some code to maintain the source (not shown)
@@ -32,10 +33,18 @@ var myoperation = mySource.Connect()
 ```
 Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
 
-The following snippet produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed.
+This example produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed. When a group is emptied it is removed.
 ```csharp
 var myoperation = mySource.Connect() 
             .Group(trade=>trade.Status) //This is different frm Rx GroupBy
+			.Subscribe(changeSet=>//do something with the groups)
+```
+
+or you could do something like this which will wire and unwire items from the stream when they are added, updated or removed from the cache.
+```csharp
+var myoperation = mySource.Connect() 
+			.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount) 
+			.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with IObservable<PropChangedArg>)
 ```
 
 And what's more is this is the tip of the iceberg - there are about 40 operators all bourne from pragmatic experience.
