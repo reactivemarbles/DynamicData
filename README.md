@@ -10,7 +10,14 @@ A comprehensive library of reactive extensions, which are used to manage in-memo
 
 It makes the management of in-memory data easy and is no exageration to say it can save thousands of lines of code.
 
-### Go on then show me
+### Give me some links
+
+- Install from Nuget  https://www.nuget.org/packages/DynamicData
+- Sample wpf project https://github.com/RolandPheasant/TradingDemo
+- Blog http://dynamicdataproject.wordpress.com
+- Feel free to feedback on twitter: [@RolandPheasant](https://twitter.com/RolandPheasant)
+
+### But I want to see some details
 
 First create a source of data:
 
@@ -33,7 +40,7 @@ var myoperation = mySource.Connect()
 ```
 Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
 
-This example produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed. When a group is emptied it is removed.
+This example produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed. When a group has no data, it is removed.
 ```csharp
 var myoperation = mySource.Connect() 
             .Group(trade=>trade.Status) //This is different frm Rx GroupBy
@@ -49,9 +56,29 @@ var myoperation = mySource.Connect()
 
 And what's more is this is the tip of the iceberg - there are about 40 operators all bourne from pragmatic experience.
 
-### Ok I'll give it a go
+### So what's the magic then?
 
-- Install from Nuget  https://www.nuget.org/packages/DynamicData
-- Sample wpf project https://github.com/RolandPheasant/TradingDemo
-- Blog http://dynamicdataproject.wordpress.com
-- Feel free to feedback on twitter: [@RolandPheasant](https://twitter.com/RolandPheasant)
+```csharp
+Simple, any change to a collection can be represented using a change set where the change set is a collection of changed items as follows.
+
+	//NB Exact implementation is  simplified 
+
+    public interface IChangeSet<TObject,  TKey> : IEnumerable<Change<TObject, TKey>>
+    {
+    }
+
+	//and the change is something like this
+	public struct Change<TObject, TKey>
+	{
+		public ChangeReason Reason {get;}
+		public TKey Key {get;}
+		public TObject Current {get;}
+		public Optional<TObjec>t Previous {get;}
+	}
+```
+
+This structure is observed like this ```IObservableIChangeSet<TObject,  TKey>``` and voila, we can start building operators around this idea.
+
+
+
+
