@@ -25,7 +25,6 @@ First create a source of data:
 //use  SourceList<T> to compare items on hash code otherwise use SourceCache<TObject,TKey>.
 var mySource = new SourceList<Trade>();
 ```
-
 This example connects to a stream of live trades, creates a proxy for each trade and orders the results by most recent first. As the source is modified the result of ‘myoperation’ will automatically reflect changes.
 
 ```csharp
@@ -76,7 +75,7 @@ Simple, any change to a collection can be represented using a change set where t
 	}
 ```
 
-This structure is observed like this ```IObservableIChangeSet<TObject,  TKey>``` and voila, we can start building operators around this idea.
+This structure is observed like this ```IObservable<IChangeSet<TObject,  TKey>>``` and voila, we can start building operators around this idea.
 
 
 
