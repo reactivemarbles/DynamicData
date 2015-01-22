@@ -24,11 +24,13 @@ First create a source of data:
 ```csharp
 //use  SourceList<T> to compare items on hash code otherwise use SourceCache<TObject,TKey>.
 var mySource = new SourceList<Trade>();
+
+//some code to maintain the source (not shown)
 ```
+
 This example connects to a stream of live trades, creates a proxy for each trade and orders the results by most recent first. As the source is modified the result of ‘myoperation’ will automatically reflect changes.
 
 ```csharp
-//some code to maintain the source (not shown)
 var myoperation = mySource.Connect() 
             .Filter(trade=>trade.Status == TradeStatus.Live) 
             .Transform(trade => new TradeProxy(trade))
