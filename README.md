@@ -40,17 +40,17 @@ var myoperation = mySource.Connect()
 ```
 Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
 
-This example produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed. When a group has no data, it is removed.
+This example produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed.
 ```csharp
 var myoperation = mySource.Connect() 
             .Group(trade=>trade.Status) //This is different frm Rx GroupBy
 			.Subscribe(changeSet=>//do something with the groups)
 ```
 
-or you could do something like this which will wire and unwire items from the stream when they are added, updated or removed from the cache.
+or you could do something like this which will wire and unwire items from the observable when they are added, updated or removed from the source.
 ```csharp
 var myoperation = mySource.Connect() 
-			.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount) 
+			.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount))
 			.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with IObservable<PropChangedArg>)
 ```
 
@@ -58,12 +58,11 @@ And what's more is this is the tip of the iceberg - there are about 40 operators
 
 ### So what's the magic then?
 
-```csharp
 Simple, any change to a collection can be represented using a change set where the change set is a collection of changed items as follows.
 
+```csharp
 	//NB Exact implementation is  simplified 
-
-    public interface IChangeSet<TObject,  TKey> : IEnumerable<Change<TObject, TKey>>
+	public interface IChangeSet<TObject,  TKey> : IEnumerable<Change<TObject, TKey>>
     {
     }
 
