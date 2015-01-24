@@ -90,12 +90,7 @@ namespace DynamicData.Tests.Kernal
             var feeder = new SourceCache<Entity, int>(e => e.Key);
 
             var subscriber = feeder.Connect()
-                            .Transform(e =>
-                                {
-                                    Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
-                                    Thread.Sleep(TimeSpan.FromSeconds(1));
-                                    return new TransformEntityWithError(e);
-                                })
+                            .Transform(e => new TransformEntityWithError(e))
 
                             .Finally(() => completed = true)
                             .Subscribe(updates => { Console.WriteLine(); }, ex => error = true);

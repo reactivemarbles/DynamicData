@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Operators;
 using DynamicData.Tests.Domain;
@@ -20,7 +21,7 @@ namespace DynamicData.Tests.Operators
         [SetUp]
         public void Initialise()
         {
-            _comparer = Binding.SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
+            _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
 
             _source = new SourceCache<Person, string>(p=>p.Key);

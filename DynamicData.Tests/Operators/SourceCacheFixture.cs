@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Threading;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
@@ -19,8 +17,8 @@ namespace DynamicData.Tests.Operators
         [SetUp]
         public void MyTestInitialize()
         {
-            _source = new SourceCache<Person, string>(p=>p.Key); 
-             _results= new ChangeSetAggregator<Person, string>(_source.Connect());
+            _source = new SourceCache<Person, string>(p=>p.Key);
+            _results = _source.Connect().AsAggregator();
         }
 
         [TearDown]
@@ -55,8 +53,6 @@ namespace DynamicData.Tests.Operators
             Assert.AreEqual(1, _results.Messages[0].Evaluates, "Should be 1 evaluate");
 
             Assert.AreEqual(0, _results.Data.Count, "Should be 1 item in` the cache");
-         //   var filtered = people.Where(p => p.Age > 20).ToArray();
-          //  CollectionAssert.AreEqual(filtered, _results.Data.Items.Where(p => p.Age > 20), "Incorrect Filter result");
         }
 
 
@@ -71,17 +67,10 @@ namespace DynamicData.Tests.Operators
             
             var results = new List<int>();
 
-            var subscription = _source.Connect()
-                    .TimeInterval()
-                     .Subscribe(updates => results.Add(updates.Value.Count));
-
 
             _source.BatchUpdate(updater => updater.AddOrUpdate(largebatch));
             _source.BatchUpdate(updater => updater.AddOrUpdate(five));
             _source.BatchUpdate(updater => updater.AddOrUpdate(single1));
-
-            Thread.Sleep(100);
-            subscription.Dispose();
             _source.Dispose();
 
             Assert.AreEqual(10000, results[0], "largebatch should be first");

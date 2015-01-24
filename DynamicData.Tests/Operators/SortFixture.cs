@@ -37,7 +37,7 @@ namespace DynamicData.Tests.Operators
         [SetUp]
         public void Initialise()
         {
-            _comparer = Binding.SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
+            _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
 
             _source = new SourceCache<Person, string>(p => p.Key);

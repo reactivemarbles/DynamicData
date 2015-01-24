@@ -22,7 +22,7 @@ namespace DynamicData.Tests.Operators
         [SetUp]
         public void Initialise()
         {
-            _comparer = Binding.SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
+            _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
             _cache = new SourceCache<Person, string>(p => p.Name);
             _sortController = new SortController<Person>(_comparer);
@@ -60,7 +60,7 @@ namespace DynamicData.Tests.Operators
             var people = _generator.Take(100).ToArray();
             _cache.BatchUpdate(updater => updater.AddOrUpdate(people));
 
-            var desc = Binding.SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
+            var desc = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
 
             _sortController.Change(desc);
                    var expectedResult = people.OrderBy(p => p, desc).Select(p => new KeyValuePair<string,Person>(p.Name, p)).ToList();
@@ -108,7 +108,7 @@ namespace DynamicData.Tests.Operators
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).OrderBy(x => Guid.NewGuid()).ToArray();
             _cache.AddOrUpdate(people);
-            _sortController.Change( Binding.SortExpressionComparer<Person>.Descending(p => p.Age));
+            _sortController.Change( SortExpressionComparer<Person>.Descending(p => p.Age));
             _sortController.Reset();
 
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string,Person>(p.Name, p)).ToList();
