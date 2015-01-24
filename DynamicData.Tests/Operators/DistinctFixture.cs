@@ -1,230 +1,84 @@
 ﻿using System;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.Operators
 {
-    //TODO: Sort this mess out and make better tests
-
-
     [TestFixture]
     public class DistinctFixture
     {
         private ISourceCache<Person, string> _source;
-        private IObservable<IChangeSet<Person, string>> _stream;
-        private IDisposable _subscriber;
-
+        private DistinctChangeSetAggregator<int> _results;
 
         [SetUp]
         public void Initialise()
         {
             _source = new SourceCache<Person, string>(p=>p.Name);
-            _stream = _source.Connect();
+            _results = _source.Connect().DistinctValues(p => p.Age).AsAggregator();
         }
 
         [TearDown]
         public void CleanUp()
         {
             _source.Dispose();
-            _subscriber.Dispose();
+            _results.Dispose();
         }
 
         [Test]
         public void FiresAddWhenaNewItemIsAdded()
         {
-            bool called = false;
-            _subscriber = _stream.DistinctValues(p => p.Age)
-
-                                            .Subscribe(
-                                                updates =>
-                                                    {
-                                                        called = true;
-                                                        Assert.AreEqual(1, updates.Count, "Should be 1 add");
-                                                        Assert.AreEqual(ChangeReason.Add, updates.First().Reason);
-                                                    });
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new Person("Person1", 20)));
-
-            _subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
-        }
-
-
-        [Test]
-        public void FiresCompletedWhenDisposed()
-        {
-            bool completed = false;
-            _subscriber = _stream.DistinctValues(p => p.Age)
-                                            .Subscribe(updates => { },
-                                                       () => { completed = true; });
-
-            _source.Dispose();
-            _subscriber.Dispose();
-            Assert.IsTrue(completed, "Completed has not been invoked");
-        }
-
-
-        [Test]
-        public void FiresErrorWhenAnExceptionIsThrown()
-        {
-
-            bool completed = false;
-            bool error = false;
-            _subscriber = _stream.DistinctValues(p => p.Age)
-                                 .Finally(() => completed = true)  
-                                 .SubscribeAndCatch(updates => { throw new Exception("Dodgy"); },ex => error = true);
-
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new Person("Person1", 20)));
-            _subscriber.Dispose();
-
-            Assert.IsTrue(error, "Error has not been invoked");
+            _source.AddOrUpdate(new Person("Person1", 20));
+            
+            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
+            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
         }
 
         [Test]
-        public void FiresManyValueForBatchOfDifferentAdds()
+        public void FiresBatchResultOnce()
         {
-            bool called = false;
-            bool ended = false;
-            _subscriber = _stream.DistinctValues(p => p.Age)
-      
-                                            .Subscribe(
-                                                updates =>
-                                                    {
-                                                        called = true;
-                                                        Assert.AreEqual(4, updates.Count, "Should be 4 adds");
-                                                        foreach (var update in updates)
-                                                        {
-                                                            Assert.AreEqual(ChangeReason.Add, update.Reason);
-                                                        }
-                                                    });
             _source.BatchUpdate(updater =>
-                {
-                    updater.AddOrUpdate(new Person("Person1", 20));
+            {
+                    updater.AddOrUpdate( new Person("Person1", 20));
                     updater.AddOrUpdate(new Person("Person2", 21));
                     updater.AddOrUpdate(new Person("Person3", 22));
-                    updater.AddOrUpdate(new Person("Person4", 23));
-                });
+            });
 
-            _subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
+            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
+            Assert.AreEqual(3, _results.Data.Count, "Should be 3 items in the cache");
+
+            CollectionAssert.AreEquivalent(new[] { 20, 21, 22 }, _results.Data.Items);
+            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
         }
 
         [Test]
-        public void FiresOnlyOnceForABatchOfUniqueValues()
+        public void DuplicatedResultsResultInNoAdditionalMessage()
         {
-            bool called = false;
-            _subscriber = _stream.DistinctValues(p => p.Age)
-                                            .Subscribe(
-                                                updates =>
-                                                    {
-                                                        called = true;
-                                                        Assert.AreEqual(1, updates.Count, "Should be 1 add");
-                                                        Assert.AreEqual(ChangeReason.Add, updates.First().Reason);
-                                                    });
             _source.BatchUpdate(updater =>
-                {
-                    updater.AddOrUpdate(new Person("Person1", 20));
-                    updater.AddOrUpdate(new Person("Person2", 20));
-                    updater.AddOrUpdate(new Person("Person3", 20));
-                    updater.AddOrUpdate(new Person("Person4", 20));
-                });
+            {
+                updater.AddOrUpdate(new Person("Person1", 20));
+                updater.AddOrUpdate(new Person("Person1", 20));
+                updater.AddOrUpdate(new Person("Person1", 20));
+            });
 
-            _subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
+            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 update message");
+            Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
+            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
         }
 
         [Test]
-        public void FiresRemoveWhenADistinctValueIsRemovedFromTheSource()
+        public void RemovingAnItemRemovesTheDistinct()
         {
-            bool called = false;
-            //skip first one a this is setting up the stream
-            _subscriber = _stream.DistinctValues(p => p.Age).Skip(1)
-                                            .Subscribe(
-                                                updates =>
-                                                    {
-                                                        called = true;
-                                                        Assert.AreEqual(1, updates.Count, "Should be 1 update");
-                                                        foreach (var update in updates)
-                                                        {
-                                                            Assert.AreEqual(ChangeReason.Remove, update.Reason);
-                                                        }
-                                                    });
+            _source.AddOrUpdate(new Person("Person1", 20));
+            _source.Remove(new Person("Person1", 20));
+            Assert.AreEqual(2, _results.Messages.Count, "Should be 1 update message");
+            Assert.AreEqual(0, _results.Data.Count, "Should be 1 items in the cache");
 
-            //load feeder
-            _source.BatchUpdate(updater => { updater.AddOrUpdate(new Person("Person1", 20)); });
-
-            //remove
-            _source.BatchUpdate(updater => { updater.Remove(new Person("Person1", 20)); });
-
-            _subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
+            Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
+            Assert.AreEqual(1, _results.Messages.Skip(1).First().Removes, "Second messsage should be a remove");
         }
 
-        [Test]
-        public void ReceivesUpdateWhenFeederIsInvoked()
-        {
-            bool called = false;
-            _subscriber = _stream.DistinctValues(p => p.Age)
-                                            .Subscribe(updates => { called = true; });
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new Person("Person1", 20)));
-            _subscriber.Dispose();
-            Assert.IsTrue(called, "Subscription has not been invoked");
-        }
-
-        [Test]
-        public void TimeFor10000Invocations()
-        {
-            ISubject<Person> subject = new Subject<Person>();
-                
-                bool called = false;
-            _subscriber = _stream
-              //  .IgnoreUpdateWhen((current,previous)=>current.Age!=previous.Age )
-                .DistinctValues(p => p.Age)
-                .Subscribe(updates => { called = true; });
-
-
-            var update = new Person("Person1", 20);
-
-            int items = 10000;
-
-            Timer.ToConsole(() => subject.OnNext(update), items, "Subject alone");
-            Timer.ToConsole(() => _source.BatchUpdate(updater => updater.AddOrUpdate(new Person("Person1", 20))), items, "Indvidual Updates");
-            var people = Enumerable.Range(1, items).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToList();
-            Timer.ToConsole(() => _source.BatchUpdate(updater => updater.AddOrUpdate(people)), 10, "Batch Updates");
-            
-            _subscriber.Dispose();
-          //  Assert.IsTrue(called, "Subscription has not been invoked");
-        }
-
-        [Test]
-        public void TimeFor10000Invocations_Filter()
-        {
-            ISubject<Person> subject = new Subject<Person>();
-
-            bool called = false;
-            _subscriber = _stream
-                //  .IgnoreUpdateWhen((current,previous)=>current.Age!=previous.Age )
-                .Clone()
-                //.Sort(new Persp)
-                .Subscribe(updates => { called = true; });
-
-
-            var update = new Person("Person1", 20);
-
-            int items = 10000;
-
-            Timer.ToConsole(() => subject.OnNext(update), items, "Subject alone");
-            Timer.ToConsole(() => _source.BatchUpdate(updater => updater.AddOrUpdate(new Person("Person1", 20))), items, "Indvidual Updates");
-            var people = Enumerable.Range(1, items).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToList();
-            Timer.ToConsole(() => _source.BatchUpdate(updater => updater.AddOrUpdate(people)), 10, "Batch Updates");
-
-            _subscriber.Dispose();
-            //  Assert.IsTrue(called, "Subscription has not been invoked");
-        }
 
      }
 }

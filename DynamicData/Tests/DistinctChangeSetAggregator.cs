@@ -6,6 +6,10 @@ using DynamicData.Diagnostics;
 
 namespace DynamicData.Tests
 {
+    /// <summary>
+    /// Aggregates all events and statistics for a distinct changeset to help assertions when testing
+    /// </summary>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
     public class DistinctChangeSetAggregator<TValue> : IDisposable
     {
         private readonly IDisposable _disposer;
@@ -15,6 +19,10 @@ namespace DynamicData.Tests
         private Exception _error;
 
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DistinctChangeSetAggregator{TValue}"/> class.
+        /// </summary>
+        /// <param name="source">The source.</param>
         public DistinctChangeSetAggregator(IObservable<IDistinctChangeSet<TValue>> source)
         {
             var published = source.Publish();
@@ -36,21 +44,45 @@ namespace DynamicData.Tests
 
 
 
+        /// <summary>
+        /// Gets the data.
+        /// </summary>
+        /// <value>
+        /// The data.
+        /// </value>
         public IObservableCache<TValue, TValue> Data
         {
             get { return _data; }
         }
 
+        /// <summary>
+        /// Gets the messages.
+        /// </summary>
+        /// <value>
+        /// The messages.
+        /// </value>
         public IList<IChangeSet<TValue, TValue>> Messages
         {
             get { return _messages; }
         }
 
+        /// <summary>
+        /// Gets the summary.
+        /// </summary>
+        /// <value>
+        /// The summary.
+        /// </value>
         public ChangeSummary Summary
         {
             get { return _summary; }
         }
 
+        /// <summary>
+        /// Gets the error.
+        /// </summary>
+        /// <value>
+        /// The error.
+        /// </value>
         public Exception Error
         {
             get { return _error; }

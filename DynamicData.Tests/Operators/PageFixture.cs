@@ -15,16 +15,13 @@ namespace DynamicData.Tests.Operators
 
         private PageController _pageController;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private SortExpressionComparer<Person> _comparer;
+        private IComparer<Person> _comparer;
 
         [SetUp]
         public void Initialise()
         {
-            _comparer = new SortExpressionComparer<Person>
-            {
-                new SortExpression<Person>(p => p.Age),
-                new SortExpression<Person>(p => p.Name)
-            };
+            _comparer = Binding.SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
+
 
             _source = new SourceCache<Person, string>(p=>p.Key);
             _pageController = new PageController(new PageRequest(1,25));

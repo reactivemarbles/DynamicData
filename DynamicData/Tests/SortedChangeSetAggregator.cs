@@ -6,16 +6,25 @@ using DynamicData.Diagnostics;
 
 namespace DynamicData.Tests
 {
-    public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
+    /// <summary>
+    /// Aggregates all events and statistics for a sorted changeset to help assertions when testing
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    public class SortedChangeSetAggregator<TObject, TKey> : IDisposable
     {
-        private readonly IList<IVirtualChangeSet<TObject, TKey>> _messages = new List<IVirtualChangeSet<TObject, TKey>>();
+        private readonly IList<ISortedChangeSet<TObject, TKey>> _messages = new List<ISortedChangeSet<TObject, TKey>>();
         private ChangeSummary _summary;
         private Exception _error;
         private readonly IDisposable _disposer;
 
         private readonly IObservableCache<TObject, TKey> _data;
 
-        public VirtualChangeSetAggregator(IObservable<IVirtualChangeSet<TObject, TKey>> source)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SortedChangeSetAggregator{TObject, TKey}"/> class.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        public SortedChangeSetAggregator(IObservable<ISortedChangeSet<TObject, TKey>> source)
         {
             var published = source.Publish();
 
@@ -24,14 +33,15 @@ namespace DynamicData.Tests
             _data = published.AsObservableCache();
             var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
 
+
             var connected = published.Connect();
             _disposer = Disposable.Create(() =>
-                                              {
-                                                  connected.Dispose();
-                                                  summariser.Dispose();
-                                                  results.Dispose();
-                                                  error.Dispose();
-                                              });
+            {
+                connected.Dispose();
+                summariser.Dispose();
+                results.Dispose();
+                error.Dispose();
+            });
         }
 
 
@@ -41,7 +51,7 @@ namespace DynamicData.Tests
             get { return _data; }
         }
 
-        public IList<IVirtualChangeSet<TObject, TKey>> Messages
+        public IList<ISortedChangeSet<TObject, TKey>> Messages
         {
             get { return _messages; }
         }

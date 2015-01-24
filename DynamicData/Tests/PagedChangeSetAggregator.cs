@@ -6,18 +6,20 @@ using DynamicData.Diagnostics;
 
 namespace DynamicData.Tests
 {
-    public class SortedChangeSetAggregator<TObject, TKey> : IDisposable
+    /// <summary>
+    /// Aggregates all events and statistics for a paged changeset to help assertions when testing
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    public class PagedChangeSetAggregator<TObject, TKey> : IDisposable
     {
-        private readonly IList<ISortedChangeSet<TObject, TKey>> _messages = new List<ISortedChangeSet<TObject, TKey>>();
-        private ChangeSummary _summary;
-        private Exception _error;
-        private readonly IDisposable _disposer;
-
-        private IList<TObject> _resultList = new List<TObject>();
-
         private readonly IObservableCache<TObject, TKey> _data;
+        private readonly IDisposable _disposer;
+        private readonly IList<IPagedChangeSet<TObject, TKey>> _messages = new List<IPagedChangeSet<TObject, TKey>>();
+        private Exception _error;
+        private ChangeSummary _summary;
 
-        public SortedChangeSetAggregator(IObservable<ISortedChangeSet<TObject, TKey>> source)
+        public PagedChangeSetAggregator(IObservable<IPagedChangeSet<TObject, TKey>> source)
         {
             var published = source.Publish();
 
@@ -26,8 +28,8 @@ namespace DynamicData.Tests
             _data = published.AsObservableCache();
             var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
 
-
             var connected = published.Connect();
+
             _disposer = Disposable.Create(() =>
             {
                 connected.Dispose();
@@ -38,13 +40,12 @@ namespace DynamicData.Tests
         }
 
 
-
         public IObservableCache<TObject, TKey> Data
         {
             get { return _data; }
         }
 
-        public IList<ISortedChangeSet<TObject, TKey>> Messages
+        public IList<IPagedChangeSet<TObject, TKey>> Messages
         {
             get { return _messages; }
         }

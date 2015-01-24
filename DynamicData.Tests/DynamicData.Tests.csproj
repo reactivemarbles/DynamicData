@@ -71,7 +71,6 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DistinctChangeSetAggregator.cs" />
     <Compile Include="Domain\PersonEmployment.cs" />
     <Compile Include="Domain\PersonSorter.cs" />
     <Compile Include="Domain\PersonWithEmployment.cs" />
@@ -103,10 +102,6 @@
     <Compile Include="Operators\TransformSafeFixture.cs" />
     <Compile Include="Operators\TransformSafeParallelFixture.cs" />
     <Compile Include="Operators\WatchFixture.cs" />
-    <Compile Include="PagedChangeSetAggregator.cs" />
-    <Compile Include="SortedChangeSetAggregator.cs" />
-    <Compile Include="TestSortedUpdateCollectionResult.cs" />
-    <Compile Include="ChangeSetAggregator.cs" />
     <Compile Include="Kernal\CacheUpdaterFixture.cs" />
     <Compile Include="Kernal\SourceUpdaterFixture.cs" />
     <Compile Include="Kernal\DistinctUpdateCollectionFixture.cs" />
@@ -127,8 +122,6 @@
     <Compile Include="Operators\MonitorStatusFixture.cs" />
     <Compile Include="Operators\TransformFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestOperators.cs" />
-    <Compile Include="VirtualChangeSetAggregator.cs" />
     <Compile Include="Utilities\SelectManyExtensions.cs" />
     <Compile Include="Operators\SourceCacheFixture.cs" />
     <Compile Include="Utilities\Timer.cs" />
