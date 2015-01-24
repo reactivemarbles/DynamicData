@@ -59,8 +59,6 @@ namespace DynamicData.Tests.Operators
         [Test]
         public void ScheduledUpdatesArriveInOrder()
         {
-            //var queue = new AsyncQueue>?();
-
             var largebatch = Enumerable.Range(1, 10000).Select(i => new Person("Large.{0}".FormatWith(i), i)).ToArray();
             var five = Enumerable.Range(1, 5).Select(i => new Person("Five.{0}".FormatWith(i), i)).ToArray();
             var single1 = new Person("Name.A", 20);
@@ -68,10 +66,10 @@ namespace DynamicData.Tests.Operators
             var results = new List<int>();
 
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(largebatch));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(five));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(single1));
-            _source.Dispose();
+            _source.AddOrUpdate(largebatch);
+            _source.AddOrUpdate(five);
+            _source.AddOrUpdate(single1);
+  
 
             Assert.AreEqual(10000, results[0], "largebatch should be first");
             Assert.AreEqual(5, results[1], "Five should be second");
