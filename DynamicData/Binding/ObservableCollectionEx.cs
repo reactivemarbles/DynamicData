@@ -57,8 +57,7 @@ namespace DynamicData.Binding
                             .FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
                                            h => source.CollectionChanged += h,
                                            h => source.CollectionChanged -= h)
-                            //  .FromEventPattern<NotifyCollectionChangedEventArgs>(source, "CollectionChanged")
-                                           .Select
+                           .Select
                             (
                                 args =>
                                 {

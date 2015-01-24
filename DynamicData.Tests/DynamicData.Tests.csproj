@@ -71,6 +71,7 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Binding\BindChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
     <Compile Include="Domain\PersonEmployment.cs" />
     <Compile Include="Domain\PersonSorter.cs" />
