@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
@@ -93,6 +94,44 @@ namespace DynamicData.Tests.Binding
             _source.AddOrUpdate(_generator.Take(100));
             var sorted = _source.Items.OrderBy(p => p, _comparer).ToList();
             CollectionAssert.AreEqual(_collection.ToList(), sorted);
+        }
+
+        [Test]
+        public void LargeUpdateInvokesAReset()
+        {
+            //update once as intital load is always a reset
+            _source.AddOrUpdate(new Person("Me",21));
+
+            bool invoked = false;
+            _collection.CollectionChanged += (sender, e) =>
+            {
+                invoked = true;
+                Assert.AreEqual(NotifyCollectionChangedAction.Reset,e.Action);
+
+            };
+            _source.AddOrUpdate(_generator.Take(100));
+
+            Assert.IsTrue(invoked);
+        }
+
+        [Test]
+        public void SmallChangeDoesNotInvokeReset()
+        {
+            //update once as intital load is always a reset
+            _source.AddOrUpdate(new Person("Me", 21));
+
+            bool invoked = false;
+            bool resetinvoked = false;
+            _collection.CollectionChanged += (sender, e) =>
+            {
+                invoked = true;
+                if (e.Action == NotifyCollectionChangedAction.Reset)
+                    resetinvoked = true;
+            };
+            _source.AddOrUpdate(_generator.Take(24));
+
+            Assert.IsTrue(invoked);
+            Assert.IsFalse(resetinvoked,"Reset should not has been invoked");
         }
 
     }
