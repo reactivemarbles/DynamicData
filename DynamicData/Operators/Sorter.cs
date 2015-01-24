@@ -163,6 +163,8 @@ namespace DynamicData.Operators
                 return null;
             }
 
+            if (sortReason == SortReason.Reorder && changeSet.Count == 0) return null;
+
             _sorted = new KeyValueCollection<TObject, TKey>(_calculator.List, _comparer, sortReason, _optimisations);
             return new SortedChangeSet<TObject, TKey>(_sorted, changeSet);
         }

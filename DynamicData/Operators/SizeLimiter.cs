@@ -16,11 +16,6 @@ namespace DynamicData.Kernel
             _updater = new IntermediateUpdater<ExpirableItem<TObject, TKey>, TKey>(_cache);
         }
 
-
-       //public void RemoveExpired()
-
-        
-
         public IChangeSet<TObject, TKey> Update(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
         {
             _updater.Update(updates);

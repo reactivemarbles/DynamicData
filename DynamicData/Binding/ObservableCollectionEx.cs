@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
@@ -14,15 +13,18 @@ namespace DynamicData.Binding
     /// </summary>
     public static class ObservableCollectionEx
     {
-
-        //public static IObservable<IChangeSet<TObject,int>> ToObservableChangeSet<TCollection, TObject>(
-        //    this TCollection source)
-        //    where TCollection : class, INotifyCollectionChanged, IEnumerable<TObject>
-        //{
-
-   
-        //    return ToObservableChangeSet(source,x=>x)
-        //}
+        /// <summary>
+        /// Convert an observable collection into a dynamic stream of change sets, using the hash code as the object's key
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, int>> ToObservableChangeSet<TObject>(this  ObservableCollection<TObject> source)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            return source.ToObservableChangeSet(t => t.GetHashCode());
+        }
 
         /// <summary>
         /// Convert an observable collection into a dynamic stream of change sets
