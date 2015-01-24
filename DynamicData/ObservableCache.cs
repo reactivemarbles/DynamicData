@@ -13,11 +13,96 @@ using DynamicData.Operators;
 namespace DynamicData
 {
 
+
     /// <summary>
     /// The entry point for the dynamic data sub system
     /// </summary>
     public static class ObservableCache
     {
+        #region Populate changetset from observables
+
+        /// <summary>
+        /// Converts the observable to an observable changeset
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="keySelector">The key selector.</param>
+        /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache</param>
+        /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<TObject> source, Func<TObject,TKey> keySelector, 
+            Func<TObject, TimeSpan?> expireAfter=null,
+            int limitSizeTo = -1)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (keySelector == null) throw new ArgumentNullException("keySelector");
+
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                var cache = new SourceCache<TObject, TKey>(keySelector);
+                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
+
+                var expirer = expireAfter !=null
+                    ? cache.AutoRemove(expireAfter,Scheduler.Default).Subscribe()
+                    : Disposable.Empty;
+
+                var sizeLimiter = limitSizeTo > 0
+                    ? cache.LimitSizeTo(limitSizeTo).Subscribe()
+                    : Disposable.Empty;
+
+                var notifier = cache.Connect().SubscribeSafe(observer);
+
+                return new CompositeDisposable(cache, sourceSubscriber, notifier, expirer, sizeLimiter);
+            });
+
+        }
+
+        /// <summary>
+        /// Converts the observable to an observable changeset
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="keySelector">The key selector.</param>
+        /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache</param>
+        /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector,
+            Func<TObject, TimeSpan?> expireAfter=null,
+            int limitSizeTo = -1)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (keySelector == null) throw new ArgumentNullException("keySelector");
+
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                var cache = new SourceCache<TObject, TKey>(keySelector);
+                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
+
+                var expirer = expireAfter != null
+                    ? cache.AutoRemove(expireAfter, Scheduler.Default).Subscribe()
+                    : Disposable.Empty;
+
+                var sizeLimiter = limitSizeTo > 0
+                    ? cache.LimitSizeTo(limitSizeTo).Subscribe()
+                    : Disposable.Empty;
+
+                var notifier = cache.Connect().SubscribeSafe(observer);
+
+                return new CompositeDisposable(cache, sourceSubscriber, notifier, expirer, sizeLimiter);
+            });
+        }
+
+        #endregion
+
+
         /// <summary>
         /// Populates a source into the specified cache.
         /// </summary>
