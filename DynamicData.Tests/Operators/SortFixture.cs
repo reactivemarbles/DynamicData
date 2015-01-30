@@ -58,7 +58,7 @@ namespace DynamicData.Tests.Operators
         public void SortInitialBatch()
         {
             var people = _generator.Take(100).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
 
             Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
 
@@ -72,7 +72,7 @@ namespace DynamicData.Tests.Operators
         public void AppendAtBeginning()
         {
             var people = _generator.Take(100).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
             
             //create age 0 to ensure it is inserted first
             var insert = new Person("_Aaron", 0);
@@ -89,7 +89,7 @@ namespace DynamicData.Tests.Operators
         public void AppendInMiddle()
         {
             var people = _generator.Take(100).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
 
             //create age 0 to ensure it is inserted first
             var insert = new Person("Marvin", 50);
@@ -110,7 +110,7 @@ namespace DynamicData.Tests.Operators
         public void AppendAtEnd()
         {
             var people = _generator.Take(100).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
 
             //create age 0 to ensure it is inserted first
             var insert = new Person("zzzzz", 1000);
@@ -132,7 +132,7 @@ namespace DynamicData.Tests.Operators
        public void RemoveFirst()
        {
            var people = _generator.Take(100).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
            //create age 0 to ensure it is inserted first
            var remove = _results.Messages[0].SortedItems.First();
@@ -155,7 +155,7 @@ namespace DynamicData.Tests.Operators
        public void RemoveFromMiddle()
        {
            var people = _generator.Take(100).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
            //create age 0 to ensure it is inserted first
            var remove = _results.Messages[0].SortedItems.Skip(50).First();
@@ -178,7 +178,7 @@ namespace DynamicData.Tests.Operators
        public void RemoveFromEnd()
        {
            var people = _generator.Take(100).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
            //create age 0 to ensure it is inserted first
            var remove = _results.Messages[0].SortedItems.Last();
@@ -199,7 +199,7 @@ namespace DynamicData.Tests.Operators
        public void UpdateFirst()
        {
            var people = _generator.Take(100).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
            var toupdate = _results.Messages[0].SortedItems.First().Value;
            var update = new Person(toupdate.Name, toupdate.Age + 5);
@@ -220,7 +220,7 @@ namespace DynamicData.Tests.Operators
        public void UpdateMiddle()
        {
            var people = _generator.Take(100).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
            var toupdate = _results.Messages[0].SortedItems.Skip(50).First().Value;
           var update = new Person(toupdate.Name, toupdate.Age + 5);
@@ -245,7 +245,7 @@ namespace DynamicData.Tests.Operators
            //TODO: fixed Text
 
            var people = _generator.Take(100).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
           var toupdate = _results.Messages[0].SortedItems.Last().Value;
           var update = new Person(toupdate.Name, toupdate.Age + 5);
@@ -268,7 +268,7 @@ namespace DynamicData.Tests.Operators
        public void BatchUpdate1()
        {
            var people = _generator.Take(10).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
 
            var toupdate = people[3];
@@ -295,7 +295,7 @@ namespace DynamicData.Tests.Operators
        public void BatchUpdateWhereUpdateMovesTheIndexDown()
        {
            var people = _generator.Take(10).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
            var toupdate = people[3];
 
@@ -324,7 +324,7 @@ namespace DynamicData.Tests.Operators
        public void BatchUpdate2()
        {
            var people = _generator.Take(10).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
 
            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
@@ -352,7 +352,7 @@ namespace DynamicData.Tests.Operators
        public void BatchUpdate3()
        {
            var people = _generator.Take(10).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
 
            var toupdate = people[7];
@@ -378,7 +378,7 @@ namespace DynamicData.Tests.Operators
        public void BatchUpdate4()
        {
            var people = _generator.Take(10).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
 
@@ -404,9 +404,8 @@ namespace DynamicData.Tests.Operators
        public void BatchUpdate6()
        {
            var people = _generator.Take(10).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
 
-           var toupdate = people[3];
 
            _source.BatchUpdate(updater =>
            {
@@ -436,13 +435,10 @@ namespace DynamicData.Tests.Operators
        public void InlineUpdateProducesAReplace()
        {
            var people = _generator.Take(10).ToArray();
-           _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+           _source.AddOrUpdate(people);
             var toupdate = people[3];
 
-           _source.BatchUpdate(updater =>
-           {
-               updater.AddOrUpdate(new Person(toupdate.Name,toupdate.Age+1));
-           });
+           _source.AddOrUpdate(new Person(toupdate.Name,toupdate.Age+1));
 
            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();

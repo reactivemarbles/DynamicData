@@ -56,25 +56,25 @@ namespace DynamicData.Tests.Operators
         }
 
 
-        [Test]
-        public void ScheduledUpdatesArriveInOrder()
-        {
-            var largebatch = Enumerable.Range(1, 10000).Select(i => new Person("Large.{0}".FormatWith(i), i)).ToArray();
-            var five = Enumerable.Range(1, 5).Select(i => new Person("Five.{0}".FormatWith(i), i)).ToArray();
-            var single1 = new Person("Name.A", 20);
+        //[Test]
+        //public void ScheduledUpdatesArriveInOrder()
+        //{
+        //    var largebatch = Enumerable.Range(1, 10000).Select(i => new Person("Large.{0}".FormatWith(i), i)).ToArray();
+        //    var five = Enumerable.Range(1, 5).Select(i => new Person("Five.{0}".FormatWith(i), i)).ToArray();
+        //    var single1 = new Person("Name.A", 20);
             
-            var results = new List<int>();
+        //    var results = new List<int>();
 
 
-            _source.AddOrUpdate(largebatch);
-            _source.AddOrUpdate(five);
-            _source.AddOrUpdate(single1);
+        //    _source.AddOrUpdate(largebatch);
+        //    _source.AddOrUpdate(five);
+        //    _source.AddOrUpdate(single1);
   
 
-            Assert.AreEqual(10000, results[0], "largebatch should be first");
-            Assert.AreEqual(5, results[1], "Five should be second");
-            Assert.AreEqual(1, results[2], "single1 should be third");
-        }
+        //    Assert.AreEqual(10000, results[0], "largebatch should be first");
+        //    Assert.AreEqual(5, results[1], "Five should be second");
+        //    Assert.AreEqual(1, results[2], "single1 should be third");
+        //}
 
 
         [Test]

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
@@ -792,38 +793,115 @@ namespace DynamicData
         
         #endregion
 
-        #region Scan / Aggregate / Query
+
+
+        #region Entire Collection Operators
+
+        private sealed class ObservableWithValue<T>
+        {
+            private readonly IObservable<T> _source;
+            private Optional<T> _latestValue = Optional<T>.None; 
+            
+            public ObservableWithValue(IObservable<T> source)
+            {
+                _source = source.Do(value => _latestValue = value).StartWith(default(T));
+            }
+            
+            public Optional<T> LatestValue
+            {
+                get { return _latestValue; }
+            }
+
+            public IObservable<T> Observable
+            {
+                get { return _source; }
+            }
+        }
+
+        public static IObservable<bool> TrueForAll<TObject, TKey,TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject,IObservable<TValue>> observableSelector,
+            Func<TValue,bool> equalityCondition )
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            return Observable.Create<bool>(observer =>
+            {
+
+                var transformed = source.Transform(t => new ObservableWithValue<TValue>(observableSelector(t))).Publish();
+
+                IObservable<TValue> inlineChanges = transformed.MergeMany(t => t.Observable);
+                IObservable<IEnumerable<ObservableWithValue<TValue>>> queried = transformed.Query(q => q.Items);
+               
+                //nb: we do not care about the inline change because we are only monitoring it to cause a notification
+                var publisher = queried.CombineLatest(inlineChanges, (items, inline) =>
+                {
+                    return items.All(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value));
+                })
+                 .DistinctUntilChanged()
+                 .SubscribeSafe(observer);
+
+
+                var connected = transformed.Connect();
+                return new CompositeDisposable(connected, publisher);
+            });
+        }
 
         /// <summary>
-        /// Returns cached data to enable querying.  
+        ///  The latest copy of the cache is exposed for querying after each modification to the underlying data
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="resultSelector">The result selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// resultSelector
+        /// </exception>
+        public static IObservable<TDestination> Query<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<IQuery<TObject, TKey>, TDestination> resultSelector)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (resultSelector == null) throw new ArgumentNullException("resultSelector");
+
+            return source.Query().Select(resultSelector);
+        }
+
+        /// <summary>
+        /// The latest copy of the cache is exposed for querying after each modification to the underlying data
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IQuery<TObject, TKey>> Query<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
+            if (source == null) throw new ArgumentNullException("source");
+
             return Observable.Create<IQuery<TObject, TKey>>
                 (
                     observer =>
-                        {
-                            var cache = new Cache<TObject, TKey>();
-                            var query = new AnomynousQuery<TObject, TKey>(cache);
+                    {
+                        var cache = new Cache<TObject, TKey>();
+                        var query = new AnomynousQuery<TObject, TKey>(cache);
 
-                            return source.Clone(cache).Subscribe(updates =>
-                                               {
-                                                   try
-                                                   {
-                                                      observer.OnNext(query);
-                                                   }
-                                                   catch (Exception ex)
-                                                   {
-                                                       observer.OnError(ex);
-                                                   }
-                                               },observer.OnError,observer.OnCompleted);
-                        }
+                        return source.Clone(cache).Subscribe(updates =>
+                        {
+                            try
+                            {
+                                observer.OnNext(query);
+                            }
+                            catch (Exception ex)
+                            {
+                                observer.OnError(ex);
+                            }
+                        }, observer.OnError, observer.OnCompleted);
+                    }
                 );
         }
+
+
 
 
         /// <summary>

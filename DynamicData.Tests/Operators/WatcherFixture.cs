@@ -30,7 +30,7 @@ namespace DynamicData.Tests.Operators
         private IDisposable _cleanUp;
 
         [SetUp]
-        public void SetStream()
+        public void SetUp()
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);

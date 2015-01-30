@@ -87,11 +87,11 @@ namespace DynamicData
                 var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
 
                 var expirer = expireAfter != null
-                    ? cache.AutoRemove(expireAfter, Scheduler.Default).Subscribe()
+                    ? cache.AutoRemove(expireAfter, Scheduler.Default).Subscribe((kvp) => { },observer.OnError)
                     : Disposable.Empty;
 
                 var sizeLimiter = limitSizeTo > 0
-                    ? cache.LimitSizeTo(limitSizeTo).Subscribe()
+                    ? cache.LimitSizeTo(limitSizeTo).Subscribe((kvp) => { }, observer.OnError)
                     : Disposable.Empty;
 
                 var notifier = cache.Connect().SubscribeSafe(observer);

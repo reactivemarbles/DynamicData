@@ -47,7 +47,7 @@ namespace DynamicData.Binding
                     observer =>
                     {
                         //populate local cache, otherwise there is no way to deal with a reset
-                        var resultCache = new SourceCache<TObject, TKey>(keySelector);
+                        var cloneOfList = new SourceCache<TObject, TKey>(keySelector);
 
                         Func<ChangeSet<TObject, TKey>> initialChangeSet = () =>
                         {
@@ -87,7 +87,7 @@ namespace DynamicData.Binding
                                         case NotifyCollectionChangedAction.Reset:
                                         {
                                             //Clear all from the cache and reload
-                                            var removes = resultCache.KeyValues.Select(t => new Change<TObject, TKey>(ChangeReason.Remove, t.Key, t.Value)).ToArray();
+                                            var removes = cloneOfList.KeyValues.Select(t => new Change<TObject, TKey>(ChangeReason.Remove, t.Key, t.Value)).ToArray();
                                             return removes.Concat(initialChangeSet());
                                         }
                                         default:
@@ -99,12 +99,9 @@ namespace DynamicData.Binding
 
 
                         var initialChanges = initialChangeSet();
-                        var cacheLoader=Observable.Return(initialChanges).Concat(sourceUpdates).PopulateInto(resultCache);
-
-
-                        var subscriber = resultCache.Connect().SubscribeSafe(observer);
-
-                        return new CompositeDisposable(cacheLoader, subscriber, resultCache);
+                        var cacheLoader=Observable.Return(initialChanges).Concat(sourceUpdates).PopulateInto(cloneOfList);
+                        var subscriber = cloneOfList.Connect().SubscribeSafe(observer);
+                        return new CompositeDisposable(cacheLoader, subscriber, cloneOfList);
                     }
 
                 );

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Controllers;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
