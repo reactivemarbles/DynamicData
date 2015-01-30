@@ -804,7 +804,7 @@ namespace DynamicData
             
             public ObservableWithValue(IObservable<T> source)
             {
-                _source = source.Do(value => _latestValue = value).StartWith(default(T));
+                _source = source.Do(value => _latestValue = value);
             }
             
             public Optional<T> LatestValue
@@ -818,6 +818,21 @@ namespace DynamicData
             }
         }
 
+        /// <summary>
+        /// Produces a boolean observable indicating whether the result on all of the selected observables matches
+        /// the equality condition. The observable is re-evaluated whenever
+        /// 
+        /// i) The cache changes
+        /// or ii) The inner observable changes
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="observableSelector">Selector which returns the target observable</param>
+        /// <param name="equalityCondition">The equality condition.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<bool> TrueForAll<TObject, TKey,TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject,IObservable<TValue>> observableSelector,
             Func<TValue,bool> equalityCondition )
@@ -825,16 +840,57 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException("source");
             return Observable.Create<bool>(observer =>
             {
-
                 var transformed = source.Transform(t => new ObservableWithValue<TValue>(observableSelector(t))).Publish();
 
-                IObservable<TValue> inlineChanges = transformed.MergeMany(t => t.Observable);
-                IObservable<IEnumerable<ObservableWithValue<TValue>>> queried = transformed.Query(q => q.Items);
+                var inlineChanges = transformed.MergeMany(t => t.Observable);
+                var queried = transformed.Query(q => q.Items);
                
                 //nb: we do not care about the inline change because we are only monitoring it to cause a notification
                 var publisher = queried.CombineLatest(inlineChanges, (items, inline) =>
                 {
                     return items.All(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value));
+                })
+                 .DistinctUntilChanged()
+                 .SubscribeSafe(observer);
+
+
+                var connected = transformed.Connect();
+                return new CompositeDisposable(connected, publisher);
+            });
+        }
+
+        /// <summary>
+        /// Produces a boolean observable indicating whether the result of whether any of the selected observables matches
+        /// the equality condition. The observable is re-evaluated whenever
+        /// 
+        /// i) The cache changes
+        /// or ii) The inner observable changes
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="observableSelector">The observable selector.</param>
+        /// <param name="equalityCondition">The equality condition.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, IObservable<TValue>> observableSelector,
+                Func<TValue, bool> equalityCondition)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            return Observable.Create<bool>(observer =>
+            {
+
+                var transformed = source.Transform(t => new ObservableWithValue<TValue>(observableSelector(t))).Publish();
+
+                var inlineChanges = transformed.MergeMany(t => t.Observable);
+                var queried = transformed.Query(q => q.Items);
+
+                //nb: we do not care about the inline change because we are only monitoring it to cause a notification
+                var publisher = queried.CombineLatest(inlineChanges, (items, inline) =>
+                {
+                    return items.Any(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value));
                 })
                  .DistinctUntilChanged()
                  .SubscribeSafe(observer);

@@ -15,7 +15,7 @@ namespace DynamicData.Tests.Operators
         public void Initialise()
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
-            _observable = _source.Connect().TrueForAll(o => o.Observable, o => o == true);
+            _observable = _source.Connect().TrueForAll(o => o.Observable.StartWith(o.Value), o => o == true);
 
         }
 
@@ -26,30 +26,61 @@ namespace DynamicData.Tests.Operators
         }
 
         [Test]
-        public void ItemAddedDoesNotReturnTrueUntilTheObservableHasAValue()
+        public void InitialItemReturnsFalseWhenObservaleHasNoValue()
         {
-            bool invoked = false;
-
+            bool? valuereturned = null;
             var subscribed = _observable.Subscribe(result =>
             {
-                invoked = true;
+                valuereturned = result;
             });
 
-
             var item = new ObjectWithObservable(1);
-           // item.InvokeObservable(true);
             _source.AddOrUpdate(item);
 
-            Assert.IsTrue(invoked,"S");
-            item.InvokeObservable(true);
-
-
-            _source.AddOrUpdate(new ObjectWithObservable(2));
+            Assert.IsTrue(valuereturned.HasValue, "An intial value should have been called");
+            Assert.AreEqual(false, valuereturned.Value, "The intial value should be false");
+   
             subscribed.Dispose();
         }
 
+        [Test]
+        public void InlineObservableChangeProducesResult()
+        {
+            bool? valuereturned = null;
+            var subscribed = _observable.Subscribe(result =>
+            {
+                valuereturned = result;
+            });
 
+            var item = new ObjectWithObservable(1);
+            item.InvokeObservable(true);
+            _source.AddOrUpdate(item);
+         
+            Assert.AreEqual(true, valuereturned.Value, "Value should be true");
+            subscribed.Dispose();
+        }
 
+        [Test]
+        public void MultipleValuesReturnTrue()
+        {
+            bool? valuereturned = null;
+            var subscribed = _observable.Subscribe(result =>
+            {
+                valuereturned = result;
+            });
+
+            var item1 = new ObjectWithObservable(1);
+            var item2 = new ObjectWithObservable(2);
+            var item3 = new ObjectWithObservable(3);
+            _source.AddOrUpdate(item1);
+            _source.AddOrUpdate(item2);
+            _source.AddOrUpdate(item3);
+            Assert.AreEqual(false, valuereturned.Value, "Value should be false");
+
+            item3.InvokeObservable(true);
+            Assert.AreEqual(false, valuereturned.Value, "Value should be true");
+            subscribed.Dispose();
+        }
 
 
     private class ObjectWithObservable
