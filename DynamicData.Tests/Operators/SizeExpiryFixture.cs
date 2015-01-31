@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Reactive.Linq;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
@@ -24,9 +23,8 @@ namespace DynamicData.Tests.Operators
         {
             _scheduler = new TestScheduler();
             _source =new SourceCache<Person, string>(p=>p.Key);
-            _sizeLimiter = _source.LimitSizeTo(10, _scheduler).Subscribe();
-            _results = new ChangeSetAggregator<Person, string>(_source.Connect());
-
+            _sizeLimiter = _source.LimitSizeTo(10,_scheduler).Subscribe();
+            _results = _source.Connect().AsAggregator();
 
         }
 
@@ -58,7 +56,7 @@ namespace DynamicData.Tests.Operators
         public void AddMoreThanLimit()
         {
             var people = _generator.Take(100).OrderBy(p=>p.Name).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
 
 

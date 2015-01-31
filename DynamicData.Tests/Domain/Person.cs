@@ -56,24 +56,11 @@ namespace DynamicData.Tests.Domain
 
         #region Equality Members
 
-
-
-        public static bool operator ==(Person left, Person right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(Person left, Person right)
-        {
-            return !Equals(left, right);
-        }
-
- 
         public bool Equals(Person other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(_gender, other._gender) && _age == other._age;
+            return string.Equals(_name, other._name);
         }
 
         public override bool Equals(object obj)
@@ -86,41 +73,8 @@ namespace DynamicData.Tests.Domain
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return ((_gender != null ? _gender.GetHashCode() : 0)*397) ^ _age;
-            }
+            return (_name != null ? _name.GetHashCode() : 0);
         }
-
-        private sealed class NameAgeEqualityComparer : IEqualityComparer<Person>
-        {
-            public bool Equals(Person x, Person y)
-            {
-                if (ReferenceEquals(x, y)) return true;
-                if (ReferenceEquals(x, null)) return false;
-                if (ReferenceEquals(y, null)) return false;
-                if (x.GetType() != y.GetType()) return false;
-                return string.Equals(x.Name, y.Name) && x.Age == y.Age;
-            }
-
-            public int GetHashCode(Person obj)
-            {
-                unchecked
-                {
-                    return ((obj.Name != null ? obj.Name.GetHashCode() : 0)*397) ^ obj.Age;
-                }
-            }
-        }
-
-        private static readonly IEqualityComparer<Person> NameAgeComparerInstance = new NameAgeEqualityComparer();
-
-
-        public static IEqualityComparer<Person> NameAgeComparer
-        {
-            get { return NameAgeComparerInstance; }
-        }
-
-
 
         #endregion
 

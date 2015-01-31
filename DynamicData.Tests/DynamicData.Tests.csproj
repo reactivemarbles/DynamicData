@@ -84,6 +84,7 @@
     <Compile Include="Operators\AutoRemoveFixture.cs" />
     <Compile Include="Operators\DeferUntilLoadedFixture.cs" />
     <Compile Include="Operators\EnumerableEx.cs" />
+    <Compile Include="Operators\EnumerableObservableToObservableChangeSetFixture.cs" />
     <Compile Include="Operators\GroupControllerFixture.cs" />
     <Compile Include="Operators\GroupControllerForFilteredItemsFixture.cs" />
     <Compile Include="Operators\IgnoreUpdateFixture.cs" />
@@ -93,7 +94,7 @@
     <Compile Include="Operators\SizeExpiryFixture.cs" />
     <Compile Include="Operators\SortFixture.cs" />
     <Compile Include="Operators\CacheOnDemandFixture.cs" />
-    <Compile Include="Operators\ToObservableChangeSetFixture.cs" />
+    <Compile Include="Operators\ObservableToObservableChangeSetFixture.cs" />
     <Compile Include="Operators\TrueForAllFixture.cs" />
     <Compile Include="Operators\TrueForAnyFixture.cs" />
     <Compile Include="Operators\WatcherFixture.cs" />

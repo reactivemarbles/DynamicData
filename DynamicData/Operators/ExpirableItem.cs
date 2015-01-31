@@ -8,13 +8,16 @@ namespace DynamicData.Operators
         private readonly TKey _key;
         private readonly TObject _value;
         private readonly DateTime _expireAt;
+        private readonly long _index;
 
 
-        public ExpirableItem(TObject value, TKey key, DateTime dateTime)
+        public ExpirableItem(TObject value, TKey key, DateTime dateTime, long index = 0)
         {
+       
             _value = value;
             _key = key;
             _expireAt = dateTime;
+            _index = index;
         }
 
         public TObject Value
@@ -32,6 +35,10 @@ namespace DynamicData.Operators
             get { return _expireAt; }
         }
 
+        public long Index
+        {
+            get { return _index; }
+        }
 
         #region Equality members
 
