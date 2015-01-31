@@ -25,7 +25,7 @@ var mydynamicdatasource = myObservable.ToObservableChangeSet();
 //2. Or specify a key like this
 var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> key);
 ```
-The problem with the above is the collection will grow forever so there are overloads to specify size limitation of expiry times (not shown). 
+The problem with the above is the collection will grow forever so there are overloads to specify size limitation or expiry times (not shown). 
 
 To have much more control over the root collection then we need a local data store which has the requisite crud methods. Like the above the cache can be created with or without specifying a key
 ```csharp
@@ -70,6 +70,7 @@ IObservable<True> allValid = mySource
                 .TrueForAll(o => o.IsValidObservable, (trade, isvalid) => isvalid)
 ```
 This bad boy flattens the observables for each item and self maintains as items are amended in the cache, and returns the combined state in one line of code. I love it.
+
 **Example 4:**  will wire and un-wire items from the observable when they are added, updated or removed from the source.
 ```csharp
 var myoperation = mySource.Connect() 
