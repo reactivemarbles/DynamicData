@@ -69,6 +69,7 @@ var myoperation = mySource
 IObservable<True> allValid = mySource
                 .TrueForAll(o => o.IsValidObservable, (obj, invoked) => invoked)
 ```
+This bad boy flattens the observables for each item and self maintains as items are amended in the cache, and returns the combined state in one line of code. I love it.
 **Example 4:**  will wire and un-wire items from the observable when they are added, updated or removed from the source.
 ```csharp
 var myoperation = mySource.Connect() 
