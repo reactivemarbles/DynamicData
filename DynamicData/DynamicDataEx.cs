@@ -742,8 +742,7 @@ namespace DynamicData
         }
 
         #endregion
-
-
+        
         #region True for all values
 
         private sealed class ObservableWithValue<TObject, TValue>

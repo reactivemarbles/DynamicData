@@ -15,7 +15,7 @@ namespace DynamicData.Tests.Operators
         public void Initialise()
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
-            _observable = _source.Connect().TrueForAll(o => o.Observable.StartWith(o.Value), o => o == true);
+            _observable = _source.Connect().TrueForAll(o => o.Observable.StartWith(o.Value), (obj, invoked) => invoked);
 
         }
 
