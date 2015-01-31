@@ -1,23 +1,20 @@
 ## Dynamic Data
+Dynamic data is a portable class library which brings the power of reactive (rx) to collections.  
 
-Dynamic data is a portable class library which brings the power of reactive (RX) to collections.
+A collection which mutates can have adds, updates and removes (plus moves and re-evaluates). Out of the box Rx does nothing to manage any changes in a collection. In Dynamic Data collection changes are notified via an observable change set which is the heart of the system.  An operator receives these notifications and then applies some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
 
-### What is it?
+The benefit of at least 40 operators which are borne from pragmatic experience is that the management of in-memory data becomes easy and it is no exaggeration to say it can save thousands of lines of code by abstracting complicated and often repetitive operations.
 
-A comprehensive library of reactive extensions, which are used to manage in-memory collections. As the source collection changes the operators receive a changeset which enables them to self-maintain.
+### Why is the first Nuget release version 3
+Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces. Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait 
 
-### Why use it?
-
-It makes the management of in-memory data easy and is no exageration to say it can save thousands of lines of code.
-
-### Give me some links
-
+### I've seen it before so give me some links
 - Install from Nuget  https://www.nuget.org/packages/DynamicData
 - Sample wpf project https://github.com/RolandPheasant/TradingDemo
 - Blog http://dynamicdataproject.wordpress.com
 - Feel free to feedback on twitter: [@RolandPheasant](https://twitter.com/RolandPheasant)
 
-### But I want to see some details
+### Getting Started
 
 First create a source of data:
 
