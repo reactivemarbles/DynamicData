@@ -14,7 +14,6 @@ namespace DynamicData.Operators
         #region Fields
 
         private readonly FilteredIndexCalculator<TObject, TKey> _changedCalculator = new FilteredIndexCalculator<TObject, TKey>();
-
         private IKeyValueCollection<TObject, TKey> _all =new KeyValueCollection<TObject, TKey>();
         private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
         private IVirtualRequest _parameters = new VirtualRequest(0, 25);

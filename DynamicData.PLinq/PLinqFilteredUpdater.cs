@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
+using DynamicData.Operators;
 
 namespace DynamicData.PLinq
 {

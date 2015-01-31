@@ -90,7 +90,6 @@
     <Compile Include="Experimental\SubjectWithRefCount.cs" />
     <Compile Include="IChangeSetAdaptor.cs" />
     <Compile Include="ISortedChangeSetAdaptor.cs" />
-    <Compile Include="Kernel\AbstractFilter.cs" />
     <Compile Include="Kernel\CacheEx.cs" />
     <Compile Include="Kernel\Continuation.cs" />
     <Compile Include="Kernel\DoubleCheck.cs" />
@@ -116,6 +115,7 @@
     <Compile Include="Kernel\QueuedAction.cs" />
     <Compile Include="Kernel\QueuedItem.cs" />
     <Compile Include="Kernel\KeyValueComparer.cs" />
+    <Compile Include="Operators\AbstractFilter.cs" />
     <Compile Include="Operators\AbstractTransformer.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using DynamicData.Kernel;
 
-namespace DynamicData.Kernel
+namespace DynamicData.Operators
 {
     internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
     {
