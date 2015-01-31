@@ -6,7 +6,7 @@ A collection which mutates can have adds, updates and removes (plus moves and re
 The benefit of at least 40 operators which are borne from pragmatic experience is that the management of in-memory data becomes easy and it is no exaggeration to say it can save thousands of lines of code by abstracting complicated and often repetitive operations.
 
 ### Why is the first Nuget release version 3
-Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces. Forcing the use of an interface or telling some one how to solve their problem I nowadays find abhorrent as I finally understand the meaning of 'favour composition over inheritance'. Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait. The wait lasted longer than I expected and end up taking over 2 years but the beauty is the it has been trialled for 2 years on a very busy high volume low latency trading system. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I have released it all with my tail up and my head held high and I hope it can make your life easier like it has done for me.
+Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces. Forcing the use of an interface or telling some one how to solve their problem I nowadays find abhorrent as I finally understand the meaning of 'favour composition over inheritance'. Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait. The wait lasted longer than I expected and end up taking over 2 years but the beauty is the it has been trialled for 2 years on a very busy high volume low latency trading system. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I have released it with my tail up and my head held high and I hope it can make your life easier like it has done for me.
 
 ### I've seen it before so give me some links
 - Install from Nuget  https://www.nuget.org/packages/DynamicData
@@ -80,7 +80,9 @@ var myoperation = mySource.Connect()
 ### Want to know more?
 I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links above)  as I intend it to be a 'living document' and I promise it will be continually maintained. 
 
-Also if you following me on Twitter you will find out when new samples or blog posts have been updated
+Also if you following me on Twitter you will find out when new samples or blog posts have been updated.
+
+Additionally if you have read up to here and not starred it then why not? Ha. A star may make me be more responsive to any requests or queries.
 
 ### Before you sign off, tell me a little more about the changeset?
 
