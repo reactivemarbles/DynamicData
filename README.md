@@ -1,7 +1,7 @@
 ## Dynamic Data
 Dynamic data is a portable class library which brings the power of reactive (rx) to collections.  
 
-A collection which mutates can have adds, updates and removes (plus moves and re-evaluates). Out of the box rx does nothing to manage any changes in a collection which is why Dynamic Data exists.  In Dynamic Data collection changes are notified via an observable change set which is the heart of the system.  An operator receives these notifications and then applies some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
+A collection which mutates can have adds, updates and removes (plus moves and re-evaluates but more in that another time). Out of the box rx does nothing to manage any changes in a collection which is why Dynamic Data exists.  In Dynamic Data collection changes are notified via an observable change set which is the heart of the system.  An operator receives these notifications and then applies some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
 
 The benefit of at least 40 operators which are borne from pragmatic experience is that the management of in-memory data becomes easy and it is no exaggeration to say it can save thousands of lines of code by abstracting complicated and often repetitive operations.
 
