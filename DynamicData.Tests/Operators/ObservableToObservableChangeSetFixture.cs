@@ -10,14 +10,12 @@ namespace DynamicData.Tests.Operators
     [TestFixture]
     public class ObservableToObservableChangeSetFixture
     {
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-
         [Test]
         public void OnNextFiresAdd()
         {
             var subject = new Subject<Person>();
 
-            var results = subject.ToObservableChangeSet<Person>().AsAggregator();
+            var results = subject.ToObservableChangeSet().AsAggregator();
             var person = new Person("A", 1);
             subject.OnNext(person);
 
@@ -31,7 +29,7 @@ namespace DynamicData.Tests.Operators
         {
             var subject = new Subject<Person>();
 
-            var results = subject.ToObservableChangeSet<Person>().AsAggregator();
+            var results = subject.ToObservableChangeSet().AsAggregator();
             var person = new Person("A", 1);
             subject.OnNext(person);
 
@@ -50,7 +48,7 @@ namespace DynamicData.Tests.Operators
         {
             var subject = new Subject<Person>();
 
-            var results = subject.ToObservableChangeSet<Person>().AsAggregator();
+            var results = subject.ToObservableChangeSet().AsAggregator();
             var person = new Person("A", 1);
             subject.OnNext(person);
 

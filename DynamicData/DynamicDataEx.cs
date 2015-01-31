@@ -809,7 +809,6 @@ namespace DynamicData
         /// or
         /// equalityCondition
         /// </exception>
-
         public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
                 Func<TObject, IObservable<TValue>> observableSelector,
                 Func<TValue, bool> equalityCondition)
@@ -834,7 +833,7 @@ namespace DynamicData
                 var inlineChanges = transformed.MergeMany(t => t.Observable);
                 var queried = transformed.QueryWhenChanged(q => q.Items);
 
-                //nb: we do not care about the inline change because we are only monitoring it to cause a notification
+                //nb: we do not care about the inline change because we are only monitoring it to cause a re-evalutaion of all items
                 var publisher = queried.CombineLatest(inlineChanges, (items, inline) => collectionMatcher(items))
                  .DistinctUntilChanged()
                  .SubscribeSafe(observer);

@@ -300,71 +300,6 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         /// <exception cref="System.ArgumentException">Size limit must be greater than zero</exception>
-        //public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> LimitSizeTo2<TObject, TKey>(this ISourceCache<TObject, TKey> source,
-        //    int sizeLimit, IScheduler scheduler=null)
-        //{
-        //    if (source == null) throw new ArgumentNullException("source");
-        //    if (sizeLimit<=0) throw new ArgumentException("Size limit must be greater than zero");
-
-
-        //    return Observable.Create<IEnumerable<KeyValuePair<TKey,TObject>>>(observer =>
-        //    {
-
-        //        long orderItemWasAdded = -1;
-
-        //     //   var sizeLimiter = new SizeLimiter<TObject, TKey>(sizeLimit);
-
-        //        var autoRemover = source.Connect()
-        //                 .Finally(observer.OnCompleted)
-        //                 .Transform((t, v) =>
-        //                 {
-        //                     var index = Interlocked.Increment(ref orderItemWasAdded);
-  
-        //                     return new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, index);
-        //                 })
-                       
-        //                .AsObservableCache();
-                
-        //        var sizeChecker = autoRemover.Connect()
-        //            .ObserveOn(scheduler ?? Scheduler.Default)
-        //            .Select(changes =>
-        //                    {
-        //                        var itemstoexpire = autoRemover.KeyValues
-        //                            .OrderByDescending(exp => exp.Value.Index)
-        //                            .Skip(sizeLimit)
-        //                            .Select(exp => new KeyValuePair<TKey,TObject>(exp.Key, exp.Value.Value))
-        //                            .ToList();
-
-        //                        return itemstoexpire;
-        //                    })
-        //            .Subscribe(toRemove =>
-        //            {
-
-        //                if (toRemove.Count==0) return;
-        //                try
-        //                {
-        //                    //remove from cache and notify which items have been auto removed
-        //                    source.Remove(toRemove.Select(kv => kv.Key));
-        //                    observer.OnNext(toRemove);
-        //                }
-        //                catch (Exception ex)
-        //                {
-        //                    observer.OnError(ex);
-        //                }
-        //            });
-    
-
-        //        return Disposable.Create(() =>
-        //        {
-        //            autoRemover.Dispose();
-        //            sizeChecker.Dispose();
-                   
-        //        });
-
-        //    });
-        //}
-
-
         public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this ISourceCache<TObject, TKey> source,
                     int sizeLimit, IScheduler scheduler = null)
         {
@@ -389,7 +324,7 @@ namespace DynamicData
                         })
                         .Subscribe(changes =>
                         {
-                            var result = sizeLimiter.UpdateAndReturnExpiredOnly(changes);
+                            var result = sizeLimiter.CloneAndReturnExpiredOnly(changes);
 
                             if (result.Count == 0) return;
                             source.BatchUpdate(updater => result.ForEach(c => updater.Remove(c.Key)));

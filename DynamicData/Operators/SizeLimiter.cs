@@ -9,7 +9,6 @@ namespace DynamicData.Kernel
         private readonly IIntermediateUpdater<ExpirableItem<TObject, TKey>, TKey> _updater;
         
         private readonly int _sizeLimit ;
-        private  long orderItemWasAdded = -1;
 
         public SizeLimiter(int size)
         {
@@ -45,7 +44,7 @@ namespace DynamicData.Kernel
             return  new ChangeSet<TObject, TKey>(changed);
         }
 
-        public IChangeSet<TObject, TKey> UpdateAndReturnExpiredOnly(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
+        public IChangeSet<TObject, TKey> CloneAndReturnExpiredOnly(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
         {
 
             _cache.Clone(updates);
