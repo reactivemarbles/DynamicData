@@ -21,6 +21,7 @@ namespace DynamicData.Kernel
         private readonly object _locker = new object();
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
         private readonly IReaderWriter<TObject, TKey> _readerWriter;
+        private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>()); 
 
         #endregion
 
@@ -40,6 +41,8 @@ namespace DynamicData.Kernel
             _disposer = Disposable.Create(() => {
                                                   loader.Dispose();
                                                   _changes.OnCompleted();
+                                                  if (_countChanged.IsValueCreated)
+                                                      _countChanged.Value.OnCompleted();
                                               });
         }
 
@@ -47,7 +50,13 @@ namespace DynamicData.Kernel
         {
             _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
 
-            _disposer = Disposable.Create(() => _changes.OnCompleted());
+            _disposer = Disposable.Create(() =>
+            {
+                _changes.OnCompleted();
+                if (_countChanged.IsValueCreated)
+                    _countChanged.Value.OnCompleted();
+     
+            });
         }
 
         #endregion
@@ -79,6 +88,10 @@ namespace DynamicData.Kernel
                 try
                 {
                     _changes.OnNext(changes);
+
+                    if (_countChanged.IsValueCreated)
+                        _countChanged.Value.OnNext(_readerWriter.Count);
+     
                 }
                 catch (Exception ex)
                 {
@@ -119,6 +132,11 @@ namespace DynamicData.Kernel
         #endregion
         
         #region Connection
+
+        public IObservable<int> CountChanged
+        {
+            get { return _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged(); }
+        }
 
         public IObservable<Change<TObject, TKey>> Watch(TKey key)
         {

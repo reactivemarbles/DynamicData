@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 

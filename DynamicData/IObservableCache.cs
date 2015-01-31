@@ -30,18 +30,15 @@ namespace DynamicData
         /// <param name="filter">The filter.</param>
         /// <returns></returns>
         IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter);
+
+
+        /// <summary>
+        /// A count changed observable starting with the current count
+        /// </summary>
+        IObservable<int> CountChanged { get; }
     }
 
 
-    ///// <summary>
-    ///// Observable cache where the key and value are the same.
-    ///// </summary>
-    ///// <typeparam name="TValue">The type of the value.</typeparam>
-    //public interface IObservableCache<TValue> : IObservableCache<TValue, TValue>
-    //{
-
-
-    //}
 
     /// <summary>
     ///   /// A cache for observing and querying in memory data. With additional data access operators

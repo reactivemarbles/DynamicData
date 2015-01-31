@@ -40,6 +40,15 @@ namespace DynamicData
             _innnerCache.UpdateFromSource(updateAction);
         }
 
+
+        /// <summary>
+        /// A count changed observable starting with the current count
+        /// </summary>
+        public IObservable<int> CountChanged
+        {
+            get { return _innnerCache.CountChanged; }
+        }
+
         /// <summary>
         /// Returns a filtered stream of cache changes preceeded with the initital filtered state
         /// </summary>

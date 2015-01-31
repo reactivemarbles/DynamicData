@@ -40,6 +40,10 @@ namespace DynamicData.Kernel
             _innnerCache.UpdateFromIntermediate(updateAction);
         }
 
+        public IObservable<int> CountChanged
+        {
+            get { return _innnerCache.CountChanged; }
+        }
 
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
         {

@@ -23,6 +23,13 @@ namespace DynamicData.Kernel
 
         #region Delgated Members
 
+        /// <summary>
+        /// A count changed observable starting with the current count
+        /// </summary>
+        public IObservable<int> CountChanged
+        {
+            get { return _cache.CountChanged; }
+        }
 
         /// <summary>
         /// Watches updates from a single item using the specified key
