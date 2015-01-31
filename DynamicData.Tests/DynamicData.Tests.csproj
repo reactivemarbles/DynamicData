@@ -95,6 +95,7 @@
     <Compile Include="Operators\CacheOnDemandFixture.cs" />
     <Compile Include="Operators\ToObservableChangeSetFixture.cs" />
     <Compile Include="Operators\TrueForAllFixture.cs" />
+    <Compile Include="Operators\TrueForAnyFixture.cs" />
     <Compile Include="Operators\WatcherFixture.cs" />
     <Compile Include="Operators\FilterControllerFixture.cs" />
     <Compile Include="Operators\PageFixture.cs" />

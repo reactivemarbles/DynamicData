@@ -743,58 +743,6 @@ namespace DynamicData
 
         #endregion
         
-        #region Connector / Stream 
-
-
-        /// <summary>
-        /// Converts the stream feeder to a data cache
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservableCache<TObject, TKey> source)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return new AnomynousObservableCache<TObject, TKey>(source);
-        }
-
-        /// <summary>
-        /// Converts the source to an observable cache
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return new AnomynousObservableCache<TObject, TKey>(source);
-        }
-
-        /// <summary>
-        /// Creates a stream using the specified controlled filter.
-        /// The controlled filter enables dynamic inline changing of the filter.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="filterController">The controlled filter.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">filterController</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> Connect<TObject, TKey>(this IObservableCache<TObject, TKey> source, FilterController<TObject> filterController)
-        {
-            if (filterController == null) throw new ArgumentNullException("filterController");
-            return source.Connect().Filter(filterController);
-        }
-
-        
-        #endregion
-
-
-
         #region Entire Collection Operators
 
         private sealed class ObservableWithValue<T>
@@ -819,7 +767,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Produces a boolean observable indicating whether the result on all of the selected observables matches
+        /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
         /// the equality condition. The observable is re-evaluated whenever
         /// 
         /// i) The cache changes
@@ -837,34 +785,15 @@ namespace DynamicData
             Func<TObject,IObservable<TValue>> observableSelector,
             Func<TValue,bool> equalityCondition )
         {
-            if (source == null) throw new ArgumentNullException("source");
-            return Observable.Create<bool>(observer =>
-            {
-                var transformed = source.Transform(t => new ObservableWithValue<TValue>(observableSelector(t))).Publish();
-
-                var inlineChanges = transformed.MergeMany(t => t.Observable);
-                var queried = transformed.Query(q => q.Items);
-               
-                //nb: we do not care about the inline change because we are only monitoring it to cause a notification
-                var publisher = queried.CombineLatest(inlineChanges, (items, inline) =>
-                {
-                    return items.All(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value));
-                })
-                 .DistinctUntilChanged()
-                 .SubscribeSafe(observer);
-
-
-                var connected = transformed.Connect();
-                return new CompositeDisposable(connected, publisher);
-            });
+            return source.TrueFor(observableSelector,
+                items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
         }
 
         /// <summary>
-        /// Produces a boolean observable indicating whether the result of whether any of the selected observables matches
+        /// Produces a boolean observable indicating whether the resulting value of whether any of the specified observables matches
         /// the equality condition. The observable is re-evaluated whenever
-        /// 
-        /// i) The cache changes
-        /// or ii) The inner observable changes
+        /// i) The cache changes.
+        /// or ii) The inner observable changes.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -873,29 +802,43 @@ namespace DynamicData
         /// <param name="observableSelector">The observable selector.</param>
         /// <param name="equalityCondition">The equality condition.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// observableSelector
+        /// or
+        /// equalityCondition
+        /// </exception>
+
         public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
                 Func<TObject, IObservable<TValue>> observableSelector,
                 Func<TValue, bool> equalityCondition)
         {
             if (source == null) throw new ArgumentNullException("source");
+            if (observableSelector == null) throw new ArgumentNullException("observableSelector");
+            if (equalityCondition == null) throw new ArgumentNullException("equalityCondition");
+            
+            return source.TrueFor(observableSelector,
+                items =>items.Any(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
+        }
+
+        private static  IObservable<bool> TrueFor<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
+                        Func<TObject, IObservable<TValue>> observableSelector,
+                        Func<IEnumerable<ObservableWithValue<TValue>>,bool> collectionMatcher)    
+        {
+           if (source == null) throw new ArgumentNullException("source");
+            
             return Observable.Create<bool>(observer =>
             {
-
                 var transformed = source.Transform(t => new ObservableWithValue<TValue>(observableSelector(t))).Publish();
-
                 var inlineChanges = transformed.MergeMany(t => t.Observable);
-                var queried = transformed.Query(q => q.Items);
+                var queried = transformed.QueryWhenChanged(q => q.Items);
 
                 //nb: we do not care about the inline change because we are only monitoring it to cause a notification
-                var publisher = queried.CombineLatest(inlineChanges, (items, inline) =>
-                {
-                    return items.Any(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value));
-                })
+                var publisher = queried.CombineLatest(inlineChanges, (items, inline) => collectionMatcher(items))
                  .DistinctUntilChanged()
                  .SubscribeSafe(observer);
-
-
+                
                 var connected = transformed.Connect();
                 return new CompositeDisposable(connected, publisher);
             });
@@ -915,12 +858,12 @@ namespace DynamicData
         /// or
         /// resultSelector
         /// </exception>
-        public static IObservable<TDestination> Query<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<IQuery<TObject, TKey>, TDestination> resultSelector)
+        public static IObservable<TDestination> QueryWhenChanged<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<IQuery<TObject, TKey>, TDestination> resultSelector)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (resultSelector == null) throw new ArgumentNullException("resultSelector");
 
-            return source.Query().Select(resultSelector);
+            return source.QueryWhenChanged().Select(resultSelector);
         }
 
         /// <summary>
@@ -931,7 +874,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IQuery<TObject, TKey>> Query<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException("source");
 
@@ -942,10 +885,11 @@ namespace DynamicData
                         var cache = new Cache<TObject, TKey>();
                         var query = new AnomynousQuery<TObject, TKey>(cache);
 
-                        return source.Clone(cache).Subscribe(updates =>
+                        return source.Subscribe(updates =>
                         {
                             try
                             {
+                                cache.Clone(updates);
                                 observer.OnNext(query);
                             }
                             catch (Exception ex)
@@ -955,91 +899,6 @@ namespace DynamicData
                         }, observer.OnError, observer.OnCompleted);
                     }
                 );
-        }
-
-
-
-
-        /// <summary>
-        /// Applies a scan function over the dynamic data state
-        /// </summary>
-        /// <remarks>
-        /// The scan function is applied over the cached items after each update is received 
-        /// </remarks>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <typeparam name="TAccumulate">The type of the accumulate.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="seed">The seed.</param>
-        /// <param name="accumulator">The accumulator</param>
-        /// <returns></returns>
-        public static IObservable<TAccumulate> ScanCache<TObject, TKey, TAccumulate>(this IObservable<IChangeSet<TObject, TKey>> source, 
-            TAccumulate seed, 
-            Func<IEnumerable<TObject>, TAccumulate> accumulator)
-        {
-            return source.Query().Select(q=>q.Items.ToList()).Scan(seed, (state, result) => accumulator(result));
-        }
-
-
-        /// <summary>
-        /// Applies a scan function over the dynamic data state
-        /// </summary>
-        /// <remarks>
-        /// The scan function is applied over the cached items after each update is received 
-        /// </remarks>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <typeparam name="TAccumulate">The type of the accumulate.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="seed">The seed.</param>
-        /// <param name="accumulator">The accumulator.</param>
-        /// <returns></returns>
-        public static IObservable<TAccumulate> ScanCache<TObject, TKey, TAccumulate>(this IObservable<IChangeSet<TObject, TKey>> source,
-            TAccumulate seed,
-            Func<TAccumulate, IEnumerable<TObject>, TAccumulate> accumulator)
-        {
-            return source.Query().Select(q => q.Items.ToList()).Scan(seed, accumulator);
-        }
-
-        /// <summary>
-        /// Applies an aggregation function over the dynamic data state, return the result when the sequence ends
-        /// </summary>
-        /// <remarks>
-        /// The scan function is applied over the cached items after each update is received 
-        /// </remarks>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <typeparam name="TAccumulate">The type of the accumulate.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="seed">The seed.</param>
-        /// <param name="accumulator">The accumulator.</param>
-        /// <returns></returns>
-        public static IObservable<TAccumulate> AggregateCache<TObject, TKey, TAccumulate>(this IObservable<IChangeSet<TObject, TKey>> source,
-            TAccumulate seed,
-            Func<IEnumerable<TObject>, TAccumulate> accumulator)
-        {
-            return source.Query().Select(q => q.Items).Aggregate(seed, (state, result) => accumulator(result));
-        }
-
-
-        /// <summary>
-        /// Applies an aggregation function over the dynamic data state, return the result when the sequence ends
-        /// </summary>
-        /// <remarks>
-        /// The scan function is applied over the cached items after each update is received 
-        /// </remarks>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <typeparam name="TAccumulate">The type of the accumulate.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="seed">The seed.</param>
-        /// <param name="accumulator">The accumulator.</param>
-        /// <returns></returns>
-        public static IObservable<TAccumulate> AggregateCache<TObject, TKey, TAccumulate>(this IObservable<IChangeSet<TObject, TKey>> source,
-            TAccumulate seed,
-            Func<TAccumulate, IEnumerable<TObject>, TAccumulate> accumulator)
-        {
-            return source.Query().Select(q => q.Items).Aggregate(seed, accumulator);
         }
 
 
@@ -2245,13 +2104,38 @@ namespace DynamicData
                 observer =>
                 {
                     var virtualiser = new Virtualiser<TObject, TKey>(new VirtualRequest(0, size));
-
+                   
                     return source.FinallySafe(observer.OnCompleted)
                         .Select(virtualiser.Update)
                         .Where(updates => updates != null)
                         .FinallySafe(observer.OnCompleted)
                         .SubscribeSafer(observer);
                 });
+        }
+
+        /// <summary>
+        /// Limits the size of the result set to the specified number, ordering by the comparer
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="comparer">The comparer.</param>
+        /// <param name="size">The size.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">size;Size should be greater than zero</exception>
+    
+        public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(
+            this IObservable<IChangeSet<TObject, TKey>> source, 
+            IComparer<TObject> comparer,
+            int size)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            if (comparer == null) throw new ArgumentNullException("comparer");
+            if (size <= 0) throw new ArgumentOutOfRangeException("size", "Size should be greater than zero");
+
+            return source.Sort(comparer).Top(size);
+
         }
 
         /// <summary>

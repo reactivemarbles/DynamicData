@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Operators
 {
     [TestFixture]
-    public class TrueForAllFixture
+    public class TrueForAnyFixture
     {
         private ISourceCache<ObjectWithObservable, int> _source;
         private IObservable<bool> _observable;
@@ -15,8 +15,7 @@ namespace DynamicData.Tests.Operators
         public void Initialise()
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
-            _observable = _source.Connect().TrueForAll(o => o.Observable.StartWith(o.Value), o => o == true);
-
+            _observable = _source.Connect().TrueForAny(o => o.Observable.StartWith(o.Value), o => o == true);
         }
 
         [TearDown]
@@ -39,7 +38,7 @@ namespace DynamicData.Tests.Operators
 
             Assert.IsTrue(valuereturned.HasValue, "An intial value should have been called");
             Assert.AreEqual(false, valuereturned.Value, "The intial value should be false");
-   
+
             subscribed.Dispose();
         }
 
@@ -55,7 +54,7 @@ namespace DynamicData.Tests.Operators
             var item = new ObjectWithObservable(1);
             item.InvokeObservable(true);
             _source.AddOrUpdate(item);
-         
+
             Assert.AreEqual(true, valuereturned.Value, "Value should be true");
             subscribed.Dispose();
         }
@@ -78,19 +77,13 @@ namespace DynamicData.Tests.Operators
             Assert.AreEqual(false, valuereturned.Value, "Value should be false");
 
             item1.InvokeObservable(true);
-            item2.InvokeObservable(true);
-            item3.InvokeObservable(true);
             Assert.AreEqual(true, valuereturned.Value, "Value should be true");
-
-            //_source.Remove(item3);
-
-            //Assert.AreEqual(false, valuereturned.Value, "Value should be true");
             subscribed.Dispose();
 
         }
 
 
-    private class ObjectWithObservable
+        private class ObjectWithObservable
         {
             private readonly int _id;
             private readonly ISubject<bool> _changed = new Subject<bool>();
@@ -112,10 +105,10 @@ namespace DynamicData.Tests.Operators
                 get { return _changed; }
             }
 
-        public bool Value
-        {
-            get { return _value; }
-        }
+            public bool Value
+            {
+                get { return _value; }
+            }
 
             public int Id
             {

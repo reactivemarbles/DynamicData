@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Controllers;
+using DynamicData.Kernel;
 using DynamicData.Operators;
 
 #endregion
@@ -102,6 +104,8 @@ namespace DynamicData
 
         #endregion
 
+        #region Populate into an observable cache
+        
 
         /// <summary>
         /// Populates a source into the specified cache.
@@ -181,6 +185,56 @@ namespace DynamicData
             return observable.Subscribe(source.AddOrUpdate);
         }
 
+        #endregion
+        
+        #region Connector / Stream
+        
+        /// <summary>
+        /// Converts the stream feeder to a data cache
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservableCache<TObject, TKey> source)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            return new AnomynousObservableCache<TObject, TKey>(source);
+        }
+
+        /// <summary>
+        /// Converts the source to an observable cache
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            return new AnomynousObservableCache<TObject, TKey>(source);
+        }
+
+        /// <summary>
+        /// Creates a stream using the specified controlled filter.
+        /// The controlled filter enables dynamic inline changing of the filter.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="filterController">The controlled filter.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">filterController</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Connect<TObject, TKey>(this IObservableCache<TObject, TKey> source, FilterController<TObject> filterController)
+        {
+            if (filterController == null) throw new ArgumentNullException("filterController");
+            return source.Connect().Filter(filterController);
+        }
+
+
+        #endregion
 
         #region Size / time limiters
 
@@ -556,6 +610,5 @@ namespace DynamicData
             source.BatchUpdate(updater => updater.Clear());
         }
         #endregion
-
     }
 }
