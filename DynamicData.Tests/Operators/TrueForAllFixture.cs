@@ -5,9 +5,6 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Operators
 {
-
-
-
     [TestFixture]
     public class TrueForAllFixture
     {

@@ -17,12 +17,12 @@ namespace DynamicData.Kernel
     {
         #region Fields
 
+        private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
+        private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
+        private readonly IReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _disposer;
         private readonly object _locker = new object();
-        private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
-        private readonly IReaderWriter<TObject, TKey> _readerWriter;
-        private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>()); 
-
+        
         #endregion
 
         #region Construction
@@ -131,7 +131,7 @@ namespace DynamicData.Kernel
 
         #endregion
         
-        #region Connection
+        #region Observable
 
         public IObservable<int> CountChanged
         {
@@ -217,8 +217,6 @@ namespace DynamicData.Kernel
                             }
                         });
         }
-
-
 
         internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null)
         {

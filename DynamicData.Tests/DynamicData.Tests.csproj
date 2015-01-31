@@ -91,6 +91,7 @@
     <Compile Include="Operators\IncludeUpdateFixture.cs" />
     <Compile Include="Operators\MergeManyFixture.cs" />
     <Compile Include="Operators\MergeManyWithKeyOverloadFixture.cs" />
+    <Compile Include="Operators\QueryWhenChangedFixture.cs" />
     <Compile Include="Operators\SizeExpiryFixture.cs" />
     <Compile Include="Operators\SortFixture.cs" />
     <Compile Include="Operators\CacheOnDemandFixture.cs" />

@@ -742,29 +742,38 @@ namespace DynamicData
         }
 
         #endregion
-        
-        #region Entire Collection Operators
 
-        private sealed class ObservableWithValue<T>
+
+        #region True for all values
+
+        private sealed class ObservableWithValue<TObject, TValue>
         {
-            private readonly IObservable<T> _source;
-            private Optional<T> _latestValue = Optional<T>.None; 
-            
-            public ObservableWithValue(IObservable<T> source)
+            private readonly TObject _item;
+            private readonly IObservable<TValue> _source;
+            private Optional<TValue> _latestValue = Optional<TValue>.None;
+
+            public ObservableWithValue(TObject item, IObservable<TValue> source)
             {
+                _item = item;
                 _source = source.Do(value => _latestValue = value);
             }
-            
-            public Optional<T> LatestValue
+
+            public TObject Item
+            {
+                get { return _item; }
+            }
+
+            public Optional<TValue> LatestValue
             {
                 get { return _latestValue; }
             }
 
-            public IObservable<T> Observable
+            public IObservable<TValue> Observable
             {
                 get { return _source; }
             }
         }
+
 
         /// <summary>
         /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
@@ -781,13 +790,69 @@ namespace DynamicData
         /// <param name="equalityCondition">The equality condition.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<bool> TrueForAll<TObject, TKey,TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
-            Func<TObject,IObservable<TValue>> observableSelector,
-            Func<TValue,bool> equalityCondition )
+        public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, IObservable<TValue>> observableSelector,
+            Func<TValue, bool> equalityCondition)
         {
             return source.TrueFor(observableSelector,
                 items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
         }
+
+
+
+        /// <summary>
+        /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
+        /// the equality condition. The observable is re-evaluated whenever
+        /// 
+        /// i) The cache changes
+        /// or ii) The inner observable changes
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="observableSelector">Selector which returns the target observable</param>
+        /// <param name="equalityCondition">The equality condition.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
+                Func<TObject, IObservable<TValue>> observableSelector,
+                Func<TObject, TValue, bool> equalityCondition)
+        {
+            return source.TrueFor(observableSelector,
+                items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.Item, o.LatestValue.Value)));
+        }
+
+        /// <summary>
+        /// Produces a boolean observable indicating whether the resulting value of whether any of the specified observables matches
+        /// the equality condition. The observable is re-evaluated whenever
+        /// i) The cache changes.
+        /// or ii) The inner observable changes.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="observableSelector">The observable selector.</param>
+        /// <param name="equalityCondition">The equality condition.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// observableSelector
+        /// or
+        /// equalityCondition
+        /// </exception>
+        public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
+        Func<TObject, IObservable<TValue>> observableSelector,
+        Func<TObject, TValue, bool> equalityCondition)
+        {
+            return source.TrueFor(observableSelector,
+                items => items.Any(o => o.LatestValue.HasValue && equalityCondition(o.Item, o.LatestValue.Value)));
+        }
+
+
+
 
         /// <summary>
         /// Produces a boolean observable indicating whether the resulting value of whether any of the specified observables matches
@@ -816,20 +881,20 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException("source");
             if (observableSelector == null) throw new ArgumentNullException("observableSelector");
             if (equalityCondition == null) throw new ArgumentNullException("equalityCondition");
-            
+
             return source.TrueFor(observableSelector,
-                items =>items.Any(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
+                items => items.Any(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
         }
 
-        private static  IObservable<bool> TrueFor<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
+        private static IObservable<bool> TrueFor<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
                         Func<TObject, IObservable<TValue>> observableSelector,
-                        Func<IEnumerable<ObservableWithValue<TValue>>,bool> collectionMatcher)    
+                        Func<IEnumerable<ObservableWithValue<TObject,TValue>>, bool> collectionMatcher)
         {
-           if (source == null) throw new ArgumentNullException("source");
-            
+            if (source == null) throw new ArgumentNullException("source");
+
             return Observable.Create<bool>(observer =>
             {
-                var transformed = source.Transform(t => new ObservableWithValue<TValue>(observableSelector(t))).Publish();
+                var transformed = source.Transform(t => new ObservableWithValue<TObject, TValue>(t,observableSelector(t))).Publish();
                 var inlineChanges = transformed.MergeMany(t => t.Observable);
                 var queried = transformed.QueryWhenChanged(q => q.Items);
 
@@ -837,11 +902,16 @@ namespace DynamicData
                 var publisher = queried.CombineLatest(inlineChanges, (items, inline) => collectionMatcher(items))
                  .DistinctUntilChanged()
                  .SubscribeSafe(observer);
-                
+
                 var connected = transformed.Connect();
                 return new CompositeDisposable(connected, publisher);
             });
         }
+        #endregion
+        
+        #region Entire Collection Operators
+
+
 
         /// <summary>
         ///  The latest copy of the cache is exposed for querying after each modification to the underlying data
@@ -866,7 +936,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// The latest copy of the cache is exposed for querying after each modification to the underlying data
+        /// The latest copy of the cache is exposed for querying i)  after each modification to the underlying data ii) on subscription
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1001,13 +1071,13 @@ namespace DynamicData
         /// or
         /// timeSelector
         /// </exception>
-        public static IObservable<IChangeSet<TObject, TKey>> AutoRemove<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+        public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
                Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler = null)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (timeSelector == null) throw new ArgumentNullException("timeSelector");
 
-            return source.AutoRemove(timeSelector, null, scheduler);
+            return source.ExpireAfter(timeSelector, null, scheduler);
         }
 
 
@@ -1026,10 +1096,10 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> AutoRemove<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+        public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval)
         {
-            return AutoRemove<TObject, TKey>(source, timeSelector, pollingInterval, null);
+            return ExpireAfter<TObject, TKey>(source, timeSelector, pollingInterval, null);
         }
 
         /// <summary>
@@ -1048,7 +1118,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> AutoRemove<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+        public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
         {
             if (source == null) throw new ArgumentNullException("source");
