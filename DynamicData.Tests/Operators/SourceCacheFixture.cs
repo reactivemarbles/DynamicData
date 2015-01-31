@@ -10,7 +10,6 @@ namespace DynamicData.Tests.Operators
         private ChangeSetAggregator<Person, string> _results;
         private ISourceCache<Person, string> _source;
 
-
         [SetUp]
         public void MyTestInitialize()
         {
@@ -52,26 +51,33 @@ namespace DynamicData.Tests.Operators
             Assert.AreEqual(0, _results.Data.Count, "Should be 1 item in` the cache");
         }
 
+        [Test]
+        public void CountChangedShouldAlwaysInvokeUponeSubscription()
+        {
+            int? result = null;
+            var subscription = _source.CountChanged
+                .Subscribe(count => result = count);
 
-        //[Test]
-        //public void ScheduledUpdatesArriveInOrder()
-        //{
-        //    var largebatch = Enumerable.Range(1, 10000).Select(i => new Person("Large.{0}".FormatWith(i), i)).ToArray();
-        //    var five = Enumerable.Range(1, 5).Select(i => new Person("Five.{0}".FormatWith(i), i)).ToArray();
-        //    var single1 = new Person("Name.A", 20);
-            
-        //    var results = new List<int>();
+            Assert.IsTrue(result.HasValue, "Count has not been invoked. Should start at zero");
+            Assert.AreEqual(0, result.Value, "Count should be zero");
 
+            subscription.Dispose();
+        }
 
-        //    _source.AddOrUpdate(largebatch);
-        //    _source.AddOrUpdate(five);
-        //    _source.AddOrUpdate(single1);
-  
+        [Test]
+        public void CountChangedShouldReflectContentsOfCacheInvokeUponeSubscription()
+        {
+            var generator = new RandomPersonGenerator();
+            int? result = null;
+            var subscription = _source.CountChanged
+                .Subscribe(count => result = count);
 
-        //    Assert.AreEqual(10000, results[0], "largebatch should be first");
-        //    Assert.AreEqual(5, results[1], "Five should be second");
-        //    Assert.AreEqual(1, results[2], "single1 should be third");
-        //}
+            _source.AddOrUpdate(generator.Take(100));
+
+            Assert.IsTrue(result.HasValue, "Count has not been invoked. Should start at zero");
+            Assert.AreEqual(100, result.Value, "Count should be 100");
+            subscription.Dispose();
+        }
 
 
         [Test]
@@ -83,7 +89,7 @@ namespace DynamicData.Tests.Operators
             IDisposable subscription = _source.Connect()
                 .FinallySafe(() => completed = true)
                 .Subscribe(updates => { called = true; }, ex => errored = true,() => completed = true);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new Person("Adult1", 40)));
+            _source.AddOrUpdate(new Person("Adult1", 40));
 
             //_stream.
               subscription.Dispose();
