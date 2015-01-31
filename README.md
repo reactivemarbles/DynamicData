@@ -67,7 +67,7 @@ var myoperation = mySource
 **Example 3:** Suppose I am editing some trades and I have an observable on each trades which validates but I want to know when all items are valid then this will do the job.
 ```csharp
 IObservable<True> allValid = mySource
-                .TrueForAll(o => o.IsValidObservable, (obj, invoked) => invoked)
+                .TrueForAll(o => o.IsValidObservable, (trade, isvalid) => isvalid)
 ```
 This bad boy flattens the observables for each item and self maintains as items are amended in the cache, and returns the combined state in one line of code. I love it.
 **Example 4:**  will wire and un-wire items from the observable when they are added, updated or removed from the source.
