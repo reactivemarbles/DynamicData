@@ -20,7 +20,7 @@ As stated in the blurb, dynamic data is based on the concept of an observable ch
 ```csharp
 IObservable<T> myObservable;
 IObservable<IEnumerable<T>> myObservable;
-//1. This option will create a collection where item's are identified using the hash code.
+//1. This option will create an observable where item's are identified using the hash code.
 var mydynamicdatasource = myObservable.ToObservableChangeSet();
 //2. Or specify a key like this
 var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> key);
@@ -52,7 +52,7 @@ This cache has the same connection methods as a source cache but is read only.
 
 Phew, got the boring stuff out of the way with so a few quick fire examples based on the assumption that we already have an observable change set. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
-**Example 1:** filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection list will automatically reflect changes.
+**Example 1:** filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
 
 ```csharp
 //Dynamic data has it's own take on an observable collection (optimised for populating f
