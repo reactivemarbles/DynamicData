@@ -56,7 +56,7 @@ Now you know how to create the source observable, here are some few quick fire e
  2. When an observer subscribes the initial items of the underlying source always form the first batch of changes.
  3. Empty change sets should never be fired.
  
- In all of these examples the resulting sequences always exactly reflect the items is the cache.  . This is where the power of  add, update and removes comes into it's own as all the operations are maintained with no consumer based plumbing.
+ In all of these examples the resulting sequences always exactly reflect the items is the cache.  This is where the power of  add, update and removes comes into it's own as all the operations are maintained with no consumer based plumbing.
 
 **Example 1:** filters a stream of live trades, creates a proxy for each trade and orders the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
 
