@@ -15,7 +15,7 @@ namespace DynamicData.Tests.Operators
         public void Initialise()
         {
             _source = new SourceCache<Person, string>(p=>p.Name);
-            _results = new ChangeSetAggregator<Person, string>(_source.Connect(p => p.Age > 20));
+            _results = _source.Connect(p => p.Age > 20).AsAggregator();
   }
 
         [TearDown]
@@ -29,7 +29,7 @@ namespace DynamicData.Tests.Operators
         public void AddMatched()
         {
             var person = new Person("Adult1", 50);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");

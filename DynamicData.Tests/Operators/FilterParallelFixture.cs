@@ -29,7 +29,7 @@ namespace DynamicData.Tests.Operators
         public void AddMatched()
         {
             var person = new Person("Adult1", 50);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Operators
         public void AddNotMatched()
         {
             var person = new Person("Adult1", 10);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
             Assert.AreEqual(0, _results.Messages.Count, "Should have no item updates");
             Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");

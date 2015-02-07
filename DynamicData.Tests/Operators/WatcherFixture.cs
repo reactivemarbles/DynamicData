@@ -24,7 +24,6 @@ namespace DynamicData.Tests.Operators
         private TestScheduler _scheduler = new TestScheduler();
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<SelfObservingPerson, string> _results;
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private IWatcher<Person, string> _watcher;
 
         private IDisposable _cleanUp;
@@ -86,11 +85,6 @@ namespace DynamicData.Tests.Operators
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
             Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-
-
-            //var firstResult = _results.Data.Items.First();
-            //Assert.AreEqual(1, firstResult.UpdateCount, "First Person should have received 1 update");
-            //Assert.AreEqual(false, firstResult.Completed, "First Person should have received 1 update");
 
             var secondResult = _results.Messages[1].First();
             Assert.AreEqual(1, secondResult.Previous.Value.UpdateCount, "Second Person should have received 1 update");

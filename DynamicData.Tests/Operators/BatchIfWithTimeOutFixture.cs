@@ -38,8 +38,6 @@ namespace DynamicData.Tests.Operators
         [Test]
         public void WillApplyTimeout()
         {
-            //pause,
-
             _pausingSubject.OnNext(true);
 
             //should timeout 
