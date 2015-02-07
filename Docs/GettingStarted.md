@@ -52,11 +52,11 @@ This cache has the same connection methods as a source cache but is read only.
 
 Now you know how to create the source observable, here are some few quick fire examples. But first, what is the expected behaviour or any standard conventions?  Simple answer to that one.
 
- 1. All operators must comply with the Rx guidelines
+ 1. All operators must comply with the Rx guidelines.
  2. When an observer subscribes the initial items of the underlying source always form the first batch of changes.
  3. Empty change sets should never be fired.
- 
- In all of these examples the resulting sequences always exactly reflect the items is the cache.  This is where the power of  add, update and removes comes into it's own as all the operations are maintained with no consumer based plumbing.
+
+In all of these examples the resulting sequences always exactly reflect the items is the cache.  This is where the power of  add, update and removes comes into it's own as all the operations are maintained with no consumer based plumbing.
 
 **Example 1:** filters a stream of live trades, creates a proxy for each trade and orders the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
 
@@ -109,6 +109,3 @@ IObservable<bool> allValid = somedynamicdatasource
 ```
 ## Want to know more?
 I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading the [WPF trading example](https://github.com/RolandPheasant/Tradingdemo) as I intend it to be a 'living document' and it will be continually maintained. 
-
-
-'
