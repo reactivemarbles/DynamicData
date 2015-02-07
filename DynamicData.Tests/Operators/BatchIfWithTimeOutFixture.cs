@@ -31,6 +31,7 @@ namespace DynamicData.Tests.Operators
         {
             _results.Dispose();
             _source.Dispose();
+            _pausingSubject.OnCompleted();
         }
 
 
