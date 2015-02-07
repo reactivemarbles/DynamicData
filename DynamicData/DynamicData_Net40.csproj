@@ -70,6 +70,7 @@
     <Compile Include="Binding\ISelectedAware.cs" />
     <Compile Include="Binding\ISortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\ObservableCollectionAdaptor.cs" />
+    <Compile Include="Binding\ObservableCollectionEx.cs" />
     <Compile Include="Binding\ObservableCollectionExtended.cs" />
     <Compile Include="Binding\SortDirection.cs" />
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
@@ -194,6 +195,12 @@
     <Compile Include="Operators\VirtualRequest.cs" />
     <Compile Include="Operators\VirtualChangeSet.cs" />
     <Compile Include="SourceList.cs" />
+    <Compile Include="Tests\ChangeSetAggregator.cs" />
+    <Compile Include="Tests\DistinctChangeSetAggregator.cs" />
+    <Compile Include="Tests\PagedChangeSetAggregator.cs" />
+    <Compile Include="Tests\SortedChangeSetAggregator.cs" />
+    <Compile Include="Tests\TestEx.cs" />
+    <Compile Include="Tests\VirtualChangeSetAggregator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DynamicData.nuspec">

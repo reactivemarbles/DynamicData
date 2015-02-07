@@ -1,21 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
 namespace DynamicData.Operators
 {
-    internal sealed class DistinctCalculator<TObject, TKey, TValue>
+
+    internal sealed class DistinctCounter<TObject, TKey, TValue>
     {
         private readonly Func<TObject, TValue> _valueSelector;
         private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
         private readonly IDictionary<TKey, TValue> _itemCache = new Dictionary<TKey, TValue>();
-       
-        public DistinctCalculator(Func<TObject, TValue> valueSelector)
+
+        public DistinctCounter(Func<TObject, TValue> valueSelector)
         {
             if (valueSelector == null) throw new ArgumentNullException("valueSelector");
             _valueSelector = valueSelector;
         }
-        
+
         public IDistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> updates)
         {
             var result = new List<Change<TValue, TValue>>();
@@ -25,7 +26,7 @@ namespace DynamicData.Operators
                 .Else(() =>
                 {
                     _valueCounters[value] = 1;
-                    result.Add(new Change<TValue, TValue>(ChangeReason.Add, value,value));
+                    result.Add(new Change<TValue, TValue>(ChangeReason.Add, value, value));
                 });
 
             Action<TValue> removeAction = value =>
@@ -36,7 +37,7 @@ namespace DynamicData.Operators
                 //decrement counter
                 var newCount = counter.Value - 1;
                 _valueCounters[value] = newCount;
-                if (newCount!=0) return;
+                if (newCount != 0) return;
 
                 //if there are none, then remove and notify
                 _valueCounters.Remove(value);
@@ -61,7 +62,7 @@ namespace DynamicData.Operators
                         var value = _valueSelector(change.Current);
                         var previous = _itemCache[key];
                         if (value.Equals(previous)) return;
-                        
+
                         removeAction(previous);
                         addAction(value);
                         _itemCache[key] = value;
@@ -73,7 +74,7 @@ namespace DynamicData.Operators
                         removeAction(previous);
                         _itemCache.Remove(key);
                         break;
-                    }                   
+                    }
                 }
             });
             return new DistinctChangeSet<TValue>(result);

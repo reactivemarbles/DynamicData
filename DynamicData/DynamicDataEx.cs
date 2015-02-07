@@ -623,26 +623,85 @@ namespace DynamicData
         }
 
 
-
         /// <summary>
-        /// Batches the underlying updates if a pause signal has been received.
+        /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
         /// When a resume signal has been received the batched updates will  be fired.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="pauseStateObservable">The pause / resume state observable.</param>
+        /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            IObservable<bool> pauseIfTrueSelector,    
+            IScheduler scheduler = null)
+        {
+            return BatchIf(source, pauseIfTrueSelector, false, scheduler);
+        }
+
+        /// <summary>
+        /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
+        /// When a resume signal has been received the batched updates will  be fired.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
         /// <param name="intialPauseState">if set to <c>true</c> [intial pause state].</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> BatchIfPaused<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                            IObservable<bool> pauseStateObservable,
-                                                            bool intialPauseState = false,
-                                                            IScheduler scheduler=null)
+        public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            IObservable<bool> pauseIfTrueSelector,
+            bool intialPauseState = false,    
+            IScheduler scheduler = null)
+        {
+            return BatchIf(source, pauseIfTrueSelector, intialPauseState, null, scheduler);
+        }
+
+        /// <summary>
+        /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
+        /// When a resume signal has been received the batched updates will  be fired.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
+        /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            IObservable<bool> pauseIfTrueSelector,
+            TimeSpan? timeOut= null,    
+            IScheduler scheduler = null)
+        {
+            return BatchIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
+        }
+
+        /// <summary>
+        /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
+        /// When a resume signal has been received the batched updates will  be fired.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
+        /// <param name="intialPauseState">if set to <c>true</c> [intial pause state].</param>
+        /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+                                                    IObservable<bool> pauseIfTrueSelector,
+                                                    bool intialPauseState = false,
+                                                    TimeSpan? timeOut= null,    
+                                                    IScheduler scheduler = null)
         {
             if (source == null) throw new ArgumentNullException("source");
-            if (pauseStateObservable == null) throw new ArgumentNullException("pauseStateObservable");
+            if (pauseIfTrueSelector == null) throw new ArgumentNullException("pauseIfTrueSelector");
             ;
 
             return Observable.Create<IChangeSet<TObject, TKey>>
@@ -652,21 +711,42 @@ namespace DynamicData
                         bool paused = intialPauseState;
                         var locker = new object();
                         var buffer = new List<Change<TObject, TKey>>();
+                        var timeoutSubscriber = new SerialDisposable();
+                        var timeoutSubject = new Subject<bool>();
 
-                        var pauseState = pauseStateObservable
-                                            .ObserveOn(scheduler ?? Scheduler.Default)
-                                            .Subscribe(state =>
-                                            {
-                                                lock (locker)
-                                                {
-                                                    if (paused == state) return;
-                                                    paused = state;
-                                                    if (paused) return;
-                                                    observer.OnNext(new ChangeSet<TObject, TKey>(buffer));
-                                                    buffer.Clear();
-                                                }
+                        var schedulertouse = scheduler ?? Scheduler.Default;
 
-                                            });
+                        var bufferSelector = Observable.Return(intialPauseState)
+                                                .Concat(pauseIfTrueSelector.Merge(timeoutSubject))
+                                                .ObserveOn(schedulertouse)
+                                                .Synchronize(locker)
+                                                .Publish();
+                        
+                        var pause = bufferSelector.Where(state => state)
+                                        .Subscribe(_ =>
+                                        {
+                                            paused = true;
+                                           //add pause timeout if required
+                                            if (timeOut != null && timeOut.Value != TimeSpan.Zero)
+                                                timeoutSubscriber.Disposable = Observable.Timer(timeOut.Value, schedulertouse)
+                                                                                .Select(l => false)
+                                                                                .SubscribeSafe(timeoutSubject);
+                                        });
+
+
+                        var resume = bufferSelector.Where(state => !state)
+                                    .Subscribe(_ =>
+                                        {
+                                            paused = false;
+                                            //publish changes and clear buffer
+                                            if (buffer.Count==0) return;
+                                            observer.OnNext(new ChangeSet<TObject, TKey>(buffer));
+                                            buffer.Clear();
+
+                                            //kill off timeout if required
+                                            timeoutSubscriber.Disposable = Disposable.Empty;
+                                        });
+
 
                         var updateSubscriber = source.Synchronize(locker)
                                         .Subscribe(updates =>
@@ -681,15 +761,22 @@ namespace DynamicData
                                             }
                                         });
 
+
+                        var connected = bufferSelector.Connect();
+
                         return Disposable.Create(() =>
                         {
+                            connected.Dispose();
+                            pause.Dispose();
+                            resume.Dispose();
                             updateSubscriber.Dispose();
-                            pauseState.Dispose();
                         });
                     }
                 );
 
         }
+
+
 
         /// <summary>
         /// Defer the subscribtion until loaded and skip initial changeset
@@ -1529,17 +1616,21 @@ namespace DynamicData
 
         #region   Combine
 
-        public static IObservable<IDistinctChangeSet<T>> And<T>(this IObservable<IDistinctChangeSet<T>> source, 
-            params IObservable<IDistinctChangeSet<T>>[] others)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (others == null || others.Length == 0) throw new ArgumentNullException("others");
-
-            var parameters = others.Select(s => s.Expand());
-            return source.Combine(CombineOperator.ContainedInEach, parameters.ToArray()).Contract();
-        }
 
 
+        /// <summary>
+        /// Applied a logical And operator between the collections i.e items which are in all of the sources are included
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="others">The others.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// others
+        /// </exception>
         public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             params IObservable<IChangeSet<TObject, TKey>>[] others)
         {
@@ -1549,17 +1640,19 @@ namespace DynamicData
             return source.Combine(CombineOperator.ContainedInEach, others);
         }
 
-        public static IObservable<IDistinctChangeSet<T>> Or<T>(this IObservable<IDistinctChangeSet<T>> source,
-            params IObservable<IDistinctChangeSet<T>>[] others)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (others == null || others.Length == 0) throw new ArgumentNullException("others");
-
-            var parameters = others.Select(s => s.Expand());
-            return source.Combine(CombineOperator.ContainedInAny, parameters.ToArray()).Contract();
-        }
-
-
+        /// <summary>
+        /// Applied a logical Or operator between the collections i.e items which are in any of the sources are included
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="others">The others.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// others
+        /// </exception>
         public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             params IObservable<IChangeSet<TObject, TKey>>[] others)
         {
@@ -1569,17 +1662,20 @@ namespace DynamicData
             return source.Combine(CombineOperator.ContainedInAny, others);
         }
 
-        public static IObservable<IDistinctChangeSet<T>> Except<T>(this IObservable<IDistinctChangeSet<T>> source,
-                params IObservable<IDistinctChangeSet<T>>[] others)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (others == null || others.Length == 0) throw new ArgumentNullException("others");
 
-            var parameters = others.Select(s => s.Expand());
-            return source.Combine(CombineOperator.ExceptFor, parameters.ToArray()).Contract();
-        }
-
-
+        /// <summary>
+        /// Applied a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="others">The others.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// others
+        /// </exception>
         public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             params IObservable<IChangeSet<TObject, TKey>>[] others)
         {
@@ -1590,62 +1686,63 @@ namespace DynamicData
         }
 
 
-        public static IObservable<IChangeSet<TObject, TKey>> Append<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-          TObject item) where TObject:IKey<TKey>
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.Append(item, item.Key);
-        }
-        //TODO: Memory leak with the StartWith operator as it is not a func
-        public static IObservable<IChangeSet<TObject, TKey>> Append<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-          TObject item, TKey key)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.StartWith(new ChangeSet<TObject, TKey>(ChangeReason.Add, key, item));
-        }
-
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(
             this IObservable<IChangeSet<TObject, TKey>> source,
             CombineOperator type,
             params IObservable<IChangeSet<TObject, TKey>>[] combinetarget)
         {
             if (combinetarget == null) throw new ArgumentNullException("combinetarget");
-            
+
             //TODO: Combine these collections using merge (with index)
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
                     observer =>
+                    {
+                        Action<IChangeSet<TObject, TKey>> updateAction = updates =>
                         {
-                            Action<IChangeSet<TObject, TKey>> updateAction = updates =>
-                                {
-                                    try
-                                    {
-                                        observer.OnNext(updates);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        observer.OnError(ex);
-                                        observer.OnCompleted();
-                                    }
-                                };
-                            IDisposable subscriber = Disposable.Empty;
                             try
                             {
-                                var list = combinetarget.ToList();
-                                list.Insert(0, source);
-
-                                var combiner = new Combiner<TObject, TKey>(type, updateAction);
-                                subscriber = combiner.Subscribe(list.ToArray());
+                                observer.OnNext(updates);
                             }
                             catch (Exception ex)
                             {
                                 observer.OnError(ex);
                                 observer.OnCompleted();
                             }
+                        };
+                        IDisposable subscriber = Disposable.Empty;
+                        try
+                        {
+                            var list = combinetarget.ToList();
+                            list.Insert(0, source);
 
-                            return subscriber;
-                        });
+                            var combiner = new Combiner<TObject, TKey>(type, updateAction);
+                            subscriber = combiner.Subscribe(list.ToArray());
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                            observer.OnCompleted();
+                        }
+
+                        return subscriber;
+                    });
         }
+
+        public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+          TObject item) where TObject:IKey<TKey>
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            return source.StartWithItem(item, item.Key);
+        }
+        
+        public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+          TObject item, TKey key)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+            return source.StartWith(new ChangeSet<TObject, TKey>(ChangeReason.Add, key, item));
+        }
+
 
         #endregion
 

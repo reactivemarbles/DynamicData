@@ -127,6 +127,7 @@
     <Compile Include="Operators\CombineOperator.cs" />
     <Compile Include="Operators\Combiner.cs" />
     <Compile Include="Operators\DistinctCalculator.cs" />
+    <Compile Include="Operators\DistinctCounter.cs" />
     <Compile Include="Operators\DynamicFilter.cs" />
     <Compile Include="Operators\DynamicSubscriber.cs" />
     <Compile Include="Operators\Error.cs" />

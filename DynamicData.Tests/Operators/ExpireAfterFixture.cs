@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Operators
 {
     [TestFixture]
-    class AutoRemoveFixture
+    class ExpireAfterFixture
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;
@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Operators
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
-            _results = new ChangeSetAggregator<Person, string>(_source.Connect());
+            _results = _source.Connect().AsAggregator();
         }
 
         [TearDown]
@@ -47,7 +47,7 @@ namespace DynamicData.Tests.Operators
             Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
             _source.AddOrUpdate(items);
 
-            var remover = _source.AutoRemove(removeFunc, _scheduler).Subscribe();
+            var remover = _source.ExpireAfter(removeFunc, _scheduler).Subscribe();
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(5010).Ticks);
 
             Assert.AreEqual(60,_source.Count,"40 items should have been removed from the cache");
@@ -61,7 +61,7 @@ namespace DynamicData.Tests.Operators
         [Test]
         public void ItemAddedIsExpired()
         {
-            var remover = _source.AutoRemove(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
+            var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
           
             _source.AddOrUpdate(new Person("Name1", 10));
 
@@ -77,7 +77,7 @@ namespace DynamicData.Tests.Operators
         [Test]
         public void ExpireIsCancelledWhenUpdated()
         {
-            var remover = _source.AutoRemove(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
+            var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
          
             _source.BatchUpdate(updater =>
             {
@@ -98,7 +98,7 @@ namespace DynamicData.Tests.Operators
         [Test]
         public void CanHandleABatchOfUpdates()
         {
-            var remover = _source.AutoRemove(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
+            var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
             const int size = 100;
             Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
 

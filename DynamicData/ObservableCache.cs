@@ -74,7 +74,7 @@ namespace DynamicData
                 var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
 
                 var expirer = expireAfter !=null
-                    ? cache.AutoRemove(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
+                    ? cache.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
                     : Disposable.Empty;
 
                 var sizeLimiter = limitSizeTo > 0
@@ -138,7 +138,7 @@ namespace DynamicData
                 var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
 
                 var expirer = expireAfter != null
-                    ? cache.AutoRemove(expireAfter,scheduler ?? Scheduler.Default).Subscribe((kvp) => { },observer.OnError)
+                    ? cache.ExpireAfter(expireAfter,scheduler ?? Scheduler.Default).Subscribe((kvp) => { },observer.OnError)
                     : Disposable.Empty;
 
                 var sizeLimiter = limitSizeTo > 0
@@ -310,7 +310,6 @@ namespace DynamicData
                 return Observable.Create< IEnumerable<KeyValuePair<TKey, TObject>>>(observer =>
                 {
                      long orderItemWasAdded = -1;
-                    var dateTime = DateTime.Now;;
                        var sizeLimiter = new SizeLimiter<TObject, TKey>(sizeLimit);
 
                    return source.Connect()
@@ -345,10 +344,10 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> AutoRemove<TObject, TKey>(this ISourceCache<TObject, TKey> source,
+        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
             Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler = null)
         {
-            return source.AutoRemove(timeSelector, null, scheduler);
+            return source.ExpireAfter(timeSelector, null, scheduler);
         }
 
         /// <summary>
@@ -366,10 +365,10 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> AutoRemove<TObject, TKey>(this ISourceCache<TObject, TKey> source,
+        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
             Func<TObject, TimeSpan?> timeSelector,TimeSpan? interval=null)
         {
-            return AutoRemove(source, timeSelector, interval,  Scheduler.Default);
+            return ExpireAfter(source, timeSelector, interval,  Scheduler.Default);
         }
 
         /// <summary>
@@ -388,7 +387,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> AutoRemove<TObject, TKey>(this ISourceCache<TObject, TKey> source,
+        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
             Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
         {
             if (source == null) throw new ArgumentNullException("source");

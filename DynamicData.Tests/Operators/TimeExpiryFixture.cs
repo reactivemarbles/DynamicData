@@ -24,7 +24,7 @@ namespace DynamicData.Tests.Operators
 
             _cache = new SourceCache<Person, string>(p=>p.Key);
             _results = new ChangeSetAggregator<Person, string>(_cache.Connect());
-            _remover = _cache.AutoRemove(p=>TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
+            _remover = _cache.ExpireAfter(p=>TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
         }
 
         [TearDown]
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.Operators
             Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
             _cache.AddOrUpdate(items);
 
-            var xxx = _cache.AutoRemove(removeFunc,_scheduler).Subscribe();
+            var xxx = _cache.ExpireAfter(removeFunc,_scheduler).Subscribe();
             _scheduler.AdvanceBy(TimeSpan.FromSeconds(5).Ticks);
 
             _scheduler.AdvanceBy(TimeSpan.FromSeconds(5).Ticks);

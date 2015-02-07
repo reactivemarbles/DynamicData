@@ -81,7 +81,9 @@
     <Compile Include="Domain\Pet.cs" />
     <Compile Include="Domain\RandomPersonGenerator.cs" />
     <Compile Include="Domain\SelfObservingPerson.cs" />
-    <Compile Include="Operators\AutoRemoveFixture.cs" />
+    <Compile Include="Operators\ExpireAfterFixture.cs" />
+    <Compile Include="Operators\BatchIfFixture.cs" />
+    <Compile Include="Operators\BatchIfWithTimeOutFixture.cs" />
     <Compile Include="Operators\DeferUntilLoadedFixture.cs" />
     <Compile Include="Operators\EnumerableEx.cs" />
     <Compile Include="Operators\EnumerableObservableToObservableChangeSetFixture.cs" />
