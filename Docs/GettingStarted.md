@@ -50,18 +50,18 @@ This cache has the same connection methods as a source cache but is read only.
 
 ### Examples
 
-Now you know how to create the source observable, here are some few quick fire examples. But first, what is the expected behaviour?  Simple answer to that one.
+Now you know how to create the source observable, here are some few quick fire examples. But first, what is the expected behaviour or any standard conventions?  Simple answer to that one.
 
- 1. When an observer subscribes the initial items of the underlying source always form the first batch of changes.
- 2. Empty change sets should never be fired.
- 3. I can't think of a 3rd one!!! 
+ 1. All operators must comply with the Rx guidelines
+ 2. When an observer subscribes the initial items of the underlying source always form the first batch of changes.
+ 3. Empty change sets should never be fired.
+ 
+ In all of these examples the resulting sequences always exactly reflect the items is the cache.  . This is where the power of  add, update and removes comes into it's own as all the operations are maintained with no consumer based plumbing.
 
-In all of these examples the resulting sequences always exactly reflect the items is the cache.  . This is where the power of  add, update and removes comes into it's own as all the operations are maintained with no consumer based plumbing.
-
-**Example 1:** filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
+**Example 1:** filters a stream of live trades, creates a proxy for each trade and orders the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
 
 ```csharp
-//Dynamic data has it's own take on an observable collection (optimised for populating f
+//Dynamic data has it's own take on an observable collection (optimised for populating from dynamic data observables)
 var list = new ObservableCollectionExtended<TradeProxy>();
 var myoperation = somedynamicdatasource
 					.Filter(trade=>trade.Status == TradeStatus.Live) 
@@ -107,13 +107,8 @@ var myoperation = somedynamicdatasource.Connect()
 IObservable<bool> allValid = somedynamicdatasource
                 .DistinctValues(trade => trade.CurrencyPair)
 ```
-**Example 6:** Produces a distinct change set of currency pairs
-```csharp
-IObservable<bool> allValid = somedynamicdatasource
-                .DistinctValues(trade => trade.CurrencyPair)
-```
 ## Want to know more?
-I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading the [WPF trading example](https://github.com/RolandPheasant/Tradingdemo) as I intend it to be a 'living document' andit will be continually maintained. 
+I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading the [WPF trading example](https://github.com/RolandPheasant/Tradingdemo) as I intend it to be a 'living document' and it will be continually maintained. 
 
 
 '
