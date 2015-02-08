@@ -37,9 +37,9 @@ var oberverableChangeSet = mycache.Connect();
 One final out of the box means of creating an observable change set is if you are doing UI work and have an observable collection, you can do this
 ```csharp
 var myobservablecollection= new ObservableCollection<T>();
-//1. This option will create a collection where item's are identified using the hash code.
+// Use the hashcode for the key
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
-//2. Or specify a key like this
+// or specify a key like this
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
 One other point worth making here is any steam can be covered to as cache.
@@ -86,26 +86,26 @@ filtercontroller.Change(trade=>//return some predicate);
 **Example 3:** produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed.
 ```csharp
 var myoperation = somedynamicdatasource
-            .Group(trade=>trade.Status) //This is NOT Rx's GroupBy 
-			.Subscribe(changeSet=>//do something with the groups)
+					.Group(trade=>trade.Status) //This is NOT Rx's GroupBy 
 ```
 **Example 4:** Suppose I am editing some trades and I have an observable on each trades which validates but I want to know when all items are valid then this will do the job.
 ```csharp
 IObservable<bool> allValid = somedynamicdatasource
-                .TrueForAll(trade => trade.IsValidObservable, (trade, isvalid) => isvalid)
+	                .TrueForAll(trade => trade.IsValidObservable, (trade, isvalid) => isvalid)
 ```
 This operator flattens the observables and returns the combined state in one line of code. I love it.
 
 **Example 5:**  will wire and un-wire items from the observable when they are added, updated or removed from the source.
 ```csharp
 var myoperation = somedynamicdatasource.Connect() 
-			.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount))
-			.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with IObservable<PropChangedArg>)
+				.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount))
+				.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with IObservable<PropChangedArg>)
 ```
-**Example 5:** Produces a distinct change set of currency pairs
+**Example 6:** Produces a distinct change set of currency pairs
 ```csharp
-IObservable<bool> allValid = somedynamicdatasource
-                .DistinctValues(trade => trade.CurrencyPair)
+var currencyPairs= somedynamicdatasource
+				    .DistinctValues(trade => trade.CurrencyPair)
 ```
+
 ## Want to know more?
-I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading the [WPF trading example](https://github.com/RolandPheasant/Tradingdemo) as I intend it to be a 'living document' and it will be continually maintained. 
+There is so much more which will be documented but for now I suggest downloading the [WPF trading example](https://github.com/RolandPheasant/Tradingdemo) as I intend it to be a 'living document' and it will be continually maintained. 

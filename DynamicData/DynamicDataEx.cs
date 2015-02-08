@@ -1220,7 +1220,7 @@ namespace DynamicData
                 var subscriber = published.SubscribeSafe(observer);
 
 
-                var autoRemover = published.ForAutoRemove(timeSelector, pollingInterval, scheduler)
+                var autoRemover = published.ForExpiry(timeSelector, pollingInterval, scheduler)
                             .FinallySafe(observer.OnCompleted)
                             .Subscribe(keys =>
                             {
@@ -1263,7 +1263,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        internal static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ForAutoRemove<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+        internal static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ForExpiry<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval, IScheduler scheduler)
         {
             if (source == null) throw new ArgumentNullException("source");

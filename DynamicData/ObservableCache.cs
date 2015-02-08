@@ -397,7 +397,7 @@ namespace DynamicData
             {
                 scheduler = scheduler ?? Scheduler.Default;
                 return source.Connect()
-                    .ForAutoRemove(timeSelector, pollingInterval, scheduler)
+                    .ForExpiry(timeSelector, pollingInterval, scheduler)
                     .FinallySafe(observer.OnCompleted)
                     .Subscribe(toRemove =>
                     {
