@@ -1,6 +1,3 @@
-
-
-
 # Observable Cache
 
 The observable cache is the key data store in dynamic data. It stores data using a key which is specified when constructed.  It is the core component of dynamic data as it exposes direct data access methods as well as observables to stream data and any changes to data it contains.
@@ -35,14 +32,17 @@ To construct it you would need to specify a key
 ```csharp
 var mycache  = new SourceCache<TObject,TKey>(t => t.Key);
 ```
-but if you wish to use the object's hash code the there is an overloaded version which uses an integer key
+but if you wish to use the object's hash code there is an overloaded version which uses an integer key
 
 ```csharp
 var mycache  = new SourceCache<TObject>();
 ```
 The source cache effectively has one method which is:
 ```csharp
-void BatchUpdate(Action<ISourceUpdater<TObject, TKey>> updateAction);
+ public interface ISourceCache<TObject, TKey> : IObservableCache<TObject, TKey>
+  {
+	void BatchUpdate(Action<ISourceUpdater<TObject, TKey>> updateAction);
+  }
 ``` 
 At a glance this may look a little odd, but let me explain first. ```ISourceUpdater``` exposes methods to update and query the inner cache where one call to it produces a single change set notification.  The benefit is many changes to the cache can be produced with single lock to the data in the cache.  
 
@@ -53,13 +53,12 @@ At a glance this may look a little odd, but let me explain first. ```ISourceUpda
        updater.AddOrUpdate(myListOfItems);
    });
 ``` 
-In this example the cache is locked one and produces a single change set to reflect the cache being cleared and loaded with 'myListOfItems'. However since this method is awkward, there a a load of convenience extensions which invoke batch update for you. For for example, you can direct call
-
+In this example the cache is locked once and produces a single change set to reflect the cache being cleared and loaded with 'myListOfItems'. However since this method is awkward, there a a load of convenience extensions which invoke batch update for you. For example could do the following
 ```csharp
 myCache.Clear();
 myCache.AddOrUpdate(myListOfItems);
 ```
-This will result in 2 locks to the cache and 2 change set notifications.
+which results in 2 locks to the cache and 2 change set notifications. Less efficient but easier code.
 
 
 
