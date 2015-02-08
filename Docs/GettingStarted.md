@@ -1,11 +1,11 @@
 # Getting Started
  
 ##The core concept
-It is perhaps easiest to think of dynamic data as reactive extensions (rx) for collections but more accurately dynamic data is a bunch of rx operators based on the concept of an observable change set. The change set notifies listeners of any changes to an underlying source and has the following signature.
-IObservable<IChangeSet<TObject,TKey>> myFirstObservableChangeSet;
+It is perhaps easiest to think of dynamic data as reactive extensions (rx) for collections but more accurately dynamic data is a bunch of rx operators based on the concept of an observable change set.  The change set notifies listeners of any changes to an underlying source and has the following signature.
 ```csharp
+IObservable<IChangeSet<TObject,TKey>> myFirstObservableChangeSet;
 ```
-where ```IChangeSet``` represents a set of adds, updates, removes and moves (for sort dependent operators). Each observer receives the changes, applies some logic and in turn notifies it's own changeset. In this way complex chains of operators can easily be chained together.
+where ```IChangeSet<TObject,TKey>```  represents a set of adds, updates, removes and moves (for sort dependent operators).  A further concept introduced by dynamic data is an evaluate change. This is used to tell listeners when an object has mutable values and there has been an in-line change.  An example could be when an object has time dependent values or changeable meta data.
 
 The only constraint of dynamic data is an object needs to be keyed. This was a design choice right from the beginning as the internals of dynamic data need to identify any object and be able to look it up quickly and efficiently.
 
@@ -42,7 +42,7 @@ var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
 // or specify a key like this
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
-One other point worth making here is any observable change set  can be coverted into a cache.
+One other point worth making here is any steam can be covered to as cache.
 ```csharp
 var mycache = somedynamicdatasource.AsObservableCache();
 ```
