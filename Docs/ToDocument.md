@@ -17,7 +17,7 @@ PagedChangeSetAggregator
 SortedChangeSetAggregator
 VirtualChangeSetAggregator
 
-**Extensions which apply to a standard observable**
+**Observable extensions**
 
 ToObservableChangeSet
 
@@ -28,7 +28,7 @@ LimitSizeTo
 PopulateFrom
 PopulateInto
 
-**Extensions which apply to an observable change set**
+**Observable change set extensions**
 
 And
 Adapt
