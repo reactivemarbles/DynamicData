@@ -34,7 +34,7 @@ The cache produces an observable change set via it's connect methods.
 ```csharp
 var oberverableChangeSet = mycache.Connect();
 ```
-One final out of the box means of creating an observable change set is if you are doing UI work and have an observable collection, you can do this
+Another way is to directly from an observable collection, you can do this
 ```csharp
 var myobservablecollection= new ObservableCollection<T>();
 // Use the hashcode for the key
@@ -42,6 +42,8 @@ var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
 // or specify a key like this
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
+This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
+
 One other point worth making here is any steam can be covered to as cache.
 ```csharp
 var mycache = somedynamicdatasource.AsObservableCache();
