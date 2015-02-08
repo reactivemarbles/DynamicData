@@ -12,6 +12,9 @@ but any observable change set has can be filtered.
 ```csharp
  var myFilteredOperation = myObservableChangeSet.Filter(x=>//return a predicate);
 ``` 
+
+##Dynamically change a filter
+
 Easy so far but what if you want to change the filter dynamically. This is possible as dynamic data provides a filter controller.
 
 ```csharp
