@@ -323,7 +323,7 @@ namespace DynamicData
                         })
                         .Subscribe(changes =>
                         {
-                            var result = sizeLimiter.CloneAndReturnExpiredOnly(changes);
+                            var result = sizeLimiter.CloneAndReturnExpiredOnly	(changes);
 
                             if (result.Count == 0) return;
                             source.BatchUpdate(updater => result.ForEach(c => updater.Remove(c.Key)));
