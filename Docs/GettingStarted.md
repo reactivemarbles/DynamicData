@@ -7,7 +7,7 @@ IObservable<IChangeSet<TObject,TKey>> myFirstObservableChangeSet;
 ```
 where ```IChangeSet<TObject,TKey>```  represents a set of adds, updates, removes and moves (for sort dependent operators).  A further concept introduced by dynamic data is an evaluate change. This is used to tell listeners when an object has mutable values and there has been an in-line change.  An example could be when an object has time dependent values or changeable meta data.
 
-The only constraint of dynamic data is an object needs to be keyed. This was a design choice right from the beginning as the internals of dynamic data need to identify any object and be able to look it up quickly and efficiently.
+The only constraint of dynamic data is an object needs to have a key specified. This was a design choice right from the beginning as the internals of dynamic data need to identify any object and be able to look it up quickly and efficiently.
 
 ## Creating an observable change set
 To open up the world of dynamic data to any object, we need to feed the data into some mechanism which produces the observable change set.  Unless you are creating a custom operator then there is no need to directly create one as there are several out of the box means of doing so.
@@ -34,7 +34,7 @@ The cache produces an observable change set via it's connect methods.
 ```csharp
 var oberverableChangeSet = mycache.Connect();
 ```
-One final out of the box means of creating an observable change set is if you are doing UI work and have an observable collection, you can do this
+Another way is to directly from an observable collection, you can do this
 ```csharp
 var myobservablecollection= new ObservableCollection<T>();
 // Use the hashcode for the key
@@ -42,6 +42,8 @@ var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
 // or specify a key like this
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
+This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
+
 One other point worth making here is any steam can be covered to as cache.
 ```csharp
 var mycache = somedynamicdatasource.AsObservableCache();
