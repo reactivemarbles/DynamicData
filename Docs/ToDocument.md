@@ -9,6 +9,8 @@ SortController
 GroupController
 PageController
 VirtualisingController
+ChangeSet
+Optional
 
 **Test Components**
 
@@ -17,7 +19,7 @@ PagedChangeSetAggregator
 SortedChangeSetAggregator
 VirtualChangeSetAggregator
 
-**Observable extensions**
+**Extensions which apply to a standard observable**
 
 ToObservableChangeSet
 
@@ -28,7 +30,7 @@ LimitSizeTo
 PopulateFrom
 PopulateInto
 
-**Observable change set extensions**
+**Extensions which apply to an observable change set**
 
 And
 Adapt

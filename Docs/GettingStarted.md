@@ -1,6 +1,6 @@
-## Getting Started
+# Getting Started
  
-### The core concept
+##The core concept
 It is perhaps easiest to think of dynamic data as reactive extensions (rx) for collections but more accurately dynamic data is a bunch of rx operators based on the concept of an observable change set.  The change set notifies listeners of any changes to an underlying source and has the following signature.
 ```csharp
 IObservable<IChangeSet<TObject,TKey>> myFirstObservableChangeSet;
@@ -9,7 +9,7 @@ where ```IChangeSet<TObject,TKey>```  represents a set of adds, updates, removes
 
 The only constraint of dynamic data is an object needs to be keyed. This was a design choice right from the beginning as the internals of dynamic data need to identify any object and be able to look it up quickly and efficiently.
 
-### Creating an observable change set
+## Creating an observable change set
 To open up the world of dynamic data to any object, we need to feed the data into some mechanism which produces the observable change set.  Unless you are creating a custom operator then there is no need to directly create one as there are several out of the box means of doing so.
 
 The easiest way is to feed directly into dynamic data from an standard rx observable.
@@ -48,7 +48,7 @@ var mycache = somedynamicdatasource.AsObservableCache();
 ```
 This cache has the same connection methods as a source cache but is read only.
 
-### Examples
+## Examples
 
 Now you know how to create the source observable, here are some few quick fire examples. But first, what is the expected behaviour or any standard conventions?  Simple answer to that one.
 
@@ -108,4 +108,7 @@ var currencyPairs= somedynamicdatasource
 ```
 
 ## Want to know more?
-There is so much more which will be documented but for now I suggest downloading the [WPF trading example](https://github.com/RolandPheasant/Tradingdemo) as I intend it to be a 'living document' and it will be continually maintained. 
+There is so much more which will be documented but for now I suggest 
+
+ 1. Download the [WPF trading example](https://github.com/RolandPheasant/Tradingdemo) as I intend it to be a 'living document' and it will be continually maintained. 
+ 2. Read the documents as they are created (keep an eye on this space)
