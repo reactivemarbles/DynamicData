@@ -12,8 +12,7 @@ Even before rx existed I had implemented a similar concept using old fashioned e
 - Install from Nuget  https://www.nuget.org/packages/DynamicData
 - Sample wpf project https://github.com/RolandPheasant/TradingDemo
 - Blog at  http://dynamic-data.org/
-- Feel free to feedback on twitter:
--  Additionally you can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
+- You can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
 
 ### Getting Started
 
