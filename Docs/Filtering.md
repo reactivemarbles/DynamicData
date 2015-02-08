@@ -7,7 +7,7 @@ The simplest filter option is to pass a predicate into the connect method on an 
 ```csharp
  var myObservableChangeSet = myCache.Connect(x=>//return a predicate);
 ``` 
-but any observable change set has can be filtered.
+but any observable change set can be filtered.
 
 ```csharp
  var myFilteredOperation = myObservableChangeSet.Filter(x=>//return a predicate);
@@ -54,5 +54,5 @@ var refresher = Observable.Timer(TimeSpan.FromMinutes(1))
 ``` 
 This way the filter will always be correct.
 
-I have also applied exactly the same principle for filtering on calculated value and on market data values.
+I have also applied exactly the same principle for filtering on calculated values as well market data values.
 
