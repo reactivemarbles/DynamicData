@@ -34,14 +34,16 @@ var mycache  = new SourceCache<TObject>();
 //2. Or specify a key like this
 var mycache  = new SourceCache<TObject,TKey>(t => key);
 ```
-One final out of the box means of creating an observable change set is if you are doing UI work and have an observable collection, you can do this
+Another way is to directly from an observable collection, you can do this
 ```csharp
 var myobservablecollection= new ObservableCollection<T>();
-//1. This option will create a collection where item's are identified using the hash code.
+// Use the hashcode for the key
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
-//2. Or specify a key like this
-var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t=> key);
+// or specify a key like this
+var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
+This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
+
 One other point worth making here is any steam can be covered to as cache.
 ```csharp
 var mycache = somedynamicdatasource.AsObservableCache();
