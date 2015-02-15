@@ -9,7 +9,8 @@ The benefit of at least 40 operators which are borne from pragmatic experience i
 Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx when it first came out. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
 
 ### I've seen it before so give me some links
-- Install from Nuget  https://www.nuget.org/packages/DynamicData
+
+- [![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)](http://www.nuget.org/packages/DynamicData/)	
 - Sample wpf project https://github.com/RolandPheasant/TradingDemo
 - Blog at  http://dynamic-data.org/
 - You can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
@@ -34,14 +35,16 @@ var mycache  = new SourceCache<TObject>();
 //2. Or specify a key like this
 var mycache  = new SourceCache<TObject,TKey>(t => key);
 ```
-One final out of the box means of creating an observable change set is if you are doing UI work and have an observable collection, you can do this
+Another way is to directly from an observable collection, you can do this
 ```csharp
 var myobservablecollection= new ObservableCollection<T>();
-//1. This option will create a collection where item's are identified using the hash code.
+// Use the hashcode for the key
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
-//2. Or specify a key like this
-var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t=> key);
+// or specify a key like this
+var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
+This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
+
 One other point worth making here is any steam can be covered to as cache.
 ```csharp
 var mycache = somedynamicdatasource.AsObservableCache();
