@@ -101,6 +101,7 @@
     <Compile Include="Kernel\IReaderWriter.cs" />
     <Compile Include="Kernel\KeyComparer.cs" />
     <Compile Include="Kernel\KeyValueCollection.cs" />
+    <Compile Include="Kernel\ObservableWithValue.cs" />
     <Compile Include="Kernel\OptionElse.cs" />
     <Compile Include="Kernel\ReaderWriter.cs" />
     <Compile Include="ObservableCache.cs" />

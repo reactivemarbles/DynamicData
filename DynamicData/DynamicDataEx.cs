@@ -159,20 +159,6 @@ namespace DynamicData
         }
 
 
-        /// <summary>
-        /// Subscribe safe which ensures error handing is passed up the chain
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="observer">The observer.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IDisposable SubscribeSafer<T>(this IObservable<T> source, IObserver<T> observer)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.SubscribeSafe(observer);
-        }
-
 
         /// <summary>
         /// Monitors the status of a stream
@@ -216,7 +202,7 @@ namespace DynamicData
                     var subscriber = statusSubject
                                 .StartWith(status)
                                 .DistinctUntilChanged()
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
 
                     return Disposable.Create(() =>
                         {
@@ -493,7 +479,7 @@ namespace DynamicData
                         });
                         var subscriber = source
                             .Do(disposer.RegisterForRemoval, observer.OnError)
-                            .SubscribeSafer(observer);
+                            .SubscribeSafe(observer);
 
                         return Disposable.Create(() =>
                         {
@@ -506,7 +492,7 @@ namespace DynamicData
         /// <summary>
         /// Disposes each item when no longer required.
         /// 
-        /// NB: Individual items are disposed when removed or replaced. All items
+        /// Individual items are disposed when removed or replaced. All items
         /// are disposed when the stream is disposed
         /// </summary>
         /// <remarks>
@@ -770,6 +756,8 @@ namespace DynamicData
                             pause.Dispose();
                             resume.Dispose();
                             updateSubscriber.Dispose();
+                            timeoutSubject.OnCompleted();
+                            timeoutSubscriber.Dispose();
                         });
                     }
                 );
@@ -832,34 +820,7 @@ namespace DynamicData
         
         #region True for all values
 
-        private sealed class ObservableWithValue<TObject, TValue>
-        {
-            private readonly TObject _item;
-            private readonly IObservable<TValue> _source;
-            private Optional<TValue> _latestValue = Optional<TValue>.None;
-
-            public ObservableWithValue(TObject item, IObservable<TValue> source)
-            {
-                _item = item;
-                _source = source.Do(value => _latestValue = value);
-            }
-
-            public TObject Item
-            {
-                get { return _item; }
-            }
-
-            public Optional<TValue> LatestValue
-            {
-                get { return _latestValue; }
-            }
-
-            public IObservable<TValue> Observable
-            {
-                get { return _source; }
-            }
-        }
-
+  
 
         /// <summary>
         /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
@@ -1013,7 +974,8 @@ namespace DynamicData
         /// or
         /// resultSelector
         /// </exception>
-        public static IObservable<TDestination> QueryWhenChanged<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<IQuery<TObject, TKey>, TDestination> resultSelector)
+        public static IObservable<TDestination> QueryWhenChanged<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, 
+            Func<IQuery<TObject, TKey>, TDestination> resultSelector)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (resultSelector == null) throw new ArgumentNullException("resultSelector");
@@ -1021,8 +983,10 @@ namespace DynamicData
             return source.QueryWhenChanged().Select(resultSelector);
         }
 
+
+
         /// <summary>
-        /// The latest copy of the cache is exposed for querying i)  after each modification to the underlying data ii) on subscription
+        /// The latest copy of the cache is exposed for querying i)  after each modification to the underlying data ii) upon subscription
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1056,6 +1020,100 @@ namespace DynamicData
                 );
         }
 
+
+        //public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey,TDestination,TValue>(this IObservable<IChangeSet<TObject, TKey>> source,
+        //     Func<IQuery<TObject, TKey>, TDestination> resultSelector,
+        //    Func<TObject, IObservable<TValue>> additionalTrigger)
+        //{
+        //    if (source == null) throw new ArgumentNullException("source");
+
+        //    return Observable.Create<IQuery<TObject, TKey>>
+        //        (
+        //            observer =>
+        //            {
+        //                var cache = new Cache<TObject, TKey>();
+        //                var query = new AnomynousQuery<TObject, TKey>(cache);
+
+        //                var xxx = additionalTrigger
+
+
+        //                return source.Subscribe(updates =>
+        //                {
+        //                    try
+        //                    {
+        //                        cache.Clone(updates);
+        //                        observer.OnNext(query);
+        //                    }
+        //                    catch (Exception ex)
+        //                    {
+        //                        observer.OnError(ex);
+        //                    }
+        //                }, observer.OnError, observer.OnCompleted);
+        //            }
+        //        );
+        //}
+
+        /// <summary>
+        /// The latest copy of the cache is exposed for querying i)  after each modification to the underlying data ii) on subscription
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="itemChangedTrigger">Should the query be triggers for observables on individual items</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> itemChangedTrigger)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+
+            return Observable.Create<IQuery<TObject, TKey>>
+                (
+                    observer =>
+                    {
+                        var cache = new Cache<TObject, TKey>();
+                        var query = new AnomynousQuery<TObject, TKey>(cache);
+
+                        return source.Subscribe(updates =>
+                        {
+                            try
+                            {
+                                cache.Clone(updates);
+                                observer.OnNext(query);
+                            }
+                            catch (Exception ex)
+                            {
+                                observer.OnError(ex);
+                            }
+                        }, observer.OnError, observer.OnCompleted);
+                    }
+                );
+        }
+
+        //var transformed = source.Transform(t => new ObservableWithValue<TObject, TValue>(t, observableSelector(t))).Publish();
+        //var inlineChanges = transformed.MergeMany(t => t.Observable);
+        //var queried = transformed.QueryWhenChanged(q => q.Items);
+
+        ////nb: we do not care about the inline change because we are only monitoring it to cause a re-evalutaion of all items
+        //var publisher = queried.CombineLatest(inlineChanges, (items, inline) => collectionMatcher(items))
+        // .DistinctUntilChanged()
+        // .SubscribeSafe(observer);
+            //        if (source == null) throw new ArgumentNullException("source");
+
+            //return Observable.Create<bool>(observer =>
+            //{
+            //    var transformed = source.Transform(t => new ObservableWithValue<TObject, TValue>(t,observableSelector(t))).Publish();
+            //    var inlineChanges = transformed.MergeMany(t => t.Observable);
+            //    var queried = transformed.QueryWhenChanged(q => q.Items);
+
+            //    //nb: we do not care about the inline change because we are only monitoring it to cause a re-evalutaion of all items
+            //    var publisher = queried.CombineLatest(inlineChanges, (items, inline) => collectionMatcher(items))
+            //     .DistinctUntilChanged()
+            //     .SubscribeSafe(observer);
+
+            //    var connected = transformed.Connect();
+            //    return new CompositeDisposable(connected, publisher);
+            //});
 
 
         #endregion
@@ -1412,7 +1470,7 @@ namespace DynamicData
                         return request.Merge(datachange)
                                             .FinallySafe(observer.OnCompleted)
                                             .Where(updates => updates != null)
-                                            .SubscribeSafer(observer);
+                                            .SubscribeSafe(observer);
                     });
         }
 
@@ -1443,7 +1501,7 @@ namespace DynamicData
                         .Select(filterer.Filter)
                         .NotEmpty()
                         .FinallySafe(observer.OnCompleted)
-                        .SubscribeSafer(observer);
+                        .SubscribeSafe(observer);
                 });
         }
 
@@ -1479,7 +1537,7 @@ namespace DynamicData
                             return filter.Merge(evaluate).Merge(data)
                                 .NotEmpty()
                                 .FinallySafe(observer.OnCompleted)
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
         }
 
@@ -1607,7 +1665,7 @@ namespace DynamicData
                                 .Merge(sortAgain)
                                 .Where(result => result != null)
                                 .FinallySafe(observer.OnCompleted)
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                     });
         }
 
@@ -1777,7 +1835,7 @@ namespace DynamicData
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
                             .Finally(observer.OnCompleted)
-                            .SubscribeSafer(observer);
+                            .SubscribeSafe(observer);
                     });
         }
 
@@ -1810,7 +1868,7 @@ namespace DynamicData
                         return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
-                            .SubscribeSafer(observer);
+                            .SubscribeSafe(observer);
                     });
         }
 
@@ -1840,7 +1898,7 @@ namespace DynamicData
                 observer =>
                 {
                     var flattend = source.FlattenWithSingleParent(manyselector, t => t.Key);
-                    var subscriber = flattend.SubscribeSafer(observer);
+                    var subscriber = flattend.SubscribeSafe(observer);
 
                     return Disposable.Create(() =>
                     {
@@ -1875,7 +1933,7 @@ namespace DynamicData
             return Observable.Create<IChangeSet<TDestination, TDestinationKey>>
                 (
                     observer => source.FlattenWithSingleParent(manyselector, keySelector)
-                                      .SubscribeSafer(observer));
+                                      .SubscribeSafe(observer));
         }
 
         /// <summary>
@@ -1974,7 +2032,7 @@ namespace DynamicData
                         return source
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
-                            .SubscribeSafer(observer);
+                            .SubscribeSafe(observer);
                     });
         }
 
@@ -2013,7 +2071,7 @@ namespace DynamicData
                             .Select(updates => transformer.Transform(updates, transformFactory))
                             .NotEmpty()
                             .Finally(observer.OnCompleted)
-                            .SubscribeSafer(observer);
+                            .SubscribeSafe(observer);
                     });
         }
 
@@ -2048,7 +2106,7 @@ namespace DynamicData
                             var subscriber = source
                                 .Select(distinctObserver.Calculate)
                                 .Where(updates=>updates.Count != 0)
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
 
                             return Disposable.Create(subscriber.Dispose);
                         }
@@ -2137,7 +2195,7 @@ namespace DynamicData
                                         var groups = x.Select(s => new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(s.Reason, s.Key, s.Current));
                                         return new GroupChangeSet<TObject, TKey, TGroupKey>(groups);
                                     })
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
 
                             return Disposable.Create(() =>
                                                          {
@@ -2173,7 +2231,7 @@ namespace DynamicData
                             var  groups = source.Select(grouper.Update)
                                 .Where(changes=>changes.Count!=0).Publish();
 
-                            var subscriber = groups.SubscribeSafer(observer);
+                            var subscriber = groups.SubscribeSafe(observer);
                             var disposer = groups.DisposeMany().Subscribe();
                            
                             var connected = groups.Connect();
@@ -2274,7 +2332,7 @@ namespace DynamicData
                         .Select(virtualiser.Update)
                         .Where(updates => updates != null)
                         .FinallySafe(observer.OnCompleted)
-                        .SubscribeSafer(observer);
+                        .SubscribeSafe(observer);
                 });
         }
 
@@ -2335,7 +2393,7 @@ namespace DynamicData
                         return request.Merge(datachange)
                                             .Where(updates=>updates!=null)
                                             .FinallySafe(observer.OnCompleted)
-                                            .SubscribeSafer(observer);
+                                            .SubscribeSafe(observer);
                     });
         }
 

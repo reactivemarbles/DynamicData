@@ -134,7 +134,7 @@ namespace DynamicData
                                 .Select(updates => transformer.Transform(updates, transformFactory))
                                 .NotEmpty()
                                 .Finally(observer.OnCompleted)
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
             }
 
@@ -169,7 +169,7 @@ namespace DynamicData
                             return source
                                 .Select(updates => transformer.Transform(updates, transformFactory))
                                 .NotEmpty()
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
             }
 
@@ -214,7 +214,7 @@ namespace DynamicData
                             return source
                                 .Select(updates => transformer.Transform(updates, transformFactory))
                                 .NotEmpty()
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
             }
 
@@ -254,7 +254,7 @@ namespace DynamicData
                                 .Select(updates => transformer.Transform(updates, transformFactory))
                                 .NotEmpty()
                                 .Finally(observer.OnCompleted)
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
             }
 
@@ -286,7 +286,7 @@ namespace DynamicData
                             .Select(filterer.Update)
                             .NotEmpty()
                             .FinallySafe(observer.OnCompleted)
-                            .SubscribeSafer(observer);
+                            .SubscribeSafe(observer);
                     });
             }
 

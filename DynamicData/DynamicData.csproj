@@ -85,6 +85,7 @@
     <Compile Include="IVirtualChangeSet.cs" />
     <Compile Include="IVirtualParameters.cs" />
     <Compile Include="IVirtualRequest.cs" />
+    <Compile Include="Kernel\ObservableWithValue.cs" />
     <Compile Include="Operators\AbstractFilter.cs" />
     <Compile Include="Kernel\AnomynousObservableCache.cs" />
     <Compile Include="Kernel\AnomynousQuery.cs" />
