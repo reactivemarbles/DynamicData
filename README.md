@@ -1,4 +1,6 @@
 ## Dynamic Data
+
+[![Join the chat at https://gitter.im/RolandPheasant/DynamicData](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RolandPheasant/DynamicData?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Dynamic data is a portable class library which brings the power of reactive (rx) to collections.  
 
 A collection which mutates can have adds, updates and removes (plus moves and re-evaluates but more about that another time). Out of the box rx does nothing to manage any changes in a collection which is why Dynamic Data exists.  In Dynamic Data collection changes are notified via an observable change set which is the heart of the system.  An operator receives these notifications and then applies some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
