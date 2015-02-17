@@ -99,6 +99,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Kernel\IReaderWriter.cs" />
+    <Compile Include="Kernel\ItemWithValue.cs" />
     <Compile Include="Kernel\KeyComparer.cs" />
     <Compile Include="Kernel\KeyValueCollection.cs" />
     <Compile Include="Kernel\ObservableWithValue.cs" />

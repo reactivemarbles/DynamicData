@@ -95,6 +95,7 @@
     <Compile Include="Operators\IgnoreUpdateFixture.cs" />
     <Compile Include="Operators\IncludeUpdateFixture.cs" />
     <Compile Include="Operators\MergeManyFixture.cs" />
+    <Compile Include="Operators\MergeManyItemsFixture.cs" />
     <Compile Include="Operators\MergeManyWithKeyOverloadFixture.cs" />
     <Compile Include="Operators\OrFixture.cs" />
     <Compile Include="Operators\QueryWhenChangedFixture.cs" />
