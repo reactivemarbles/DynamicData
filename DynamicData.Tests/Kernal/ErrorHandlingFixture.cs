@@ -57,27 +57,6 @@ namespace DynamicData.Tests.Kernal
             }
         }
 
-        [Test]
-        public void SubscribeError()
-        {
-
-            bool completed = false;
-            bool error = false;
-
-            var feeder = new SourceCache<Entity, int>(e=>e.Key);
-
-            var subscriber = feeder.Connect()
-                                 .Finally(() => completed = true)
-                                 .SubscribeAndCatch( updates => { throw new Exception("Dodgy"); }, ex => error = true);
-
-            feeder.BatchUpdate(updater => updater.AddOrUpdate(new Entity()));
-
-
-            subscriber.Dispose();
-
-            Assert.IsTrue(error, "Error has not been invoked");
-            Assert.IsTrue(completed, "Completed has not been called");
-        }
 
         [Test]
         public void TransformError()

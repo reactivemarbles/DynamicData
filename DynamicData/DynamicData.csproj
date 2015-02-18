@@ -38,6 +38,7 @@
     <DocumentationFile>bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AggregationEx.cs" />
     <Compile Include="Binding\IEvaluateAware.cs" />
     <Compile Include="Binding\IIndexAware.cs" />
     <Compile Include="Binding\IObservableCollection.cs" />

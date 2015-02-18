@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Operators
             }
         }
 
-        private ISourceCache<ObjectWithObservable, int> _source;
+        private SourceCache<ObjectWithObservable, int> _source;
 
         [SetUp]
         public void Initialise()
@@ -50,6 +50,9 @@ namespace DynamicData.Tests.Operators
             _source.Dispose();
         }
 
+        /// <summary>
+        /// Invocations the only when child is invoked.
+        /// </summary>
         [Test]
         public void InvocationOnlyWhenChildIsInvoked()
         {

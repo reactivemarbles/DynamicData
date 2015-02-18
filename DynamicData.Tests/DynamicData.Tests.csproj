@@ -81,6 +81,7 @@
     <Compile Include="Domain\Pet.cs" />
     <Compile Include="Domain\RandomPersonGenerator.cs" />
     <Compile Include="Domain\SelfObservingPerson.cs" />
+    <Compile Include="Operators\AggregationFixture.cs" />
     <Compile Include="Operators\AndFixture.cs" />
     <Compile Include="Operators\BatchFixture.cs" />
     <Compile Include="Operators\BatchIfFixture.cs" />
