@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AggregationEx.cs" />
     <Compile Include="Binding\IEvaluateAware.cs" />
     <Compile Include="Binding\IIndexAware.cs" />
     <Compile Include="Binding\IObservableCollection.cs" />

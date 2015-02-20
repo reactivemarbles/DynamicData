@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 
 namespace DynamicData
 {
-    public class AggregateEnumerator<TObject, TKey> : IEnumerable<AggregateItem<TObject, TKey>>
+    internal class AggregateEnumerator<TObject, TKey> : IEnumerable<AggregateItem<TObject, TKey>>
     {
         private readonly IChangeSet<TObject, TKey> _source;
 
@@ -55,8 +54,7 @@ namespace DynamicData
             TAccumulate seed,
             Func<IEnumerable<AggregateItem<TObject, TKey>>, TAccumulate> accumulator)
         {
-            return source.Select(changeset => new AggregateEnumerator<TObject, TKey>(changeset))
-                .Scan(seed, (state, result) => accumulator(result));
+            return source.ForAggregation().Scan(seed, (state, result) => accumulator(result));
         }
     }
 }
