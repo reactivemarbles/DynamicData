@@ -128,7 +128,6 @@
     <Compile Include="Operators\TimeExpiryFixture.cs" />
     <Compile Include="Kernal\KeyValueFixture.cs" />
     <Compile Include="Kernal\UpdateCollectionFixture.cs" />
-    <Compile Include="Kernal\UniqueUpdateCollectionFixture.cs" />
     <Compile Include="Kernal\UpdateFixture.cs" />
     <Compile Include="Operators\DistinctFixture.cs" />
     <Compile Include="Operators\GroupFixture.cs" />

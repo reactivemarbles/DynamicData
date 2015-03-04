@@ -1,13 +1,9 @@
-﻿#region Usings
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-
-#endregion
 
 namespace DynamicData.Kernel
 {

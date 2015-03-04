@@ -4,10 +4,11 @@ using System.Linq;
 
 namespace DynamicData.Kernel
 {
-    /// <summary>
-    /// Extensions for Optional<typeparam name="&gt;T"></typeparam>
-    /// </summary>
-    public static class OptionExtensions
+
+	/// <summary>
+	/// Extensions for optional
+	/// </summary>
+	public static class OptionExtensions
     {
         /// <summary>
         /// Returns the value if the optional has a value, otherwise returns the result of the value selector
