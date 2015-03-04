@@ -139,11 +139,8 @@ namespace DynamicData
             return _cache.Lookup(key);
         }
 
-        public int Count
-        {
-            get { return _cache.Count; }
-        }
+        public int Count => _cache.Count;
 
-        #endregion
+	    #endregion
     }
 }

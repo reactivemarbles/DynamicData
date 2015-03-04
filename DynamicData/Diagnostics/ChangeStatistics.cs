@@ -1,6 +1,4 @@
-﻿
-
-using System;
+﻿using System;
 
 
 namespace DynamicData.Diagnostics
@@ -8,7 +6,7 @@ namespace DynamicData.Diagnostics
 	/// <summary>
 	///     Object used to capture accumulated changes
 	/// </summary>
-	public class ChangeStatistics
+	public class ChangeStatistics : IEquatable<ChangeStatistics>
 	{
 		private readonly int _adds;
 		private readonly int _count;
@@ -48,10 +46,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The adds.
 		/// </value>
-		public int Adds
-		{
-			get { return _adds; }
-		}
+		public int Adds => _adds;
 
 		/// <summary>
 		///     Gets the updates.
@@ -59,10 +54,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The updates.
 		/// </value>
-		public int Updates
-		{
-			get { return _updates; }
-		}
+		public int Updates => _updates;
 
 		/// <summary>
 		///     Gets the removes.
@@ -70,10 +62,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The removes.
 		/// </value>
-		public int Removes
-		{
-			get { return _removes; }
-		}
+		public int Removes => _removes;
 
 		/// <summary>
 		///     Gets the evaluates.
@@ -81,10 +70,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The evaluates.
 		/// </value>
-		public int Evaluates
-		{
-			get { return _evaluates; }
-		}
+		public int Evaluates => _evaluates;
 
 		/// <summary>
 		///     Gets the count.
@@ -92,10 +78,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The count.
 		/// </value>
-		public int Count
-		{
-			get { return _count; }
-		}
+		public int Count => _count;
 
 		/// <summary>
 		///     Gets the index.
@@ -103,10 +86,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The index.
 		/// </value>
-		public int Index
-		{
-			get { return _index; }
-		}
+		public int Index => _index;
 
 		/// <summary>
 		///     Gets the moves.
@@ -114,10 +94,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The moves.
 		/// </value>
-		public int Moves
-		{
-			get { return _moves; }
-		}
+		public int Moves => _moves;
 
 		/// <summary>
 		///     Gets the last updated.
@@ -125,59 +102,49 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The last updated.
 		/// </value>
-		public DateTime LastUpdated
-		{
-			get { return _timestamp; }
-		}
+		public DateTime LastUpdated => _timestamp;
 
 		#region Equality members
 
-		protected bool Equals(ChangeStatistics other)
+		public bool Equals(ChangeStatistics other)
 		{
-			return _index == other._index
-			       && _adds == other._adds
-			       && _updates == other._updates && _removes == other._removes && _evaluates == other._evaluates &&
-			       _count == other._count && _timestamp.Equals(other._timestamp);
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+			return _adds == other._adds && _updates == other._updates && _removes == other._removes && _evaluates == other._evaluates && _moves == other._moves && _count == other._count && _index == other._index && _timestamp.Equals(other._timestamp);
 		}
 
-		/// <summary>
-		///     Determines whether the specified <see cref="T:System.Object" /> is equal to the current
-		///     <see cref="T:System.Object" />.
-		/// </summary>
-		/// <returns>
-		///     true if the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />;
-		///     otherwise, false.
-		/// </returns>
-		/// <param name="obj">
-		///     The <see cref="T:System.Object" /> to compare with the current <see cref="T:System.Object" />.
-		/// </param>
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != GetType()) return false;
+			if (obj.GetType() != this.GetType()) return false;
 			return Equals((ChangeStatistics) obj);
 		}
 
-		/// <summary>
-		///     Serves as a hash function for a particular type.
-		/// </summary>
-		/// <returns>
-		///     A hash code for the current <see cref="T:System.Object" />.
-		/// </returns>
 		public override int GetHashCode()
 		{
 			unchecked
 			{
-				int hashCode = _index;
-				hashCode = (hashCode*397) ^ _adds;
+				var hashCode = _adds;
 				hashCode = (hashCode*397) ^ _updates;
 				hashCode = (hashCode*397) ^ _removes;
 				hashCode = (hashCode*397) ^ _evaluates;
+				hashCode = (hashCode*397) ^ _moves;
 				hashCode = (hashCode*397) ^ _count;
+				hashCode = (hashCode*397) ^ _index;
 				hashCode = (hashCode*397) ^ _timestamp.GetHashCode();
 				return hashCode;
 			}
+		}
+
+		public static bool operator ==(ChangeStatistics left, ChangeStatistics right)
+		{
+			return Equals(left, right);
+		}
+
+		public static bool operator !=(ChangeStatistics left, ChangeStatistics right)
+		{
+			return !Equals(left, right);
 		}
 
 		#endregion

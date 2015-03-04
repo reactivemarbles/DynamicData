@@ -93,14 +93,13 @@ namespace DynamicData.Kernel
         }
 
 
-        /// <summary>
-        /// Filters where Optional<typeparam name="T"></typeparam> has a value
-        /// and return the values only 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
+		/// <summary>
+		/// Filters where Optional<typeparam name="T"></typeparam> has a value
+		/// and return the values only
+		/// </summary>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
         {
             return source.Where(t => t.HasValue).Select(t => t.Value);
         }

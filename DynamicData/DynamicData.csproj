@@ -106,6 +106,7 @@
     <Compile Include="Cache\IKeyValueCollection.cs" />
     <Compile Include="Cache\IntermediateCache.cs" />
     <Compile Include="Cache\IntermediateUpdater.cs" />
+    <Compile Include="Kernel\EnumerableEx.cs" />
     <Compile Include="Kernel\InternalEx.cs" />
     <Compile Include="Cache\IReaderWriter.cs" />
     <Compile Include="Cache\KeyComparer.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="Cache\KeyValueCollection.cs" />
     <Compile Include="Cache\KeyValueComparer.cs" />
     <Compile Include="Cache\ObservableCache.cs" />
+    <Compile Include="Kernel\ItemWithIndex.cs" />
     <Compile Include="Kernel\Optional.cs" />
     <Compile Include="Kernel\OptionElse.cs" />
     <Compile Include="Kernel\OptionExtensions.cs" />
@@ -121,6 +123,16 @@
     <Compile Include="Cache\SortedChangeSet.cs" />
     <Compile Include="Cache\SourceUpdater.cs" />
     <Compile Include="Cache\MissingKeyException.cs" />
+    <Compile Include="List\AnomynousObservableList.cs" />
+    <Compile Include="List\Change.cs" />
+    <Compile Include="List\ChangeSet.cs" />
+    <Compile Include="List\ListEx.cs" />
+    <Compile Include="List\IChangeSet.cs" />
+    <Compile Include="List\ChangeAwareCollection.cs" />
+    <Compile Include="List\IObservableList.cs" />
+    <Compile Include="List\ISourceList.cs" />
+    <Compile Include="List\SourceList.cs" />
+    <Compile Include="List\ReaderWriter.cs" />
     <Compile Include="ObservableCache.cs" />
     <Compile Include="Cache\AbstractTransformer.cs" />
     <Compile Include="Cache\CombineOperator.cs" />
@@ -157,7 +169,6 @@
     <Compile Include="Cache\VirtualResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Cache\SourceCache.cs" />
-    <Compile Include="Cache\SourceList.cs" />
     <Compile Include="Tests\ChangeSetAggregator.cs" />
     <Compile Include="Tests\DistinctChangeSetAggregator.cs" />
     <Compile Include="Tests\PagedChangeSetAggregator.cs" />
@@ -183,7 +194,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Cache\Internal\" />
-    <Folder Include="List\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

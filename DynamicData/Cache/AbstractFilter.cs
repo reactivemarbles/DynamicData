@@ -24,12 +24,9 @@ namespace DynamicData
             }
         }
 
-        public Func<TObject, bool> Filter
-        {
-            get { return _filter; }
-        }
+        public Func<TObject, bool> Filter => _filter;
 
-        public IChangeSet<TObject, TKey> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items)
+	    public IChangeSet<TObject, TKey> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
             //this is an internal method only so we can be sure there are no duplicate keys in the result
             //(therefore safe to parallelise)

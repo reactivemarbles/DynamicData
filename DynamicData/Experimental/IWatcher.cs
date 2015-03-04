@@ -4,7 +4,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Experimental
 {
     /// <summary>
-    /// A specialisation of the ObservableCache which is optimised for watching individual items
+    /// A specialisation of the SourceList which is optimised for watching individual items
     /// 
     /// 
     /// </summary>

@@ -35,23 +35,17 @@
         /// <value>
         /// The latest.
         /// </value>
-        public ChangeStatistics Latest
-        {
-            get { return _latest; }
-        }
+        public ChangeStatistics Latest => _latest;
 
-        /// <summary>
+	    /// <summary>
         /// Gets the overall change count
         /// </summary>
         /// <value>
         /// The overall.
         /// </value>
-        public ChangeStatistics Overall
-        {
-            get { return _overall; }
-        }
+        public ChangeStatistics Overall => _overall;
 
-        #region Equality members
+	    #region Equality members
 
 
         protected bool Equals(ChangeSummary other)

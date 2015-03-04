@@ -9,7 +9,7 @@ namespace DynamicData
         public static IChangeSet<TObject, TKey> AsInitialUpdates<TObject, TKey>(this IReaderWriter<TObject, TKey> source,Func<TObject, bool> filter = null)
         {
             var filtered = filter == null ? source.KeyValues : source.KeyValues.Where(kv => filter(kv.Value));
-            var initialItems = filtered.Select(i => (Change<TObject, TKey>)new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value));
+            var initialItems = filtered.Select(i => new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value));
             return new ChangeSet<TObject, TKey>(initialItems);
         }
 
@@ -18,7 +18,7 @@ namespace DynamicData
             Func<TObject, bool> filter = null)
         {
             var filtered = filter == null ? source.KeyValues : source.KeyValues.Where(kv => filter(kv.Value));
-            var initialItems =filtered.Select(i => (Change<TObject, TKey>) new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value));
+            var initialItems =filtered.Select(i => new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value));
             return new ChangeSet<TObject, TKey>(initialItems);
         }
     }

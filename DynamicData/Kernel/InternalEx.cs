@@ -1,54 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 
 namespace DynamicData.Kernel
 {
-    public static class InternalEx
+	public static class InternalEx
     {
-        internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source)
-        {
-            return source ?? Enumerable.Empty<T>();
-        }
 
-        internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source )
-        {
-            return new HashSet<T>(source);
-        }
 
-        internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
-        {
-            foreach (var item in source)
-            {
-                action(item);
-            }
-        }
-
-        internal static void ForEach<TObject>(this IEnumerable<TObject> source, Action<TObject, int> action)
-        {
-            int i = 0;
-            foreach (var item in source)
-            {
-                action(item,i);
-                i++;
-            }
-        }
-        
-        //internal static void ToConsoleWithThreadId(this string message, TimeSpan timeSpan)
-        //{
-        //    Console.WriteLine("{0}. Thread={1} @ {2}ms".FormatWith(message,
-        //        Thread.CurrentThread.ManagedThreadId, timeSpan.TotalMilliseconds));
-        //}
-
-        //internal static void ToConsoleWithThreadId(this string message)
-        //{
-        //    var time = DateTime.Now;
-        //    Console.WriteLine("{0}. Thread={1} @ {2}.{3}ms".FormatWith(message, 
-        //        Thread.CurrentThread.ManagedThreadId,time.Second,time.Millisecond));
-        //}
 
         internal static String FormatWith(this String @this, params object[] parameters)
         {
