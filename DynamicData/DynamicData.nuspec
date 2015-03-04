@@ -18,13 +18,6 @@
     <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableCollection Collection Linq</tags>
   </metadata>
   <files>
-    <!--Net4 files including PLinq-->
-    <file src="bin\Release\net40\DynamicData.dll" target="lib\net40\DynamicData.dll" />
-    <file src="bin\Release\net40\DynamicData.pdb" target="lib\net40\DynamicData.pdb" />
-    <file src="bin\Release\net40\DynamicData.xml" target="lib\net40\DynamicData.xml" />
-    <file src="..\DynamicData.Plinq\bin\Release\net40\DynamicData.Plinq.dll" target="lib\net40\DynamicData.Plinq.dll" />
-    <file src="..\DynamicData.Plinq\bin\Release\net40\DynamicData.Plinq.pdb" target="lib\net40\DynamicData.Plinq.pdb" />
-    <file src="..\DynamicData.Plinq\bin\Release\net40\DynamicData.Plinq.xml" target="lib\net40\DynamicData.PLinq.XML" />
 
     <!--Net45 files including PLinq-->
     <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\net45\DynamicData.dll" />

@@ -16,27 +16,15 @@ namespace DynamicData.Kernel
             _cache = cache;
         }
 
-        public int Count
-        {
-            get { return _cache.Count; }
-        }
+        public int Count => _cache.Count;
 
-        public IEnumerable<TObject> Items
-        {
-            get { return _cache.Items; }
-        }
+	    public IEnumerable<TObject> Items => _cache.Items;
 
-        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues
-        {
-            get { return _cache.KeyValues; }
-        }
+	    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
 
-        public IEnumerable<TKey> Keys
-        {
-            get { return _cache.Keys; }
-        }
+	    public IEnumerable<TKey> Keys => _cache.Keys;
 
-        public Optional<TObject> Lookup(TKey key)
+	    public Optional<TObject> Lookup(TKey key)
         {
             return _cache.Lookup(key);
         }

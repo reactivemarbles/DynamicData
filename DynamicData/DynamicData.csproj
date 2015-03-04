@@ -62,7 +62,6 @@
     <Compile Include="Diagnostics\ChangeStatistics.cs" />
     <Compile Include="Diagnostics\ChangeSummary.cs" />
     <Compile Include="Diagnostics\DiagnosticOperators.cs" />
-    <Compile Include="Diagnostics\TimeTakenHolder.cs" />
     <Compile Include="DynamicDataEx.cs" />
     <Compile Include="Experimental\ExperimentalEx.cs" />
     <Compile Include="Experimental\ISubjectWithRefCount.cs" />
@@ -77,7 +76,7 @@
     <Compile Include="IIntermediateCache.cs" />
     <Compile Include="IKeyValue.cs" />
     <Compile Include="IObservableCache.cs" />
-    <Compile Include="IPagedChangeSet.cs" />
+    <Compile Include="List\IPagedChangeSet.cs" />
     <Compile Include="IQuery.cs" />
     <Compile Include="ISortedChangeSet.cs" />
     <Compile Include="ISortedChangeSetAdaptor.cs" />

@@ -10,46 +10,6 @@ namespace DynamicData.Diagnostics
     public static class DiagnosticOperators
     {
 
-        /// <summary>
-        /// Intercepts the specified source enabling the consumer to apply before and after actions
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="beforeAction">The before action.</param>
-        /// <param name="afterAction">The after action.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// source
-        /// or
-        /// beforeAction
-        /// or
-        /// afterAction
-        /// </exception>
-        public static IObservable<T> Intercept<T>(this IObservable<T> source, 
-            Action<T> beforeAction,
-            Action<T> afterAction)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (beforeAction == null) throw new ArgumentNullException("beforeAction");
-            if (afterAction == null) throw new ArgumentNullException("afterAction");
-
-            return Observable.Create<T>
-                (
-                    observer => source.Subscribe(t =>
-                    {
-                        try
-                        {
-                            beforeAction(t);
-                            observer.OnNext(t);
-                            afterAction(t);
-                        }
-                        catch (Exception ex)
-                        {
-                            observer.OnError(ex);
-                        }
-                    }, observer.OnError, observer.OnCompleted));
-        }
-
 
         /// <summary>
         /// Accumulates update statistics
