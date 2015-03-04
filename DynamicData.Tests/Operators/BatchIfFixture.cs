@@ -1,4 +1,3 @@
-﻿
 using System;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
@@ -15,16 +14,16 @@ namespace DynamicData.Tests.Operators
         private TestScheduler _scheduler;
 
         private ISubject<bool> _pausingSubject = new Subject<bool>();
-       
-        
+
+
         [SetUp]
         public void MyTestInitialize()
         {
             _pausingSubject = new Subject<bool>();
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
-            _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator(); 
-           
+            _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
+
         }
 
         [TearDown]
@@ -41,11 +40,11 @@ namespace DynamicData.Tests.Operators
             //advance otherwise nothing happens
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-            _source.AddOrUpdate(new Person("A",1));
+            _source.AddOrUpdate(new Person("A", 1));
 
             //go forward an arbitary amount of time
             _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-            Assert.AreEqual(0,_results.Messages.Count,"There should be no messages");
+            Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
         }
 
         [Test]

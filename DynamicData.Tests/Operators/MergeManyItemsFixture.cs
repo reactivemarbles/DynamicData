@@ -6,12 +6,12 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Operators
 {
     [TestFixture]
-    public class MergeManyFixture
+    public class MergeManyItemsFixture
     {
         private class ObjectWithObservable
         {
             private readonly int _id;
-            private readonly ISubject<bool> _changed= new Subject<bool>();
+            private readonly ISubject<bool> _changed = new Subject<bool>();
             private bool _value;
 
             public ObjectWithObservable(int id)
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Operators
             }
         }
 
-        private SourceCache<ObjectWithObservable, int> _source;
+        private ISourceCache<ObjectWithObservable, int> _source;
 
         [SetUp]
         public void Initialise()
@@ -50,26 +50,24 @@ namespace DynamicData.Tests.Operators
             _source.Dispose();
         }
 
-        /// <summary>
-        /// Invocations the only when child is invoked.
-        /// </summary>
         [Test]
         public void InvocationOnlyWhenChildIsInvoked()
         {
-            bool invoked=false;
+            bool invoked = false;
 
 
             var stream = _source.Connect()
-                    .MergeMany(o => o.Observable)
-                    .Subscribe(o =>
-                               {
-                                   invoked = true;
-                               });
+                .MergeManyItems(o => o.Observable)
+                .Subscribe(o =>
+                {
+                    invoked = true;
+                    Assert.IsTrue(o.Item.Id==1, "Item id should be 1");
+                });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
 
-            Assert.IsFalse(invoked,"Error. The operator should not have been invoked");
+            Assert.IsFalse(invoked, "Error. The operator should not have been invoked");
 
             item.InvokeObservable(true);
             Assert.IsTrue(invoked, "The observable should have notified");
@@ -81,11 +79,12 @@ namespace DynamicData.Tests.Operators
         {
             bool invoked = false;
             var stream = _source.Connect()
-                    .MergeMany(o => o.Observable)
-                    .Subscribe(o =>
-                    {
-                        invoked = true;
-                    });
+                .MergeManyItems(o => o.Observable)
+                .Subscribe(o =>
+                {
+                    invoked = true;
+                    Assert.IsTrue(o.Item.Id == 1, "Item id should be 1");
+                });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -102,11 +101,12 @@ namespace DynamicData.Tests.Operators
         {
             bool invoked = false;
             var stream = _source.Connect()
-                    .MergeMany(o => o.Observable)
-                    .Subscribe(o =>
-                    {
-                        invoked = true;
-                    });
+                .MergeManyItems(o => o.Observable)
+                .Subscribe(o =>
+                {
+                    invoked = true;
+                    Assert.IsTrue(o.Item.Id == 1, "Item id should be 1");
+                });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);

@@ -81,11 +81,12 @@
     <Compile Include="Domain\Pet.cs" />
     <Compile Include="Domain\RandomPersonGenerator.cs" />
     <Compile Include="Domain\SelfObservingPerson.cs" />
+    <Compile Include="Operators\AggregationFixture.cs" />
     <Compile Include="Operators\AndFixture.cs" />
     <Compile Include="Operators\BatchFixture.cs" />
+    <Compile Include="Operators\BatchIfFixture.cs" />
     <Compile Include="Operators\ExceptFixture.cs" />
     <Compile Include="Operators\ExpireAfterFixture.cs" />
-    <Compile Include="Operators\BatchIfFixture.cs" />
     <Compile Include="Operators\BatchIfWithTimeOutFixture.cs" />
     <Compile Include="Operators\DeferUntilLoadedFixture.cs" />
     <Compile Include="Operators\EnumerableEx.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="Operators\IgnoreUpdateFixture.cs" />
     <Compile Include="Operators\IncludeUpdateFixture.cs" />
     <Compile Include="Operators\MergeManyFixture.cs" />
+    <Compile Include="Operators\MergeManyItemsFixture.cs" />
     <Compile Include="Operators\MergeManyWithKeyOverloadFixture.cs" />
     <Compile Include="Operators\OrFixture.cs" />
     <Compile Include="Operators\QueryWhenChangedFixture.cs" />

@@ -85,7 +85,7 @@ namespace DynamicData
                             .DisposeMany()
                             .Subscribe();
 
-                        var result = published.SubscribeSafe<IChangeSet<TObject, TKey>>(observer);
+                        var result = published.SubscribeSafe(observer);
                         var connected = published.Connect();
 
                         return Disposable.Create(() =>
@@ -134,7 +134,7 @@ namespace DynamicData
                                 .Select(updates => transformer.Transform(updates, transformFactory))
                                 .NotEmpty()
                                 .Finally(observer.OnCompleted)
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
             }
 
@@ -169,7 +169,7 @@ namespace DynamicData
                             return source
                                 .Select(updates => transformer.Transform(updates, transformFactory))
                                 .NotEmpty()
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
             }
 
@@ -214,7 +214,7 @@ namespace DynamicData
                             return source
                                 .Select(updates => transformer.Transform(updates, transformFactory))
                                 .NotEmpty()
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
             }
 
@@ -253,8 +253,7 @@ namespace DynamicData
                             return source
                                 .Select(updates => transformer.Transform(updates, transformFactory))
                                 .NotEmpty()
-                                .Finally(observer.OnCompleted)
-                                .SubscribeSafer(observer);
+                                .SubscribeSafe(observer);
                         });
             }
 
@@ -285,8 +284,7 @@ namespace DynamicData
                         return source
                             .Select(filterer.Update)
                             .NotEmpty()
-                            .FinallySafe(observer.OnCompleted)
-                            .SubscribeSafer(observer);
+                            .SubscribeSafe(observer);
                     });
             }
 

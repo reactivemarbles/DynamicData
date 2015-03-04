@@ -1,0 +1,60 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reactive.Linq;
+
+namespace DynamicData
+{
+    internal class AggregateEnumerator<TObject, TKey> : IEnumerable<AggregateItem<TObject, TKey>>
+    {
+        private readonly IChangeSet<TObject, TKey> _source;
+
+        public AggregateEnumerator(IChangeSet<TObject, TKey> source)
+        {
+            _source = source;
+        }
+
+        public IEnumerator<AggregateItem<TObject, TKey>> GetEnumerator()
+        {
+            foreach (var change in _source)
+            {
+                switch (change.Reason)
+                {
+                    case ChangeReason.Add:
+                        yield return new AggregateItem<TObject, TKey>(AggregateType.Add, change.Current, change.Key);
+                        break;
+                    case ChangeReason.Update:
+                        yield return new AggregateItem<TObject, TKey>(AggregateType.Remove, change.Previous.Value, change.Key);
+                        yield return new AggregateItem<TObject, TKey>(AggregateType.Add, change.Current, change.Key);
+                        break;
+                    case ChangeReason.Remove:
+                        yield return new AggregateItem<TObject, TKey>(AggregateType.Remove, change.Current, change.Key);
+                        break;
+                    default:
+                        continue;
+                }
+            }
+            ;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
+    public static class AggregationEx
+    {
+        public static IObservable<IEnumerable<AggregateItem<TObject, TKey>>> ForAggregation<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            return source.Select(changeset => (IEnumerable<AggregateItem<TObject, TKey>>)new AggregateEnumerator<TObject, TKey>(changeset));
+        }
+
+        public static IObservable<TAccumulate> ForScan<TObject, TKey, TAccumulate>(this IObservable<IChangeSet<TObject, TKey>> source,
+            TAccumulate seed,
+            Func<IEnumerable<AggregateItem<TObject, TKey>>, TAccumulate> accumulator)
+        {
+            return source.ForAggregation().Scan(seed, (state, result) => accumulator(result));
+        }
+    }
+}

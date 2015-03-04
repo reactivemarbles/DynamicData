@@ -38,6 +38,7 @@
     <DocumentationFile>bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AggregationEx.cs" />
     <Compile Include="Binding\IEvaluateAware.cs" />
     <Compile Include="Binding\IIndexAware.cs" />
     <Compile Include="Binding\IObservableCollection.cs" />
@@ -85,6 +86,8 @@
     <Compile Include="IVirtualChangeSet.cs" />
     <Compile Include="IVirtualParameters.cs" />
     <Compile Include="IVirtualRequest.cs" />
+    <Compile Include="Kernel\ItemWithValue.cs" />
+    <Compile Include="Kernel\ObservableWithValue.cs" />
     <Compile Include="Operators\AbstractFilter.cs" />
     <Compile Include="Kernel\AnomynousObservableCache.cs" />
     <Compile Include="Kernel\AnomynousQuery.cs" />
