@@ -10,7 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
 	/// <summary>
-	/// An observable list
+	/// An editable observable list
 	/// </summary>
 	/// <typeparam name="T">The type of the object.</typeparam>
 	internal sealed class SourceList<T> : ISourceList<T>
