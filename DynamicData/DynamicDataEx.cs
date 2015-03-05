@@ -1,7 +1,5 @@
-#region Usings
-
+#reg
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -10,9 +8,10 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Controllers;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Operators;
-#endregion
+
 
 namespace DynamicData
 {
@@ -500,7 +499,7 @@ namespace DynamicData
                         var disposer = new OnBeingRemoved<TObject, TKey>(t =>
                         {
                             var d = t as IDisposable;
-                            if (d != null) d.Dispose();
+	                        d?.Dispose();
                         });
                         var subscriber = source
                             .Do(disposer.RegisterForRemoval, observer.OnError)
@@ -532,13 +531,13 @@ namespace DynamicData
             return source.OnItemRemoved(t =>
                                         {
                                             var d = t as IDisposable;
-                                            if (d != null) d.Dispose();
+	                                        d?.Dispose();
                                         });
         }
 
 
         /// <summary>
-        /// Includes updates for the specified reasons only
+        /// Includes changes for the specified reasons only
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>

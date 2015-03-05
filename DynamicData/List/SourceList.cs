@@ -4,8 +4,8 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Internal;
 using DynamicData.Kernel;
-using DynamicData.List;
 
 namespace DynamicData
 {
@@ -39,9 +39,8 @@ namespace DynamicData
 		private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source)
 		{
 			return source.Synchronize(_locker)
-				.FinallySafe(_changes.OnCompleted)
 				.Subscribe(changes => _readerWriter.Write(changes)
-					.Then(InvokeNext, _changes.OnError));
+					.Then(InvokeNext, _changes.OnError),()=> _changes.OnCompleted());
 
 		}
 
@@ -87,7 +86,7 @@ namespace DynamicData
 		public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
 
 
-		public IObservable<IChangeSet<T>> Connect()
+		public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null)
 		{
 			return Observable.Create<IChangeSet<T>>
 				(
@@ -95,19 +94,25 @@ namespace DynamicData
 					{
 						lock (_locker)
 						{
-							var initial = GetInitialUpdates();
+							var initial = GetInitialUpdates(predicate);
 							if (initial.Count > 0) observer.OnNext(initial);
+							var source = _changes.FinallySafe(observer.OnCompleted);
 
-							return _changes.FinallySafe(observer.OnCompleted)
-								.SubscribeSafe(observer);
+							if (predicate != null)
+								source = source.Filter(predicate);
+
+							return source.SubscribeSafe(observer);
 						}
 					});
 		}
-
-
-		internal IChangeSet<T> GetInitialUpdates()
+		
+		private IChangeSet<T> GetInitialUpdates(Func<T, bool> predicate = null)
 		{
-			var initial = _readerWriter.Items.WithIndex().Select(t => new Change<T>(ChangeReason.Add, t.Item, t.Index));
+			var items = predicate == null
+				? _readerWriter.Items
+				: _readerWriter.Items.Where(predicate);
+
+			var initial = items.WithIndex().Select(t => new Change<T>(ChangeReason.Add, t.Item, t.Index));
 			return new ChangeSet<T>(initial);
 		}
 

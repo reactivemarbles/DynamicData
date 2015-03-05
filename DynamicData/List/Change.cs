@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
-namespace DynamicData.List
+namespace DynamicData
 {
 	/// <summary>
 	///   Container to describe a single change to a cache

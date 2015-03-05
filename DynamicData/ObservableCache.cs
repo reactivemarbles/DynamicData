@@ -8,6 +8,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using DynamicData.Controllers;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Operators;
 
@@ -239,7 +240,7 @@ namespace DynamicData
         #region AsObservableCache /Connect
 
         /// <summary>
-        /// Converts the stream feeder to a data cache
+        /// Converts the source to an read only observable cache
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -252,15 +253,15 @@ namespace DynamicData
             return new AnomynousObservableCache<TObject, TKey>(source);
         }
 
-        /// <summary>
-        /// Converts the source to an observable cache
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+		/// <summary>
+		/// Converts the source to an read only observable cache
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TKey">The type of the key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException("source");
             return new AnomynousObservableCache<TObject, TKey>(source);

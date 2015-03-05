@@ -1,4 +1,5 @@
 using System.Linq;
+using DynamicData.Internal;
 using  DynamicData.Kernel;
 
 namespace DynamicData.Binding

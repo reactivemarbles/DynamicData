@@ -9,14 +9,14 @@ namespace DynamicData
 	/// as well as data access methods
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	internal interface IObservableList<T> : IDisposable
+	public interface IObservableList<T> : IDisposable
 	{
 		/// <summary>
 		/// Connect to the observable list and observe and changes
 		/// starting with the initial items in the cache 
 		/// </summary>
 		/// <returns></returns>
-		IObservable<IChangeSet<T>> Connect();
+		IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate=null);
 		
 		/// <summary>
 		/// Observe the count changes, starting with the inital items count

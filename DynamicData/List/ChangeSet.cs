@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using DynamicData.Kernel;
-using DynamicData.List;
 
 namespace DynamicData
 {

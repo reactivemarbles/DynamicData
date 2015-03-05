@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Operators;
 
