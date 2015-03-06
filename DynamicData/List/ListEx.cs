@@ -136,6 +136,8 @@ namespace DynamicData
 			items.ForEach(t=>source.Remove(t));
 		}
 
+
+
 		/// <summary>
 		/// Clones the source list with the specified change set, transforming the items using the specified factory
 		/// </summary>
@@ -175,7 +177,7 @@ namespace DynamicData
 						}
 						break;
 					case ChangeReason.Remove:
-						source.RemoveAt(change.PreviousIndex);
+						source.RemoveAt(change.CurrentIndex);
 						break;
 				}
 			});

@@ -2,13 +2,15 @@ using System;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
+using System.Reactive;
 using System.Reactive.Linq;
 
-namespace DynamicData.Tests.ListFixture
+
+namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    public class BatchFixture
-    {
+    public class BufferFixture
+	{
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;
         private TestScheduler _scheduler;
