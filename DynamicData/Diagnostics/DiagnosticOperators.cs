@@ -36,5 +36,31 @@ namespace DynamicData.Diagnostics
                     return new ChangeSummary(index, latest, overall);
                 });
         }
-    }
+
+		/// <summary>
+		/// Accumulates update statistics
+		/// </summary>
+		/// <typeparam name="TSource">The type of the source.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservable<ChangeSummary> CollectUpdateStats<TSource>(this IObservable<IChangeSet<TSource>> source)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			return source.Scan(new ChangeSummary(), (seed, next) =>
+			{
+				int index = seed.Overall.Index + 1;
+				int adds = seed.Overall.Adds + next.Adds;
+				int updates = seed.Overall.Updates + next.Updates;
+				int removes = seed.Overall.Removes + next.Removes;
+				int evaluates = seed.Overall.Evaluates + next.Evaluates;
+				int moves = seed.Overall.Moves + next.Moves;
+				int total = seed.Overall.Count + next.Count;
+
+				var latest = new ChangeStatistics(index, next.Adds, next.Updates, next.Removes, next.Evaluates, next.Moves, next.Count);
+				var overall = new ChangeStatistics(index, adds, updates, removes, evaluates, moves, total);
+				return new ChangeSummary(index, latest, overall);
+			});
+		}
+	}
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿
+using System.Collections.ObjectModel;
 using System.Linq;
 using DynamicData.Kernel;
 
@@ -7,8 +8,9 @@ namespace DynamicData
 	internal class ChangeAwareCollection<T> : Collection<T>
 	{
 		ChangeSet<T> _changes = new ChangeSet<T>();
+		private bool _isMoving;
 
-		public IChangeSet<T> CaptureChanges()
+        public IChangeSet<T> CaptureChanges()
 		{
 			var copy = _changes;
 			_changes = new ChangeSet<T>();
@@ -25,12 +27,16 @@ namespace DynamicData
 
 		protected override void InsertItem(int index, T item)
 		{
+			if (_isMoving) return;
+
 			_changes.Add(new Change<T>(ChangeReason.Add, item, index));
 			base.InsertItem(index, item);
 		}
 
 		protected override void RemoveItem(int index)
 		{
+			if (_isMoving) return;
+
 			var item = this[index];
 			_changes.Add(new Change<T>(ChangeReason.Remove, item, index));
 			base.RemoveItem(index);
@@ -38,6 +44,8 @@ namespace DynamicData
 
 		protected override void SetItem(int index, T item)
 		{
+			if (_isMoving) return;
+
 			var previous = this[index];
 			_changes.Add(new Change<T>(ChangeReason.Update, item, previous, index, index));
 			base.SetItem(index, item);
@@ -45,11 +53,18 @@ namespace DynamicData
 
 		public void Move(int original, int destination)
 		{
-
+			try
+			{
+				_isMoving = true;
+				var item = this[original];
+				base.RemoveItem(original);
+				base.InsertItem(destination, item);
+				_changes.Add(new Change<T>(item, destination, original));
+			}
+			finally 
+			{
+				_isMoving = false;
+			}
 		}
-
-
-
-
 	}
 }

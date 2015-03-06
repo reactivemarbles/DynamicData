@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace DynamicData
 {
+	/// <summary>
+	/// An editable observable list, providing  observable methods
+	/// as well as data access methods
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
 	public interface ISourceList<T> : IObservableList<T>
 	{
 		/// <summary>

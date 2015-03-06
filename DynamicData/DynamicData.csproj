@@ -128,6 +128,7 @@
     <Compile Include="List\Internal\AnomynousObservableList.cs" />
     <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeSet.cs" />
+    <Compile Include="List\Internal\OnBeingRemoved.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\ListEx.cs" />
     <Compile Include="List\IChangeSet.cs" />
@@ -139,6 +140,8 @@
     <Compile Include="List\SortOptions.cs" />
     <Compile Include="List\SourceList.cs" />
     <Compile Include="List\Internal\ReaderWriter.cs" />
+    <Compile Include="List\Tests\ChangeSetAggregator.cs" />
+    <Compile Include="List\Tests\TestEx.cs" />
     <Compile Include="ObservableCache.cs" />
     <Compile Include="Cache\Internal\AbstractTransformer.cs" />
     <Compile Include="Cache\Internal\CombineOperator.cs" />
@@ -175,12 +178,12 @@
     <Compile Include="Cache\VirtualResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Cache\SourceCache.cs" />
-    <Compile Include="Tests\ChangeSetAggregator.cs" />
-    <Compile Include="Tests\DistinctChangeSetAggregator.cs" />
-    <Compile Include="Tests\PagedChangeSetAggregator.cs" />
-    <Compile Include="Tests\SortedChangeSetAggregator.cs" />
-    <Compile Include="Tests\TestEx.cs" />
-    <Compile Include="Tests\VirtualChangeSetAggregator.cs" />
+    <Compile Include="Cache\Tests\ChangeSetAggregator.cs" />
+    <Compile Include="Cache\Tests\DistinctChangeSetAggregator.cs" />
+    <Compile Include="Cache\Tests\PagedChangeSetAggregator.cs" />
+    <Compile Include="Cache\Tests\SortedChangeSetAggregator.cs" />
+    <Compile Include="Cache\Tests\TestEx.cs" />
+    <Compile Include="Cache\Tests\VirtualChangeSetAggregator.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Reactive.Core">

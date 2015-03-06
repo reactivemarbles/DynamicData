@@ -115,6 +115,128 @@ namespace DynamicData
 			return source.Where(s => s.Count != 0);
 		}
 
+		#region Item operators
+
+		/// <summary>
+		/// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
+		/// when it is no longer part of the stream.
+		/// </summary>
+		/// <typeparam name="T">The type of the object.</typeparam>
+		/// <typeparam name="TDestination">The type of the destination.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="observableSelector">The observable selector.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source
+		/// or
+		/// observableSelector</exception>
+		public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (observableSelector == null) throw new ArgumentNullException("observableSelector");
+
+			return Observable.Create<TDestination>
+				(
+					observer => source.SubscribeMany(t=> observableSelector(t).SubscribeSafe(observer))
+						.Subscribe());
+		}
+
+		/// <summary>
+		/// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed
+		/// </summary>
+		/// <typeparam name="T">The type of the object.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="subscriptionFactory">The subsription function</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source
+		/// or
+		/// subscriptionFactory</exception>
+		/// <remarks>
+		/// Subscribes to each item when it is added or updates and unsubcribes when it is removed
+		/// </remarks>
+		public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source, Func<T, IDisposable> subscriptionFactory)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (subscriptionFactory == null) throw new ArgumentNullException("subscriptionFactory");
+
+			return Observable.Create<IChangeSet<T>>
+				(
+					observer =>
+					{
+						var published = source.Publish();
+						var subscriptions = published
+											.Transform(t => subscriptionFactory)
+											.DisposeMany()
+											.Subscribe();
+
+						var result = published.SubscribeSafe(observer);
+						var connected = published.Connect();
+
+						return new CompositeDisposable(subscriptions, connected, result);
+					});
+		}
+
+		/// <summary>
+		/// Disposes each item when no longer required.
+		/// 
+		/// Individual items are disposed when removed or replaced. All items
+		/// are disposed when the stream is disposed
+		/// </summary>
+		/// <remarks>
+		/// </remarks>
+		/// <typeparam name="T">The type of the object.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns>A continuation of the original stream</returns>
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
+		{
+			return source.OnItemRemoved(t =>
+			{
+				var d = t as IDisposable;
+				d?.Dispose();
+			});
+		}
+
+
+
+		/// <summary>
+		/// Callback for each item as and when it is being removed from the stream
+		/// </summary>
+		/// <typeparam name="T">The type of the object.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="removeAction">The remove action.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// removeAction
+		/// </exception>
+		public static IObservable<IChangeSet<T>> OnItemRemoved<T>(this IObservable<IChangeSet<T>> source, Action<T> removeAction)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (removeAction == null) throw new ArgumentNullException("removeAction");
+			return Observable.Create<IChangeSet<T>>
+				(
+					observer =>
+					{
+						var disposer = new OnBeingRemoved<T>(removeAction);
+						var subscriber = source
+							.Do(disposer.RegisterForRemoval, observer.OnError)
+							.SubscribeSafe(observer);
+
+						return Disposable.Create(() =>
+						{
+							subscriber.Dispose();
+							disposer.Dispose();
+						});
+					});
+		}
+
+		#endregion
+
+		#region Reason filtering
+
+
+
 		/// <summary>
 		/// Includes changes for the specified reasons only
 		/// </summary>
@@ -157,28 +279,10 @@ namespace DynamicData
 				return new ChangeSet<T>(filtered);
 			}).NotEmpty();
 		}
-
+		#endregion
 
 		#region Buffering
 
-
-		/// <summary>
-		/// Batches changesets for the spefied duration
-		/// </summary>
-		/// <typeparam name="T">The type of the object.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="timeSpan">The time span.</param>
-		/// <param name="scheduler">The scheduler.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<T>> Batch<T>(this IObservable<IChangeSet<T>> source,
-															TimeSpan timeSpan,
-															IScheduler scheduler = null)
-		{
-			if (source == null) throw new ArgumentNullException("source");
-
-			return source.Buffer(timeSpan, scheduler ?? Scheduler.Default).ToChangeSet();
-		}
 
 		/// <summary>
 		/// Convert the result of a buffer operation to a change set

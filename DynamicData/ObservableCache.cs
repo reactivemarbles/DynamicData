@@ -10,7 +10,6 @@ using System.Threading;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
-using DynamicData.Operators;
 
 #endregion
 

@@ -496,12 +496,13 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        var disposer = new OnBeingRemoved<TObject, TKey>(t =>
-                        {
-                            var d = t as IDisposable;
-	                        d?.Dispose();
-                        });
-                        var subscriber = source
+						var disposer = new OnBeingRemoved<TObject, TKey>(t =>
+						{
+							removeAction(t);
+							//var d = t as IDisposable;
+							//d?.Dispose();
+						});
+						var subscriber = source
                             .Do(disposer.RegisterForRemoval, observer.OnError)
                             .SubscribeSafe(observer);
 
