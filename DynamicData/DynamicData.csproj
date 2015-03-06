@@ -128,12 +128,15 @@
     <Compile Include="List\Internal\AnomynousObservableList.cs" />
     <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeSet.cs" />
+    <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\ListEx.cs" />
     <Compile Include="List\IChangeSet.cs" />
     <Compile Include="List\ChangeAwareCollection.cs" />
     <Compile Include="List\IObservableList.cs" />
     <Compile Include="List\ISourceList.cs" />
     <Compile Include="List\ObservableListEx.cs" />
+    <Compile Include="List\Internal\Sorter.cs" />
+    <Compile Include="List\SortOptions.cs" />
     <Compile Include="List\SourceList.cs" />
     <Compile Include="List\Internal\ReaderWriter.cs" />
     <Compile Include="ObservableCache.cs" />

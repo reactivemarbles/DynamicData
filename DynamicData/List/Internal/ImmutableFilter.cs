@@ -20,6 +20,5 @@ namespace DynamicData.Internal
 			_filtered.Filter(changes, _predicate);
 			return _filtered.CaptureChanges();
 		}
-
 	}
 }

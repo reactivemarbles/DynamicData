@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -45,11 +44,11 @@ namespace DynamicData
 
 
 		/// <summary>
-		/// Filters the source using the specified predicate
+		/// Filters the source using the specified transformFactory
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="source">The source.</param>
-		/// <param name="predicate">The predicate.</param>
+		/// <param name="predicate">The transformFactory.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
 		public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
@@ -60,6 +59,48 @@ namespace DynamicData
 			return source.Select(filter.Process).NotEmpty();
 		}
 
+		/// <summary>
+		/// Sorts the sequence using the specified comparer.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="comparer">The comparer.</param>
+		/// <param name="options">The options.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// comparer
+		/// </exception>
+		public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions options=SortOptions.None)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (comparer == null) throw new ArgumentNullException("comparer");
+			var sorter = new Sorter<T>(comparer, options);
+			return source.Select(sorter.Process).NotEmpty();
+		}
+
+
+		/// <summary>
+		/// Projects each update item to a new form using the specified transform function
+		/// </summary>
+		/// <typeparam name="TSource">The type of the source.</typeparam>
+		/// <typeparam name="TDestination">The type of the destination.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="transformFactory">The transform factory.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// transformFactory
+		/// </exception>
+		public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (transformFactory == null) throw new ArgumentNullException("transformFactory");
+			var filter = new Transformer<TSource,TDestination>(transformFactory);
+			return source.Select(filter.Process).NotEmpty();
+		}
 
 		/// <summary>
 		/// Prevents an empty notification
@@ -118,37 +159,40 @@ namespace DynamicData
 		}
 
 
-		#region Batching
-		
+		#region Buffering
+
 
 		/// <summary>
-		/// Buffers the updates for the specified time period. 
-		/// 
-		/// **** Equivalent as Rx.Buffer() but alas due to ambiguous extension problems
-		/// I have had to use an alternative semantic
+		/// Batches changesets for the spefied duration
 		/// </summary>
-		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="T">The type of the object.</typeparam>
 		/// <param name="source">The source.</param>
 		/// <param name="timeSpan">The time span.</param>
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source
-		/// or
-		/// scheduler</exception>
-		public static IObservable<IChangeSet<TObject>> Batch<TObject>(this IObservable<IChangeSet<TObject>> source,
-																	TimeSpan timeSpan,
-																	IScheduler scheduler = null)
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservable<IChangeSet<T>> Batch<T>(this IObservable<IChangeSet<T>> source,
+															TimeSpan timeSpan,
+															IScheduler scheduler = null)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
-			return source
-				.Buffer(timeSpan, scheduler ?? Scheduler.Default)
-				.Where(x => x.Count != 0)
-				.Select(updates => new ChangeSet<TObject>(updates.SelectMany(u => u)));
-
+			return source.Buffer(timeSpan, scheduler ?? Scheduler.Default).ToChangeSet();
 		}
 
+		/// <summary>
+		/// Convert the result of a buffer operation to a change set
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		public static IObservable<IChangeSet<T>> ToChangeSet<T>(this IObservable<IList<IChangeSet<T>>> source)
+		{
+			return source
+					.Where(x => x.Count != 0)
+					.Select(updates => new ChangeSet<T>(updates.SelectMany(u => u)));
 
+		}
 
 		/// <summary>
 		/// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
@@ -160,11 +204,11 @@ namespace DynamicData
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<TObject>> BatchIf<TObject>(this IObservable<IChangeSet<TObject>> source,
+		public static IObservable<IChangeSet<TObject>> BufferIf<TObject>(this IObservable<IChangeSet<TObject>> source,
 			IObservable<bool> pauseIfTrueSelector,
 			IScheduler scheduler = null)
 		{
-			return BatchIf(source, pauseIfTrueSelector, false, scheduler);
+			return BufferIf(source, pauseIfTrueSelector, false, scheduler);
 		}
 
 		/// <summary>
@@ -178,12 +222,12 @@ namespace DynamicData
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<TObject>> BatchIf<TObject>(this IObservable<IChangeSet<TObject>> source,
+		public static IObservable<IChangeSet<TObject>> BufferIf<TObject>(this IObservable<IChangeSet<TObject>> source,
 			IObservable<bool> pauseIfTrueSelector,
 			bool intialPauseState = false,
 			IScheduler scheduler = null)
 		{
-			return BatchIf(source, pauseIfTrueSelector, intialPauseState, null, scheduler);
+			return BufferIf(source, pauseIfTrueSelector, intialPauseState, null, scheduler);
 		}
 
 		/// <summary>
@@ -197,12 +241,12 @@ namespace DynamicData
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<TObject>> BatchIf<TObject>(this IObservable<IChangeSet<TObject>> source,
+		public static IObservable<IChangeSet<TObject>> BufferIf<TObject>(this IObservable<IChangeSet<TObject>> source,
 			IObservable<bool> pauseIfTrueSelector,
 			TimeSpan? timeOut = null,
 			IScheduler scheduler = null)
 		{
-			return BatchIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
+			return BufferIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
 		}
 
 
@@ -218,7 +262,7 @@ namespace DynamicData
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<T>> BatchIf<T>(this IObservable<IChangeSet<T>> source,
+		public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source,
 													IObservable<bool> pauseIfTrueSelector,
 													bool intialPauseState = false,
 													TimeSpan? timeOut = null,

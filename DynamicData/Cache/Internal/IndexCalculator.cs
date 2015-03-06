@@ -265,7 +265,6 @@ namespace DynamicData.Internal
 
             if (index > 0)
             {
-             //   Console.WriteLine("Found existing");
                 var indx = (int)index;
                 index = _list.BinarySearch(indx-1, _list.Count - indx, item, _comparer);
                 if (index > 0)
@@ -273,9 +272,7 @@ namespace DynamicData.Internal
                     return indx;
                 }
             }
-
-
-
+			
             int insertIndex = ~index;
             return insertIndex;
         }

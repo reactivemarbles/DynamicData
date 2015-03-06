@@ -137,6 +137,53 @@ namespace DynamicData
 		}
 
 		/// <summary>
+		/// Clones the source list with the specified change set, transforming the items using the specified factory
+		/// </summary>
+		/// <typeparam name="TSource">The type of the source.</typeparam>
+		/// <typeparam name="TDestination">The type of the destination.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="changes">The changes.</param>
+		/// <param name="transformFactory">The transform factory.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// changes
+		/// or
+		/// transformFactory
+		/// </exception>
+		public static void Transform<TSource,TDestination>(this IList<TDestination> source, IChangeSet<TSource> changes, Func<TSource,TDestination> transformFactory)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (changes == null) throw new ArgumentNullException("changes");
+			if (transformFactory == null) throw new ArgumentNullException("transformFactory");
+			changes.ForEach(change =>
+			{
+				switch (change.Reason)
+				{
+					case ChangeReason.Add:
+						source.Insert(change.CurrentIndex, transformFactory(change.Current));
+                        break;
+					case ChangeReason.Update:
+						if (change.CurrentIndex == change.PreviousIndex)
+						{
+							source[change.CurrentIndex] = transformFactory(change.Current);
+						}
+						else
+						{
+							source.RemoveAt(change.PreviousIndex);
+							source.Insert(change.CurrentIndex, transformFactory(change.Current));
+						}
+						break;
+					case ChangeReason.Remove:
+						source.RemoveAt(change.PreviousIndex);
+						break;
+				}
+			});
+
+		}
+
+
+		/// <summary>
 		/// Clones the source list with the specified change set
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
