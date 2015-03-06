@@ -133,7 +133,7 @@ namespace DynamicData
 			if (source == null) throw new ArgumentNullException("source");
 			if (items == null) throw new ArgumentNullException("items");
 
-			items.ForEach(source.Add);
+			items.ForEach(t=>source.Remove(t));
 		}
 
 		/// <summary>
