@@ -19,9 +19,6 @@ namespace DynamicData.Kernel
 			return source.Select((item, index) => new ItemWithIndex<T>(item, index));
 		}
 
-
-
-
 		internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
 		{
 			foreach (var item in source)
@@ -29,8 +26,6 @@ namespace DynamicData.Kernel
 				action(item);
 			}
 		}
-
-
 
 		internal static void ForEach<TObject>(this IEnumerable<TObject> source, Action<TObject, int> action)
 		{
