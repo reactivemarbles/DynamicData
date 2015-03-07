@@ -1,6 +1,5 @@
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
-using System;
 using System.Linq;
 
 namespace DynamicData.Tests.ListFixtures

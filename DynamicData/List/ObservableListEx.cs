@@ -142,6 +142,20 @@ namespace DynamicData
 			return source.Where(s => s.Count != 0);
 		}
 
+		/// <summary>
+		/// Clones the target list as a side effect of the stream
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="target"></param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservable<IChangeSet<T>> Clone<T>(this IObservable<IChangeSet<T>> source, IList<T> target)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			return source.Do(target.Clone);
+		}
+
 		#endregion
 
 		#region Item operators
