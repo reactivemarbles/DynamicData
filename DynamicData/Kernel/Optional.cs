@@ -87,12 +87,9 @@ namespace DynamicData.Kernel
         /// <returns>
         /// true if the current <see cref="T:System.Nullable`1"/> object has a value; false if the current <see cref="T:System.Nullable`1"/> object has no value.
         /// </returns>
-        public bool HasValue
-        {
-            get { return _hasValue; }
-        }
+        public bool HasValue => _hasValue;
 
-        /// <summary>
+	    /// <summary>
         /// Gets the value of the current <see cref="T:System.Nullable`1"/> value.
         /// </summary>
         /// 
@@ -131,27 +128,55 @@ namespace DynamicData.Kernel
         {
             return value.Value;
         }
-        
-        #region Equality members
 
-        public static bool operator ==(Optional<T> left, Optional<T> right)
+		#region Equality members
+
+		/// <summary>
+		/// Implements the operator ==.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
+		public static bool operator ==(Optional<T> left, Optional<T> right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(Optional<T> left, Optional<T> right)
+		/// <summary>
+		/// Implements the operator !=.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
+		public static bool operator !=(Optional<T> left, Optional<T> right)
         {
             return !left.Equals(right);
         }
 
-        public bool Equals(Optional<T> other)
+		/// <summary>
+		/// Equalses the specified other.
+		/// </summary>
+		/// <param name="other">The other.</param>
+		/// <returns></returns>
+		public bool Equals(Optional<T> other)
         {
             if (!HasValue) return !other.HasValue;
             if (!other.HasValue) return false;
             return _hasValue.Equals(other._hasValue) && EqualityComparer<T>.Default.Equals(_value, other._value);
         }
 
-        public override bool Equals(object obj)
+		/// <summary>
+		/// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+		/// </summary>
+		/// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+		/// <returns>
+		///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+		/// </returns>
+		public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Optional<T> && Equals((Optional<T>) obj);
@@ -172,10 +197,16 @@ namespace DynamicData.Kernel
             }
         }
 
-        #endregion
+		#endregion
 
-        
-        public override string ToString()
+
+		/// <summary>
+		/// Returns a <see cref="System.String" /> that represents this instance.
+		/// </summary>
+		/// <returns>
+		/// A <see cref="System.String" /> that represents this instance.
+		/// </returns>
+		public override string ToString()
         {
             return !HasValue ? "<None>" : _value.ToString();
         }

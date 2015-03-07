@@ -46,27 +46,15 @@ namespace DynamicData.Tests
 
 
 
-        public IObservableCache<TObject, TKey> Data
-        {
-            get { return _data; }
-        }
+        public IObservableCache<TObject, TKey> Data => _data;
 
-        public IList<ISortedChangeSet<TObject, TKey>> Messages
-        {
-            get { return _messages; }
-        }
+	    public IList<ISortedChangeSet<TObject, TKey>> Messages => _messages;
 
-        public ChangeSummary Summary
-        {
-            get { return _summary; }
-        }
+	    public ChangeSummary Summary => _summary;
 
-        public Exception Error
-        {
-            get { return _error; }
-        }
+	    public Exception Error => _error;
 
-        public void Dispose()
+	    public void Dispose()
         {
             _disposer.Dispose();
         }

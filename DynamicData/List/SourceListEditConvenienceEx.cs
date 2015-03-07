@@ -31,5 +31,10 @@ namespace DynamicData
 		{
 			source.Edit(list => list.Replace(original, destination));
 		}
+
+		public static void Replace<T>(this ISourceList<T> source, int index, T item)
+		{
+			source.Edit(list => list[index]=item);
+		}
 	}
 }

@@ -105,15 +105,15 @@ namespace DynamicData.Kernel
         }
 
 
-        /// <summary>
-        /// Overloads a TryGetValue of the dictionary wrapping the result as an Optional<typeparam name=">TValue"></typeparam>
-        /// </summary>
-        /// <typeparam name="TValue">The type of the value.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="key">The key.</param>
-        /// <returns></returns>
-        public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
+		/// <summary>
+		/// Overloads a TryGetValue of the dictionary wrapping the result as an Optional<typeparam name="&gt;TValue"></typeparam>
+		/// </summary>
+		/// <typeparam name="TValue">The type of the value.</typeparam>
+		/// <typeparam name="TKey">The type of the key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="key">The key.</param>
+		/// <returns></returns>
+		public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         {
             TValue contained;
             bool result = source.TryGetValue(key, out contained);
@@ -137,14 +137,14 @@ namespace DynamicData.Kernel
             return false;
         }
 
-        /// <summary>
-        /// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam name=">T"></typeparam> container
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="selector">The selector.</param>
-        /// <returns></returns>
-        public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
+		/// <summary>
+		/// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam name="&gt;T"></typeparam> container
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="selector">The selector.</param>
+		/// <returns></returns>
+		public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         {
             var result = source.FirstOrDefault(selector);
             return !Equals(result, null) ? result : Optional.None<T>();

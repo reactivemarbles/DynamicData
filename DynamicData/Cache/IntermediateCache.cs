@@ -32,56 +32,82 @@ namespace DynamicData
            _innnerCache = new ObservableCache<TObject, TKey>();
         }
 
-        #region Delegated Members
+		#region Delegated Members
 
 
-
-        public void BatchUpdate(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
+		/// <summary>
+		/// Action to apply a batch update to a cache. Multiple update methods can be invoked within a single batch operation.
+		/// These operations are invoked within the cache's lock and is therefore thread safe.
+		/// 
+		/// The result of the action will produce a single changeset
+		/// </summary>
+		/// <param name="updateAction">The update action.</param>
+		public void BatchUpdate(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
         {
             _innnerCache.UpdateFromIntermediate(updateAction);
         }
+		/// <summary>
+		/// A count changed observable starting with the current count
+		/// </summary>
+		public IObservable<int> CountChanged => _innnerCache.CountChanged;
 
-        public IObservable<int> CountChanged
-        {
-            get { return _innnerCache.CountChanged; }
-        }
-
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
+	    /// <summary>
+		/// Returns a filtered changeset of cache changes preceeded with the initial state
+		/// </summary>
+		/// <param name="filter">The filter.</param>
+		/// <returns></returns>
+		public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
         {
             return _innnerCache.Connect(filter);
         }
 
-        public IObservable<IChangeSet<TObject, TKey>> Connect()
+		/// <summary>
+		/// Returns a observable of cache changes preceeded with the initital cache state
+		/// </summary>
+		/// <returns></returns>
+		public IObservable<IChangeSet<TObject, TKey>> Connect()
         {
             return _innnerCache.Connect();
         }
-
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
+		/// <summary>
+		/// Returns an observable of any changes which match the specified key.  The sequence starts with the inital item in the cache (if there is one).
+		/// </summary>
+		/// <param name="key">The key.</param>
+		/// <returns></returns>
+		public IObservable<Change<TObject, TKey>> Watch(TKey key)
         {
             return _innnerCache.Watch(key);
         }
 
-        public int Count
-        {
-            get { return _innnerCache.Count; }
-        }
+		/// <summary>
+		/// The total count of cached items
+		/// </summary>
+		public int Count => _innnerCache.Count;
 
-        public IEnumerable<TObject> Items
-        {
-            get { return _innnerCache.Items; }
-        }
+		/// <summary>
+		/// Gets the Items
+		/// </summary>
+		public IEnumerable<TObject> Items => _innnerCache.Items;
 
-        public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues
-        {
-            get { return _innnerCache.KeyValues; }
-        }
+		/// <summary>
+		/// Gets the key value pairs
+		/// </summary>
+		public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues => _innnerCache.KeyValues;
 
-        public IEnumerable<TKey> Keys
-        {
-            get { return _innnerCache.Keys; }
-        }
+		/// <summary>
+		/// Gets the keys
+		/// </summary>
+		public IEnumerable<TKey> Keys => _innnerCache.Keys;
 
-        public Optional<TObject> Lookup(TKey key)
+		/// <summary>
+		/// Lookup a single item using the specified key.
+		/// </summary>
+		/// <remarks>
+		/// Fast indexed lookup
+		/// </remarks>
+		/// <param name="key">The key.</param>
+		/// <returns></returns>
+		public Optional<TObject> Lookup(TKey key)
         {
             return _innnerCache.Lookup(key);
         }

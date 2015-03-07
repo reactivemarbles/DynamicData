@@ -5,8 +5,9 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
 	/// <summary>
-	///   Container to describe a single change to a cache
+	/// Container to describe a single change to a cache
 	/// </summary>
+	/// <typeparam name="T"></typeparam>
 	public struct Change<T> : IEquatable<Change<T>>
 	{
 		#region Fields
@@ -134,6 +135,12 @@ namespace DynamicData
 
 		#region Overrides
 
+		/// <summary>
+		/// Returns a <see cref="System.String" /> that represents this instance.
+		/// </summary>
+		/// <returns>
+		/// A <see cref="System.String" /> that represents this instance.
+		/// </returns>
 		public override string ToString()
 		{
 			return string.Format("{0}, Current: {1}, Previous: {2}", Reason, Current, Previous);
@@ -143,17 +150,35 @@ namespace DynamicData
 
 		#region IEquatable<Change<T>> Members
 
+		/// <summary>
+		/// Equalses the specified other.
+		/// </summary>
+		/// <param name="other">The other.</param>
+		/// <returns></returns>
 		public bool Equals(Change<T> other)
 		{
 			return Reason == other.Reason && EqualityComparer<T>.Default.Equals(_current, other._current) && Previous.Equals(other.Previous);
 		}
 
+		/// <summary>
+		/// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+		/// </summary>
+		/// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+		/// <returns>
+		///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+		/// </returns>
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			return obj is Change<T> && Equals((Change<T>)obj);
 		}
 
+		/// <summary>
+		/// Returns a hash code for this instance.
+		/// </summary>
+		/// <returns>
+		/// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+		/// </returns>
 		public override int GetHashCode()
 		{
 			unchecked
@@ -165,11 +190,27 @@ namespace DynamicData
 			}
 		}
 
+		/// <summary>
+		/// Implements the operator ==.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
 		public static bool operator ==(Change<T> left, Change<T> right)
 		{
 			return left.Equals(right);
 		}
 
+		/// <summary>
+		/// Implements the operator !=.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
 		public static bool operator !=(Change<T> left, Change<T> right)
 		{
 			return !left.Equals(right);

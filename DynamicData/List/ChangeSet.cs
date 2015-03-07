@@ -28,10 +28,17 @@ namespace DynamicData
 
 		#region Construction
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ChangeSet{T}"/> class.
+		/// </summary>
 		public ChangeSet()
 		{
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ChangeSet{T}"/> class.
+		/// </summary>
+		/// <param name="items">The items.</param>
 		public ChangeSet(IEnumerable<Change<T>> items)
 		{
 			foreach (var update in items)
@@ -40,6 +47,12 @@ namespace DynamicData
 			}
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ChangeSet{T}"/> class.
+		/// </summary>
+		/// <param name="reason">The reason.</param>
+		/// <param name="current">The current.</param>
+		/// <param name="previous">The previous.</param>
 		public ChangeSet(ChangeReason reason, T current, Optional<T> previous)
 			: this()
 		{
@@ -76,22 +89,43 @@ namespace DynamicData
 
 		private List<Change<T>> Items => _items;
 
-		public int Count => Items.Count;
 
+		/// <summary>
+		///     Gets the number of additions
+		/// </summary>
 		public int Adds => _adds;
 
+		/// <summary>
+		///     Gets the number of updates
+		/// </summary>
 		public int Updates => _updates;
-
+		/// <summary>
+		///     Gets the number of removes
+		/// </summary>
 		public int Removes => _removes;
-
+	
+		/// <summary>
+		///     Gets the number of requeries
+		/// </summary>
 		public int Evaluates => _evaluates;
 
+		/// <summary>
+		///     Gets the number of moves
+		/// </summary>
 		public int Moves => _moves;
 
+		/// <summary>
+		///     The total update count
+		/// </summary>
+		public int Count => Items.Count;
 		#endregion
 
 		#region Enumeration
 
+		/// <summary>
+		/// Gets the enumerator.
+		/// </summary>
+		/// <returns></returns>
 		public IEnumerator<Change<T>> GetEnumerator()
 		{
 			return _items.GetEnumerator();
@@ -105,6 +139,12 @@ namespace DynamicData
 
 		#endregion
 
+		/// <summary>
+		/// Returns a <see cref="System.String" /> that represents this instance.
+		/// </summary>
+		/// <returns>
+		/// A <see cref="System.String" /> that represents this instance.
+		/// </returns>
 		public override string ToString()
 		{
 			return string.Format("ChangeSet<{0}>. Count={1}", typeof(T).Name,

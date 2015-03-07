@@ -130,6 +130,31 @@ namespace DynamicData
 		}
 
 		/// <summary>
+		///  Groups the source on the value returned by group selector factory. 
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TGroup">The type of the group.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="groupSelector">The group selector.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// groupSelector
+		/// </exception>
+		public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOn<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroup> groupSelector)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (groupSelector == null) throw new ArgumentNullException("groupSelector");
+			var calculator = new Grouper<TObject, TGroup>();
+
+			return source.Transform(t => new ItemWithValue<TObject, TGroup>(t, groupSelector(t)))
+				.Select(calculator.Process)
+				.DisposeMany() //dispose removes as the grouping is disposable
+				.NotEmpty();
+		}
+
+		/// <summary>
 		/// Prevents an empty notification
 		/// </summary>
 		/// <typeparam name="T"></typeparam>

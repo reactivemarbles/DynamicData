@@ -37,7 +37,7 @@ namespace DynamicData
 		int Moves { get; }
 
 		/// <summary>
-		///     The total update count
+		///     The total change count
 		/// </summary>
 		int Count { get; }
 	}

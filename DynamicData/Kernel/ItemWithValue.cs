@@ -7,25 +7,25 @@ namespace DynamicData.Kernel
 	/// <summary>
 	/// Container for an item and it's Value from a list
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public class ItemWithValue<T,V> : IEquatable<ItemWithValue<T,V>>
+	/// <typeparam name="TObject"></typeparam>
+	public class ItemWithValue<TObject,TValue> : IEquatable<ItemWithValue<TObject,TValue>>
 	{
 		/// <summary>
 		/// Gets the item.
 		/// </summary>
-		public T Item { get; }
+		public TObject Item { get; }
 
 		/// <summary>
 		/// Gets the Value.
 		/// </summary>
-		public V Value { get; }
+		public TValue Value { get; }
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ItemWithIndex{T}"/> class.
 		/// </summary>
 		/// <param name="item">The item.</param>
 		/// <param name="value">The Value.</param>
-		public ItemWithValue(T item, V value)
+		public ItemWithValue(TObject item, TValue value)
 		{
 			Item = item;
 			Value = value;
@@ -33,11 +33,11 @@ namespace DynamicData.Kernel
 
 		#region Equality 
 
-		public bool Equals(ItemWithValue<T, V> other)
+		public bool Equals(ItemWithValue<TObject, TValue> other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			return EqualityComparer<T>.Default.Equals(Item, other.Item);
+			return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
 		}
 
 		public override bool Equals(object obj)
@@ -45,20 +45,20 @@ namespace DynamicData.Kernel
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
 			if (obj.GetType() != this.GetType()) return false;
-			return Equals((ItemWithValue<T, V>) obj);
+			return Equals((ItemWithValue<TObject, TValue>) obj);
 		}
 
 		public override int GetHashCode()
 		{
-			return EqualityComparer<T>.Default.GetHashCode(Item);
+			return EqualityComparer<TObject>.Default.GetHashCode(Item);
 		}
 
-		public static bool operator ==(ItemWithValue<T, V> left, ItemWithValue<T, V> right)
+		public static bool operator ==(ItemWithValue<TObject, TValue> left, ItemWithValue<TObject, TValue> right)
 		{
 			return Equals(left, right);
 		}
 
-		public static bool operator !=(ItemWithValue<T, V> left, ItemWithValue<T, V> right)
+		public static bool operator !=(ItemWithValue<TObject, TValue> left, ItemWithValue<TObject, TValue> right)
 		{
 			return !Equals(left, right);
 		}

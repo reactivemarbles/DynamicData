@@ -1,28 +1,17 @@
-﻿using System;
-
-namespace DynamicData
+﻿namespace DynamicData
 {
+	/// <summary>
+	/// Options for sortinig
+	/// </summary>
 	public enum SortOptions
 	{
+		/// <summary>
+		/// No sort options are specified. 
+		/// </summary>
 		None,
+		/// <summary>
+		/// Use binary search to locate item index.
+		/// </summary>
 		UseBinarySearch
 	}
-
-	public class SortException : Exception
-	{
-		public SortException()
-		{
-		}
-
-		public SortException(string message) : base(message)
-		{
-		}
-
-		public SortException(string message, Exception innerException) : base(message, innerException)
-		{
-		}
-	}
-
-
-
 }

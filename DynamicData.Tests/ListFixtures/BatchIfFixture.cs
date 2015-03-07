@@ -3,11 +3,10 @@ using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
-using System.Reactive.Linq;
 
 namespace DynamicData.Tests.ListFixtures
 {
-    [TestFixture]
+	[TestFixture]
     public class BatchIfFixture
     {
         private ISourceList<Person> _source;

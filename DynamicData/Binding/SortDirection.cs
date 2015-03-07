@@ -1,8 +1,18 @@
 ﻿namespace DynamicData.Binding
 {
-    public enum SortDirection
+	/// <summary>
+	/// Sort direction
+	/// </summary>
+	public enum SortDirection
     {
-        Ascending,
-        Descending
-    }
+		/// <summary>
+		/// Sort items ascending
+		/// </summary>
+		Ascending,
+
+		/// <summary>
+		/// Sort items descending
+		/// </summary>
+		Descending
+	}
 }
