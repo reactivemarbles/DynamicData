@@ -69,7 +69,7 @@ namespace DynamicData.Kernel
 
 		public override string ToString()
 		{
-			return string.Format("Item: {0}, _Index: {1}", Item, Index);
+			return string.Format("{0} ({1})", Item, Index);
 		}
 	}
 }

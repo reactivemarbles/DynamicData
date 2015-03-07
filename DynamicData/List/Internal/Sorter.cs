@@ -28,6 +28,7 @@ namespace DynamicData.Internal
 						break;
 					case ChangeReason.Update:
 						//TODO: check whether an item should stay in the same position
+						//i.e. update and move
 						Remove(change.Previous.Value);
 						Insert(current);
 						break;

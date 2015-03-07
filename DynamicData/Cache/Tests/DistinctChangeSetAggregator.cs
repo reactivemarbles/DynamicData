@@ -13,9 +13,7 @@ namespace DynamicData.Tests
     public class DistinctChangeSetAggregator<TValue> : IDisposable
     {
         private readonly IDisposable _disposer;
-        private readonly IObservableCache<TValue, TValue> _data;
-        private readonly IList<IChangeSet<TValue, TValue>> _messages = new List<IChangeSet<TValue, TValue>>();
-        private ChangeSummary _summary;
+	    private ChangeSummary _summary;
         private Exception _error;
 
 
@@ -28,8 +26,8 @@ namespace DynamicData.Tests
             var published = source.Publish();
 
             var error = published.Subscribe(updates => { }, ex => _error = ex);
-            var results = published.Subscribe(updates => _messages.Add(updates));
-            _data = published.AsObservableCache();
+            var results = published.Subscribe(updates => Messages.Add(updates));
+            Data = published.AsObservableCache();
             var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
 
             var connected = published.Connect();
@@ -42,53 +40,30 @@ namespace DynamicData.Tests
             });
         }
 
-
-
         /// <summary>
         /// Gets the data.
         /// </summary>
-        /// <value>
-        /// The data.
-        /// </value>
-        public IObservableCache<TValue, TValue> Data
-        {
-            get { return _data; }
-        }
+        public IObservableCache<TValue, TValue> Data { get; }
 
-        /// <summary>
+	    /// <summary>
         /// Gets the messages.
         /// </summary>
-        /// <value>
-        /// The messages.
-        /// </value>
-        public IList<IChangeSet<TValue, TValue>> Messages
-        {
-            get { return _messages; }
-        }
+        public IList<IChangeSet<TValue, TValue>> Messages { get; } = new List<IChangeSet<TValue, TValue>>();
 
-        /// <summary>
+	    /// <summary>
         /// Gets the summary.
         /// </summary>
-        /// <value>
-        /// The summary.
-        /// </value>
-        public ChangeSummary Summary
-        {
-            get { return _summary; }
-        }
+        public ChangeSummary Summary => _summary;
 
-        /// <summary>
+	    /// <summary>
         /// Gets the error.
         /// </summary>
         /// <value>
         /// The error.
         /// </value>
-        public Exception Error
-        {
-            get { return _error; }
-        }
+        public Exception Error => _error;
 
-        public void Dispose()
+	    public void Dispose()
         {
             _disposer.Dispose();
         }

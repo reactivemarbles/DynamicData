@@ -21,7 +21,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
-            _results = _source.Connect().Buffer(TimeSpan.FromMinutes(1),_scheduler).ToChangeSet().AsAggregator();
+            _results = _source.Connect().Buffer(TimeSpan.FromMinutes(1),_scheduler).FlattenBufferResult().AsAggregator();
 
         }
 

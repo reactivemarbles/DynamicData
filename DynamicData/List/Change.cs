@@ -68,8 +68,8 @@ namespace DynamicData
 		/// <param name="reason">The reason.</param>
 		/// <param name="current">The current.</param>
 		/// <param name="previous">The previous.</param>
-		/// <param name="currentIndex">Index of the current.</param>
-		/// <param name="previousIndex">Index of the previous.</param>
+		/// <param name="currentIndex">Value of the current.</param>
+		/// <param name="previousIndex">Value of the previous.</param>
 		/// <exception cref="System.ArgumentException">
 		/// For ChangeReason.Add, a previous value cannot be specified
 		/// or

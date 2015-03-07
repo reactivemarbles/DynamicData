@@ -10,6 +10,8 @@ namespace DynamicData
 	/// </summary>
 	public static class ListEx
 	{
+		#region Binary Search / Lookup
+
 
 		/// <summary>
 		/// Performs a binary search on the specified collection.
@@ -80,8 +82,6 @@ namespace DynamicData
 			return ~lower;
 		}
 
-
-
 		/// <summary>
 		/// Lookups the item using the specified comparer. If matched, the item's index is also returned
 		/// </summary>
@@ -90,13 +90,18 @@ namespace DynamicData
 		/// <param name="item">The item.</param>
 		/// <param name="equalityComparer">The equality comparer.</param>
 		/// <returns></returns>
-		public static Optional<ItemWithIndex<T>> Lookup<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer=null)
+		public static Optional<ItemWithIndex<T>> Lookup<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer = null)
 		{
 			var comparer = equalityComparer ?? EqualityComparer<T>.Default;
 
 			var result = source.WithIndex().FirstOrDefault(x => comparer.Equals(x.Item, item));
 			return !Equals(result, null) ? result : Optional.None<ItemWithIndex<T>>();
 		}
+
+		#endregion
+		
+		#region Amendment
+
 
 		/// <summary>
 		/// Adds the  items to the specified list
@@ -136,8 +141,30 @@ namespace DynamicData
 			items.ForEach(t=>source.Remove(t));
 		}
 
+		/// <summary>
+		/// Replaces the specified item.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="original">The original.</param>
+		/// <param name="replacewith">The replacewith.</param>
+		/// <exception cref="System.ArgumentNullException">source
+		/// or
+		/// items</exception>
+		public static void Replace<T>(this IList<T> source, T original,T replacewith)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (original == null) throw new ArgumentNullException("original");
+			if (replacewith == null) throw new ArgumentNullException("replacewith");
 
+			var index = source.IndexOf(original);
+			source[index] = replacewith;
+		}
+		
+		#endregion
 
+		#region Operators
+		
 		/// <summary>
 		/// Clones the source list with the specified change set, transforming the items using the specified factory
 		/// </summary>
@@ -301,6 +328,6 @@ namespace DynamicData
 
 
 		}
-
+		#endregion
 	}
 }

@@ -11,7 +11,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
 	/// <summary>
-	/// Extenstions for ObservableList
+	/// Extenssions for ObservableList
 	/// </summary>
 	public static class ObservableListEx
 	{
@@ -42,13 +42,16 @@ namespace DynamicData
 			return new AnomynousObservableList<T>(source);
 		}
 
+		#region Core List Operators
+
+
 
 		/// <summary>
-		/// Filters the source using the specified transformFactory
+		/// Filters the source using the specified valueSelector
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="source">The source.</param>
-		/// <param name="predicate">The transformFactory.</param>
+		/// <param name="predicate">The valueSelector.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
 		public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
@@ -92,14 +95,38 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentNullException">
 		/// source
 		/// or
-		/// transformFactory
+		/// valueSelector
 		/// </exception>
 		public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (transformFactory == null) throw new ArgumentNullException("transformFactory");
-			var filter = new Transformer<TSource,TDestination>(transformFactory);
-			return source.Select(filter.Process).NotEmpty();
+			var transformer = new Transformer<TSource,TDestination>(transformFactory);
+			return source.Select(transformer.Process).NotEmpty();
+		}
+
+		/// <summary>
+		/// Selects distinct values from the source, using the specified value selector
+		/// </summary>
+		/// <typeparam name="TObject">The type of the source.</typeparam>
+		/// <typeparam name="TValue">The type of the destination.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="valueSelector">The transform factory.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// valueSelector
+		/// </exception>
+		public static IObservable<IChangeSet<TValue>> DistinctValues<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, 
+			Func<TObject, TValue> valueSelector)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (valueSelector == null) throw new ArgumentNullException("valueSelector");
+			var calculator = new DistinctCalculator<TObject, TValue>();
+			return source.Transform(t=>new ItemWithValue<TObject, TValue>(t, valueSelector(t)))
+				.Select(calculator.Process)
+				.NotEmpty();
 		}
 
 		/// <summary>
@@ -114,6 +141,8 @@ namespace DynamicData
 			if (source == null) throw new ArgumentNullException("source");
 			return source.Where(s => s.Count != 0);
 		}
+
+		#endregion
 
 		#region Item operators
 
@@ -290,7 +319,7 @@ namespace DynamicData
 		/// <typeparam name="T"></typeparam>
 		/// <param name="source">The source.</param>
 		/// <returns></returns>
-		public static IObservable<IChangeSet<T>> ToChangeSet<T>(this IObservable<IList<IChangeSet<T>>> source)
+		public static IObservable<IChangeSet<T>> FlattenBufferResult<T>(this IObservable<IList<IChangeSet<T>>> source)
 		{
 			return source
 					.Where(x => x.Count != 0)

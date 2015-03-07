@@ -2,9 +2,9 @@
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
-namespace DynamicData.Tests.ListFixture
+namespace DynamicData.Tests.ListFixtures
 {
-    [TestFixture]
+	[TestFixture]
     public class FilterFixture
     {
         private ISourceList<Person> _source;

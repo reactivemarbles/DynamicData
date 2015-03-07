@@ -52,6 +52,8 @@
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
+    <Compile Include="Kernel\ItemWithIndex.cs" />
+    <Compile Include="List\Internal\DistinctCalculator.cs" />
     <Compile Include="List\Internal\ImmutableFilter.cs" />
     <Compile Include="Kernel\ReferenceEqualityComparer.cs" />
     <Compile Include="ChangeReason.cs" />
@@ -87,7 +89,6 @@
     <Compile Include="Cache\IVirtualChangeSet.cs" />
     <Compile Include="Cache\IVirtualParameters.cs" />
     <Compile Include="Cache\IVirtualRequest.cs" />
-    <Compile Include="Cache\Internal\ItemWithValue.cs" />
     <Compile Include="Cache\Internal\ObservableWithValue.cs" />
     <Compile Include="Cache\Internal\AbstractFilter.cs" />
     <Compile Include="Cache\Internal\AnomynousObservableCache.cs" />
@@ -117,7 +118,7 @@
     <Compile Include="Cache\Internal\KeyValueCollection.cs" />
     <Compile Include="Cache\Internal\KeyValueComparer.cs" />
     <Compile Include="Cache\ObservableCache.cs" />
-    <Compile Include="Kernel\ItemWithIndex.cs" />
+    <Compile Include="Kernel\ItemWithValue.cs" />
     <Compile Include="Kernel\Optional.cs" />
     <Compile Include="Kernel\OptionElse.cs" />
     <Compile Include="Kernel\OptionExtensions.cs" />
@@ -140,6 +141,7 @@
     <Compile Include="List\SortOptions.cs" />
     <Compile Include="List\SourceList.cs" />
     <Compile Include="List\Internal\ReaderWriter.cs" />
+    <Compile Include="List\SourceListEditConvenienceEx.cs" />
     <Compile Include="List\Tests\ChangeSetAggregator.cs" />
     <Compile Include="List\Tests\TestEx.cs" />
     <Compile Include="ObservableCache.cs" />

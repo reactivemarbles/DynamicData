@@ -51,6 +51,12 @@ namespace DynamicData
 			base.SetItem(index, item);
 		}
 
+		public void Move(T item, int destination)
+		{
+			
+		}
+
+
 		public void Move(int original, int destination)
 		{
 			try

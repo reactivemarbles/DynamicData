@@ -138,6 +138,7 @@
     <Compile Include="ListFixtures\BufferFixture.cs" />
     <Compile Include="ListFixtures\BatchIfFixture.cs" />
     <Compile Include="ListFixtures\BatchIfWithTimeOutFixture.cs" />
+    <Compile Include="ListFixtures\DistinctValuesFixture.cs" />
     <Compile Include="ListFixtures\FilterFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
