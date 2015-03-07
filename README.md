@@ -11,7 +11,8 @@ Even before rx existed I had implemented a similar concept using old fashioned e
 
 ### Version 4 is being writen
 
-Version 4 build status https://ci.appveyor.com/api/projects/status/occtlji3iwinami5/branch/develop?svg=true
+Version 4 build status [![Build status]( https://ci.appveyor.com/api/projects/status/occtlji3iwinami5/branch/develop?svg=true)](https://ci.appveyor.com/project/RolandPheasant/DynamicData/branch/develop)
+
 
 ### I've seen it before so give me some links
 
