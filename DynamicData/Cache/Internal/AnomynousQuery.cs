@@ -25,4 +25,24 @@ namespace DynamicData.Internal
             return _cache.Lookup(key);
         }
     }
+
+	//internal class AnomynousList<T> : IReadOnlyCollection<T>
+	//{
+	//	private readonly IList<T> _list;
+
+	//	public AnomynousList(IList<T> list)
+	//	{
+	//		_list = list;
+	//	}
+
+	//	public int Count => _list.Count;
+
+	//	public IEnumerable<T> Items => _list;
+
+
+	//	public Optional<T> Lookup(TKey key)
+	//	{
+	//		return _list.Lookup(key);
+	//	}
+	//}
 }

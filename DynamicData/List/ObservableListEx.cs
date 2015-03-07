@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
@@ -534,6 +535,62 @@ namespace DynamicData
 							.Concat(source.Connect())
 							.NotEmpty();
 		}
+
+		/// <summary>
+		///  The latest copy of the cache is exposed for querying after each modification to the underlying data
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TDestination">The type of the destination.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="resultSelector">The result selector.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// resultSelector
+		/// </exception>
+		public static IObservable<TDestination> QueryWhenChanged<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source,
+			Func<IList<TObject>, TDestination> resultSelector)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (resultSelector == null) throw new ArgumentNullException("resultSelector");
+
+			return source.QueryWhenChanged().Select(resultSelector);
+		}
+
+		/// <summary>
+		/// The latest copy of the cache is exposed for querying i)  after each modification to the underlying data ii) upon subscription
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservable<IList<TObject>> QueryWhenChanged<TObject>(this IObservable<IChangeSet<TObject>> source)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			return Observable.Create<IList<TObject>>
+				(
+					observer =>
+					{
+
+						IList<TObject> list = new List<TObject>();
+						return source.Subscribe(changes =>
+						{
+							try
+							{
+								list.Clone(changes);
+								observer.OnNext(new ReadOnlyCollection<TObject>(list));
+							}
+							catch (Exception ex)
+							{
+								observer.OnError(ex);
+							}
+						}, observer.OnError, observer.OnCompleted);
+					}
+				);
+		}
+
 
 		/// <summary>
 		/// Defer the subscribtion until loaded and skip initial changeset

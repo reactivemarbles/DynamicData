@@ -146,6 +146,7 @@
     <Compile Include="ListFixtures\DistinctValuesFixture.cs" />
     <Compile Include="ListFixtures\FilterFixture.cs" />
     <Compile Include="ListFixtures\GroupFixture.cs" />
+    <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
     <Compile Include="ListFixtures\SortFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

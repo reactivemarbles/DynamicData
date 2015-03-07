@@ -1,8 +1,6 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
@@ -51,6 +49,19 @@ namespace DynamicData.Tests.ListFixtures
 			CollectionAssert.AreEquivalent(expectedResult, actualResult);
 		}
 
+		[Test]
+		public void Insert()
+		{
+			var people = _generator.Take(100).ToArray();
+			_source.AddRange(people);
+
+			var shouldbefirst = new Person("__A", 99);
+			_source.Add(shouldbefirst);
+
+			Assert.AreEqual(101, _results.Data.Count, "Should be 100 people in the cache");
+
+			Assert.AreEqual(shouldbefirst, _results.Data.Items.First());
+		}
 
 		[Test]
 		public void Replace()
@@ -62,7 +73,6 @@ namespace DynamicData.Tests.ListFixtures
             _source.Replace(10, shouldbefirst);
 
 			Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
-			var actualResult = _results.Data.Items;
 
 			Assert.AreEqual(shouldbefirst, _results.Data.Items.First());
 		}

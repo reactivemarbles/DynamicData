@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Tests.ListFixtures
 {
-    [TestFixture]
+	[TestFixture]
     public class BatchFixture
     {
         private ISourceList<Person> _source;
