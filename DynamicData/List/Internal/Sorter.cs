@@ -53,7 +53,7 @@ namespace DynamicData.Internal
 		private void Insert(T item)
 		{
 			var index = GetInsertPosition(item);
-			_list.RemoveAt(index);
+			_list.Insert(index,item);
 
 		}
 

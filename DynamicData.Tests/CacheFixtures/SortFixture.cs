@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Kernel;
-using DynamicData.Operators;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 

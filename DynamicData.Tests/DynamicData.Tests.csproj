@@ -90,7 +90,7 @@
     <Compile Include="CacheFixtures\ExpireAfterFixture.cs" />
     <Compile Include="CacheFixtures\BatchIfWithTimeOutFixture.cs" />
     <Compile Include="CacheFixtures\DeferUntilLoadedFixture.cs" />
-    <Compile Include="CacheFixtures\EnumerableEx.cs" />
+    <Compile Include="Kernal\EnumerableEx.cs" />
     <Compile Include="CacheFixtures\EnumerableObservableToObservableChangeSetFixture.cs" />
     <Compile Include="CacheFixtures\GroupControllerFixture.cs" />
     <Compile Include="CacheFixtures\GroupControllerForFilteredItemsFixture.cs" />
@@ -137,12 +137,16 @@
     <Compile Include="Domain\PersonWithGender.cs" />
     <Compile Include="CacheFixtures\MonitorStatusFixture.cs" />
     <Compile Include="CacheFixtures\TransformFixture.cs" />
+    <Compile Include="ListFixtures\BatchFixture.cs" />
     <Compile Include="ListFixtures\BufferFixture.cs" />
     <Compile Include="ListFixtures\BatchIfFixture.cs" />
     <Compile Include="ListFixtures\BatchIfWithTimeOutFixture.cs" />
+    <Compile Include="ListFixtures\DeferUntilLoadedFixture.cs" />
+    <Compile Include="ListFixtures\DisposeManyFixture.cs" />
     <Compile Include="ListFixtures\DistinctValuesFixture.cs" />
     <Compile Include="ListFixtures\FilterFixture.cs" />
     <Compile Include="ListFixtures\GroupFixture.cs" />
+    <Compile Include="ListFixtures\SortFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\SelectManyExtensions.cs" />
