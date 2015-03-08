@@ -24,7 +24,10 @@ namespace DynamicData.Kernel
             _factory = factory;
         }
 
-        public T Value
+		/// <summary>
+		/// Gets the value. Factory is execute when first called
+		/// </summary>
+		public T Value
         {
             get
             {

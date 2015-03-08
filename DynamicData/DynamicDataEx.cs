@@ -1106,24 +1106,27 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException("source");
             return source.Watch(key).Select(u => u.Current);
         }
-        /// <summary>
-        /// Returns an observable of any updates which match the specified key,  preceeded with the initital cache state
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns></returns>
-        public static IObservable<Change<TObject, TKey>> Watch<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.SelectMany(updates => updates).Where(update => update.Key.Equals(key));
-        }
+		/// <summary>
+		/// Returns an observable of any updates which match the specified key,  preceeded with the initital cache state
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TKey">The type of the key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="key">The key.</param>
+		/// <returns></returns>
+		public static IObservable<Change<TObject, TKey>> Watch<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			return source.SelectMany(updates => updates).Where(update => update.Key.Equals(key));
+		}
 
-        #endregion
-        
-        #region Clone
+		#endregion
+
+		#region Clone
 
 
 
-        internal static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ICache<TObject,TKey> cache)
+		internal static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ICache<TObject,TKey> cache)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (cache == null) throw new ArgumentNullException("cache");
@@ -1744,40 +1747,57 @@ namespace DynamicData
                     });
         }
 
-        public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-          TObject item) where TObject:IKey<TKey>
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.StartWithItem(item, item.Key);
-        }
-        
-        public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-          TObject item, TKey key)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.StartWith(new ChangeSet<TObject, TKey>(ChangeReason.Add, key, item));
-        }
+		/// <summary>
+		/// The equivalent of rx startwith operator, but wraps the item in a change where reason is ChangeReason.Add
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TKey">The type of the key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="item">The item.</param>
+		/// <returns></returns>
+		public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+				  TObject item) where TObject : IKey<TKey>
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			return source.StartWithItem(item, item.Key);
+		}
+
+		/// <summary>
+		/// The equivalent of rx startwith operator, but wraps the item in a change where reason is ChangeReason.Add
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TKey">The type of the key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="item">The item.</param>
+		/// <param name="key">The key.</param>
+		/// <returns></returns>
+		public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+				  TObject item, TKey key)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			return source.StartWith(new ChangeSet<TObject, TKey>(ChangeReason.Add, key, item));
+		}
 
 
-        #endregion
+		#endregion
 
-        #region  Transform
+		#region  Transform
 
-        /// <summary>
-        /// Projects each update item to a new form using the specified transform function
-        /// </summary>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="transformFactory">The transform factory.</param>
-        /// <returns>
-        /// A transformed update collection
-        /// </returns>
-        /// <exception cref="System.ArgumentNullException">source
-        /// or
-        /// transformFactory</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+		/// <summary>
+		/// Projects each update item to a new form using the specified transform function
+		/// </summary>
+		/// <typeparam name="TDestination">The type of the destination.</typeparam>
+		/// <typeparam name="TSource">The type of the source.</typeparam>
+		/// <typeparam name="TKey">The type of the key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="transformFactory">The transform factory.</param>
+		/// <returns>
+		/// A transformed update collection
+		/// </returns>
+		/// <exception cref="System.ArgumentNullException">source
+		/// or
+		/// transformFactory</exception>
+		public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TKey, TDestination> transformFactory)
         {
             if (source == null) throw new ArgumentNullException("source");

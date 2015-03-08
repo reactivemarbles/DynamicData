@@ -118,11 +118,14 @@ namespace DynamicData
         }
 
 
-        public void Dispose()
-        {
-            _innnerCache.Dispose();
-        }
+		/// <summary>
+		/// Releases unmanaged and - optionally - managed resources.
+		/// </summary>
+		public void Dispose()
+		{
+			_innnerCache.Dispose();
+		}
 
-        #endregion
-    }
+		#endregion
+	}
 }

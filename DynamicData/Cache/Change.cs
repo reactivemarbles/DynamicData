@@ -9,18 +9,6 @@ namespace DynamicData
     /// </summary>
     public  struct Change<TObject, TKey> 
     {
-        #region Fields
-
-        private readonly TObject _current;
-        private readonly TKey _key;
-        private readonly Optional<TObject> _previous;
-        private readonly ChangeReason _reason;
-        private readonly int _currentIndex;
-        private readonly int _previousIndex;
-
-        public readonly static Change<TObject, TKey> Empty = new Change<TObject, TKey>();
-
-        #endregion
 
         #region Construction
 
@@ -61,12 +49,12 @@ namespace DynamicData
             if (previousIndex < 0)
                 throw new ArgumentException("PreviousIndex must be greater than or equal to zero");
           
-            _current = current;
-            _previous = Optional.None<TObject>();
-            _key = key;
-            _reason = ChangeReason.Moved;
-            _currentIndex = currentIndex;
-            _previousIndex = previousIndex;
+            Current = current;
+            Previous = Optional.None<TObject>();
+            Key = key;
+            Reason = ChangeReason.Moved;
+            CurrentIndex = currentIndex;
+            PreviousIndex = previousIndex;
 
         }
 
@@ -87,12 +75,12 @@ namespace DynamicData
         public Change(ChangeReason reason, TKey key, TObject current, Optional<TObject> previous, int currentIndex=-1,int previousIndex=-1)
             :this()
         {
-            _current = current;
-            _previous = previous;
-            _key = key;
-            _reason = reason;
-            _currentIndex = currentIndex;
-            _previousIndex = previousIndex;
+            Current = current;
+            Previous = previous;
+            Key = key;
+            Reason = reason;
+            CurrentIndex = currentIndex;
+            PreviousIndex = previousIndex;
 
             if (reason == ChangeReason.Add && previous.HasValue)
             {
@@ -112,102 +100,102 @@ namespace DynamicData
         /// <summary>
         /// The unique key of the item which has changed
         /// </summary>
-        public TKey Key
-        {
-            get { return _key; }
-        }
+        public TKey Key { get; }
 
 
-        /// <summary>
+	    /// <summary>
         /// The  reason for the change
         /// </summary>
-        public ChangeReason Reason
-        {
-            get { return _reason; }
-        }
+        public ChangeReason Reason { get; }
 
 
-        /// <summary>
+	    /// <summary>
         /// The item which has changed
         /// </summary>
-        public TObject Current
-        {
-            get { return _current; }
-        }
+        public TObject Current { get; }
 
-        /// <summary>
+	    /// <summary>
         /// The current index
         /// </summary>
-        public int CurrentIndex
-        {
-            get { return _currentIndex; }
-        }
+        public int CurrentIndex { get; }
 
-        /// <summary>
+	    /// <summary>
         /// The previous change.
         /// 
         /// This is only when Reason==ChangeReason.Update.
         /// </summary>
-        public Optional<TObject> Previous
-        {
-            get { return _previous; }
-        }
+        public Optional<TObject> Previous { get; }
 
-        /// <summary>
+	    /// <summary>
         /// The previous change.
         /// 
         /// This is only when Reason==ChangeReason.Update or ChangeReason.Move.
         /// </summary>
-        public int PreviousIndex
+        public int PreviousIndex { get; }
+
+	    #endregion
+
+		#region IEquatable<Change<T>> Members
+
+
+
+		/// <summary>
+		///  Determines whether the specified object, is equal to this instance.
+		/// </summary>
+		/// <param name="other">The other.</param>
+		/// <returns></returns>
+		public bool Equals(Change<TObject, TKey> other)
         {
-            get { return _previousIndex; }
+            return Reason.Equals(other.Reason) && EqualityComparer<TKey>.Default.Equals(Key, other.Key) &&
+                   EqualityComparer<TObject>.Default.Equals(Current, other.Current);
         }
 
-
-
-
-        #endregion
-
-        #region Overrides
-
-        public override string ToString()
-        {
-            return string.Format("{0}, Key: {1}, Current: {2}, Previous: {3}", Reason, Key, Current, Previous);
-        }
-
-        #endregion
-
-        #region IEquatable<Change<T>> Members
-
-        //public bool IsEmpty()
-        //{
-        //    return this.Equals(Empty);
-        //}
-
-        public bool Equals(Change<TObject, TKey> other)
-        {
-            return _reason.Equals(other._reason) && EqualityComparer<TKey>.Default.Equals(_key, other._key) &&
-                   EqualityComparer<TObject>.Default.Equals(_current, other._current);
-        }
-
-        public override bool Equals(object obj)
+		/// <summary>
+		/// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+		/// </summary>
+		/// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+		/// <returns>
+		///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+		/// </returns>
+		public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (obj.GetType() != GetType()) return false;
             return Equals((Change<TObject, TKey>) obj);
         }
 
-        public override int GetHashCode()
+		/// <summary>
+		/// Returns a hash code for this instance.
+		/// </summary>
+		/// <returns>
+		/// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+		/// </returns>
+		public override int GetHashCode()
         {
             unchecked
             {
-                int hashCode = _reason.GetHashCode();
-                hashCode = (hashCode*397) ^ EqualityComparer<TKey>.Default.GetHashCode(_key);
-                hashCode = (hashCode*397) ^ EqualityComparer<TObject>.Default.GetHashCode(_current);
+                int hashCode = Reason.GetHashCode();
+                hashCode = (hashCode*397) ^ EqualityComparer<TKey>.Default.GetHashCode(Key);
+                hashCode = (hashCode*397) ^ EqualityComparer<TObject>.Default.GetHashCode(Current);
                 return hashCode;
             }
         }
 
-        #endregion
-    }
+		#endregion
+
+		#region Overrides
+
+		/// <summary>
+		/// Returns a <see cref="System.String" /> that represents this instance.
+		/// </summary>
+		/// <returns>
+		/// A <see cref="System.String" /> that represents this instance.
+		/// </returns>
+		public override string ToString()
+		{
+			return string.Format("{0}, Key: {1}, Current: {2}, Previous: {3}", Reason, Key, Current, Previous);
+		}
+
+		#endregion
+	}
 }

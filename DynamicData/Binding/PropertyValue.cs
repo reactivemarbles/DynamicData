@@ -10,6 +10,11 @@ namespace DynamicData.Binding
 	/// <typeparam name="TValue">The type of the value.</typeparam>
 	public sealed class PropertyValue<TObject, TValue> : IEquatable<PropertyValue<TObject, TValue>>
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PropertyValue{TObject, TValue}"/> class.
+		/// </summary>
+		/// <param name="sender">The sender.</param>
+		/// <param name="value">The value.</param>
 		public PropertyValue(TObject sender, TValue value)
 		{
 			Sender = sender;
@@ -17,7 +22,7 @@ namespace DynamicData.Binding
 		}
 
 		/// <summary>
-		/// Sender
+		/// The Sender
 		/// </summary>
 		public TObject Sender { get; }
 
@@ -29,6 +34,11 @@ namespace DynamicData.Binding
 		#region Equality
 
 
+		/// <summary>
+		/// Equalses the specified other.
+		/// </summary>
+		/// <param name="other">The other.</param>
+		/// <returns></returns>
 		public bool Equals(PropertyValue<TObject, TValue> other)
 		{
 			if (ReferenceEquals(null, other)) return false;
@@ -36,6 +46,13 @@ namespace DynamicData.Binding
 			return EqualityComparer<TObject>.Default.Equals(Sender, other.Sender) && EqualityComparer<TValue>.Default.Equals(Value, other.Value);
 		}
 
+		/// <summary>
+		/// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+		/// </summary>
+		/// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+		/// <returns>
+		///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+		/// </returns>
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
@@ -43,6 +60,12 @@ namespace DynamicData.Binding
 			return obj is PropertyValue<TObject, TValue> && Equals((PropertyValue<TObject, TValue>)obj);
 		}
 
+		/// <summary>
+		/// Returns a hash code for this instance.
+		/// </summary>
+		/// <returns>
+		/// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+		/// </returns>
 		public override int GetHashCode()
 		{
 			unchecked
@@ -51,11 +74,27 @@ namespace DynamicData.Binding
 			}
 		}
 
+		/// <summary>
+		/// Implements the operator ==.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
 		public static bool operator ==(PropertyValue<TObject, TValue> left, PropertyValue<TObject, TValue> right)
 		{
 			return Equals(left, right);
 		}
 
+		/// <summary>
+		/// Implements the operator !=.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
 		public static bool operator !=(PropertyValue<TObject, TValue> left, PropertyValue<TObject, TValue> right)
 		{
 			return !Equals(left, right);
@@ -63,6 +102,12 @@ namespace DynamicData.Binding
 
 		#endregion
 
+		/// <summary>
+		/// Returns a <see cref="System.String" /> that represents this instance.
+		/// </summary>
+		/// <returns>
+		/// A <see cref="System.String" /> that represents this instance.
+		/// </returns>
 		public override string ToString()
 		{
 			return string.Format("{0} ({1})", Sender, Value);

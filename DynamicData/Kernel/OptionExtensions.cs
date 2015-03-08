@@ -106,7 +106,9 @@ namespace DynamicData.Kernel
 
 
 		/// <summary>
-		/// Overloads a TryGetValue of the dictionary wrapping the result as an Optional<typeparam name="&gt;TValue"></typeparam>
+		/// Overloads a TryGetValue of the dictionary wrapping the result as an Optional<typeparam>
+		///         <name>&amp;gt;TValue</name>
+		///     </typeparam>
 		/// </summary>
 		/// <typeparam name="TValue">The type of the value.</typeparam>
 		/// <typeparam name="TKey">The type of the key.</typeparam>
@@ -138,7 +140,9 @@ namespace DynamicData.Kernel
         }
 
 		/// <summary>
-		/// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam name="&gt;T"></typeparam> container
+		/// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam>
+		///         <name>&amp;gt;T</name>
+		///     </typeparam> container
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="source">The source.</param>

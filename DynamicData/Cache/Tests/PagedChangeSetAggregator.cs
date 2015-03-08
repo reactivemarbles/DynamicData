@@ -13,19 +13,21 @@ namespace DynamicData.Tests
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public class PagedChangeSetAggregator<TObject, TKey> : IDisposable
     {
-        private readonly IObservableCache<TObject, TKey> _data;
-        private readonly IDisposable _disposer;
-        private readonly IList<IPagedChangeSet<TObject, TKey>> _messages = new List<IPagedChangeSet<TObject, TKey>>();
-        private Exception _error;
+	    private readonly IDisposable _disposer;
+	    private Exception _error;
         private ChangeSummary _summary;
 
-        public PagedChangeSetAggregator(IObservable<IPagedChangeSet<TObject, TKey>> source)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PagedChangeSetAggregator{TObject, TKey}"/> class.
+		/// </summary>
+		/// <param name="source">The source.</param>
+		public PagedChangeSetAggregator(IObservable<IPagedChangeSet<TObject, TKey>> source)
         {
             var published = source.Publish();
 
             var error = published.Subscribe(updates => { }, ex => _error = ex);
-            var results = published.Subscribe(updates => _messages.Add(updates));
-            _data = published.AsObservableCache();
+            var results = published.Subscribe(updates => Messages.Add(updates));
+            Data = published.AsObservableCache();
             var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
 
             var connected = published.Connect();
@@ -40,29 +42,41 @@ namespace DynamicData.Tests
         }
 
 
-        public IObservableCache<TObject, TKey> Data
-        {
-            get { return _data; }
-        }
+		/// <summary>
+		/// The data of the steam cached inorder to apply assertions
+		/// </summary>
+		public IObservableCache<TObject, TKey> Data { get; }
 
-        public IList<IPagedChangeSet<TObject, TKey>> Messages
-        {
-            get { return _messages; }
-        }
+	    /// <summary>
+		/// Record of all received messages.
+		/// </summary>
+		/// <value>
+		/// The messages.
+		/// </value>
+		public IList<IPagedChangeSet<TObject, TKey>> Messages { get; } = new List<IPagedChangeSet<TObject, TKey>>();
 
-        public ChangeSummary Summary
-        {
-            get { return _summary; }
-        }
+	    /// <summary>
+		/// The aggregated change summary.
+		/// </summary>
+		/// <value>
+		/// The summary.
+		/// </value>
+		public ChangeSummary Summary => _summary;
 
-        public Exception Error
-        {
-            get { return _error; }
-        }
+		/// <summary>
+		/// Gets and error.
+		/// </summary>
+		/// <value>
+		/// The error.
+		/// </value>
+		public Exception Error => _error;
 
-        public void Dispose()
-        {
-            _disposer.Dispose();
-        }
-    }
+		/// <summary>
+		/// Releases unmanaged and - optionally - managed resources.
+		/// </summary>
+		public void Dispose()
+		{
+			_disposer.Dispose();
+		}
+	}
 }

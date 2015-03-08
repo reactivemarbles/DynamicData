@@ -53,17 +53,14 @@ namespace DynamicData.Controllers
         /// <value>
         /// The changed.
         /// </value>
-        public IObservable<IVirtualRequest> Changed
-        {
-            get
-            {
-                return _subject.AsObservable();
-            }
-        }
+        public IObservable<IVirtualRequest> Changed => _subject.AsObservable();
 
-        public void Dispose()
-        {
-            _subject.OnCompleted();
-        }
-    }
+		/// <summary>
+		/// Releases unmanaged and - optionally - managed resources.
+		/// </summary>
+		public void Dispose()
+		{
+			_subject.OnCompleted();
+		}
+	}
 }

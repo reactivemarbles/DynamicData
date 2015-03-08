@@ -2,7 +2,7 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
-using DynamicData.Operators;
+using DynamicData.Kernel;
 using DynamicData.PLinq;
 
 // ReSharper disable once CheckNamespace

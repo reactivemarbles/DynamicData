@@ -52,45 +52,36 @@ namespace DynamicData.Tests
         /// <value>
         /// The data.
         /// </value>
-        public IObservableCache<TObject, TKey> Data
-        {
-            get { return _data; }
-        }
+        public IObservableCache<TObject, TKey> Data => _data;
 
-        /// <summary>
+	    /// <summary>
         /// Gets the messages.
         /// </summary>
         /// <value>
         /// The messages.
         /// </value>
-        public IList<IChangeSet<TObject, TKey>> Messages
-        {
-            get { return _messages; }
-        }
+        public IList<IChangeSet<TObject, TKey>> Messages => _messages;
 
-        /// <summary>
+	    /// <summary>
         /// Gets the summary.
         /// </summary>
         /// <value>
         /// The summary.
         /// </value>
-        public ChangeSummary Summary
-        {
-            get { return _summary; }
-        }
+        public ChangeSummary Summary => _summary;
 
-        /// <summary>
+	    /// <summary>
         /// Gets the error.
         /// </summary>
         /// <value>
         /// The error.
         /// </value>
-        public Exception Error
-        {
-            get { return _error; }
-        }
+        public Exception Error => _error;
 
-        public void Dispose()
+	    /// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		public void Dispose()
         {
             _disposer.Dispose();
         }

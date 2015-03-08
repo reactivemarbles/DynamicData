@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using DynamicData.Kernel;
 using DynamicData.Operators;
 
 

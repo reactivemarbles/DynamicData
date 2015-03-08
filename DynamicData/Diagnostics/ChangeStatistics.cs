@@ -8,22 +8,12 @@ namespace DynamicData.Diagnostics
 	/// </summary>
 	public class ChangeStatistics : IEquatable<ChangeStatistics>
 	{
-		private readonly int _adds;
-		private readonly int _count;
-		private readonly int _evaluates;
-		private readonly int _index;
-		private readonly int _removes;
-		private readonly int _moves;
-		private readonly DateTime _timestamp = DateTime.Now;
-		private readonly int _updates;
-
-
 		/// <summary>
 		///     Initializes a new instance of the <see cref="T:System.Object" /> class.
 		/// </summary>
 		public ChangeStatistics()
 		{
-			_index = -1;
+			Index = -1;
 		}
 
 		/// <summary>
@@ -31,13 +21,13 @@ namespace DynamicData.Diagnostics
 		/// </summary>
 		public ChangeStatistics(int index, int adds, int updates, int removes, int evaluates, int moves, int count)
 		{
-			_index = index;
-			_adds = adds;
-			_updates = updates;
-			_removes = removes;
-			_evaluates = evaluates;
-			_moves = moves;
-			_count = count;
+			Index = index;
+			Adds = adds;
+			Updates = updates;
+			Removes = removes;
+			Evaluates = evaluates;
+			Moves = moves;
+			Count = count;
 		}
 
 		/// <summary>
@@ -46,7 +36,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The adds.
 		/// </value>
-		public int Adds => _adds;
+		public int Adds { get; }
 
 		/// <summary>
 		///     Gets the updates.
@@ -54,7 +44,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The updates.
 		/// </value>
-		public int Updates => _updates;
+		public int Updates { get; }
 
 		/// <summary>
 		///     Gets the removes.
@@ -62,7 +52,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The removes.
 		/// </value>
-		public int Removes => _removes;
+		public int Removes { get; }
 
 		/// <summary>
 		///     Gets the evaluates.
@@ -70,7 +60,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The evaluates.
 		/// </value>
-		public int Evaluates => _evaluates;
+		public int Evaluates { get; }
 
 		/// <summary>
 		///     Gets the count.
@@ -78,7 +68,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The count.
 		/// </value>
-		public int Count => _count;
+		public int Count { get; }
 
 		/// <summary>
 		///     Gets the index.
@@ -86,7 +76,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The index.
 		/// </value>
-		public int Index => _index;
+		public int Index { get; }
 
 		/// <summary>
 		///     Gets the moves.
@@ -94,7 +84,7 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The moves.
 		/// </value>
-		public int Moves => _moves;
+		public int Moves { get; }
 
 		/// <summary>
 		///     Gets the last updated.
@@ -102,46 +92,80 @@ namespace DynamicData.Diagnostics
 		/// <value>
 		///     The last updated.
 		/// </value>
-		public DateTime LastUpdated => _timestamp;
+		public DateTime LastUpdated { get; } = DateTime.Now;
 
 		#region Equality members
 
+		/// <summary>
+		/// Equalses the specified other.
+		/// </summary>
+		/// <param name="other">The other.</param>
+		/// <returns></returns>
 		public bool Equals(ChangeStatistics other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			return _adds == other._adds && _updates == other._updates && _removes == other._removes && _evaluates == other._evaluates && _moves == other._moves && _count == other._count && _index == other._index && _timestamp.Equals(other._timestamp);
+			return Adds == other.Adds && Updates == other.Updates && Removes == other.Removes && Evaluates == other.Evaluates && Moves == other.Moves && Count == other.Count && Index == other.Index && LastUpdated.Equals(other.LastUpdated);
 		}
 
+		/// <summary>
+		/// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+		/// </summary>
+		/// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+		/// <returns>
+		///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+		/// </returns>
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
 			if (obj.GetType() != this.GetType()) return false;
-			return Equals((ChangeStatistics) obj);
+			return Equals((ChangeStatistics)obj);
 		}
 
+		/// <summary>
+		/// Returns a hash code for this instance.
+		/// </summary>
+		/// <returns>
+		/// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+		/// </returns>
 		public override int GetHashCode()
 		{
 			unchecked
 			{
-				var hashCode = _adds;
-				hashCode = (hashCode*397) ^ _updates;
-				hashCode = (hashCode*397) ^ _removes;
-				hashCode = (hashCode*397) ^ _evaluates;
-				hashCode = (hashCode*397) ^ _moves;
-				hashCode = (hashCode*397) ^ _count;
-				hashCode = (hashCode*397) ^ _index;
-				hashCode = (hashCode*397) ^ _timestamp.GetHashCode();
+				var hashCode = Adds;
+				hashCode = (hashCode * 397) ^ Updates;
+				hashCode = (hashCode * 397) ^ Removes;
+				hashCode = (hashCode * 397) ^ Evaluates;
+				hashCode = (hashCode * 397) ^ Moves;
+				hashCode = (hashCode * 397) ^ Count;
+				hashCode = (hashCode * 397) ^ Index;
+				hashCode = (hashCode * 397) ^ LastUpdated.GetHashCode();
 				return hashCode;
 			}
 		}
 
+		/// <summary>
+		/// Implements the operator ==.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
 		public static bool operator ==(ChangeStatistics left, ChangeStatistics right)
 		{
 			return Equals(left, right);
 		}
 
+		/// <summary>
+		/// Implements the operator !=.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
 		public static bool operator !=(ChangeStatistics left, ChangeStatistics right)
 		{
 			return !Equals(left, right);
@@ -162,7 +186,7 @@ namespace DynamicData.Diagnostics
 			return
 				string.Format(
 					"CurrentIndex: {0}, Adds: {1}, Updates: {2}, Removes: {3}, Evaluates: {4}, Count: {5}, Timestamp: {6}",
-					_index, _adds, _updates, _removes, _evaluates, _count, _timestamp);
+					Index, Adds, Updates, Removes, Evaluates, Count, LastUpdated);
 		}
 
 		#endregion

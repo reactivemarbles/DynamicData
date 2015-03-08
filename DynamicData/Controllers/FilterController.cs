@@ -77,23 +77,20 @@ namespace DynamicData.Controllers
         /// <value>
         /// The filter changed.
         /// </value>
-        public IObservable<Func<T, bool>> FilterChanged
-        {
-            get { return _filterSubject.AsObservable(); }
-        }
+        public IObservable<Func<T, bool>> FilterChanged => _filterSubject.AsObservable();
 
-        /// <summary>
+	    /// <summary>
         /// Observable which is fired when the re-evaluate is invoked
         /// </summary>
         /// <value>
         /// The evaluate changed.
         /// </value>
-        public IObservable<Func<T, bool>> EvaluateChanged
-        {
-            get { return _reevaluteSubject.AsObservable(); }
-        }
-        
-        public void Dispose()
+        public IObservable<Func<T, bool>> EvaluateChanged => _reevaluteSubject.AsObservable();
+
+	    /// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		public void Dispose()
         {
             _filterSubject.OnCompleted();
             _reevaluteSubject.OnCompleted();

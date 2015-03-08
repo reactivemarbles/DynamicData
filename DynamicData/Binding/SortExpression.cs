@@ -8,23 +8,25 @@ namespace DynamicData.Binding
     /// <typeparam name="T"></typeparam>
     public class SortExpression<T>
     {
-        private readonly SortDirection _direction;
-        private readonly Func<T, IComparable> _expression;
-
-        public SortExpression(Func<T, IComparable> expression, SortDirection direction = SortDirection.Ascending)
+	    /// <summary>
+		/// Initializes a new instance of the <see cref="SortExpression{T}"/> class.
+		/// </summary>
+		/// <param name="expression">The expression.</param>
+		/// <param name="direction">The direction.</param>
+		public SortExpression(Func<T, IComparable> expression, SortDirection direction = SortDirection.Ascending)
         {
-            _expression = expression;
-            _direction = direction;
+            Expression = expression;
+            Direction = direction;
         }
 
-        public SortDirection Direction
-        {
-            get { return _direction; }
-        }
+		/// <summary>
+		/// Gets or sets the direction.
+		/// </summary>
+		public SortDirection Direction { get; }
 
-        public Func<T, IComparable> Expression
-        {
-            get { return _expression; }
-        }
+	    /// <summary>
+		/// Gets or sets the expression.
+		/// </summary>
+		public Func<T, IComparable> Expression { get; }
     }
 }

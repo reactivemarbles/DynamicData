@@ -3,7 +3,10 @@
 namespace DynamicData.Tests
 {
 
-    public static class TestEx
+	/// <summary>
+	/// Test extensions
+	/// </summary>
+	public static class TestEx
     {
 
         /// <summary>

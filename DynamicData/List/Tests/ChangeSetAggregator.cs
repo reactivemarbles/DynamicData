@@ -43,14 +43,31 @@ namespace DynamicData.Tests
                                               });
         }
 
-        public IObservableList<TObject> Data => _data;
-	    public IList<IChangeSet<TObject>> Messages => _messages;
-        public ChangeSummary Summary => _summary;
-        public Exception Error => _error;
+		/// <summary>
+		/// A clone of the daata
+		/// </summary>
+		public IObservableList<TObject> Data => _data;
 
-	    public void Dispose()
-        {
-            _disposer.Dispose();
-        }
-    }
+		/// <summary>
+		/// All message received
+		/// </summary>
+		public IList<IChangeSet<TObject>> Messages => _messages;
+		/// <summary>
+		/// Gets or sets the summary.
+		/// </summary>
+		public ChangeSummary Summary => _summary;
+	
+		/// <summary>
+		/// Gets or sets the error.
+		/// </summary>
+		public Exception Error => _error;
+
+		/// <summary>
+		/// Releases unmanaged and - optionally - managed resources.
+		/// </summary>
+		public void Dispose()
+		{
+			_disposer.Dispose();
+		}
+	}
 }

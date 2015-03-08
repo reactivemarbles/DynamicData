@@ -6,30 +6,24 @@ namespace DynamicData
 {
     internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>
     {
-        private readonly IKeyValueCollection<TObject, TKey> _sortedItems;
-        private readonly IPageResponse _response;
-
-        public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
+	    public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
             : base(updates)
         {
-            _response = response;
-            _sortedItems = sortedItems;
+            Response = response;
+            SortedItems = sortedItems;
         }
 
-        public IKeyValueCollection<TObject, TKey> SortedItems
-        {
-            get { return _sortedItems; }
-        }
+        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
+		public IPageResponse Response { get; }
 
-        public IPageResponse Response
-        {
-            get { return _response; }
-        }
+		#region Equality Members
 
-
-        #region Equality Members
-
-        protected bool Equals(PagedChangeSet<TObject, TKey> other)
+		/// <summary>
+		/// Equalses the specified other.
+		/// </summary>
+		/// <param name="other">The other.</param>
+		/// <returns></returns>
+		public bool Equals(PagedChangeSet<TObject, TKey> other)
         {
             return SortedItems.SequenceEqual(other.SortedItems);
             // return Equals(this.SortedItems, other.SortedItems);
@@ -46,7 +40,7 @@ namespace DynamicData
 
         public override int GetHashCode()
         {
-            return (SortedItems != null ? SortedItems.GetHashCode() : 0);
+            return SortedItems?.GetHashCode() ?? 0;
         }
 
         #endregion
@@ -59,7 +53,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0}, Response: {1}, SortedItems: {2}", base.ToString(), _response, _sortedItems);
+            return string.Format("{0}, Response: {1}, SortedItems: {2}", base.ToString(), Response, SortedItems);
         }
     }
 }

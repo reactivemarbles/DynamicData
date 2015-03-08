@@ -59,6 +59,10 @@ namespace DynamicData
 			Add(new Change<T>(reason, current, previous));
 		}
 
+		/// <summary>
+		/// Adds the specified item.
+		/// </summary>
+		/// <param name="item">The item.</param>
 		public void Add(Change<T> item)
 		{
 			switch (item.Reason)

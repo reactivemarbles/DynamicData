@@ -20,36 +20,41 @@ namespace DynamicData
         Remove
     }
 
-    public struct AggregateItem<TObject, TKey>
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <typeparam name="TObject">The type of the object.</typeparam>
+	/// <typeparam name="TKey">The type of the key.</typeparam>
+	public struct AggregateItem<TObject, TKey>
     {
- 
-        private readonly AggregateType _type;
-        private readonly TObject _item;
-        private readonly TKey _key;
-        
-        public AggregateItem(AggregateType type, TObject item, TKey key)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="AggregateItem{TObject, TKey}"/> struct.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <param name="item">The item.</param>
+		/// <param name="key">The key.</param>
+		public AggregateItem(AggregateType type, TObject item, TKey key)
         {
-            _type = type;
-            _item = item;
-            _key = key;
+            Type = type;
+            Item = item;
+            Key = key;
         }
 
-        public TKey Key
-        {
-            get { return _key; }
-        }
+		/// <summary>
+		/// Gets the key.
+		/// </summary>
+		public TKey Key { get; }
 
-        public AggregateType Type
-        {
-            get { return _type; }
-        }
+		/// <summary>
+		/// Gets the type.
+		/// </summary>
+		public AggregateType Type { get; }
 
 
-        public TObject Item
-        {
-            get { return _item; }
-        }
-
+		/// <summary>
+		/// Gets the item.
+		/// </summary>
+		public TObject Item { get; }
     }
 
 

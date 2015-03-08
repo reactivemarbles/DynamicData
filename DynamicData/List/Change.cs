@@ -10,17 +10,9 @@ namespace DynamicData
 	/// <typeparam name="T"></typeparam>
 	public struct Change<T> : IEquatable<Change<T>>
 	{
-		#region Fields
-
-		private readonly T _current;
-
-		public readonly static Change<T> Empty = new Change<T>();
-
-		#endregion
 
 		#region Construction
-
-
+		
 		/// <summary>
 		/// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
 		/// </summary>
@@ -55,7 +47,7 @@ namespace DynamicData
 			if (previousIndex < 0)
 				throw new ArgumentException("PreviousIndex must be greater than or equal to zero");
 
-			_current = current;
+			Current = current;
 			Previous = Optional.None<T>();
 			Reason = ChangeReason.Moved;
 			CurrentIndex = currentIndex;
@@ -79,7 +71,7 @@ namespace DynamicData
 		public Change(ChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
 			: this()
 		{
-			_current = current;
+			Current = current;
 			Previous = previous;
 			Reason = reason;
 			CurrentIndex = currentIndex;
@@ -110,7 +102,7 @@ namespace DynamicData
 		/// <summary>
 		/// The item which has changed
 		/// </summary>
-		public T Current => _current;
+		public T Current { get; }
 
 		/// <summary>
 		/// The current index
@@ -157,7 +149,7 @@ namespace DynamicData
 		/// <returns></returns>
 		public bool Equals(Change<T> other)
 		{
-			return Reason == other.Reason && EqualityComparer<T>.Default.Equals(_current, other._current) && Previous.Equals(other.Previous);
+			return Reason == other.Reason && EqualityComparer<T>.Default.Equals(Current, other.Current) && Previous.Equals(other.Previous);
 		}
 
 		/// <summary>
@@ -184,7 +176,7 @@ namespace DynamicData
 			unchecked
 			{
 				var hashCode = (int)Reason;
-				hashCode = (hashCode * 397) ^ EqualityComparer<T>.Default.GetHashCode(_current);
+				hashCode = (hashCode * 397) ^ EqualityComparer<T>.Default.GetHashCode(Current);
 				hashCode = (hashCode * 397) ^ Previous.GetHashCode();
 				return hashCode;
 			}

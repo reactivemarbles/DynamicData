@@ -45,6 +45,24 @@ namespace DynamicData.Binding
 		}
 
 
+		/// <summary>
+		/// Observes property changed for the specified object
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		public static IObservable<string> ObservePropertyChanges<T>(this T source)
+			where T : INotifyPropertyChanged
+		{
+
+			return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+				(
+					handler => source.PropertyChanged += handler,
+					handler => source.PropertyChanged -= handler
+				)
+				.Select(x => x.EventArgs.PropertyName);
+		}
+
 
 		private static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
 		{
@@ -89,7 +107,5 @@ namespace DynamicData.Binding
 
 			return memberExpression.Member;
 		}
-
-
 	}
 }

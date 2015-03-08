@@ -30,12 +30,12 @@ namespace DynamicData.Controllers
             _regroupSubject.OnNext(Unit.Default);
         }
 
-        internal IObservable<Unit> Regrouped
-        {
-            get { return _regroupSubject.AsObservable(); }
-        }
+        internal IObservable<Unit> Regrouped => _regroupSubject.AsObservable();
 
-        public void Dispose()
+	    /// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		public void Dispose()
         {
            _cleanUp.Dispose();
         }

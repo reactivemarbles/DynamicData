@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Operators
+namespace DynamicData.Kernel
 {
     /// <summary>
     /// An error container used to report errors from within dynamic data operators
@@ -10,64 +10,70 @@ namespace DynamicData.Operators
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public sealed class Error<TObject, TKey>: IKeyValue<TObject,TKey>, IEquatable<Error<TObject, TKey>>
     {
-        private readonly TKey _key;
-        private readonly TObject _value;
-        private readonly Exception _exception;
-
-        /// <summary>
+	    /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object"/> class.
         /// </summary>
         public Error(Exception exception, TObject value, TKey key)
         {
-            _exception = exception;
-            _value = value;
-            _key = key;
+            Exception = exception;
+            Value = value;
+            Key = key;
         }
 
         /// <summary>
         /// Gets the key.
         /// </summary>
-        public TKey Key
-        {
-            get { return _key; }
-        }
+        public TKey Key { get; }
 
-        /// <summary>
+	    /// <summary>
         /// Gets the object.
         /// </summary>
-        public TObject Value
-        {
-            get { return _value; }
-        }
+        public TObject Value { get; }
 
-        /// <summary>
+	    /// <summary>
         /// The exception.
         /// </summary>
-        public Exception Exception
-        {
-            get { return _exception; }
-        }
+        public Exception Exception { get; }
 
+		#region Equality members
 
-
-        #region Equality members
-
-        public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right)
+		/// <summary>
+		/// Implements the operator ==.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
+		public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right)
         {
             return Equals(left, right);
         }
 
-        public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right)
+		/// <summary>
+		/// Implements the operator !=.
+		/// </summary>
+		/// <param name="left">The left.</param>
+		/// <param name="right">The right.</param>
+		/// <returns>
+		/// The result of the operator.
+		/// </returns>
+		public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right)
         {
             return !Equals(left, right);
         }
 
 
-        public bool Equals(Error<TObject, TKey> other)
+		/// <summary>
+		/// Equalses the specified other.
+		/// </summary>
+		/// <param name="other">The other.</param>
+		/// <returns></returns>
+		public bool Equals(Error<TObject, TKey> other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return EqualityComparer<TKey>.Default.Equals(_key, other._key) && EqualityComparer<TObject>.Default.Equals(_value, other._value) && Equals(_exception, other._exception);
+            return EqualityComparer<TKey>.Default.Equals(Key, other.Key) && EqualityComparer<TObject>.Default.Equals(Value, other.Value) && Equals(Exception, other.Exception);
         }
 
         /// <summary>
@@ -94,9 +100,9 @@ namespace DynamicData.Operators
         {
             unchecked
             {
-                int hashCode = EqualityComparer<TKey>.Default.GetHashCode(_key);
-                hashCode = (hashCode*397) ^ EqualityComparer<TObject>.Default.GetHashCode(_value);
-                hashCode = (hashCode*397) ^ (_exception != null ? _exception.GetHashCode() : 0);
+                int hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
+                hashCode = (hashCode*397) ^ EqualityComparer<TObject>.Default.GetHashCode(Value);
+                hashCode = (hashCode*397) ^ (Exception != null ? Exception.GetHashCode() : 0);
                 return hashCode;
             }
         }

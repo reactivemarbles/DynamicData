@@ -53,7 +53,8 @@ namespace DynamicData
 
 		public void Move(T item, int destination)
 		{
-			
+			var index = IndexOf(item);
+			Move(index,destination);
 		}
 
 

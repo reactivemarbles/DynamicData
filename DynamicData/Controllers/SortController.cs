@@ -77,24 +77,21 @@ namespace DynamicData.Controllers
         /// <value>
         /// The changed.
         /// </value>
-        public IObservable<IComparer<T>> ComparerChanged
-        {
-            get { return _sortSubject.AsObservable(); }
-        }
+        public IObservable<IComparer<T>> ComparerChanged => _sortSubject.AsObservable();
 
-        /// <summary>
+	    /// <summary>
         /// Observable which is fired when the sort comparer is changed
         /// </summary>
         /// <value>
         /// The changed.
         /// </value>
-        public IObservable<Unit> SortAgain
-        {
-            get { return _resortSubject.AsObservable(); }
-        }
-        
+        public IObservable<Unit> SortAgain => _resortSubject.AsObservable();
 
-        public void Dispose()
+
+	    /// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		public void Dispose()
         {
             _sortSubject.OnCompleted();
             _resortSubject.OnCompleted();

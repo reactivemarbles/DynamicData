@@ -5,6 +5,9 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Kernel
 {
+	/// <summary>
+	/// 
+	/// </summary>
 	public static class InternalEx
     {
 
@@ -14,19 +17,8 @@ namespace DynamicData.Kernel
         {
             return string.Format(@this, parameters);
         }
-        
 
-        public static IObservable<string> ObserveChanges<T>(this T source)
-            where T: INotifyPropertyChanged
-        {
 
-            return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
-                (
-                    handler => source.PropertyChanged += handler,
-                    handler => source.PropertyChanged -= handler
-                )
-                .Select(x => x.EventArgs.PropertyName);
-        }
 
        /// <summary>
         /// Retries the with back off.

@@ -15,6 +15,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _results = new ChangeSetAggregator<Person, string>(_source.Connect(p => p.Age > 20));
+
         }
 
         [TearDown]

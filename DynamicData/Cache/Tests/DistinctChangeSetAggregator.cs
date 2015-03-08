@@ -63,9 +63,12 @@ namespace DynamicData.Tests
         /// </value>
         public Exception Error => _error;
 
-	    public void Dispose()
-        {
-            _disposer.Dispose();
-        }
-    }
+		/// <summary>
+		/// Releases unmanaged and - optionally - managed resources.
+		/// </summary>
+		public void Dispose()
+		{
+			_disposer.Dispose();
+		}
+	}
 }

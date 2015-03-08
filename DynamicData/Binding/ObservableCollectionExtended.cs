@@ -82,7 +82,11 @@ namespace DynamicData.Binding
             });
         }
 
-        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+		/// <summary>
+		/// Raises the <see cref="E:PropertyChanged" /> event.
+		/// </summary>
+		/// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+		protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             if (_suspendCount && e.PropertyName == "Count")
                 return;
@@ -90,7 +94,11 @@ namespace DynamicData.Binding
             base.OnPropertyChanged(e);
         }
 
-        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+		/// <summary>
+		/// Raises the <see cref="E:CollectionChanged" /> event.
+		/// </summary>
+		/// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
+		protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             if (_suspendNotifications) return;
             base.OnCollectionChanged(e);

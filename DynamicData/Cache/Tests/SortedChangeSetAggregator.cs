@@ -18,9 +18,7 @@ namespace DynamicData.Tests
         private Exception _error;
         private readonly IDisposable _disposer;
 
-        private readonly IObservableCache<TObject, TKey> _data;
-
-        /// <summary>
+	    /// <summary>
         /// Initializes a new instance of the <see cref="SortedChangeSetAggregator{TObject, TKey}"/> class.
         /// </summary>
         /// <param name="source">The source.</param>
@@ -30,7 +28,7 @@ namespace DynamicData.Tests
 
             var error = published.Subscribe(updates => { }, ex => _error = ex);
             var results = published.Subscribe(updates => _messages.Add(updates));
-            _data = published.AsObservableCache();
+            Data = published.AsObservableCache();
             var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
 
 
@@ -44,19 +42,40 @@ namespace DynamicData.Tests
             });
         }
 
+		/// <summary>
+		/// The data of the steam cached inorder to apply assertions
+		/// </summary>
+		public IObservableCache<TObject, TKey> Data { get; }
+
+		/// <summary>
+		/// Record of all received messages.
+		/// </summary>
+		/// <value>
+		/// The messages.
+		/// </value>
+		public IList<ISortedChangeSet<TObject, TKey>> Messages => _messages;
+
+		/// <summary>
+		/// The aggregated change summary.
+		/// </summary>
+		/// <value>
+		/// The summary.
+		/// </value>
+		public ChangeSummary Summary => _summary;
 
 
-        public IObservableCache<TObject, TKey> Data => _data;
+		/// <summary>
+		/// Gets and error.
+		/// </summary>
 
-	    public IList<ISortedChangeSet<TObject, TKey>> Messages => _messages;
+		public Exception Error => _error;
 
-	    public ChangeSummary Summary => _summary;
-
-	    public Exception Error => _error;
-
-	    public void Dispose()
-        {
-            _disposer.Dispose();
-        }
-    }
+		/// <summary>
+		/// Releases unmanaged and - optionally - managed resources.
+		/// </summary>
+		public void Dispose()
+		{
+			_disposer.Dispose();
+		}
+	}
 }

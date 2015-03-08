@@ -9,10 +9,7 @@ namespace DynamicData
     /// </summary>
     public sealed class PageRequest : IPageRequest, IEquatable<IPageRequest>
     {
-        private readonly int _page=1;
-        private readonly int _size=25;
-
-        /// <summary>
+	    /// <summary>
         /// The default page request
         /// </summary>
         public readonly static IPageRequest Default = new PageRequest();
@@ -30,8 +27,8 @@ namespace DynamicData
         {
             if (page < 0) throw new ArgumentException("Page must be positive");
             if (size < 0) throw new ArgumentException("Size must be positive");
-            _page = page;
-            _size = size;
+            Page = page;
+            Size = size;
         }
 
         /// <summary>
@@ -45,34 +42,33 @@ namespace DynamicData
         /// <summary>
         /// The page to move to
         /// </summary>
-        public int Page
-        {
-            get { return _page; }
-        }
+        public int Page { get; } = 1;
 
-        /// <summary>
+	    /// <summary>
         /// The page size
         /// </summary>
-        public int Size
-        {
-            get { return _size; }
-        }
+        public int Size { get; } = 25;
 
-        #region Equality members
+		#region Equality members
 
-        public bool Equals(IPageRequest other)
-        {
-            return DefaultComparer.Equals(this, other);
-        }
+		/// <summary>
+		/// Equalses the specified other.
+		/// </summary>
+		/// <param name="other">The other.</param>
+		/// <returns></returns>
+		public bool Equals(IPageRequest other)
+		{
+			return DefaultComparer.Equals(this, other);
+		}
 
-        /// <summary>
-        /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
-        /// </summary>
-        /// <returns>
-        /// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
-        /// </returns>
-        /// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. </param>
-        public override bool Equals(object obj)
+		/// <summary>
+		/// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+		/// </summary>
+		/// <returns>
+		/// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
+		/// </returns>
+		/// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. </param>
+		public override bool Equals(object obj)
         {
             if (!(obj is IPageRequest))
                 return false;
@@ -89,7 +85,7 @@ namespace DynamicData
         {
             unchecked
             {
-                return (_size*397) ^ _page;
+                return (Size*397) ^ Page;
             }
         }
 
@@ -125,12 +121,9 @@ namespace DynamicData
         /// <value>
         /// The default comparer.
         /// </value>
-        public IEqualityComparer<IPageRequest> DefaultComparer
-        {
-            get { return PageSizeComparerInstance; }
-        }
+        public IEqualityComparer<IPageRequest> DefaultComparer => PageSizeComparerInstance;
 
-        #endregion
+	    #endregion
 
         /// <summary>
         /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
@@ -140,7 +133,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("Page: {0}, Size: {1}", _page, _size);
+            return string.Format("Page: {0}, Size: {1}", Page, Size);
         }
     }
 }
