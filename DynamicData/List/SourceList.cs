@@ -21,6 +21,10 @@ namespace DynamicData
 		private readonly IDisposable _disposer;
 		private readonly object _locker = new object();
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SourceList{T}"/> class.
+		/// </summary>
+		/// <param name="source">The source.</param>
 		public SourceList(IObservable<IChangeSet<T>> source = null)
 		{
 			_readerWriter = new ReaderWriter<T>();
@@ -73,19 +77,50 @@ namespace DynamicData
 			}
 		}
 
+		/// <summary>
+		/// Lookups the item using the specified equality comparer
+		/// </summary>
+		/// <param name="item">The item.</param>
+		/// <param name="equalityComparer">The equality comparer.</param>
+		/// <returns>
+		/// An ItemWithIndex container which contains the item with it's index
+		/// </returns>
 		public Optional<ItemWithIndex<T>> Lookup(T item, IEqualityComparer<T> equalityComparer = null)
 		{
 			return _readerWriter.Items.Lookup(item, equalityComparer);
 		}
 
+		/// <summary>
+		/// Gets or sets the items.
+		/// </summary>
+		/// <value>
+		/// The items.
+		/// </value>
 		public IEnumerable<T> Items => _readerWriter.Items;
 
+		/// <summary>
+		/// Gets or sets the count.
+		/// </summary>
+		/// <value>
+		/// The count.
+		/// </value>
 		public int Count => _readerWriter.Count;
 
 
+		/// <summary>
+		/// Gets or sets the count changed.
+		/// </summary>
+		/// <value>
+		/// The count changed.
+		/// </value>
 		public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
 
 
+		/// <summary>
+		/// Connects using the specified predicate.
+		/// </summary>
+		/// <param name="predicate">The predicate.</param>
+		/// <returns></returns>
 		public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null)
 		{
 			return Observable.Create<IChangeSet<T>>
@@ -105,7 +140,7 @@ namespace DynamicData
 						}
 					});
 		}
-		
+
 		private IChangeSet<T> GetInitialUpdates(Func<T, bool> predicate = null)
 		{
 			var items = predicate == null
@@ -116,6 +151,9 @@ namespace DynamicData
 			return new ChangeSet<T>(initial);
 		}
 
+		/// <summary>
+		/// Releases unmanaged and - optionally - managed resources.
+		/// </summary>
 		public void Dispose()
 		{
 			_disposer.Dispose();
