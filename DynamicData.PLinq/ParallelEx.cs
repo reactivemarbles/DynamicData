@@ -9,7 +9,7 @@ namespace DynamicData
     /// <summary>
     /// Parallelisation extensions for DynamicData
     /// </summary>
-    public static class ParallelEx
+    internal static class ParallelEx
     {
         #region Parallelisation
 
