@@ -95,6 +95,7 @@ namespace DynamicData.Tests.CacheFixtures
               subscription.Dispose();
             _source.Dispose();
 
+            Assert.IsFalse(errored, "Should be no error");
             Assert.IsTrue(called, "Subscription has not been invoked");
             Assert.IsTrue(completed, "Completed has not been invoked");
         }

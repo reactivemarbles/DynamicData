@@ -5,7 +5,7 @@ namespace DynamicData.PLinq
     /// </summary>
     public class ParallelisationOptions
     {
-        private readonly ParallelType _type = ParallelType.None;
+        private readonly ParallelType _type;
         private readonly int  _threshold=0;
 
         /// <summary>
