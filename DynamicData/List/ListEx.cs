@@ -230,15 +230,22 @@ namespace DynamicData
 
 			changes.ForEach(change =>
 			{
-
+				bool hasIndex = change.CurrentIndex >= 0;
 				switch (change.Reason)
 				{
 					case ChangeReason.Add:
-						source.Insert(change.CurrentIndex, change.Current);
+						if (hasIndex)
+						{
+							source.Insert(change.CurrentIndex, change.Current);
+						}
+						else
+						{
+							source.Add(change.Current);
+						}
 						break;
 					case ChangeReason.Update:
 						{
-							if (change.CurrentIndex == change.PreviousIndex)
+							if (hasIndex && change.CurrentIndex == change.PreviousIndex)
 							{
 								source[change.CurrentIndex] = change.Current;
 							}
@@ -251,12 +258,32 @@ namespace DynamicData
 						}
 						break;
 					case ChangeReason.Remove:
-						source.RemoveAt(change.CurrentIndex);
+						if (hasIndex)
+						{
+							source.RemoveAt(change.CurrentIndex);
+						}
+						else
+						{
+							source.Remove(change.Current);
+						}
+						
 						break;
 					case ChangeReason.Moved:
-						//check this works whether the index is 
-						source.RemoveAt(change.PreviousIndex);
-						source.Insert(change.CurrentIndex, change.Current);
+						if (!hasIndex)
+							throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+
+						var collection = source as ChangeAwareCollection<T>;
+						if (collection != null)
+						{
+							collection.Move(change.PreviousIndex, change.CurrentIndex);
+                        }
+						else
+						{
+							//check this works whether the index is 
+							source.RemoveAt(change.PreviousIndex);
+							source.Insert(change.CurrentIndex, change.Current);
+						}
+
 						break;
 				}
 			});

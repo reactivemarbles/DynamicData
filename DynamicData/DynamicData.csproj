@@ -135,6 +135,7 @@
     <Compile Include="List\Internal\AnomynousObservableList.cs" />
     <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeSet.cs" />
+    <Compile Include="List\Internal\MutableFilter.cs" />
     <Compile Include="List\Internal\OnBeingRemoved.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\ListEx.cs" />

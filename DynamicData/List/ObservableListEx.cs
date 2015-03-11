@@ -6,6 +6,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
 
@@ -59,8 +60,26 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (predicate == null) throw new ArgumentNullException("predicate");
-			var filter = new ImmutableFilter<T>(predicate);
-			return source.Select(filter.Process).NotEmpty();
+			return new ImmutableFilter<T>(source, predicate).Run();
+		}
+
+		/// <summary>
+		/// Filters the specified filter controller.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="filterController">The filter controller.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// filterController
+		/// </exception>
+		public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, FilterController<T> filterController)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (filterController == null) throw new ArgumentNullException("filterController");
+			return new MutableFilter<T>(source, filterController).Run();
 		}
 
 		/// <summary>

@@ -27,7 +27,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <CodeAnalysisIgnoreGeneratedCode>true</CodeAnalysisIgnoreGeneratedCode>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
@@ -144,6 +144,7 @@
     <Compile Include="ListFixtures\DeferUntilLoadedFixture.cs" />
     <Compile Include="ListFixtures\DisposeManyFixture.cs" />
     <Compile Include="ListFixtures\DistinctValuesFixture.cs" />
+    <Compile Include="ListFixtures\FilterControllerFixture.cs" />
     <Compile Include="ListFixtures\FilterFixture.cs" />
     <Compile Include="ListFixtures\GroupFixture.cs" />
     <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
