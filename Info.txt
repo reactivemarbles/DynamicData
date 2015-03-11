@@ -1,1 +1,1 @@
-This is a branch 
+Version 4.0 of dynamic data will introduce an observable list and possibly an observable hash set

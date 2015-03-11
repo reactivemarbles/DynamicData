@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Kernel;
 using DynamicData.PLinq;
 
 namespace DynamicData
@@ -9,7 +8,7 @@ namespace DynamicData
     /// <summary>
     /// Parallelisation extensions for DynamicData
     /// </summary>
-    public static class ParallelEx
+    internal static class ParallelEx
     {
         #region Parallelisation
 
