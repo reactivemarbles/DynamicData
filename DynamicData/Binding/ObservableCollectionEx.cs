@@ -20,11 +20,56 @@ namespace DynamicData.Binding
         /// <param name="source">The source.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<TObject, int>> ToObservableChangeSet<TObject>(this  ObservableCollection<TObject> source)
+        public static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this  ObservableCollection<TObject> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            return source.ToObservableChangeSet(t => t.GetHashCode());
-        }
+			Func<ChangeSet<TObject>> initialChangeSet = () =>
+			{
+				var items = source.Select((t,index) => new Change<TObject>(ChangeReason.Add, t, index));
+				return new ChangeSet<TObject>(items);
+			};
+
+			return Observable
+				.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+							   h => source.CollectionChanged += h,
+							   h => source.CollectionChanged -= h)
+			   .Select
+				(
+					args =>
+					{
+						var changes = args.EventArgs;
+
+						switch (changes.Action)
+						{
+							case NotifyCollectionChangedAction.Add:
+								return changes.NewItems.OfType<TObject>()
+									.Select((t,index) => new Change<TObject>(ChangeReason.Add, t, index + changes.NewStartingIndex));
+
+							case NotifyCollectionChangedAction.Remove:
+								return changes.OldItems.OfType<TObject>()
+									.Select((t, index) => new Change<TObject>(ChangeReason.Remove, t, index + changes.OldStartingIndex));
+
+							case NotifyCollectionChangedAction.Replace:
+								{
+									return changes.NewItems.OfType<TObject>()
+													.Select((t, idx) =>
+									{
+										var old = changes.OldItems[idx];
+										return new Change<TObject>(ChangeReason.Update, t, (TObject)old, idx, idx);
+									});
+								}
+							case NotifyCollectionChangedAction.Reset:
+								{
+									//Clear all from the cache and reload
+									var removes = source.Select((t, index) => new Change<TObject>(ChangeReason.Remove, t, index)).Reverse();
+									return removes.Concat(initialChangeSet());
+								}
+							default:
+								return null;
+						}
+					})
+				.Where(updates => updates != null)
+				.Select(updates => (IChangeSet<TObject>)new ChangeSet<TObject>(updates));
+		}
 
         /// <summary>
         /// Convert an observable collection into a dynamic stream of change sets
