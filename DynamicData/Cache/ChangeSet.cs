@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DynamicData.Kernel;
 
 namespace DynamicData
@@ -9,9 +10,11 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public  class ChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>
-    {
-	    private int _adds;
+    public  class ChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>, IChangeSet
+	{
+		private List<Change<TObject, TKey>> Items { get; } = new List<Change<TObject, TKey>>();
+
+		private int _adds;
         private int _removes;
         private int _evaluates;
         private int _updates;
@@ -35,10 +38,8 @@ namespace DynamicData
 		/// <param name="items">The items.</param>
 		public ChangeSet(IEnumerable<Change<TObject, TKey>> items)
         {
-            foreach (var update in items)
-            {
-                Add(update);
-            }
+			Items  = items.ToList();
+			Items.ForEach(change=>Add(change,true));
         }
 
 		/// <summary>
@@ -73,35 +74,52 @@ namespace DynamicData
             Add(new Change<TObject, TKey>(reason, key, current, previous));
         }
 
+
+	    public void Add(Change<TObject, TKey> item)
+	    {
+			Add(item,false);
+	    }
+
 		/// <summary>
 		/// Adds the specified item.
 		/// </summary>
 		/// <param name="item">The item.</param>
-		public void Add(Change<TObject, TKey> item)
-        {
-            switch (item.Reason)
-            {
-                case ChangeReason.Add:
-                    _adds++;
-                    break;
-                case ChangeReason.Update:
-                    _updates++;
-                    break;
-                case ChangeReason.Remove:
-                    _removes++;
-                    break;
-                case ChangeReason.Evaluate:
-                    _evaluates++;
-                    break;
-                case ChangeReason.Moved:
-                    _moves++;
-                    break;
-            }
-            Items.Add(item);
-        }
-        
-        private List<Change<TObject, TKey>> Items { get; } = new List<Change<TObject, TKey>>();
+		/// <param name="countOnly">set to true if the item has already been added</param>
+		public void Add(Change<TObject, TKey> item, bool countOnly)
+		{
+			switch (item.Reason)
+			{
+				case ChangeReason.Add:
+					_adds++;
+					break;
+				case ChangeReason.Update:
+					_updates++;
+					break;
+				case ChangeReason.Remove:
+					_removes++;
+					break;
+				case ChangeReason.Evaluate:
+					_evaluates++;
+					break;
+				case ChangeReason.Moved:
+					_moves++;
+					break;
+			}
+			if (!countOnly) Items.Add(item);
+		}
 
+
+		/// <summary>
+		/// Gets or sets the capacity.
+		/// </summary>
+		/// <value>
+		/// The capacity.
+		/// </value>
+		public int Capacity
+		{
+			get { return Items.Capacity; }
+			set { Items.Capacity = value; }
+		}
 
 		/// <summary>
 		///     The total update count

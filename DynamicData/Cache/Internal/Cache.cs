@@ -6,12 +6,17 @@ namespace DynamicData.Internal
 {
 	internal class Cache<TObject, TKey> : ICache<TObject, TKey>
 	{
-		private IDictionary<TKey, TObject> _data;
+		private Dictionary<TKey, TObject> _data;
+
+		public int Count => _data.Count;
+		public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
+		public IEnumerable<TObject> Items => _data.Values;
+		public IEnumerable<TKey> Keys => _data.Keys;
 
 		public Cache()
 		{
 			_data = new Dictionary<TKey, TObject>();
-		}
+        }
 
 		public void Clone(IChangeSet<TObject, TKey> changes)
 		{
@@ -59,12 +64,6 @@ namespace DynamicData.Internal
 			_data.Clear();
 		}
 
-		public int Count => _data.Count;
 
-		public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
-
-		public IEnumerable<TObject> Items => _data.Values;
-
-		public IEnumerable<TKey> Keys => _data.Keys;
 	}
 }

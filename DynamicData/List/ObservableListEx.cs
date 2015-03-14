@@ -6,6 +6,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Annotations;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
@@ -17,6 +18,36 @@ namespace DynamicData
 	/// </summary>
 	public static class ObservableListEx
 	{
+
+		#region Populate into an observable cache
+
+
+		/// <summary>
+		/// list.
+		/// </summary>
+		/// <typeparam name="T">The type of the object.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="detination">The detination.</param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentNullException">
+		/// source
+		/// or
+		/// detination
+		/// </exception>
+		/// <exception cref="System.ArgumentNullException">source
+		/// or
+		/// detination</exception>
+		public static IDisposable PopulateInto<T>([NotNull] this IObservable<IChangeSet<T>> source,[NotNull] ISourceList<T> detination)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (detination == null) throw new ArgumentNullException("detination");
+
+			return source.Subscribe(changes => detination.Edit(updater => updater.Clone(changes)));
+		}
+
+
+		#endregion
+
 		/// <summary>
 		/// Converts the source list to an read only observable list
 		/// </summary>

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using DynamicData.Annotations;
 using DynamicData.Kernel;
 
 namespace DynamicData
@@ -151,7 +153,7 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentNullException">source
 		/// or
 		/// items</exception>
-		public static void Replace<T>(this IList<T> source, T original,T replacewith)
+		public static void Replace<T>(this IList<T> source, [NotNull]  T original, [NotNull] T replacewith)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (original == null) throw new ArgumentNullException("original");
@@ -160,11 +162,36 @@ namespace DynamicData
 			var index = source.IndexOf(original);
 			source[index] = replacewith;
 		}
-		
+
+		/// <summary>
+		/// Ensures the collection has enough capacity where capacity
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The enumerable.</param>
+		/// <param name="changes">The changes.</param>
+		/// <exception cref="ArgumentNullException">enumerable</exception>
+		public static void EnsureCapacityFor<T>(this IEnumerable<T> source, [NotNull] IChangeSet<T> changes)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (changes == null) throw new ArgumentNullException("changes");
+			if (source is List<T>)
+			{
+				var list = (List<T>)source;
+				list.Capacity = list.Count + changes.Adds;
+			}
+			else if (source is IChangeSet)
+			{
+				var original = (IChangeSet)source;
+				original.Capacity = original.Count + changes.Count;
+			}
+		}
+
 		#endregion
 
 		#region Operators
-		
+
+
+
 		/// <summary>
 		/// Clones the source list with the specified change set, transforming the items using the specified factory
 		/// </summary>
@@ -228,7 +255,9 @@ namespace DynamicData
 			if (source == null) throw new ArgumentNullException("source");
 			if (changes == null) throw new ArgumentNullException("changes");
 
-			changes.ForEach(change =>
+			source.EnsureCapacityFor(changes);
+
+            changes.ForEach(change =>
 			{
 				bool hasIndex = change.CurrentIndex >= 0;
 				switch (change.Reason)

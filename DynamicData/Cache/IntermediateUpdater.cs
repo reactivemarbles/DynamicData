@@ -10,29 +10,20 @@ namespace DynamicData
         private readonly ICache<TObject, TKey> _cache;
         private  ChangeSet<TObject, TKey> _queue = new ChangeSet<TObject, TKey>();
 
+		public IEnumerable<TObject> Items => _cache.Items;
+		public IEnumerable<TKey> Keys => _cache.Keys;
+		public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
+		public int Count => _cache.Count;
 
-        public IntermediateUpdater(ICache<TObject, TKey> cache)
+		public IntermediateUpdater(ICache<TObject, TKey> cache)
         {
             if (cache == null) throw new ArgumentNullException("cache");
             _cache = cache;
         }
 
-        public IEnumerable<TObject> Items
-        {
-            get { return _cache.Items; }
-        }
 
-        public IEnumerable<TKey> Keys
-        {
-            get { return _cache.Keys; }
-        }
-        
-        public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues
-        {
-            get { return _cache.KeyValues; }
-        }
 
-        public Optional<TObject> Lookup(TKey key)
+		public Optional<TObject> Lookup(TKey key)
         {
             var item = _cache.Lookup(key);
             return item.HasValue ? item.Value : Optional.None<TObject>();
@@ -119,14 +110,12 @@ namespace DynamicData
             _cache.Clear();
         }
 
-        public int Count
-        {
-            get { return _cache.Count; }
-        }
 
 
-        public void Update(IChangeSet<TObject, TKey> changes)
+
+	    public void Update(IChangeSet<TObject, TKey> changes)
         {
+			
             if (changes == null) throw new ArgumentNullException("changes");
             foreach (var item in changes)
             {

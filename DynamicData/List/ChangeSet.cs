@@ -1,14 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DynamicData.Kernel;
 
 namespace DynamicData
 {
+
+
 	/// <summary>
 	/// A set of changes which has occured since the last reported changes
 	/// </summary>
 	/// <typeparam name="T">The type of the object.</typeparam>
-	public class ChangeSet<T> : IChangeSet<T>
+	public class ChangeSet<T> : IChangeSet<T>, IChangeSet
 	{
 		#region Fields
 
@@ -41,22 +44,8 @@ namespace DynamicData
 		/// <param name="items">The items.</param>
 		public ChangeSet(IEnumerable<Change<T>> items)
 		{
-			foreach (var update in items)
-			{
-				Add(update);
-			}
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ChangeSet{T}"/> class.
-		/// </summary>
-		/// <param name="reason">The reason.</param>
-		/// <param name="current">The current.</param>
-		/// <param name="previous">The previous.</param>
-		public ChangeSet(ChangeReason reason, T current, Optional<T> previous)
-			: this()
-		{
-			Add(new Change<T>(reason, current, previous));
+			_items =  items.ToList();
+			_items.ForEach(change => Add(change, true));
 		}
 
 		/// <summary>
@@ -64,6 +53,16 @@ namespace DynamicData
 		/// </summary>
 		/// <param name="item">The item.</param>
 		public void Add(Change<T> item)
+		{
+			Add(item, false);
+		}
+
+		/// <summary>
+		/// Adds the specified item.
+		/// </summary>
+		/// <param name="item">The item.</param>
+		/// <param name="countOnly">set to true if the item has already been added</param>
+		public void Add(Change<T> item, bool countOnly)
 		{
 			switch (item.Reason)
 			{
@@ -83,10 +82,21 @@ namespace DynamicData
 					_moves++;
 					break;
 			}
-			_items.Add(item);
+			if (!countOnly) Items.Add(item);
 		}
 
 
+		/// <summary>
+		/// Gets or sets the capacity.
+		/// </summary>
+		/// <value>
+		/// The capacity.
+		/// </value>
+		public int Capacity
+		{
+			get { return _items.Capacity; }
+			set { _items.Capacity = value; }
+		}
 		#endregion
 
 		#region Properties

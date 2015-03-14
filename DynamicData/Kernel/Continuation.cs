@@ -2,7 +2,7 @@ using System;
 
 namespace DynamicData.Kernel
 {
-    internal sealed class Continuation<T>
+	internal sealed class Continuation<T>
     {
         private readonly Exception _exception;
         private readonly T _result;
