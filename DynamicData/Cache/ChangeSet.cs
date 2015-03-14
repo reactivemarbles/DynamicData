@@ -43,6 +43,22 @@ namespace DynamicData
         }
 
 		/// <summary>
+		/// Adds the specified items. 
+		/// </summary>
+		/// <param name="items">The items.</param>
+		public void AddRange(IEnumerable<Change<TObject, TKey>> items)
+		{
+			var enumerable = items as ICollection<Change<TObject, TKey>> ?? items.ToList();
+			Items.AddRange(enumerable);
+
+			Items.ForEach(t =>
+			{
+				Add(t, true);
+			});
+
+		}
+
+		/// <summary>
 		/// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.
 		/// </summary>
 		/// <param name="change">The change.</param>
@@ -75,17 +91,21 @@ namespace DynamicData
         }
 
 
-	    public void Add(Change<TObject, TKey> item)
-	    {
-			Add(item,false);
-	    }
+		/// <summary>
+		/// Adds the specified item.
+		/// </summary>
+		/// <param name="item">The item.</param>
+		public void Add(Change<TObject, TKey> item)
+		{
+			Add(item, false);
+		}
 
 		/// <summary>
 		/// Adds the specified item.
 		/// </summary>
 		/// <param name="item">The item.</param>
 		/// <param name="countOnly">set to true if the item has already been added</param>
-		public void Add(Change<TObject, TKey> item, bool countOnly)
+		private void Add(Change<TObject, TKey> item, bool countOnly)
 		{
 			switch (item.Reason)
 			{

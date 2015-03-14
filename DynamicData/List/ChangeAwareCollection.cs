@@ -5,7 +5,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-	internal class ChangeAwareCollection<T> : Collection<T>
+	internal class ChangeAwareCollection2<T> : Collection<T>
 	{
 		ChangeSet<T> _changes = new ChangeSet<T>();
 		private bool _isMoving;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Annotations;
 using DynamicData.Internal;
 using DynamicData.Kernel;
 
@@ -47,11 +48,14 @@ namespace DynamicData
 					.Then(InvokeNext, _changes.OnError),()=> _changes.OnCompleted());
 
 		}
-
-		public void Edit(Action<IList<T>> updateAction)
+		/// <summary>
+		/// Edit the inner list within the list's internal locking mechanism
+		/// </summary>
+		/// <param name="updateAction">The update action.</param>
+		public void Edit([NotNull] Action<IList<T>> updateAction)
 		{
 			if (updateAction == null) throw new ArgumentNullException("updateAction");
-
+			
 			_readerWriter.Write(updateAction)
 				.Then(InvokeNext, _changes.OnError);
 		}

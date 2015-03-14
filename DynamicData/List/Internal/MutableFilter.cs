@@ -25,9 +25,7 @@ namespace DynamicData.Internal
 			_source = source;
 			_controller = controller;
 		}
-
-
-
+		
 		public IObservable<IChangeSet<T>> Run()
 		{
 			return Observable.Create<IChangeSet<T>>(observer =>
@@ -43,8 +41,7 @@ namespace DynamicData.Internal
 						Requery(predicate);
 						return _filtered.CaptureChanges();
 					});
-
-
+				
 				var shared = _source.Synchronize(locker).Publish();
 
 				//take current filter state of all items
@@ -86,8 +83,6 @@ namespace DynamicData.Internal
 					_filtered.Remove(item.Item);
 				}
 			});
-
-
 		}
 
 		private class ItemWithMatch

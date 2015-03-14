@@ -96,6 +96,7 @@ namespace DynamicData.Binding
 
         private void DoUpdate(IChangeSet<TObject, TKey> updates, IObservableCollection<TObject> list)
         {
+			list.EnsureCapacityFor(updates);
             updates.ForEach(update =>
             {
                 switch (update.Reason)

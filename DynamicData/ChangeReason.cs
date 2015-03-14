@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using DynamicData.Kernel;
-
-namespace DynamicData
+﻿namespace DynamicData
 {
 
     /// <summary>
@@ -57,13 +53,19 @@ namespace DynamicData
 		public TObject Item { get; }
     }
 
+	internal interface ISupportsCapcity
+	{
+		int Capacity { get; set; }
+		int Count { get; }
+	}
 
-    /// <summary>
-    ///  The reason for an individual change.  
-    /// 
-    /// Used to signal consumers of any changes to the underlying cache
-    /// </summary>
-    public enum ChangeReason
+
+	/// <summary>
+	///  The reason for an individual change.  
+	/// 
+	/// Used to signal consumers of any changes to the underlying cache
+	/// </summary>
+	public enum ChangeReason
     {
         /// <summary>
         ///  An item has been added
@@ -89,5 +91,10 @@ namespace DynamicData
         /// An item has been moved in a sorted collection
         /// </summary>
         Moved,
+
+		/// <summary>
+		/// The entire collection has been cleared
+		/// </summary>
+		Clear,
     }
 }

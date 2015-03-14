@@ -7,7 +7,7 @@ namespace DynamicData.Internal
 {
 	internal sealed class ReaderWriter<T>
 	{
-		private readonly ChangeAwareCollection<T> _cache = new ChangeAwareCollection<T>();
+		private readonly ChangeAwareCollection<T> _data = new ChangeAwareCollection<T>();
 		private readonly object _locker = new object();
 		
 		public Continuation<IChangeSet<T>> Write(IChangeSet<T> changes)
@@ -18,8 +18,8 @@ namespace DynamicData.Internal
 			{
 				try
 				{
-					_cache.Clone(changes);
-					result = _cache.CaptureChanges();
+					_data.Clone(changes);
+					result = _data.CaptureChanges();
 				}
 				catch (Exception ex)
 				{
@@ -37,8 +37,8 @@ namespace DynamicData.Internal
 			{
 				try
 				{
-					updateAction(_cache);
-					result = _cache.CaptureChanges();
+					updateAction(_data);
+					result = _data.CaptureChanges();
 				}
 				catch (Exception ex)
 				{
@@ -55,7 +55,7 @@ namespace DynamicData.Internal
 				IEnumerable<T> result;
 				lock (_locker)
 				{
-					result = _cache.ToArray();
+					result = _data.ToArray();
 				}
 				return result;
 			}
@@ -65,11 +65,11 @@ namespace DynamicData.Internal
 		{
 			lock (_locker)
 			{
-				return _cache.Lookup(item, equalityComparer);
+				return _data.Lookup(item, equalityComparer);
 			}
 		}
 
-		public int Count => _cache.Count;
+		public int Count => _data.Count;
 
 	}
 }

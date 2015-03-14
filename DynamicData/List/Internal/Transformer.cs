@@ -5,7 +5,7 @@ namespace DynamicData.Internal
 	internal class Transformer<TSource, TDestination>
 	{
 		private readonly Func<TSource, TDestination> _factory;
-		private readonly ChangeAwareCollection<TDestination> _filtered = new ChangeAwareCollection<TDestination>();
+		private readonly ChangeAwareCollection<TDestination> _transformed = new ChangeAwareCollection<TDestination>();
 
 		public Transformer(Func<TSource, TDestination> factory)
 		{
@@ -15,8 +15,8 @@ namespace DynamicData.Internal
 		
 		public IChangeSet<TDestination> Process(IChangeSet<TSource> changes)
 		{
-			_filtered.Transform(changes, _factory);
-			return _filtered.CaptureChanges();
+			_transformed.Transform(changes, _factory);
+			return _transformed.CaptureChanges();
 		}
 	}
 }

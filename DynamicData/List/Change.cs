@@ -26,7 +26,6 @@ namespace DynamicData
 		}
 
 
-
 		/// <summary>
 		/// Construtor for ChangeReason.Move
 		/// </summary>
@@ -56,18 +55,21 @@ namespace DynamicData
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
+		/// Initializes a new instance of the <see cref="Change{TObject, TKey}" /> struct.
 		/// </summary>
 		/// <param name="reason">The reason.</param>
 		/// <param name="current">The current.</param>
 		/// <param name="previous">The previous.</param>
 		/// <param name="currentIndex">Value of the current.</param>
 		/// <param name="previousIndex">Value of the previous.</param>
-		/// <exception cref="System.ArgumentException">
+		/// <exception cref="ArgumentException">
 		/// For ChangeReason.Add, a previous value cannot be specified
 		/// or
 		/// For ChangeReason.Change, must supply previous value
 		/// </exception>
+		/// <exception cref="System.ArgumentException">For ChangeReason.Add, a previous value cannot be specified
+		/// or
+		/// For ChangeReason.Change, must supply previous value</exception>
 		public Change(ChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
 			: this()
 		{
@@ -81,7 +83,6 @@ namespace DynamicData
 			{
 				throw new ArgumentException("For ChangeReason.Add, a previous value cannot be specified");
 			}
-
 			if (reason == ChangeReason.Update && !previous.HasValue)
 			{
 				throw new ArgumentException("For ChangeReason.Change, must supply previous value");

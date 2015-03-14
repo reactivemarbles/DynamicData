@@ -55,8 +55,9 @@
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
-    <Compile Include="Kernel\ISupportsCapcity.cs" />
+    <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
+    <Compile Include="List\ChangeAwareList.cs" />
     <Compile Include="List\Internal\DistinctCalculator.cs" />
     <Compile Include="List\Internal\Group.cs" />
     <Compile Include="List\Internal\Grouper.cs" />

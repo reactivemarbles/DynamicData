@@ -11,7 +11,7 @@ namespace DynamicData
 	/// A set of changes which has occured since the last reported changes
 	/// </summary>
 	/// <typeparam name="T">The type of the object.</typeparam>
-	public class ChangeSet<T> : IChangeSet<T>, IChangeSet
+	public class ChangeSet<T> : IChangeSet<T>
 	{
 		#region Fields
 
@@ -58,11 +58,27 @@ namespace DynamicData
 		}
 
 		/// <summary>
+		/// Adds the specified items. 
+		/// </summary>
+		/// <param name="items">The items.</param>
+		public void AddRange(IEnumerable<Change<T>> items)
+		{
+			var enumerable = items as ICollection<Change<T>> ?? items.ToList();
+			_items.AddRange(enumerable);
+
+			_items.ForEach(t =>
+			{
+				Add(t,true);
+			});
+
+		}
+
+		/// <summary>
 		/// Adds the specified item.
 		/// </summary>
 		/// <param name="item">The item.</param>
 		/// <param name="countOnly">set to true if the item has already been added</param>
-		public void Add(Change<T> item, bool countOnly)
+		private void Add(Change<T> item, bool countOnly)
 		{
 			switch (item.Reason)
 			{
