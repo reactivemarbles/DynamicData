@@ -27,22 +27,22 @@ namespace DynamicData
 		/// </summary>
 		/// <typeparam name="T">The type of the object.</typeparam>
 		/// <param name="source">The source.</param>
-		/// <param name="detination">The detination.</param>
+		/// <param name="destination">The destination.</param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentNullException">
 		/// source
 		/// or
-		/// detination
+		/// destination
 		/// </exception>
 		/// <exception cref="System.ArgumentNullException">source
 		/// or
-		/// detination</exception>
-		public static IDisposable PopulateInto<T>([NotNull] this IObservable<IChangeSet<T>> source,[NotNull] ISourceList<T> detination)
+		/// destination</exception>
+		public static IDisposable PopulateInto<T>([NotNull] this IObservable<IChangeSet<T>> source,[NotNull] ISourceList<T> destination)
 		{
 			if (source == null) throw new ArgumentNullException("source");
-			if (detination == null) throw new ArgumentNullException("detination");
+			if (destination == null) throw new ArgumentNullException("destination");
 
-			return source.Subscribe(changes => detination.Edit(updater => updater.Clone(changes)));
+			return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
 		}
 
 

@@ -19,14 +19,13 @@ namespace DynamicData
 		}
 
 		#region Range support
-
-
+		
 		public void AddRange(IEnumerable<T> collection)
 		{
-			var changes = _innerList.Select((t, index) => new Change<T>(ChangeReason.Remove, t, index + Count));
+			var changes = _innerList.Select((t, index) => new Change<T>(ChangeReason.Add, t, index + Count));
 			_changes.AddRange(changes);
 			_innerList.AddRange(collection);
-		}
+		} 
 
 		#endregion
 

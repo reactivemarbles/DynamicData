@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-    [TestFixture]
+	[TestFixture]
     public class TransformFixture
     {
         private ISourceList<Person> _source;
@@ -20,7 +20,7 @@ namespace DynamicData.Tests.ListFixtures
         {
 
            _source = new SourceList<Person>();
-            _results = new ChangeSetAggregator<PersonWithGender>(_source.Connect().Transform(_transformFactory));
+           _results = new ChangeSetAggregator<PersonWithGender>(_source.Connect().Transform(_transformFactory));
         }
 
         [TearDown]

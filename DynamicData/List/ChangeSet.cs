@@ -177,8 +177,7 @@ namespace DynamicData
 		/// </returns>
 		public override string ToString()
 		{
-			return string.Format("ChangeSet<{0}>. Count={1}", typeof(T).Name,
-				Count);
+			return string.Format("ChangeSet<{0}>. Count={1}", typeof(T).Name,Count);
 		}
 
 	}
