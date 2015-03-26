@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using DynamicData.Annotations;
 using DynamicData.Controllers;
 using DynamicData.Internal;
@@ -130,8 +127,7 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (comparer == null) throw new ArgumentNullException("comparer");
-			var sorter = new Sorter<T>(comparer, options);
-			return source.Select(sorter.Process).NotEmpty();
+			return new Sorter<T>(source, comparer, options).Run();
 		}
 
 
@@ -152,8 +148,7 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (transformFactory == null) throw new ArgumentNullException("transformFactory");
-			var transformer = new Transformer<TSource,TDestination>(transformFactory);
-			return source.Select(transformer.Process).NotEmpty();
+			return new Transformer<TSource, TDestination>(source,transformFactory).Run();
 		}
 
 		/// <summary>
@@ -174,10 +169,7 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (valueSelector == null) throw new ArgumentNullException("valueSelector");
-			var calculator = new DistinctCalculator<TObject, TValue>();
-			return source.Transform(t=>new ItemWithValue<TObject, TValue>(t, valueSelector(t)))
-				.Select(calculator.Process)
-				.NotEmpty();
+			return new Distinct<TObject, TValue>(source, valueSelector).Run();
 		}
 
 		/// <summary>
@@ -197,12 +189,7 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (groupSelector == null) throw new ArgumentNullException("groupSelector");
-			var calculator = new Grouper<TObject, TGroup>();
-
-			return source.Transform(t => new ItemWithValue<TObject, TGroup>(t, groupSelector(t)))
-				.Select(calculator.Process)
-				.DisposeMany() //dispose removes as the grouping is disposable
-				.NotEmpty();
+			return new GroupOn<TObject, TGroup>(source, groupSelector).Run();
 		}
 
 		/// <summary>
@@ -248,15 +235,13 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentNullException">source
 		/// or
 		/// observableSelector</exception>
-		public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
+		public static IObservable<TDestination> MergeMany<T, TDestination>([NotNull] this IObservable<IChangeSet<T>> source,
+			[NotNull] Func<T, IObservable<TDestination>> observableSelector)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (observableSelector == null) throw new ArgumentNullException("observableSelector");
 
-			return Observable.Create<TDestination>
-				(
-					observer => source.SubscribeMany(t=> observableSelector(t).SubscribeSafe(observer))
-						.Subscribe());
+			return new MergeMany<T, TDestination>(source, observableSelector).Run();
 		}
 
 		/// <summary>
@@ -276,22 +261,7 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (subscriptionFactory == null) throw new ArgumentNullException("subscriptionFactory");
-
-			return Observable.Create<IChangeSet<T>>
-				(
-					observer =>
-					{
-						var published = source.Publish();
-						var subscriptions = published
-											.Transform(t => subscriptionFactory)
-											.DisposeMany()
-											.Subscribe();
-
-						var result = published.SubscribeSafe(observer);
-						var connected = published.Connect();
-
-						return new CompositeDisposable(subscriptions, connected, result);
-					});
+			return new SubscribeMany<T>(source, subscriptionFactory).Run();
 		}
 
 		/// <summary>
@@ -333,21 +303,8 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (removeAction == null) throw new ArgumentNullException("removeAction");
-			return Observable.Create<IChangeSet<T>>
-				(
-					observer =>
-					{
-						var disposer = new OnBeingRemoved<T>(removeAction);
-						var subscriber = source
-							.Do(disposer.RegisterForRemoval, observer.OnError)
-							.SubscribeSafe(observer);
 
-						return Disposable.Create(() =>
-						{
-							subscriber.Dispose();
-							disposer.Dispose();
-						});
-					});
+			return new OnBeingRemoved<T>(source, removeAction).Run();
 		}
 
 		#endregion
@@ -421,13 +378,13 @@ namespace DynamicData
 		/// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
 		/// When a resume signal has been received the batched updates will  be fired.
 		/// </summary>
-		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="T">The type of the object.</typeparam>
 		/// <param name="source">The source.</param>
 		/// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<TObject>> BufferIf<TObject>(this IObservable<IChangeSet<TObject>> source,
+		public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source,
 			IObservable<bool> pauseIfTrueSelector,
 			IScheduler scheduler = null)
 		{
@@ -438,14 +395,14 @@ namespace DynamicData
 		/// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
 		/// When a resume signal has been received the batched updates will  be fired.
 		/// </summary>
-		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="T">The type of the object.</typeparam>
 		/// <param name="source">The source.</param>
 		/// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
 		/// <param name="intialPauseState">if set to <c>true</c> [intial pause state].</param>
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<TObject>> BufferIf<TObject>(this IObservable<IChangeSet<TObject>> source,
+		public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source,
 			IObservable<bool> pauseIfTrueSelector,
 			bool intialPauseState = false,
 			IScheduler scheduler = null)
@@ -457,14 +414,14 @@ namespace DynamicData
 		/// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
 		/// When a resume signal has been received the batched updates will  be fired.
 		/// </summary>
-		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="T">The type of the object.</typeparam>
 		/// <param name="source">The source.</param>
 		/// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
 		/// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long</param>
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<TObject>> BufferIf<TObject>(this IObservable<IChangeSet<TObject>> source,
+		public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source,
 			IObservable<bool> pauseIfTrueSelector,
 			TimeSpan? timeOut = null,
 			IScheduler scheduler = null)
@@ -493,98 +450,10 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (pauseIfTrueSelector == null) throw new ArgumentNullException("pauseIfTrueSelector");
-			;
-
-			return Observable.Create<IChangeSet<T>>
-				(
-					observer =>
-					{
-						bool paused = intialPauseState;
-						var locker = new object();
-						var buffer = new List<Change<T>>();
-						var timeoutSubscriber = new SerialDisposable();
-						var timeoutSubject = new Subject<bool>();
-
-						var schedulertouse = scheduler ?? Scheduler.Default;
-
-						var bufferSelector = Observable.Return(intialPauseState)
-												.Concat(pauseIfTrueSelector.Merge(timeoutSubject))
-												.ObserveOn(schedulertouse)
-												.Synchronize(locker)
-												.Publish();
-
-						var pause = bufferSelector.Where(state => state)
-										.Subscribe(_ =>
-										{
-											paused = true;
-											//add pause timeout if required
-											if (timeOut != null && timeOut.Value != TimeSpan.Zero)
-												timeoutSubscriber.Disposable = Observable.Timer(timeOut.Value, schedulertouse)
-																				.Select(l => false)
-																				.SubscribeSafe(timeoutSubject);
-										});
-
-
-						var resume = bufferSelector.Where(state => !state)
-									.Subscribe(_ =>
-									{
-										paused = false;
-										//publish changes and clear buffer
-										if (buffer.Count == 0) return;
-										observer.OnNext(new ChangeSet<T>(buffer));
-										buffer.Clear();
-
-										//kill off timeout if required
-										timeoutSubscriber.Disposable = Disposable.Empty;
-									});
-
-
-						var updateSubscriber = source.Synchronize(locker)
-										.Subscribe(updates =>
-										{
-											if (paused)
-											{
-												buffer.AddRange(updates);
-											}
-											else
-											{
-												observer.OnNext(updates);
-											}
-										});
-
-
-						var connected = bufferSelector.Connect();
-
-						return Disposable.Create(() =>
-						{
-							connected.Dispose();
-							pause.Dispose();
-							resume.Dispose();
-							updateSubscriber.Dispose();
-							timeoutSubject.OnCompleted();
-							timeoutSubscriber.Dispose();
-						});
-					}
-				);
-
+			return new BufferIf<T>(source, pauseIfTrueSelector, intialPauseState, timeOut, scheduler).Run();
 		}
 
-		/// <summary>
-		/// Defer the subscription until the cache has been inflated with data
-		/// </summary>
-		/// <typeparam name="T">The type of the object.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <returns></returns>
-		public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
-		{
-			if (source == null) throw new ArgumentNullException("source");
 
-			return source.CountChanged.Where(count => count != 0)
-							.Take(1)
-							.Select(_ => new ChangeSet<T>())
-							.Concat(source.Connect())
-							.NotEmpty();
-		}
 
 		/// <summary>
 		///  The latest copy of the cache is exposed for querying after each modification to the underlying data
@@ -611,34 +480,14 @@ namespace DynamicData
 		/// <summary>
 		/// The latest copy of the cache is exposed for querying i)  after each modification to the underlying data ii) upon subscription
 		/// </summary>
-		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="T">The type of the object.</typeparam>
 		/// <param name="source">The source.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IList<TObject>> QueryWhenChanged<TObject>(this IObservable<IChangeSet<TObject>> source)
+		public static IObservable<IList<T>> QueryWhenChanged<T>([NotNull] this IObservable<IChangeSet<T>> source)
 		{
 			if (source == null) throw new ArgumentNullException("source");
-
-			return Observable.Create<IList<TObject>>
-				(
-					observer =>
-					{
-
-						IList<TObject> list = new List<TObject>();
-						return source.Subscribe(changes =>
-						{
-							try
-							{
-								list.Clone(changes);
-								observer.OnNext(new ReadOnlyCollection<TObject>(list));
-							}
-							catch (Exception ex)
-							{
-								observer.OnError(ex);
-							}
-						}, observer.OnError, observer.OnCompleted);
-					}
-				);
+			return new QueryWhenChanged<T>(source).Run();
 		}
 
 
@@ -663,36 +512,28 @@ namespace DynamicData
 		/// <typeparam name="T">The type of the object.</typeparam>
 		/// <param name="source">The source.</param>
 		/// <returns></returns>
-		public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservable<IChangeSet<T>> source)
+		public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>([NotNull] this IObservable<IChangeSet<T>> source)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			return new DeferUntilLoaded<T>(source).Run();
+		}
+
+		/// <summary>
+		/// Defer the subscription until the cache has been inflated with data
+		/// </summary>
+		/// <typeparam name="T">The type of the object.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 
-			return Observable.Create<IChangeSet<T>>
-				(
-					observer =>
-					{
-						var published = source.Publish();
-
-						var subscriber = published.MonitorStatus()
-											 .Where(status => status == ConnectionStatus.Loaded)
-											 .Take(1)
-											 .Select(_ => new ChangeSet<T>())
-											 .Concat(source)
-											 .NotEmpty()
-											 .SubscribeSafe(observer);
-
-						var connected = published.Connect();
-
-						return Disposable.Create(() =>
-						{
-							connected.Dispose();
-							subscriber.Dispose();
-						});
-					}
-				);
+			return source.CountChanged.Where(count => count != 0)
+							.Take(1)
+							.Select(_ => new ChangeSet<T>())
+							.Concat(source.Connect())
+							.NotEmpty();
 		}
-
-
 
 		#endregion
 	}

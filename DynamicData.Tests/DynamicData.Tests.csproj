@@ -147,6 +147,7 @@
     <Compile Include="ListFixtures\FilterControllerFixture.cs" />
     <Compile Include="ListFixtures\FilterFixture.cs" />
     <Compile Include="ListFixtures\GroupFixture.cs" />
+    <Compile Include="ListFixtures\MergeManyFixture.cs" />
     <Compile Include="ListFixtures\Performance.cs" />
     <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
     <Compile Include="ListFixtures\SortFixture.cs" />

@@ -1,7 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using DynamicData.Annotations;
 
 namespace DynamicData.Kernel
 {
@@ -10,17 +10,14 @@ namespace DynamicData.Kernel
 	/// </summary>
 	public static class InternalEx
     {
-
-
-
-        internal static String FormatWith(this String @this, params object[] parameters)
+		[StringFormatMethod("parameters")]
+		internal static string FormatWith(this string source, params object[] parameters)
         {
-            return string.Format(@this, parameters);
+            return string.Format(source, parameters);
         }
 
-
-
-       /// <summary>
+		
+		/// <summary>
         /// Retries the with back off.
         /// </summary>
         /// <remarks>

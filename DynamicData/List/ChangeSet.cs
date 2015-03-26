@@ -5,8 +5,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
-
 	/// <summary>
 	/// A set of changes which has occured since the last reported changes
 	/// </summary>
@@ -44,8 +42,10 @@ namespace DynamicData
 		/// <param name="items">The items.</param>
 		public ChangeSet(IEnumerable<Change<T>> items)
 		{
-			_items =  items.ToList();
-			_items.ForEach(change => Add(change, true));
+			var list = items as List<Change<T>> ?? items.ToList();
+
+			_items = list;
+            _items.ForEach(change => Add(change, true));
 		}
 
 		/// <summary>

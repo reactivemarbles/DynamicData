@@ -1,15 +1,36 @@
 using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
+using DynamicData.Annotations;
 using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-	internal sealed class DistinctCalculator<T, TValue>
+	internal sealed class Distinct<T, TValue>
 	{
+		private readonly IObservable<IChangeSet<T>> _source;
+		private readonly Func<T, TValue> _valueSelector;
+
 		private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
 		private readonly ChangeAwareCollection<TValue> _result = new ChangeAwareCollection<TValue>();
 
-		public IChangeSet<TValue> Process(IChangeSet<ItemWithValue<T, TValue>> updates)
+		public Distinct([NotNull] IObservable<IChangeSet<T>> source,
+			[NotNull] Func<T, TValue> valueSelector)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (valueSelector == null) throw new ArgumentNullException("valueSelector");
+			_source = source;
+			_valueSelector = valueSelector;
+		}
+
+		public IObservable<IChangeSet<TValue>> Run()
+		{
+			return _source.Transform(t => new ItemWithValue<T, TValue>(t, _valueSelector(t)))
+							.Select(Process)
+							.NotEmpty();
+		}
+
+		private IChangeSet<TValue> Process(IChangeSet<ItemWithValue<T, TValue>> updates)
 		{
 
 			Action<TValue> addAction = value => _valueCounters.Lookup(value)

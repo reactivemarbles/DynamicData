@@ -12,8 +12,8 @@ namespace DynamicData
 	public interface IObservableList<T> : IDisposable
 	{
 		/// <summary>
-		/// Connect to the observable list and observe and changes
-		/// starting with the initial items in the cache 
+		/// Connect to the observable list and observe any changes
+		/// starting with the list's initial items.
 		/// </summary>
 		/// <returns></returns>
 		IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate=null);

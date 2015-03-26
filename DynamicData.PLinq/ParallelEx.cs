@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DynamicData.PLinq;
 
-namespace DynamicData
+namespace DynamicData.PLinq
 {
     /// <summary>
     /// Parallelisation extensions for DynamicData

@@ -25,15 +25,9 @@ namespace DynamicData.Tests.CacheFixtures
                 _changed.OnNext(value);
             }
 
-            public IObservable<bool> Observable
-            {
-                get { return _changed.AsObservable(); }
-            }
+            public IObservable<bool> Observable => _changed.AsObservable();
 
-            public int Id
-            {
-                get { return _id; }
-            }
+	        public int Id => _id;
         }
 
         private ISourceCache<ObjectWithObservable, int> _source;

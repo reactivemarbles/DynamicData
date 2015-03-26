@@ -1,14 +1,36 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using DynamicData.Annotations;
 using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-	internal sealed class Grouper<TObject, TGroupKey>
+	internal sealed class GroupOn<TObject, TGroupKey>
 	{
+		private readonly IObservable<IChangeSet<TObject>> _source;
+		private readonly Func<TObject, TGroupKey> _groupSelector;
 
 		private readonly ChangeAwareCollection<IGroup<TObject, TGroupKey>> _groupings = new ChangeAwareCollection<IGroup<TObject, TGroupKey>>();
 		private readonly IDictionary<TGroupKey, Group<TObject,  TGroupKey>> _groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
+
+		public GroupOn([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (groupSelector == null) throw new ArgumentNullException("groupSelector");
+			_source = source;
+			_groupSelector = groupSelector;
+		}
+
+		public IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> Run()
+		{
+		return _source.Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
+							.Select(Process)
+							.DisposeMany() //dispose removes as the grouping is disposable
+							.NotEmpty(); 
+		}
+
 
 		public IChangeSet<IGroup<TObject, TGroupKey>> Process(IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
 		{

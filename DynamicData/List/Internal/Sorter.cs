@@ -1,21 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Reactive.Linq;
 using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
 	internal sealed class Sorter<T>
 	{
+		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly IComparer<T> _comparer;
 		private readonly SortOptions _sortOptions;
 		private readonly ChangeAwareCollection<T> _list = new ChangeAwareCollection<T>();
 
-		public Sorter(IComparer<T> comparer, SortOptions sortOptions)
+		public Sorter(IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions sortOptions)
 		{
+			_source = source;
 			_comparer = comparer;
 			_sortOptions = sortOptions;
 		}
 
-		public IChangeSet<T> Process(IChangeSet<T> changes)
+		public IObservable<IChangeSet<T>> Run()
+		{
+			return _source.Select(Process);
+		}
+
+		private IChangeSet<T> Process(IChangeSet<T> changes)
 		{
 			changes.ForEach(change =>
 			{
