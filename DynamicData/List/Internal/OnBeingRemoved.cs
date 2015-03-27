@@ -53,6 +53,12 @@ namespace DynamicData.Internal
 					case ListChangeReason.Remove:
 						_callback(change.Item.Current);
 						break;
+					case ListChangeReason.RemoveRange:
+						change.Range.ForEach(_callback);
+						break;
+					case ListChangeReason.Clear:
+						_items.ForEach(_callback);
+						break;
 				}
 			});
 			_items.Clone(changes);
