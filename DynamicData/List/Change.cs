@@ -34,7 +34,7 @@ namespace DynamicData
 		/// <param name="reason">The reason.</param>
 		/// <param name="items">The items.</param>
 		/// <param name="index">The index.</param>
-		public Change(ListChangeReason reason, IList<T> items, int index = -1)
+		public Change(ListChangeReason reason, IEnumerable<T> items, int index = -1)
 		{
 			Reason = reason;
 			Item = ItemChange<T>.Empty;

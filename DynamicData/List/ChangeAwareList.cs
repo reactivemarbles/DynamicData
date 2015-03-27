@@ -23,19 +23,19 @@ namespace DynamicData
 
 		public void AddRange(IEnumerable<T> collection)
 		{
-			var args = new Change<T>(ListChangeReason.AddRange, _innerList.ToList());
+			var args = new Change<T>(ListChangeReason.AddRange, collection);
 
 			if (args.Range.Count == 0) return;
 			_changes.Add(args);
-			_innerList.AddRange(collection);
+			_innerList.AddRange(args.Range);
 		}
 		
 		public void InsertRange(IEnumerable<T> collection,int index)
 		{
-			var args = new Change<T>(ListChangeReason.AddRange, _innerList.ToList(), index);
+			var args = new Change<T>(ListChangeReason.AddRange, collection, index);
 			if (args.Range.Count == 0) return;
 			_changes.Add(args);
-			_innerList.InsertRange(index,collection);
+			_innerList.InsertRange(index, args.Range);
 		}
 
 		public void RemoveRange(int index,int count)

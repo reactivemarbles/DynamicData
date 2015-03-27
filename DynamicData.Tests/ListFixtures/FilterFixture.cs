@@ -35,7 +35,37 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
 
-        [Test]
+		[Test]
+		public void AddRange()
+		{
+
+			var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
+
+			_source.Edit(list => list.AddRange(itemstoadd));
+
+			Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
+			Assert.AreEqual(ListChangeReason.AddRange, _results.Messages[0].First().Reason, "Should be 1 updates");
+			Assert.AreEqual(80, _results.Data.Count, "Should be 50 item in the cache");
+		}
+
+
+
+		[Test]
+		public void ClearFixture()
+		{
+
+			var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
+
+			_source.Edit(list => list.AddRange(itemstoadd));
+			_source.Clear();
+
+			Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
+			Assert.AreEqual(ListChangeReason.AddRange, _results.Messages[0].First().Reason, "First reason should be add range");
+			Assert.AreEqual(ListChangeReason.Clear, _results.Messages[1].First().Reason, "Second reason should be clear");
+			Assert.AreEqual(0, _results.Data.Count, "Should be 50 item in the cache");
+		}
+
+		[Test]
         public void AddNotMatched()
         {
             var person = new Person("Adult1", 10);
@@ -143,21 +173,7 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
         }
 
-   //     [Test]
-   //     public void UpdateMatched()
 
-   //     {
-   //         const string key = "Adult1";
-   //         var newperson = new Person(key, 50);
-   //         var updated = new Person(key, 51);
-
-			//_source.Edit(list => list.Add(newperson));
-			//_source.AddOrUpdate(updated);
-
-   //         Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-   //         Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 adds");
-   //         Assert.AreEqual(1, _results.Messages[1].Updates, "Should be 1 update");
-   //     }
 
         [Test]
         public void SameKeyChanges()
