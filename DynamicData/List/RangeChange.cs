@@ -10,7 +10,7 @@ namespace DynamicData
 	/// <typeparam name="T"></typeparam>
 	public class RangeChange<T> : IEnumerable<T>
 	{
-		private readonly IList<T> _items;
+		private readonly List<T> _items;
 		/// <summary>
 		/// Gets the index initial index i.e. for the initial starting point of the range insertion
 		/// </summary>

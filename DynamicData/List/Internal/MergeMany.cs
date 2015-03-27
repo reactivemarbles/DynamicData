@@ -27,11 +27,17 @@ namespace DynamicData.Internal
 					observer =>
 					{
 						var locker = new object();
-						return _source.Transform(t => _observableSelector(t)
-							.Synchronize(locker)
-							.SubscribeSafe(observer))
-							.DisposeMany()
-							.Subscribe();
+						return _source.SubscribeMany(t => _observableSelector(t).Subscribe(x =>
+						{
+							observer.OnNext(x);
+						}))
+						.Subscribe();
+
+						//return _source.Transform(t => _observableSelector(t)
+						//	//.Synchronize(locker)
+						//	.SubscribeSafe(observer))
+						//	.DisposeMany()
+						//	.Subscribe();
 					});
 		}
 	}

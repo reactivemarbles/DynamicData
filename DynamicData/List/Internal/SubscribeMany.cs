@@ -27,12 +27,12 @@ namespace DynamicData.Internal
 					{
 						var shared = _source.Publish();
 						var subscriptions = shared
-											.Transform(t => _subscriptionFactory)
+											.Transform(t=>_subscriptionFactory(t))
 											.DisposeMany()
 											.Subscribe();
 
 						var result = shared.SubscribeSafe(observer);
-						return new CompositeDisposable(shared.Connect(),subscriptions, result);
+						return new CompositeDisposable(subscriptions, result, shared.Connect());
 					});
 		}
 	}

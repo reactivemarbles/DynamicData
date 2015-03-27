@@ -26,7 +26,7 @@ namespace DynamicData.Tests.ListFixtures
 				_changed.OnNext(value);
 			}
 
-			public IObservable<bool> Observable => _changed.AsObservable();
+			public IObservable<bool> Observable => _changed;
 
 			public int Id => _id;
 		}

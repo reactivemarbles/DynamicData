@@ -150,6 +150,7 @@
     <Compile Include="ListFixtures\Performance.cs" />
     <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
     <Compile Include="ListFixtures\SortFixture.cs" />
+    <Compile Include="ListFixtures\SubscribeManyFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\SelectManyExtensions.cs" />

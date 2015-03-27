@@ -50,7 +50,7 @@ namespace DynamicData.Internal
 					case ListChangeReason.Update:
 						change.Item.Previous.IfHasValue(t => _callback(t));
 						break;
-					case ListChangeReason.Add:
+					case ListChangeReason.Remove:
 						_callback(change.Item.Current);
 						break;
 				}

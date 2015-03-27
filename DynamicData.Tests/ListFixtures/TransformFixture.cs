@@ -34,7 +34,7 @@ namespace DynamicData.Tests.ListFixtures
         public void Add()
         {
             var person = new Person("Adult1", 50);
-            _source.Edit(list => list.Add(person));
+            _source.Add(person);
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
