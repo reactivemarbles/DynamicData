@@ -29,8 +29,8 @@ namespace DynamicData.Binding
 			        {
 				        Func<ChangeSet<T>> initialChangeSet = () =>
 				        {
-					        var items = source.Select((t, index) => new Change<T>(ChangeReason.Add, t, index));
-					        return new ChangeSet<T>(items);
+					        var initial = new Change<T>(ListChangeReason.AddRange, source.ToList());
+					        return new ChangeSet<T>() {initial};
 				        };
 
 				        //populate local cache, otherwise there is no way to deal with a reset
@@ -50,11 +50,11 @@ namespace DynamicData.Binding
 							        {
 								        case NotifyCollectionChangedAction.Add:
 									        return changes.NewItems.OfType<T>()
-										        .Select((t, index) => new Change<T>(ChangeReason.Add, t, index + changes.NewStartingIndex));
+										        .Select((t, index) => new Change<T>(ListChangeReason.Add,  t, index + changes.NewStartingIndex));
 
 								        case NotifyCollectionChangedAction.Remove:
 									        return changes.OldItems.OfType<T>()
-										        .Select((t, index) => new Change<T>(ChangeReason.Remove, t, index + changes.OldStartingIndex));
+										        .Select((t, index) => new Change<T>(ListChangeReason.Remove, t, index + changes.OldStartingIndex));
 
 								        case NotifyCollectionChangedAction.Replace:
 								        {
@@ -62,14 +62,14 @@ namespace DynamicData.Binding
 										        .Select((t, idx) =>
 										        {
 											        var old = changes.OldItems[idx];
-											        return new Change<T>(ChangeReason.Update, t, (T) old, idx, idx);
+											        return new Change<T>(ListChangeReason.Update, t, (T) old, idx, idx);
 										        });
 								        }
 								        case NotifyCollectionChangedAction.Reset:
 								        {
-									        //Clear all from the cache and reload
-									        var removes = source.Select((t, index) => new Change<T>(ChangeReason.Remove, t, index)).Reverse();
-									        return removes.Concat(initialChangeSet());
+											var cleared = new Change<T>(ListChangeReason.Clear,cloneOfList.Items.ToList());
+									        var clearedChangeSet = new ChangeSet<T>() {cleared};
+											 return clearedChangeSet.Concat(initialChangeSet());
 								        }
 								        default:
 									        return null;

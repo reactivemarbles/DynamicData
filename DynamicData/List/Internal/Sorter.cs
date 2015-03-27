@@ -10,7 +10,7 @@ namespace DynamicData.Internal
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly IComparer<T> _comparer;
 		private readonly SortOptions _sortOptions;
-		private readonly ChangeAwareCollection<T> _list = new ChangeAwareCollection<T>();
+		private readonly ChangeAwareList<T> _list = new ChangeAwareList<T>();
 
 		public Sorter(IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions sortOptions)
 		{
@@ -28,20 +28,20 @@ namespace DynamicData.Internal
 		{
 			changes.ForEach(change =>
 			{
-				var current = change.Current;
+				var current = change.Item.Current;
 
 				switch (change.Reason)
 				{
-					case ChangeReason.Add:
+					case ListChangeReason.Add:
 						Insert(current);
 						break;
-					case ChangeReason.Update:
+					case ListChangeReason.Update:
 						//TODO: check whether an item should stay in the same position
 						//i.e. update and move
-						Remove(change.Previous.Value);
+						Remove(change.Item.Previous.Value);
 						Insert(current);
 						break;
-					case ChangeReason.Remove:
+					case ListChangeReason.Remove:
 						Remove(current);
 						break;
 				}

@@ -91,7 +91,7 @@ namespace DynamicData
 		/// </returns>
 		public Optional<ItemWithIndex<T>> Lookup(T item, IEqualityComparer<T> equalityComparer = null)
 		{
-			return _readerWriter.Items.Lookup(item, equalityComparer);
+			return _readerWriter.Lookup(item, equalityComparer);
 		}
 
 		/// <summary>
@@ -151,7 +151,7 @@ namespace DynamicData
 				? _readerWriter.Items
 				: _readerWriter.Items.Where(predicate);
 
-			var initial = items.WithIndex().Select(t => new Change<T>(ChangeReason.Add, t.Item, t.Index));
+			var initial = items.WithIndex().Select(t => new Change<T>(ListChangeReason.Add, t.Item, t.Index));
 			return new ChangeSet<T>(initial);
 		}
 

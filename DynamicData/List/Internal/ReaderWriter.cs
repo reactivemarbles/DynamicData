@@ -7,7 +7,7 @@ namespace DynamicData.Internal
 {
 	internal sealed class ReaderWriter<T>
 	{
-		private readonly ChangeAwareCollection<T> _data = new ChangeAwareCollection<T>();
+		private readonly ChangeAwareList<T> _data = new ChangeAwareList<T>();
 		private readonly object _locker = new object();
 		
 		public Continuation<IChangeSet<T>> Write(IChangeSet<T> changes)

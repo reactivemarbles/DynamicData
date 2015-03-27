@@ -59,7 +59,7 @@ namespace DynamicData.Tests.ListFixtures
                     });
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(matched, _results.Messages[0].First().Current, "Should be same person");
+            Assert.AreEqual(matched, _results.Messages[0].First().Item.Current, "Should be same person");
             Assert.AreEqual(matched, _results.Data.Items.First(), "Should be same person");
         }
         

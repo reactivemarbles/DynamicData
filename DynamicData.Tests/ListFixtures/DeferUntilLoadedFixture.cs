@@ -30,7 +30,7 @@ namespace DynamicData.Tests.ListFixtures
 
             Assert.IsTrue(updateReceived,"Update should be received");
             Assert.AreEqual(1,result.Adds);
-            Assert.AreEqual(new Person("Test",1), result.First().Current);
+            Assert.AreEqual(new Person("Test",1), result.First().Item.Current);
             deferStream.Dispose();
         }
 

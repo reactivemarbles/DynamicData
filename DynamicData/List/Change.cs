@@ -5,21 +5,50 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
 	/// <summary>
-	/// Container to describe a single change to a cache
+	///   Container to describe a single change to a cache
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public struct Change<T> : IEquatable<Change<T>>
+	public sealed class Change<T> : IEquatable<Change<T>>
 	{
+		/// <summary>
+		/// The reason for the change
+		/// </summary>
+		public ListChangeReason Reason { get; }
+	
+		/// <summary>
+		/// A single item change
+		/// </summary>
+		public ItemChange<T> Item { get; }
+
+
+		/// <summary>
+		/// A multiple item change
+		/// </summary>
+		public RangeChange<T> Range { get; }
 
 		#region Construction
-		
+
+
 		/// <summary>
-		/// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
+		/// Initializes a new instance of the <see cref="Change{T}"/> class.
+		/// </summary>
+		/// <param name="reason">The reason.</param>
+		/// <param name="items">The items.</param>
+		/// <param name="index">The index.</param>
+		public Change(ListChangeReason reason, IList<T> items, int index = -1)
+		{
+			Reason = reason;
+			Item = ItemChange<T>.Empty;
+			Range = new RangeChange<T>(items,index);
+		}
+
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="Change{T}"/> class.
 		/// </summary>
 		/// <param name="reason">The reason.</param>
 		/// <param name="current">The current.</param>
 		/// <param name="index">The index.</param>
-		public Change(ChangeReason reason, T current, int index = -1)
+		public Change(ListChangeReason reason, T current, int index = -1)
 			: this(reason, current, Optional.None<T>(), index, -1)
 		{
 
@@ -38,7 +67,7 @@ namespace DynamicData
 		/// PreviousIndex must be greater than or equal to zero
 		/// </exception>
 		public Change(T current, int currentIndex, int previousIndex)
-			: this()
+
 		{
 			if (currentIndex < 0)
 				throw new ArgumentException("CurrentIndex must be greater than or equal to zero");
@@ -46,12 +75,8 @@ namespace DynamicData
 			if (previousIndex < 0)
 				throw new ArgumentException("PreviousIndex must be greater than or equal to zero");
 
-			Current = current;
-			Previous = Optional.None<T>();
-			Reason = ChangeReason.Moved;
-			CurrentIndex = currentIndex;
-			PreviousIndex = previousIndex;
-
+			Reason = ListChangeReason.Moved;
+			Item = new ItemChange<T>(current, Optional.None<T>(), currentIndex,previousIndex);
 		}
 
 		/// <summary>
@@ -70,78 +95,24 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentException">For ChangeReason.Add, a previous value cannot be specified
 		/// or
 		/// For ChangeReason.Change, must supply previous value</exception>
-		public Change(ChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
-			: this()
+		public Change(ListChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
 		{
-			Current = current;
-			Previous = previous;
-			Reason = reason;
-			CurrentIndex = currentIndex;
-			PreviousIndex = previousIndex;
-
-			if (reason == ChangeReason.Add && previous.HasValue)
+			if (reason == ListChangeReason.Add && previous.HasValue)
 			{
 				throw new ArgumentException("For ChangeReason.Add, a previous value cannot be specified");
 			}
-			if (reason == ChangeReason.Update && !previous.HasValue)
+			if (reason == ListChangeReason.Update && !previous.HasValue)
 			{
 				throw new ArgumentException("For ChangeReason.Change, must supply previous value");
 			}
+			Reason = reason;
+			Item = new ItemChange<T>(current, previous, currentIndex, previousIndex);
 		}
 
-		#endregion
 
-		#region Properties
+     #endregion
 
-
-		/// <summary>
-		/// The  reason for the change
-		/// </summary>
-		public ChangeReason Reason { get; }
-
-
-		/// <summary>
-		/// The item which has changed
-		/// </summary>
-		public T Current { get; }
-
-		/// <summary>
-		/// The current index
-		/// </summary>
-		public int CurrentIndex { get; }
-
-		/// <summary>
-		/// The previous change.
-		/// 
-		/// This is only when Reason==ChangeReason.Update.
-		/// </summary>
-		public Optional<T> Previous { get; }
-
-		/// <summary>
-		/// The previous change.
-		/// 
-		/// This is only when Reason==ChangeReason.Update or ChangeReason.Move.
-		/// </summary>
-		public int PreviousIndex { get; }
-
-		#endregion
-
-		#region Overrides
-
-		/// <summary>
-		/// Returns a <see cref="System.String" /> that represents this instance.
-		/// </summary>
-		/// <returns>
-		/// A <see cref="System.String" /> that represents this instance.
-		/// </returns>
-		public override string ToString()
-		{
-			return string.Format("{0}, Current: {1}, Previous: {2}", Reason, Current, Previous);
-		}
-
-		#endregion
-
-		#region IEquatable<Change<T>> Members
+		#region Equality
 
 		/// <summary>
 		/// Equalses the specified other.
@@ -150,7 +121,9 @@ namespace DynamicData
 		/// <returns></returns>
 		public bool Equals(Change<T> other)
 		{
-			return Reason == other.Reason && EqualityComparer<T>.Default.Equals(Current, other.Current) && Previous.Equals(other.Previous);
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+			return Reason == other.Reason && Item.Equals(other.Item) && Equals(Range, other.Range);
 		}
 
 		/// <summary>
@@ -163,7 +136,9 @@ namespace DynamicData
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
-			return obj is Change<T> && Equals((Change<T>)obj);
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != this.GetType()) return false;
+			return Equals((Change<T>) obj);
 		}
 
 		/// <summary>
@@ -176,39 +151,34 @@ namespace DynamicData
 		{
 			unchecked
 			{
-				var hashCode = (int)Reason;
-				hashCode = (hashCode * 397) ^ EqualityComparer<T>.Default.GetHashCode(Current);
-				hashCode = (hashCode * 397) ^ Previous.GetHashCode();
+				var hashCode = (int) Reason;
+				hashCode = (hashCode*397) ^ Item.GetHashCode();
+				hashCode = (hashCode*397) ^ (Range != null ? Range.GetHashCode() : 0);
 				return hashCode;
 			}
 		}
 
-		/// <summary>
-		/// Implements the operator ==.
-		/// </summary>
-		/// <param name="left">The left.</param>
-		/// <param name="right">The right.</param>
-		/// <returns>
-		/// The result of the operator.
-		/// </returns>
 		public static bool operator ==(Change<T> left, Change<T> right)
 		{
-			return left.Equals(right);
+			return Equals(left, right);
 		}
 
-		/// <summary>
-		/// Implements the operator !=.
-		/// </summary>
-		/// <param name="left">The left.</param>
-		/// <param name="right">The right.</param>
-		/// <returns>
-		/// The result of the operator.
-		/// </returns>
 		public static bool operator !=(Change<T> left, Change<T> right)
 		{
-			return !left.Equals(right);
+			return !Equals(left, right);
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Returns a <see cref="System.String" /> that represents this instance.
+		/// </summary>
+		/// <returns>
+		/// A <see cref="System.String" /> that represents this instance.
+		/// </returns>
+		public override string ToString()
+		{
+			return Range!=null ? string.Format("{0}. {1} changes", Reason, Range.Count) : string.Format("{0}. Current: {1}, Previous: {2}", Reason, Item.Current, Item.Previous);
+		}
 	}
 }

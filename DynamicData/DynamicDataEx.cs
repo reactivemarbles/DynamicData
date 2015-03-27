@@ -23,69 +23,64 @@ namespace DynamicData
     /// </summary>
     public static class DynamicDataEx
     {
-        #region Error Handling
+
+		#region General
 
 
-        /// <summary>
-        /// Ensure that finally is always called. Thanks to Lee Campbell for this
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="finallyAction">The finally action.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<T> FinallySafe<T>(this IObservable<T> source, Action finallyAction)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (finallyAction == null) throw new ArgumentNullException("finallyAction");
+		/// <summary>
+		/// Ensure that finally is always called. Thanks to Lee Campbell for this
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="finallyAction">The finally action.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservable<T> FinallySafe<T>(this IObservable<T> source, Action finallyAction)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (finallyAction == null) throw new ArgumentNullException("finallyAction");
 
-            return Observable.Create<T>(o =>
-                                        {
-                                            var finallyOnce = Disposable.Create(finallyAction);
+			return Observable.Create<T>(o =>
+			{
+				var finallyOnce = Disposable.Create(finallyAction);
 
-                                            var subscription = source.Subscribe(o.OnNext,
-                                                ex =>
-                                                {
-                                                    try
-                                                    {
-                                                        o.OnError(ex);
-                                                    }
-                                                    finally
-                                                    {
-                                                        finallyOnce.Dispose();
-                                                    }
-                                                },
-                                                () =>
-                                                {
-                                                    try
-                                                    {
-                                                        o.OnCompleted();
-                                                    }
-                                                    finally
-                                                    {
-                                                        finallyOnce.Dispose();
-                                                    }
-                                                });
+				var subscription = source.Subscribe(o.OnNext,
+					ex =>
+					{
+						try
+						{
+							o.OnError(ex);
+						}
+						finally
+						{
+							finallyOnce.Dispose();
+						}
+					},
+					() =>
+					{
+						try
+						{
+							o.OnCompleted();
+						}
+						finally
+						{
+							finallyOnce.Dispose();
+						}
+					});
 
-                                            return new CompositeDisposable(subscription, finallyOnce);
-
-
-                                        });
-        }
-
-        #endregion
-
-        #region General
+				return new CompositeDisposable(subscription, finallyOnce);
 
 
-        /// <summary>
-        /// Cache equivalent to Publish().RefCount().  The source is cached so long as there is at least 1 subscriber.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the destination key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        public static IObservable<IChangeSet<TObject, TKey>> CacheOnDemand<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+			});
+		}
+		/// <summary>
+		/// Cache equivalent to Publish().RefCount().  The source is cached so long as there is at least 1 subscriber.
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TKey">The type of the destination key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		public static IObservable<IChangeSet<TObject, TKey>> CacheOnDemand<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException("source");
 
@@ -1348,10 +1343,7 @@ namespace DynamicData
 
             });
         }
-
-
-
-
+		
         /// <summary>
         /// Applies a size limiter to the number of records which can be included in the 
         /// underlying cache.  When the size limit is reached the oldest items are removed.
@@ -1372,7 +1364,6 @@ namespace DynamicData
                 return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
                 {
                     var sizeLimiter = new SizeLimiter<TObject, TKey>(size);
-                   // var dateTime = DateTime.Now;
 
                     var root = new IntermediateCache<TObject, TKey>(source);
 
@@ -1391,7 +1382,6 @@ namespace DynamicData
 
                     return Disposable.Create(() =>
                     {
-                       // expirableItems.Dispose();
                         subscriber.Dispose();
                         root.Dispose();
                     });

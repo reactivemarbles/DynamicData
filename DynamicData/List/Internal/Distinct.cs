@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
@@ -12,7 +13,7 @@ namespace DynamicData.Internal
 		private readonly Func<T, TValue> _valueSelector;
 
 		private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
-		private readonly ChangeAwareCollection<TValue> _result = new ChangeAwareCollection<TValue>();
+		private readonly ChangeAwareList<TValue> _result = new ChangeAwareList<TValue>();
 
 		public Distinct([NotNull] IObservable<IChangeSet<T>> source,
 			[NotNull] Func<T, TValue> valueSelector)
@@ -59,29 +60,46 @@ namespace DynamicData.Internal
 			{
 				switch (change.Reason)
 				{
-					case ChangeReason.Add:
+					case ListChangeReason.Add:
 					{
-						var value = change.Current.Value;
+						var value = change.Item.Current.Value;
 						addAction(value);
 						break;
 					}
-					case ChangeReason.Evaluate:
-					case ChangeReason.Update:
+					case ListChangeReason.AddRange:
+						{
+							change.Range.Select(item=>item.Value).ForEach(addAction);
+							break;
+						}
+					//	case ListChangeReason.Evaluate:
+					case ListChangeReason.Update:
 					{
-						var value = change.Current.Value;
-						var previous = change.Previous.Value.Value;
+						var value = change.Item.Current.Value;
+						var previous = change.Item.Previous.Value.Value;
 						if (value.Equals(previous)) return;
 
 						removeAction(previous);
 						addAction(value);
 						break;
 					}
-					case ChangeReason.Remove:
+					case ListChangeReason.Remove:
 					{
-						var previous = change.Current.Value;
+						var previous = change.Item.Current.Value;
 						removeAction(previous);
 						break;
 					}
+					case ListChangeReason.RemoveRange:
+						{
+							change.Range.Select(item => item.Value).ForEach(removeAction);
+							break;
+						}
+
+					case ListChangeReason.Clear:
+						{
+							_result.Clear();
+							_valueCounters.Clear();
+                            break;
+						}
 				}
 			});
 			return _result.CaptureChanges();

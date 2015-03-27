@@ -1,16 +1,17 @@
+﻿
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace DynamicData
 {
-	internal class ChangeAwareCollection<T> : ISupportsCapcity, IList<T>
+	internal class ChangeAwareList<T> : ISupportsCapcity, IList<T>
 	{
 		private readonly List<T> _innerList = new List<T>();
 		ChangeSet<T> _changes = new ChangeSet<T>();
 		private bool _isMoving;
-		
-		
+
+
 		public ChangeSet<T> CaptureChanges()
 		{
 			var copy = _changes;
@@ -19,31 +20,53 @@ namespace DynamicData
 		}
 
 		#region Range support
-		
+
 		public void AddRange(IEnumerable<T> collection)
 		{
-			var changes = _innerList.Select((t, index) => new Change<T>(ChangeReason.Add, t, index + Count));
-			_changes.AddRange(changes);
+			var args = new Change<T>(ListChangeReason.AddRange, _innerList.ToList());
+
+			if (args.Range.Count == 0) return;
+			_changes.Add(args);
 			_innerList.AddRange(collection);
-		} 
+		}
+		
+		public void InsertRange(IEnumerable<T> collection,int index)
+		{
+			var args = new Change<T>(ListChangeReason.AddRange, _innerList.ToList(), index);
+			if (args.Range.Count == 0) return;
+			_changes.Add(args);
+			_innerList.InsertRange(index,collection);
+		}
+
+		public void RemoveRange(int index,int count)
+		{
+			var toremove = _innerList.Skip(index).Take(count).ToList();
+			if (toremove.Count == 0) return;
+
+			var args = new Change<T>(ListChangeReason.RemoveRange, toremove, index);
+
+			_changes.Add(args);
+			_innerList.RemoveRange(index, count);
+		}
+
+		public  void Clear()
+		{
+			if (_innerList.Count == 0) return;
+			var toremove = _innerList.ToList();
+			var args = new Change<T>(ListChangeReason.Clear, toremove);
+			_changes.Add(args);
+			_innerList.Clear();
+		}
 
 		#endregion
 
 		#region Collection overrides
 
-		protected virtual void ClearItems()
-		{
-			//add in reverse order as this will be more efficient for any consumers to reflect
-			var changes = _innerList.Select((t, index) => new Change<T>(ChangeReason.Remove, t, index)).Reverse();
-			_changes.AddRange(changes);
-			_innerList.Clear();
-		}
-
 		protected virtual void InsertItem(int index, T item)
 		{
 			if (_isMoving) return;
 
-			_changes.Add(new Change<T>(ChangeReason.Add, item, index));
+			_changes.Add(new Change<T>(ListChangeReason.Add, item, index));
 			_innerList.Insert(index, item);
 		}
 
@@ -52,7 +75,7 @@ namespace DynamicData
 			if (_isMoving) return;
 
 			var item = _innerList[index];
-			_changes.Add(new Change<T>(ChangeReason.Remove, item, index));
+			_changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
 			_innerList.RemoveAt(index);
 		}
 
@@ -61,16 +84,16 @@ namespace DynamicData
 			if (_isMoving) return;
 
 			var previous = _innerList[index];
-			_changes.Add(new Change<T>(ChangeReason.Update, item, previous, index, index));
-			_innerList[index]= item;
+			_changes.Add(new Change<T>(ListChangeReason.Update, item, previous, index, index));
+			_innerList[index] = item;
 		}
 
-		public virtual void  Move(T item, int destination)
+		public virtual void Move(T item, int destination)
 		{
 			var index = _innerList.IndexOf(item);
 			Move(index, destination);
 		}
-		
+
 		public virtual void Move(int original, int destination)
 		{
 			try
@@ -103,10 +126,6 @@ namespace DynamicData
 
 		#region IList<T> implementation
 
-		public void Clear()
-		{
-			ClearItems();
-		}
 
 		public bool Contains(T item)
 		{

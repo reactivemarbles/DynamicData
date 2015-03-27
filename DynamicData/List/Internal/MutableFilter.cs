@@ -11,7 +11,7 @@ namespace DynamicData.Internal
 	internal class MutableFilter<T>
 	{
 		private readonly List<ItemWithMatch> _all = new List<ItemWithMatch>();
-		private readonly ChangeAwareCollection<T> _filtered = new ChangeAwareCollection<T>();
+		private readonly ChangeAwareList<T> _filtered = new ChangeAwareList<T>();
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly FilterController<T> _controller;
 

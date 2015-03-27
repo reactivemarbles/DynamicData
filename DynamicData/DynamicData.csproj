@@ -27,6 +27,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\portable-net45+winrt45+wp8+wpa81\DynamicData.XML</DocumentationFile>
+    <CodeAnalysisIgnoreGeneratedCode>true</CodeAnalysisIgnoreGeneratedCode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -56,7 +57,7 @@
     <Compile Include="Binding\SortExpressionComparer.cs" />
     <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
-    <Compile Include="List\ChangeAwareList.cs" />
+    <Compile Include="List\Change.cs" />
     <Compile Include="List\Internal\BufferIf.cs" />
     <Compile Include="List\Internal\DeferUntilLoaded.cs" />
     <Compile Include="List\Internal\Distinct.cs" />
@@ -136,7 +137,6 @@
     <Compile Include="Cache\Internal\SourceUpdater.cs" />
     <Compile Include="Cache\MissingKeyException.cs" />
     <Compile Include="List\Internal\AnomynousObservableList.cs" />
-    <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeSet.cs" />
     <Compile Include="List\Internal\MergeMany.cs" />
     <Compile Include="List\Internal\MutableFilter.cs" />
@@ -144,13 +144,17 @@
     <Compile Include="List\Internal\QueryWhenChanged.cs" />
     <Compile Include="List\Internal\SubscribeMany.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
+    <Compile Include="List\ItemChange.cs" />
+    <Compile Include="List\ListChangeEx.cs" />
+    <Compile Include="List\ListChangeReason.cs" />
     <Compile Include="List\ListEx.cs" />
     <Compile Include="List\IChangeSet.cs" />
-    <Compile Include="List\ChangeAwareCollection.cs" />
+    <Compile Include="List\ChangeAwareList.cs" />
     <Compile Include="List\IObservableList.cs" />
     <Compile Include="List\ISourceList.cs" />
     <Compile Include="List\ObservableListEx.cs" />
     <Compile Include="List\Internal\Sorter.cs" />
+    <Compile Include="List\RangeChange.cs" />
     <Compile Include="List\SortException.cs" />
     <Compile Include="List\SortOptions.cs" />
     <Compile Include="List\SourceList.cs" />

@@ -33,6 +33,7 @@ namespace DynamicData.Internal
 					case ChangeReason.Update:
 					case ChangeReason.Add:
 					{
+
 						_data[item.Key] = item.Current;
 					}
 						break;

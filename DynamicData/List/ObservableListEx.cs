@@ -321,7 +321,7 @@ namespace DynamicData
 		/// <param name="reasons">The reasons.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentException">Must enter at least 1 reason</exception>
-		public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ChangeReason[] reasons)
+		public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
 		{
 			var matches = reasons.ToHashSet();
 			if (matches.Count==0)
@@ -343,7 +343,7 @@ namespace DynamicData
 		/// <param name="reasons">The reasons.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentException">Must enter at least 1 reason</exception>
-		public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ChangeReason[] reasons)
+		public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
 		{
 			var matches = reasons.ToHashSet();
 			if (matches.Count == 0)

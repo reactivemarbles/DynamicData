@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DynamicData.Annotations;
 using DynamicData.Kernel;
 
 namespace DynamicData
@@ -36,8 +38,9 @@ namespace DynamicData
 		/// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.
 		/// </summary>
 		/// <param name="items">The items.</param>
-		public ChangeSet(IEnumerable<Change<TObject, TKey>> items)
+		public ChangeSet([NotNull] IEnumerable<Change<TObject, TKey>> items)
         {
+			if (items == null) throw new ArgumentNullException("items");
 			Items  = items.ToList();
 			Items.ForEach(change=>Add(change,true));
         }
@@ -46,8 +49,9 @@ namespace DynamicData
 		/// Adds the specified items. 
 		/// </summary>
 		/// <param name="items">The items.</param>
-		public void AddRange(IEnumerable<Change<TObject, TKey>> items)
+		public void AddRange([NotNull] IEnumerable<Change<TObject, TKey>> items)
 		{
+			if (items == null) throw new ArgumentNullException("items");
 			var enumerable = items as ICollection<Change<TObject, TKey>> ?? items.ToList();
 			Items.AddRange(enumerable);
 

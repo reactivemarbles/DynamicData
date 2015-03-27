@@ -12,7 +12,7 @@ namespace DynamicData.Internal
 		private readonly IObservable<IChangeSet<TObject>> _source;
 		private readonly Func<TObject, TGroupKey> _groupSelector;
 
-		private readonly ChangeAwareCollection<IGroup<TObject, TGroupKey>> _groupings = new ChangeAwareCollection<IGroup<TObject, TGroupKey>>();
+		private readonly ChangeAwareList<IGroup<TObject, TGroupKey>> _groupings = new ChangeAwareList<IGroup<TObject, TGroupKey>>();
 		private readonly IDictionary<TGroupKey, Group<TObject,  TGroupKey>> _groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
 
 		public GroupOn([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector)
@@ -25,17 +25,19 @@ namespace DynamicData.Internal
 
 		public IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> Run()
 		{
-		return _source.Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
+			 return _source.Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
 							.Select(Process)
 							.DisposeMany() //dispose removes as the grouping is disposable
 							.NotEmpty(); 
 		}
 
 
-		public IChangeSet<IGroup<TObject, TGroupKey>> Process(IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
+		private IChangeSet<IGroup<TObject, TGroupKey>> Process(IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
 		{
+			//TO do. create enumerator which flattens out item changes...
+
 			changes
-				.GroupBy(change => change.Current.Value)
+				.GroupBy(change => change.Item.Current.Value)
 				.ForEach(grouping =>
 				{
 					//lookup group and if created, add to result set
@@ -55,25 +57,25 @@ namespace DynamicData.Internal
 							{
 								switch (change.Reason)
 								{
-									case ChangeReason.Add:
-										list.Add(change.Current.Item);
+									case ListChangeReason.Add:
+										list.Add(change.Item.Current.Item);
 										break;
-									case ChangeReason.Update:
+									case ListChangeReason.Update:
 									{
-										var previousItem = change.Previous.Value.Item;
-										var previousGroup = change.Previous.Value.Value;
+										var previousItem = change.Item.Previous.Value.Item;
+										var previousGroup = change.Item.Previous.Value.Value;
 
 
 										if (previousGroup.Equals(currentGroup))
 										{
 											//find and replace
 											var index = list.IndexOf(previousItem);
-											list[index] = change.Current.Item;
+											list[index] = change.Item.Current.Item;
 										}
 										else
 										{
 											//add to new group
-											list.Add(change.Current.Item);
+											list.Add(change.Item.Current.Item);
 
 											//remove from old group
 											_groupCache.Lookup(previousGroup)
@@ -87,10 +89,8 @@ namespace DynamicData.Internal
 										}
 									}
 										break;
-									case ChangeReason.Remove:
-										list.Remove(change.Current.Item);
-										break;
-									case ChangeReason.Evaluate:
+									case ListChangeReason.Remove:
+										list.Remove(change.Item.Current.Item);
 										break;
 
 								}
@@ -106,23 +106,23 @@ namespace DynamicData.Internal
 			return _groupings.CaptureChanges();
 		}
 
-		private GroupAndAddIndicator GetCache(TGroupKey key)
+		private GroupWithAddIndicator GetCache(TGroupKey key)
 		{
 			var cache = _groupCache.Lookup(key);
 			if (cache.HasValue)
-				return new GroupAndAddIndicator(cache.Value, false);
+				return new GroupWithAddIndicator(cache.Value, false);
 		
 			var newcache = new Group<TObject, TGroupKey>(key);
 			_groupCache[key] = newcache;
-			return new GroupAndAddIndicator(newcache, true);
+			return new GroupWithAddIndicator(newcache, true);
 		}
 
-		private class GroupAndAddIndicator
+		private class GroupWithAddIndicator
 		{
 			public Group<TObject, TGroupKey> Group { get;  }
 			public bool WasCreated { get;  }
 
-			public GroupAndAddIndicator(Group<TObject, TGroupKey> @group, bool wasCreated)
+			public GroupWithAddIndicator(Group<TObject, TGroupKey> @group, bool wasCreated)
 			{
 				Group = @group;
 				WasCreated = wasCreated;

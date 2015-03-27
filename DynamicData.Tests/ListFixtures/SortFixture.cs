@@ -90,7 +90,7 @@ namespace DynamicData.Tests.ListFixtures
 
 			Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
-			Assert.AreEqual(toRemove, _results.Messages[1].First().Current, "Incorrect item removed");
+			Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
 
 			var expectedResult = people.OrderBy(p => p, _comparer);
 			var actualResult = _results.Data.Items;

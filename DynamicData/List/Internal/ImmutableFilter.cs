@@ -8,7 +8,7 @@ namespace DynamicData.Internal
 	{
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly Func<T, bool> _predicate;
-		private readonly ChangeAwareCollection<T> _filtered = new ChangeAwareCollection<T>();
+		private readonly ChangeAwareList<T> _filtered = new ChangeAwareList<T>();
 
 
 		public ImmutableFilter([NotNull] IObservable<IChangeSet<T>> source, [NotNull]Func<T, bool> predicate)

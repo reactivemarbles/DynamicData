@@ -8,7 +8,7 @@ namespace DynamicData.Internal
 	{
 		private readonly IObservable<IChangeSet<TSource>> _source;
 		private readonly Func<TSource, TDestination> _factory;
-		private readonly ChangeAwareCollection<TDestination> _transformed = new ChangeAwareCollection<TDestination>();
+		private readonly ChangeAwareList<TDestination> _transformed = new ChangeAwareList<TDestination>();
 
 		public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
 		{

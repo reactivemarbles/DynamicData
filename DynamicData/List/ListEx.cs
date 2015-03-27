@@ -120,7 +120,106 @@ namespace DynamicData
 			if (source == null) throw new ArgumentNullException("source");
 			if (items == null) throw new ArgumentNullException("items");
 
+			if (source is List<T>)
+			{ }
+
+
 			items.ForEach(source.Add);
+		}
+
+		public static void AddRange<T>(this IList<T> source, IEnumerable<T> items)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (items == null) throw new ArgumentNullException("items");
+
+			if (source is List<T>)
+			{
+				((List<T>)source).AddRange(items);
+			}
+			else if (source is ChangeAwareList<T>)
+			{
+				((ChangeAwareList<T>)source).AddRange(items);
+			}
+			else
+			{
+				items.ForEach(source.Add);
+			}
+
+		}
+
+		public static void InsertRange<T>(this IList<T> source, IEnumerable<T> items,int index)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (items == null) throw new ArgumentNullException("items");
+
+			if (source is List<T>)
+			{
+				((List<T>)source).InsertRange(items,index);
+			}
+			else if (source is ChangeAwareList<T>)
+			{
+				((ChangeAwareList<T>)source).InsertRange(items,index);
+			}
+			else
+			{
+				items.ForEach(source.Add);
+			}
+
+		}
+
+		public static void AddOrInsertRange<T>(this IList<T> source, IEnumerable<T> items, int index)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (items == null) throw new ArgumentNullException("items");
+
+			if (source is List<T>)
+			{
+				if (index >= 0)
+				{
+					((List<T>)source).InsertRange(items, index);
+				}
+				else
+				{
+					((List<T>)source).AddRange(items);
+				}
+
+			}
+			else if (source is ChangeAwareList<T>)
+			{
+				if (index >= 0)
+				{
+					((ChangeAwareList<T>)source).InsertRange(items, index);
+				}
+				else
+				{
+					((ChangeAwareList<T>)source).AddRange(items);
+				}
+			}
+			else
+			{
+				items.ForEach(source.Add);
+			}
+
+		}
+
+
+		public static void RemoveRange<T>(this IList<T> source,  int index,int count)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+
+			if (source is List<T>)
+			{
+				((List<T>)source).RemoveRange(index, count);
+			}
+			else if (source is ChangeAwareList<T>)
+			{
+				((ChangeAwareList<T>)source).RemoveRange(index, count);
+			}
+			else
+			{
+				throw new NotSupportedException("Cannot remove range from {0}".FormatWith(source.GetType()));
+			}
+
 		}
 
 		/// <summary>
@@ -197,200 +296,200 @@ namespace DynamicData
 
 
 
-		/// <summary>
-		/// Clones the source list with the specified change set, transforming the items using the specified factory
-		/// </summary>
-		/// <typeparam name="TSource">The type of the source.</typeparam>
-		/// <typeparam name="TDestination">The type of the destination.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="changes">The changes.</param>
-		/// <param name="transformFactory">The transform factory.</param>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// changes
-		/// or
-		/// transformFactory
-		/// </exception>
-		public static void Transform<TSource,TDestination>(this IList<TDestination> source, IChangeSet<TSource> changes, Func<TSource,TDestination> transformFactory)
-		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (changes == null) throw new ArgumentNullException("changes");
-			if (transformFactory == null) throw new ArgumentNullException("transformFactory");
+		///// <summary>
+		///// Clones the source list with the specified change set, transforming the items using the specified factory
+		///// </summary>
+		///// <typeparam name="TSource">The type of the source.</typeparam>
+		///// <typeparam name="TDestination">The type of the destination.</typeparam>
+		///// <param name="source">The source.</param>
+		///// <param name="changes">The changes.</param>
+		///// <param name="transformFactory">The transform factory.</param>
+		///// <exception cref="System.ArgumentNullException">
+		///// source
+		///// or
+		///// changes
+		///// or
+		///// transformFactory
+		///// </exception>
+		//public static void Transform<TSource,TDestination>(this IList<TDestination> source, IChangeSet<TSource> changes, Func<TSource,TDestination> transformFactory)
+		//{
+		//	if (source == null) throw new ArgumentNullException("source");
+		//	if (changes == null) throw new ArgumentNullException("changes");
+		//	if (transformFactory == null) throw new ArgumentNullException("transformFactory");
 
-			source.EnsureCapacityFor(changes);
-            changes.ForEach(change =>
-			{
-				switch (change.Reason)
-				{
-					case ChangeReason.Add:
-						source.Insert(change.CurrentIndex, transformFactory(change.Current));
-                        break;
-					case ChangeReason.Update:
-						if (change.CurrentIndex == change.PreviousIndex)
-						{
-							source[change.CurrentIndex] = transformFactory(change.Current);
-						}
-						else
-						{
-							source.RemoveAt(change.PreviousIndex);
-							source.Insert(change.CurrentIndex, transformFactory(change.Current));
-						}
-						break;
-					case ChangeReason.Remove:
-						source.RemoveAt(change.CurrentIndex);
-						break;
-				}
-			});
+		//	source.EnsureCapacityFor(changes);
+  //          changes.ForEach(change =>
+		//	{
+		//		switch (change.Reason)
+		//		{
+		//			case ChangeReason.Add:
+		//				source.Insert(change.CurrentIndex, transformFactory(change.Current));
+  //                      break;
+		//			case ChangeReason.Update:
+		//				if (change.CurrentIndex == change.PreviousIndex)
+		//				{
+		//					source[change.CurrentIndex] = transformFactory(change.Current);
+		//				}
+		//				else
+		//				{
+		//					source.RemoveAt(change.PreviousIndex);
+		//					source.Insert(change.CurrentIndex, transformFactory(change.Current));
+		//				}
+		//				break;
+		//			case ChangeReason.Remove:
+		//				source.RemoveAt(change.CurrentIndex);
+		//				break;
+		//		}
+		//	});
 
-		}
+		//}
 
 
-		/// <summary>
-		/// Clones the source list with the specified change set
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="changes">The changes.</param>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// changes
-		/// </exception>
-		public static void Clone<T>(this IList<T> source, IChangeSet<T> changes)
-		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (changes == null) throw new ArgumentNullException("changes");
+		///// <summary>
+		///// Clones the source list with the specified change set
+		///// </summary>
+		///// <typeparam name="T"></typeparam>
+		///// <param name="source">The source.</param>
+		///// <param name="changes">The changes.</param>
+		///// <exception cref="System.ArgumentNullException">
+		///// source
+		///// or
+		///// changes
+		///// </exception>
+		//public static void Clone<T>(this IList<T> source, IChangeSet<T> changes)
+		//{
+		//	if (source == null) throw new ArgumentNullException("source");
+		//	if (changes == null) throw new ArgumentNullException("changes");
 
-			source.EnsureCapacityFor(changes);
+		//	source.EnsureCapacityFor(changes);
 
-            changes.ForEach(change =>
-			{
-				bool hasIndex = change.CurrentIndex >= 0;
-				switch (change.Reason)
-				{
-					case ChangeReason.Add:
-						if (hasIndex)
-						{
-							source.Insert(change.CurrentIndex, change.Current);
-						}
-						else
-						{
-							source.Add(change.Current);
-						}
-						break;
-					case ChangeReason.Update:
-						{
-							if (hasIndex && change.CurrentIndex == change.PreviousIndex)
-							{
-								source[change.CurrentIndex] = change.Current;
-							}
-							else
-							{
-								//is this best? or replace + move?
-								source.RemoveAt(change.PreviousIndex);
-								source.Insert(change.CurrentIndex, change.Current);
-							}
-						}
-						break;
-					case ChangeReason.Remove:
-						if (hasIndex)
-						{
-							source.RemoveAt(change.CurrentIndex);
-						}
-						else
-						{
-							source.Remove(change.Current);
-						}
+  //          changes.ForEach(change =>
+		//	{
+		//		bool hasIndex = change.CurrentIndex >= 0;
+		//		switch (change.Reason)
+		//		{
+		//			case ChangeReason.Add:
+		//				if (hasIndex)
+		//				{
+		//					source.Insert(change.CurrentIndex, change.Current);
+		//				}
+		//				else
+		//				{
+		//					source.Add(change.Current);
+		//				}
+		//				break;
+		//			case ChangeReason.Update:
+		//				{
+		//					if (hasIndex && change.CurrentIndex == change.PreviousIndex)
+		//					{
+		//						source[change.CurrentIndex] = change.Current;
+		//					}
+		//					else
+		//					{
+		//						//is this best? or replace + move?
+		//						source.RemoveAt(change.PreviousIndex);
+		//						source.Insert(change.CurrentIndex, change.Current);
+		//					}
+		//				}
+		//				break;
+		//			case ChangeReason.Remove:
+		//				if (hasIndex)
+		//				{
+		//					source.RemoveAt(change.CurrentIndex);
+		//				}
+		//				else
+		//				{
+		//					source.Remove(change.Current);
+		//				}
 						
-						break;
-					case ChangeReason.Moved:
-						if (!hasIndex)
-							throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+		//				break;
+		//			case ChangeReason.Moved:
+		//				if (!hasIndex)
+		//					throw new UnspecifiedIndexException("Cannot move as an index was not specified");
 
-						var collection = source as ChangeAwareCollection<T>;
-						if (collection != null)
-						{
-							collection.Move(change.PreviousIndex, change.CurrentIndex);
-                        }
-						else
-						{
-							//check this works whether the index is 
-							source.RemoveAt(change.PreviousIndex);
-							source.Insert(change.CurrentIndex, change.Current);
-						}
+		//				var collection = source as ChangeAwareCollection<T>;
+		//				if (collection != null)
+		//				{
+		//					collection.Move(change.PreviousIndex, change.CurrentIndex);
+  //                      }
+		//				else
+		//				{
+		//					//check this works whether the index is 
+		//					source.RemoveAt(change.PreviousIndex);
+		//					source.Insert(change.CurrentIndex, change.Current);
+		//				}
 
-						break;
-				}
-			});
-
-
-		}
-
-		/// <summary>
-		/// Filters the source from the changes, using the specified predicate
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="changes">The changes.</param>
-		/// <param name="predicate">The predicate.</param>
-		internal static void Filter<T>(this IList<T> source, IChangeSet<T> changes, Func<T, bool> predicate)
-		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (changes == null) throw new ArgumentNullException("changes");
-			if (predicate == null) throw new ArgumentNullException("predicate");
-
-			changes.ForEach(change =>
-			{
-
-				switch (change.Reason)
-				{
-					case ChangeReason.Add:
-						{
-							var match = predicate(change.Current);
-							if (match) source.Add(change.Current);
-						}
-						break;
-					case ChangeReason.Update:
-						{
-							var match = predicate(change.Current);
-							var wasMatch = predicate(change.Previous.Value);
-
-							if (match)
-							{
-								if (wasMatch)
-								{
-									//an update, so get the latest index
-									var previous = source.Lookup(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
-														.ValueOrThrow(()=>new InvalidOperationException("Cannot find item. Expected to be in the list"));
-
-									//replace inline
-									source[previous.Index] = change.Current;
-								}
-								else
-								{
-									source.Add(change.Current);
-								}
-							}
-							else
-							{
-								if (wasMatch)
-									source.Remove(change.Previous.Value);
-							}
-						}
-
-						break;
-					case ChangeReason.Remove:
-						{
-							var wasMatch = predicate(change.Current);
-							if (wasMatch) source.Remove(change.Current);
-						}
-						break;
-				}
-			});
+		//				break;
+		//		}
+		//	});
 
 
-		}
+		//}
+
+		///// <summary>
+		///// Filters the source from the changes, using the specified predicate
+		///// </summary>
+		///// <typeparam name="T"></typeparam>
+		///// <param name="source">The source.</param>
+		///// <param name="changes">The changes.</param>
+		///// <param name="predicate">The predicate.</param>
+		//internal static void Filter<T>(this IList<T> source, IChangeSet<T> changes, Func<T, bool> predicate)
+		//{
+		//	if (source == null) throw new ArgumentNullException("source");
+		//	if (changes == null) throw new ArgumentNullException("changes");
+		//	if (predicate == null) throw new ArgumentNullException("predicate");
+
+		//	changes.ForEach(change =>
+		//	{
+
+		//		switch (change.Reason)
+		//		{
+		//			case ChangeReason.Add:
+		//				{
+		//					var match = predicate(change.Current);
+		//					if (match) source.Add(change.Current);
+		//				}
+		//				break;
+		//			case ChangeReason.Update:
+		//				{
+		//					var match = predicate(change.Current);
+		//					var wasMatch = predicate(change.Previous.Value);
+
+		//					if (match)
+		//					{
+		//						if (wasMatch)
+		//						{
+		//							//an update, so get the latest index
+		//							var previous = source.Lookup(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
+		//												.ValueOrThrow(()=>new InvalidOperationException("Cannot find item. Expected to be in the list"));
+
+		//							//replace inline
+		//							source[previous.Index] = change.Current;
+		//						}
+		//						else
+		//						{
+		//							source.Add(change.Current);
+		//						}
+		//					}
+		//					else
+		//					{
+		//						if (wasMatch)
+		//							source.Remove(change.Previous.Value);
+		//					}
+		//				}
+
+		//				break;
+		//			case ListChangeReason.Remove:
+		//				{
+		//					var wasMatch = predicate(change.Current);
+		//					if (wasMatch) source.Remove(change.Current);
+		//				}
+		//				break;
+		//		}
+		//	});
+
+
+		//}
 		#endregion
 	}
 }

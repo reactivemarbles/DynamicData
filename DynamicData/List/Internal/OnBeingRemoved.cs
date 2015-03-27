@@ -47,11 +47,11 @@ namespace DynamicData.Internal
 			{
 				switch (change.Reason)
 				{
-					case ChangeReason.Update:
-						change.Previous.IfHasValue(t => _callback(t));
+					case ListChangeReason.Update:
+						change.Item.Previous.IfHasValue(t => _callback(t));
 						break;
-					case ChangeReason.Remove:
-						_callback(change.Current);
+					case ListChangeReason.Add:
+						_callback(change.Item.Current);
 						break;
 				}
 			});

@@ -14,8 +14,7 @@ namespace DynamicData.Tests
     public class ChangeSetAggregator<TObject> : IDisposable
     {
         private readonly IDisposable _disposer;
-        private readonly IObservableList<TObject> _data;
-        private readonly IList<IChangeSet<TObject>> _messages = new List<IChangeSet<TObject>>();
+	    private readonly IList<IChangeSet<TObject>> _messages = new List<IChangeSet<TObject>>();
         private  ChangeSummary _summary;
         private Exception _error;
 
@@ -28,7 +27,7 @@ namespace DynamicData.Tests
         {
             var published = source.Publish();
 
-            _data = published.AsObservableList();
+            Data = published.AsObservableList();
             
             var results = published.Subscribe(updates => _messages.Add(updates), ex => _error = ex);
             var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
@@ -36,7 +35,7 @@ namespace DynamicData.Tests
 
             _disposer = Disposable.Create(() =>
                                               {
-                                                  _data.Dispose();
+                                                  Data.Dispose();
                                                   connected.Dispose();
                                                   summariser.Dispose();
                                                   results.Dispose();
@@ -46,9 +45,9 @@ namespace DynamicData.Tests
 		/// <summary>
 		/// A clone of the daata
 		/// </summary>
-		public IObservableList<TObject> Data => _data;
+		public IObservableList<TObject> Data { get; }
 
-		/// <summary>
+	    /// <summary>
 		/// All message received
 		/// </summary>
 		public IList<IChangeSet<TObject>> Messages => _messages;
