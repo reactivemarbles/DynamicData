@@ -1,14 +1,13 @@
 
 using System;
 using System.Linq;
-using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
 	[TestFixture]
-	public class GroupFixture
+	public class GroupOnFixture
 	{
 		private ISourceList<Person> _source;
 		private ChangeSetAggregator<IGroup<Person, int>> _results;

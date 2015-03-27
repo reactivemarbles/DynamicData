@@ -11,7 +11,6 @@ namespace DynamicData.Internal
 	{
 		private readonly IObservable<IChangeSet<TObject>> _source;
 		private readonly Func<TObject, TGroupKey> _groupSelector;
-
 		private readonly ChangeAwareList<IGroup<TObject, TGroupKey>> _groupings = new ChangeAwareList<IGroup<TObject, TGroupKey>>();
 		private readonly IDictionary<TGroupKey, Group<TObject,  TGroupKey>> _groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
 

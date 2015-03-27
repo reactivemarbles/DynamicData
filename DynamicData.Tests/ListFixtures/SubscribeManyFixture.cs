@@ -1,5 +1,7 @@
+using System;
 using System.Linq;
 using System.Reactive.Disposables;
+using System.Security.Cryptography.X509Certificates;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -92,7 +94,10 @@ namespace DynamicData.Tests.ListFixtures
 			_source.Clear();
 
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-			Assert.IsTrue(_results.Messages[1].All(d => !d.Item.Current.IsSubscribed));
+
+			var items = _results.Messages[0].SelectMany(x => x.Range);
+
+				Assert.IsTrue(items.All(d => !d.IsSubscribed));
 
 		}
 	}

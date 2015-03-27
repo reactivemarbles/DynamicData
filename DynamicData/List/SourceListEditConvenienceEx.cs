@@ -37,7 +37,7 @@ namespace DynamicData
 		/// <param name="items">The items.</param>
 		public static void AddRange<T>(this ISourceList<T> source, IEnumerable<T> items)
 		{
-			source.Edit(list => list.Add(items));
+			source.Edit(list => list.AddRange(items));
 		}
 
 		/// <summary>

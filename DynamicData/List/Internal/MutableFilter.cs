@@ -65,7 +65,9 @@ namespace DynamicData.Internal
 
 		private void  Requery(Func<T, bool> predicate)
 		{
+			//TODO:
 			_predicate = predicate;
+
 			_all.ForEach(item =>
 			{
 				var wasMatch = item.IsMatch;
