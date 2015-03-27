@@ -5,14 +5,14 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-	internal sealed class Sorter<T>
+	internal sealed class Sort<T>
 	{
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly IComparer<T> _comparer;
 		private readonly SortOptions _sortOptions;
 		private readonly ChangeAwareList<T> _list = new ChangeAwareList<T>();
 
-		public Sorter(IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions sortOptions)
+		public Sort(IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions sortOptions)
 		{
 			_source = source;
 			_comparer = comparer;
@@ -28,22 +28,46 @@ namespace DynamicData.Internal
 		{
 			changes.ForEach(change =>
 			{
-				var current = change.Item.Current;
 
 				switch (change.Reason)
 				{
 					case ListChangeReason.Add:
+					{
+						var current = change.Item.Current;
 						Insert(current);
 						break;
+					}
+					case ListChangeReason.AddRange:
+					{
+						change.Range.ForEach(Insert);
+						break;
+					}
 					case ListChangeReason.Update:
+					{
+						var current = change.Item.Current;
 						//TODO: check whether an item should stay in the same position
 						//i.e. update and move
 						Remove(change.Item.Previous.Value);
 						Insert(current);
 						break;
+					}
 					case ListChangeReason.Remove:
+					{
+						var current = change.Item.Current;
 						Remove(current);
 						break;
+					}
+					case ListChangeReason.RemoveRange:
+						{
+							change.Range.ForEach(Remove);
+							break;
+						}
+					case ListChangeReason.Clear:
+					{
+						_list.Clear();
+                        break;
+					}
+
 				}
 			});
 

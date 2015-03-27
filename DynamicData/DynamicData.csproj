@@ -153,7 +153,7 @@
     <Compile Include="List\IObservableList.cs" />
     <Compile Include="List\ISourceList.cs" />
     <Compile Include="List\ObservableListEx.cs" />
-    <Compile Include="List\Internal\Sorter.cs" />
+    <Compile Include="List\Internal\Sort.cs" />
     <Compile Include="List\RangeChange.cs" />
     <Compile Include="List\SortException.cs" />
     <Compile Include="List\SortOptions.cs" />

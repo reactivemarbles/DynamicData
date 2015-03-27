@@ -127,7 +127,7 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (comparer == null) throw new ArgumentNullException("comparer");
-			return new Sorter<T>(source, comparer, options).Run();
+			return new Sort<T>(source, comparer, options).Run();
 		}
 
 

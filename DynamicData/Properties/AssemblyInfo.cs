@@ -16,8 +16,7 @@ using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("DynamicData.Tests")]
 [assembly: InternalsVisibleTo("DynamicData.PLinq")]
-
-
+[assembly: InternalsVisibleTo("DynamicData.Fixtures")]
 
 
 // Version information for an assembly consists of the following four values:
