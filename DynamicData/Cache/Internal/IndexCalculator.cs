@@ -209,25 +209,13 @@ namespace DynamicData.Internal
 
 
 
-        public IComparer<KeyValuePair<TKey,TObject>> Comparer
-        {
-            get
-            {
-                return _comparer;
-            }
-        }
+        public IComparer<KeyValuePair<TKey,TObject>> Comparer => _comparer;
 
 
-        public List<KeyValuePair<TKey,TObject>> List
-        {
-            get
-            {
-                return _list;
-            }
-        }
+	    public List<KeyValuePair<TKey,TObject>> List => _list;
 
 
-        private int GetCurrentPosition(KeyValuePair<TKey,TObject> item)
+	    private int GetCurrentPosition(KeyValuePair<TKey,TObject> item)
         {
             int index;
 

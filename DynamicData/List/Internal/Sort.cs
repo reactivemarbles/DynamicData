@@ -10,7 +10,7 @@ namespace DynamicData.Internal
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly IComparer<T> _comparer;
 		private readonly SortOptions _sortOptions;
-		private readonly ChangeAwareList<T> _list = new ChangeAwareList<T>();
+		private readonly ChangeAwareList<T> _sortedList = new ChangeAwareList<T>();
 
 		public Sort(IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions sortOptions)
 		{
@@ -26,6 +26,8 @@ namespace DynamicData.Internal
 
 		private IChangeSet<T> Process(IChangeSet<T> changes)
 		{
+			//TODO: Can this be optimised? Perhaps option of add to end then do inline sort
+
 			changes.ForEach(change =>
 			{
 
@@ -64,14 +66,14 @@ namespace DynamicData.Internal
 						}
 					case ListChangeReason.Clear:
 					{
-						_list.Clear();
+						_sortedList.Clear();
                         break;
 					}
 
 				}
 			});
 
-			return _list.CaptureChanges();
+			return _sortedList.CaptureChanges();
 		}
 
 
@@ -79,14 +81,14 @@ namespace DynamicData.Internal
 		private void Remove(T item)
 		{
 			var index = GetCurrentPosition(item);
-			_list.RemoveAt(index);
+			_sortedList.RemoveAt(index);
 
 		}
 
 		private void Insert(T item)
 		{
 			var index = GetInsertPosition(item);
-			_list.Insert(index,item);
+			_sortedList.Insert(index,item);
 
 		}
 
@@ -99,17 +101,17 @@ namespace DynamicData.Internal
 
 		private int GetInsertPositionLinear(T item)
 		{
-			for (int i = 0; i < _list.Count; i++)
+			for (int i = 0; i < _sortedList.Count; i++)
 			{
-				if (_comparer.Compare(item, _list[i]) < 0)
+				if (_comparer.Compare(item, _sortedList[i]) < 0)
 					return i;
 			}
-			return _list.Count;
+			return _sortedList.Count;
 		}
 
 		private int GetInsertPositionBinary(T item)
 		{
-			int index = _list.BinarySearch(item, _comparer);
+			int index = _sortedList.BinarySearch(item, _comparer);
 			int insertIndex = ~index;
 
 			//sort is not returning uniqueness
@@ -121,8 +123,8 @@ namespace DynamicData.Internal
 		private int GetCurrentPosition(T item)
 		{
 			int index = _sortOptions == SortOptions.UseBinarySearch
-				? _list.BinarySearch(item,_comparer)
-				: _list.IndexOf(item);
+				? _sortedList.BinarySearch(item,_comparer)
+				: _sortedList.IndexOf(item);
 
 			if (index < 0)
 				throw new SortException("Current item cannot be found");

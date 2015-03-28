@@ -7,12 +7,13 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-    /// <summary>
-    /// A set of changes applied to the 
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    public  class ChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>, IChangeSet
+
+		/// <summary>
+	/// A set of changes applied to the 
+	/// </summary>
+	/// <typeparam name="TObject">The type of the object.</typeparam>
+	/// <typeparam name="TKey">The type of the key.</typeparam>
+	public class ChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>, IChangeSet
 	{
 		private List<Change<TObject, TKey>> Items { get; } = new List<Change<TObject, TKey>>();
 

@@ -75,6 +75,7 @@
     <Compile Include="Binding\BindChangeSetFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
+    <Compile Include="Binding\ObservableCollectionToObservableListFixture.cs" />
     <Compile Include="Domain\PersonEmployment.cs" />
     <Compile Include="Domain\PersonSorter.cs" />
     <Compile Include="Domain\PersonWithEmployment.cs" />
@@ -153,6 +154,7 @@
     <Compile Include="ListFixtures\SortFixture.cs" />
     <Compile Include="ListFixtures\SubscribeManyFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
+    <Compile Include="ListFixtures\TransformManyFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\SelectManyExtensions.cs" />
     <Compile Include="CacheFixtures\SourceCacheFixture.cs" />

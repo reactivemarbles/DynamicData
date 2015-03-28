@@ -152,6 +152,28 @@ namespace DynamicData
 		}
 
 		/// <summary>
+		/// Equivalent to a select many transform. To work, the key must individually identify each child.
+		/// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
+		/// </summary>
+		/// <typeparam name="TDestination">The type of the destination.</typeparam>
+		/// <typeparam name="TSource">The type of the source.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="manyselector">The manyselector.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// manyselector
+		/// </exception>
+		public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination,  TSource>([NotNull] this IObservable<IChangeSet<TSource>> source,
+			[NotNull] Func<TSource, IEnumerable<TDestination>> manyselector)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (manyselector == null) throw new ArgumentNullException("manyselector");
+			return new TransformMany<TSource, TDestination>(source, manyselector).Run();
+		}
+
+		/// <summary>
 		/// Selects distinct values from the source, using the specified value selector
 		/// </summary>
 		/// <typeparam name="TObject">The type of the source.</typeparam>

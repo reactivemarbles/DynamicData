@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Binding
 {
-    [TestFixture]
+	[TestFixture]
     public class ObservableCollectionToObservableChangeSetFixture
     {
         private TestObservableCollection<Person> _collection;

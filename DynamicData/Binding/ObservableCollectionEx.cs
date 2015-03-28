@@ -22,8 +22,7 @@ namespace DynamicData.Binding
 		/// <exception cref="System.ArgumentNullException">source</exception>
 		public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this  ObservableCollection<T> source)
         {
-
-	        return Observable.Create<IChangeSet<T>>
+			return Observable.Create<IChangeSet<T>>
 		        (
 			        observer =>
 			        {

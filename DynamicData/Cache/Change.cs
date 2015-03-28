@@ -4,6 +4,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
+
     /// <summary>
     ///   Container to describe a single change to a cache
     /// </summary>
@@ -133,7 +134,11 @@ namespace DynamicData
         /// </summary>
         public int PreviousIndex { get; }
 
-	    #endregion
+
+
+		#endregion
+
+
 
 		#region IEquatable<Change<T>> Members
 

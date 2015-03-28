@@ -58,6 +58,7 @@
     <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
     <Compile Include="List\Change.cs" />
+    <Compile Include="List\ChangeType.cs" />
     <Compile Include="List\Internal\BufferIf.cs" />
     <Compile Include="List\Internal\DeferUntilLoaded.cs" />
     <Compile Include="List\Internal\Distinct.cs" />
@@ -144,6 +145,9 @@
     <Compile Include="List\Internal\QueryWhenChanged.cs" />
     <Compile Include="List\Internal\SubscribeMany.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
+    <Compile Include="List\Internal\TransformMany.cs" />
+    <Compile Include="List\Internal\UnifiedChange.cs" />
+    <Compile Include="List\Internal\UnifiedChangeEnumerator.cs" />
     <Compile Include="List\ItemChange.cs" />
     <Compile Include="List\ListChangeEx.cs" />
     <Compile Include="List\ListChangeReason.cs" />

@@ -15,9 +15,7 @@ using DynamicData.Operators;
 
 namespace DynamicData
 {
-
-
-
+	
     /// <summary>
     /// Extensions for dynamic data
     /// </summary>

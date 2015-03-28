@@ -7,7 +7,6 @@ namespace DynamicData
 {
 	public static class ListChangeEx
 	{
-
 		/// <summary>
 		/// Filters the source from the changes, using the specified predicate
 		/// </summary>

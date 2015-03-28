@@ -33,10 +33,12 @@ namespace DynamicData.Internal
 
 		private IChangeSet<IGroup<TObject, TGroupKey>> Process(IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
 		{
-			//TO do. create enumerator which flattens out item changes...
+			//TO do.This flattened enumerator is inefficient as range operations are lost.
+			//maybe can infer within each grouping whether we can regroup i.e. Another enumerator!!!
+			var enumerator = new UnifiedChangeEnumerator<ItemWithValue<TObject, TGroupKey>>(changes);
 
-			changes
-				.GroupBy(change => change.Item.Current.Value)
+			enumerator
+				.GroupBy(change => change.Current.Value)
 				.ForEach(grouping =>
 				{
 					//lookup group and if created, add to result set
@@ -57,24 +59,24 @@ namespace DynamicData.Internal
 								switch (change.Reason)
 								{
 									case ListChangeReason.Add:
-										list.Add(change.Item.Current.Item);
+										list.Add(change.Current.Item);
 										break;
 									case ListChangeReason.Update:
 									{
-										var previousItem = change.Item.Previous.Value.Item;
-										var previousGroup = change.Item.Previous.Value.Value;
+										var previousItem = change.Previous.Value.Item;
+										var previousGroup = change.Previous.Value.Value;
 
-
+										//check whether an item changing has resulted in a different group
 										if (previousGroup.Equals(currentGroup))
 										{
 											//find and replace
 											var index = list.IndexOf(previousItem);
-											list[index] = change.Item.Current.Item;
+											list[index] = change.Current.Item;
 										}
 										else
 										{
 											//add to new group
-											list.Add(change.Item.Current.Item);
+											list.Add(change.Current.Item);
 
 											//remove from old group
 											_groupCache.Lookup(previousGroup)
@@ -89,7 +91,7 @@ namespace DynamicData.Internal
 									}
 										break;
 									case ListChangeReason.Remove:
-										list.Remove(change.Item.Current.Item);
+										list.Remove(change.Current.Item);
 										break;
 
 								}

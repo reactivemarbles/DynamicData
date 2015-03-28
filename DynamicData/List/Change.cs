@@ -18,12 +18,44 @@ namespace DynamicData
 		/// A single item change
 		/// </summary>
 		public ItemChange<T> Item { get; }
-
-
+		
 		/// <summary>
 		/// A multiple item change
 		/// </summary>
 		public RangeChange<T> Range { get; }
+
+		/// <summary>
+		/// Gets a value indicating whether the change is a single item change or a range change
+		/// </summary>
+		/// <value>
+		/// The type.
+		/// </value>
+		public ChangeType Type
+		{
+			get
+			{
+				switch (Reason)
+				{
+					case ListChangeReason.Add:
+						return ChangeType.Item;
+					case ListChangeReason.AddRange:
+						return ChangeType.Range;
+					case ListChangeReason.Update:
+						return ChangeType.Item;
+					case ListChangeReason.Remove:
+						return ChangeType.Item;
+					case ListChangeReason.RemoveRange:
+						return ChangeType.Range;
+					case ListChangeReason.Moved:
+						return ChangeType.Item;
+					case ListChangeReason.Clear:
+						return ChangeType.Range;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+		}
+
 
 		#region Construction
 
