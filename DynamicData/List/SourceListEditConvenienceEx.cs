@@ -41,6 +41,18 @@ namespace DynamicData
 		}
 
 		/// <summary>
+		/// Inserts the elements of a collection into the <see cref="T:System.Collections.Generic.List`1" /> at the specified index.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="items">The items.</param>
+		/// <param name="index">The zero-based index at which the new elements should be inserted.</param>
+		public static void InsertRange<T>(this ISourceList<T> source, IEnumerable<T> items, int index)
+		{
+			source.Edit(list => list.InsertRange(items, index));
+		}
+
+		/// <summary>
 		/// Removes the specified item from the source list
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
@@ -52,14 +64,17 @@ namespace DynamicData
 		}
 
 		/// <summary>
-		/// Removes the specified items from the source list
+		/// Removes a range of elements from the <see cref="T:System.Collections.Generic.List`1" />.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="source">The source.</param>
-		/// <param name="items">The items.</param>
-		public static void RemoveRange<T>(this ISourceList<T> source, IEnumerable<T> items)
+		/// <param name="index">The zero-based starting index of the range of elements to remove.</param>
+		/// <param name="count">The number of elements to remove.</param>
+		/// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="count" /> is less than 0.</exception>
+		/// <exception cref="T:System.ArgumentException"><paramref name="index" /> and <paramref name="count" /> do not denote a valid range of elements in the <see cref="T:System.Collections.Generic.List`1" />.</exception>
+		public static void RemoveRange<T>(this ISourceList<T> source, int index, int count)
 		{
-			source.Edit(list => list.Remove(items));
+			source.Edit(list => list.RemoveRange(index,count));
 		}
 
 

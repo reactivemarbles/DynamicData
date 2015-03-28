@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
 
@@ -41,7 +42,15 @@ namespace DynamicData.Internal
 					}
 					case ListChangeReason.AddRange:
 					{
-						change.Range.ForEach(Insert);
+						var ordered = change.Range.OrderBy(t => t, _comparer).ToList();
+						if (_sortedList.Count == 0)
+						{
+							_sortedList.AddRange(ordered);
+						}
+						else
+						{
+							change.Range.ForEach(Insert);
+						}
 						break;
 					}
 					case ListChangeReason.Update:

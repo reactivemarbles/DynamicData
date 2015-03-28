@@ -30,9 +30,9 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void ChangeFilter()
         {
-            var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray();
+            var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
 
-            _source.Edit(updater => updater.Add(people));
+            _source.AddRange(people);
             Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
             
             _filter.Change(p=>p.Age<=50);
@@ -50,8 +50,8 @@ namespace DynamicData.Tests.ListFixtures
             //re-evaluate for inline changes
             var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray();
 
-            _source.Edit(updater => updater.Add(people));
-            Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
+			_source.AddRange(people);
+			Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
 
             foreach (var person in people)
             {
@@ -135,8 +135,8 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
-            _source.Edit(updater => updater.Add(people));
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
+			_source.AddRange(people);
+			Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should return 80 adds");
 
             var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
@@ -150,7 +150,7 @@ namespace DynamicData.Tests.ListFixtures
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
 
             _source.AddRange(people);
-            _source.RemoveRange(people);
+            _source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");

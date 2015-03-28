@@ -117,10 +117,10 @@ namespace DynamicData.Tests.ListFixtures
         public void BatchRemoves()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
-			_source.Edit(list => list.Add(people));
-			_source.Edit(list => list.Remove(people));
+			_source.AddRange(people);
+			_source.Clear();
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
+			Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");
             Assert.AreEqual(80, _results.Messages[1].Removes, "Should be 80 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
@@ -147,8 +147,8 @@ namespace DynamicData.Tests.ListFixtures
         public void Clear()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
-			_source.Edit(list => list.Add(people));
-			_source.Edit(list=>list.Clear());
+			_source.AddRange(people);
+			_source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");

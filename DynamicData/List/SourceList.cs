@@ -52,7 +52,7 @@ namespace DynamicData
 		/// Edit the inner list within the list's internal locking mechanism
 		/// </summary>
 		/// <param name="updateAction">The update action.</param>
-		public void Edit([NotNull] Action<IList<T>> updateAction)
+		public void Edit([NotNull] Action<IExtendedList<T>> updateAction)
 		{
 			if (updateAction == null) throw new ArgumentNullException("updateAction");
 			

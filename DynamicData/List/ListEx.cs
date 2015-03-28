@@ -136,9 +136,9 @@ namespace DynamicData
 			{
 				((List<T>)source).AddRange(items);
 			}
-			else if (source is ChangeAwareList<T>)
+			else if (source is IExtendedList<T>)
 			{
-				((ChangeAwareList<T>)source).AddRange(items);
+				((IExtendedList<T>)source).AddRange(items);
 			}
 			else
 			{
@@ -156,9 +156,9 @@ namespace DynamicData
 			{
 				((List<T>)source).InsertRange(items,index);
 			}
-			else if (source is ChangeAwareList<T>)
+			else if (source is IExtendedList<T>)
 			{
-				((ChangeAwareList<T>)source).InsertRange(items,index);
+				((IExtendedList<T>)source).InsertRange(items,index);
 			}
 			else
 			{

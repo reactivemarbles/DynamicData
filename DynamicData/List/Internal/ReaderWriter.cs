@@ -29,7 +29,7 @@ namespace DynamicData.Internal
 			return new Continuation<IChangeSet<T>>(result);
 		}
 
-		public Continuation<IChangeSet<T>> Write(Action<IList<T>> updateAction)
+		public Continuation<IChangeSet<T>> Write(Action<IExtendedList<T>> updateAction)
 		{
 			if (updateAction == null) throw new ArgumentNullException("updateAction");
 			IChangeSet<T> result;

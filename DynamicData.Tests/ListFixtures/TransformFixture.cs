@@ -78,7 +78,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
-            _source.Edit(updater => updater.Add(people));
+            _source.AddRange(people);
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(100, _results.Messages[0].Adds, "Should return 100 adds");
@@ -93,9 +93,9 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name", i)).ToArray();
 
-            _source.Edit(updater => updater.Add(people));
+			_source.AddRange(people);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
+			Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(10, _results.Messages[0].Adds, "Should return 10 adds");
             Assert.AreEqual(10, _results.Data.Count, "Should result in 10 records");
 
@@ -106,10 +106,10 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
 
-            _source.Edit(updater => updater.Add(people));
-            _source.Edit(updater => updater.Clear());
+			_source.AddRange(people);
+			_source.Clear();
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
+			Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(100, _results.Messages[0].Adds, "Should be 80 addes");
             Assert.AreEqual(100, _results.Messages[1].Removes, "Should be 80 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");

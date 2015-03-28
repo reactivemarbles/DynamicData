@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace DynamicData
 {
-	internal class ChangeAwareList<T> : ISupportsCapcity, IList<T>
+	internal class ChangeAwareList<T> : ISupportsCapcity, IList<T>, IExtendedList<T>
 	{
 		private readonly List<T> _innerList = new List<T>();
 		ChangeSet<T> _changes = new ChangeSet<T>();
