@@ -1,16 +1,14 @@
-﻿
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace DynamicData
 {
-	internal class ChangeAwareList<T> : ISupportsCapcity, IList<T>, IExtendedList<T>
+	internal class ChangeAwareList<T> : ISupportsCapcity,  IExtendedList<T>
 	{
 		private readonly List<T> _innerList = new List<T>();
 		ChangeSet<T> _changes = new ChangeSet<T>();
 		private bool _isMoving;
-
 
 		public ChangeSet<T> CaptureChanges()
 		{
@@ -42,7 +40,6 @@ namespace DynamicData
 		{
 			var toremove = _innerList.Skip(index).Take(count).ToList();
 			if (toremove.Count == 0) return;
-
 			var args = new Change<T>(ListChangeReason.RemoveRange, toremove, index);
 
 			_changes.Add(args);

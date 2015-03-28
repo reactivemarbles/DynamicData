@@ -6,6 +6,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Annotations;
 using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Internal;
@@ -602,26 +603,40 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException("source");
 
-            return source
-                .Buffer(timeSpan, scheduler ?? Scheduler.Default)
-                .Where(x=>x.Count!=0)
-                .Select(updates => new ChangeSet<TObject, TKey>(updates.SelectMany(u => u)));
+	        return source
+		        .Buffer(timeSpan, scheduler ?? Scheduler.Default)
+		        .FlattenBufferResult();
 
         }
 
+		/// <summary>
+		/// Convert the result of a buffer operation to a single change set
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TKey">The type of the key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		public static IObservable<IChangeSet<TObject, TKey>> FlattenBufferResult<TObject, TKey>([NotNull] this IObservable<IList<IChangeSet<TObject, TKey>>> source)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			return source
+					.Where(x => x.Count != 0)
+					.Select(updates => new ChangeSet<TObject, TKey>(updates.SelectMany(u => u)));
+		}
 
-        /// <summary>
-        /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
-        /// When a resume signal has been received the batched updates will  be fired.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
-        /// <param name="scheduler">The scheduler.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+
+		/// <summary>
+		/// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
+		/// When a resume signal has been received the batched updates will  be fired.
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TKey">The type of the key.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
+		/// <param name="scheduler">The scheduler.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             IObservable<bool> pauseIfTrueSelector,    
             IScheduler scheduler = null)
         {

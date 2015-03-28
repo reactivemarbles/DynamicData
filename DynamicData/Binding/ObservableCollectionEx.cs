@@ -66,7 +66,7 @@ namespace DynamicData.Binding
 								        }
 								        case NotifyCollectionChangedAction.Reset:
 								        {
-											var cleared = new Change<T>(ListChangeReason.Clear,cloneOfList.Items.ToList());
+											var cleared = new Change<T>(ListChangeReason.Clear,cloneOfList.Items.ToList(),0);
 									        var clearedChangeSet = new ChangeSet<T>() {cleared};
 											 return clearedChangeSet.Concat(initialChangeSet());
 								        }

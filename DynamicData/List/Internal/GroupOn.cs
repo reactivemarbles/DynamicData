@@ -33,7 +33,7 @@ namespace DynamicData.Internal
 
 		private IChangeSet<IGroup<TObject, TGroupKey>> Process(IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
 		{
-			//TO do.This flattened enumerator is inefficient as range operations are lost.
+			//TODO.This flattened enumerator is inefficient as range operations are lost.
 			//maybe can infer within each grouping whether we can regroup i.e. Another enumerator!!!
 			var enumerator = new UnifiedChangeEnumerator<ItemWithValue<TObject, TGroupKey>>(changes);
 

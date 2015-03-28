@@ -5,6 +5,9 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
+	/// <summary>
+	/// 
+	/// </summary>
 	public static class ListChangeEx
 	{
 		/// <summary>
@@ -14,7 +17,7 @@ namespace DynamicData
 		/// <param name="source">The source.</param>
 		/// <param name="changes">The changes.</param>
 		/// <param name="predicate">The predicate.</param>
-		internal static void Filter<T>(this IList<T> source, IChangeSet<T> changes, Func<T, bool> predicate)
+		public static void Filter<T>(this IList<T> source, IChangeSet<T> changes, Func<T, bool> predicate)
 		{
 			if (source == null) throw new ArgumentNullException("source");
 			if (changes == null) throw new ArgumentNullException("changes");
@@ -270,11 +273,10 @@ namespace DynamicData
 							}
 							else
 							{
-								//check this works whether the index is 
+								//check this works whatever the index is 
 								source.RemoveAt(change.PreviousIndex);
 								source.Insert(change.CurrentIndex, change.Current);
 							}
-
 							break;
 						}
 				}

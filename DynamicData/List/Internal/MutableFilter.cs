@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
@@ -14,8 +15,7 @@ namespace DynamicData.Internal
 		private readonly ChangeAwareList<T> _filtered = new ChangeAwareList<T>();
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly FilterController<T> _controller;
-
-
+		
 		private  Func<T, bool> _predicate=t=>false;
 
 		public MutableFilter([NotNull] IObservable<IChangeSet<T>> source, [NotNull] FilterController<T> controller)
@@ -63,28 +63,38 @@ namespace DynamicData.Internal
 			});
 		}
 
-		private void  Requery(Func<T, bool> predicate)
+		private void Requery(Func<T, bool> predicate)
 		{
-			//TODO:
 			_predicate = predicate;
 
-			_all.ForEach(item =>
+			var newState = _all.Select(item =>
 			{
+				var match = _predicate(item.Item);
 				var wasMatch = item.IsMatch;
-				var isMatch = _predicate(item.Item);
-				item.IsMatch = isMatch;
 
-				if (wasMatch == isMatch) return;
+				//reflect filtered state
+				if (item.IsMatch != match) item.IsMatch = match;
 
-				if (isMatch)
+				return new
 				{
-					_filtered.Add(item.Item);
-				}
-				else
-				{
-					_filtered.Remove(item.Item);
-				}
+					Item = item,
+					IsMatch = match,
+					WasMatch = wasMatch
+				};
+			}).ToList();
+
+			//reflect items which are no longer matched
+			//TODO:can we determine whether removes are remove all? i.e. Then we can send a 'Clear' reason message (or Remove range?)
+			var noLongerMatched = newState.Where(state => !state.IsMatch && state.WasMatch).Select(state => state.Item);
+			noLongerMatched.ForEach(state =>
+			{
+				_filtered.Remove(state.Item);
 			});
+
+
+			//reflect new matches in the list
+			var newMatched = newState.Where(state => state.IsMatch && !state.WasMatch).Select(state => state.Item.Item);
+			_filtered.AddRange(newMatched);
 		}
 
 		private class ItemWithMatch

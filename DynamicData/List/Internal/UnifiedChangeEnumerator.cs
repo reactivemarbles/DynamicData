@@ -41,7 +41,6 @@ namespace DynamicData.Internal
 						}
 					}
 				}
-
 			}
 		}
 

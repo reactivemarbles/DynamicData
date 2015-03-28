@@ -9,7 +9,7 @@ namespace DynamicData.Internal
 	internal class QueryWhenChanged<T>
 	{
 		private readonly IObservable<IChangeSet<T>> _source;
-		readonly IList<T> _list = new List<T>();
+		private readonly List<T> _list = new List<T>();
 
 		public QueryWhenChanged([NotNull] IObservable<IChangeSet<T>> source)
 		{

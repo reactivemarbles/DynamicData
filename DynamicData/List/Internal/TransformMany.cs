@@ -23,50 +23,42 @@ namespace DynamicData.Internal
 
 		public IObservable<IChangeSet<TDestination>> Run()
 		{
-			//TODO: This is very ineffiecient as it flattens range operation
-			//need to find a means of re-forming ranges
-
-			return Observable.Create<IChangeSet<TDestination>>(
-				observer =>
-				{
-					var list = new ChangeAwareList<TDestination>();
-
-					return _source.Subscribe(updates =>
-					{
-						var enumerator = new UnifiedChangeEnumerator<TSource>(updates);
-						var children = enumerator.SelectMany(change =>
-						{
-							var many = _manyselector(change.Current);
-							return many.Select(m => new TransformedItem<TDestination>(change.Reason, m));
-						});
-
-						foreach (var child in children)
-						{
-							switch (child.Reason)
-							{
-								case ListChangeReason.Add:
-									list.Add(child.Current);
-									break;
-								case ListChangeReason.Update:
-									list.Remove(child.Previous.Value);
-									list.Add(child.Current);
-									break;
-								case ListChangeReason.Remove:
-									list.Remove(child.Current);
-									break;
-							}
-						}
-
-						var changes = list.CaptureChanges();
-						if (changes.Count != 0)
-							observer.OnNext(changes);
-					});
-				}
-				);
+			return _source.Select(Process).NotEmpty();
 		}
 
+		private IChangeSet<TDestination> Process(IChangeSet<TSource> source)
+		{
+			//TODO: This is very ineffiecient as it flattens range operation
+			//need to find a means of re-forming ranges
+			var enumerator = new UnifiedChangeEnumerator<TSource>(source);
+			var children = enumerator.SelectMany(change =>
+			{
+				var many = _manyselector(change.Current);
+				return many.Select(m => new TransformedItem<TDestination>(change.Reason, m));
+			});
+
+			foreach (var child in children)
+			{
+				switch (child.Reason)
+				{
+					case ListChangeReason.Add:
+						_transformed.Add(child.Current);
+						break;
+					case ListChangeReason.Update:
+						_transformed.Remove(child.Previous.Value);
+						_transformed.Add(child.Current);
+						break;
+					case ListChangeReason.Remove:
+						_transformed.Remove(child.Current);
+						break;
+				}
+			}
+			return _transformed.CaptureChanges();
+		}
+
+
 		/// <summary>
-		///     Staging object for ManyTransform.
+		///  Staging object for ManyTransform.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		internal struct TransformedItem<T>
@@ -120,6 +112,5 @@ namespace DynamicData.Internal
 				return string.Format("Reason: {0}, Current: {1}, Previous: {2}", Reason, Current, Previous);
 			}
 		}
-
 	}
 }

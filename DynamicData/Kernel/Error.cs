@@ -10,6 +10,8 @@ namespace DynamicData.Kernel
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public sealed class Error<TObject, TKey>: IKeyValue<TObject,TKey>, IEquatable<Error<TObject, TKey>>
     {
+
+
 	    /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object"/> class.
         /// </summary>
@@ -20,20 +22,21 @@ namespace DynamicData.Kernel
             Key = key;
         }
 
-        /// <summary>
-        /// Gets the key.
-        /// </summary>
-        public TKey Key { get; }
+		/// <summary>
+		/// Gets the key.
+		/// </summary>
+		public TKey Key { get; }
 
-	    /// <summary>
-        /// Gets the object.
-        /// </summary>
-        public TObject Value { get; }
+		/// <summary>
+		/// Gets the object.
+		/// </summary>
+		public TObject Value { get; }
 
-	    /// <summary>
-        /// The exception.
-        /// </summary>
-        public Exception Exception { get; }
+		/// <summary>
+		/// The exception.
+		/// </summary>
+		public Exception Exception { get; }
+
 
 		#region Equality members
 

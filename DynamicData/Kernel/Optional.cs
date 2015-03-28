@@ -160,7 +160,7 @@ namespace DynamicData.Kernel
 		/// <summary>
 		/// Equalses the specified other.
 		/// </summary>
-		/// <param name="other">The other.</param>
+		/// <param name="other">The other.</param>s
 		/// <returns></returns>
 		public bool Equals(Optional<T> other)
         {

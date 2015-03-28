@@ -18,8 +18,7 @@ namespace DynamicData.Internal
 			_source = source;
 			_observableSelector = observableSelector;
 		}
-
-
+		
 		public IObservable<TDestination> Run()
 		{
 			return Observable.Create<TDestination>
@@ -27,17 +26,9 @@ namespace DynamicData.Internal
 					observer =>
 					{
 						var locker = new object();
-						return _source.SubscribeMany(t => _observableSelector(t).Subscribe(x =>
-						{
-							observer.OnNext(x);
-						}))
-						.Subscribe();
+						return _source.SubscribeMany(t => _observableSelector(t).Synchronize(locker).SubscribeSafe(observer))
+						.Subscribe(t => { }, observer.OnError);
 
-						//return _source.Transform(t => _observableSelector(t)
-						//	//.Synchronize(locker)
-						//	.SubscribeSafe(observer))
-						//	.DisposeMany()
-						//	.Subscribe();
 					});
 		}
 	}

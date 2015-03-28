@@ -60,7 +60,7 @@ namespace DynamicData.Binding
                 _suspendCount = false;
                 _suspendNotifications = false;
                 OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-                this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             });
         }
 
