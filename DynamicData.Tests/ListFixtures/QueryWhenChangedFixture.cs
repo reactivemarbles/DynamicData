@@ -36,6 +36,23 @@ namespace DynamicData.Tests.ListFixtures
 			subscription.Dispose();
 		}
 
+
+		[Test]
+		public void CanHandleAddsAndUpdates()
+		{
+			bool invoked = false;
+			var subscription = _source.Connect()
+				.QueryWhenChanged(q=>q.Count)
+				.Subscribe(query => invoked = true);
+
+			var person = new Person("A", 1);
+            _source.Add(person);
+			_source.Remove(person);
+
+			Assert.IsTrue(invoked, "Should have received on next");
+			subscription.Dispose();
+		}
+
 		[Test]
 		public void ChangeInvokedOnNext()
 		{

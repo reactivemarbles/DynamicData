@@ -104,6 +104,7 @@ namespace DynamicData.Binding
                     case ChangeReason.Add:
                         list.Add(update.Current);
                         break;
+
                     case ChangeReason.Remove:
                         list.Remove(update.Current);
                         break;

@@ -3,10 +3,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Internal;
 using DynamicData.Kernel;
-using DynamicData.PLinq;
-
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData.PLinq
 {
 
     /// <summary>
