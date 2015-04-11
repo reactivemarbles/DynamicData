@@ -40,6 +40,8 @@ namespace DynamicData.Tests.ListFixtures
 		[Test]
 		public void CanHandleAddsAndUpdates()
 		{
+
+
 			bool invoked = false;
 			var subscription = _source.Connect()
 				.QueryWhenChanged(q=>q.Count)

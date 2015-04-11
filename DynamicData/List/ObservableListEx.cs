@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
@@ -15,6 +16,51 @@ namespace DynamicData
 	/// </summary>
 	public static class ObservableListEx
 	{
+		#region Binding
+
+		/// <summary>
+		/// Binds a clone of the observable changeset to the target observable collection
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="targetCollection">The target collection.</param>
+		/// <param name="resetThreshold">The reset threshold.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// targetCollection
+		/// </exception>
+		public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
+			[NotNull] IObservableCollection<T> targetCollection, int resetThreshold=25 )
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (targetCollection == null) throw new ArgumentNullException("targetCollection");
+
+			var adaptor = new ObservableCollectionAdaptor<T>(targetCollection, resetThreshold);
+			return source.Adapt(adaptor);
+		}
+
+		/// <summary>
+		/// Injects a side effect into a changeset observable
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="adaptor">The adaptor.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">
+		/// source
+		/// or
+		/// adaptor
+		/// </exception>
+		public static IObservable<IChangeSet<T>> Adapt<T>([NotNull] this IObservable<IChangeSet<T>> source,[NotNull] IChangeSetAdaptor<T> adaptor)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (adaptor == null) throw new ArgumentNullException("adaptor");
+			return source.Do(adaptor.Adapt);
+		}
+
+		#endregion
 
 		#region Populate into an observable cache
 
@@ -43,8 +89,6 @@ namespace DynamicData
 		}
 
 
-		#endregion
-
 		/// <summary>
 		/// Converts the source list to an read only observable list
 		/// </summary>
@@ -71,6 +115,9 @@ namespace DynamicData
 			if (source == null) throw new ArgumentNullException("source");
 			return new AnomynousObservableList<T>(source);
 		}
+
+
+		#endregion
 
 		#region Core List Operators
 

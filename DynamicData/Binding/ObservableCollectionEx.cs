@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
@@ -13,6 +12,7 @@ namespace DynamicData.Binding
     /// </summary>
     public static class ObservableCollectionEx
     {
+
 		/// <summary>
 		/// Convert an observable collection into an observable change set
 		/// </summary>

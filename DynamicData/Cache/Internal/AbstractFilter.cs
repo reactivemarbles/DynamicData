@@ -154,30 +154,20 @@ namespace DynamicData.Internal
 
         protected struct UpdateWithFilter
         {
-            private readonly Change<TObject, TKey> _source;
-            private readonly bool _isMatch;
-
-            /// <summary>
+	        /// <summary>
             /// Initializes a new instance of the <see cref="T:System.Object"/> class.
             /// </summary>
             public UpdateWithFilter(bool isMatch, Change<TObject, TKey> change)
             {
-                _isMatch = isMatch;
-                _source = change;
+                IsMatch = isMatch;
+                Change = change;
             }
+			public Change<TObject, TKey> Change { get; }
+			public bool IsMatch { get; }
 
 
 
-            public Change<TObject, TKey> Change
-            {
-                get { return _source; }
-            }
-
-            public bool IsMatch
-            {
-                get { return _isMatch; }
-            }
-        }
+		}
 
     }
 }

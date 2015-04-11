@@ -7,7 +7,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
 	/// <summary>
 	/// A set of changes which has occured since the last reported changes
 	/// </summary>

@@ -59,6 +59,7 @@
     <Compile Include="Kernel\ItemWithIndex.cs" />
     <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeType.cs" />
+    <Compile Include="List\IChangeSetAdaptor.cs" />
     <Compile Include="List\Internal\BufferIf.cs" />
     <Compile Include="List\Internal\DeferUntilLoaded.cs" />
     <Compile Include="List\Internal\Distinct.cs" />

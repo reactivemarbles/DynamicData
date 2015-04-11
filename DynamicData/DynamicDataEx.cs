@@ -2423,8 +2423,7 @@ namespace DynamicData
                     var locker = new object();
                     var published = source.Synchronize(locker).Publish();
 
-                    var adaptor = published
-                        .Subscribe(updates =>
+                    var adaptor = published.Subscribe(updates =>
                         {
                             try
                             {

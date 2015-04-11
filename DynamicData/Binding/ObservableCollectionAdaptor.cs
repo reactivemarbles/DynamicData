@@ -1,4 +1,5 @@
-using System.Linq;
+using System;
+using DynamicData.Annotations;
 using DynamicData.Internal;
 using  DynamicData.Kernel;
 
@@ -9,18 +10,21 @@ namespace DynamicData.Binding
 	/// Adaptor to relect a change set into an observable list
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public class ObservableCollectionAdaptor<T> 
+	public class ObservableCollectionAdaptor<T> : IChangeSetAdaptor<T>
 	{
 		private readonly IObservableCollection<T> _collection;
 		private readonly int _refreshThreshold;
 		private bool _loaded;
 
-		//private readonly Cache<TObject, TKey> _cache = new Cache<TObject, TKey>();
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:System.Object"/> class.
+		/// Initializes a new instance of the <see cref="T:System.Object" /> class.
 		/// </summary>
-		public ObservableCollectionAdaptor(IObservableCollection<T> collection, int refreshThreshold = 25)
+		/// <param name="collection">The collection.</param>
+		/// <param name="refreshThreshold">The refresh threshold.</param>
+		/// <exception cref="System.ArgumentNullException">collection</exception>
+		public ObservableCollectionAdaptor([NotNull] IObservableCollection<T> collection, int refreshThreshold = 25)
 		{
+			if (collection == null) throw new ArgumentNullException("collection");
 			_collection = collection;
 			_refreshThreshold = refreshThreshold;
 		}
