@@ -27,7 +27,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <CodeAnalysisIgnoreGeneratedCode>true</CodeAnalysisIgnoreGeneratedCode>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Binding\BindChangeSetFixture.cs" />
+    <Compile Include="Binding\BindFromObservaleListFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
     <Compile Include="Binding\ObservableCollectionToObservableListFixture.cs" />
@@ -174,6 +175,9 @@
       <Project>{fe903921-6c55-40e3-9a16-4127ecacc12c}</Project>
       <Name>DynamicData</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

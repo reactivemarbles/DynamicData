@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Binding
 {
-    [TestFixture]
+	[TestFixture]
     public class BindChangeSetFixture
     {
         private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();

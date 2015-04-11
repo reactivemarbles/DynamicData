@@ -6,9 +6,15 @@ using DynamicData.Kernel;
 
 namespace DynamicData.PLinq
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
     internal class PLinqFilteredUpdater<TObject, TKey> : AbstractFilter<TObject, TKey>
     {
         private readonly ParallelisationOptions _parallelisationOptions;
+
 
         public PLinqFilteredUpdater( Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
             : base(new Cache<TObject, TKey>(), filter)
