@@ -26,7 +26,6 @@ namespace DynamicData.Internal
 					{
 						switch (change.Reason)
 						{
-
 							case ListChangeReason.AddRange:
 								yield return new UnifiedChange<T>(ListChangeReason.Add, item);
 								break;

@@ -21,7 +21,7 @@ namespace DynamicData.Controllers
         /// <param name="defaultFilter">The default filter.</param>
         public FilterController(Func<T, bool> defaultFilter = null)
         {
-            _filter = defaultFilter ?? (t => false);
+            _filter = defaultFilter ?? (t => true);
             _filterSubject.OnNext(_filter);
         }
 

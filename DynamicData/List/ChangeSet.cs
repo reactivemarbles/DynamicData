@@ -8,11 +8,10 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
 	/// <summary>
-	/// A set of changes which has occured since the last reported changes
+	/// A set of changes which has occured since the last reported change
 	/// </summary>
 	/// <typeparam name="T">The type of the object.</typeparam>
 	public class ChangeSet<T> : IChangeSet<T>
-	//: IChangeSet<T>
 	{
 		#region Fields
 

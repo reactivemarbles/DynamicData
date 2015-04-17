@@ -3,7 +3,6 @@ using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
-using IDisposable = System.IDisposable;
 
 namespace DynamicData.Tests.Binding
 {
@@ -21,7 +20,6 @@ namespace DynamicData.Tests.Binding
 			_collection = new ObservableCollectionExtended<Person>();
 			_source = new SourceList<Person>();
 			_binder = _source.Connect().Bind(_collection).Subscribe();
-
 		}
 
 		[TearDown]
@@ -65,7 +63,7 @@ namespace DynamicData.Tests.Binding
 		}
 
 		[Test]
-		public void BatchAdd()
+		public void AddRange()
 		{
 			var people = _generator.Take(100).ToList();
 			_source.AddRange(people);
@@ -75,7 +73,7 @@ namespace DynamicData.Tests.Binding
 		}
 
 		[Test]
-		public void BatchRemove()
+		public void Clear()
 		{
 			var people = _generator.Take(100).ToList();
 			_source.AddRange(people);

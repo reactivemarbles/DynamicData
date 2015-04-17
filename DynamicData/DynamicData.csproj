@@ -58,11 +58,13 @@
     <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
     <Compile Include="List\Change.cs" />
+    <Compile Include="List\ChangeSetEx.cs" />
     <Compile Include="List\ChangeType.cs" />
     <Compile Include="List\IChangeSetAdaptor.cs" />
     <Compile Include="List\Internal\BufferIf.cs" />
     <Compile Include="List\Internal\DeferUntilLoaded.cs" />
     <Compile Include="List\Internal\Distinct.cs" />
+    <Compile Include="List\Internal\ExpirableItem.cs" />
     <Compile Include="List\Internal\Group.cs" />
     <Compile Include="List\Internal\GroupOn.cs" />
     <Compile Include="List\IGroup.cs" />
@@ -144,6 +146,7 @@
     <Compile Include="List\Internal\MutableFilter.cs" />
     <Compile Include="List\Internal\OnBeingRemoved.cs" />
     <Compile Include="List\Internal\QueryWhenChanged.cs" />
+    <Compile Include="List\Internal\SizeLimiter.cs" />
     <Compile Include="List\Internal\SubscribeMany.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\Internal\TransformMany.cs" />
@@ -168,7 +171,7 @@
     <Compile Include="List\SourceListEditConvenienceEx.cs" />
     <Compile Include="List\Tests\ChangeSetAggregator.cs" />
     <Compile Include="List\Tests\TestEx.cs" />
-    <Compile Include="ObservableCache.cs" />
+    <Compile Include="ObservableCacheEx.cs" />
     <Compile Include="Cache\Internal\AbstractTransformer.cs" />
     <Compile Include="Cache\Internal\CombineOperator.cs" />
     <Compile Include="Cache\Internal\Combiner.cs" />

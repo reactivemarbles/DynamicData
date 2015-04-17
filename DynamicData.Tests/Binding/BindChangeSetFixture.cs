@@ -21,7 +21,6 @@ namespace DynamicData.Tests.Binding
             _collection = new ObservableCollectionExtended<Person>();
              _source = new SourceCache<Person, string>(p => p.Name);
              _binder = _source.Connect().Bind(_collection).Subscribe();
-
         }
 
         [TearDown]

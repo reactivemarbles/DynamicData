@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using DynamicData.Kernel;
 using DynamicData.Operators;
 
 namespace DynamicData.Controllers
@@ -53,12 +52,9 @@ namespace DynamicData.Controllers
         /// <value>
         /// The changed.
         /// </value>
-        public IObservable<IPageRequest> Changed
-        {
-            get { return _subject.AsObservable(); }
-        }
+        public IObservable<IPageRequest> Changed => _subject.AsObservable();
 
-        /// <summary>
+	    /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()

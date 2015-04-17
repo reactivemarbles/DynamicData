@@ -20,7 +20,7 @@ namespace DynamicData
     /// <summary>
     /// The entry point for the dynamic data sub system
     /// </summary>
-    public static class ObservableCache
+    public static class ObservableCacheEx
     {
         #region Populate changetset from observables
 

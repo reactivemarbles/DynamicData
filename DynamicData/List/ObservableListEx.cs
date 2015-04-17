@@ -16,6 +16,50 @@ namespace DynamicData
 	/// </summary>
 	public static class ObservableListEx
 	{
+		#region Expiry / size limiter
+
+		/// <summary>
+		/// Limits the size of the source cache to the specified limit
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source">The source.</param>
+		/// <param name="sizeLimit">The size limit.</param>
+		/// <param name="scheduler">The scheduler.</param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentNullException">source</exception>
+		/// <exception cref="ArgumentException">sizeLimit cannot be zero</exception>
+		public static IObservable<IEnumerable<T>> LimitSizeTo<T>([NotNull] this ISourceList<T> source,
+			int sizeLimit, IScheduler scheduler = null)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			if (sizeLimit <= 0) throw new ArgumentException("sizeLimit cannot be zero");
+
+			return new SizeLimiter<T>(source.Connect(), sizeLimit, true, scheduler)
+							.Run()
+							.Select(changes =>
+							{
+								//NB: only expired items are reported so no need to check whether type if removed
+								var expired =  changes.Unified()
+									.Select(change => change.Current)
+									.ToList();
+
+								//remove from csource
+								source.Edit(list =>
+								{
+									expired.ForEach(t=>list.Remove(t));
+								});
+
+
+
+
+								//report on expired items
+								return expired;
+
+							});
+		}
+
+		#endregion
+
 		#region Binding
 
 		/// <summary>

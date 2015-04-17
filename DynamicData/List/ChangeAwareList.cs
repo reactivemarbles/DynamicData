@@ -10,6 +10,12 @@ namespace DynamicData
 		ChangeSet<T> _changes = new ChangeSet<T>();
 		private bool _isMoving;
 
+		public void ClearChanges()
+		{
+			_changes = new ChangeSet<T>();
+		}
+
+
 		public ChangeSet<T> CaptureChanges()
 		{
 			var copy = _changes;

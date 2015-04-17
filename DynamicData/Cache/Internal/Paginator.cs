@@ -50,7 +50,7 @@ namespace DynamicData.Internal
         {
             _isLoaded = true;
             _all = updates.SortedItems;
-            return Paginate();
+            return Paginate(updates);
         }
 
         private IPagedChangeSet<TObject, TKey> Paginate(ISortedChangeSet<TObject, TKey> updates=null)
@@ -68,7 +68,7 @@ namespace DynamicData.Internal
                                  .Take(_request.Size)
                                  .ToList();
 
-            _current = new KeyValueCollection<TObject, TKey>(paged, _all.Comparer, SortReason.DataChanged,_all.Optimisations);
+            _current = new KeyValueCollection<TObject, TKey>(paged, _all.Comparer, updates?.SortedItems.SortReason ?? SortReason.DataChanged,_all.Optimisations);
 
             //check for changes within the current virtualised page.  Notify if there have been changes or if the overall count has changed
             var notifications = _changedCalculator.Calculate(_current, previous, updates);

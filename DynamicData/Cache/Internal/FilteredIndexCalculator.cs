@@ -11,7 +11,19 @@ namespace DynamicData.Internal
             IKeyValueCollection<TObject, TKey> previousItems,IChangeSet<TObject, TKey> sourceUpdates)
         {
             {
-                List<KeyValuePair<TKey,TObject>> previousList = previousItems.ToList();
+
+	            if (currentItems.SortReason == SortReason.ComparerChanged)
+	            {
+					//clear collection and rebuild
+					var removed = previousItems.Select((item,index)  => new Change<TObject, TKey>(ChangeReason.Remove, item.Key, item.Value, index));
+					var newitems = currentItems.Select((item, index) => new Change<TObject, TKey>(ChangeReason.Add, item.Key, item.Value, index));
+
+		            return new List<Change<TObject, TKey>>(removed.Union(newitems));
+	            }
+
+
+
+					List<KeyValuePair<TKey,TObject>> previousList = previousItems.ToList();
                 var keyComparer =new KeyComparer<TObject, TKey>();
                 
                 var removes = previousItems.Except(currentItems,keyComparer).ToList();
@@ -22,7 +34,12 @@ namespace DynamicData.Internal
                 var result = new List<Change<TObject, TKey>>();
                 foreach (var remove in removes)
                 {
-                    var index = previousList.BinarySearch(remove, currentItems.Comparer);
+	                int index;
+
+				 index = currentItems.SortReason== SortReason.ComparerChanged 
+						? previousList.IndexOf(remove) 
+						:  previousList.BinarySearch(remove, currentItems.Comparer);
+
                     previousList.RemoveAt(index);
                     result.Add(new Change<TObject, TKey>(ChangeReason.Remove, remove.Key, remove.Value, index));
                 }
