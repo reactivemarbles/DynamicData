@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
 using System.Reflection;
+using DynamicData.Annotations;
 
 namespace DynamicData.Binding
 {
@@ -42,6 +43,20 @@ namespace DynamicData.Binding
 				.StartWith(factory());
 
 			return propertyChanged;
+		}
+
+		/// <summary>
+		/// Selects the value from the property changed notification
+		/// </summary>
+		/// <typeparam name="TObject">The type of the object.</typeparam>
+		/// <typeparam name="TValue">The type of the value.</typeparam>
+		/// <param name="source">The source.</param>
+		/// <returns></returns>
+		/// <exception cref="System.ArgumentNullException">source</exception>
+		public static IObservable<TValue> Value<TObject, TValue>([NotNull] this IObservable<PropertyValue<TObject, TValue>> source)
+		{
+			if (source == null) throw new ArgumentNullException("source");
+			return source.Select(prop => prop.Value);
 		}
 
 
