@@ -6,7 +6,7 @@ namespace DynamicData.PLinq
 {
     /// <summary>
     /// Parallelisation extensions for DynamicData
-    /// </summary>
+    /// </summar>y
     internal static class ParallelEx
     {
         #region Parallelisation

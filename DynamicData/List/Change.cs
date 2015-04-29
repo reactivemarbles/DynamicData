@@ -185,7 +185,7 @@ namespace DynamicData
 			{
 				var hashCode = (int) Reason;
 				hashCode = (hashCode*397) ^ Item.GetHashCode();
-				hashCode = (hashCode*397) ^ (Range != null ? Range.GetHashCode() : 0);
+				hashCode = (hashCode*397) ^ (Range?.GetHashCode() ?? 0);
 				return hashCode;
 			}
 		}
@@ -210,7 +210,8 @@ namespace DynamicData
 		/// </returns>
 		public override string ToString()
 		{
-			return Range!=null ? string.Format("{0}. {1} changes", Reason, Range.Count) : string.Format("{0}. Current: {1}, Previous: {2}", Reason, Item.Current, Item.Previous);
+			return Range!=null ? $"{Reason}. {Range.Count} changes"
+			    : $"{Reason}. Current: {Item.Current}, Previous: {Item.Previous}";
 		}
 	}
 }
