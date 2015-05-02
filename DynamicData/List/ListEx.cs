@@ -53,10 +53,10 @@ namespace DynamicData
 		public static int BinarySearch<TItem, TSearch>(this IList<TItem> list, TSearch value, Func<TSearch, TItem, int> comparer)
 		{
 			if (list == null)
-				throw new ArgumentNullException("list");
+				throw new ArgumentNullException(nameof(list));
 
 			if (comparer == null)
-				throw new ArgumentNullException("comparer");
+				throw new ArgumentNullException(nameof(comparer));
 		
 
 			int lower = 0;
@@ -147,14 +147,14 @@ namespace DynamicData
 
 		}
 
-		public static void InsertRange<T>(this IList<T> source, IEnumerable<T> items,int index)
+		public static void AddRange<T>(this IList<T> source, IEnumerable<T> items,int index)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (items == null) throw new ArgumentNullException("items");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (items == null) throw new ArgumentNullException(nameof(items));
 
 			if (source is List<T>)
 			{
-				((List<T>)source).InsertRange(items,index);
+				((List<T>)source).InsertRange(index,items);
 			}
 			else if (source is IExtendedList<T>)
 			{
@@ -176,7 +176,7 @@ namespace DynamicData
 			{
 				if (index >= 0)
 				{
-					((List<T>)source).InsertRange(items, index);
+					((List<T>)source).AddRange(items, index);
 				}
 				else
 				{

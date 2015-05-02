@@ -77,9 +77,7 @@ namespace DynamicData.Tests.ListFixtures
 			Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
 			Assert.AreEqual(1, _results.Messages.Skip(1).First().Removes, "Second messsage should be a remove");
 		}
-
-
-
+        
 		[Test]
 		public void Replacing()
 		{

@@ -128,11 +128,27 @@ namespace DynamicData
 			get { return Items.Capacity; }
 			set { Items.Capacity = value; }
 		}
-		#endregion
 
-		#region Properties
+        /// <summary>
+        /// Gets or sets the <see cref="Change{T}"/> at the specified index.
+        /// </summary>
+        /// <value>
+        /// The <see cref="Change{T}"/>.
+        /// </value>
+        /// <param name="index">The index.</param>
+        /// <returns></returns>
+        public Change<T> this[int index]
+	    {
+	        get { return Items[index]; }
+            set { Items[index] = value; }
+	    }
 
-		private List<Change<T>> Items { get; } = new List<Change<T>>();
+
+        #endregion
+
+        #region Properties
+
+        private List<Change<T>> Items { get; } = new List<Change<T>>();
 
 
 		/// <summary>
@@ -163,15 +179,22 @@ namespace DynamicData
 		///     The total update count
 		/// </summary>
 		public int Count => Items.Count;
-		#endregion
 
-		#region Enumeration
 
-		/// <summary>
-		/// Gets the enumerator.
-		/// </summary>
-		/// <returns></returns>
-		public IEnumerator<Change<T>> GetEnumerator()
+        /// <summary>
+        /// Gets the last change in the collection
+        /// </summary>
+        public Optional<Change<T>> Last => Items.Count == 0 ? Optional.None<Change<T>>() : Items[Count - 1];
+
+	    #endregion
+
+        #region Enumeration
+
+        /// <summary>
+        /// Gets the enumerator.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<Change<T>> GetEnumerator()
 		{
 			return Items.GetEnumerator();
 		}
@@ -192,7 +215,7 @@ namespace DynamicData
 		/// </returns>
 		public override string ToString()
 		{
-			return string.Format("ChangeSet<{0}>. Count={1}", typeof(T).Name, Count);
+			return $"ChangeSet<{typeof (T).Name}>. Count={Count}";
 		}
 
 	}

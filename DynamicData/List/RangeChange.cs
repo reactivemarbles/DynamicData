@@ -10,14 +10,7 @@ namespace DynamicData
 	/// <typeparam name="T"></typeparam>
 	public class RangeChange<T> : IEnumerable<T>
 	{
-		private readonly List<T> _items;
-		/// <summary>
-		/// Gets the index initial index i.e. for the initial starting point of the range insertion
-		/// </summary>
-		/// <value>
-		/// The index.
-		/// </value>
-		public int Index { get; }
+
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
@@ -30,17 +23,47 @@ namespace DynamicData
 			_items = items as List<T> ?? items.ToList();
 		}
 
-		/// <summary>
-		///     The total update count
-		/// </summary>
-		public int Count => _items.Count;
+        /// <summary>
+        /// Adds the specified item to the range.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        public void Add(T item)
+	    {
+            _items.Add(item);
+        }
 
 
-		/// <summary>
-		/// Gets the enumerator.
-		/// </summary>
-		/// <returns></returns>
-		public IEnumerator<T> GetEnumerator()
+        /// <summary>
+        /// Sets the index of the starting index of the range
+        /// </summary>
+        /// <param name="index">The index.</param>
+        /// <exception cref="System.NotImplementedException"></exception>
+        public void SetStartingIndex(int index)
+        {
+            Index = index;
+        }
+
+        private readonly List<T> _items;
+
+        /// <summary>
+        ///     The total update count
+        /// </summary>
+        public int Count => _items.Count;
+
+
+        /// <summary>
+        /// Gets the index initial index i.e. for the initial starting point of the range insertion
+        /// </summary>
+        /// <value>
+        /// The index.
+        /// </value>
+        public int Index { get; private set; }
+
+        /// <summary>
+        /// Gets the enumerator.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<T> GetEnumerator()
 		{
 			return _items.GetEnumerator();
 		}
@@ -58,7 +81,7 @@ namespace DynamicData
 		/// </returns>
 		public override string ToString()
 		{
-			return string.Format("Range<{0}>. Count={1}", typeof(T).Name, Count);
+			return $"Range<{typeof (T).Name}>. Count={Count}";
 		}
 
 	}

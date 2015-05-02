@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,8 +8,7 @@ namespace DynamicData
 	internal class ChangeAwareList<T> : ISupportsCapcity,  IExtendedList<T>
 	{
 		private readonly List<T> _innerList = new List<T>();
-		ChangeSet<T> _changes = new ChangeSet<T>();
-		private bool _isMoving;
+	    private ChangeSet<T> _changes = new ChangeSet<T>();
 
 		public void ClearChanges()
 		{
@@ -67,25 +67,82 @@ namespace DynamicData
 
 		protected virtual void InsertItem(int index, T item)
 		{
-			if (_isMoving) return;
+            //attempt to batch updates as it is much more efficient
+		    var last = _changes.Last;
 
-			_changes.Add(new Change<T>(ListChangeReason.Add, item, index));
+		    if (last.HasValue && last.Value.Reason == ListChangeReason.Add)
+		    {
+		        //begin a new batch
+		        var firstOfBatch = _changes.Count - 1;
+		        var previousItem = last.Value.Item;
+                _changes[firstOfBatch]=new Change<T>(ListChangeReason.AddRange, new[] { previousItem.Current, item}, previousItem.CurrentIndex);
+            }
+            else if (last.HasValue && last.Value.Reason== ListChangeReason.AddRange)
+            {
+                //append to batch
+                var range = last.Value.Range;
+                var lastInsertIndex = range.Index + range.Count;
+                if (lastInsertIndex == index)
+                {
+                    range.Add(item);
+                }
+                else
+                {
+                    _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
+                }
+            }
+            else
+            {
+                //first add, so cannot infer range
+                _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
+            }
+            //finally, add the item
 			_innerList.Insert(index, item);
 		}
 
 		protected virtual void RemoveItem(int index)
 		{
-			if (_isMoving) return;
-
 			var item = _innerList[index];
-			_changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
+
+            //attempt to batch updates as it is much more efficient
+            var last = _changes.Last;
+            if (last.HasValue && last.Value.Reason == ListChangeReason.Remove)
+            {
+                //begin a new batch
+                var firstOfBatch = _changes.Count - 1;
+                _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { last.Value.Item.Current, item }, index);
+            }
+            else if (last.HasValue && last.Value.Reason == ListChangeReason.RemoveRange)
+            {
+
+                //add to the end of the previous batch
+                var range = last.Value.Range;
+                if (range.Index == index)
+                {
+                    //removed in order
+                    range.Add(item);
+                }
+                else if (range.Index== index+1)
+                {
+                    //removed in reverse order
+                    range.Add(item);
+                    range.SetStartingIndex(index);
+                }
+                else
+                {
+                    _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
+                }
+            }
+            else
+            {
+                //first add, so cannot infer range
+                _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
+            }
 			_innerList.RemoveAt(index);
 		}
 
 		protected virtual void SetItem(int index, T item)
 		{
-			if (_isMoving) return;
-
 			var previous = _innerList[index];
 			_changes.Add(new Change<T>(ListChangeReason.Update, item, previous, index, index));
 			_innerList[index] = item;
@@ -99,18 +156,10 @@ namespace DynamicData
 
 		public virtual void Move(int original, int destination)
 		{
-			try
-			{
-				_isMoving = true;
-				var item = _innerList[original];
-				RemoveItem(original);
-				InsertItem(destination, item);
-				_changes.Add(new Change<T>(item, destination, original));
-			}
-			finally
-			{
-				_isMoving = false;
-			}
+			var item = _innerList[original];
+            _innerList.RemoveAt(original);
+            _innerList.Insert(destination, item);
+			_changes.Add(new Change<T>(item, destination, original));
 		}
 
 		#endregion

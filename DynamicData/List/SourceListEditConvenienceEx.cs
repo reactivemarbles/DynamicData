@@ -49,7 +49,7 @@ namespace DynamicData
 		/// <param name="index">The zero-based index at which the new elements should be inserted.</param>
 		public static void InsertRange<T>(this ISourceList<T> source, IEnumerable<T> items, int index)
 		{
-			source.Edit(list => list.InsertRange(items, index));
+			source.Edit(list => list.AddRange(items, index));
 		}
 
 		/// <summary>

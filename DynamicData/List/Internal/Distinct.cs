@@ -11,15 +11,14 @@ namespace DynamicData.Internal
 	{
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly Func<T, TValue> _valueSelector;
-
-		private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
+        private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
 		private readonly ChangeAwareList<TValue> _result = new ChangeAwareList<TValue>();
 
 		public Distinct([NotNull] IObservable<IChangeSet<T>> source,
 			[NotNull] Func<T, TValue> valueSelector)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (valueSelector == null) throw new ArgumentNullException("valueSelector");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
 			_source = source;
 			_valueSelector = valueSelector;
 		}
