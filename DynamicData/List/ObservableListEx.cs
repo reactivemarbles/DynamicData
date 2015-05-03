@@ -31,30 +31,25 @@ namespace DynamicData
 		public static IObservable<IEnumerable<T>> LimitSizeTo<T>([NotNull] this ISourceList<T> source,
 			int sizeLimit, IScheduler scheduler = null)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (sizeLimit <= 0) throw new ArgumentException("sizeLimit cannot be zero");
 
-			return new SizeLimiter<T>(source.Connect(), sizeLimit, true, scheduler)
-							.Run()
-							.Select(changes =>
+		    var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? Scheduler.Default);
+            var locker = new object();
+
+            return limiter.Run().Synchronize(locker)
+							.Select(toExpire =>
 							{
 								//NB: only expired items are reported so no need to check whether type if removed
-								var expired =  changes.Unified()
-									.Select(change => change.Current)
-									.ToList();
-
-								//remove from csource
-								source.Edit(list =>
-								{
-									expired.ForEach(t=>list.Remove(t));
-								});
-
-
-
-
-								//report on expired items
-								return expired;
-
+							    lock (locker)
+							    {
+                                    source.Edit(list =>
+                                    {
+                                        toExpire.ForEach(t => list.Remove(t));
+                                    });
+                                }
+                                //report on expired items
+                                return toExpire;
 							});
 		}
 
@@ -78,8 +73,8 @@ namespace DynamicData
 		public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
 			[NotNull] IObservableCollection<T> targetCollection, int resetThreshold=25 )
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (targetCollection == null) throw new ArgumentNullException("targetCollection");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (targetCollection == null) throw new ArgumentNullException(nameof(targetCollection));
 
 			var adaptor = new ObservableCollectionAdaptor<T>(targetCollection, resetThreshold);
 			return source.Adapt(adaptor);
@@ -99,8 +94,8 @@ namespace DynamicData
 		/// </exception>
 		public static IObservable<IChangeSet<T>> Adapt<T>([NotNull] this IObservable<IChangeSet<T>> source,[NotNull] IChangeSetAdaptor<T> adaptor)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (adaptor == null) throw new ArgumentNullException("adaptor");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (adaptor == null) throw new ArgumentNullException(nameof(adaptor));
 			return source.Do(adaptor.Adapt);
 		}
 

@@ -21,7 +21,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">keySelector</exception>
         public SourceCache(Func<TObject, TKey> keySelector)
         {
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             _innnerCache = new ObservableCache<TObject, TKey>(keySelector);  
         }
         

@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-    class SizeExpiryFixture
+    class SizeLimitFixture
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;
@@ -23,7 +23,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _scheduler = new TestScheduler();
             _source =new SourceCache<Person, string>(p=>p.Key);
-            _sizeLimiter = _source.LimitSizeTo(10,_scheduler).Subscribe();
+            _sizeLimiter = _source.LimitSizeTo(10,_scheduler).FinallySafe(()=>Console.WriteLine()).Subscribe();
             _results = _source.Connect().AsAggregator();
 
         }

@@ -28,8 +28,8 @@ namespace DynamicData
 		public static IChangeSet<TDestination> Transform<TSource, TDestination>([NotNull] this IChangeSet<TSource> source,
 			[NotNull] Func<TSource, TDestination>  transformer)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (transformer == null) throw new ArgumentNullException("transformer");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (transformer == null) throw new ArgumentNullException(nameof(transformer));
 
 			var changes = source.Select(change =>
 			{
@@ -58,7 +58,7 @@ namespace DynamicData
 		/// <exception cref="ArgumentNullException">source</exception>
 		internal static IEnumerable<UnifiedChange<T>> Unified<T>([NotNull] this IChangeSet<T> source)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			return new UnifiedChangeEnumerator<T>(source);
 		}
 	}

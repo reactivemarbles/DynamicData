@@ -104,7 +104,7 @@
     <Compile Include="CacheFixtures\MergeManyWithKeyOverloadFixture.cs" />
     <Compile Include="CacheFixtures\OrFixture.cs" />
     <Compile Include="CacheFixtures\QueryWhenChangedFixture.cs" />
-    <Compile Include="CacheFixtures\SizeExpiryFixture.cs" />
+    <Compile Include="CacheFixtures\SizeLimitFixture.cs" />
     <Compile Include="CacheFixtures\SortFixture.cs" />
     <Compile Include="CacheFixtures\CacheOnDemandFixture.cs" />
     <Compile Include="CacheFixtures\ObservableToObservableChangeSetFixture.cs" />
@@ -153,6 +153,7 @@
     <Compile Include="ListFixtures\MergeManyFixture.cs" />
     <Compile Include="ListFixtures\Performance.cs" />
     <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
+    <Compile Include="ListFixtures\SizeLimitFixture.cs" />
     <Compile Include="ListFixtures\SortFixture.cs" />
     <Compile Include="ListFixtures\SubscribeManyFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />

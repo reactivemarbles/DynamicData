@@ -66,7 +66,7 @@ namespace DynamicData
 
        internal void UpdateFromIntermediate(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException("updateAction");
+            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             
            _readerWriter.Write(updateAction)
                  .Then(InvokeNext, _changes.OnError);
@@ -74,7 +74,7 @@ namespace DynamicData
 
         internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException("updateAction");
+            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
            
             _readerWriter.Write(updateAction)
                   .Then(InvokeNext, _changes.OnError);
@@ -109,35 +109,19 @@ namespace DynamicData
             return _readerWriter.Lookup(key);
         }
 
-        public IEnumerable<TKey> Keys
-        {
-            get { return _readerWriter.Keys; }
-        }
+        public IEnumerable<TKey> Keys => _readerWriter.Keys;
 
-        public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues
-        {
-            get { return _readerWriter.KeyValues; }
-        }
+        public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues => _readerWriter.KeyValues;
 
-        public IEnumerable<TObject> Items
-        {
-            get { return _readerWriter.Items; }
+        public IEnumerable<TObject> Items => _readerWriter.Items;
 
-        }
-
-        public int Count
-        {
-            get { return _readerWriter.Count; }
-        }
+        public int Count => _readerWriter.Count;
 
         #endregion
         
         #region Observable
 
-        public IObservable<int> CountChanged
-        {
-            get { return _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged(); }
-        }
+        public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
 
         public IObservable<Change<TObject, TKey>> Watch(TKey key)
         {
@@ -195,10 +179,7 @@ namespace DynamicData
 
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
         {
-
-            if (filter == null) throw new ArgumentNullException("filter");
-
-
+            if (filter == null) throw new ArgumentNullException(nameof(filter));
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
                     observer =>

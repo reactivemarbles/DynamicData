@@ -43,7 +43,7 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentNullException">items</exception>
 		public ChangeSet([NotNull] IEnumerable<Change<T>> items)
 		{
-			if (items == null) throw new ArgumentNullException("items");
+			if (items == null) throw new ArgumentNullException(nameof(items));
 			var list = items as List<Change<T>> ?? items.ToList();
 
 			Items = list;
@@ -66,7 +66,7 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentNullException">items</exception>
 		public void AddRange([NotNull] IEnumerable<Change<T>> items)
 		{
-			if (items == null) throw new ArgumentNullException("items");
+			if (items == null) throw new ArgumentNullException(nameof(items));
 			var enumerable = items as ICollection<Change<T>> ?? items.ToList();
 			Items.AddRange(enumerable);
 

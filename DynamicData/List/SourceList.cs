@@ -54,7 +54,7 @@ namespace DynamicData
 		/// <param name="updateAction">The update action.</param>
 		public void Edit([NotNull] Action<IExtendedList<T>> updateAction)
 		{
-			if (updateAction == null) throw new ArgumentNullException("updateAction");
+			if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 			
 			_readerWriter.Write(updateAction)
 				.Then(InvokeNext, _changes.OnError);
@@ -135,7 +135,7 @@ namespace DynamicData
 						{
 							var initial = GetInitialUpdates(predicate);
 							if (initial.Count > 0) observer.OnNext(initial);
-							var source = _changes.FinallySafe(observer.OnCompleted);
+							var source = _changes.FinallySafe(()=>observer.OnCompleted());
 
 							if (predicate != null)
 								source = source.Filter(predicate);
