@@ -13,8 +13,6 @@ namespace DynamicData
 	/// <typeparam name="T">The type of the object.</typeparam>
 	public class ChangeSet<T> : IChangeSet<T>
 	{
-		#region Fields
-
 		private int _adds;
 		private int _removes;
 		private int _updates;
@@ -24,10 +22,6 @@ namespace DynamicData
 		/// An empty change set
 		/// </summary>
 		public readonly static IChangeSet<T> Empty = new ChangeSet<T>();
-
-		#endregion
-
-		#region Construction
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ChangeSet{T}"/> class.
@@ -101,9 +95,6 @@ namespace DynamicData
 				case ListChangeReason.RemoveRange:
 					_removes = _removes + item.Range.Count;
 					break;
-				//case ListChangeReason.Evaluate:
-				//	_evaluates++;
-				//	break;
 				case ListChangeReason.Moved:
 					_moves++;
 					break;
@@ -144,10 +135,6 @@ namespace DynamicData
 	    }
 
 
-        #endregion
-
-        #region Properties
-
         private List<Change<T>> Items { get; } = new List<Change<T>>();
 
 
@@ -180,13 +167,6 @@ namespace DynamicData
 		/// </summary>
 		public int Count => Items.Count;
 
-
-        /// <summary>
-        /// Gets the last change in the collection
-        /// </summary>
-        public Optional<Change<T>> Last => Items.Count == 0 ? Optional.None<Change<T>>() : Items[Count - 1];
-
-	    #endregion
 
         #region Enumeration
 

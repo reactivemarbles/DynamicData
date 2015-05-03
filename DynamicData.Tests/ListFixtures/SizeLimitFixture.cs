@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
@@ -14,7 +13,6 @@ namespace DynamicData.Tests.ListFixtures
         private ChangeSetAggregator<Person> _results;
         private TestScheduler _scheduler;
         private IDisposable _sizeLimiter;
-
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
 
@@ -23,9 +21,8 @@ namespace DynamicData.Tests.ListFixtures
         {
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
-            _sizeLimiter = _source.LimitSizeTo(10, _scheduler).FinallySafe(()=>Console.WriteLine()).Subscribe();
+            _sizeLimiter = _source.LimitSizeTo(10, _scheduler).Subscribe();
             _results = _source.Connect().AsAggregator();
-
         }
 
         [TearDown]

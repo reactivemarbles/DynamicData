@@ -135,7 +135,7 @@ namespace DynamicData
 						{
 							var initial = GetInitialUpdates(predicate);
 							if (initial.Count > 0) observer.OnNext(initial);
-							var source = _changes.FinallySafe(()=>observer.OnCompleted());
+							var source = _changes.FinallySafe(observer.OnCompleted);
 
 							if (predicate != null)
 								source = source.Filter(predicate);

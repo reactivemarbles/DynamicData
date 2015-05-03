@@ -11,7 +11,7 @@ namespace DynamicData.Internal
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly IComparer<T> _comparer;
 		private readonly SortOptions _sortOptions;
-		private readonly ChangeAwareList<T> _sortedList = new ChangeAwareList<T>();
+		private readonly ChangeAwareList<T> _innerList = new ChangeAwareList<T>();
 
 		public Sort(IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions sortOptions)
 		{
@@ -27,9 +27,9 @@ namespace DynamicData.Internal
 
 		private IChangeSet<T> Process(IChangeSet<T> changes)
 		{
-			//TODO: Can this be optimised? Perhaps option of add to end then do inline sort
+            //TODO: Can this be optimised? Perhaps option of add to end then do inline sort
 
-			changes.ForEach(change =>
+            changes.ForEach(change =>
 			{
 
 				switch (change.Reason)
@@ -43,9 +43,9 @@ namespace DynamicData.Internal
 					case ListChangeReason.AddRange:
 					{
 						var ordered = change.Range.OrderBy(t => t, _comparer).ToList();
-						if (_sortedList.Count == 0)
+						if (_innerList.Count == 0)
 						{
-							_sortedList.AddRange(ordered);
+							_innerList.AddRange(ordered);
 						}
 						else
 						{
@@ -75,14 +75,14 @@ namespace DynamicData.Internal
 						}
 					case ListChangeReason.Clear:
 					{
-						_sortedList.Clear();
+						_innerList.Clear();
                         break;
 					}
 
 				}
 			});
 
-			return _sortedList.CaptureChanges();
+			return _innerList.CaptureChanges();
 		}
 
 
@@ -90,14 +90,14 @@ namespace DynamicData.Internal
 		private void Remove(T item)
 		{
 			var index = GetCurrentPosition(item);
-			_sortedList.RemoveAt(index);
+			_innerList.RemoveAt(index);
 
 		}
 
 		private void Insert(T item)
 		{
 			var index = GetInsertPosition(item);
-			_sortedList.Insert(index,item);
+			_innerList.Insert(index,item);
 
 		}
 
@@ -110,17 +110,17 @@ namespace DynamicData.Internal
 
 		private int GetInsertPositionLinear(T item)
 		{
-			for (int i = 0; i < _sortedList.Count; i++)
+			for (var i = 0; i < _innerList.Count; i++)
 			{
-				if (_comparer.Compare(item, _sortedList[i]) < 0)
+				if (_comparer.Compare(item, _innerList[i]) < 0)
 					return i;
 			}
-			return _sortedList.Count;
+			return _innerList.Count;
 		}
 
 		private int GetInsertPositionBinary(T item)
 		{
-			int index = _sortedList.BinarySearch(item, _comparer);
+			int index = _innerList.BinarySearch(item, _comparer);
 			int insertIndex = ~index;
 
 			//sort is not returning uniqueness
@@ -132,8 +132,8 @@ namespace DynamicData.Internal
 		private int GetCurrentPosition(T item)
 		{
 			int index = _sortOptions == SortOptions.UseBinarySearch
-				? _sortedList.BinarySearch(item,_comparer)
-				: _sortedList.IndexOf(item);
+				? _innerList.BinarySearch(item,_comparer)
+				: _innerList.IndexOf(item);
 
 			if (index < 0)
 				throw new SortException("Current item cannot be found");

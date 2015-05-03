@@ -18,7 +18,7 @@ namespace DynamicData.Tests.ListFixtures
 															.Ascending(p => p.Name)
 															.ThenByAscending(p => p.Age);
 
-			[SetUp]
+		[SetUp]
 		public void SetUp()
 		{
 			_source = new SourceList<Person>();

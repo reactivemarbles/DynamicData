@@ -2,24 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DynamicData.Kernel;
 
 namespace DynamicData
 {
 	internal class ChangeAwareList<T> : ISupportsCapcity,  IExtendedList<T>
 	{
 		private readonly List<T> _innerList = new List<T>();
-	    private ChangeSet<T> _changes = new ChangeSet<T>();
-
-		public void ClearChanges()
-		{
-			_changes = new ChangeSet<T>();
-		}
-
+        private  List<Change<T>> _changes = new List<Change<T>>();
 
 		public ChangeSet<T> CaptureChanges()
 		{
-			var copy = _changes;
-			_changes = new ChangeSet<T>();
+			var copy = new ChangeSet<T>(_changes);
+			_changes = new List<Change<T>>();
 			return copy;
 		}
 
@@ -56,19 +51,23 @@ namespace DynamicData
 		{
 			if (_innerList.Count == 0) return;
 			var toremove = _innerList.ToList();
-			var args = new Change<T>(ListChangeReason.Clear, toremove);
-			_changes.Add(args);
+			_changes.Add(new Change<T>(ListChangeReason.Clear, toremove));
 			_innerList.Clear();
 		}
 
-		#endregion
+        #endregion
 
-		#region Collection overrides
+        #region Collection overrides
 
-		protected virtual void InsertItem(int index, T item)
+        /// <summary>
+        /// Gets the last change in the collection
+        /// </summary>
+        private Optional<Change<T>> Last => _changes.Count == 0 ? Optional.None<Change<T>>() : _changes[_changes.Count - 1];
+
+        protected virtual void InsertItem(int index, T item)
 		{
             //attempt to batch updates as it is much more efficient
-		    var last = _changes.Last;
+		    var last = Last;
 
 		    if (last.HasValue && last.Value.Reason == ListChangeReason.Add)
 		    {
@@ -105,7 +104,7 @@ namespace DynamicData
 			var item = _innerList[index];
 
             //attempt to batch updates as it is much more efficient
-            var last = _changes.Last;
+            var last = Last;
             if (last.HasValue && last.Value.Reason == ListChangeReason.Remove)
             {
                 //begin a new batch

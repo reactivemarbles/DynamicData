@@ -36,8 +36,8 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentNullException">source</exception>
 		public static IObservable<T> FinallySafe<T>(this IObservable<T> source, Action finallyAction)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (finallyAction == null) throw new ArgumentNullException("finallyAction");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (finallyAction == null) throw new ArgumentNullException(nameof(finallyAction));
 
 			return Observable.Create<T>(o =>
 			{
@@ -81,7 +81,7 @@ namespace DynamicData
 		/// <returns></returns>
 		public static IObservable<IChangeSet<TObject, TKey>> CacheOnDemand<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
             int refCount = 0;
             var locker = new object();
@@ -584,7 +584,6 @@ namespace DynamicData
 
         #region Delayed Stream
 
-
         /// <summary>
         /// Batches the updates for the specified time period
         /// </summary>
@@ -601,7 +600,7 @@ namespace DynamicData
                                                                     TimeSpan timeSpan,
                                                                     IScheduler scheduler=null)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
 	        return source
 		        .Buffer(timeSpan, scheduler ?? Scheduler.Default)
@@ -618,7 +617,7 @@ namespace DynamicData
 		/// <returns></returns>
 		public static IObservable<IChangeSet<TObject, TKey>> FlattenBufferResult<TObject, TKey>([NotNull] this IObservable<IList<IChangeSet<TObject, TKey>>> source)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			return source
 					.Where(x => x.Count != 0)
 					.Select(updates => new ChangeSet<TObject, TKey>(updates.SelectMany(u => u)));
@@ -792,7 +791,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> SkipInitial<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return source.DeferUntilLoaded().Skip(1);
         }
 
@@ -805,7 +804,7 @@ namespace DynamicData
         /// <returns></returns>
         public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
