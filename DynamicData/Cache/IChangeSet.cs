@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using DynamicData.Kernel;
 
 namespace DynamicData
 {
@@ -13,5 +12,9 @@ namespace DynamicData
     public interface IChangeSet<TObject,  TKey> : IChangeSet, IEnumerable<Change<TObject, TKey>>
     {
 
+        /// <summary>
+        /// Gets the number of evaluates
+        /// </summary>
+        int Evaluates { get; }
     }
 }

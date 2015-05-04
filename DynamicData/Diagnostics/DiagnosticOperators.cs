@@ -20,7 +20,7 @@ namespace DynamicData.Diagnostics
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<ChangeSummary> CollectUpdateStats<TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return source.Scan(new ChangeSummary(), (seed, next) =>
                 {
                     int index = seed.Overall.Index + 1;
@@ -46,19 +46,18 @@ namespace DynamicData.Diagnostics
 		/// <exception cref="System.ArgumentNullException">source</exception>
 		public static IObservable<ChangeSummary> CollectUpdateStats<TSource>(this IObservable<IChangeSet<TSource>> source)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			return source.Scan(new ChangeSummary(), (seed, next) =>
 			{
 				int index = seed.Overall.Index + 1;
 				int adds = seed.Overall.Adds + next.Adds;
 				int updates = seed.Overall.Updates + next.Updates;
 				int removes = seed.Overall.Removes + next.Removes;
-				int evaluates = seed.Overall.Evaluates + next.Evaluates;
 				int moves = seed.Overall.Moves + next.Moves;
 				int total = seed.Overall.Count + next.Count;
 
-				var latest = new ChangeStatistics(index, next.Adds, next.Updates, next.Removes, next.Evaluates, next.Moves, next.Count);
-				var overall = new ChangeStatistics(index, adds, updates, removes, evaluates, moves, total);
+				var latest = new ChangeStatistics(index, next.Adds, next.Updates, next.Removes, 0, next.Moves, next.Count);
+				var overall = new ChangeStatistics(index, adds, updates, removes, 0, moves, total);
 				return new ChangeSummary(index, latest, overall);
 			});
 		}

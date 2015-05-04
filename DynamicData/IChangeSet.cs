@@ -21,10 +21,6 @@
 		/// </summary>
 		int Removes { get; }
 
-		/// <summary>
-		///     Gets the number of requeries
-		/// </summary>
-		int Evaluates { get; }
 
 
 		/// <summary>
