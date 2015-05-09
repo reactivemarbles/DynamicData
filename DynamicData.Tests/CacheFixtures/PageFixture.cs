@@ -9,6 +9,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
+    [TestFixture]
 	public class PageFixture
     {
         private ISourceCache<Person, string> _source;

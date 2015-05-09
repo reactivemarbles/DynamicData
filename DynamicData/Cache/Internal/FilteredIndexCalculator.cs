@@ -32,11 +32,8 @@ namespace DynamicData.Internal
                 var result = new List<Change<TObject, TKey>>();
                 foreach (var remove in removes)
                 {
-	                int index;
+	                int index = previousList.IndexOf(remove);
 
-				    index = currentItems.SortReason== SortReason.ComparerChanged 
-						?  previousList.IndexOf(remove) 
-						:  previousList.BinarySearch(remove, currentItems.Comparer);
 
                     previousList.RemoveAt(index);
                     result.Add(new Change<TObject, TKey>(ChangeReason.Remove, remove.Key, remove.Value, index));
