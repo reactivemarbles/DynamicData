@@ -33,7 +33,7 @@ namespace DynamicData.Internal
 								yield return new UnifiedChange<T>(ListChangeReason.Remove, item);
 								break;
 							case ListChangeReason.Clear:
-								yield return new UnifiedChange<T>(ListChangeReason.Remove, item);
+								yield return new UnifiedChange<T>(ListChangeReason.Clear, item);
 								break;
 							default:
 								yield break;

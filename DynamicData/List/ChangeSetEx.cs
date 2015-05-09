@@ -61,5 +61,47 @@ namespace DynamicData
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			return new UnifiedChangeEnumerator<T>(source);
 		}
-	}
+
+        //internal static  IChangeSet<T> Optimise<T>([NotNull] this IEnumerable<UnifiedChange<T>> source)
+        //{
+        //    var items = new List<Change<T>>();
+
+
+        //    Change<T> previous=null;
+
+        //    source.ForEach(change =>
+        //    {
+        //        if (previous == null)
+        //        {
+        //            items.Add(new Change<T>(change.Reason,change.Current,change.Previous));
+        //        }
+        //        else
+        //        {
+        //            if (previous.Reason == ListChangeReason.Add && change.Reason== ListChangeReason.Add)
+        //            {
+        //                //begin a new batch
+        //                var firstOfBatch = items.Count - 1;
+        //                items[firstOfBatch] = new Change<T>(ListChangeReason.AddRange, new[] { previous.Current, item }, previousItem.CurrentIndex);
+
+        //            }
+
+        //        }
+
+
+        //        var current =
+
+        //        if (isFirst)
+
+
+        //            previous = change;
+
+        //    });
+
+
+
+
+
+        //    return new ChangeSet<T>(items);
+        //}
+    }
 }

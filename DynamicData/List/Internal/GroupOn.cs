@@ -16,8 +16,8 @@ namespace DynamicData.Internal
 
 		public GroupOn([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (groupSelector == null) throw new ArgumentNullException("groupSelector");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
 			_source = source;
 			_groupSelector = groupSelector;
 		}
@@ -35,10 +35,10 @@ namespace DynamicData.Internal
 		{
 			//TODO.This flattened enumerator is inefficient as range operations are lost.
 			//maybe can infer within each grouping whether we can regroup i.e. Another enumerator!!!
-			var enumerator = new UnifiedChangeEnumerator<ItemWithValue<TObject, TGroupKey>>(changes);
+			//var enumerator = new UnifiedChangeEnumerator<ItemWithValue<TObject, TGroupKey>>(changes);
 
-			enumerator
-				.GroupBy(change => change.Current.Value)
+            changes.Unified()
+                .GroupBy(change => change.Current.Value)
 				.ForEach(grouping =>
 				{
 					//lookup group and if created, add to result set
@@ -93,8 +93,11 @@ namespace DynamicData.Internal
 									case ListChangeReason.Remove:
 										list.Remove(change.Current.Item);
 										break;
+                                    case ListChangeReason.Clear:
+                                        list.Clear();
+                                        break;
 
-								}
+                                }
 							});
 						});
 

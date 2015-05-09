@@ -51,7 +51,10 @@ namespace DynamicData.Internal
 					case ListChangeReason.Remove:
 						_transformed.Remove(child.Current);
 						break;
-				}
+                    case ListChangeReason.Clear:
+                        _transformed.Clear();
+                        break;
+                }
 			}
 			return _transformed.CaptureChanges();
 		}

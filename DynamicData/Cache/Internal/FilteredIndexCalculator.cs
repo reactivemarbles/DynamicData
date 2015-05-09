@@ -21,9 +21,7 @@ namespace DynamicData.Internal
 		            return new List<Change<TObject, TKey>>(removed.Union(newitems));
 	            }
 
-
-
-					List<KeyValuePair<TKey,TObject>> previousList = previousItems.ToList();
+					var previousList = previousItems.ToList();
                 var keyComparer =new KeyComparer<TObject, TKey>();
                 
                 var removes = previousItems.Except(currentItems,keyComparer).ToList();
@@ -36,8 +34,8 @@ namespace DynamicData.Internal
                 {
 	                int index;
 
-				 index = currentItems.SortReason== SortReason.ComparerChanged 
-						? previousList.IndexOf(remove) 
+				    index = currentItems.SortReason== SortReason.ComparerChanged 
+						?  previousList.IndexOf(remove) 
 						:  previousList.BinarySearch(remove, currentItems.Comparer);
 
                     previousList.RemoveAt(index);
