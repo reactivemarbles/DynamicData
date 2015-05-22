@@ -13,8 +13,8 @@ namespace DynamicData.Internal
 
 		public ImmutableFilter([NotNull] IObservable<IChangeSet<T>> source, [NotNull]Func<T, bool> predicate)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (predicate == null) throw new ArgumentNullException("predicate");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 			_source = source;
 			_predicate = predicate;
 		}

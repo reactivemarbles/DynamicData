@@ -19,9 +19,11 @@ namespace DynamicData
 		/// <param name="predicate">The predicate.</param>
 		public static void Filter<T>(this IList<T> source, IChangeSet<T> changes, Func<T, bool> predicate)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (changes == null) throw new ArgumentNullException("changes");
-			if (predicate == null) throw new ArgumentNullException("predicate");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (changes == null) throw new ArgumentNullException(nameof(changes));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            //TODO: Check for missing index
 
 			changes.ForEach(item =>
 			{
@@ -33,7 +35,7 @@ namespace DynamicData
 						var change = item.Item;
 						var match = predicate(change.Current);
 						if (match) source.Add(change.Current);
-					}
+                        }
 						break;
 					case ListChangeReason.AddRange:
 					{
@@ -116,9 +118,9 @@ namespace DynamicData
 		/// </exception>
 		public static void Transform<TSource, TDestination>(this IList<TDestination> source, IChangeSet<TSource> changes, Func<TSource, TDestination> transformFactory)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (changes == null) throw new ArgumentNullException("changes");
-			if (transformFactory == null) throw new ArgumentNullException("transformFactory");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (changes == null) throw new ArgumentNullException(nameof(changes));
+			if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
 			source.EnsureCapacityFor(changes);
 			changes.ForEach(item =>

@@ -15,8 +15,8 @@ namespace DynamicData.Internal
 
 		public OnBeingRemoved([NotNull] IObservable<IChangeSet<T>> source, [NotNull] Action<T> callback)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (callback == null) throw new ArgumentNullException("callback");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (callback == null) throw new ArgumentNullException(nameof(callback));
 			_source = source;
 			_callback = callback;
 		}
