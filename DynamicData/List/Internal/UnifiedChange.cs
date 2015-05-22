@@ -60,7 +60,7 @@ namespace DynamicData.Internal
 
 		public override string ToString()
 		{
-			return string.Format("Reason: {0}, Current: {1}, Previous: {2}", Reason, Current, Previous);
+			return $"Reason: {Reason}, Current: {Current}, Previous: {Previous}";
 		}
 	}
 }

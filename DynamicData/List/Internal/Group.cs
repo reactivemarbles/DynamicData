@@ -55,7 +55,7 @@ namespace DynamicData.Internal
 
 		public override string ToString()
 		{
-			return string.Format("Group of {0} ({1} records)", GroupKey, List.Count);
+			return $"Group of {GroupKey} ({List.Count} records)";
 		}
 
 		public void Dispose()

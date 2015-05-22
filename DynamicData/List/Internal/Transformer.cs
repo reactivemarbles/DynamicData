@@ -12,8 +12,8 @@ namespace DynamicData.Internal
 
 		public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (factory == null) throw new ArgumentNullException("factory");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (factory == null) throw new ArgumentNullException(nameof(factory));
 			_source = source;
 			_factory = factory;
 		}

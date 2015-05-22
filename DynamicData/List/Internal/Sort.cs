@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using DynamicData.Annotations;
 using DynamicData.Kernel;
 
 namespace DynamicData.Internal
@@ -13,9 +14,11 @@ namespace DynamicData.Internal
 		private readonly SortOptions _sortOptions;
 		private readonly ChangeAwareList<T> _innerList = new ChangeAwareList<T>();
 
-		public Sort(IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions sortOptions)
+		public Sort([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IComparer<T> comparer, SortOptions sortOptions)
 		{
-			_source = source;
+		    if (source == null) throw new ArgumentNullException(nameof(source));
+		    if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+		    _source = source;
 			_comparer = comparer;
 			_sortOptions = sortOptions;
 		}

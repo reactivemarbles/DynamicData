@@ -12,7 +12,7 @@ namespace DynamicData.Internal
 		
 		public Continuation<IChangeSet<T>> Write(IChangeSet<T> changes)
 		{
-			if (changes == null) throw new ArgumentNullException("changes");
+			if (changes == null) throw new ArgumentNullException(nameof(changes));
 			IChangeSet<T> result;
 			lock (_locker)
 			{
@@ -31,7 +31,7 @@ namespace DynamicData.Internal
 
 		public Continuation<IChangeSet<T>> Write(Action<IExtendedList<T>> updateAction)
 		{
-			if (updateAction == null) throw new ArgumentNullException("updateAction");
+			if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 			IChangeSet<T> result;
 			lock (_locker)
 			{

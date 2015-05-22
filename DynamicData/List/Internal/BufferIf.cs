@@ -19,8 +19,8 @@ namespace DynamicData.Internal
 		public BufferIf([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<bool> pauseIfTrueSelector,
 			bool intialPauseState = false, TimeSpan? timeOut = null, IScheduler scheduler = null)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (pauseIfTrueSelector == null) throw new ArgumentNullException("pauseIfTrueSelector");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
 			_source = source;
 			_pauseIfTrueSelector = pauseIfTrueSelector;

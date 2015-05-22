@@ -11,13 +11,13 @@ namespace DynamicData.Internal
 
 		public AnomynousObservableList(IObservable<IChangeSet<T>> source)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			_sourceList = new SourceList<T>(source);
 		}
 
 		public AnomynousObservableList(ISourceList<T> sourceList)
 		{
-			if (sourceList == null) throw new ArgumentNullException("sourceList");
+			if (sourceList == null) throw new ArgumentNullException(nameof(sourceList));
 			_sourceList = sourceList;
 		}
 

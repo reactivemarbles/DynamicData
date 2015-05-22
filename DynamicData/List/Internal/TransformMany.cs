@@ -16,7 +16,7 @@ namespace DynamicData.Internal
 		public TransformMany([NotNull] IObservable<IChangeSet<TSource>> source, 
 			[NotNull]  Func<TSource, IEnumerable<TDestination>> manyselector)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			_source = source;
 			_manyselector = manyselector;
 		}

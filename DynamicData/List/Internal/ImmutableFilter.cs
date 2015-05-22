@@ -21,16 +21,12 @@ namespace DynamicData.Internal
 
 		public IObservable<IChangeSet<T>> Run()
 		{
-			return Observable.Create<IChangeSet<T>>(observer =>
-			{
-				return _source.Select(changes =>
-				{
-					_filtered.Filter(changes, _predicate);
-					return _filtered.CaptureChanges();
-				})
-				.NotEmpty()
-				.SubscribeSafe(observer);
-			});
+		    return _source.Select(changes =>
+		    {
+		        _filtered.Filter(changes, _predicate);
+		        return _filtered.CaptureChanges();
+		    })
+		    .NotEmpty();
 		}
 	}
 

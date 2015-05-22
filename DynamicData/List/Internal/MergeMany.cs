@@ -12,8 +12,8 @@ namespace DynamicData.Internal
 		public MergeMany([NotNull] IObservable<IChangeSet<T>> source,
 			[NotNull] Func<T, IObservable<TDestination>> observableSelector)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (observableSelector == null) throw new ArgumentNullException("observableSelector");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
 			_source = source;
 			_observableSelector = observableSelector;
@@ -25,10 +25,9 @@ namespace DynamicData.Internal
 				(
 					observer =>
 					{
-						var locker = new object();
-						return _source.SubscribeMany(t => _observableSelector(t).Synchronize(locker).SubscribeSafe(observer))
-						.Subscribe(t => { }, observer.OnError);
-
+					    var locker = new object();
+					        return _source.SubscribeMany(t => _observableSelector(t).Synchronize(locker).Subscribe(observer.OnNext))
+					            .Subscribe(t => { }, observer.OnError);
 					});
 		}
 	}

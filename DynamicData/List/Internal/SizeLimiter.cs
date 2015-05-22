@@ -35,7 +35,7 @@ namespace DynamicData.Internal
                         .ObserveOn(_scheduler)
                         .Synchronize(locker)
                         .Select(changes => changes.Transform(t => new ExpirableItem<T>(t, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded))))
-                        .FinallySafe(()=>observer.OnCompleted())
+                        .FinallySafe(observer.OnCompleted)
                         .Subscribe(changes =>
                         {
                             list.Clone(changes);

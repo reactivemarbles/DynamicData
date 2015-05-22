@@ -57,7 +57,7 @@ namespace DynamicData.Internal
 
 		public override string ToString()
 		{
-			return string.Format("{0} @ {1}", Item, ExpireAt);
+			return $"{Item} @ {ExpireAt}";
 		}
 	}
 }

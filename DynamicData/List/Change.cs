@@ -4,10 +4,10 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-	/// <summary>
-	///   Container to describe a single change to a cache
-	/// </summary>
-	public sealed class Change<T> : IEquatable<Change<T>>
+    /// <summary>
+    ///   Container to describe a single change to a cache
+    /// </summary>
+    public sealed class Change<T> : IEquatable<Change<T>>
 	{
 		/// <summary>
 		/// The reason for the change

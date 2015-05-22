@@ -12,8 +12,8 @@ namespace DynamicData.Internal
 
 		public SubscribeMany([NotNull] IObservable<IChangeSet<T>> source, [NotNull] Func<T, IDisposable> subscriptionFactory)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (subscriptionFactory == null) throw new ArgumentNullException("subscriptionFactory");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
 			_source = source;
 			_subscriptionFactory = subscriptionFactory;
 		}

@@ -10,7 +10,7 @@ namespace DynamicData.Internal
 
 		public DeferUntilLoaded([NotNull] IObservable<IChangeSet<T>> source)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			_source = source;
 		}
 
