@@ -32,6 +32,16 @@ namespace DynamicData
             _items.Add(item);
         }
 
+        /// <summary>
+        /// Inserts the  item in the range at the specified index.
+        /// </summary>
+        /// <param name="index">The index.</param>
+        /// <param name="item">The item.</param>
+        public void Insert(int index, T item)
+        {
+            _items.Insert(index,item);
+        }
+
 
         /// <summary>
         /// Sets the index of the starting index of the range

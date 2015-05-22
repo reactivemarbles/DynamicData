@@ -9,21 +9,41 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
+
+    /// <summary>
+    /// The policy which will be applied when a mutable filter changes
+    /// </summary>
+    public enum FilterPolicy
+    {
+        /// <summary>
+        /// A full diff-set of adds, updates and removes will be calculated. Use this when objects are mutable.
+        /// </summary>
+        CalculateDiffSet,
+        /// <summary>
+        /// Clears the list and inserts batch of items matching the filter. Use this for much better performance
+        /// </summary>
+        ClearAndReplace
+    }
+
+
 	internal class MutableFilter<T>
 	{
-		private readonly List<ItemWithMatch> _all = new List<ItemWithMatch>();
-		private readonly ChangeAwareList<T> _filtered = new ChangeAwareList<T>();
+		private readonly List<ItemWithMatch> _allWithMatch = new List<ItemWithMatch>();
+        private readonly List<T> _all = new List<T>();
+        private readonly ChangeAwareList<T> _filtered = new ChangeAwareList<T>();
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly FilterController<T> _controller;
-		
-		private  Func<T, bool> _predicate=t=>false;
+	    private readonly FilterPolicy _filterPolicy;
 
-		public MutableFilter([NotNull] IObservable<IChangeSet<T>> source, [NotNull] FilterController<T> controller)
+	    private  Func<T, bool> _predicate=t=>false;
+
+		public MutableFilter([NotNull] IObservable<IChangeSet<T>> source, [NotNull] FilterController<T> controller, FilterPolicy filterPolicy= FilterPolicy.ClearAndReplace)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (controller == null) throw new ArgumentNullException("controller");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (controller == null) throw new ArgumentNullException(nameof(controller));
 			_source = source;
 			_controller = controller;
+		    _filterPolicy = filterPolicy;
 		}
 		
 		public IObservable<IChangeSet<T>> Run()
@@ -45,10 +65,20 @@ namespace DynamicData.Internal
 				var shared = _source.Synchronize(locker).Publish();
 
 				//take current filter state of all items
-				var updateall = shared.Synchronize(locker)
-									.Transform(t => new ItemWithMatch(t, _predicate(t)))
-									.Subscribe(_all.Clone);
+			    IDisposable updateall;
 
+			    if (_filterPolicy == FilterPolicy.ClearAndReplace)
+			    {
+                    updateall = shared.Synchronize(locker)
+                                    .Subscribe(_all.Clone);
+                }
+			    else
+			    {
+                    updateall = shared.Synchronize(locker)
+                                    .Transform(t => new ItemWithMatch(t, _predicate(t)))
+                                    .Subscribe(_allWithMatch.Clone);
+                }
+                
 				//filter result list
 				var filter = shared.Synchronize(locker)
 									.Select(changes =>
@@ -67,7 +97,16 @@ namespace DynamicData.Internal
 		{
 			_predicate = predicate;
 
-			var newState = _all.Select(item =>
+		    if (_filterPolicy == FilterPolicy.ClearAndReplace)
+		    {
+                _filtered.Clear();
+                _filtered.AddRange(_all.Where(_predicate));
+
+                return;
+		    }
+
+
+			var newState = _allWithMatch.Select(item =>
 			{
 				var match = _predicate(item.Item);
 				var wasMatch = item.IsMatch;

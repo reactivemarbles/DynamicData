@@ -1,12 +1,13 @@
 using System.Linq;
 using DynamicData.Controllers;
+using DynamicData.Internal;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    public class FilterControllerFixture
+    public class FilterControllerFixtureWithDiffSet
     {
         private ISourceList<Person> _source; 
         private ChangeSetAggregator<Person> _results;
@@ -17,7 +18,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source = new SourceList<Person>();
             _filter = new FilterController<Person>(p=>p.Age>20);
-	        _results = _source.Connect().Filter(_filter).AsAggregator();
+	        _results = _source.Connect().Filter(_filter, FilterPolicy.CalculateDiffSet).AsAggregator();
         }
 
         [TearDown]

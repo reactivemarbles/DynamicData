@@ -177,23 +177,22 @@ namespace DynamicData
 			return new ImmutableFilter<T>(source, predicate).Run();
 		}
 
-		/// <summary>
-		/// Filters the specified filter controller.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="filterController">The filter controller.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// filterController
-		/// </exception>
-		public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, FilterController<T> filterController)
+        /// <summary>
+        /// Filters the specified filter controller.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="filterController">The filter controller.</param>
+        /// <param name="filterPolicy">The filter policy.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// filterController</exception>
+        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, FilterController<T> filterController, FilterPolicy filterPolicy= FilterPolicy.ClearAndReplace)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-			return new MutableFilter<T>(source, filterController).Run();
+			return new MutableFilter<T>(source, filterController, filterPolicy).Run();
 		}
 
 		/// <summary>

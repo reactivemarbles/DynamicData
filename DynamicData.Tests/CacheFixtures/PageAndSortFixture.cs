@@ -44,7 +44,7 @@ namespace DynamicData.Tests.CacheFixtures
 
         private class TestVm
         {
-            public int Id { get; set; }
+            public int Id { get; }
             public DateTime? DateFavorited { get; set; }
 
             public TestVm(int id)

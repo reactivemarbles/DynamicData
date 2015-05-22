@@ -184,8 +184,8 @@ namespace DynamicData
 		/// </exception>
 		public static void Clone<T>(this IList<T> source, IChangeSet<T> changes)
 		{
-			if (source == null) throw new ArgumentNullException("source");
-			if (changes == null) throw new ArgumentNullException("changes");
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (changes == null) throw new ArgumentNullException(nameof(changes));
 
 			changes.ForEach(item =>
 			{

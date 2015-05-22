@@ -71,23 +71,44 @@ namespace DynamicData
 
 		    if (last.HasValue && last.Value.Reason == ListChangeReason.Add)
 		    {
-		        //begin a new batch
+		        //begin a new batch if possible
+
 		        var firstOfBatch = _changes.Count - 1;
 		        var previousItem = last.Value.Item;
-                _changes[firstOfBatch]=new Change<T>(ListChangeReason.AddRange, new[] { previousItem.Current, item}, previousItem.CurrentIndex);
-            }
-            else if (last.HasValue && last.Value.Reason== ListChangeReason.AddRange)
-            {
-                //append to batch
-                var range = last.Value.Range;
-                var lastInsertIndex = range.Index + range.Count;
-                if (lastInsertIndex == index)
+
+                if (last.HasValue && last.Value.Reason == ListChangeReason.Add)
                 {
-                    range.Add(item);
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.AddRange, new[] { previousItem.Current, item }, previousItem.CurrentIndex);
+                }
+                else if (index == previousItem.CurrentIndex)
+                {
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.AddRange, new[] { item, previousItem.Current  }, index);
                 }
                 else
                 {
+                    _changes.Add(new Change<T>(ListChangeReason.Add,item,index));
+                }
+            }
+            else if (last.HasValue && last.Value.Reason== ListChangeReason.AddRange)
+            {
+                //check whether the new item is in the specified range
+                var range = last.Value.Range;
+
+                var minimum = Math.Max(range.Index - 1, 0);
+                var maximum = range.Index + range.Count;
+                var isPartOfRange = index >= minimum && index <= maximum;
+                
+                if (!isPartOfRange)
+                {
                     _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
+                }
+                else
+                {
+                    var insertPosition = index - range.Index;
+                    range.Insert(Math.Min(insertPosition, range.Count), item);
+
+                    if (index<range.Index)
+                        range.SetStartingIndex(index);
                 }
             }
             else
@@ -95,6 +116,7 @@ namespace DynamicData
                 //first add, so cannot infer range
                 _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
             }
+            
             //finally, add the item
 			_innerList.Insert(index, item);
 		}
@@ -109,7 +131,20 @@ namespace DynamicData
             {
                 //begin a new batch
                 var firstOfBatch = _changes.Count - 1;
-                _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { last.Value.Item.Current, item }, index);
+                var previousItem = last.Value.Item;
+
+                if (index == previousItem.CurrentIndex + 1)
+                {
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { previousItem.Current, item }, index);
+                }
+               else if (index == previousItem.CurrentIndex )
+                {
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { item, previousItem.Current }, index);
+                }
+               else
+               {
+                    _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
+                }
             }
             else if (last.HasValue && last.Value.Reason == ListChangeReason.RemoveRange)
             {

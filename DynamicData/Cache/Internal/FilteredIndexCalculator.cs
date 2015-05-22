@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
-using DynamicData.Operators;
 
 namespace DynamicData.Internal
 {
@@ -10,7 +9,6 @@ namespace DynamicData.Internal
         public IList<Change<TObject, TKey>> Calculate(IKeyValueCollection<TObject, TKey> currentItems,
             IKeyValueCollection<TObject, TKey> previousItems,IChangeSet<TObject, TKey> sourceUpdates)
         {
-            {
 
 	            if (currentItems.SortReason == SortReason.ComparerChanged)
 	            {
@@ -21,7 +19,7 @@ namespace DynamicData.Internal
 		            return new List<Change<TObject, TKey>>(removed.Union(newitems));
 	            }
 
-					var previousList = previousItems.ToList();
+				var previousList = previousItems.ToList();
                 var keyComparer =new KeyComparer<TObject, TKey>();
                 
                 var removes = previousItems.Except(currentItems,keyComparer).ToList();
@@ -139,10 +137,8 @@ namespace DynamicData.Internal
                         previousList.Insert(newposition, current);
                         result.Add(new Change<TObject, TKey>(u.Key, u.Current, newposition, old));
                     }
-                
-
                 return result;
-            }
+
              
         }
 
