@@ -160,6 +160,7 @@
     <Compile Include="ListFixtures\SubscribeManyFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="ListFixtures\TransformManyFixture.cs" />
+    <Compile Include="ListFixtures\VirtualisationFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\SelectManyExtensions.cs" />
     <Compile Include="CacheFixtures\SourceCacheFixture.cs" />

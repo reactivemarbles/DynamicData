@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Binding;
@@ -663,6 +664,25 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (virtualisingController == null) throw new ArgumentNullException(nameof(virtualisingController));
             return new Virtualiser<T>(source, virtualisingController).Run();
+        }
+
+        /// <summary>
+        /// Limits the size of the result set to the specified number of items
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="numberOfItems">The number of items.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Top<T>([NotNull] this IObservable<IChangeSet<T>> source, int numberOfItems)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (numberOfItems <= 0) throw new ArgumentOutOfRangeException(nameof(numberOfItems), "Number of items should be greater than zero");
+            return Observable.Create<IChangeSet<T>>(observer =>
+            {
+                var controller = new VirtualisingController(new VirtualRequest(0, numberOfItems));
+                var subscriber = source.Virtualise(controller).SubscribeSafe(observer);
+                return new CompositeDisposable(subscriber, controller);
+            });
         }
 
         #endregion

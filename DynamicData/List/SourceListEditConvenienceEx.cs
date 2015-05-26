@@ -29,13 +29,25 @@ namespace DynamicData
 			source.Edit(list=>list.Add(item));
 		}
 
-		/// <summary>
-		/// Adds the specified items to the source list
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="items">The items.</param>
-		public static void AddRange<T>(this ISourceList<T> source, IEnumerable<T> items)
+        /// <summary>
+        /// Adds the specified item to the source list
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="item">The item.</param>
+        /// <param name="index">The index.</param>
+        public static void Insert<T>(this ISourceList<T> source, int index, T item)
+        {
+            source.Edit(list => list.Insert(index,item));
+        }
+
+        /// <summary>
+        /// Adds the specified items to the source list
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="items">The items.</param>
+        public static void AddRange<T>(this ISourceList<T> source, IEnumerable<T> items)
 		{
 			source.Edit(list => list.AddRange(items));
 		}

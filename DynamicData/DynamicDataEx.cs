@@ -2297,8 +2297,8 @@ namespace DynamicData
         public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(
             this IObservable<ISortedChangeSet<TObject, TKey>> source, int size)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (size <= 0) throw new ArgumentOutOfRangeException("size","Size should be greater than zero");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size),"Size should be greater than zero");
 
             return Observable.Create<IVirtualChangeSet<TObject, TKey>>
             (
@@ -2331,9 +2331,9 @@ namespace DynamicData
             IComparer<TObject> comparer,
             int size)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (comparer == null) throw new ArgumentNullException("comparer");
-            if (size <= 0) throw new ArgumentOutOfRangeException("size", "Size should be greater than zero");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+            if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size), "Size should be greater than zero");
 
             return source.Sort(comparer).Top(size);
 
@@ -2351,8 +2351,8 @@ namespace DynamicData
         public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
             VirtualisingController virtualisingController)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (virtualisingController == null) throw new ArgumentNullException("virtualisingController");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (virtualisingController == null) throw new ArgumentNullException(nameof(virtualisingController));
 
             return Observable.Create<IVirtualChangeSet<TObject, TKey>>
                 (
