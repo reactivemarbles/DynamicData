@@ -16,20 +16,20 @@ namespace DynamicData
 	/// </summary>
 	public static class ObservableListEx
 	{
-		#region Expiry / size limiter
+        #region Expiry / size limiter
 
-		/// <summary>
-		/// Limits the size of the source cache to the specified limit
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="sizeLimit">The size limit.</param>
-		/// <param name="scheduler">The scheduler.</param>
-		/// <returns></returns>
-		/// <exception cref="ArgumentNullException">source</exception>
-		/// <exception cref="ArgumentException">sizeLimit cannot be zero</exception>
-		public static IObservable<IEnumerable<T>> LimitSizeTo<T>([NotNull] this ISourceList<T> source,
-			int sizeLimit, IScheduler scheduler = null)
+        /// <summary>
+        /// Limits the size of the source cache to the specified limit
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="sizeLimit">The size limit.</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentException">sizeLimit cannot be zero</exception>
+        /// <exception cref="ArgumentNullException">source</exception>
+        /// <exception cref="ArgumentException">sizeLimit cannot be zero</exception>
+        public static IObservable<IEnumerable<T>> LimitSizeTo<T>([NotNull] this ISourceList<T> source,int sizeLimit, IScheduler scheduler = null)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (sizeLimit <= 0) throw new ArgumentException("sizeLimit cannot be zero");
@@ -646,6 +646,25 @@ namespace DynamicData
 							.NotEmpty();
 		}
 
-		#endregion
-	}
+        #endregion
+
+        #region Virtualisation / Paging
+
+
+        /// <summary>
+        /// Virtualises the source using parameters provided by the specified virtualising controller
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="virtualisingController">The virtualising controller.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] VirtualisingController virtualisingController)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (virtualisingController == null) throw new ArgumentNullException(nameof(virtualisingController));
+            return new Virtualiser<T>(source, virtualisingController).Run();
+        }
+
+        #endregion
+    }
 }
