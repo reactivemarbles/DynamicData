@@ -85,7 +85,7 @@ namespace DynamicData.Internal
 
 
             //find updates
-            for (int i = 0; i < current.Count; i++)
+            for (var i = 0; i < current.Count; i++)
             {
                 var currentItem = current[i];
                 var previousItem = previous[i];

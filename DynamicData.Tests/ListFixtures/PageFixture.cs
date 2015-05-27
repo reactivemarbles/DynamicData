@@ -19,6 +19,10 @@ namespace DynamicData.Tests.ListFixtures
             _source = new SourceList<Person>();
             _controller = new PageController(new PageRequest(1,25));
             _results = _source.Connect().Page(_controller).AsAggregator();
+
+
+
+
         }
 
         [TearDown]

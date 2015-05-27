@@ -2,27 +2,58 @@
 
 Dynamic data is a portable class library which brings the power of reactive (rx) to collections.  
 
-A collection which mutates can have adds, updates and removes (plus moves and re-evaluates but more about that another time). Out of the box rx does nothing to manage any changes in a collection which is why Dynamic Data exists.  In Dynamic Data collection changes are notified via an observable change set which is the heart of the system.  An operator receives these notifications and then applies some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
+A collection which mutates can have adds, updates and removes (plus moves and re-evaluates but more about that another time). Dynamic data has been evolved to take Rx to another dimension by introducing an observable cache and an observable list where changes are notified via an observable change set .  Operators receive these notifications then apply some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
 
 The benefit of at least 50 operators which are borne from pragmatic experience is that the management of in-memory data becomes easy and it is no exaggeration to say it can save thousands of lines of code by abstracting complicated and often repetitive operations.
 
 ### Why is the first Nuget release version 3
 Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx when it first came out. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
 
-### Version 4 is under development
+### Version 4 is available on nuget  pre-release
 
 [![Build status]( https://ci.appveyor.com/api/projects/status/occtlji3iwinami5/branch/develop?svg=true)](https://ci.appveyor.com/project/RolandPheasant/DynamicData/branch/develop)
 
-The core of dynamic data is an observable cache which for most circumstances is great but sometimes there is the need simply for an observable list. Version 4 will deliver this.
+The core of dynamic data is an observable cache which for most circumstances is great but sometimes there is the need simply for an observable list. Version 4 delivers this. It has been a great effort and consumed loads of my time, mental capacity and resolve but it is finally crystallising into a stable state.  
 
-The aim is the observable list will have as comprehensive a set of operators as the observable cache. It is now available from Nuget as a pre-release product.
+If you download the latest pre-release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
+
+### Introducing an observable list
+
+Create a source list like this.
+```csharp
+var myObservableList = new SourceList<T>()
+```
+Now you can connect to it using ```myObservableList.Connect()``` which creates an observable change set meaning that whenever there is an add, update, delete or move to ```myObservableList``` a notification is transmitted. 
+
+From here you can start composing sophisticated observations. For example if my list was a list of trades I can do this
+```csharp
+var mySubscription = myObservableList 
+					.Filter(t=>trade.Status == TradeStatus.Live) 
+					.Transform(trade => new TradeProxy(trade))
+					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
+					.DisposeMany()
+					....//do something with the result
+```
+where the source is filtered, transformed, ordered and the proxy is disposed of when removed from the underlying filtered result.  As the list is edited the result set always reflects the changes made in the source list.
+
+If you are familiar with using dynamic data's observable cache you will recognise these operators. This is intentional as  I have tried to replicate the observable cache operators. So far I have created about 25 operators for the observable list and in time will try and replicate most if not all of the cache operators.
+
+Editing the source  list is easy as the list has the usual add / insert / remove methods.  For a batch edit I have provided a method which enables batch editing as follows
+```csharp
+	 _source.Edit(innerList =>
+	 {
+	     innerList.Clear();
+	     innerList.AddRange(myItemsToAdd);
+	 });
+```
+This method will clear and load the source list yet produce a single notification which helps improve efficiency.
 
 
 ### I've seen it before so give me some links
 
 - [![Join the chat at https://gitter.im/RolandPheasant/DynamicData](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RolandPheasant/DynamicData?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 - [![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)](http://www.nuget.org/packages/DynamicData/)	
-- Sample wpf project https://github.com/RolandPheasant/TradingDemo
+- Sample wpf project https://github.com/RolandPheasant/Dynamic.Trader
 - Blog at  http://dynamic-data.org/
 - You can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
 
@@ -62,7 +93,7 @@ var mycache = somedynamicdatasource.AsObservableCache();
 ```
 This cache has the same connection methods as a source cache but is read only.
 
-### Now lets the games begin
+### Now for some powerful examples
 
 Phew, got the boring stuff out of the way with so a few quick fire examples based on the assumption that we already have an observable change set. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
@@ -99,8 +130,19 @@ This operator flattens the observables and returns the combined state in one lin
 ```csharp
 var myoperation = somedynamicdatasource.Connect() 
 			.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount))
-			.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with IObservable<PropChangedArg>)
+			.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with Observable<PropChangedArg>)
 ```
+**Example 5:**  will wire and un-wire items from the observable when they are added, updated or removed from the source.
+```csharp
+var myoperation = somedynamicdatasource.Connect() 
+				.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount))
+				.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with IObservable<PropChangedArg>)
+```
+**Example 6:** Produces a distinct change set of currency pairs
+```csharp
+var currencyPairs= somedynamicdatasource .DistinctValues(trade => trade.CurrencyPair)
+```
+
 ### Want to know more?
 I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links above)  as I intend it to be a 'living document' and I promise it will be continually maintained. 
 
