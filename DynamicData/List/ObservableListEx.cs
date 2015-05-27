@@ -685,6 +685,20 @@ namespace DynamicData
             });
         }
 
+        /// <summary>
+        /// Applies paging to the the data source
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="pageController">The page controller.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Page<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] PageController pageController)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (pageController == null) throw new ArgumentNullException(nameof(pageController));
+            return new Pager<T>(source, pageController).Run();
+        }
+
         #endregion
     }
 }

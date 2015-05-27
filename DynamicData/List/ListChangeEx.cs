@@ -10,14 +10,27 @@ namespace DynamicData
 	/// </summary>
 	public static class ListChangeEx
 	{
-		/// <summary>
-		/// Filters the source from the changes, using the specified predicate
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="changes">The changes.</param>
-		/// <param name="predicate">The predicate.</param>
-		public static void Filter<T>(this IList<T> source, IChangeSet<T> changes, Func<T, bool> predicate)
+	    internal static bool MovedWithinRange<T>(this Change<T> source, int startIndex, int endIndex)
+	    {
+	        if (source.Reason != ListChangeReason.Moved)
+	            return false;
+
+	        var current = source.Item.CurrentIndex;
+	        var previous = source.Item.PreviousIndex;
+
+	        return current >= startIndex && current <= endIndex
+	               || previous >= startIndex && previous <= endIndex;
+
+	    }
+
+	    /// <summary>
+        /// Filters the source from the changes, using the specified predicate
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="changes">The changes.</param>
+        /// <param name="predicate">The predicate.</param>
+        public static void Filter<T>(this IList<T> source, IChangeSet<T> changes, Func<T, bool> predicate)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (changes == null) throw new ArgumentNullException(nameof(changes));
@@ -286,6 +299,5 @@ namespace DynamicData
 
 
 		}
-
 	}
 }

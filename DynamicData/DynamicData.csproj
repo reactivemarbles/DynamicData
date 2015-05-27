@@ -146,6 +146,7 @@
     <Compile Include="List\Internal\MergeMany.cs" />
     <Compile Include="List\Internal\MutableFilter.cs" />
     <Compile Include="List\Internal\OnBeingRemoved.cs" />
+    <Compile Include="List\Internal\Pager.cs" />
     <Compile Include="List\Internal\QueryWhenChanged.cs" />
     <Compile Include="List\Internal\SizeLimiter.cs" />
     <Compile Include="List\Internal\SubscribeMany.cs" />

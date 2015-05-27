@@ -153,6 +153,7 @@
     <Compile Include="ListFixtures\FilterFixture.cs" />
     <Compile Include="ListFixtures\GroupOnFixture.cs" />
     <Compile Include="ListFixtures\MergeManyFixture.cs" />
+    <Compile Include="ListFixtures\PageFixture.cs" />
     <Compile Include="ListFixtures\Performance.cs" />
     <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
     <Compile Include="ListFixtures\SizeLimitFixture.cs" />

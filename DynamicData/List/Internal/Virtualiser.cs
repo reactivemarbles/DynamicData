@@ -58,8 +58,7 @@ namespace DynamicData.Internal
             var current = _all.Skip(_parameters.StartIndex)
                 .Take(_parameters.Size)
                 .ToList();
-
-
+            
             var adds = current.Except(previous).ToArray();
             var removes = previous.Except(current).ToArray();
 
@@ -69,6 +68,21 @@ namespace DynamicData.Internal
                 var index = current.IndexOf(t);
                 _virtualised.Insert(index,t);
             });
+
+
+            var moves = changeset.EmptyIfNull()
+                            .Where(change => change.Reason == ListChangeReason.Moved 
+                                    && change.MovedWithinRange(_parameters.StartIndex, _parameters.StartIndex + _parameters.Size));
+
+            foreach (var change in moves)
+            {
+                //check whether an item has moved within the same page
+                var currentIndex = change.Item.CurrentIndex - _parameters.StartIndex;
+                var previousIndex = change.Item.PreviousIndex - _parameters.StartIndex;
+                _virtualised.Move(previousIndex, currentIndex);
+
+            }
+
 
             //find updates
             for (int i = 0; i < current.Count; i++)
@@ -87,4 +101,5 @@ namespace DynamicData.Internal
 
         }
     }
+
 }
