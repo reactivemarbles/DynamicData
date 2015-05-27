@@ -163,24 +163,3 @@ I could go on endlessly but this is not the place for full documentation.  I pro
 Also if you following me on Twitter you will find out when new samples or blog posts have been updated.
 
 Additionally if you have read up to here and not pressed star then why not? Ha. A star may make me be more responsive to any requests or queries.
-
-### Before you sign off, tell me a little more about the changeset?
-
-Simple, any change to a collection can be represented using a change set where the change set is a collection of changed items as follows.
-
-```csharp
-	//NB Exact implementation is  simplified 
-	public interface IChangeSet<TObject,  TKey> : IEnumerable<Change<TObject, TKey>>
-    {
-    }
-
-	//and the change is something like this
-	public struct Change<TObject, TKey>
-	{
-		public ChangeReason Reason {get;}
-		public TKey Key {get;}
-		public TObject Current {get;}
-		public Optional<TObjec>t Previous {get;}
-	}
-```
-This structure is observed like this ```IObservable<IChangeSet<TObject,  TKey>>``` and voila, we can start building operators around this idea.
