@@ -6,10 +6,16 @@ A collection which mutates can have adds, updates and removes (plus moves and re
 
 The benefit of at least 50 operators which are borne from pragmatic experience is that the management of in-memory data becomes easy and it is no exaggeration to say it can save thousands of lines of code by abstracting complicated and often repetitive operations.
 
-### Why is the first Nuget release version 3
-Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx when it first came out. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
+###Some links
 
-### Version 4 is available on nuget  pre-release
+- [![Join the chat at https://gitter.im/RolandPheasant/DynamicData](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RolandPheasant/DynamicData?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+- [![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)](http://www.nuget.org/packages/DynamicData/)	
+- Sample wpf project https://github.com/RolandPheasant/Dynamic.Trader
+- Blog at  http://dynamic-data.org/
+- You can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
+
+
+### Version 4 is available on Nuget  pre-release
 
 [![Build status]( https://ci.appveyor.com/api/projects/status/occtlji3iwinami5/branch/develop?svg=true)](https://ci.appveyor.com/project/RolandPheasant/DynamicData/branch/develop)
 
@@ -17,7 +23,7 @@ The core of dynamic data is an observable cache which for most circumstances is 
 
 If you download the latest pre-release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
 
-### Introducing an observable list
+### Introducing the observable list
 
 Create a source list like this.
 ```csharp
@@ -29,7 +35,7 @@ From here you can start composing sophisticated observations. For example if my 
 ```csharp
 var mySubscription = myObservableList 
 					.Filter(t=>trade.Status == TradeStatus.Live) 
-					.Transform(trade => new TradeProxy(trade))
+					.Transform(trade => new TradeProxy(trade)) //equivalent to rx .Select
 					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
 					.DisposeMany()
 					....//do something with the result
@@ -48,14 +54,19 @@ Editing the source  list is easy as the list has the usual add / insert / remove
 ```
 This method will clear and load the source list yet produce a single notification which helps improve efficiency.
 
+The source list is thread-safe and can be shared but before sharing I  recommend you call ```myObservableList.AsObservableList()``` which hides the edit methods.  Additionally you can call ```.AsObservableList()``` on any observable change set. So for example if you want to share a filtered observable list you can do this.
 
-### I've seen it before so give me some links
+```csharp
+IObservableList<T> filteredObservableList = myObservableList 
+					.Filter(t=>trade.Status == TradeStatus.Live) 
+					.AsObservableList();		
+```
+which is a self-maintaining filtered observable list.  I hope you think that is cool! 
 
-- [![Join the chat at https://gitter.im/RolandPheasant/DynamicData](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RolandPheasant/DynamicData?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-- [![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)](http://www.nuget.org/packages/DynamicData/)	
-- Sample wpf project https://github.com/RolandPheasant/Dynamic.Trader
-- Blog at  http://dynamic-data.org/
-- You can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
+I am about to start documenting this a creating some examples so watch this space.
+
+### Introducing the observable cache
+
 
 ### Getting Started
 
@@ -142,6 +153,9 @@ var myoperation = somedynamicdatasource.Connect()
 ```csharp
 var currencyPairs= somedynamicdatasource .DistinctValues(trade => trade.CurrencyPair)
 ```
+
+### Why is the first Nuget release version 3
+Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx when it first came out. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
 
 ### Want to know more?
 I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links above)  as I intend it to be a 'living document' and I promise it will be continually maintained. 
