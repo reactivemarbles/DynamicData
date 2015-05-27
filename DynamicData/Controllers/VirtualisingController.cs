@@ -28,7 +28,7 @@ namespace DynamicData.Controllers
         /// <exception cref="System.ArgumentNullException">request</exception>
         public VirtualisingController(IVirtualRequest request)
         {
-            if (request == null) throw new ArgumentNullException("request");
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
             _request = request;
             _subject.OnNext(_request);
@@ -39,9 +39,9 @@ namespace DynamicData.Controllers
         /// </summary>
         /// <param name="request">The request.</param>
         /// <exception cref="System.ArgumentNullException">request</exception>
-        public void Virualise(IVirtualRequest request)
+        public void Virtualise(IVirtualRequest request)
         {
-            if (request == null) throw new ArgumentNullException("request");
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
             _request = request;
             _subject.OnNext(_request);

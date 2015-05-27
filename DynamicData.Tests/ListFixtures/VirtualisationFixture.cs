@@ -47,7 +47,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            _controller.Virualise(new VirtualRequest(25,25));
+            _controller.Virtualise(new VirtualRequest(25,25));
 
             var expected = people.Skip(25).Take(25).ToArray();
             CollectionAssert.AreEqual(expected, _results.Data.Items);
@@ -88,7 +88,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            _controller.Virualise(new VirtualRequest(25, 25));
+            _controller.Virtualise(new VirtualRequest(25, 25));
             _source.RemoveAt(0);
             var expected = people.Skip(26).Take(25).ToArray();
 
