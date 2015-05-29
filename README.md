@@ -77,7 +77,7 @@ Now you can connect to the cache using ```myObservableCache.Connect()``` which c
 
 Exactly like the observable list you can now start composing sophisticated observations. For example if the cache is a cache of trades you can do this
 ```csharp
-var mySubscription = myObservableList 
+var mySubscription = myObservableCache 
 					.Filter(t=>trade.Status == TradeStatus.Live) 
 					.Transform(trade => new TradeProxy(trade)) //equivalent to rx .Select
 					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
@@ -103,7 +103,7 @@ IObservableCache<T> filteredObservableCache = myObservableCache
 					.Filter(t=>trade.Status == TradeStatus.Live) 
 					.AsObservableCache();		
 ```
-
+which is a self-maintaining filtered observable cache. 
 
 ### Create an observable change set from an standard Rx observable
 
