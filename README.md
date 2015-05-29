@@ -144,7 +144,7 @@ This method is only recommended for simple queries which act only on the UI thre
 
 No you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
-**Example 1: ** filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
+**Example 1:** filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
 
 ```csharp
 //Dynamic data has it's own take on an observable collection (optimised for populating f
@@ -160,7 +160,7 @@ var myoperation = somedynamicdatasource
 ```
 Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
 
-**Example 2: ** produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed.
+**Example 2:** produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed.
 ```csharp
 var myoperation = somedynamicdatasource
             .Group(trade=>trade.Status) //This is NOT Rx's GroupBy 
