@@ -17,6 +17,8 @@ The benefit of at least 50 operators which are borne from pragmatic experience i
 
 ### Version 4 is available on Nuget  pre-release
 
+[![Build status]( https://ci.appveyor.com/api/projects/status/occtlji3iwinami5/branch/develop?svg=true)](https://ci.appveyor.com/project/RolandPheasant/DynamicData/branch/develop)
+
 The core of dynamic data is an observable cache which for most circumstances is great but sometimes there is the need simply for an observable list. Version 4 delivers this. It has been a great effort and consumed loads of my time, mental capacity and resolve but it is finally crystallising into a stable state.  
 
 If you download the latest pre-release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
@@ -75,7 +77,7 @@ var myObservableCache= new SourceCache<TObject>();
 ```
 Now you can connect to the cache using ```myObservableCache.Connect()``` which creates an observable change set meaning that whenever there is change to ```myObservableCache``` a notification is transmitted. 
 
-Exactly like the observable list an start composing sophisticated observations. For example if the cache is a cache of trades you can do this
+Exactly like the observable list you can now start composing sophisticated observations. For example if the cache is a cache of trades you can do this
 ```csharp
 var mySubscription = myObservableList 
 					.Filter(t=>trade.Status == TradeStatus.Live) 
@@ -140,15 +142,9 @@ var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Ke
 ```
 This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
 
-One other point worth making here is any steam can be covered to as cache.
-```csharp
-var mycache = somedynamicdatasource.AsObservableCache();
-```
-This cache has the same connection methods as a source cache but is read only.
-
 ### Now for some powerful examples
 
-Phew, got the boring stuff out of the way with so a few quick fire examples based on the assumption that we already have an observable change set. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
+No you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
 **Example 1: ** filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
 
