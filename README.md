@@ -105,7 +105,7 @@ IObservableCache<T> filteredObservableCache = myObservableCache
 ```
 which is a self-maintaining filtered observable cache. 
 
-### Create an observable change set from an standard Rx observable
+### Create an observable change set from a standard Rx observable
 
 Given either of the following observables
 ```csharp
