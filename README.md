@@ -191,7 +191,7 @@ var currencyPairs= somedynamicdatasource .DistinctValues(trade => trade.Currency
 **Example 7:**  virtualise the results so only a limited range of data is included
 ```csharp
 var controller =  new VirtualisingController(new VirtualRequest(0,25));
-var myoperation = somedynamicdatasource.Connect().**Virtualise(controller)**
+var myoperation = somedynamicdatasource.Connect().Virtualise(controller)
 ```
 the starting index and number of records can be changed using ``` _controller.Virualise(new VirtualRequest(start,size))```
 
