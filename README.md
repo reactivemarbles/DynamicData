@@ -31,7 +31,7 @@ Now you can connect to it using ```myObservableList.Connect()``` which creates a
 
 From here you can start composing sophisticated observations. For example if my list was a list of trades I can do this
 ```csharp
-var mySubscription = myObservableList 
+var mySubscription = myObservableList.Connect() 
 					.Filter(t=>trade.Status == TradeStatus.Live) 
 					.Transform(trade => new TradeProxy(trade)) //equivalent to rx .Select
 					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
@@ -55,7 +55,7 @@ This method will clear and load the source list yet produce a single notificatio
 The source list is thread-safe and can be shared but before sharing I  recommend you call ```myObservableList.AsObservableList()``` which hides the edit methods.  Additionally you can call ```.AsObservableList()``` on any observable change set. So for example if you want to share a filtered observable list you can do this.
 
 ```csharp
-IObservableList<T> filteredObservableList = myObservableList 
+IObservableList<T> filteredObservableList = myObservableList.Connect()  
 					.Filter(t=>trade.Status == TradeStatus.Live) 
 					.AsObservableList();		
 ```
@@ -77,7 +77,7 @@ Now you can connect to the cache using ```myObservableCache.Connect()``` which c
 
 Exactly like the observable list you can now start composing sophisticated observations. For example if the cache is a cache of trades you can do this
 ```csharp
-var mySubscription = myObservableCache 
+var mySubscription = myObservableCache.Connect()  
 					.Filter(t=>trade.Status == TradeStatus.Live) 
 					.Transform(trade => new TradeProxy(trade)) //equivalent to rx .Select
 					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
@@ -99,7 +99,7 @@ This method will clear and load the source list yet produce a single notificatio
 The cache is thread-safe and can be shared but before sharing I  recommend you call ```myObservableCache.AsObservableCache()``` which hides the edit methods.  Additionally you can call ```.AsObservableCache()``` on any observable change set. So for example if you want to share a filtered observable cache you can do this.
 
 ```csharp
-IObservableCache<T> filteredObservableCache = myObservableCache
+IObservableCache<T> filteredObservableCache = myObservableCache.Connect() 
 					.Filter(t=>trade.Status == TradeStatus.Live) 
 					.AsObservableCache();		
 ```
@@ -179,11 +179,9 @@ var myoperation = somedynamicdatasource.Connect()
 			.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount))
 			.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with Observable<PropChangedArg>)
 ```
-**Example 5:**  will wire and un-wire items from the observable when they are added, updated or removed from the source.
+**Example 5:**  will dispose items when removed from the source, or when myoperation is disposed.
 ```csharp
-var myoperation = somedynamicdatasource.Connect() 
-				.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount))
-				.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with IObservable<PropChangedArg>)
+var myoperation = somedynamicdatasource.Connect().DisposeMany()
 ```
 **Example 6:** Produces a distinct change set of currency pairs
 ```csharp
@@ -192,17 +190,15 @@ var currencyPairs= somedynamicdatasource .DistinctValues(trade => trade.Currency
 
 **Example 7:**  virtualise the results so only a limited range of data is included
 ```csharp
-var controller =  new VirtualisingController(new VirtualRequest(0,25))
-var myoperation = somedynamicdatasource.Connect() 
-				.Virtualise(controller)
+var controller =  new VirtualisingController(new VirtualRequest(0,25));
+var myoperation = somedynamicdatasource.Connect().**Virtualise(controller)**
 ```
 the starting index and number of records can be changed using ``` _controller.Virualise(new VirtualRequest(start,size))```
 
 **Example 8:**  page the results so only a limited range of data is included
 ```csharp
-var controller =  new PageController(new PageRequest(1,25))
-var myoperation = somedynamicdatasource.Connect() 
-				.Page(controller)
+var controller =  new PageController(new PageRequest(1,25));
+var myoperation = somedynamicdatasource.Connect().Page(controller)
 ```
 the starting index and number of records can be changed using ``` _controller.Change(new PageRequest(pageNumber,pageSize))``
 
