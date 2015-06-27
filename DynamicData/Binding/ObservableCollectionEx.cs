@@ -61,7 +61,7 @@ namespace DynamicData.Binding
 										        .Select((t, idx) =>
 										        {
 											        var old = changes.OldItems[idx];
-											        return new Change<T>(ListChangeReason.Update, t, (T) old, idx, idx);
+											        return new Change<T>(ListChangeReason.Replace, t, (T) old, idx, idx);
 										        });
 								        }
 								        case NotifyCollectionChangedAction.Reset:

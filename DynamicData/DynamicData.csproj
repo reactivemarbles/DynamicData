@@ -159,6 +159,7 @@
     <Compile Include="List\ItemChange.cs" />
     <Compile Include="List\ListChangeEx.cs" />
     <Compile Include="List\ListChangeReason.cs" />
+    <Compile Include="List\ListChangeToKeyedChangeEnumerator.cs" />
     <Compile Include="List\ListEx.cs" />
     <Compile Include="List\IChangeSet.cs" />
     <Compile Include="List\ChangeAwareList.cs" />

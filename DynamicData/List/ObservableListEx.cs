@@ -12,11 +12,56 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-	/// <summary>
+    /// <summary>
 	/// Extenssions for ObservableList
 	/// </summary>
 	public static class ObservableListEx
 	{
+        #region Conversion
+
+        /// <summary>
+        /// Adds a key to each item,  which enables all caching features of dynamic data
+        /// </summary>
+        /// <typeparam name="TObject">The type of  object.</typeparam>
+        /// <typeparam name="TKey">The type of  key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="keySelector">The key selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> WithKey<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject,TKey> keySelector )
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            return source.Select(changes =>
+            {
+                var enumerator = new ListChangeToKeyedChangeEnumerator<TObject, TKey>(changes, keySelector);
+                return new ChangeSet<TObject, TKey>(enumerator);
+            });
+        }
+
+
+        /// <summary>
+        /// Cast the object using the sepcified casting function.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="conversionFactory">The conversion factory.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TDestination>> Cast<TObject, TDestination>([NotNull] this IObservable<IChangeSet<TObject>> source, 
+            [NotNull] Func<TObject, TDestination> conversionFactory)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
+            return source.Select(changes => changes.Transform(conversionFactory));
+        }
+
+
+        #endregion
+
         #region Expiry / size limiter
 
         /// <summary>

@@ -28,7 +28,7 @@ namespace DynamicData.Tests.ListFixtures
             Assert.IsFalse(updateReceived,"No update should be received");
             cache.Add(new Person("Test",1));
 
-            Assert.IsTrue(updateReceived,"Update should be received");
+            Assert.IsTrue(updateReceived,"Replace should be received");
             Assert.AreEqual(1,result.Adds);
             Assert.AreEqual(new Person("Test",1), result.First().Item.Current);
             deferStream.Dispose();
@@ -52,7 +52,7 @@ namespace DynamicData.Tests.ListFixtures
             Assert.IsFalse(updateReceived, "No update should be received for initial batch of changes");
 
             cache.Add(new Person("P2", 2));
-            Assert.IsTrue(updateReceived, "Update should be received");
+            Assert.IsTrue(updateReceived, "Replace should be received");
             deferStream.Dispose();
         }
     }

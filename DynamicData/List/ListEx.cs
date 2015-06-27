@@ -325,7 +325,7 @@ namespace DynamicData
 		//			case ChangeReason.Add:
 		//				source.Insert(change.CurrentIndex, transformFactory(change.Current));
   //                      break;
-		//			case ChangeReason.Update:
+		//			case ChangeReason.Replace:
 		//				if (change.CurrentIndex == change.PreviousIndex)
 		//				{
 		//					source[change.CurrentIndex] = transformFactory(change.Current);
@@ -378,7 +378,7 @@ namespace DynamicData
 		//					source.Add(change.Current);
 		//				}
 		//				break;
-		//			case ChangeReason.Update:
+		//			case ChangeReason.Replace:
 		//				{
 		//					if (hasIndex && change.CurrentIndex == change.PreviousIndex)
 		//					{
@@ -450,7 +450,7 @@ namespace DynamicData
 		//					if (match) source.Add(change.Current);
 		//				}
 		//				break;
-		//			case ChangeReason.Update:
+		//			case ChangeReason.Replace:
 		//				{
 		//					var match = predicate(change.Current);
 		//					var wasMatch = predicate(change.Previous.Value);

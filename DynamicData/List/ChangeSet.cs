@@ -86,7 +86,7 @@ namespace DynamicData
 				case ListChangeReason.AddRange:
 					_adds = _adds + item.Range.Count;
 					break;
-				case ListChangeReason.Update:
+				case ListChangeReason.Replace:
 					_updates++;
 					break; ;
 				case ListChangeReason.Remove:

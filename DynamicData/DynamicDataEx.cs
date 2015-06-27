@@ -127,7 +127,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<ConnectionStatus> MonitorStatus<T>(this IObservable<T>  source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
             return Observable.Create<ConnectionStatus>(observer =>
                 {
@@ -185,8 +185,8 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey,TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source,
             Func<TObject, TDestinationKey> keySelector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             return source.Select(updates =>
                                      {
@@ -205,7 +205,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> NotEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return source.Where(updates => updates.Count!=0);
         }
 
@@ -220,7 +220,7 @@ namespace DynamicData
         public static IObservable<Change<TObject, TKey>> Flatten<TObject, TKey>(
             this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return source.SelectMany(updates => updates);
         }
 
@@ -263,8 +263,8 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> IncludeUpdateWhen<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TObject, bool> includeFunction)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (includeFunction == null) throw new ArgumentNullException("includeFunction");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (includeFunction == null) throw new ArgumentNullException(nameof(includeFunction));
  
             return source.Select(updates =>
             {

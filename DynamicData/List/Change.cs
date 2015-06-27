@@ -40,7 +40,7 @@ namespace DynamicData
 						return ChangeType.Item;
 					case ListChangeReason.AddRange:
 						return ChangeType.Range;
-					case ListChangeReason.Update:
+					case ListChangeReason.Replace:
 						return ChangeType.Item;
 					case ListChangeReason.Remove:
 						return ChangeType.Item;
@@ -133,7 +133,7 @@ namespace DynamicData
 			{
 				throw new ArgumentException("For ChangeReason.Add, a previous value cannot be specified");
 			}
-			if (reason == ListChangeReason.Update && !previous.HasValue)
+			if (reason == ListChangeReason.Replace && !previous.HasValue)
 			{
 				throw new ArgumentException("For ChangeReason.Change, must supply previous value");
 			}

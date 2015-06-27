@@ -56,7 +56,7 @@ namespace DynamicData.Internal
 						}
 						break;
 					}
-					case ListChangeReason.Update:
+					case ListChangeReason.Replace:
 					{
 						var current = change.Item.Current;
 						//TODO: check whether an item should stay in the same position

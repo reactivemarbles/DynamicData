@@ -178,7 +178,7 @@ namespace DynamicData
 		protected virtual void SetItem(int index, T item)
 		{
 			var previous = _innerList[index];
-			_changes.Add(new Change<T>(ListChangeReason.Update, item, previous, index, index));
+			_changes.Add(new Change<T>(ListChangeReason.Replace, item, previous, index, index));
 			_innerList[index] = item;
 		}
 

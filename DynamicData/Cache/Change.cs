@@ -123,14 +123,14 @@ namespace DynamicData
 	    /// <summary>
         /// The previous change.
         /// 
-        /// This is only when Reason==ChangeReason.Update.
+        /// This is only when Reason==ChangeReason.Replace.
         /// </summary>
         public Optional<TObject> Previous { get; }
 
 	    /// <summary>
         /// The previous change.
         /// 
-        /// This is only when Reason==ChangeReason.Update or ChangeReason.Move.
+        /// This is only when Reason==ChangeReason.Replace or ChangeReason.Move.
         /// </summary>
         public int PreviousIndex { get; }
 

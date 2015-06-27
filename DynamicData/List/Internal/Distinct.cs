@@ -71,7 +71,7 @@ namespace DynamicData.Internal
 							break;
 						}
 					//	case ListChangeReason.Evaluate:
-					case ListChangeReason.Update:
+					case ListChangeReason.Replace:
 					{
 						var value = change.Item.Current.Value;
 						var previous = change.Item.Previous.Value.Value;

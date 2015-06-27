@@ -42,8 +42,6 @@ namespace DynamicData
 						change.Item.PreviousIndex);
 				}
 				return new Change<TDestination>(change.Reason, change.Range.Select(transformer), change.Range.Index);
-
-
 			});
 
 			return new ChangeSet<TDestination>(changes);

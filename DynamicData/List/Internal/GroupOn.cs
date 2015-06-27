@@ -61,7 +61,7 @@ namespace DynamicData.Internal
 									case ListChangeReason.Add:
 										list.Add(change.Current.Item);
 										break;
-									case ListChangeReason.Update:
+									case ListChangeReason.Replace:
 									{
 										var previousItem = change.Previous.Value.Item;
 										var previousGroup = change.Previous.Value.Value;

@@ -20,7 +20,7 @@ namespace DynamicData
 		/// <summary>
 		///  An item has been updated
 		/// </summary>
-		Update,
+		Replace,
 
 		/// <summary>
 		///  An item has removed

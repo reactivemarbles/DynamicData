@@ -58,7 +58,7 @@ namespace DynamicData
 						break;
 
 
-					case ListChangeReason.Update:
+					case ListChangeReason.Replace:
 					{
 						var change = item.Item;
 						var match = predicate(change.Current);
@@ -151,7 +151,7 @@ namespace DynamicData
 							source.AddOrInsertRange(item.Range.Select(transformFactory), item.Range.Index);
 							break;
 						}
-					case ListChangeReason.Update:
+					case ListChangeReason.Replace:
 					{
 						var change = item.Item;
 						if (change.CurrentIndex == change.PreviousIndex)
@@ -234,7 +234,7 @@ namespace DynamicData
 							break;
 						}
 
-					case ListChangeReason.Update:
+					case ListChangeReason.Replace:
 						{
 
 							var change = item.Item;

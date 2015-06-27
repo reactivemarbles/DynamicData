@@ -47,7 +47,7 @@ namespace DynamicData.Internal
 			{
 				switch (change.Reason)
 				{
-					case ListChangeReason.Update:
+					case ListChangeReason.Replace:
 						change.Item.Previous.IfHasValue(t => _callback(t));
 						break;
 					case ListChangeReason.Remove:
