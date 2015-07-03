@@ -42,7 +42,9 @@ namespace DynamicData
 
 
         /// <summary>
-        /// Cast the object using the sepcified casting function.
+        /// Convert the object using the sepcified conversion function.
+        /// 
+        /// This is a lighter equivalent of Transform and is designed to be used with non-disposable objects
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -51,7 +53,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> Cast<TObject, TDestination>([NotNull] this IObservable<IChangeSet<TObject>> source, 
+        public static IObservable<IChangeSet<TDestination>> Convert<TObject, TDestination>([NotNull] this IObservable<IChangeSet<TObject>> source, 
             [NotNull] Func<TObject, TDestination> conversionFactory)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

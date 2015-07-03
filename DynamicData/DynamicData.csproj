@@ -55,6 +55,8 @@
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
+    <Compile Include="Cache\Node.cs" />
+    <Compile Include="Cache\Internal\TreeBuilder.cs" />
     <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
     <Compile Include="List\Change.cs" />

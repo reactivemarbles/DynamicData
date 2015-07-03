@@ -113,7 +113,6 @@ namespace DynamicData
                          });
                      }
                     });
-
         }
 
 
@@ -172,28 +171,6 @@ namespace DynamicData
         }
 
 
-        /// <summary>
-        /// Changes the primary key.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
-        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="keySelector">The key selector.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey,TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source,
-            Func<TObject, TDestinationKey> keySelector)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-
-            return source.Select(updates =>
-                                     {
-                                         var changed = updates.Select(u => new Change<TObject, TDestinationKey>(u.Reason, keySelector(u.Current), u.Current, u.Previous));
-                                         return new ChangeSet<TObject, TDestinationKey>(changed);
-                                     });
-        }
 
         /// <summary>
         /// Supresses updates which are empty
@@ -580,6 +557,64 @@ namespace DynamicData
              }).NotEmpty();
          }
 
+        #endregion
+
+        #region Conversion
+
+
+        /// <summary>
+        /// Changes the primary key.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="keySelector">The key selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey, TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source,
+            Func<TObject, TDestinationKey> keySelector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+            return source.Select(updates =>
+            {
+                var changed = updates.Select(u => new Change<TObject, TDestinationKey>(u.Reason, keySelector(u.Current), u.Current, u.Previous));
+                return new ChangeSet<TObject, TDestinationKey>(changed);
+            });
+        }
+
+
+        /// <summary>
+        /// Convert the object using the sepcified conversion function.
+        /// This is a lighter equivalent of Transform and is designed to be used with non-disposable objects
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="conversionFactory">The conversion factory.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Convert<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, TDestination> conversionFactory)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
+
+            return source.Select(changes =>
+            {
+                 var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
+                    change.Key,
+                    conversionFactory(change.Current),
+                    change.Previous.Convert(conversionFactory),
+                    change.CurrentIndex,
+                    change.PreviousIndex));
+
+                return new ChangeSet<TDestination, TKey>(transformed);
+            });
+        }
         #endregion
 
         #region Delayed Stream
@@ -1802,8 +1837,8 @@ namespace DynamicData
 		public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TKey, TDestination> transformFactory)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (transformFactory == null) throw new ArgumentNullException("transformFactory");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
             return Observable.Create<IChangeSet<TDestination, TKey>>
                 (
@@ -1836,8 +1871,8 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TDestination> transformFactory)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (transformFactory == null) throw new ArgumentNullException("transformFactory");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
             return Observable.Create<IChangeSet<TDestination, TKey>>
                 (
@@ -1849,6 +1884,24 @@ namespace DynamicData
                             .NotEmpty()
                             .SubscribeSafe(observer);
                     });
+        }
+
+
+        /// <summary>
+        /// Transforms the object to a fully recursive tree, create a hiearchy based on the pivot function
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="pivotOn">The pivot on.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<Node<TObject, TKey>, TKey>> TransformToTree<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, 
+            [NotNull] Func<TObject, TKey> pivotOn)
+                   where TObject : class
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (pivotOn == null) throw new ArgumentNullException(nameof(pivotOn));
+            return new TreeBuilder<TObject, TKey>(source, pivotOn).Run();
         }
 
         #endregion

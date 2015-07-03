@@ -4,6 +4,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
+
 	internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
     {
         private readonly ICache<TObject, TKey> _cache;
@@ -11,7 +12,7 @@ namespace DynamicData.Internal
 
         protected AbstractFilter(ICache<TObject, TKey> cache, Func<TObject, bool> filter)
         {
-            if (cache == null) throw new ArgumentNullException("cache");
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
             _cache = cache;
 
             if (filter==null)

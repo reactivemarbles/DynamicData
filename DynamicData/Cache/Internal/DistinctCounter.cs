@@ -13,7 +13,7 @@ namespace DynamicData.Internal
 
         public DistinctCounter(Func<TObject, TValue> valueSelector)
         {
-            if (valueSelector == null) throw new ArgumentNullException("valueSelector");
+            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
             _valueSelector = valueSelector;
         }
 
