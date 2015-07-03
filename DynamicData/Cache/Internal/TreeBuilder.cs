@@ -36,7 +36,7 @@ namespace DynamicData.Internal
                 var allNodes = allData.Connect()
                     .Synchronize(locker)
                     .Transform((t, v) => new Node<TObject, TKey>(t, v))
-                    .AsObservableCache(); ;
+                    .AsObservableCache(); 
 
                 var parentSetter = allNodes.Connect()
                     .Subscribe(changes =>
@@ -96,7 +96,7 @@ namespace DynamicData.Internal
                                             {
                                                 // update the parent node
                                                 node.Parent = p;
-                                                updater.AddOrUpdate(p);
+                                                updater.AddOrUpdate(node);
                                             }
                                                 break;
                                             case ChangeReason.Update:
@@ -129,9 +129,14 @@ namespace DynamicData.Internal
                                             case ChangeReason.Remove:
                                             case ChangeReason.Clear:
                                             {
+   
                                                 node.Parent = null;
                                                 updater.Remove(key);
-                                            }
+
+                                                var children = node.Children.Items;
+                                                change.Current.Update(u => u.AddOrUpdate(children));
+                                                children.ForEach(child => child.Parent = null);
+                                                }
                                             break;
                                         }
                                     });

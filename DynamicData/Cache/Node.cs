@@ -26,8 +26,7 @@ namespace DynamicData
             Children = _children.AsObservableCache();
             _cleanUp = new CompositeDisposable(Children, _children);
         }
-
-
+        
         public TObject Item { get; }
         public TKey Key { get; }
 
@@ -37,8 +36,27 @@ namespace DynamicData
 
         public bool IsRoot => !Parent.HasValue;
 
-        #region Equality
+        public int Depth
+        {
 
+            get
+            {
+                int i = 0;
+                var parent = Parent;
+                do
+                {
+                    if (!parent.HasValue)
+                        break;
+                    i++;
+                    parent = parent.Value.Parent;
+                } while (true);
+                return i;
+            }
+
+        }
+
+
+        #region Equality
         public bool Equals(Node<TObject, TKey> other)
         {
             if (ReferenceEquals(null, other)) return false;
