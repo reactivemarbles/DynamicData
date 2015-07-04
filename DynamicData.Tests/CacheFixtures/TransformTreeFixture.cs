@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -41,7 +39,7 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         [Test]
-        public void UpdateANode()
+        public void UpdateAParentNode()
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
 
@@ -57,6 +55,29 @@ namespace DynamicData.Tests.CacheFixtures
             var firstNode = _result.Items.First();
             Assert.AreEqual(3, firstNode.Children.Count);
             Assert.AreEqual(changed.Name, firstNode.Item.Name);
+
+        }
+
+        [Test]
+        public void UpdateChildNode()
+        {
+            _sourceCache.AddOrUpdate(CreateEmployees());
+
+
+            var changed = new EmployeeDto(2)
+            {
+                BossId =1,
+                Name = "Employee 2 (with name change)"
+            };
+
+            _sourceCache.AddOrUpdate(changed);
+            Assert.AreEqual(2, _result.Count);
+
+            var changedNode = _result.Items.First().Children.Items.First();
+
+            Assert.AreEqual(1, changedNode.Parent.Value.Item.Id);
+            Assert.AreEqual(1, changedNode.Children.Count);
+            Assert.AreEqual(changed.Name, changed.Name);
 
         }
 
@@ -83,13 +104,60 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(5, thirdNode.Key);
         }
 
+        [Test]
+        public void AddMissingChild()
+        {
+            var boss = new EmployeeDto(2) {BossId = 0, Name = "Boss"};
+            var minion = new EmployeeDto(1) { BossId = 2, Name = "DogsBody" };
+            _sourceCache.AddOrUpdate(boss);
+            _sourceCache.AddOrUpdate(minion);
+
+            Assert.AreEqual(1, _result.Count);
+
+            var firstNode = _result.Items.First();
+            Assert.AreEqual(boss, firstNode.Item);
+
+            var childNode = firstNode.Children.Items.First();
+            Assert.AreEqual(minion, childNode.Item);
+        }
+
+        [Test]
+        public void AddMissingParent()
+        {
+            var minion = new EmployeeDto(1) { BossId = 2, Name = "DogsBody" };
+            var boss = new EmployeeDto(2) { BossId = 0, Name = "Boss" };
+
+            _sourceCache.AddOrUpdate(boss);
+            _sourceCache.AddOrUpdate(minion);
+
+            Assert.AreEqual(1, _result.Count);
+
+            var firstNode = _result.Items.First();
+            Assert.AreEqual(boss, firstNode.Item);
+
+            var childNode = firstNode.Children.Items.First();
+            Assert.AreEqual(minion, childNode.Item);
+        }
+
+        [Test]
+        public void AddParent()
+        {
+            _sourceCache.AddOrUpdate(new EmployeeDto(1) { BossId = 2, Name = "E1" });
+            _sourceCache.AddOrUpdate(new EmployeeDto(2) { BossId = 1, Name = "E2" });
+
+
+            //we expect the children of node 4  to be pushed up become new roots
+            Assert.AreEqual(1, _result.Count);
+
+        }
+
         #region Employees
         private IEnumerable<EmployeeDto> CreateEmployees()
         {
             yield return new EmployeeDto(1)
             {
                 BossId = 0,
-                Name = "Employee 1"
+                Name = "Employee1"
             };
 
             yield return new EmployeeDto(2)

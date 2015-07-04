@@ -95,6 +95,9 @@ namespace DynamicData.Internal
                                             case ChangeReason.Add:
                                             {
                                                 // update the parent node
+                                                
+      
+
                                                 node.Parent = p;
                                                 updater.AddOrUpdate(node);
                                             }
