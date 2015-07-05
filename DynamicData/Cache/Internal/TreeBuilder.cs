@@ -33,11 +33,15 @@ namespace DynamicData.Internal
 
                 var allData = _source.Synchronize(locker).AsObservableCache();
 
+                //for each object we need a node which provides
+                //a structure to set the parent and children
                 var allNodes = allData.Connect()
                     .Synchronize(locker)
                     .Transform((t, v) => new Node<TObject, TKey>(t, v))
-                    .AsObservableCache(); 
+                    .DisposeMany()
+                    .AsObservableCache();
 
+                //as nodes change, maintain parent and children
                 var parentSetter = allNodes.Connect()
                     .Subscribe(changes =>
                     {
@@ -50,8 +54,10 @@ namespace DynamicData.Internal
 
                             if (!parent.HasValue)
                             {
+                                //deal with items which have no parent
                                 group.ForEach(change =>
                                 {
+                                    var node = change.Current;
                                     change.Current.Parent = null;
                                     switch (change.Reason)
                                     {
@@ -64,7 +70,21 @@ namespace DynamicData.Internal
                                             var children = change.Previous.Value.Children.Items;
                                             change.Current.Update(updater => updater.AddOrUpdate(children));
                                             children.ForEach(child => child.Parent = change.Current);
-                                        }
+
+                                            //remove from old parent if different
+                                            var previous = change.Previous.Value;
+                                            var previousParent = _pivotOn(previous.Item);
+
+                                            if (!previousParent.Equals(previous.Key))
+                                            {
+                                                allNodes.Lookup(previousParent)
+                                                    .IfHasValue(n =>
+                                                    {
+                                                        n.Update(u => u.Remove(change.Key));
+                                                    });
+                                            }
+
+                                            }
                                             break;
                                         case ChangeReason.Remove:
                                         case ChangeReason.Clear:
@@ -73,6 +93,7 @@ namespace DynamicData.Internal
                                             var children = change.Current.Children.Items;
                                             change.Current.Update(updater => updater.AddOrUpdate(children));
                                             children.ForEach(child => child.Parent = null);
+
                                         }
                                             break;
                                     }
@@ -80,6 +101,7 @@ namespace DynamicData.Internal
                             }
                             else
                             {
+                                //deal with items have a parent
                                 parent.Value.Update(updater =>
                                 {
                                     var p = parent.Value;
