@@ -95,9 +95,6 @@ namespace DynamicData.Internal
                                             case ChangeReason.Add:
                                             {
                                                 // update the parent node
-                                                
-      
-
                                                 node.Parent = p;
                                                 updater.AddOrUpdate(node);
                                             }
@@ -119,7 +116,7 @@ namespace DynamicData.Internal
                                                     allNodes.Lookup(previousParent)
                                                         .IfHasValue(n =>
                                                         {
-                                                            n.Update(u=>u.Remove(previousKey));
+                                                            n.Update(u=>u.Remove(key));
                                                         });
                                                 }
 
@@ -132,14 +129,13 @@ namespace DynamicData.Internal
                                             case ChangeReason.Remove:
                                             case ChangeReason.Clear:
                                             {
-   
                                                 node.Parent = null;
                                                 updater.Remove(key);
 
                                                 var children = node.Children.Items;
                                                 change.Current.Update(u => u.AddOrUpdate(children));
                                                 children.ForEach(child => child.Parent = null);
-                                                }
+                                             }
                                             break;
                                         }
                                     });

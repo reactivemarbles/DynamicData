@@ -25,7 +25,7 @@ namespace DynamicData.Binding
 			Expression<Func<TObject, TValue>> propertyAccessor)
 			where TObject : INotifyPropertyChanged
 		{
-			if (propertyAccessor == null) throw new ArgumentNullException("propertyAccessor");
+			if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
 			var member = propertyAccessor.GetProperty();
 			var accessor = propertyAccessor.Compile();
@@ -55,7 +55,7 @@ namespace DynamicData.Binding
 		/// <exception cref="System.ArgumentNullException">source</exception>
 		public static IObservable<TValue> Value<TObject, TValue>([NotNull] this IObservable<PropertyValue<TObject, TValue>> source)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			return source.Select(prop => prop.Value);
 		}
 

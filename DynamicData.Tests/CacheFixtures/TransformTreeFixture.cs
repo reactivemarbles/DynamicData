@@ -140,6 +140,32 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         [Test]
+        public void ChangeParent()
+        {
+            _sourceCache.AddOrUpdate(CreateEmployees());
+
+            _sourceCache.AddOrUpdate(new EmployeeDto(4)
+            {
+                BossId = 1,
+                Name = "Employee4"
+            });
+
+
+            //if this throws, then employee 4 is no a child of boss 1
+            var emp4 = _result.Lookup(1).Value.Children.Lookup(4).Value;
+
+            //check boss is = 1
+            Assert.AreEqual(1, emp4.Parent.Value.Item.Id);
+
+            //lookup previous boss (emp 4 should no longet be a child)
+            var emp3 = _result.Lookup(1).Value.Children.Lookup(3).Value;
+
+
+            //emp 4 must be removed from previous boss's child collection
+            Assert.IsFalse( emp3.Children.Lookup(4).HasValue);
+        }
+
+        [Test]
         public void AddParent()
         {
             _sourceCache.AddOrUpdate(new EmployeeDto(1) { BossId = 2, Name = "E1" });
@@ -251,6 +277,8 @@ namespace DynamicData.Tests.CacheFixtures
 
             #endregion
 
+
+
             public override string ToString()
             {
                 return $"Name: {Name}, Id: {Id}, BossId: {BossId}";
@@ -259,5 +287,7 @@ namespace DynamicData.Tests.CacheFixtures
 
 
         #endregion
+
+
     }
 }
