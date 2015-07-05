@@ -153,7 +153,7 @@ namespace DynamicData.Internal
                                                 updater.Remove(key);
 
                                                 var children = node.Children.Items;
-                                                change.Current.Update(u => u.AddOrUpdate(children));
+                                                change.Current.Update(u => u.Remove(children));
                                                 children.ForEach(child => child.Parent = null);
                                              }
                                             break;
