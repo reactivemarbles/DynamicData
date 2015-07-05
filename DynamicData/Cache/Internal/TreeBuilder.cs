@@ -57,12 +57,10 @@ namespace DynamicData.Internal
                                 //deal with items which have no parent
                                 group.ForEach(change =>
                                 {
-                                    var node = change.Current;
                                     change.Current.Parent = null;
                                     switch (change.Reason)
                                     {
                                         case ChangeReason.Add:
-                                            //check for orphaned children (iterate at end) 
                                             break;
                                         case ChangeReason.Update:
                                         {
@@ -91,7 +89,7 @@ namespace DynamicData.Internal
                                         {
                                             //remove children and null out parent
                                             var children = change.Current.Children.Items;
-                                            change.Current.Update(updater => updater.AddOrUpdate(children));
+                                            change.Current.Update(updater => updater.Remove(children));
                                             children.ForEach(child => child.Parent = null);
 
                                         }
