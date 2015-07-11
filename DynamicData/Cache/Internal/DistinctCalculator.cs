@@ -1,21 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive.Linq;
 using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
     internal sealed class DistinctCalculator<TObject, TKey, TValue>
     {
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TValue> _valueSelector;
         private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
         private readonly IDictionary<TKey, TValue> _itemCache = new Dictionary<TKey, TValue>();
        
-        public DistinctCalculator(Func<TObject, TValue> valueSelector)
+        public DistinctCalculator(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
         {
-            if (valueSelector == null) throw new ArgumentNullException("valueSelector");
+            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            _source = source;
             _valueSelector = valueSelector;
         }
-        
+
+        public IObservable<IDistinctChangeSet<TValue>> Run()
+        {
+             return _source.Select(Calculate).Where(updates => updates.Count != 0);
+        }
+
+
+
         public IDistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> updates)
         {
             var result = new List<Change<TValue, TValue>>();

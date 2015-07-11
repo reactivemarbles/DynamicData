@@ -1,12 +1,16 @@
 ﻿
 using System;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.Binding
 {
+
+
 	[TestFixture]
     public class BindChangeSetFixture
     {

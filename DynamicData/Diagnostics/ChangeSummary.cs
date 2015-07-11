@@ -89,8 +89,8 @@
             unchecked
             {
                 int hashCode = _index;
-                hashCode = (hashCode*397) ^ (Latest != null ? Latest.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (Overall != null ? Overall.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (Latest?.GetHashCode() ?? 0);
+                hashCode = (hashCode*397) ^ (Overall?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

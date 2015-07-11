@@ -647,8 +647,7 @@ namespace DynamicData
 		public static IObservable<IChangeSet<TObject, TKey>> FlattenBufferResult<TObject, TKey>([NotNull] this IObservable<IList<IChangeSet<TObject, TKey>>> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
-			return source
-					.Where(x => x.Count != 0)
+			return source.Where(x => x.Count != 0)
 					.Select(updates => new ChangeSet<TObject, TKey>(updates.SelectMany(u => u)));
 		}
 
@@ -730,8 +729,8 @@ namespace DynamicData
                                                     TimeSpan? timeOut= null,    
                                                     IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (pauseIfTrueSelector == null) throw new ArgumentNullException("pauseIfTrueSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
             ;
 
             return Observable.Create<IChangeSet<TObject, TKey>>
@@ -835,36 +834,37 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        var published = source.Publish();
+            return source.MonitorStatus()
+                .Where(status => status == ConnectionStatus.Loaded)
+                .Take(1)
+                .Select(_ => new ChangeSet<TObject, TKey>())
+                .Concat(source)
+                .NotEmpty();
+        }
 
-                       var subscriber = published.MonitorStatus()
-                                            .Where(status => status == ConnectionStatus.Loaded)
-                                            .Take(1)
-                                            .Select(_=>new ChangeSet<TObject,TKey>())
-                                            .Concat(source)
-                                            .NotEmpty()
-                                            .SubscribeSafe(observer);
+        /// <summary>
+        /// Defer the subscription until the stream has been inflated with data
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservableCache<TObject, TKey> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
-                        var connected = published.Connect();
-
-                        return Disposable.Create(() =>
-                        {
-                            connected.Dispose();
-                            subscriber.Dispose();
-                        });
-                    }
-                );
+            return source.CountChanged.Where(count => count != 0)
+                    .Take(1)
+                    .Select(_ => new ChangeSet<TObject, TKey>())
+                    .Concat(source.Connect())
+                    .NotEmpty();
         }
 
         #endregion
-        
+
         #region True for all values
 
-  
+
 
         /// <summary>
         /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
@@ -969,9 +969,9 @@ namespace DynamicData
                 Func<TObject, IObservable<TValue>> observableSelector,
                 Func<TValue, bool> equalityCondition)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (observableSelector == null) throw new ArgumentNullException("observableSelector");
-            if (equalityCondition == null) throw new ArgumentNullException("equalityCondition");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+            if (equalityCondition == null) throw new ArgumentNullException(nameof(equalityCondition));
 
             return source.TrueFor(observableSelector,
                 items => items.Any(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
@@ -981,7 +981,7 @@ namespace DynamicData
                         Func<TObject, IObservable<TValue>> observableSelector,
                         Func<IEnumerable<ObservableWithValue<TObject,TValue>>, bool> collectionMatcher)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
             return Observable.Create<bool>(observer =>
             {
@@ -994,8 +994,7 @@ namespace DynamicData
                  .DistinctUntilChanged()
                  .SubscribeSafe(observer);
 
-                var connected = transformed.Connect();
-                return new CompositeDisposable(connected, publisher);
+                return new CompositeDisposable( publisher, transformed.Connect());
             });
         }
         #endregion
@@ -1021,8 +1020,8 @@ namespace DynamicData
         public static IObservable<TDestination> QueryWhenChanged<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, 
             Func<IQuery<TObject, TKey>, TDestination> resultSelector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (resultSelector == null) throw new ArgumentNullException("resultSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
 
             return source.QueryWhenChanged().Select(resultSelector);
         }
@@ -1039,29 +1038,12 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
-            return Observable.Create<IQuery<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        var cache = new Cache<TObject, TKey>();
-                        var query = new AnomynousQuery<TObject, TKey>(cache);
+            var cache = new Cache<TObject, TKey>();
+            var query = new AnomynousQuery<TObject, TKey>(cache);
 
-                        return source.Subscribe(updates =>
-                        {
-                            try
-                            {
-                                cache.Clone(updates);
-                                observer.OnNext(query);
-                            }
-                            catch (Exception ex)
-                            {
-                                observer.OnError(ex);
-                            }
-                        }, observer.OnError, observer.OnCompleted);
-                    }
-                );
+            return source.Do(changes=> cache.Clone(changes)).Select(changes => query);
         }
 
         /// <summary>
@@ -1076,36 +1058,25 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> itemChangedTrigger)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
-            return Observable.Create<IQuery<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        var cache = new Cache<TObject, TKey>();
-                        var query = new AnomynousQuery<TObject, TKey>(cache);
+            var locker = new object();
+            var cache = new Cache<TObject, TKey>();
+            var query = new AnomynousQuery<TObject, TKey>(cache);
+            
+            return source.Publish(shared =>
+            {
+                var inlineChange = shared.MergeMany(itemChangedTrigger)
+                            .Synchronize(locker)   
+                            .Select(_ => query);
 
-                        var shared = source.Publish();
+                var sourceChanged = shared
+                            .Synchronize(locker)
+                            .Do(changes => cache.Clone(changes))
+                            .Select(changes => query);
 
-                        var inlineChange = shared.MergeMany(itemChangedTrigger)
-                                                .Subscribe(_ => observer.OnNext(query));
-                        
-                        var dataChanged = shared.Subscribe(updates =>
-                        {
-                            try
-                            {
-                                cache.Clone(updates);
-                                observer.OnNext(query);
-                            }
-                            catch (Exception ex)
-                            {
-                                observer.OnError(ex);
-                            }
-                        }, observer.OnError, observer.OnCompleted);
-
-                        return new CompositeDisposable(inlineChange, dataChanged);
-                    }
-                );
+                return sourceChanged.Merge(inlineChange);
+            });
         }
 
 
@@ -1125,7 +1096,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservableCache<TObject, TKey> source, TKey key)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return source.Watch(key).Select(u => u.Current);
         }
         /// <summary>
@@ -1139,7 +1110,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return source.Watch(key).Select(u => u.Current);
         }
 		/// <summary>
@@ -1152,7 +1123,7 @@ namespace DynamicData
 		/// <returns></returns>
 		public static IObservable<Change<TObject, TKey>> Watch<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
 		{
-			if (source == null) throw new ArgumentNullException("source");
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			return source.SelectMany(updates => updates).Where(update => update.Key.Equals(key));
 		}
 
@@ -2045,9 +2016,9 @@ namespace DynamicData
             Func<TSource, TDestination> transformFactory,
              Action<Error<TSource, TKey>> errorHandler)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (transformFactory == null) throw new ArgumentNullException("transformFactory");
-            if (errorHandler == null) throw new ArgumentNullException("errorHandler");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
 
             return Observable.Create<IChangeSet<TDestination, TKey>>
                 (
@@ -2083,21 +2054,14 @@ namespace DynamicData
             Func<TSource, TKey, TDestination> transformFactory,
             Action<Error<TSource, TKey>> errorHandler)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (transformFactory == null) throw new ArgumentNullException("transformFactory");
-            if (errorHandler == null) throw new ArgumentNullException("errorHandler");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
 
-            return Observable.Create<IChangeSet<TDestination, TKey>>
-                (
-                    observer =>
-                    {
-                        var transformer = new Transformer<TDestination, TSource, TKey>(errorHandler);
-                        return source
-                            .Select(updates => transformer.Transform(updates, transformFactory))
-                            .NotEmpty()
-                            .Finally(observer.OnCompleted)
-                            .SubscribeSafe(observer);
-                    });
+            var transformer = new Transformer<TDestination, TSource, TKey>(errorHandler);
+            return source
+                .Select(updates => transformer.Transform(updates, transformFactory))
+                .NotEmpty();
         }
 
         #endregion
@@ -2117,25 +2081,11 @@ namespace DynamicData
         /// Due to it's nature only adds or removes can be returned
         /// </remarks>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IDistinctChangeSet<TValue>> DistinctValues<TObject, TKey, TValue>(
-            this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
+        public static IObservable<IDistinctChangeSet<TValue>> DistinctValues<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (valueSelector == null) throw new ArgumentNullException("valueSelector");
-
-            return Observable.Create<IDistinctChangeSet<TValue>>
-                (
-                    observer =>
-                    {
-                        var distinctObserver = new DistinctCalculator<TObject, TKey, TValue>(valueSelector);
-                            var subscriber = source
-                                .Select(distinctObserver.Calculate)
-                                .Where(updates=>updates.Count != 0)
-                                .SubscribeSafe(observer);
-
-                            return Disposable.Create(subscriber.Dispose);
-                        }
-                );
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            return new DistinctCalculator<TObject, TKey, TValue>(source,valueSelector).Run();
         }
 
         #endregion
@@ -2163,9 +2113,9 @@ namespace DynamicData
                 Func<TObject, TGroupKey> groupSelector, 
                 IObservable<IDistinctChangeSet<TGroupKey>> resultGroupSource)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (groupSelector == null) throw new ArgumentNullException("groupSelector");
-            if (resultGroupSource == null) throw new ArgumentNullException("resultGroupSource");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
+            if (resultGroupSource == null) throw new ArgumentNullException(nameof(resultGroupSource));
 
 
             return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
@@ -2244,8 +2194,8 @@ namespace DynamicData
         public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey)
 
      {
-            if (source == null) throw new ArgumentNullException("source");
-            if (groupSelectorKey == null) throw new ArgumentNullException("groupSelectorKey");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
 
             return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
                 (
@@ -2253,12 +2203,12 @@ namespace DynamicData
                         {
                             var grouper = new Grouper<TObject, TKey, TGroupKey>(groupSelectorKey);
 
-                            var  groups = source.Select(grouper.Update)
-                                .Where(changes=>changes.Count!=0).Publish();
+                            var groups = source.Select(grouper.Update)
+                                .Where(changes => changes.Count != 0).Publish();
 
                             var subscriber = groups.SubscribeSafe(observer);
                             var disposer = groups.DisposeMany().Subscribe();
-                           
+
                             var connected = groups.Connect();
 
                             return Disposable.Create(() =>
@@ -2290,9 +2240,9 @@ namespace DynamicData
         public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source, 
             Func<TObject, TGroupKey> groupSelectorKey, GroupController groupController)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (groupSelectorKey == null) throw new ArgumentNullException("groupSelectorKey");
-            if (groupController == null) throw new ArgumentNullException("groupController");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
+            if (groupController == null) throw new ArgumentNullException(nameof(groupController));
 
             return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
                 (
@@ -2462,40 +2412,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (updater == null) throw new ArgumentNullException(nameof(updater));
-
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (observer =>
-                {
-                    var locker = new object();
-                    var published = source.Synchronize(locker).Publish();
-
-                    var adaptor = published.Subscribe(updates =>
-                        {
-                            try
-                            {
-                                updater.Adapt(updates, destination);
-                            }
-                            catch (Exception ex)
-                            {
-                                observer.OnError(ex);
-                                observer.OnCompleted();
-                            }
-                        },
-                        observer.OnError, observer.OnCompleted);
-
-                    var connected = published.Connect();
-
-                    var subscriber = published.SubscribeSafe(observer);
-
-                    return Disposable.Create(() =>
-                    {
-                        adaptor.Dispose();
-                        subscriber.Dispose();
-                        connected.Dispose();
-                        subscriber.Dispose();
-                    });
-                }
-                );
+            return source.Do(changes => updater.Adapt(changes, destination));
         }
 
 
@@ -2537,39 +2454,7 @@ namespace DynamicData
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (updater == null) throw new ArgumentNullException(nameof(updater));
 
-            return Observable.Create<ISortedChangeSet<TObject, TKey>>
-                (observer =>
-                {
-                    var locker = new object();
-                    var published = source.Synchronize(locker).Publish();
-
-                    var adaptor = published
-                        .Subscribe(updates =>
-                        {
-                            try
-                            {
-                                updater.Adapt(updates, destination);
-                            }
-                            catch (Exception ex)
-                            {
-                                observer.OnError(ex); 
-                                observer.OnCompleted();
-                            }
-                        },
-                        observer.OnError, observer.OnCompleted);
-
-                    var connected = published.Connect();
-                    var subscriber = published.SubscribeSafe(observer);
-
-                    return Disposable.Create(() =>
-                    {
-                        adaptor.Dispose();
-                        subscriber.Dispose();
-                        connected.Dispose();
-                        subscriber.Dispose();
-                    });
-                }
-                );
+            return source.Do(changes => updater.Adapt(changes, destination));
         }
 
 
