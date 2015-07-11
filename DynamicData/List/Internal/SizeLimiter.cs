@@ -11,8 +11,8 @@ namespace DynamicData.Internal
     internal sealed class LimitSizeTo<T>
     {
         private readonly ISourceList<T> _sourceList;
-        private readonly int _sizeLimit;
         private readonly IScheduler _scheduler;
+        private readonly int _sizeLimit;
 
         public LimitSizeTo([NotNull] ISourceList<T> sourceList, int sizeLimit, [NotNull] IScheduler scheduler)
         {

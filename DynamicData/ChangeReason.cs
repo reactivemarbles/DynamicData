@@ -95,9 +95,5 @@
         /// </summary>
         Moved,
 
-		/// <summary>
-		/// The entire collection has been cleared
-		/// </summary>
-		Clear,
     }
 }

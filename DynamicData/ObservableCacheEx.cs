@@ -390,8 +390,8 @@ namespace DynamicData
         public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
             Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (timeSelector == null) throw new ArgumentNullException("timeSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
 
             return Observable.Create<IEnumerable<KeyValuePair<TKey,TObject>>>(observer =>
             {

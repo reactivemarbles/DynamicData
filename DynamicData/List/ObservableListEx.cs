@@ -12,6 +12,9 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
+
+
+
     /// <summary>
 	/// Extenssions for ObservableList
 	/// </summary>
@@ -64,61 +67,22 @@ namespace DynamicData
 
         #endregion
 
-        #region Expiry / size limiter
+        #region Binding
 
         /// <summary>
-        /// Limits the size of the source cache to the specified limit
+        /// Binds a clone of the observable changeset to the target observable collection
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="sizeLimit">The size limit.</param>
-        /// <param name="scheduler">The scheduler.</param>
+        /// <param name="targetCollection">The target collection.</param>
+        /// <param name="resetThreshold">The reset threshold.</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentException">sizeLimit cannot be zero</exception>
-        /// <exception cref="ArgumentNullException">source</exception>
-        /// <exception cref="ArgumentException">sizeLimit cannot be zero</exception>
-        public static IObservable<IEnumerable<T>> LimitSizeTo<T>([NotNull] this ISourceList<T> source,int sizeLimit, IScheduler scheduler = null)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (sizeLimit <= 0) throw new ArgumentException("sizeLimit cannot be zero");
-
-		    var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? Scheduler.Default);
-            var locker = new object();
-
-            return limiter.Run().Synchronize(locker)
-							.Select(toExpire =>
-							{
-								//NB: only expired items are reported so no need to check whether type if removed
-							    lock (locker)
-							    {
-                                    source.Edit(list =>
-                                    {
-                                        toExpire.ForEach(t => list.Remove(t));
-                                    });
-                                }
-                                //report on expired items
-                                return toExpire;
-							});
-		}
-
-		#endregion
-
-		#region Binding
-
-		/// <summary>
-		/// Binds a clone of the observable changeset to the target observable collection
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="targetCollection">The target collection.</param>
-		/// <param name="resetThreshold">The reset threshold.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// targetCollection
-		/// </exception>
-		public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// targetCollection
+        /// </exception>
+        public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
 			[NotNull] IObservableCollection<T> targetCollection, int resetThreshold=25 )
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -478,15 +442,13 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentException">Must enter at least 1 reason</exception>
 		public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
 		{
-            //TODO: Must remove index, otherwise consuming operators can break
+            if (reasons.Length == 0)
+                throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
 
-			var matches = reasons.ToHashSet();
-			if (matches.Count==0)
-				throw new ArgumentException("Must enter at least 1 reason");
-
+            var matches = reasons.ToHashSet();
 			return source.Select(updates =>
 			{
-				var filtered = updates.Where(u => matches.Contains(u.Reason));
+				var filtered = updates.Where(u => matches.Contains(u.Reason)).YieldWithoutIndex(); ;
 				return new ChangeSet<T>(filtered);
 			}).NotEmpty();
 		}
@@ -502,15 +464,13 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentException">Must enter at least 1 reason</exception>
 		public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
 		{
+            if (reasons.Length == 0)
+                throw new ArgumentException("Must enter at least 1 reason",nameof(reasons));
 
-            //TODO: Must remove index, otherwise consuming operators can break 
             var matches = reasons.ToHashSet();
-			if (matches.Count == 0)
-				throw new ArgumentException("Must enter at least 1 reason");
-
-			return source.Select(updates =>
+            return source.Select(updates =>
 			{
-				var filtered = updates.Where(u => !matches.Contains(u.Reason));
+				var filtered = updates.Where(u => !matches.Contains(u.Reason)).YieldWithoutIndex();
 				return new ChangeSet<T>(filtered);
 			}).NotEmpty();
 		}
@@ -747,5 +707,98 @@ namespace DynamicData
         }
 
         #endregion
+
+
+        #region Expiry / size limiter
+
+        /// <summary>
+        /// Limits the size of the source cache to the specified limit. 
+        /// Notifies which items have been removed from the source list.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="sizeLimit">The size limit.</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentException">sizeLimit cannot be zero</exception>
+        /// <exception cref="ArgumentNullException">source</exception>
+        /// <exception cref="ArgumentException">sizeLimit cannot be zero</exception>
+        public static IObservable<IEnumerable<T>> LimitSizeTo<T>([NotNull] this ISourceList<T> source, int sizeLimit, IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (sizeLimit <= 0) throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
+
+            var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? Scheduler.Default);
+            var locker = new object();
+
+            return limiter.Run().Synchronize(locker)
+                            .Select(toExpire =>
+                            {
+                                //NB: only expired items are reported so no need to check whether type if removed
+                                lock (locker)
+                                {
+                                    source.Edit(list =>
+                                    {
+                                        toExpire.ForEach(t => list.Remove(t));
+                                    });
+                                }
+                                //report on expired items
+                                return toExpire;
+                            });
+        }
+
+        /// <summary>
+        /// Removes items from the cache according to the value specified by the time selector function
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="timeSelector">Selector returning when to expire the item. Return null for non-expiring item</param>
+        /// <param name="scheduler">The scheduler</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IEnumerable<T>> ExpireAfter<T>([NotNull] this ISourceList<T> source, [NotNull] Func<T, TimeSpan?> timeSelector, IScheduler scheduler = null)
+        {
+            return source.ExpireAfter(timeSelector, null, scheduler);
+        }
+
+        /// <summary>
+        /// Removes items from the cache according to the value specified by the time selector function
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="timeSelector">Selector returning when to expire the item. Return null for non-expiring item</param>
+        /// <param name="pollingInterval">Enter the polling interval to optimise expiry timers, if ommited 1 timer is created for each unique expiry time</param>
+        /// <param name="scheduler">The scheduler</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IEnumerable<T>> ExpireAfter<T>([NotNull] this ISourceList<T> source, [NotNull] Func<T, TimeSpan?> timeSelector, TimeSpan? pollingInterval = null, IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
+
+
+            var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? Scheduler.Default);
+            var locker = new object();
+
+            return limiter.Run().Synchronize(locker)
+                            .Select(toExpire =>
+                            {
+                                //NB: only expired items are reported so no need to check whether type if removed
+                                lock (locker)
+                                {
+                                    source.Edit(innerList =>
+                                    {
+                                        toExpire.ForEach(t => innerList.Remove(t));
+                                    });
+                                }
+                                //report on expired items
+                                return toExpire;
+                            });
+        }
+
+        #endregion
+
     }
 }

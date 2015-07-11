@@ -18,7 +18,7 @@ namespace DynamicData
 		AddRange,
 
 		/// <summary>
-		///  An item has been updated
+		///  An item has been replaced
 		/// </summary>
 		Replace,
 

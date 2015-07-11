@@ -6,7 +6,6 @@ using System.Reactive;
 using System.Reactive.Linq;
 
 
-
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]

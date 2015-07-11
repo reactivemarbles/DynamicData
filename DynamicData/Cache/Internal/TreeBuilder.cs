@@ -81,11 +81,9 @@ namespace DynamicData.Internal
                                                         n.Update(u => u.Remove(change.Key));
                                                     });
                                             }
-
-                                            }
+                                        }
                                             break;
                                         case ChangeReason.Remove:
-                                        case ChangeReason.Clear:
                                         {
                                             //remove children and null out parent
                                             var children = change.Current.Children.Items;
@@ -147,7 +145,6 @@ namespace DynamicData.Internal
 
                                                 break;
                                             case ChangeReason.Remove:
-                                            case ChangeReason.Clear:
                                             {
                                                 node.Parent = null;
                                                 updater.Remove(key);

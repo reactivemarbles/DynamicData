@@ -149,6 +149,7 @@
     <Compile Include="ListFixtures\DeferUntilLoadedFixture.cs" />
     <Compile Include="ListFixtures\DisposeManyFixture.cs" />
     <Compile Include="ListFixtures\DistinctValuesFixture.cs" />
+    <Compile Include="ListFixtures\ExpireAfterFixture.cs" />
     <Compile Include="ListFixtures\FilterControllerFixtureWithDiffSet.cs" />
     <Compile Include="ListFixtures\FilterControllerFixtureWithClearAndReplace.cs" />
     <Compile Include="ListFixtures\FilterFixture.cs" />

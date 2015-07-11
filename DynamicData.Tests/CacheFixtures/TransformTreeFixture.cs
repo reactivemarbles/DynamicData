@@ -15,7 +15,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _sourceCache =  new SourceCache<EmployeeDto, int>(e => e.Id);
 
-            _result = _sourceCache.Connect().TransformToTree(e => e.BossId).AsObservableCache();
+            _result = _sourceCache.Connect()
+                            .TransformToTree(e => e.BossId)
+                            .AsObservableCache();
         }
 
         [TearDown]
@@ -78,7 +80,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, changedNode.Parent.Value.Item.Id);
             Assert.AreEqual(1, changedNode.Children.Count);
             Assert.AreEqual(changed.Name, changed.Name);
-
         }
 
         [Test]

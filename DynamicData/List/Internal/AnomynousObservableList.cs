@@ -4,7 +4,9 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-	internal sealed class AnomynousObservableList<T> : IObservableList<T>
+
+
+    internal sealed class AnomynousObservableList<T> : IObservableList<T>
 	{
 		private readonly ISourceList<T> _sourceList;
 

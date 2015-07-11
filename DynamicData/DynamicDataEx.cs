@@ -1221,8 +1221,8 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
                Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (timeSelector == null) throw new ArgumentNullException("timeSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
 
             return source.ExpireAfter(timeSelector, null, scheduler);
         }
@@ -1268,8 +1268,8 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (timeSelector == null) throw new ArgumentNullException("timeSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
 
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
@@ -1327,8 +1327,8 @@ namespace DynamicData
         internal static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ForExpiry<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval, IScheduler scheduler)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (timeSelector == null) throw new ArgumentNullException("timeSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
 
             return Observable.Create<IEnumerable<KeyValuePair<TKey,TObject>>>(observer =>
             {
@@ -2444,8 +2444,8 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
                                                                                               IObservableCollection<TObject> destination)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (destination == null) throw new ArgumentNullException("destination");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
             var updater = new ObservableCollectionAdaptor<TObject, TKey>();
             return source.Bind(destination, updater);
         }
@@ -2465,9 +2465,9 @@ namespace DynamicData
             IObservableCollection<TObject> destination,
             IObservableCollectionAdaptor<TObject, TKey> updater)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (destination == null) throw new ArgumentNullException("destination");
-            if (updater == null) throw new ArgumentNullException("updater");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
+            if (updater == null) throw new ArgumentNullException(nameof(updater));
 
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (observer =>
@@ -2517,8 +2517,8 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
                       IObservableCollection<TObject> destination)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (destination == null) throw new ArgumentNullException("destination");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
             var updater = new SortedObservableCollectionAdaptor<TObject, TKey>();
             return source.Bind(destination, updater);
         }
@@ -2539,9 +2539,9 @@ namespace DynamicData
             IObservableCollection<TObject> destination,
             ISortedObservableCollectionAdaptor<TObject, TKey> updater)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (destination == null) throw new ArgumentNullException("destination");
-            if (updater == null) throw new ArgumentNullException("updater");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
+            if (updater == null) throw new ArgumentNullException(nameof(updater));
 
             return Observable.Create<ISortedChangeSet<TObject, TKey>>
                 (observer =>
@@ -2601,8 +2601,8 @@ namespace DynamicData
         /// </exception>
         public static IObservable<IChangeSet<TObject, TKey>> Adapt<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,IChangeSetAdaptor<TObject, TKey> adaptor)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (adaptor == null) throw new ArgumentNullException("adaptor");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (adaptor == null) throw new ArgumentNullException(nameof(adaptor));
 
             return source.Do(adaptor.Adapt);
         }
@@ -2622,8 +2622,8 @@ namespace DynamicData
         /// </exception>
         public static IObservable<IChangeSet<TObject, TKey>> Adapt<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, ISortedChangeSetAdaptor<TObject, TKey> adaptor)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (adaptor == null) throw new ArgumentNullException("adaptor");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (adaptor == null) throw new ArgumentNullException(nameof(adaptor));
 
             return source.Do(adaptor.Adapt);
         }
