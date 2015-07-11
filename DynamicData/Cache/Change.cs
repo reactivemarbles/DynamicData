@@ -26,8 +26,7 @@ namespace DynamicData
         {
 
         }
-
-
+        
 
         /// <summary>
         /// Construtor for ChangeReason.Move

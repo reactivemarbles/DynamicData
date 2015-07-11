@@ -219,9 +219,8 @@ namespace DynamicData
                 var result = updates.Where(u =>
                 {
                     if (u.Reason != ChangeReason.Update)
-                    {
                         return true;
-                    }
+
                     return !ignoreFunction(u.Current, u.Previous.Value);
                 });
                 return new ChangeSet<TObject, TKey>(result);
@@ -272,8 +271,8 @@ namespace DynamicData
             this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (observableSelector == null) throw new ArgumentNullException("observableSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
             return Observable.Create<ItemWithValue<TObject, TDestination>>
                 (
@@ -302,8 +301,8 @@ namespace DynamicData
             this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject,TKey, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (observableSelector == null) throw new ArgumentNullException("observableSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
             return Observable.Create<ItemWithValue<TObject, TDestination>>
                 (
@@ -329,8 +328,8 @@ namespace DynamicData
         /// observableSelector</exception>
         public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (observableSelector == null) throw new ArgumentNullException("observableSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
             return Observable.Create<TDestination>
                 (
@@ -354,8 +353,8 @@ namespace DynamicData
         /// observableSelector</exception>
         public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject,TKey, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (observableSelector == null) throw new ArgumentNullException("observableSelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
             return Observable.Create<TDestination>
                 (
@@ -380,8 +379,8 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, IDisposable> subscriptionFactory)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (subscriptionFactory == null) throw new ArgumentNullException("subscriptionFactory");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
 
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
@@ -418,8 +417,8 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
         Func<TObject, TKey, IDisposable> subscriptionFactory)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (subscriptionFactory == null) throw new ArgumentNullException("subscriptionFactory");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
 
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
@@ -461,18 +460,13 @@ namespace DynamicData
         /// </exception>
         public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (removeAction == null) throw new ArgumentNullException("removeAction");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (removeAction == null) throw new ArgumentNullException(nameof(removeAction));
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
                     observer =>
                     {
-						var disposer = new OnBeingRemoved<TObject, TKey>(t =>
-						{
-							removeAction(t);
-							//var d = t as IDisposable;
-							//d?.Dispose();
-						});
+						var disposer = new OnBeingRemoved<TObject, TKey>(removeAction);
 						var subscriber = source
                             .Do(disposer.RegisterForRemoval, observer.OnError)
                             .SubscribeSafe(observer);
@@ -521,7 +515,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> WhereReasonsAre<TObject, TKey>(
                     this IObservable<IChangeSet<TObject, TKey>> source, params ChangeReason[] reasons)
          {
-             if (reasons == null) throw new ArgumentNullException("reasons");
+             if (reasons == null) throw new ArgumentNullException(nameof(reasons));
              if (!reasons.Any()) throw new ArgumentException("Must select at least one reason");
             var hashed = new HashSet<ChangeReason>(reasons);
 
@@ -545,7 +539,7 @@ namespace DynamicData
          public static IObservable<IChangeSet<TObject, TKey>> WhereReasonsAreNot<TObject, TKey>(
              this IObservable<IChangeSet<TObject, TKey>> source, params ChangeReason[] reasons)
          {
-             if (reasons == null) throw new ArgumentNullException("reasons");
+             if (reasons == null) throw new ArgumentNullException(nameof(reasons));
              if (!reasons.Any()) throw new ArgumentException("Must select at least one reason");
 
              var hashed = new HashSet<ChangeReason>(reasons);
@@ -1405,7 +1399,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             int size)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             if (size <= 0) throw new ArgumentException("Size limit must be greater than zero");
 
                 return Observable.Create<IChangeSet<TObject, TKey>>(observer =>

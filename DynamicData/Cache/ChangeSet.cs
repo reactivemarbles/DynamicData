@@ -13,7 +13,7 @@ namespace DynamicData
 	/// </summary>
 	/// <typeparam name="TObject">The type of the object.</typeparam>
 	/// <typeparam name="TKey">The type of the key.</typeparam>
-	public class ChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>, IChangeSet
+	public class ChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>
 	{
 		private List<Change<TObject, TKey>> Items { get; } = new List<Change<TObject, TKey>>();
 

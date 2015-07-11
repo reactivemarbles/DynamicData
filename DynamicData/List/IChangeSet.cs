@@ -10,6 +10,9 @@ namespace DynamicData
 	/// <typeparam name="TObject">The type of the object.</typeparam>
 	public interface IChangeSet<TObject> : IEnumerable<Change<TObject>>, IChangeSet
 	{
-
-	}
+        /// <summary>
+        ///     Gets the number of updates
+        /// </summary>
+        int Replaced { get; }
+    }
 }

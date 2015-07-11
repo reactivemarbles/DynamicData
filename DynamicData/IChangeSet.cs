@@ -11,10 +11,6 @@
 		/// </summary>
 		int Adds { get; }
 
-		/// <summary>
-		///     Gets the number of updates
-		/// </summary>
-		int Updates { get; }
 
 		/// <summary>
 		///     Gets the number of removes

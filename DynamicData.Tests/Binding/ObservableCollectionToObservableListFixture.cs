@@ -82,7 +82,7 @@ namespace DynamicData.Tests.Binding
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
 			Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
 			Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
-			Assert.AreEqual(1, _results.Messages.Skip(1).First().Updates, "First message should be an update");
+			Assert.AreEqual(1, _results.Messages.Skip(1).First().Replaced, "First message should be an update");
 		}
 
 		[Test]

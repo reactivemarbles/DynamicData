@@ -15,7 +15,7 @@ namespace DynamicData
 	{
 		private int _adds;
 		private int _removes;
-		private int _updates;
+		private int _replaced;
 		private int _moves;
 
 		/// <summary>
@@ -87,7 +87,7 @@ namespace DynamicData
 					_adds = _adds + item.Range.Count;
 					break;
 				case ListChangeReason.Replace:
-					_updates++;
+					_replaced++;
 					break; ;
 				case ListChangeReason.Remove:
 					_removes++;
@@ -146,7 +146,7 @@ namespace DynamicData
 		/// <summary>
 		///     Gets the number of updates
 		/// </summary>
-		public int Updates => _updates;
+		public int Replaced => _replaced;
 		/// <summary>
 		///     Gets the number of removes
 		/// </summary>

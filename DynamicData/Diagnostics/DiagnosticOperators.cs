@@ -51,12 +51,12 @@ namespace DynamicData.Diagnostics
 			{
 				int index = seed.Overall.Index + 1;
 				int adds = seed.Overall.Adds + next.Adds;
-				int updates = seed.Overall.Updates + next.Updates;
+				int updates = seed.Overall.Updates + next.Replaced;
 				int removes = seed.Overall.Removes + next.Removes;
 				int moves = seed.Overall.Moves + next.Moves;
 				int total = seed.Overall.Count + next.Count;
 
-				var latest = new ChangeStatistics(index, next.Adds, next.Updates, next.Removes, 0, next.Moves, next.Count);
+				var latest = new ChangeStatistics(index, next.Adds, next.Replaced, next.Removes, 0, next.Moves, next.Count);
 				var overall = new ChangeStatistics(index, adds, updates, removes, 0, moves, total);
 				return new ChangeSummary(index, latest, overall);
 			});

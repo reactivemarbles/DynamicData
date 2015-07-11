@@ -42,6 +42,7 @@
     <Compile Include="Binding\AbstractNotifyPropertyChanged.cs" />
     <Compile Include="Binding\NotifyPropertyChangedEx.cs" />
     <Compile Include="Binding\PropertyValue.cs" />
+    <Compile Include="Cache\AggregateEnumerator.cs" />
     <Compile Include="Cache\AggregationEx.cs" />
     <Compile Include="Binding\IEvaluateAware.cs" />
     <Compile Include="Binding\IIndexAware.cs" />

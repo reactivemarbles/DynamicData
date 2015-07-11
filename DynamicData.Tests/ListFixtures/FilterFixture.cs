@@ -191,7 +191,7 @@ namespace DynamicData.Tests.ListFixtures
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(3, _results.Messages[0].Adds, "Should be 3 adds");
-            Assert.AreEqual(0, _results.Messages[0].Updates, "Should be 0 updates");
+            Assert.AreEqual(0, _results.Messages[0].Replaced, "Should be 0 updates");
             Assert.AreEqual(1, _results.Messages[0].Removes, "Should be 1 remove");
         }
 

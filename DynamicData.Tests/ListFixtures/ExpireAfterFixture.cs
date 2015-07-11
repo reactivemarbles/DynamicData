@@ -92,7 +92,7 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(0, _results.Data.Count, "Should be no data in the cache");
             Assert.AreEqual(3, _results.Messages.Count, "Should be 3 updates");
             Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 add in the first message");
-            Assert.AreEqual(1, _results.Messages[1].Updates, "Should be 1 update in the second message");
+            Assert.AreEqual(1, _results.Messages[1].Replaced, "Should be 1 update in the second message");
             Assert.AreEqual(1, _results.Messages[2].Removes, "Should be 1 remove in the 3rd message");
         }
 

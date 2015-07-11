@@ -16,5 +16,11 @@ namespace DynamicData
         /// Gets the number of evaluates
         /// </summary>
         int Evaluates { get; }
+
+
+        /// <summary>
+        ///     Gets the number of updates
+        /// </summary>
+        int Updates { get; }
     }
 }

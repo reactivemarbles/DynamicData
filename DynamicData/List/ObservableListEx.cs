@@ -12,9 +12,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
-
-
     /// <summary>
 	/// Extenssions for ObservableList
 	/// </summary>
@@ -622,8 +619,7 @@ namespace DynamicData
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			return source.DeferUntilLoaded().Skip(1);
 		}
-
-
+        
 
 		/// <summary>
 		/// Defer the subscription until the stream has been inflated with data
@@ -707,8 +703,7 @@ namespace DynamicData
         }
 
         #endregion
-
-
+        
         #region Expiry / size limiter
 
         /// <summary>

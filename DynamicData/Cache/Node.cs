@@ -13,7 +13,6 @@ namespace DynamicData
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>> where TObject : class
     {
-
         private readonly ISourceCache<Node<TObject, TKey>, TKey> _children = new SourceCache<Node<TObject, TKey>, TKey>(n => n.Key);
         private readonly IDisposable _cleanUp;
 
@@ -77,10 +76,9 @@ namespace DynamicData
         ///  </summary>
         public int Depth
         {
-
             get
             {
-                int i = 0;
+                var i = 0;
                 var parent = Parent;
                 do
                 {
@@ -91,9 +89,11 @@ namespace DynamicData
                 } while (true);
                 return i;
             }
-
         }
-
+        internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction)
+        {
+            _children.BatchUpdate(updateAction);
+        }
 
         #region Equality
         public bool Equals(Node<TObject, TKey> other)
@@ -128,10 +128,7 @@ namespace DynamicData
 
         #endregion
 
-        internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction)
-        {
-            _children.BatchUpdate(updateAction);
-        }
+
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
