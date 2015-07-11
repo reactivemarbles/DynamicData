@@ -15,10 +15,6 @@ namespace DynamicData.Tests
     public class ChangeSetAggregator<TObject, TKey> : IDisposable
     {
         private readonly IDisposable _disposer;
-        private readonly IObservableCache<TObject, TKey> _data;
-        private readonly IList<IChangeSet<TObject, TKey>> _messages = new List<IChangeSet<TObject, TKey>>();
-        private  ChangeSummary _summary;
-        private Exception _error;
 
 
         /// <summary>
@@ -29,15 +25,15 @@ namespace DynamicData.Tests
         {
             var published = source.Publish();
 
-            _data = published.AsObservableCache();
+            Data = published.AsObservableCache();
             
-            var results = published.Subscribe(updates => _messages.Add(updates), ex => _error = ex);
-            var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
+            var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex);
+            var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
             var connected = published.Connect();
 
             _disposer = Disposable.Create(() =>
                                               {
-                                                  _data.Dispose();
+                                                  Data.Dispose();
                                                   connected.Dispose();
                                                   summariser.Dispose();
                                                   results.Dispose();
@@ -52,33 +48,33 @@ namespace DynamicData.Tests
         /// <value>
         /// The data.
         /// </value>
-        public IObservableCache<TObject, TKey> Data => _data;
+        public IObservableCache<TObject, TKey> Data { get; }
 
-	    /// <summary>
+        /// <summary>
         /// Gets the messages.
         /// </summary>
         /// <value>
         /// The messages.
         /// </value>
-        public IList<IChangeSet<TObject, TKey>> Messages => _messages;
+        public IList<IChangeSet<TObject, TKey>> Messages { get; } = new List<IChangeSet<TObject, TKey>>();
 
-	    /// <summary>
+        /// <summary>
         /// Gets the summary.
         /// </summary>
         /// <value>
         /// The summary.
         /// </value>
-        public ChangeSummary Summary => _summary;
+        public ChangeSummary Summary { get; private set; } = ChangeSummary.Empty;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the error.
         /// </summary>
         /// <value>
         /// The error.
         /// </value>
-        public Exception Error => _error;
+        public Exception Error { get; private set; }
 
-	    /// <summary>
+        /// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		public void Dispose()

@@ -15,7 +15,7 @@ namespace DynamicData.Tests
     {
         private readonly IDisposable _disposer;
 	    private readonly IList<IChangeSet<TObject>> _messages = new List<IChangeSet<TObject>>();
-        private  ChangeSummary _summary;
+        private  ChangeSummary _summary = ChangeSummary.Empty;
         private Exception _error;
 
 

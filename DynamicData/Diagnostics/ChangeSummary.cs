@@ -7,7 +7,12 @@
     {
         private readonly int _index;
 
-	    /// <summary>
+        /// <summary>
+        /// An empty instance of change summary
+        /// </summary>
+        public readonly static ChangeSummary Empty  = new ChangeSummary();
+
+        /// <summary>
         ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
         /// </summary>
         public ChangeSummary(int index, ChangeStatistics latest, ChangeStatistics overall)
@@ -20,7 +25,7 @@
         /// <summary>
         ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
         /// </summary>
-        public ChangeSummary()
+        private ChangeSummary()
         {
             _index = -1;
             Latest = new ChangeStatistics();

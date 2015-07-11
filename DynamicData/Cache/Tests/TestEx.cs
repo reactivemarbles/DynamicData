@@ -31,7 +31,7 @@ namespace DynamicData.Tests
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static DistinctChangeSetAggregator<TValue> AsAggregator<TValue>(this IObservable<IDistinctChangeSet<TValue>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return new DistinctChangeSetAggregator<TValue>(source);
         }
 
@@ -45,7 +45,7 @@ namespace DynamicData.Tests
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static SortedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
        {
-           if (source == null) throw new ArgumentNullException("source");
+           if (source == null) throw new ArgumentNullException(nameof(source));
            return new SortedChangeSetAggregator<TObject, TKey>(source);
        }
 
@@ -59,7 +59,7 @@ namespace DynamicData.Tests
         /// <exception cref="System.ArgumentNullException">source</exception>
          public static VirtualChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IVirtualChangeSet<TObject, TKey>> source)
          {
-             if (source == null) throw new ArgumentNullException("source");
+             if (source == null) throw new ArgumentNullException(nameof(source));
              return new  VirtualChangeSetAggregator<TObject, TKey>(source);
          }
 
@@ -72,7 +72,7 @@ namespace DynamicData.Tests
         /// <returns></returns>
         public static PagedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IPagedChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return new  PagedChangeSetAggregator<TObject, TKey>(source);
         }
     }

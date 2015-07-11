@@ -21,7 +21,7 @@ namespace DynamicData.Diagnostics
         public static IObservable<ChangeSummary> CollectUpdateStats<TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.Scan(new ChangeSummary(), (seed, next) =>
+            return source.Scan(ChangeSummary.Empty, (seed, next) =>
                 {
                     int index = seed.Overall.Index + 1;
                     int adds = seed.Overall.Adds + next.Adds;
@@ -47,7 +47,7 @@ namespace DynamicData.Diagnostics
 		public static IObservable<ChangeSummary> CollectUpdateStats<TSource>(this IObservable<IChangeSet<TSource>> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
-			return source.Scan(new ChangeSummary(), (seed, next) =>
+			return source.Scan(ChangeSummary.Empty, (seed, next) =>
 			{
 				int index = seed.Overall.Index + 1;
 				int adds = seed.Overall.Adds + next.Adds;

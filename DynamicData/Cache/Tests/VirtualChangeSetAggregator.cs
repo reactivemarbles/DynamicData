@@ -13,12 +13,7 @@ namespace DynamicData.Tests
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public class VirtualChangeSetAggregator<TObject, TKey> : IDisposable
     {
-        private readonly IList<IVirtualChangeSet<TObject, TKey>> _messages = new List<IVirtualChangeSet<TObject, TKey>>();
-        private ChangeSummary _summary;
-        private Exception _error;
         private readonly IDisposable _disposer;
-
-        private readonly IObservableCache<TObject, TKey> _data;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualChangeSetAggregator{TObject, TKey}"/> class.
@@ -28,10 +23,10 @@ namespace DynamicData.Tests
         {
             var published = source.Publish();
 
-            var error = published.Subscribe(updates => { }, ex => _error = ex);
-            var results = published.Subscribe(updates => _messages.Add(updates));
-            _data = published.AsObservableCache();
-            var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
+            var error = published.Subscribe(updates => { }, ex => Error = ex);
+            var results = published.Subscribe(updates => Messages.Add(updates));
+            Data = published.AsObservableCache();
+            var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
 
             var connected = published.Connect();
             _disposer = Disposable.Create(() =>
@@ -51,33 +46,33 @@ namespace DynamicData.Tests
         /// <value>
         /// The data.
         /// </value>
-        public IObservableCache<TObject, TKey> Data => _data;
+        public IObservableCache<TObject, TKey> Data { get; }
 
-	    /// <summary>
+        /// <summary>
         /// Gets the messages.
         /// </summary>
         /// <value>
         /// The messages.
         /// </value>
-        public IList<IVirtualChangeSet<TObject, TKey>> Messages => _messages;
+        public IList<IVirtualChangeSet<TObject, TKey>> Messages { get; } = new List<IVirtualChangeSet<TObject, TKey>>();
 
-	    /// <summary>
+        /// <summary>
         /// Gets the summary.
         /// </summary>
         /// <value>
         /// The summary.
         /// </value>
-        public ChangeSummary Summary => _summary;
+        public ChangeSummary Summary { get; private set; } = ChangeSummary.Empty;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the error.
         /// </summary>
         /// <value>
         /// The error.
         /// </value>
-        public Exception Error => _error;
+        public Exception Error { get; private set; }
 
-	    /// <summary>
+        /// <summary>
 		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
 		/// </summary>
 		public void Dispose()

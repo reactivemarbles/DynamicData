@@ -13,7 +13,7 @@ namespace DynamicData.Tests
     public class DistinctChangeSetAggregator<TValue> : IDisposable
     {
         private readonly IDisposable _disposer;
-	    private ChangeSummary _summary;
+        private ChangeSummary _summary = ChangeSummary.Empty;
         private Exception _error;
 
 

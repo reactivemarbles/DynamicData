@@ -15,13 +15,13 @@ namespace DynamicData.Tests
     {
 	    private readonly IDisposable _disposer;
 	    private Exception _error;
-        private ChangeSummary _summary;
+        private ChangeSummary _summary = ChangeSummary.Empty;
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="PagedChangeSetAggregator{TObject, TKey}"/> class.
-		/// </summary>
-		/// <param name="source">The source.</param>
-		public PagedChangeSetAggregator(IObservable<IPagedChangeSet<TObject, TKey>> source)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PagedChangeSetAggregator{TObject, TKey}"/> class.
+        /// </summary>
+        /// <param name="source">The source.</param>
+        public PagedChangeSetAggregator(IObservable<IPagedChangeSet<TObject, TKey>> source)
         {
             var published = source.Publish();
 

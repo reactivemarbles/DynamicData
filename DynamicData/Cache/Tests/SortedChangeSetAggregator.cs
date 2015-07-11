@@ -13,9 +13,6 @@ namespace DynamicData.Tests
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public class SortedChangeSetAggregator<TObject, TKey> : IDisposable
     {
-        private readonly IList<ISortedChangeSet<TObject, TKey>> _messages = new List<ISortedChangeSet<TObject, TKey>>();
-        private ChangeSummary _summary;
-        private Exception _error;
         private readonly IDisposable _disposer;
 
 	    /// <summary>
@@ -26,10 +23,10 @@ namespace DynamicData.Tests
         {
             var published = source.Publish();
 
-            var error = published.Subscribe(updates => { }, ex => _error = ex);
-            var results = published.Subscribe(updates => _messages.Add(updates));
+            var error = published.Subscribe(updates => { }, ex => Error = ex);
+            var results = published.Subscribe(updates => Messages.Add(updates));
             Data = published.AsObservableCache();
-            var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
+            var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
 
 
             var connected = published.Connect();
@@ -53,24 +50,24 @@ namespace DynamicData.Tests
 		/// <value>
 		/// The messages.
 		/// </value>
-		public IList<ISortedChangeSet<TObject, TKey>> Messages => _messages;
+		public IList<ISortedChangeSet<TObject, TKey>> Messages { get; } = new List<ISortedChangeSet<TObject, TKey>>();
 
-		/// <summary>
+        /// <summary>
 		/// The aggregated change summary.
 		/// </summary>
 		/// <value>
 		/// The summary.
 		/// </value>
-		public ChangeSummary Summary => _summary;
+		public ChangeSummary Summary { get; private set; } = ChangeSummary.Empty;
 
 
-		/// <summary>
+        /// <summary>
 		/// Gets and error.
 		/// </summary>
 
-		public Exception Error => _error;
+		public Exception Error { get; private set; }
 
-		/// <summary>
+        /// <summary>
 		/// Releases unmanaged and - optionally - managed resources.
 		/// </summary>
 		public void Dispose()
