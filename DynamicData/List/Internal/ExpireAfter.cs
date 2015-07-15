@@ -16,11 +16,9 @@ namespace DynamicData.Internal
         private readonly Func<T, TimeSpan?> _expireAfter;
         private readonly TimeSpan? _pollingInterval;
         private readonly IScheduler _scheduler;
+        private readonly object _locker;
 
-        public ExpireAfter([NotNull] ISourceList<T> sourceList, 
-            [NotNull] Func<T, TimeSpan?> expireAfter,
-            TimeSpan? pollingInterval,
-            [NotNull] IScheduler scheduler)
+        public ExpireAfter([NotNull] ISourceList<T> sourceList, [NotNull] Func<T, TimeSpan?> expireAfter, TimeSpan? pollingInterval, [NotNull] IScheduler scheduler, object locker)
         {
             if (sourceList == null) throw new ArgumentNullException(nameof(sourceList));
             if (expireAfter == null) throw new ArgumentNullException(nameof(expireAfter));
@@ -30,6 +28,7 @@ namespace DynamicData.Internal
             _expireAfter = expireAfter;
             _pollingInterval = pollingInterval;
             _scheduler = scheduler;
+            _locker = locker;
         }
 
         public  IObservable<IEnumerable<T>> Run()
@@ -41,6 +40,7 @@ namespace DynamicData.Internal
                 long orderItemWasAdded = -1;
                 
                 var autoRemover = _sourceList.Connect()
+                    .Synchronize(_locker)
                     .Do(x => dateTime = _scheduler.Now.DateTime)
                     .Convert(t =>
                     {
@@ -54,12 +54,16 @@ namespace DynamicData.Internal
                 {
                     try
                     {
-                        var toRemove = autoRemover.Items
-                            .Where(ei => ei.ExpireAt <= _scheduler.Now.DateTime)
-                            .Select(ei=>ei.Item)
-                            .ToList();
+                        lock (_locker)
+                        {
+                            var toRemove = autoRemover.Items
+                                .Where(ei => ei.ExpireAt <= _scheduler.Now.DateTime)
+                                .Select(ei => ei.Item)
+                                .ToList();
 
-                        observer.OnNext(toRemove);
+                            observer.OnNext(toRemove);
+                        }
+
                     }
                     catch (Exception ex)
                     {

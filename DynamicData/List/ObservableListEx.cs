@@ -723,23 +723,19 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (sizeLimit <= 0) throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
 
-            var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? Scheduler.Default);
-            var locker = new object();
 
-            return limiter.Run().Synchronize(locker)
-                            .Select(toExpire =>
+            var locker = new object();
+            var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? Scheduler.Default, locker);
+
+            //NB: only expired items are reported so no need to check whether type if removed
+            //+ report expired items only
+            return limiter.Run()
+                    .Synchronize(locker)
+                    .Do(toExpire=> source.Edit(list =>
                             {
-                                //NB: only expired items are reported so no need to check whether type if removed
-                                lock (locker)
-                                {
-                                    source.Edit(list =>
-                                    {
-                                        toExpire.ForEach(t => list.Remove(t));
-                                    });
-                                }
-                                //report on expired items
-                                return toExpire;
-                            });
+                                //maintain original list
+                                toExpire.ForEach(t => list.Remove(t));
+                            }));
         }
 
         /// <summary>
@@ -773,23 +769,17 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
 
-
-            var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? Scheduler.Default);
             var locker = new object();
-
-            return limiter.Run().Synchronize(locker)
-                            .Select(toExpire =>
-                            {
-                                //NB: only expired items are reported so no need to check whether type if removed
-                                lock (locker)
+            var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? Scheduler.Default, locker);
+            
+            return limiter.Run()
+                            .Synchronize(locker)
+                            .Do(toExpire => {
+                                source.Edit(innerList =>
                                 {
-                                    source.Edit(innerList =>
-                                    {
-                                        toExpire.ForEach(t => innerList.Remove(t));
-                                    });
-                                }
-                                //report on expired items
-                                return toExpire;
+                                    //maintain original list
+                                    toExpire.ForEach(t => innerList.Remove(t));
+                                });
                             });
         }
 
