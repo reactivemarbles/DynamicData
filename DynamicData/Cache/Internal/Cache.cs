@@ -20,7 +20,7 @@ namespace DynamicData.Internal
 
 		public void Clone(IChangeSet<TObject, TKey> changes)
 		{
-			if (changes == null) throw new ArgumentNullException("changes");
+			if (changes == null) throw new ArgumentNullException(nameof(changes));
 
 			//for efficiency resize dictionary to initial batch size
 			if (_data.Count == 0)
@@ -64,7 +64,6 @@ namespace DynamicData.Internal
 		{
 			_data.Clear();
 		}
-
 
 	}
 }

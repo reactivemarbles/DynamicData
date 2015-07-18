@@ -15,7 +15,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void OnNextProducesAnAddChangeForEnumerableSource()
         {
             var subject = new Subject<IEnumerable<Person>>();
-            var results = subject.ToObservableChangeSet<Person>().AsAggregator();
+            var results = subject.ToObservableChangeSet().AsAggregator();
 
             var people = new[]
             {
@@ -60,7 +60,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var subject = new Subject<IEnumerable<Person>>();
             var scheduler = new TestScheduler();
-            var results = subject.ToObservableChangeSet<Person>(expireAfter: t => TimeSpan.FromMinutes(1), scheduler: scheduler).AsAggregator();
+            var results = subject.ToObservableChangeSet<Person>(t => TimeSpan.FromMinutes(1), scheduler: scheduler).AsAggregator();
 
             var people = Enumerable.Range(1, 200).Select(i => new Person("p" + i.ToString("000"), i)).ToArray();
 

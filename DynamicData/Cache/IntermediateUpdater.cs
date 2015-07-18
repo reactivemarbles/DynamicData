@@ -17,7 +17,7 @@ namespace DynamicData
 
 		public IntermediateUpdater(ICache<TObject, TKey> cache)
         {
-            if (cache == null) throw new ArgumentNullException("cache");
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
             _cache = cache;
         }
 

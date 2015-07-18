@@ -11,25 +11,22 @@ namespace DynamicData.Tests.CacheFixtures
     public class GroupFromDistinctFixture
     {
           
-        private ISourceCache<Person, string>  _personFeeder;
-        private ISourceCache<PersonEmployment, PersonEmpKey> _employmentFeeder;
+        private ISourceCache<Person, string>  _personCache;
+        private ISourceCache<PersonEmployment, PersonEmpKey> _employmentCache;
 
         [SetUp]
         public void SetStream()
         {
-            _personFeeder = new SourceCache<Person, string>(p=>p.Key);
-            _employmentFeeder = new SourceCache<PersonEmployment, PersonEmpKey>(e=>e.Key);
+            _personCache = new SourceCache<Person, string>(p=>p.Key);
+            _employmentCache = new SourceCache<PersonEmployment, PersonEmpKey>(e=>e.Key);
         }
 
 
         [TearDown]
         public void CleanUp()
         {
-            if (_personFeeder != null)
-                _personFeeder.Dispose();
-
-            if (_employmentFeeder != null)
-                _employmentFeeder.Dispose();
+            _personCache?.Dispose();
+            _employmentCache?.Dispose();
         }
 
 
@@ -51,14 +48,14 @@ namespace DynamicData.Tests.CacheFixtures
                                                                                 }).ToList();
 
             // Cache results
-            var allpeopleWithEmpHistory = _employmentFeeder.Connect()
-                .Group(e => e.Name, _personFeeder.Connect().DistinctValues(p => p.Name))
+            var allpeopleWithEmpHistory = _employmentCache.Connect()
+                .Group(e => e.Name, _personCache.Connect().DistinctValues(p => p.Name))
                 .Transform(x => new PersonWithEmployment(x))
                 .AsObservableCache();
 
 
-            _personFeeder.BatchUpdate(updater => updater.AddOrUpdate(people));
-            _employmentFeeder.BatchUpdate(updater => updater.AddOrUpdate(emphistory));
+            _personCache.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _employmentCache.BatchUpdate(updater => updater.AddOrUpdate(emphistory));
 
             Assert.AreEqual(numberOfPeople, allpeopleWithEmpHistory.Count);
             Assert.AreEqual(emphistory.Count, allpeopleWithEmpHistory.Items.SelectMany(d => d.EmpoymentData.Items).Count());
@@ -72,9 +69,9 @@ namespace DynamicData.Tests.CacheFixtures
 
                 );
             
-            _personFeeder.BatchUpdate(updater => updater.Remove("Person1"));
+            _personCache.BatchUpdate(updater => updater.Remove("Person1"));
             Assert.AreEqual(numberOfPeople - 1, allpeopleWithEmpHistory.Count);
-            _employmentFeeder.BatchUpdate(updater => updater.Remove(emphistory));
+            _employmentCache.BatchUpdate(updater => updater.Remove(emphistory));
             allpeopleWithEmpHistory.Dispose();
         }
 

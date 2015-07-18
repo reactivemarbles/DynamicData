@@ -9,7 +9,7 @@ namespace DynamicData.Tests
     {
 
         /// <summary>
-        /// Aggregates all events and statistics for a paged changeset to help assertions when testing
+        /// Aggregates all events and statistics for a changeset to help assertions when testing
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <returns></returns>

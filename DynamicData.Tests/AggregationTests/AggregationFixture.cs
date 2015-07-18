@@ -1,10 +1,11 @@
 using System;
 using System.Reactive.Linq;
+using DynamicData.Aggregation;
+using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
-using  DynamicData.Kernel;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.AggregationTests
 {
     [TestFixture]
     public class AggregationFixture
@@ -19,7 +20,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 
-            _accumulator = _source.Connect().ForAggregation()
+            _accumulator = _source.Connect()
+                .ForAggregation()
                 .Scan(0, (current, items) =>
                 {
                     items.ForEach(x =>
@@ -62,6 +64,8 @@ namespace DynamicData.Tests.CacheFixtures
 
             accumulator.Dispose();
         }
+
+
 
         [Test]
         public void CanHandleUpdatedItem()

@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DynamicData
+namespace DynamicData.Aggregation
 {
     internal class AggregateEnumerator<TObject, TKey> : IEnumerable<AggregateItem<TObject, TKey>>
     {

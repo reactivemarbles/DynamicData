@@ -65,8 +65,8 @@ namespace DynamicData
             int limitSizeTo = -1,
             IScheduler scheduler=null)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
@@ -129,8 +129,8 @@ namespace DynamicData
             int limitSizeTo = -1,
             IScheduler scheduler=null)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
@@ -248,7 +248,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservableCache<TObject, TKey> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return new AnomynousObservableCache<TObject, TKey>(source);
         }
 
@@ -262,7 +262,7 @@ namespace DynamicData
 		/// <exception cref="System.ArgumentNullException">source</exception>
 		public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return new AnomynousObservableCache<TObject, TKey>(source);
         }
 
@@ -278,7 +278,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">filterController</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Connect<TObject, TKey>(this IObservableCache<TObject, TKey> source, FilterController<TObject> filterController)
         {
-            if (filterController == null) throw new ArgumentNullException("filterController");
+            if (filterController == null) throw new ArgumentNullException(nameof(filterController));
             return source.Connect().Filter(filterController);
         }
 
@@ -303,7 +303,7 @@ namespace DynamicData
         public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this ISourceCache<TObject, TKey> source,
                     int sizeLimit, IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             if (sizeLimit <= 0) throw new ArgumentException("Size limit must be greater than zero");
 
 
@@ -420,7 +420,7 @@ namespace DynamicData
 
         #endregion
 
-        #region Convenient update methods
+        #region Convenience update methods
 
         /// <summary>
         /// Adds or updates the cache with the specified item.
@@ -432,7 +432,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater=>updater.AddOrUpdate(item));
         }
 
@@ -448,7 +448,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.AddOrUpdate(items));
         }
 
@@ -464,7 +464,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Remove(item));
         }
 
@@ -479,7 +479,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Remove(key));
         }
 
@@ -494,7 +494,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void RemoveKey<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.RemoveKey(key));
         }
 
@@ -510,7 +510,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Remove(items));
         }
 
@@ -526,7 +526,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Remove(keys));
         }
 
@@ -542,7 +542,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void RemoveKeys<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.RemoveKeys(keys));
         }
 
@@ -556,7 +556,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Clear<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Clear());
         }
 
@@ -570,7 +570,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Evaluate(item));
         }
 
@@ -584,7 +584,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source,  IEnumerable<TObject> items)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Evaluate(items));
         }
 
@@ -600,7 +600,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TKey key)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Remove(key));
         }
 
@@ -617,7 +617,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, IEnumerable<TKey> keys)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Remove(keys));
         }
 
@@ -632,7 +632,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void Clear<TObject, TKey>(this IIntermediateCache<TObject, TKey> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             source.BatchUpdate(updater => updater.Clear());
         }
         #endregion

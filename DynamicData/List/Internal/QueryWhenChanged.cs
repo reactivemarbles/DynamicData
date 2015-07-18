@@ -18,7 +18,7 @@ namespace DynamicData.Internal
 		}
 
 
-		public IObservable<IList<T>> Run()
+		public IObservable<IReadOnlyCollection<T>> Run()
 		{
 			return _source.Do(_list.Clone).Select(_=>new ReadOnlyCollection<T>(_list));
 		}

@@ -585,7 +585,7 @@ namespace DynamicData
 		/// resultSelector
 		/// </exception>
 		public static IObservable<TDestination> QueryWhenChanged<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source,
-			Func<IList<TObject>, TDestination> resultSelector)
+			Func<IReadOnlyCollection<TObject>, TDestination> resultSelector)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
@@ -600,7 +600,7 @@ namespace DynamicData
 		/// <param name="source">The source.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IList<T>> QueryWhenChanged<T>([NotNull] this IObservable<IChangeSet<T>> source)
+		public static IObservable<IReadOnlyCollection<T>> QueryWhenChanged<T>([NotNull] this IObservable<IChangeSet<T>> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			return new QueryWhenChanged<T>(source).Run();
@@ -619,33 +619,33 @@ namespace DynamicData
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			return source.DeferUntilLoaded().Skip(1);
 		}
-        
 
-		/// <summary>
-		/// Defer the subscription until the stream has been inflated with data
-		/// </summary>
-		/// <typeparam name="T">The type of the object.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <returns></returns>
-		public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>([NotNull] this IObservable<IChangeSet<T>> source)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			return new DeferUntilLoaded<T>(source).Run();
-		}
 
-		/// <summary>
-		/// Defer the subscription until the cache has been inflated with data
-		/// </summary>
-		/// <typeparam name="T">The type of the object.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <returns></returns>
-		public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
+        /// <summary>
+        /// Defer the subscription until the stream has been inflated with data
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>([NotNull] this IObservable<IChangeSet<T>> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return new DeferUntilLoaded<T>(source).Run();
+        }
+
+        /// <summary>
+        /// Defer the subscription until the cache has been inflated with data
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return source.CountChanged.Where(count => count != 0)
 							.Take(1)
-							.Select(_ => new ChangeSet<T>())
+							.Select(_ => ChangeSet<T>.Empty)
 							.Concat(source.Connect())
 							.NotEmpty();
 		}

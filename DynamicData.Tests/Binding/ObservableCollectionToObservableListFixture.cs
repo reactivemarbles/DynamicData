@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using DynamicData.Binding;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
@@ -40,7 +39,7 @@ namespace DynamicData.Tests.Binding
 			_collection.Add(person);
 
 			Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-			Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+			Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the list");
 			Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
 		}
 
@@ -52,7 +51,7 @@ namespace DynamicData.Tests.Binding
 			_collection.Remove(person);
 
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
-			Assert.AreEqual(0, _results.Data.Count, "Should be nothing in the cache");
+			Assert.AreEqual(0, _results.Data.Count, "Should be nothing in the list");
 			Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
 			Assert.AreEqual(1, _results.Messages.Skip(1).First().Removes, "First message should be a remove");
 		}
@@ -65,7 +64,7 @@ namespace DynamicData.Tests.Binding
 			_collection.Add(new Person("Adult1", 51));
 
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
-			Assert.AreEqual(2, _results.Data.Count, "Should be 1 item in the cache");
+			Assert.AreEqual(2, _results.Data.Count, "Sho uld be 1 item in the list");
 			Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
 			Assert.AreEqual(1, _results.Messages.Skip(1).First().Adds, "First message should be an add");
 		}
@@ -80,7 +79,7 @@ namespace DynamicData.Tests.Binding
 			_collection.Replace(person, replaced);
 
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
-			Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+			Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the list");
 			Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
 			Assert.AreEqual(1, _results.Messages.Skip(1).First().Replaced, "First message should be an update");
 		}
@@ -93,13 +92,13 @@ namespace DynamicData.Tests.Binding
 			Assert.AreEqual(10, _results.Messages.Count, "Should be 10 updates");
 
 			_collection.Reset();
-			Assert.AreEqual(10, _results.Data.Count, "Should be 10 items in the cache");
+			Assert.AreEqual(10, _results.Data.Count, "Should be 10 items in the list");
 			Assert.AreEqual(11, _results.Messages.Count, "Should be 2 updates");
 
 			var update11 = _results.Messages[10];
 			Assert.AreEqual(10, update11.Removes, "Should be 10 removes");
 			Assert.AreEqual(10, update11.Adds, "Should be 10 adds");
-			Assert.AreEqual(10, _results.Data.Count, "Should be 10 items in the cache");
+			Assert.AreEqual(10, _results.Data.Count, "Should be 10 items in the list");
 		}
 
 		private class TestObservableCollection<T> : ObservableCollection<T>

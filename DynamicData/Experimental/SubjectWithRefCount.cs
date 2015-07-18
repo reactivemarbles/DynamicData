@@ -72,15 +72,6 @@ namespace DynamicData.Experimental
         /// <value>
         /// The ref count.
         /// </value>
-        public int RefCount
-        {
-            get
-            {
-                return _refCount;
-            }
-        }
-
-
-
+        public int RefCount => _refCount;
     }
 }

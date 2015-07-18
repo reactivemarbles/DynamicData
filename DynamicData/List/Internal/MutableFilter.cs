@@ -9,10 +9,12 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
+    //TODO: Implement seperate ClearAndReplace and CalculateDiffSet filters??
 
 
 
-	internal class MutableFilter<T>
+
+    internal class MutableFilter<T>
 	{
 		private readonly List<ItemWithMatch> _allWithMatch = new List<ItemWithMatch>();
         private readonly List<T> _all = new List<T>();
@@ -78,6 +80,8 @@ namespace DynamicData.Internal
 				return new CompositeDisposable(updateall, subscriber, shared.Connect());
 			});
 		}
+
+        //TODO: Need to account for re-evaluate (as it is not mutually excluse to clear and replace)
 
 		private void Requery(Func<T, bool> predicate)
 		{

@@ -79,6 +79,7 @@
     <Compile Include="Binding\ObservableCollectionToObservableListFixture.cs" />
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
+    <Compile Include="AggregationTests\SumFixture.cs" />
     <Compile Include="CacheFixtures\TransformTreeFixture.cs" />
     <Compile Include="Domain\PersonEmployment.cs" />
     <Compile Include="Domain\PersonSorter.cs" />
@@ -87,7 +88,7 @@
     <Compile Include="Domain\Pet.cs" />
     <Compile Include="Domain\RandomPersonGenerator.cs" />
     <Compile Include="Domain\SelfObservingPerson.cs" />
-    <Compile Include="CacheFixtures\AggregationFixture.cs" />
+    <Compile Include="AggregationTests\AggregationFixture.cs" />
     <Compile Include="CacheFixtures\AndFixture.cs" />
     <Compile Include="CacheFixtures\BatchFixture.cs" />
     <Compile Include="CacheFixtures\BatchIfFixture.cs" />
