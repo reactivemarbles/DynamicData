@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Linq;
+using DynamicData.Aggregation;
 using DynamicData.Annotations;
 
 namespace DynamicData.Internal
@@ -20,7 +21,7 @@ namespace DynamicData.Internal
 
 		public IObservable<IReadOnlyCollection<T>> Run()
 		{
-			return _source.Do(_list.Clone).Select(_=>new ReadOnlyCollection<T>(_list));
+			return _source.Do(_list.Clone).Select(_=>new ReadOnlyCollectionLight<T>(_list, _list.Count));
 		}
 	}
 }

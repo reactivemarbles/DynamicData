@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+
 namespace DynamicData.Aggregation
 {
-    class ReadOnlyCollection<T>: IReadOnlyCollection<T>
+    class ReadOnlyCollectionLight<T>: IReadOnlyCollection<T>
     {
         private readonly IEnumerable<T> _items;
 
-        public ReadOnlyCollection(IEnumerable<T> items, int count)
+        public ReadOnlyCollectionLight(IEnumerable<T> items, int count)
         {
             _items = items;
             Count = count;
