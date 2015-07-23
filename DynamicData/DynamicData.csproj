@@ -45,6 +45,7 @@
     <Compile Include="Aggregation\CountEx.cs" />
     <Compile Include="Aggregation\IAggregateChangeSet.cs" />
     <Compile Include="Aggregation\StdDev.cs" />
+    <Compile Include="Aggregation\StdDevEx.cs" />
     <Compile Include="Aggregation\SumEx.cs" />
     <Compile Include="Binding\AbstractNotifyPropertyChanged.cs" />
     <Compile Include="Binding\NotifyPropertyChangedEx.cs" />

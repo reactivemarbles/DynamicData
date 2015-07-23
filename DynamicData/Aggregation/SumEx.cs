@@ -156,8 +156,7 @@ namespace DynamicData.Aggregation
         }
 
         #endregion
-
-
+        
         #region From IChangeSet<TObject>
 
         /// <summary>
@@ -295,8 +294,7 @@ namespace DynamicData.Aggregation
         }
 
         #endregion
-
-
+        
         #region From IAggregateChangeSet<TObject>
 
         /// <summary>
@@ -483,6 +481,5 @@ namespace DynamicData.Aggregation
         }
 
         #endregion
-
     }
 }

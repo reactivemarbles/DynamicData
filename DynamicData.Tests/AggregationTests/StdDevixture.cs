@@ -7,67 +7,18 @@ using NUnit.Framework;
 namespace DynamicData.Tests.AggregationTests
 {
     [TestFixture]
-    public class SumFixture
+    public class StdDevixture
     {
-        private SourceCache<Person, string> _source;
 
-        [SetUp]
-        public void Initialise()
-        {
-            _source = new SourceCache<Person, string>(p => p.Name);
-        }
-
-        [TearDown]
-        public void Cleanup()
-        {
-            _source.Dispose();
-        }
-
-        [Test]
-        public void AddedItemsContributeToSum()
-        {
-            int sum = 0;
-
-            var accumulator = _source.Connect()
-                .Sum(p => p.Age)
-                .Subscribe(x => sum = x);
-
-            _source.AddOrUpdate(new Person("A", 10));
-            _source.AddOrUpdate(new Person("B", 20));
-            _source.AddOrUpdate(new Person("C", 30));
-
-            Assert.AreEqual(60, sum, "Accumulated value should be 60");
-
-            accumulator.Dispose();
-        }
-
-        [Test]
-        public void RemoveProduceCorrectResult()
-        {
-            int sum = 0;
-
-            var accumulator = _source.Connect()
-                .Sum(p => p.Age)
-                .Subscribe(x => sum = x);
-
-            _source.AddOrUpdate(new Person("A", 10));
-            _source.AddOrUpdate(new Person("B", 20));
-            _source.AddOrUpdate(new Person("C", 30));
-
-            _source.Remove("A");
-            Assert.AreEqual(50, sum, "Accumulated value should be 50 after remove");
+        //TODO: TEST ACURACY
 
 
-            accumulator.Dispose();
-        }
-
- 
         [TestCase(100)]
         [TestCase(1000)]
         [TestCase(10000)]
         [TestCase(100000)]
         [Explicit]
-        public void SumCachePerformance(int n)
+        public void CachePerformance(int n)
         {
 
             /*
@@ -82,14 +33,14 @@ namespace DynamicData.Tests.AggregationTests
                 With both of these the speed can be almost negligable
 
             */
-            var cache = new SourceCache<int,int>(i=>i);
-            int runningSum = 0;
+            var cache = new SourceCache<int, int>(i => i);
+            double calculated = 0;
 
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                .Sum(i => i)
-                .Subscribe(result => runningSum = result);
+                .StdDev(i => i)
+                .Subscribe(result => calculated = result);
 
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
@@ -97,14 +48,14 @@ namespace DynamicData.Tests.AggregationTests
                 cache.AddOrUpdate(i);
 
             //2. much faster to to this (whole range is 1 update and 1 calculation):
-          //  cache.AddOrUpdate(Enumerable.Range(0,n));
+            //  cache.AddOrUpdate(Enumerable.Range(0,n));
 
             sw.Stop();
 
             summation.Dispose();
             cache.Dispose();
 
-            Console.WriteLine("Total items: {0}. Sum = {1}",n , runningSum);
+            Console.WriteLine("Total items: {0}. Value = {1}", n, calculated);
             Console.WriteLine("Cache Summation: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
 
         }
@@ -115,16 +66,16 @@ namespace DynamicData.Tests.AggregationTests
         [TestCase(10000)]
         [TestCase(100000)]
         [Explicit]
-        public void SumListPerformance(int n)
+        public void ListPerformance(int n)
         {
             var list = new SourceList<int>();
-            int runningSum = 0;
+            int calculated = 0;
 
             var sw = Stopwatch.StartNew();
 
             var summation = list.Connect()
                 .Sum(i => i)
-                .Subscribe(result => runningSum = result);
+                .Subscribe(result => calculated = result);
 
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
@@ -138,7 +89,7 @@ namespace DynamicData.Tests.AggregationTests
             summation.Dispose();
             list.Dispose();
 
-            Console.WriteLine("Total items: {0}. Sum = {1}", n, runningSum);
+            Console.WriteLine("Total items: {0}. Value = {1}", n, calculated);
             Console.WriteLine("List: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
 
         }

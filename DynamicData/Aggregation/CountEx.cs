@@ -19,13 +19,7 @@ namespace DynamicData.Aggregation
         /// <returns></returns>
         public static IObservable<int> Count<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            return source.ForAggregation().Scan(0, (state, changes) =>
-            {
-                return changes.Aggregate(state, (current, aggregateItem) =>
-                                aggregateItem.Type == AggregateType.Add
-                                    ? state = state + 1
-                                    : state = state - 1);
-            });
+            return source.ForAggregation().Count();
         }
 
         /// <summary>
