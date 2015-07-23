@@ -90,17 +90,16 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                //.Buffer(n / 10).FlattenBufferResult()
                 .Sum(i => i)
                 .Subscribe(result => runningSum = result);
 
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
-            //for (int i = 0; i < n; i++)
-            //    cache.AddOrUpdate(i);
-            
+            for (int i = 1; i < n; i++)
+                cache.AddOrUpdate(i);
+
             //2. much faster to to this (whole range is 1 update and 1 calculation):
-            cache.AddOrUpdate(Enumerable.Range(0,n));
+          //  cache.AddOrUpdate(Enumerable.Range(0,n));
 
             sw.Stop();
 
@@ -120,37 +119,22 @@ namespace DynamicData.Tests.AggregationTests
         [Explicit]
         public void SumListPerformance(int n)
         {
-            /*
-                Tricks to make it fast = 
-
-                1) use list.AddRange(Enumerable.Range(0, n))
-                  instead of  for (int i = 0; i < n; i++) list.Add(i);
-
-                2)  Uncomment Buffer(n/10).FlattenBufferResult()
-                    or just use buffer by time functions
-
-                With both of these the speed can be almost negligable
-
-            */
-
-
             var list = new SourceList<int>();
             int runningSum = 0;
 
             var sw = Stopwatch.StartNew();
 
             var summation = list.Connect()
-                .Buffer(n/10).FlattenBufferResult()
                 .Sum(i => i)
                 .Subscribe(result => runningSum = result);
 
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
-            //for (int i = 0; i < n; i++)
-            //    list.Add(i);
+            for (int i = 0; i < n; i++)
+                list.Add(i);
 
             //2. very fast doing this (whole range is 1 update and 1 calculation):
-            list.AddRange(Enumerable.Range(0, n));
+            //list.AddRange(Enumerable.Range(0, n));
             sw.Stop();
 
             summation.Dispose();

@@ -13,9 +13,7 @@ namespace DynamicData
 	/// </summary>
 	public static class ListEx
 	{
-
-
-
+        
         #region Binary Search / Lookup
 
 
@@ -254,12 +252,14 @@ namespace DynamicData
 			{
 				((List<T>)source).RemoveRange(index, count);
 			}
-			else if (source is ChangeAwareList<T>)
+			else if (source is IExtendedList<T>)
 			{
-				((ChangeAwareList<T>)source).RemoveRange(index, count);
+				((IExtendedList<T>)source).RemoveRange(index, count);
 			}
 			else
 			{
+
+
 				throw new NotSupportedException("Cannot remove range from {0}".FormatWith(source.GetType()));
 			}
 

@@ -10,7 +10,21 @@ namespace DynamicData.Kernel
 	/// </summary>
 	public static class OptionExtensions
     {
+
         /// <summary>
+        /// Returns the value if the nullable has a value, otherwise returns the result of the value selector
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="defaultValue">The default value</param>
+        /// <returns></returns>
+        public static T ValueOr<T>(this T? source, T defaultValue)
+            where T:struct
+	    {
+	        return source ?? defaultValue;
+	    }
+
+	    /// <summary>
         /// Returns the value if the optional has a value, otherwise returns the result of the value selector
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -20,7 +34,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">valueSelector</exception>
         public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector )
         {
-            if (valueSelector == null) throw new ArgumentNullException("valueSelector");
+            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
             return source.HasValue ? source.Value : valueSelector();
         }
 
@@ -45,7 +59,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">exceptionGenerator</exception>
         public static T ValueOrThrow<T>(this Optional<T> source, Func<Exception> exceptionGenerator)
         {
-            if (exceptionGenerator == null) throw new ArgumentNullException("exceptionGenerator");
+            if (exceptionGenerator == null) throw new ArgumentNullException(nameof(exceptionGenerator));
             if (source.HasValue)
                 return source.Value;
 
@@ -71,8 +85,8 @@ namespace DynamicData.Kernel
         /// </exception>
         public static TDestination ConvertOr<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter, Func<TDestination> fallbackConverter)
         {
-            if (converter == null) throw new ArgumentNullException("converter");
-            if (fallbackConverter == null) throw new ArgumentNullException("fallbackConverter");
+            if (converter == null) throw new ArgumentNullException(nameof(converter));
+            if (fallbackConverter == null) throw new ArgumentNullException(nameof(fallbackConverter));
 
             return source.HasValue ? converter(source.Value) : fallbackConverter();
         }
@@ -88,7 +102,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">converter</exception>
         public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter)
         {
-            if (converter == null) throw new ArgumentNullException("converter");
+            if (converter == null) throw new ArgumentNullException(nameof(converter));
             return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
         }
 

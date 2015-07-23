@@ -271,9 +271,16 @@ namespace DynamicData
 
 					case ListChangeReason.RemoveRange:
 						{
-							source.RemoveRange(item.Range.Index, item.Range.Count);
-							break;
+						    if (source is IExtendedList<T>)
+						    {
+						        source.RemoveRange(item.Range.Index, item.Range.Count);
+						    }
+						    else
+						    {
+                                item.Range.ForEach(t=> source.Remove(t));
+                            }
 						}
+							break;
 					case ListChangeReason.Moved:
 						{
 							var change = item.Item;

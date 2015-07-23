@@ -42,9 +42,10 @@
     <Compile Include="Aggregation\AggregateItem.cs" />
     <Compile Include="Aggregation\AggregateType.cs" />
     <Compile Include="Aggregation\Average.cs" />
-    <Compile Include="Aggregation\ReadOnlyCollectionLight.cs" />
+    <Compile Include="Aggregation\CountEx.cs" />
+    <Compile Include="Aggregation\IAggregateChangeSet.cs" />
     <Compile Include="Aggregation\StdDev.cs" />
-    <Compile Include="Aggregation\Sum.cs" />
+    <Compile Include="Aggregation\SumEx.cs" />
     <Compile Include="Binding\AbstractNotifyPropertyChanged.cs" />
     <Compile Include="Binding\NotifyPropertyChangedEx.cs" />
     <Compile Include="Binding\PropertyValue.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="Cache\Internal\TreeBuilder.cs" />
     <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
+    <Compile Include="Kernel\ReadOnlyCollectionLight.cs" />
     <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeSetEx.cs" />
     <Compile Include="List\ChangeType.cs" />

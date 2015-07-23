@@ -9,34 +9,34 @@ namespace DynamicData.Aggregation
 
     public static class StdDevEx
     {
-        public static IObservable<double> StdDev<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,[NotNull] Func<TObject, int> valueSelector)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
-            return source.ForAggregate().Select(items => items.Compute(valueSelector));
-        }
+        //public static IObservable<double> StdDev<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,[NotNull] Func<TObject, int> valueSelector)
+        //{
+        //    if (source == null) throw new ArgumentNullException(nameof(source));
+        //    if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+        //    return source.ToCollection().Select(items => items.Compute(valueSelector));
+        //}
 
-        public static IObservable<double> StdDev<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, long> valueSelector)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.ForAggregate().Select(items => items.Compute(valueSelector));
-        }
+        //public static IObservable<double> StdDev<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, long> valueSelector)
+        //{
+        //    if (source == null) throw new ArgumentNullException(nameof(source));
+        //    return source.ToCollection().Select(items => items.Compute(valueSelector));
+        //}
 
-        public static IObservable<double> StdDev<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, double> valueSelector)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.ForAggregate().Select(items => items.Compute(valueSelector));
-        }
+        //public static IObservable<double> StdDev<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, double> valueSelector)
+        //{
+        //    if (source == null) throw new ArgumentNullException(nameof(source));
+        //    return source.ToCollection().Select(items => items.Compute(valueSelector));
+        //}
 
-        public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, decimal> valueSelector)
-        {
-            return source.ForAggregate().Select(items => items.Compute(valueSelector));
-        }
+        //public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, decimal> valueSelector)
+        //{
+        //    return source.ToCollection().Select(items => items.Compute(valueSelector));
+        //}
 
-        public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, float> valueSelector)
-        {
-            return source.ForAggregate().Select(items => items.Compute(valueSelector));
-        }
+        //public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, float> valueSelector)
+        //{
+        //    return source.ToCollection().Select(items => items.Compute(valueSelector));
+        //}
 
         public static IObservable<double> StdDev<TObject>(this IObservable<IReadOnlyCollection<TObject>> source, Func<TObject, int> valueSelector)
         {

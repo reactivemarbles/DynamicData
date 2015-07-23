@@ -1,29 +1,23 @@
 ﻿namespace DynamicData.Aggregation
 {
+
     /// <summary>
-    /// 
+    /// An object representing added and removed itemsin a continous aggregation stream
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    public struct AggregateItem<TObject, TKey>
+    public struct AggregateItem<TObject>
     {
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="AggregateItem{TObject, TKey}"/> struct.
+        /// Initializes a new instance of the <see cref="AggregateItem{TObject}"/> struct.
         /// </summary>
         /// <param name="type">The type.</param>
         /// <param name="item">The item.</param>
-        /// <param name="key">The key.</param>
-        public AggregateItem(AggregateType type, TObject item, TKey key)
+        public AggregateItem(AggregateType type, TObject item)
         {
             Type = type;
             Item = item;
-            Key = key;
         }
-
-        /// <summary>
-        /// Gets the key.
-        /// </summary>
-        public TKey Key { get; }
 
         /// <summary>
         /// Gets the type.

@@ -490,24 +490,24 @@ namespace DynamicData
 
 		}
 
-		/// <summary>
-		/// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
-		/// When a resume signal has been received the batched updates will  be fired.
-		/// </summary>
-		/// <typeparam name="T">The type of the object.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
-		/// <param name="scheduler">The scheduler.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source,
-			IObservable<bool> pauseIfTrueSelector,
-			IScheduler scheduler = null)
-		{
-			return BufferIf(source, pauseIfTrueSelector, false, scheduler);
-		}
+        /// <summary>
+        /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
+        /// When a resume signal has been received the batched updates will  be fired.
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<T>> BufferIf<T>([NotNull] this IObservable<IChangeSet<T>> source,
+            [NotNull] IObservable<bool> pauseIfTrueSelector,
+            IScheduler scheduler = null)
+        {
+            return BufferIf(source, pauseIfTrueSelector, false, scheduler);
+        }
 
-		/// <summary>
+        /// <summary>
 		/// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
 		/// When a resume signal has been received the batched updates will  be fired.
 		/// </summary>
@@ -518,15 +518,17 @@ namespace DynamicData
 		/// <param name="scheduler">The scheduler.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source,
-			IObservable<bool> pauseIfTrueSelector,
+		public static IObservable<IChangeSet<T>> BufferIf<T>([NotNull] this IObservable<IChangeSet<T>> source,
+		    [NotNull] IObservable<bool> pauseIfTrueSelector,
 			bool intialPauseState = false,
 			IScheduler scheduler = null)
 		{
-			return BufferIf(source, pauseIfTrueSelector, intialPauseState, null, scheduler);
+		    if (source == null) throw new ArgumentNullException(nameof(source));
+		    if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
+		    return BufferIf(source, pauseIfTrueSelector, intialPauseState, null, scheduler);
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
 		/// When a resume signal has been received the batched updates will  be fired.
 		/// </summary>
@@ -606,15 +608,27 @@ namespace DynamicData
 			return new QueryWhenChanged<T>(source).Run();
 		}
 
+        /// <summary>
+        /// Converts the changeset into a fully formed collection. Each change in the source results in a new collection
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            return source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items, query.Count));
+        }
 
-		/// <summary>
-		/// Defer the subscribtion until loaded and skip initial changeset
-		/// </summary>
-		/// <typeparam name="T">The type of the object.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
+
+        /// <summary>
+        /// Defer the subscribtion until loaded and skip initial changeset
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			return source.DeferUntilLoaded().Skip(1);

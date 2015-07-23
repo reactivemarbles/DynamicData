@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using DynamicData.Aggregation;
 using DynamicData.Annotations;
+using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
