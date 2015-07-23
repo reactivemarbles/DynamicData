@@ -72,7 +72,7 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AggregationTests\StdDevixture.cs" />
+    <Compile Include="AggregationTests\StdDevFixture.cs" />
     <Compile Include="Binding\BindChangeSetFixture.cs" />
     <Compile Include="Binding\BindFromObservaleListFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />

@@ -1,13 +1,12 @@
 using System;
 using System.Diagnostics;
 using DynamicData.Aggregation;
-using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
 {
     [TestFixture]
-    public class StdDevixture
+    public class StdDevFixture
     {
 
         //TODO: TEST ACURACY
@@ -56,7 +55,7 @@ namespace DynamicData.Tests.AggregationTests
             cache.Dispose();
 
             Console.WriteLine("Total items: {0}. Value = {1}", n, calculated);
-            Console.WriteLine("Cache Summation: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
+            Console.WriteLine("Cache: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
 
         }
 
@@ -76,10 +75,9 @@ namespace DynamicData.Tests.AggregationTests
             var summation = list.Connect()
                 .Sum(i => i)
                 .Subscribe(result => calculated = result);
-
-
+            
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
-            for (int i = 0; i < n; i++)
+            for (int i = 1; i < n; i++)
                 list.Add(i);
 
             //2. very fast doing this (whole range is 1 update and 1 calculation):
