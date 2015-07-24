@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Kernel;
 
 namespace DynamicData.Aggregation
 {
@@ -20,7 +19,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -37,7 +36,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -53,7 +52,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -70,7 +69,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -88,7 +87,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -106,7 +105,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -123,7 +122,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -141,7 +140,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -157,7 +156,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -175,7 +174,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -194,7 +193,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -211,7 +210,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -226,7 +225,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -242,7 +241,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -257,7 +256,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -273,7 +272,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -288,7 +287,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -304,7 +303,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -319,7 +318,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -336,7 +335,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -355,7 +354,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -375,7 +374,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -390,7 +389,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>mentNullException"></exception>
@@ -410,7 +409,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -426,7 +425,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -446,7 +445,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -462,7 +461,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -483,7 +482,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>umentNullException"></exception>
@@ -498,7 +497,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
@@ -520,7 +519,7 @@ namespace DynamicData.Aggregation
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source observable</param>
         /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting averahe value when there is no data</param>
+        /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
         /// An obervable of averages
         /// </returns>
