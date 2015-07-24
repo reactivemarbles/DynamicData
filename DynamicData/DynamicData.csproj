@@ -41,7 +41,8 @@
   <ItemGroup>
     <Compile Include="Aggregation\AggregateItem.cs" />
     <Compile Include="Aggregation\AggregateType.cs" />
-    <Compile Include="Aggregation\Average.cs" />
+    <Compile Include="Aggregation\AvgEx.cs" />
+    <Compile Include="Aggregation\Avg.cs" />
     <Compile Include="Aggregation\CountEx.cs" />
     <Compile Include="Aggregation\IAggregateChangeSet.cs" />
     <Compile Include="Aggregation\StdDev.cs" />
