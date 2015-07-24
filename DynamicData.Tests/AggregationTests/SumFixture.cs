@@ -56,12 +56,37 @@ namespace DynamicData.Tests.AggregationTests
 
             _source.Remove("A");
             Assert.AreEqual(50, sum, "Accumulated value should be 50 after remove");
-
-
             accumulator.Dispose();
         }
 
- 
+        [Test]
+        public void InlineChangeReEvaluatesTotals()
+        {
+            int sum = 0;
+
+            var somepropChanged = _source.Connect().WhenAnyChanged(p => p.Age);
+
+            var accumulator = _source.Connect()
+                .Sum(p => p.Age)
+                .InvalidateWhen(somepropChanged)
+                .Subscribe(x => sum = x);
+
+            var personb =  new Person("B", 5);
+            _source.AddOrUpdate(new Person("A", 10));
+            _source.AddOrUpdate(personb);
+            _source.AddOrUpdate(new Person("C", 30));
+
+
+            Assert.AreEqual(45, sum, "Sum should be 60 after inline change");
+
+            personb.Age = 20;
+
+            Assert.AreEqual(60, sum, "Sum should be 60 after inline change");
+            accumulator.Dispose();
+        }
+
+
+
         [TestCase(100)]
         [TestCase(1000)]
         [TestCase(10000)]

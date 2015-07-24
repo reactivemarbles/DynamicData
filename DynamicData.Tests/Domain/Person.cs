@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
+using DynamicData.Binding;
 
 
 namespace DynamicData.Tests.Domain
 {
-    public class Person : IKey<string>, IEquatable<Person>
+    public class Person :AbstractNotifyPropertyChanged, IKey<string>, IEquatable<Person>
     {
         private readonly string _name;
         private  int _age;
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Domain
         public int Age
         {
             get { return _age; }
-            set { _age = value; }
+            set { SetAndRaise(ref _age,value); }
         }
 
         public string Key

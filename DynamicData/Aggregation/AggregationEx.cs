@@ -132,8 +132,24 @@ namespace DynamicData.Aggregation
                 .Select(_ => source)
                 .Switch()
                 .DistinctUntilChanged();
+        }
 
-        } 
+        /// <summary>
+        /// Used to invalidate an aggregating stream. Used when there has been an inline change 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TTrigger">The type of the trigger.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="invalidate">The invalidate.</param>
+        /// <returns></returns>
+        public static IObservable<T> InvalidateWhen<T, TTrigger>(this IObservable<T> source, IObservable<TTrigger> invalidate)
+        {
+
+            return invalidate.StartWith(default(TTrigger))
+                .Select(_ => source)
+                .Switch()
+                .DistinctUntilChanged();
+        }
 
     }
 }

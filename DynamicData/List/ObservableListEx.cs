@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -360,20 +362,62 @@ namespace DynamicData
 			return new MergeMany<T, TDestination>(source, observableSelector).Run();
 		}
 
-		/// <summary>
-		/// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed
-		/// </summary>
-		/// <typeparam name="T">The type of the object.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="subscriptionFactory">The subsription function</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source
-		/// or
-		/// subscriptionFactory</exception>
-		/// <remarks>
-		/// Subscribes to each item when it is added or updates and unsubcribes when it is removed
-		/// </remarks>
-		public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source, Func<T, IDisposable> subscriptionFactory)
+        /// <summary>
+        /// Notifies the value when any property in the underlying collection changes
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyAccessor">The property accessor.</param>
+        /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<TValue> WhenAnyValueChanged<T, TValue>([NotNull] this IObservable<IChangeSet<T>> source,
+            [NotNull] Expression<Func<T, TValue>> propertyAccessor, bool notifyOnInitialValue=true)
+            where T:INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+
+            return source.MergeMany(t => t.WhenValueChanged(propertyAccessor, notifyOnInitialValue));
+        }
+
+        /// <summary>
+        /// Notifies the value and object when any property in the underlying collection changes
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyAccessor">The property accessor.</param>
+        /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<PropertyValue<T, TValue>> WhenAnyChanged<T, TValue>([NotNull] this IObservable<IChangeSet<T>> source,
+            [NotNull] Expression<Func<T, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+            where T : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+
+            return source.MergeMany(t => t.WhenChanged(propertyAccessor, notifyOnInitialValue));
+        }
+
+        /// <summary>
+        /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="subscriptionFactory">The subsription function</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// subscriptionFactory</exception>
+        /// <remarks>
+        /// Subscribes to each item when it is added or updates and unsubcribes when it is removed
+        /// </remarks>
+        public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source, Func<T, IDisposable> subscriptionFactory)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));

@@ -1,7 +1,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -360,6 +362,50 @@ namespace DynamicData
                 (
                     observer => source.SubscribeMany((t,v) => observableSelector(t,v).SubscribeSafe(observer))
                         .Subscribe());
+        }
+
+        /// <summary>
+        /// Notifies the value when any property in the underlying collection changes
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyAccessor">The property accessor.</param>
+        /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<TValue> WhenAnyValueChanged<TObject, TKey, TValue>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
+            [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+
+            return source.MergeMany(t => t.WhenValueChanged(propertyAccessor, notifyOnInitialValue));
+        }
+
+        /// <summary>
+        /// Notifies the value and object when any property in the underlying collection changes
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyAccessor">The property accessor.</param>
+        /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<PropertyValue<TObject, TValue>> WhenAnyChanged<TObject, TKey, TValue>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
+            [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+
+            return source.MergeMany(t => t.WhenChanged(propertyAccessor, notifyOnInitialValue));
         }
 
         /// <summary>
