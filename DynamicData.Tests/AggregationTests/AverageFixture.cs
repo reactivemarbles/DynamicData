@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.AggregationTests
 {
     [TestFixture]
-    public class SumFixture
+    public class AverageFixture
     {
         private SourceCache<Person, string> _source;
 
@@ -26,17 +26,17 @@ namespace DynamicData.Tests.AggregationTests
         [Test]
         public void AddedItemsContributeToSum()
         {
-            int sum = 0;
+            double avg = 0;
 
             var accumulator = _source.Connect()
-                .Sum(p => p.Age)
-                .Subscribe(x => sum = x);
+                .Avg(p => p.Age)
+                .Subscribe(x => avg = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(60, sum, "Accumulated value should be 60");
+            Assert.AreEqual(20, avg, "Average value should be 20");
 
             accumulator.Dispose();
         }
@@ -44,44 +44,44 @@ namespace DynamicData.Tests.AggregationTests
         [Test]
         public void RemoveProduceCorrectResult()
         {
-            int sum = 0;
+            double avg = 0;
 
             var accumulator = _source.Connect()
-                .Sum(p => p.Age)
-                .Subscribe(x => sum = x);
+                .Avg(p => p.Age)
+                .Subscribe(x => avg = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
             _source.Remove("A");
-            Assert.AreEqual(50, sum, "Accumulated value should be 50 after remove");
+            Assert.AreEqual(25, avg, "Average value should be 25 after remove");
             accumulator.Dispose();
         }
 
         [Test]
         public void InlineChangeReEvaluatesTotals()
         {
-            int sum = 0;
+            double avg = 0;
 
             var somepropChanged = _source.Connect().WhenAnyValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
-                .Sum(p => p.Age)
+                .Avg(p => p.Age)
                 .InvalidateWhen(somepropChanged)
-                .Subscribe(x => sum = x);
+                .Subscribe(x => avg = x);
 
-            var personb =  new Person("B", 5);
+            var personb = new Person("B", 5);
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(personb);
             _source.AddOrUpdate(new Person("C", 30));
 
 
-            Assert.AreEqual(45, sum, "Sum should be 45 after inline change");
+            Assert.AreEqual(15, avg, "Sum should be 15 after inline change");
 
             personb.Age = 20;
 
-            Assert.AreEqual(60, sum, "Sum should be 60 after inline change");
+            Assert.AreEqual(20, avg, "Sum should be 20 after inline change");
             accumulator.Dispose();
         }
 
@@ -107,13 +107,13 @@ namespace DynamicData.Tests.AggregationTests
                 With both of these the speed can be almost negligable
 
             */
-            var cache = new SourceCache<int,int>(i=>i);
-            int runningSum = 0;
+            var cache = new SourceCache<int, int>(i => i);
+            double runningSum = 0;
 
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                .Sum(i => i)
+                .Avg(i => i)
                 .Subscribe(result => runningSum = result);
 
 
@@ -122,14 +122,14 @@ namespace DynamicData.Tests.AggregationTests
                 cache.AddOrUpdate(i);
 
             //2. much faster to to this (whole range is 1 update and 1 calculation):
-          //  cache.AddOrUpdate(Enumerable.Range(0,n));
+            //  cache.AddOrUpdate(Enumerable.Range(0,n));
 
             sw.Stop();
 
             summation.Dispose();
             cache.Dispose();
 
-            Console.WriteLine("Total items: {0}. Sum = {1}",n , runningSum);
+            Console.WriteLine("Total items: {0}. Sum = {1}", n, runningSum);
             Console.WriteLine("Cache Summation: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
 
         }
@@ -143,12 +143,12 @@ namespace DynamicData.Tests.AggregationTests
         public void ListPerformance(int n)
         {
             var list = new SourceList<int>();
-            int runningSum = 0;
+            double runningSum = 0;
 
             var sw = Stopwatch.StartNew();
 
             var summation = list.Connect()
-                .Sum(i => i)
+                .Avg(i => i)
                 .Subscribe(result => runningSum = result);
 
 

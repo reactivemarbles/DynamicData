@@ -365,7 +365,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Notifies the value when any property in the underlying collection changes
+        /// Watches each item in the collection and notifies when any of them has changed
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -387,7 +387,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Notifies the value and object when any property in the underlying collection changes
+        /// Watches each item in the collection and notifies when any of them has changed
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -398,7 +398,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<PropertyValue<TObject, TValue>> WhenAnyChanged<TObject, TKey, TValue>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
+        public static IObservable<PropertyValue<TObject, TValue>> WhenAnyPropertyChanged<TObject, TKey, TValue>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
             [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {

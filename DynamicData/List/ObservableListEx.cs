@@ -363,9 +363,9 @@ namespace DynamicData
 		}
 
         /// <summary>
-        /// Notifies the value when any property in the underlying collection changes
+        /// Watches each item in the collection and notifies when any of them has changed
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TObject"></typeparam>
         /// <typeparam name="TValue">The type of the value.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="propertyAccessor">The property accessor.</param>
@@ -373,9 +373,9 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<TValue> WhenAnyValueChanged<T, TValue>([NotNull] this IObservable<IChangeSet<T>> source,
-            [NotNull] Expression<Func<T, TValue>> propertyAccessor, bool notifyOnInitialValue=true)
-            where T:INotifyPropertyChanged
+        public static IObservable<TValue> WhenAnyValueChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
+            [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue=true)
+            where TObject:INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
@@ -384,9 +384,9 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Notifies the value and object when any property in the underlying collection changes
+        /// Watches each item in the collection and notifies when any of them has changed
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TObject"></typeparam>
         /// <typeparam name="TValue">The type of the value.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="propertyAccessor">The property accessor.</param>
@@ -394,9 +394,9 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<PropertyValue<T, TValue>> WhenAnyChanged<T, TValue>([NotNull] this IObservable<IChangeSet<T>> source,
-            [NotNull] Expression<Func<T, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
-            where T : INotifyPropertyChanged
+        public static IObservable<PropertyValue<TObject, TValue>> WhenAnyChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
+            [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+            where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
