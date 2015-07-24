@@ -530,6 +530,7 @@ namespace DynamicData.Aggregation
 
         #endregion
 
+
         private static IObservable<TResult> AvgCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source,
             Func<TObject, TValue> valueSelector,
             TResult fallbackValue,
@@ -551,7 +552,7 @@ namespace DynamicData.Aggregation
                         : removeAction(current, valueSelector(aggregateItem.Item))
                     );
             })
-            .Select(values => values.Count < 1 ? fallbackValue : resultAction(values));
+            .Select(values => values.Count ==0 ? fallbackValue : resultAction(values));
         }
 
 
