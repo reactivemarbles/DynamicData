@@ -31,7 +31,7 @@ namespace DynamicData.Tests.AggregationTests
             var result = 0;
 
             var accumulator = _source.Connect()
-                .Min(p => p.Age)
+                .Minimum(p => p.Age)
                 .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
@@ -49,7 +49,7 @@ namespace DynamicData.Tests.AggregationTests
             var result = 0;
 
             var accumulator = _source.Connect()
-                .Min(p => p.Age)
+                .Minimum(p => p.Age)
                 .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
@@ -69,7 +69,7 @@ namespace DynamicData.Tests.AggregationTests
             var somepropChanged = _source.Connect().WhenAnyValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
-                .Min(p => p.Age)
+                .Minimum(p => p.Age)
                 .InvalidateWhen(somepropChanged)
                 .Subscribe(x => min = x);
 
@@ -118,7 +118,7 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                .Min(i => i)
+                .Minimum(i => i)
                 .Subscribe(result => runningSum = result);
 
 
@@ -153,7 +153,7 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = list.Connect()
-                .Min(i => i)
+                .Minimum(i => i)
                 .Subscribe(result => runningSum = result);
 
 

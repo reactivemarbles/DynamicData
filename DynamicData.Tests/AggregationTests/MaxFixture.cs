@@ -29,7 +29,7 @@ namespace DynamicData.Tests.AggregationTests
             var result = 0;
 
             var accumulator = _source.Connect()
-                .Max(p => p.Age)
+                .Maximum(p => p.Age)
                 .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
@@ -47,7 +47,7 @@ namespace DynamicData.Tests.AggregationTests
             var result = 0;
 
             var accumulator = _source.Connect()
-                .Max(p => p.Age)
+                .Maximum(p => p.Age)
                 .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.AggregationTests
             var somepropChanged = _source.Connect().WhenAnyValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
-                .Max(p => p.Age)
+                .Maximum(p => p.Age)
                .InvalidateWhen(somepropChanged)
                 .Subscribe(x => max = x);
 
@@ -113,7 +113,7 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                .Max(i => i)
+                .Maximum(i => i)
                 .Subscribe(result => runningSum = result);
 
 
@@ -142,14 +142,15 @@ namespace DynamicData.Tests.AggregationTests
         [Explicit]
         public void ListPerformance(int n)
         {
-            var list = new SourceList<int>();
-            double runningSum = 0;
+
+            int result = 0;
 
             var sw = Stopwatch.StartNew();
+            var list = new SourceList<int>();
 
             var summation = list.Connect()
-                .Max(i => i)
-                .Subscribe(result => runningSum = result);
+                            .Maximum(i => i)
+                            .Subscribe(x => result =x);
 
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
@@ -163,7 +164,7 @@ namespace DynamicData.Tests.AggregationTests
             summation.Dispose();
             list.Dispose();
 
-            Console.WriteLine("Total items: {0}. Sum = {1}", n, runningSum);
+            Console.WriteLine("Total items: {0}. Sum = {1}", n, result);
             Console.WriteLine("List: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
 
         }

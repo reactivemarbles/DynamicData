@@ -552,7 +552,7 @@ namespace DynamicData.Aggregation
                         : removeAction(current, valueSelector(aggregateItem.Item))
                     );
             })
-            .Select(values => values.Count ==0 ? fallbackValue : resultAction(values));
+            .Select(values => values.Count == 0 ? fallbackValue : resultAction(values));
         }
 
 

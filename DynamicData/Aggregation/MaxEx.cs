@@ -17,7 +17,7 @@ namespace DynamicData.Aggregation
 
 
         /// <summary>
-        /// Continually calculated the maximum value from the underlying data sourcce
+        /// Continually calculates the maximum value from the underlying data sourcce
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TResult">The type of the result.</typeparam>
@@ -27,7 +27,7 @@ namespace DynamicData.Aggregation
         /// <returns>
         /// A distinct observable of the maximum item
         /// </returns>
-        public static IObservable<TResult> Max<TObject, TResult>([NotNull] this IObservable<IChangeSet<TObject>> source, 
+        public static IObservable<TResult> Maximum<TObject, TResult>([NotNull] this IObservable<IChangeSet<TObject>> source, 
             [NotNull] Func<TObject, TResult> valueSelector, 
             TResult emptyValue = default(TResult))
             where TResult : struct, IComparable<TResult>
@@ -36,7 +36,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Continually calculated the maximum value from the underlying data sourcce
+        /// Continually calculates the maximum value from the underlying data sourcce
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -47,14 +47,14 @@ namespace DynamicData.Aggregation
         /// <returns>
         /// A distinct observable of the maximum item
         /// </returns>
-        public static IObservable<TResult> Max<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
+        public static IObservable<TResult> Maximum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
             where TResult : struct, IComparable<TResult>
         {
             return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
         }
 
         /// <summary>
-        /// Continually calculated the minimum value from the underlying data sourcce
+        /// Continually calculates the minimum value from the underlying data sourcce
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TResult">The type of the result.</typeparam>
@@ -62,7 +62,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The value selector.</param>
         /// <param name="emptyValue">The value to use when the underlying collection is empty</param>
         /// <returns>A distinct observable of the minimums item</returns>
-        public static IObservable<TResult> Min<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
+        public static IObservable<TResult> Minimum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
             where TResult : struct, IComparable<TResult>
         {
             return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
@@ -72,7 +72,7 @@ namespace DynamicData.Aggregation
 
 
         /// <summary>
-        /// Continually calculated the minimum value from the underlying data sourcce
+        /// Continually calculates the minimum value from the underlying data sourcce
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -83,7 +83,7 @@ namespace DynamicData.Aggregation
         /// <returns>
         /// A distinct observable of the minimums item
         /// </returns>
-        public static IObservable<TResult> Min<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
+        public static IObservable<TResult> Minimum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
             where TResult : struct, IComparable<TResult>
         {
             return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
