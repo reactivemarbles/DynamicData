@@ -6,10 +6,8 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
 {
-
-
     [TestFixture]
-    public class AverageFixture
+    public class MaxFixture
     {
         private SourceCache<Person, string> _source;
 
@@ -26,64 +24,64 @@ namespace DynamicData.Tests.AggregationTests
         }
 
         [Test]
-        public void AddedItemsContributeToSum()
+        public void AddItems()
         {
-            double avg = 0;
+            var result = 0;
 
             var accumulator = _source.Connect()
-                .Avg(p => p.Age)
-                .Subscribe(x => avg = x);
+                .Max(p => p.Age)
+                .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(20, avg, "Average value should be 20");
+            Assert.AreEqual(30, result, "Max value should be 30");
 
             accumulator.Dispose();
         }
 
         [Test]
-        public void RemoveProduceCorrectResult()
+        public void RemoveItems()
         {
-            double avg = 0;
+            var result = 0;
 
             var accumulator = _source.Connect()
-                .Avg(p => p.Age)
-                .Subscribe(x => avg = x);
+                .Max(p => p.Age)
+                .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            _source.Remove("A");
-            Assert.AreEqual(25, avg, "Average value should be 25 after remove");
+            _source.Remove("C");
+            Assert.AreEqual(20, result, "Max value should be 20 after remove");
             accumulator.Dispose();
         }
 
         [Test]
         public void InlineChangeReEvaluatesTotals()
         {
-            double avg = 0;
+            double max = 0;
 
             var somepropChanged = _source.Connect().WhenAnyValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
-                .Avg(p => p.Age)
-                .InvalidateWhen(somepropChanged)
-                .Subscribe(x => avg = x);
+                .Max(p => p.Age)
+               .InvalidateWhen(somepropChanged)
+                .Subscribe(x => max = x);
 
-            var personb = new Person("B", 5);
+            var personc = new Person("C", 5);
             _source.AddOrUpdate(new Person("A", 10));
-            _source.AddOrUpdate(personb);
-            _source.AddOrUpdate(new Person("C", 30));
+            _source.AddOrUpdate(new Person("B",11));
+            _source.AddOrUpdate(personc);
 
 
-            Assert.AreEqual(15, avg, "Sum should be 15 after inline change");
+            Assert.AreEqual(11, max, "Max should be 11");
 
-            personb.Age = 20;
+            personc.Age = 100;
 
-            Assert.AreEqual(20, avg, "Sum should be 20 after inline change");
+            Assert.AreEqual(100, max, "Max should be 100 after inline change");
             accumulator.Dispose();
         }
 
@@ -115,7 +113,7 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                .Avg(i => i)
+                .Max(i => i)
                 .Subscribe(result => runningSum = result);
 
 
@@ -150,7 +148,7 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = list.Connect()
-                .Avg(i => i)
+                .Max(i => i)
                 .Subscribe(result => runningSum = result);
 
 

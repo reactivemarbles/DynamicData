@@ -9,7 +9,7 @@ namespace DynamicData.Tests.AggregationTests
 
 
     [TestFixture]
-    public class AverageFixture
+    public class MinFixture
     {
         private SourceCache<Person, string> _source;
 
@@ -28,17 +28,17 @@ namespace DynamicData.Tests.AggregationTests
         [Test]
         public void AddedItemsContributeToSum()
         {
-            double avg = 0;
+            var result = 0;
 
             var accumulator = _source.Connect()
-                .Avg(p => p.Age)
-                .Subscribe(x => avg = x);
+                .Min(p => p.Age)
+                .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(20, avg, "Average value should be 20");
+            Assert.AreEqual(10, result, "Min value should be 10");
 
             accumulator.Dispose();
         }
@@ -46,44 +46,47 @@ namespace DynamicData.Tests.AggregationTests
         [Test]
         public void RemoveProduceCorrectResult()
         {
-            double avg = 0;
+            var result = 0;
 
             var accumulator = _source.Connect()
-                .Avg(p => p.Age)
-                .Subscribe(x => avg = x);
+                .Min(p => p.Age)
+                .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
             _source.Remove("A");
-            Assert.AreEqual(25, avg, "Average value should be 25 after remove");
+            Assert.AreEqual(20, result, "Min value should be 20 after remove");
             accumulator.Dispose();
         }
 
         [Test]
         public void InlineChangeReEvaluatesTotals()
         {
-            double avg = 0;
+            double min = 0;
 
             var somepropChanged = _source.Connect().WhenAnyValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
-                .Avg(p => p.Age)
+                .Min(p => p.Age)
                 .InvalidateWhen(somepropChanged)
-                .Subscribe(x => avg = x);
+                .Subscribe(x => min = x);
 
-            var personb = new Person("B", 5);
+            var personc = new Person("C", 5);
             _source.AddOrUpdate(new Person("A", 10));
-            _source.AddOrUpdate(personb);
-            _source.AddOrUpdate(new Person("C", 30));
+            _source.AddOrUpdate(new Person("B", 11));
+            _source.AddOrUpdate(personc);
+            Assert.AreEqual(5, min, "Min should be 5");
+
+            _source.AddOrUpdate(personc);
 
 
-            Assert.AreEqual(15, avg, "Sum should be 15 after inline change");
 
-            personb.Age = 20;
 
-            Assert.AreEqual(20, avg, "Sum should be 20 after inline change");
+            personc.Age = 11;
+
+            Assert.AreEqual(10, min, "Min should be 10 after inline change");
             accumulator.Dispose();
         }
 
@@ -115,7 +118,7 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                .Avg(i => i)
+                .Min(i => i)
                 .Subscribe(result => runningSum = result);
 
 
@@ -150,7 +153,7 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = list.Connect()
-                .Avg(i => i)
+                .Min(i => i)
                 .Subscribe(result => runningSum = result);
 
 

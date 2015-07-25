@@ -12,6 +12,10 @@ namespace DynamicData.Aggregation
     /// </summary>
     public static class MaxEx
     {
+
+        #region Abstracted
+
+
         /// <summary>
         /// Continually calculated the maximum value from the underlying data sourcce
         /// </summary>
@@ -23,7 +27,9 @@ namespace DynamicData.Aggregation
         /// <returns>
         /// A distinct observable of the maximum item
         /// </returns>
-        public static IObservable<TResult> Max<TObject, TResult>([NotNull] this IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
+        public static IObservable<TResult> Max<TObject, TResult>([NotNull] this IObservable<IChangeSet<TObject>> source, 
+            [NotNull] Func<TObject, TResult> valueSelector, 
+            TResult emptyValue = default(TResult))
             where TResult : struct, IComparable<TResult>
         {
            return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
@@ -62,6 +68,9 @@ namespace DynamicData.Aggregation
             return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
         }
 
+
+
+
         /// <summary>
         /// Continually calculated the minimum value from the underlying data sourcce
         /// </summary>
@@ -79,6 +88,7 @@ namespace DynamicData.Aggregation
         {
             return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
         }
+        #endregion
 
 
         private static IObservable<TResult> Calculate<TObject, TResult>([NotNull] this IObservable<ChangesAndCollection<TObject>> source,
@@ -89,24 +99,30 @@ namespace DynamicData.Aggregation
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
-            return source.Scan(emptyValue, (state, latest) =>
+            return source.Scan(default(TResult?), (state, latest) =>
                 {
-                    var next = state;
+                    var current = state;
                     var requiresReset = false;
 
                     foreach (var change in latest.Changes)
                     {
                         var value = valueSelector(change.Item);
+                        if (!current.HasValue)
+                        {
+                            current = value;
+                        }
+
                         if (change.Type == AggregateType.Add)
                         {
                             int isMatched = maxOrMin == MaxOrMin.Max ? 1 : -1;
-                            if (value.CompareTo(next) == isMatched) next = value;
+                            if (value.CompareTo(current.Value) == isMatched)
+                                current = value;
                         }
                         else
                         {
                             //check whether the max / min has been removed. If so we need to look 
                             //up the latest from the underlying collection
-                            if (value.CompareTo(next) != 0) continue;
+                            if (value.CompareTo(current.Value) != 0) continue;
                             requiresReset = true;
                             break;
                         }
@@ -117,17 +133,19 @@ namespace DynamicData.Aggregation
                         var collecton = latest.Collection;
                         if (collecton.Count == 0)
                         {
-                            next = emptyValue;
+                            current = default(TResult?);
                         }
                         else
                         {
-                            next = maxOrMin == MaxOrMin.Max
+                            current = maxOrMin == MaxOrMin.Max
                                 ? collecton.Max(valueSelector)
                                 : collecton.Min(valueSelector);
                         }
                     }
-                    return next;
-                }).DistinctUntilChanged();
+                    return current;
+                })
+                 .Select(t=> t ?? emptyValue)       
+                .DistinctUntilChanged();
         }
 
         #region Helpers
