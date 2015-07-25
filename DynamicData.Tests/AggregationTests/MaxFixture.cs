@@ -1,8 +1,10 @@
 using System;
 using System.Diagnostics;
+using System.Reactive.Concurrency;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
+using System.Reactive.Concurrency;
 
 namespace DynamicData.Tests.AggregationTests
 {
@@ -68,7 +70,7 @@ namespace DynamicData.Tests.AggregationTests
 
             var accumulator = _source.Connect()
                 .Maximum(p => p.Age)
-               .InvalidateWhen(somepropChanged)
+                .InvalidateWhen(somepropChanged)
                 .Subscribe(x => max = x);
 
             var personc = new Person("C", 5);
@@ -142,7 +144,6 @@ namespace DynamicData.Tests.AggregationTests
         [Explicit]
         public void ListPerformance(int n)
         {
-
             int result = 0;
 
             var sw = Stopwatch.StartNew();

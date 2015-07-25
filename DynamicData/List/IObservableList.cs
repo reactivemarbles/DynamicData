@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using DynamicData.Kernel;
 
 namespace DynamicData
 {
@@ -22,14 +21,6 @@ namespace DynamicData
 		/// Observe the count changes, starting with the inital items count
 		/// </summary>
 		IObservable<int> CountChanged { get; }
-
-		/// <summary>
-		/// Lookups the item using the specified equality comparer
-		/// </summary>
-		/// <param name="item">The item.</param>
-		/// <param name="equalityComparer">The equality comparer.</param>
-		/// <returns>An ItemWithIndex container which contains the item with it's index</returns>
-		Optional<ItemWithIndex<T>> Lookup(T item, IEqualityComparer<T> equalityComparer = null);
 		
 		/// <summary>
 		/// Items enumerable

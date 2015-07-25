@@ -65,7 +65,7 @@ namespace DynamicData.Internal
 		{
 			lock (_locker)
 			{
-				return _data.Lookup(item, equalityComparer);
+				return _data.FindItemAndIndex(item, equalityComparer);
 			}
 		}
 

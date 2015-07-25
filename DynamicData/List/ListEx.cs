@@ -94,7 +94,7 @@ namespace DynamicData
 		/// <param name="item">The item.</param>
 		/// <param name="equalityComparer">The equality comparer.</param>
 		/// <returns></returns>
-		public static Optional<ItemWithIndex<T>> Lookup<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer = null)
+		public static Optional<ItemWithIndex<T>> FindItemAndIndex<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer = null)
 		{
 			var comparer = equalityComparer ?? EqualityComparer<T>.Default;
 

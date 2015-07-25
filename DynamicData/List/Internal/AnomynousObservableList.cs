@@ -4,8 +4,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-
-
     internal sealed class AnomynousObservableList<T> : IObservableList<T>
 	{
 		private readonly ISourceList<T> _sourceList;
@@ -32,11 +30,6 @@ namespace DynamicData.Internal
 		public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate=null)
 		{
 			return _sourceList.Connect(predicate);
-		}
-		
-		public Optional<ItemWithIndex<T>> Lookup(T item, IEqualityComparer<T> equalityComparer = null)
-		{
-			return _sourceList.Lookup(item, equalityComparer);
 		}
 
 		public void Dispose()

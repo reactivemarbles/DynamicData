@@ -69,7 +69,7 @@ namespace DynamicData
 							if (wasMatch)
 							{
 								//an update, so get the latest index
-								var previous = source.Lookup(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
+								var previous = source.FindItemAndIndex(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
 									.ValueOrThrow(() => new InvalidOperationException("Cannot find item. Expected to be in the list"));
 
 								//replace inline

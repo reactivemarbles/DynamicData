@@ -166,22 +166,64 @@ namespace DynamicData
 			return new AnomynousObservableList<T>(source);
 		}
 
+        /// <summary>
+        /// List equivalent to Publish().RefCount().  The source is cached so long as there is at least 1 subscriber.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject>> PublishRefCount<TObject>(this IObservable<IChangeSet<TObject>> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
-		#endregion
+            int refCount = 0;
+            var locker = new object();
+            IObservableList<TObject> list = null;
 
-		#region Core List Operators
+            return Observable.Create<IChangeSet<TObject>>(observer =>
+            {
+                lock (locker)
+                {
+                    refCount++;
+                    if (refCount == 1)
+                    {
+                        list = source.AsObservableList();
+                    }
+
+                    // ReSharper disable once PossibleNullReferenceException (never the case!)
+                    var subscriber = list.Connect().SubscribeSafe(observer);
+
+                    return Disposable.Create(() =>
+                    {
+                        lock (locker)
+                        {
+                            refCount--;
+                            subscriber.Dispose();
+                            if (refCount != 0) return;
+                            list.Dispose();
+                            list = null;
+                        }
+                    });
+                }
+            });
+        }
+
+
+        #endregion
+
+        #region Core List Operators
 
 
 
-		/// <summary>
-		/// Filters the source using the specified valueSelector
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="predicate">The valueSelector.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
+        /// <summary>
+        /// Filters the source using the specified valueSelector
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="predicate">The valueSelector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));

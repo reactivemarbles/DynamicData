@@ -82,19 +82,6 @@ namespace DynamicData
 		}
 
 		/// <summary>
-		/// Lookups the item using the specified equality comparer
-		/// </summary>
-		/// <param name="item">The item.</param>
-		/// <param name="equalityComparer">The equality comparer.</param>
-		/// <returns>
-		/// An ItemWithIndex container which contains the item with it's index
-		/// </returns>
-		public Optional<ItemWithIndex<T>> Lookup(T item, IEqualityComparer<T> equalityComparer = null)
-		{
-			return _readerWriter.Lookup(item, equalityComparer);
-		}
-
-		/// <summary>
 		/// Gets or sets the items.
 		/// </summary>
 		/// <value>

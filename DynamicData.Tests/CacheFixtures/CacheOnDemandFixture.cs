@@ -36,7 +36,7 @@ namespace DynamicData.Tests.CacheFixtures
                 .Transform(p => p)
                 .Do(_ => created++)
                 .Finally(() => disposals++)
-                .CacheOnDemand();
+                .PublishRefCount();
 
             var suscriber1 = longChain.Subscribe();
             var suscriber2 = longChain.Subscribe();
@@ -65,7 +65,7 @@ namespace DynamicData.Tests.CacheFixtures
                 .Transform(p => p)
                 .Do(_ => created++)
                 .Finally(() => disposals++)
-                .CacheOnDemand();
+                .PublishRefCount();
 
             var suscriber = longChain.Subscribe();
             suscriber.Dispose();
