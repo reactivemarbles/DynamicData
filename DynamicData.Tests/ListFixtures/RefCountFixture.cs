@@ -1,20 +1,19 @@
-﻿using System.Reactive.Linq;
+using System;
+using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
-using System;
 
-
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
     public class RefCountFixture
     {
-        private ISourceCache<Person, string> _source;
+        private ISourceList<Person> _source;
 
         [SetUp]
         public void MyTestInitialize()
         {
-            _source = new SourceCache<Person, string>(p => p.Key);
+            _source = new SourceList<Person>();
 
         }
 
@@ -42,7 +41,7 @@ namespace DynamicData.Tests.CacheFixtures
             var suscriber2 = longChain.Subscribe();
             var suscriber3 = longChain.Subscribe();
 
-            _source.AddOrUpdate(new Person("Name", 10));
+            _source.Add(new Person("Name", 10));
             suscriber1.Dispose();
             suscriber2.Dispose();
             suscriber3.Dispose();
@@ -56,9 +55,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             int created = 0;
             int disposals = 0;
-            
+
             //must have data so transform is invoked
-            _source.AddOrUpdate(new Person("Name", 10));
+            _source.Add(new Person("Name", 10));
 
             //Some expensive transform (or chain of operations)
             var longChain = _source.Connect()
@@ -72,7 +71,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             suscriber = longChain.Subscribe();
             suscriber.Dispose();
-            
+
             Assert.AreEqual(2, created);
             Assert.AreEqual(2, disposals);
         }
