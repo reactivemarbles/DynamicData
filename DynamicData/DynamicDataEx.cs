@@ -81,7 +81,7 @@ namespace DynamicData
 		/// <typeparam name="TKey">The type of the destination key.</typeparam>
 		/// <param name="source">The source.</param>
 		/// <returns></returns>
-		public static IObservable<IChangeSet<TObject, TKey>> PublishRefCount<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+		public static IObservable<IChangeSet<TObject, TKey>> RefCount<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 

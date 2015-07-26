@@ -146,7 +146,7 @@ namespace DynamicData
 		/// <param name="source">The source.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservableList<T> AsObservableList<T>(this ISourceList<T> source)
+		public static IObservableList<T> AsObservableList<T>([NotNull] this ISourceList<T> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			return new AnomynousObservableList<T>(source);
@@ -160,7 +160,7 @@ namespace DynamicData
 		/// <param name="source">The source.</param>
 		/// <returns></returns>
 		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservableList<T> AsObservableList<T>(this IObservable<IChangeSet<T>> source)
+		public static IObservableList<T> AsObservableList<T>([NotNull] this IObservable<IChangeSet<T>> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			return new AnomynousObservableList<T>(source);
@@ -172,7 +172,7 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<TObject>> PublishRefCount<TObject>(this IObservable<IChangeSet<TObject>> source)
+        public static IObservable<IChangeSet<TObject>> RefCount<TObject>([NotNull] this IObservable<IChangeSet<TObject>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -186,10 +186,8 @@ namespace DynamicData
                 {
                     refCount++;
                     if (refCount == 1)
-                    {
-                        list = source.AsObservableList();
-                    }
 
+                        list = source.AsObservableList();
                     // ReSharper disable once PossibleNullReferenceException (never the case!)
                     var subscriber = list.Connect().SubscribeSafe(observer);
 

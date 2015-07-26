@@ -1,10 +1,9 @@
 using System;
 using System.Diagnostics;
-using System.Reactive.Concurrency;
+using System.Linq;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
-using System.Reactive.Concurrency;
 
 namespace DynamicData.Tests.AggregationTests
 {
@@ -60,6 +59,8 @@ namespace DynamicData.Tests.AggregationTests
             Assert.AreEqual(20, result, "Max value should be 20 after remove");
             accumulator.Dispose();
         }
+
+
 
         [Test]
         public void InlineChangeReEvaluatesTotals()
@@ -120,11 +121,11 @@ namespace DynamicData.Tests.AggregationTests
 
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
-            for (int i = 1; i < n; i++)
-                cache.AddOrUpdate(i);
+            //for (int i = 1; i < n; i++)
+            //    cache.AddOrUpdate(i);
 
             //2. much faster to to this (whole range is 1 update and 1 calculation):
-            //  cache.AddOrUpdate(Enumerable.Range(0,n));
+              cache.AddOrUpdate(Enumerable.Range(0,n));
 
             sw.Stop();
 
@@ -152,8 +153,7 @@ namespace DynamicData.Tests.AggregationTests
             var summation = list.Connect()
                             .Maximum(i => i)
                             .Subscribe(x => result =x);
-
-
+            
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
             for (int i = 0; i < n; i++)
                 list.Add(i);
