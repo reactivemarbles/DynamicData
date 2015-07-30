@@ -14,5 +14,11 @@ namespace DynamicData
         ///     Gets the number of updates
         /// </summary>
         int Replaced { get; }
+
+
+        /// <summary>
+        /// The total count of items changed
+        /// </summary>
+        int TotalChanges { get; }
     }
 }

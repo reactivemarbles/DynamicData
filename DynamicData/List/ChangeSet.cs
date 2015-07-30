@@ -168,6 +168,11 @@ namespace DynamicData
 		public int Count => Items.Count;
 
 
+	    /// <summary>
+	    ///     The total number if individual item changes
+	    /// </summary>
+	    public int TotalChanges => Adds + Removes + Replaced + Moves;
+
         #region Enumeration
 
         /// <summary>

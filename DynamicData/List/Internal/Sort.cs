@@ -25,10 +25,37 @@ namespace DynamicData.Internal
 
 		public IObservable<IChangeSet<T>> Run()
 		{
+
+
 			return _source.Select(Process);
 		}
 
-		private IChangeSet<T> Process(IChangeSet<T> changes)
+	    private IChangeSet<T> Process(IChangeSet<T> changes)
+	    {
+	        if (changes.TotalChanges == changes.Removes && changes.All(c => c.Reason != ListChangeReason.Clear))
+	        {
+
+	            var removed = changes.Unified().Select(u=>u.Current);
+
+                //match all indicies and call ToArray() as the original source will be changed
+                var indexed = _innerList.IndexOfMany(removed)
+                   .OrderByDescending(x => x.Index)
+                   .ToArray();
+
+
+                indexed.ForEach(x => _innerList.RemoveAt(x.Index));
+
+                return _innerList.CaptureChanges();
+
+            }
+
+
+
+
+            return ProcessImpl(changes);
+	    }
+
+	    private IChangeSet<T> ProcessImpl(IChangeSet<T> changes)
 		{
             //TODO: Can this be optimised? Perhaps option of add to end then do inline sort
 

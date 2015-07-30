@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
@@ -22,7 +23,9 @@ namespace DynamicData.Tests.ListFixtures
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
             _sizeLimiter = _source.LimitSizeTo(10, _scheduler).Subscribe();
-            _results = _source.Connect().AsAggregator();
+            _results = _source.Connect()
+                .Sort(SortExpressionComparer<Person>.Ascending(p=>p.Name))
+                .AsAggregator();
         }
 
         [TearDown]
@@ -100,20 +103,20 @@ namespace DynamicData.Tests.ListFixtures
         }
 
 
-        [Test]
-        public void OnCompleteIsInvokedWhenSourceisDisposed()
-        {
-            bool completed = false;
+        //[Test]
+        //public void OnCompleteIsInvokedWhenSourceisDisposed()
+        //{
+        //    bool completed = false;
 
 
-            var subscriber = _source.LimitSizeTo(10)
-                .FinallySafe(() => completed = true)
-                .Subscribe();
+        //    var subscriber = _source.LimitSizeTo(10)
+        //        .FinallySafe(() => completed = true)
+        //        .Subscribe();
             
-            _source.Dispose();
-            _scheduler.Start();
-            Assert.IsTrue(completed, "Completed has not been called");
-        }
+        //    _source.Dispose();
+        //    _scheduler.Start();
+        //    Assert.IsTrue(completed, "Completed has not been called");
+        //}
 
 
     }
