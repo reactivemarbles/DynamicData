@@ -52,7 +52,7 @@ namespace DynamicData.Internal
 						}
 						else
 						{
-							change.Range.ForEach(Insert);
+                             ordered.ForEach(Insert);
 						}
 						break;
 					}
@@ -72,8 +72,14 @@ namespace DynamicData.Internal
 						break;
 					}
 					case ListChangeReason.RemoveRange:
-						{
-							change.Range.ForEach(Remove);
+				    {
+                        //match all indicies and call ToArray() as the original source will be changed
+				         var indexed = _innerList.IndexOfMany(change.Range)
+				            .OrderByDescending(x => x.Index)
+				            .ToArray();
+
+
+                            indexed.ForEach(x=>_innerList.RemoveAt(x.Index));
 							break;
 						}
 					case ListChangeReason.Clear:

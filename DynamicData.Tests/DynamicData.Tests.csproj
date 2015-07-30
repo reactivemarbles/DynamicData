@@ -113,7 +113,7 @@
     <Compile Include="CacheFixtures\QueryWhenChangedFixture.cs" />
     <Compile Include="CacheFixtures\SizeLimitFixture.cs" />
     <Compile Include="CacheFixtures\SortFixture.cs" />
-    <Compile Include="CacheFixtures\CacheOnDemandFixture.cs" />
+    <Compile Include="CacheFixtures\RefCountFixture.cs" />
     <Compile Include="CacheFixtures\ObservableToObservableChangeSetFixture.cs" />
     <Compile Include="CacheFixtures\TrueForAllFixture.cs" />
     <Compile Include="CacheFixtures\TrueForAnyFixture.cs" />
@@ -171,6 +171,7 @@
     <Compile Include="ListFixtures\TransformManyFixture.cs" />
     <Compile Include="ListFixtures\VirtualisationFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RandomStuff.cs" />
     <Compile Include="Utilities\SelectManyExtensions.cs" />
     <Compile Include="CacheFixtures\SourceCacheFixture.cs" />
     <Compile Include="Utilities\Timer.cs" />

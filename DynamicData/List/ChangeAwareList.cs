@@ -66,8 +66,8 @@ namespace DynamicData
 
         protected virtual void InsertItem(int index, T item)
 		{
-            //attempt to batch updates as it is much more efficient
-		    var last = Last;
+            //attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
+            var last = Last;
 
 		    if (last.HasValue && last.Value.Reason == ListChangeReason.Add)
 		    {
@@ -105,7 +105,15 @@ namespace DynamicData
                 else
                 {
                     var insertPosition = index - range.Index;
-                    range.Insert(Math.Min(insertPosition, range.Count), item);
+                    if (insertPosition < 0)
+                    {
+                        insertPosition = 0;
+                    }
+                    else if (insertPosition>=range.Count)
+                    {
+                        insertPosition = range.Count;
+                    }
+                    range.Insert(insertPosition, item);
 
                     if (index<range.Index)
                         range.SetStartingIndex(index);
@@ -125,7 +133,7 @@ namespace DynamicData
 		{
 			var item = _innerList[index];
 
-            //attempt to batch updates as it is much more efficient
+            //attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
             var last = Last;
             if (last.HasValue && last.Value.Reason == ListChangeReason.Remove)
             {
@@ -137,14 +145,11 @@ namespace DynamicData
                 {
                     _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { previousItem.Current, item }, index);
                 }
-               else if (index == previousItem.CurrentIndex )
+                else
                 {
-                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { item, previousItem.Current }, index);
-                }
-               else
-               {
                     _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
                 }
+
             }
             else if (last.HasValue && last.Value.Reason == ListChangeReason.RemoveRange)
             {

@@ -2,7 +2,6 @@ using System;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
-using System.Reactive;
 using System.Reactive.Linq;
 
 
