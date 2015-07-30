@@ -43,9 +43,8 @@ namespace DynamicData.Tests
 
         [Test]
         [Explicit]
-        public void UpdatingOneSourceOnlyProducesNoResults()
+        public void TakeUntilComplete()
         {
-
             var combined = new Subject<IObservable<string>>();
 
 
@@ -60,7 +59,7 @@ namespace DynamicData.Tests
             };
 
 
-            var sub = combined.SwitchFirst().Subscribe(x => Console.WriteLine(x));
+            var sub = combined.SwitchFirst().Subscribe(Console.WriteLine);
 
 
             var a = add("a");
@@ -73,10 +72,6 @@ namespace DynamicData.Tests
             var e = add("e");
             e.OnCompleted();
             var f = add("f");
-
-
-
-
         }
     }
 }

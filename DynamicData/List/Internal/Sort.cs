@@ -32,7 +32,9 @@ namespace DynamicData.Internal
 
 	    private IChangeSet<T> Process(IChangeSet<T> changes)
 	    {
-	        if (changes.TotalChanges == changes.Removes && changes.All(c => c.Reason != ListChangeReason.Clear))
+            //if all removes and not Clear, then more efficient to try clear range
+	        if (changes.TotalChanges == changes.Removes 
+                && changes.All(c => c.Reason != ListChangeReason.Clear))
 	        {
 
 	            var removed = changes.Unified().Select(u=>u.Current);
