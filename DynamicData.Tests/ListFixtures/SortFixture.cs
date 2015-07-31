@@ -96,5 +96,61 @@ namespace DynamicData.Tests.ListFixtures
 			var actualResult = _results.Data.Items;
 			CollectionAssert.AreEquivalent(expectedResult, actualResult);
 		}
-	}
+
+        [Test]
+        public void RemoveManyOrdered()
+        {
+            var people = _generator.Take(100).ToList();
+            _source.AddRange(people);
+
+
+            _source.RemoveMany(people.OrderBy(p=>p,_comparer).Skip(10).Take(90));
+
+            Assert.AreEqual(10, _results.Data.Count, "Should be 99 people in the cache");
+            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
+
+            var expectedResult = people.OrderBy(p => p, _comparer).Take(10);
+            var actualResult = _results.Data.Items;
+            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+        }
+
+        [Test]
+        public void RemoveManyReverseOrdered()
+        {
+            var people = _generator.Take(100).ToList();
+            _source.AddRange(people);
+
+
+            _source.RemoveMany(people.OrderByDescending(p => p, _comparer).Skip(10).Take(90));
+
+            Assert.AreEqual(10, _results.Data.Count, "Should be 99 people in the cache");
+            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
+
+            var expectedResult = people.OrderByDescending(p => p, _comparer).Take(10);
+            var actualResult = _results.Data.Items;
+            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+        }
+
+
+        [Test]
+        public void RemoveManyOdds()
+        {
+            var people = _generator.Take(100).ToList();
+            _source.AddRange(people);
+
+            var odd = people.Select((p, idx) => new { p, idx }).Where(x => x.idx % 2 == 1).Select(x => x.p).ToArray();
+
+            _source.RemoveMany(odd);
+
+            Assert.AreEqual(50, _results.Data.Count, "Should be 99 people in the cache");
+            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
+
+            var expectedResult = people.Except(odd).OrderByDescending(p => p, _comparer).ToArray();
+            var actualResult = _results.Data.Items;
+            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+        }
+    }
 }

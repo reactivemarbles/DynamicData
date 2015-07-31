@@ -83,7 +83,14 @@ namespace DynamicData
 		    source.Edit(list => list.Remove(item));
 		}
 
-	    /// <summary>
+        public static void RemoveMany<T>([NotNull] this ISourceList<T> source, IEnumerable<T> itemsToRemove)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list.RemoveMany(itemsToRemove));
+        }
+
+
+        /// <summary>
         /// Moves an item from the original to the destination index
         /// </summary>
         ///  <param name="source">The source.</param>
@@ -124,14 +131,15 @@ namespace DynamicData
 	    }
 
 
-	    /// <summary>
-		/// Replaces the specified original with the destinaton object
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="original">The original.</param>
-		/// <param name="destination">The destination.</param>
-		public static void Replace<T>([NotNull] this ISourceList<T> source, T original, T destination)
+
+        /// <summary>
+        /// Replaces the specified original with the destinaton object
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="original">The original.</param>
+        /// <param name="destination">The destination.</param>
+        public static void Replace<T>([NotNull] this ISourceList<T> source, T original, T destination)
 	    {
 	        if (source == null) throw new ArgumentNullException(nameof(source));
 	        source.Edit(list => list.Replace(original, destination));

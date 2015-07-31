@@ -33,11 +33,9 @@ namespace DynamicData.Internal
 	    private IChangeSet<T> Process(IChangeSet<T> changes)
 	    {
             //if all removes and not Clear, then more efficient to try clear range
-	        if (changes.TotalChanges == changes.Removes 
-                && changes.All(c => c.Reason != ListChangeReason.Clear))
+	        if (changes.TotalChanges == changes.Removes  && changes.All(c => c.Reason != ListChangeReason.Clear) && changes.Removes>1)
 	        {
-
-	            var removed = changes.Unified().Select(u=>u.Current);
+                   var removed = changes.Unified().Select(u=>u.Current);
 
                 //match all indicies and call ToArray() as the original source will be changed
                 var indexed = _innerList.IndexOfMany(removed)
@@ -50,9 +48,6 @@ namespace DynamicData.Internal
                 return _innerList.CaptureChanges();
 
             }
-
-
-
 
             return ProcessImpl(changes);
 	    }

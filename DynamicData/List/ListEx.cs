@@ -234,6 +234,27 @@ namespace DynamicData
 
 		}
 
+        /// <summary>
+        /// Removes the many items from a collection in an optimal way
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="itemsToRemove">The items to remove.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static void RemoveMany<T>(this IList<T> source, [NotNull] IEnumerable<T> itemsToRemove)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (itemsToRemove == null) throw new ArgumentNullException(nameof(itemsToRemove));
+
+            //match all indicies and call ToArray() as the original source will be changed
+            var indexed = source.IndexOfMany(itemsToRemove)
+               .OrderByDescending(x => x.Index)
+               .ToArray();
+
+
+            indexed.ForEach(x => source.RemoveAt(x.Index));
+        }
 
         /// <summary>
         /// Removes the number of items, starting at the specified index

@@ -145,6 +145,11 @@ namespace DynamicData
                 {
                     _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { previousItem.Current, item }, index);
                 }
+
+                else if (index == previousItem.CurrentIndex -1)
+                {
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] {  previousItem.Current, item }, index);
+                }
                 else
                 {
                     _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
@@ -164,7 +169,7 @@ namespace DynamicData
                 else if (range.Index== index+1)
                 {
                     //removed in reverse order
-                    range.Add(item);
+                    range.Insert(0,item);
                     range.SetStartingIndex(index);
                 }
                 else
