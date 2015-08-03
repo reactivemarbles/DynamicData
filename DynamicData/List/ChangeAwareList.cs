@@ -141,7 +141,7 @@ namespace DynamicData
                 var firstOfBatch = _changes.Count - 1;
                 var previousItem = last.Value.Item;
 
-                if (index == previousItem.CurrentIndex + 1)
+                if (index == previousItem.CurrentIndex)
                 {
                     _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { previousItem.Current, item }, index);
                 }
