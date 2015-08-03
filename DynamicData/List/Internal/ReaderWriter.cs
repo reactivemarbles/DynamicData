@@ -59,14 +59,6 @@ namespace DynamicData.Internal
 				}
 				return result;
 			}
-
-		}
-		public Optional<ItemWithIndex<T>> Lookup(T item, IEqualityComparer<T> equalityComparer=null)
-		{
-			lock (_locker)
-			{
-				return _data.FindItemAndIndex(item, equalityComparer);
-			}
 		}
 
 		public int Count => _data.Count;

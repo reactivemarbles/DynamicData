@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -2410,6 +2411,28 @@ namespace DynamicData
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             var updater = new ObservableCollectionAdaptor<TObject, TKey>();
             return source.Bind(destination, updater);
+        }
+
+        /// <summary>
+        /// Binds the results to the specified readonly observable collection collection using the default update algorithm
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+        /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            var target = new ObservableCollectionExtended<TObject>();
+            var result = new ReadOnlyObservableCollection<TObject>(target);
+            var updater = new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
+            readOnlyObservableCollection = result;
+            return source.Bind(target, updater);
         }
 
 

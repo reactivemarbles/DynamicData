@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,7 +16,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
     /// <summary>
-	/// Extenssions for ObservableList
+	/// Extensions for ObservableList
 	/// </summary>
 	public static class ObservableListEx
 	{
@@ -91,19 +92,41 @@ namespace DynamicData
 			return source.Adapt(adaptor);
 		}
 
-		/// <summary>
-		/// Injects a side effect into a changeset observable
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="adaptor">The adaptor.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// adaptor
-		/// </exception>
-		public static IObservable<IChangeSet<T>> Adapt<T>([NotNull] this IObservable<IChangeSet<T>> source,[NotNull] IChangeSetAdaptor<T> adaptor)
+        /// <summary>
+        /// Creates a binding to a readonly observable collection which is specified as an 'out' parameter
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+        /// <param name="resetThreshold">The reset threshold.</param>
+        /// <returns>A continuation of the source stream</returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
+                out ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = 25)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            var target = new ObservableCollectionExtended<T>();
+            var result = new ReadOnlyObservableCollection<T>(target);
+            var adaptor = new ObservableCollectionAdaptor<T>(target, resetThreshold);
+            readOnlyObservableCollection = result;
+            return source.Adapt(adaptor);
+        }
+
+        /// <summary>
+        /// Injects a side effect into a changeset observable
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="adaptor">The adaptor.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// adaptor
+        /// </exception>
+        public static IObservable<IChangeSet<T>> Adapt<T>([NotNull] this IObservable<IChangeSet<T>> source,[NotNull] IChangeSetAdaptor<T> adaptor)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (adaptor == null) throw new ArgumentNullException(nameof(adaptor));
@@ -169,41 +192,14 @@ namespace DynamicData
         /// <summary>
         /// List equivalent to Publish().RefCount().  The source is cached so long as there is at least 1 subscriber.
         /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<TObject>> RefCount<TObject>([NotNull] this IObservable<IChangeSet<TObject>> source)
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<T>> RefCount<T>([NotNull] this IObservable<IChangeSet<T>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-
-            int refCount = 0;
-            var locker = new object();
-            IObservableList<TObject> list = null;
-
-            return Observable.Create<IChangeSet<TObject>>(observer =>
-            {
-                lock (locker)
-                {
-                    refCount++;
-                    if (refCount == 1)
-
-                        list = source.AsObservableList();
-                    // ReSharper disable once PossibleNullReferenceException (never the case!)
-                    var subscriber = list.Connect().SubscribeSafe(observer);
-
-                    return Disposable.Create(() =>
-                    {
-                        lock (locker)
-                        {
-                            refCount--;
-                            subscriber.Dispose();
-                            if (refCount != 0) return;
-                            list.Dispose();
-                            list = null;
-                        }
-                    });
-                }
-            });
+            return new RefCount<T>(source).Run();
         }
 
 

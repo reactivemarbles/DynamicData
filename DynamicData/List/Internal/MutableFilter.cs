@@ -11,9 +11,6 @@ namespace DynamicData.Internal
 {
     //TODO: Implement seperate ClearAndReplace and CalculateDiffSet filters??
 
-
-
-
     internal class MutableFilter<T>
 	{
 		private readonly List<ItemWithMatch> _allWithMatch = new List<ItemWithMatch>();
@@ -39,11 +36,12 @@ namespace DynamicData.Internal
 			return Observable.Create<IChangeSet<T>>(observer =>
 			{
 				var locker = new object();
-				var requery = _controller.FilterChanged.Synchronize(locker);
-				var reevaluate = _controller.EvaluateChanged.Synchronize(locker);
+				var requery = _controller.FilterChanged;
+				var reevaluate = _controller.EvaluateChanged;
 
 				//requery wehn controller either fires changed or requery event
 				var refresher = requery.Merge(reevaluate)
+                    .Synchronize(locker)
 					.Select(predicate =>
 					{
 						Requery(predicate);
@@ -113,16 +111,11 @@ namespace DynamicData.Internal
 			}).ToList();
 
 			//reflect items which are no longer matched
-			//TODO:can we determine whether removes are remove all? i.e. Then we can send a 'Clear' reason message (or Remove range?)
-			var noLongerMatched = newState.Where(state => !state.IsMatch && state.WasMatch).Select(state => state.Item);
-			noLongerMatched.ForEach(state =>
-			{
-				_filtered.Remove(state.Item);
-			});
+			var noLongerMatched = newState.Where(state => !state.IsMatch && state.WasMatch).Select(state => state.Item.Item);
+            _filtered.RemoveMany(noLongerMatched);
 
-
-			//reflect new matches in the list
-			var newMatched = newState.Where(state => state.IsMatch && !state.WasMatch).Select(state => state.Item.Item);
+            //reflect new matches in the list
+            var newMatched = newState.Where(state => state.IsMatch && !state.WasMatch).Select(state => state.Item.Item);
 			_filtered.AddRange(newMatched);
 		}
 

@@ -98,8 +98,7 @@ namespace DynamicData
 
 					case ListChangeReason.RemoveRange:
 						{
-							//can this be optimised? should we check whether it was a match?
-							item.Range.ForEach(t=> source.Remove(t));
+                            source.RemoveMany(item.Range);
 						}
 						break;
 

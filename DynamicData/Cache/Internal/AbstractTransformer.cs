@@ -123,48 +123,30 @@ namespace DynamicData.Internal
 
         protected struct TransformedItem
         {
-            private readonly Optional<Exception> _error;
-            private readonly Optional<TKey> _key;
-            private readonly Optional<TDestination> _destination;
-
-            private readonly Change<TSource, TKey> _change;
-
             public TransformedItem(TKey key, Optional<TDestination> transformed, Change<TSource, TKey> change)
             {
-                _key = key;
-                _destination = transformed;
-                _change = change;
-                _error = Optional.None<Exception>();
+                Key = key;
+                Transformed = transformed;
+                Change = change;
+                Error = Optional.None<Exception>();
             }
 
 
             public TransformedItem(Exception exception, Change<TSource, TKey> change)
             {
-                _key = Optional.None<TKey>();
-                _destination = Optional.None<TDestination>();
-                _change = change;
-                _error = exception;
+                Key = Optional.None<TKey>();
+                Transformed = Optional.None<TDestination>();
+                Change = change;
+                Error = exception;
             }
 
-            public Optional<TDestination> Transformed
-            {
-                get { return _destination; }
-            }
+            public Optional<TDestination> Transformed { get; }
 
-            public Optional<TKey> Key
-            {
-                get { return _key; }
-            }
+            public Optional<TKey> Key { get; }
 
-            public Change<TSource, TKey> Change
-            {
-                get { return _change; }
-            }
+            public Change<TSource, TKey> Change { get; }
 
-            public Optional<Exception> Error
-            {
-                get { return _error; }
-            }
+            public Optional<Exception> Error { get; }
         }
 
     }

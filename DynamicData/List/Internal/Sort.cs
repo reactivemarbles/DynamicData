@@ -25,8 +25,6 @@ namespace DynamicData.Internal
 
 		public IObservable<IChangeSet<T>> Run()
 		{
-
-
 			return _source.Select(Process);
 		}
 
@@ -35,30 +33,18 @@ namespace DynamicData.Internal
             //if all removes and not Clear, then more efficient to try clear range
 	        if (changes.TotalChanges == changes.Removes  && changes.All(c => c.Reason != ListChangeReason.Clear) && changes.Removes>1)
 	        {
-                   var removed = changes.Unified().Select(u=>u.Current);
-
-                //match all indicies and call ToArray() as the original source will be changed
-                var indexed = _innerList.IndexOfMany(removed)
-                   .OrderByDescending(x => x.Index)
-                   .ToArray();
-
-
-                indexed.ForEach(x => _innerList.RemoveAt(x.Index));
-
+                 var removed = changes.Unified().Select(u=>u.Current);
+                _innerList.RemoveMany(removed);
                 return _innerList.CaptureChanges();
 
             }
-
             return ProcessImpl(changes);
 	    }
 
 	    private IChangeSet<T> ProcessImpl(IChangeSet<T> changes)
 		{
-            //TODO: Can this be optimised? Perhaps option of add to end then do inline sort
-
             changes.ForEach(change =>
 			{
-
 				switch (change.Reason)
 				{
 					case ListChangeReason.Add:
@@ -97,15 +83,9 @@ namespace DynamicData.Internal
 					}
 					case ListChangeReason.RemoveRange:
 				    {
-                        //match all indicies and call ToArray() as the original source will be changed
-				         var indexed = _innerList.IndexOfMany(change.Range)
-				            .OrderByDescending(x => x.Index)
-				            .ToArray();
-
-
-                            indexed.ForEach(x=>_innerList.RemoveAt(x.Index));
-							break;
-						}
+                        _innerList.RemoveMany(change.Range);
+						break;
+					}
 					case ListChangeReason.Clear:
 					{
 						_innerList.Clear();

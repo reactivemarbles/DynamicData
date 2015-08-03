@@ -247,13 +247,10 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (itemsToRemove == null) throw new ArgumentNullException(nameof(itemsToRemove));
 
-            //match all indicies and call ToArray() as the original source will be changed
-            var indexed = source.IndexOfMany(itemsToRemove)
-               .OrderByDescending(x => x.Index)
-               .ToArray();
-
-
-            indexed.ForEach(x => source.RemoveAt(x.Index));
+            //match all indicies and and remove in reverse as it is more efficient
+            source.IndexOfMany(itemsToRemove)
+              .OrderByDescending(x => x.Index)
+              .ForEach(x => source.RemoveAt(x.Index));
         }
 
         /// <summary>

@@ -151,6 +151,7 @@
     <Compile Include="ListFixtures\BufferFixture.cs" />
     <Compile Include="ListFixtures\BatchIfFixture.cs" />
     <Compile Include="ListFixtures\BatchIfWithTimeOutFixture.cs" />
+    <Compile Include="ListFixtures\ChangeAwareListFixture.cs" />
     <Compile Include="ListFixtures\DeferUntilLoadedFixture.cs" />
     <Compile Include="ListFixtures\DisposeManyFixture.cs" />
     <Compile Include="ListFixtures\DistinctValuesFixture.cs" />
