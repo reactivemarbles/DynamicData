@@ -70,7 +70,15 @@ namespace DynamicData.Binding
 									        var clearedChangeSet = new ChangeSet<T>() {cleared};
 											 return clearedChangeSet.Concat(initialChangeSet());
 								        }
-								        default:
+
+                                        case NotifyCollectionChangedAction.Move:
+							            {
+							                var item = changes.NewItems.OfType<T>().First();
+							                var change = new Change<T>(item, changes.NewStartingIndex, changes.OldStartingIndex);
+							                return new[] {change};
+							            }
+
+							            default:
 									        return null;
 							        }
 						        })
@@ -97,8 +105,8 @@ namespace DynamicData.Binding
         /// keySelector</exception>
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this  ObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (

@@ -1,8 +1,6 @@
 ﻿
 using System;
 using System.Linq;
-using System.Reactive.Linq;
-using System.Threading;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;

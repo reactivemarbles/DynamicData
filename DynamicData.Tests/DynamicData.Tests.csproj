@@ -80,7 +80,7 @@
     <Compile Include="Binding\BindFromObservaleListFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
-    <Compile Include="Binding\ObservableCollectionToObservableListFixture.cs" />
+    <Compile Include="Binding\ObservableCollectionToListFixture.cs" />
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />

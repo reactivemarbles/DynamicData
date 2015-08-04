@@ -216,15 +216,15 @@ namespace DynamicData
 				}
 
 			}
-			else if (source is ChangeAwareList<T>)
+			else if (source is IExtendedList<T>)
 			{
 				if (index >= 0)
 				{
-					((ChangeAwareList<T>)source).InsertRange(items, index);
+					((IExtendedList<T>)source).InsertRange(items, index);
 				}
 				else
 				{
-					((ChangeAwareList<T>)source).AddRange(items);
+					((IExtendedList<T>)source).AddRange(items);
 				}
 			}
 			else

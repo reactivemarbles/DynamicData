@@ -1236,6 +1236,25 @@ namespace DynamicData
 
         #region Auto removal
 
+        /// <summary>
+        /// Automatically removes items from the stream after the time specified by
+        /// the timeSelector elapses.  Return null if the item should never be removed
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="timeSelector">The time selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// timeSelector
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, TimeSpan?> timeSelector)
+        {
+            return ExpireAfter<TObject, TKey>(source, timeSelector, Scheduler.Default);
+        }
 
         /// <summary>
         /// Automatically removes items from the stream after the time specified by
@@ -1253,7 +1272,7 @@ namespace DynamicData
         /// timeSelector
         /// </exception>
         public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-               Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler = null)
+               Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
@@ -1280,7 +1299,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval)
         {
-            return ExpireAfter(source, timeSelector, pollingInterval, null);
+            return ExpireAfter(source, timeSelector, pollingInterval, Scheduler.Default);
         }
 
         /// <summary>
@@ -2413,6 +2432,7 @@ namespace DynamicData
             return source.Bind(destination, updater);
         }
 
+
         /// <summary>
         /// Binds the results to the specified readonly observable collection collection using the default update algorithm
         /// </summary>
@@ -2423,7 +2443,7 @@ namespace DynamicData
         /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+        public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
             out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2498,6 +2518,29 @@ namespace DynamicData
             return source.Do(changes => updater.Adapt(changes, destination));
         }
 
+
+
+        /// <summary>
+        /// Binds the results to the specified readonly observable collection collection using the default update algorithm
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+        /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            var target = new ObservableCollectionExtended<TObject>();
+            var result = new ReadOnlyObservableCollection<TObject>(target);
+            var updater = new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
+            readOnlyObservableCollection = result;
+            return source.Bind(target, updater);
+        }
 
         #endregion
 

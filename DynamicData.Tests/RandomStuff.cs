@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
@@ -33,6 +34,34 @@ namespace DynamicData.Tests
             }
             );
         }
+        //By Dorus on Gitter
+        public static IObservable<TSource> DoFirst<TSource>(this IObservable<TSource> source, int n, Action<TSource> action)
+        {
+            return Observable.Create<TSource>(o => {
+                var pub = source.Publish();
+                return new CompositeDisposable(
+                    pub.Take(n).Subscribe(action),
+                    pub.Subscribe(o),
+                    pub.Connect());
+            }
+            );
+        }
+
+        //By Dorus on Gitter
+        public static IObservable<TSource> Amb<TSource>(this IObservable<IObservable<TSource>> source)
+        {
+            return Observable.Create<TSource>(o => {
+                int first = -1;
+                return source.TakeWhile(_ => first == -1)
+                    .Select((el, c) => el
+                        .DoFirst(1, _ => Interlocked.CompareExchange(ref first, c, -1))
+                        .TakeWhile(_ => first == c))
+                        .Merge().Subscribe(o);
+            }
+            );
+        }
+
+
     }
 
     [TestFixture]

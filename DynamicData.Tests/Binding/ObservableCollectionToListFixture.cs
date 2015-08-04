@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Binding
 {
 	[TestFixture]
-	public class ObservableCollectionToObservableListFixture
+	public class ObservableCollectionToListFixture
 	{
 		
 		private TestObservableCollection<Person> _collection;
@@ -31,6 +31,19 @@ namespace DynamicData.Tests.Binding
 		{
 			_results.Dispose();
 		}
+
+        [Test]
+        public void Move()
+	    {
+	        var source = new ObservableCollection<int>();
+            var result = source.ToObservableChangeSet().AsObservableList();
+            source.AddRange(Enumerable.Range(1,10));
+
+            Assert.AreEqual(source.ToArray(),result.Items);
+            source.Move(5,8);
+            Assert.AreEqual(source.ToArray(), result.Items);
+        }
+
 
 		[Test]
 		public void AddInvokesAnAddChange()
