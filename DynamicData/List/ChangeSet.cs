@@ -54,24 +54,6 @@ namespace DynamicData
 		}
 
 		/// <summary>
-		/// Adds the specified items.
-		/// </summary>
-		/// <param name="items">The items.</param>
-		/// <exception cref="System.ArgumentNullException">items</exception>
-		public void AddRange([NotNull] IEnumerable<Change<T>> items)
-		{
-			if (items == null) throw new ArgumentNullException(nameof(items));
-			var enumerable = items as ICollection<Change<T>> ?? items.ToList();
-			Items.AddRange(enumerable);
-
-			Items.ForEach(t =>
-			{
-				Add(t, true);
-			});
-
-		}
-
-		/// <summary>
 		/// Adds the specified item.
 		/// </summary>
 		/// <param name="item">The item.</param>
@@ -119,21 +101,6 @@ namespace DynamicData
 			get { return Items.Capacity; }
 			set { Items.Capacity = value; }
 		}
-
-        /// <summary>
-        /// Gets or sets the <see cref="Change{T}"/> at the specified index.
-        /// </summary>
-        /// <value>
-        /// The <see cref="Change{T}"/>.
-        /// </value>
-        /// <param name="index">The index.</param>
-        /// <returns></returns>
-        public Change<T> this[int index]
-	    {
-	        get { return Items[index]; }
-            set { Items[index] = value; }
-	    }
-
 
         private List<Change<T>> Items { get; } = new List<Change<T>>();
 
