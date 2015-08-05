@@ -276,7 +276,7 @@ namespace DynamicData
 						    }
 						    else
 						    {
-                                item.Range.ForEach(t=> source.Remove(t));
+                                source.RemoveMany(item.Range);
                             }
 						}
 							break;

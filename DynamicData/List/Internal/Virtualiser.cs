@@ -59,10 +59,11 @@ namespace DynamicData.Internal
                 .Take(_parameters.Size)
                 .ToList();
             
-            var adds = current.Except(previous).ToArray();
-            var removes = previous.Except(current).ToArray();
+            var adds = current.Except(previous);
+            var removes = previous.Except(current);
 
-            removes.ForEach(t=> { _virtualised.Remove(t); });
+            _virtualised.RemoveMany(removes);
+
             adds.ForEach(t =>
             {
                 var index = current.IndexOf(t);
@@ -84,7 +85,7 @@ namespace DynamicData.Internal
             }
 
 
-            //find updates
+            //find replaces [Is this ever the case that it can be reached]
             for (var i = 0; i < current.Count; i++)
             {
                 var currentItem = current[i];

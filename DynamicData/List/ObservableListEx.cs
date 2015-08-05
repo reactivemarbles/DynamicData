@@ -820,15 +820,7 @@ namespace DynamicData
             var locker = new object();
             var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? Scheduler.Default, locker);
 
-            //NB: only expired items are reported so no need to check whether type if removed
-            //+ report expired items only
-            return limiter.Run()
-                    .Synchronize(locker)
-                    .Do(toExpire=> source.Edit(list =>
-                            {
-                                //maintain original list
-                                toExpire.ForEach(t => list.Remove(t));
-                            }));
+            return limiter.Run().Synchronize(locker).Do(source.RemoveMany);
         }
 
         /// <summary>
@@ -865,15 +857,7 @@ namespace DynamicData
             var locker = new object();
             var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? Scheduler.Default, locker);
             
-            return limiter.Run()
-                            .Synchronize(locker)
-                            .Do(toExpire => {
-                                source.Edit(innerList =>
-                                {
-                                    //maintain original list
-                                    toExpire.ForEach(t => innerList.Remove(t));
-                                });
-                            });
+            return limiter.Run().Synchronize(locker).Do(source.RemoveMany);
         }
 
         #endregion
