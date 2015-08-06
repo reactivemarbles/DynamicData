@@ -24,8 +24,11 @@ namespace DynamicData
         #region Conversion
 
         /// <summary>
-        /// Adds a key to each item,  which enables all caching features of dynamic data
+        /// Removes the key which enables all observable cache features of dynamic data
         /// </summary>
+        /// <remarks>
+        /// All indexed changes are dropped i.e. sorting is not supported by this function
+        /// </remarks>
         /// <typeparam name="TObject">The type of  object.</typeparam>
         /// <typeparam name="TKey">The type of  key.</typeparam>
         /// <param name="source">The source.</param>
@@ -33,13 +36,13 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<IChangeSet<TObject, TKey>> WithKey<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject,TKey> keySelector )
+        public static IObservable<IChangeSet<TObject, TKey>> AddKey<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject,TKey> keySelector )
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             return source.Select(changes =>
             {
-                var enumerator = new ListChangeToKeyedChangeEnumerator<TObject, TKey>(changes, keySelector);
+                var enumerator = new AddKeyEnumerator<TObject, TKey>(changes, keySelector);
                 return new ChangeSet<TObject, TKey>(enumerator);
             });
         }

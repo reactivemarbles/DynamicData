@@ -23,7 +23,7 @@ namespace DynamicData
     /// <summary>
     /// Extensions for dynamic data
     /// </summary>
-    public static class DynamicDataEx
+    public  static  class DynamicDataEx
     {
 
 		#region General
@@ -602,6 +602,27 @@ namespace DynamicData
 
         #region Conversion
 
+        /// <summary>
+        /// Removes the key which enables all observable list features of dynamic data
+        /// </summary>
+        /// <remarks>
+        /// All indexed changes are dropped i.e. sorting is not supported by this function
+        /// </remarks>
+        /// <typeparam name="TObject">The type of  object.</typeparam>
+        /// <typeparam name="TKey">The type of  key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TObject>> RemoveKey<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return source.Select(changes =>
+            {
+                var enumerator = new RemoveKeyEnumerator<TObject, TKey>(changes);
+                return new ChangeSet<TObject>(enumerator);
+            });
+        }
 
         /// <summary>
         /// Changes the primary key.

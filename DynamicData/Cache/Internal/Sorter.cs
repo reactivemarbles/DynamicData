@@ -110,7 +110,7 @@ namespace DynamicData.Internal
                 sortReason = SortReason.Reset;
             }
 
-            //TODO: Create a sorted cache
+            //TODO: Create a sorted cache (could create an sorted observable list perhaps?)
             IChangeSet<TObject, TKey> changeSet;
             switch (sortReason)
             {

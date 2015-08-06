@@ -3,14 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using DynamicData.Annotations;
 
-namespace DynamicData
+namespace DynamicData.Internal
 {
-    internal class ListChangeToKeyedChangeEnumerator<TObject, TKey>: IEnumerable<Change<TObject, TKey>>
+    internal class AddKeyEnumerator<TObject, TKey>: IEnumerable<Change<TObject, TKey>>
     {
         private readonly IChangeSet<TObject> _source;
         private readonly Func<TObject, TKey> _keySelector;
 
-        public ListChangeToKeyedChangeEnumerator([NotNull] IChangeSet<TObject> source,
+        public AddKeyEnumerator([NotNull] IChangeSet<TObject> source,
             [NotNull] Func<TObject,TKey> keySelector)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

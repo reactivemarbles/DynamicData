@@ -116,18 +116,18 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.IsTrue(completed, "Completed has not been called");
         }
 
-        [Test]
-        public void OnCompleteIsInvokedWhenStreamIsDisposed()
-        {
-            bool completed = false;
+        //[Test]
+        //public void OnCompleteIsInvokedWhenStreamIsDisposed()
+        //{
+        //    bool completed = false;
 
-            var subscriber = _source.LimitSizeTo(10)
-                .Subscribe(updates => { Console.WriteLine(); }, () => completed = true);
+        //    var subscriber = _source.LimitSizeTo(10)
+        //        .Subscribe(updates => { Console.WriteLine(); }, () => completed = true);
 
-            _source.Dispose();
+        //    _source.Dispose();
 
-            Assert.IsTrue(completed, "Completed has not been called");
-        }
+        //    Assert.IsTrue(completed, "Completed has not been called");
+        //}
 
     }
 }

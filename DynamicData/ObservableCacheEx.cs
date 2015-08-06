@@ -15,8 +15,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
-
+    
     /// <summary>
     /// The entry point for the dynamic data sub system
     /// </summary>
@@ -171,8 +170,8 @@ namespace DynamicData
         /// </exception>
         public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> detination)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (detination == null) throw new ArgumentNullException("detination");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (detination == null) throw new ArgumentNullException(nameof(detination));
 
             return source.Subscribe(changes => detination.BatchUpdate(updater => updater.Update(changes)));
         }
@@ -190,8 +189,8 @@ namespace DynamicData
         /// detination</exception>
         public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> detination)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (detination == null) throw new ArgumentNullException("detination");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (detination == null) throw new ArgumentNullException(nameof(detination));
 
             return source.Subscribe(changes => detination.BatchUpdate(updater => updater.Update(changes)));
         }
@@ -212,7 +211,7 @@ namespace DynamicData
         /// </exception>
         public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<IEnumerable<TObject>> observable)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return observable.Subscribe(source.AddOrUpdate);
         }
         /// <summary>
@@ -230,7 +229,7 @@ namespace DynamicData
         /// </exception>
         public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<TObject> observable)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return observable.Subscribe(source.AddOrUpdate);
         }
 
