@@ -25,7 +25,7 @@ namespace DynamicData.Controllers
         /// </summary>
         public PageController(IPageRequest request)
         {
-            if (request == null) throw new ArgumentNullException("request");
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
             OnNext(request);
         }
@@ -37,7 +37,7 @@ namespace DynamicData.Controllers
         /// <exception cref="System.ArgumentNullException">request</exception>
         public void Change(IPageRequest request)
         {
-            if (request == null) throw new ArgumentNullException("request");
+            if (request == null) throw new ArgumentNullException(nameof(request));
             OnNext(request);
         }
 

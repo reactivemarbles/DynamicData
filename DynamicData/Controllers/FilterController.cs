@@ -67,7 +67,7 @@ namespace DynamicData.Controllers
         /// <param name="itemSelector">The item selector.</param>
         public void Reevaluate(Func<T, bool> itemSelector)
         {
-            if (itemSelector == null) throw new ArgumentNullException("itemSelector");
+            if (itemSelector == null) throw new ArgumentNullException(nameof(itemSelector));
             _reevaluteSubject.OnNext(itemSelector);
         }
 

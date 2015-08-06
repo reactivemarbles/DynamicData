@@ -250,6 +250,7 @@ namespace DynamicData
             //match all indicies and and remove in reverse as it is more efficient
             source.IndexOfMany(itemsToRemove)
               .OrderByDescending(x => x.Index)
+              .ToArray()
               .ForEach(x => source.RemoveAt(x.Index));
         }
 

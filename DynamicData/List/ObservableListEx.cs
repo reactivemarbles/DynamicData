@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
+using DynamicData.Operators;
 
 namespace DynamicData
 {
@@ -225,7 +226,7 @@ namespace DynamicData
 		}
 
         /// <summary>
-        /// Filters the specified filter controller.
+        /// Filters source using the specified filter controller.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
@@ -235,27 +236,55 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// filterController</exception>
-        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, FilterController<T> filterController, FilterPolicy filterPolicy= FilterPolicy.ClearAndReplace)
+        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, 
+            FilterController<T> filterController, 
+            FilterPolicy filterPolicy= FilterPolicy.ClearAndReplace)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-			return new MutableFilter<T>(source, filterController, filterPolicy).Run();
+
+           
+            var predicates = filterController
+                .EvaluateChanged
+                .Merge(filterController.FilterChanged);
+            return source.Filter(predicates, filterPolicy);
 		}
 
-		/// <summary>
-		/// Sorts the sequence using the specified comparer.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="comparer">The comparer.</param>
-		/// <param name="options">The options.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// comparer
-		/// </exception>
-		public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions options=SortOptions.None)
+        /// <summary>
+        /// Filters source using the specified filter observable predicate.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="filterPolicy">The filter policy.</param>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// filterController</exception>
+        public static IObservable<IChangeSet<T>> Filter<T>([NotNull]  this IObservable<IChangeSet<T>> source,
+            [NotNull] IObservable<Func<T,bool>> predicate,
+            FilterPolicy filterPolicy = FilterPolicy.ClearAndReplace)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            return new MutableFilter<T>(source, predicate, filterPolicy).Run();
+        }
+
+        /// <summary>
+        /// Sorts the sequence using the specified comparer.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="comparer">The comparer.</param>
+        /// <param name="options">The options.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// comparer
+        /// </exception>
+        public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions options=SortOptions.None)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (comparer == null) throw new ArgumentNullException(nameof(comparer));
@@ -759,7 +788,21 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (virtualisingController == null) throw new ArgumentNullException(nameof(virtualisingController));
-            return new Virtualiser<T>(source, virtualisingController).Run();
+            return source.Virtualise(virtualisingController.Changed);
+        }
+
+        /// <summary>
+        /// Virtualises the source using parameters provided via the requests observable
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="requests">The requests.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] IObservable<IVirtualRequest> requests)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (requests == null) throw new ArgumentNullException(nameof(requests));
+            return new Virtualiser<T>(source, requests).Run();
         }
 
         /// <summary>
@@ -788,15 +831,30 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="pageController">The page controller.</param>
         /// <returns></returns>
+       
         public static IObservable<IChangeSet<T>> Page<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] PageController pageController)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (pageController == null) throw new ArgumentNullException(nameof(pageController));
-            return new Pager<T>(source, pageController).Run();
+            return source.Page(pageController.Changed);
+        }
+
+        /// <summary>
+        /// Applies paging to the the data source
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="requests">Observable to control page requests</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Page<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] IObservable<IPageRequest>  requests)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (requests == null) throw new ArgumentNullException(nameof(requests));
+            return new Pager<T>(source, requests).Run();
         }
 
         #endregion
-        
+
         #region Expiry / size limiter
 
         /// <summary>

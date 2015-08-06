@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
@@ -16,18 +17,23 @@ namespace DynamicData.Internal
 		private readonly List<ItemWithMatch> _allWithMatch = new List<ItemWithMatch>();
         private readonly List<T> _all = new List<T>();
         private readonly ChangeAwareList<T> _filtered = new ChangeAwareList<T>();
-		private readonly IObservable<IChangeSet<T>> _source;
-		private readonly FilterController<T> _controller;
+
+
 	    private readonly FilterPolicy _filterPolicy;
+        private readonly IObservable<IChangeSet<T>> _source;
+        private readonly IObservable<Func<T, bool>> _predicates;
 
-	    private  Func<T, bool> _predicate=t=>false;
 
-		public MutableFilter([NotNull] IObservable<IChangeSet<T>> source, [NotNull] FilterController<T> controller, FilterPolicy filterPolicy= FilterPolicy.ClearAndReplace)
+        private Func<T, bool> _predicate=t=>false;
+
+		public MutableFilter([NotNull] IObservable<IChangeSet<T>> source, 
+            [NotNull] IObservable<Func<T, bool>> predicates,
+            FilterPolicy filterPolicy= FilterPolicy.ClearAndReplace)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (controller == null) throw new ArgumentNullException(nameof(controller));
+			if (predicates == null) throw new ArgumentNullException(nameof(predicates));
 			_source = source;
-			_controller = controller;
+            _predicates = predicates;
 		    _filterPolicy = filterPolicy;
 		}
 		
@@ -36,12 +42,10 @@ namespace DynamicData.Internal
 			return Observable.Create<IChangeSet<T>>(observer =>
 			{
 				var locker = new object();
-				var requery = _controller.FilterChanged;
-				var reevaluate = _controller.EvaluateChanged;
+
 
 				//requery wehn controller either fires changed or requery event
-				var refresher = requery.Merge(reevaluate)
-                    .Synchronize(locker)
+				var refresher = _predicates.Synchronize(locker)
 					.Select(predicate =>
 					{
 						Requery(predicate);

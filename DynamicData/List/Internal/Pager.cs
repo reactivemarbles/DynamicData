@@ -12,24 +12,24 @@ namespace DynamicData.Internal
     internal class Pager<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
-        private readonly PageController _controller;
+        private readonly IObservable<IPageRequest> _requests;
         private readonly List<T> _all = new List<T>();
         private readonly ChangeAwareList<T> _paged = new ChangeAwareList<T>();
 
         private IPageRequest _parameters = new PageRequest(0, 25);
 
-        public Pager([NotNull] IObservable<IChangeSet<T>> source, [NotNull] PageController controller)
+        public Pager([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IPageRequest> requests)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (controller == null) throw new ArgumentNullException(nameof(controller));
+            if (requests == null) throw new ArgumentNullException(nameof(requests));
             _source = source;
-            _controller = controller;
+            _requests = requests;
         }
 
         public IObservable<IChangeSet<T>> Run()
         {
             var locker = new object();
-            var request = _controller.Changed
+            var request = _requests
                 .Synchronize(locker)
                 .Select(Page);
 

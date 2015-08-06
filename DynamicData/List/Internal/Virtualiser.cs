@@ -11,24 +11,24 @@ namespace DynamicData.Internal
     internal class Virtualiser<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
-        private readonly VirtualisingController _controller;
+        private readonly IObservable<IVirtualRequest> _requests;
         private readonly List<T> _all = new List<T>();
         private readonly ChangeAwareList<T> _virtualised = new ChangeAwareList<T>();
 
         private IVirtualRequest _parameters = new VirtualRequest(0,25);
 
-        public Virtualiser([NotNull] IObservable<IChangeSet<T>> source, [NotNull] VirtualisingController controller)
+        public Virtualiser([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IVirtualRequest> requests)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (controller == null) throw new ArgumentNullException(nameof(controller));
+            if (requests == null) throw new ArgumentNullException(nameof(requests));
             _source = source;
-            _controller = controller;
+            _requests = requests;
         }
 
         public IObservable<IChangeSet<T>> Run()
         {
             var locker = new object();
-            var request = _controller.Changed
+            var request = _requests
                 .Synchronize(locker)
                 .Select(Virtualise);
 

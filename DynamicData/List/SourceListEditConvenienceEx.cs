@@ -83,6 +83,13 @@ namespace DynamicData
 		    source.Edit(list => list.Remove(item));
 		}
 
+        /// <summary>
+        /// Removes the items from source in an optimised manner
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="itemsToRemove">The items to remove.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
         public static void RemoveMany<T>([NotNull] this ISourceList<T> source, IEnumerable<T> itemsToRemove)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
