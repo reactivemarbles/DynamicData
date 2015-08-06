@@ -1,8 +1,6 @@
 ﻿
 using System.Linq;
 using DynamicData.Internal;
-using DynamicData.Operators;
-
 
 namespace DynamicData
 {    

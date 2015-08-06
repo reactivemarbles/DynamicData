@@ -99,7 +99,7 @@ namespace DynamicData
 		/// </returns>
 		public override string ToString()
 		{
-			return string.Format("Value: {0}, Key: {1}, CurrentIndex: {2}", Value, Key, Index);
+			return $"Value: {Value}, Key: {Key}, CurrentIndex: {Index}";
 		}
 	}
 }
