@@ -148,7 +148,7 @@ namespace DynamicData.Internal
                 }
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("sortReason");
+                    throw new ArgumentOutOfRangeException(nameof(sortReason));
             }
 
             Debug.Assert(changeSet != null, "changeSet != null");

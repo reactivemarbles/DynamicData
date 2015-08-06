@@ -55,16 +55,13 @@ namespace DynamicData.Internal
         {
             _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
         }
-
-
-
+        
         public IChangeSet<TObject, TKey> ChangeComparer(KeyValueComparer<TObject, TKey> comparer)
         {
             _comparer = comparer;
             _list = _list.OrderBy(kv => kv, _comparer).ToList();
            return ChangeSet<TObject, TKey>.Empty;
         }
-
 
         public IChangeSet<TObject, TKey> Reorder()
         {
@@ -205,10 +202,7 @@ namespace DynamicData.Internal
 
             return new ChangeSet<TObject, TKey>(result);
         }
-
-
-
-
+        
         public IComparer<KeyValuePair<TKey,TObject>> Comparer => _comparer;
 
 
@@ -222,16 +216,18 @@ namespace DynamicData.Internal
             if (_optimisations.HasFlag(SortOptimisations.ComparesImmutableValuesOnly))
             {
                 index= _list.BinarySearch(item, _comparer);
+
+                if (index < 0)
+                    throw new SortException("Current position cannot be found.  Ensure the comparer includes a unique value, or do not specify ComparesImmutableValuesOnly");
             }
             else
             {
                index= _list.IndexOf(item);
+
+                if (index < 0)
+                    throw new SortException("Current position cannot be found. The item is not in the collection");
             }
-
-
-            if (index >= 0)
-                return index;
-            throw new ArgumentOutOfRangeException("Current position cannot be found.  Ensure the comparer includes a unique value");
+            return index;
         }
 
 

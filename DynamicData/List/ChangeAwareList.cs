@@ -23,9 +23,6 @@ namespace DynamicData
                 var change = new Change<T>(ListChangeReason.Clear, removed);
                 return new ChangeSet<T> { change };
             }
-
-
-
             return copy;
         }
 
