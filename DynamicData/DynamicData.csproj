@@ -175,7 +175,6 @@
     <Compile Include="List\Internal\Virtualiser.cs" />
     <Compile Include="List\Internal\WithoutIndexEnumerator.cs" />
     <Compile Include="List\ItemChange.cs" />
-    <Compile Include="List\ListChangeEx.cs" />
     <Compile Include="List\ListChangeReason.cs" />
     <Compile Include="List\Internal\AddKeyEnumerator.cs" />
     <Compile Include="List\ListEx.cs" />
