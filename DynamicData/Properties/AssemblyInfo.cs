@@ -14,8 +14,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: InternalsVisibleTo("DynamicData.Tests")]
 [assembly: InternalsVisibleTo("DynamicData.PLinq")]
+[assembly: InternalsVisibleTo("DynamicData.ReactiveUI")]
+[assembly: InternalsVisibleTo("DynamicData.Tests")]
 [assembly: InternalsVisibleTo("DynamicData.Fixtures")]
 
 

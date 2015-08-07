@@ -8,11 +8,13 @@ namespace DynamicData
 {
 
 
-	/// <summary>
-	/// Extensions to help with maintainence of a list
-	/// </summary>
-	public static class ListEx
+    /// <summary>
+    /// Extensions to help with maintainence of a list
+    /// </summary>
+    public static class ListEx
 	{
+
+
         
         #region Binary Search / Lookup
 
@@ -102,23 +104,23 @@ namespace DynamicData
 			return !Equals(result, null) ? result : Optional.None<ItemWithIndex<T>>();
 		}
 
-		#endregion
-		
-		#region Amendment
+        #endregion
+
+        #region Amendment
 
 
-		/// <summary>
-		/// Adds the  items to the specified list
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="items">The items.</param>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// items
-		/// </exception>
-		public static void Add<T>(this IList<T> source, IEnumerable<T> items)
+        /// <summary>
+        /// Adds the  items to the specified list
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="items">The items.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// items
+        /// </exception>
+        public static void Add<T>(this IList<T> source, IEnumerable<T> items)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (items == null) throw new ArgumentNullException(nameof(items));

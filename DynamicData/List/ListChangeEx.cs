@@ -98,7 +98,7 @@ namespace DynamicData
 
 					case ListChangeReason.RemoveRange:
 						{
-                            source.RemoveMany(item.Range);
+                            source.RemoveMany(item.Range.Where(predicate));
 						}
 						break;
 
@@ -269,6 +269,10 @@ namespace DynamicData
 		            case ListChangeReason.RemoveRange:
 		            {
 		                if (source is IExtendedList<T>)
+		                {
+		                    source.RemoveRange(item.Range.Index, item.Range.Count);
+		                }
+		                else if (source is List<T>)
 		                {
 		                    source.RemoveRange(item.Range.Index, item.Range.Count);
 		                }

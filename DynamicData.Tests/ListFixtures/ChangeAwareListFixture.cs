@@ -5,7 +5,6 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-
     [TestFixture]
     class ChangeAwareListFixture
     {
