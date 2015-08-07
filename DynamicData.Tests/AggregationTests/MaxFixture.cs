@@ -67,7 +67,7 @@ namespace DynamicData.Tests.AggregationTests
         {
             double max = 0;
 
-            var somepropChanged = _source.Connect().WhenAnyValueChanged(p => p.Age);
+            var somepropChanged = _source.Connect().WhenValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
                 .Maximum(p => p.Age)

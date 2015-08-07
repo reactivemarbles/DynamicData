@@ -64,7 +64,7 @@ namespace DynamicData.Tests.AggregationTests
         {
             int sum = 0;
 
-            var somepropChanged = _source.Connect().WhenAnyValueChanged(p => p.Age);
+            var somepropChanged = _source.Connect().WhenValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
                 .Sum(p => p.Age)

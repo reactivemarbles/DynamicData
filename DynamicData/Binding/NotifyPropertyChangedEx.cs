@@ -22,7 +22,7 @@ namespace DynamicData.Binding
         /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
-        public static IObservable<PropertyValue<TObject, TValue>> WhenChanged<TObject, TValue>(
+        public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>(
             [NotNull] this TObject source,
 			Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue=true)
 			where TObject : INotifyPropertyChanged
@@ -33,8 +33,7 @@ namespace DynamicData.Binding
 			var member = propertyAccessor.GetProperty();
 			var accessor = propertyAccessor.Compile();
 
-			Func<PropertyValue<TObject, TValue>> factory =
-				() => new PropertyValue<TObject, TValue>(source, accessor(source));
+			Func<PropertyValue<TObject, TValue>> factory =() => new PropertyValue<TObject, TValue>(source, accessor(source));
 
 			var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
 				(
@@ -46,6 +45,25 @@ namespace DynamicData.Binding
 
             return !notifyOnInitialValue ? propertyChanged : propertyChanged.StartWith(factory());
 		}
+
+        /// <summary>
+        /// Notifies when any any property on the object has changed
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this TObject source)
+                where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+                (
+                    handler => source.PropertyChanged += handler,
+                    handler => source.PropertyChanged -= handler
+                )
+                .Select(x => source);
+        }
 
         /// <summary>
         /// Observes property changes for the specified property, starting with the current value

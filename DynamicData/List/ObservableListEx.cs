@@ -498,14 +498,14 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<PropertyValue<TObject, TValue>> WhenAnyChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
+        public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
             [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            return source.MergeMany(t => t.WhenChanged(propertyAccessor, notifyOnInitialValue));
+            return source.MergeMany(t => t.WhenPropertyChanged(propertyAccessor, notifyOnInitialValue));
         }
 
         /// <summary>

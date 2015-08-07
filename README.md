@@ -21,7 +21,7 @@ The core of dynamic data is an observable cache which for most circumstances is 
 
 If you download the latest pre-release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
 
-### Introducing the observable list (available in beta only)
+### Introducing the observable list
 
 Create a source list like this.
 ```csharp
@@ -144,9 +144,10 @@ This method is only recommended for simple queries which act only on the UI thre
 
 No you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
-**Example 1:** filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
+#### Bind to a complex stream
 
-```csharp
+The filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
+```
 //Dynamic data has it's own take on an observable collection (optimised for populating f
 var list = new ObservableCollectionExtended<TradeProxy>();
 var myoperation = somedynamicdatasource
@@ -158,49 +159,135 @@ var myoperation = somedynamicdatasource
 					.DisposeMany()
 					.Subscribe()
 ```
-Oh and I forgot to say, ```TradeProxy``` is disposable and DisposeMany() ensures items are disposed when no longer part of the stream.
+Oh and I forgot to say, ```TradeProxy``` is disposable and ```DisposeMany()``` ensures items are disposed when no longer part of the stream.
 
-**Example 2:** produces a stream which is grouped by status. If an item's changes status it will be moved to the new group and when a group has no items the group will automatically be removed.
-```csharp
-var myoperation = somedynamicdatasource
-            .Group(trade=>trade.Status) //This is NOT Rx's GroupBy 
-			.Subscribe(changeSet=>//do something with the groups)
-```
-**Example 3:** Suppose I am editing some trades and I have an observable on each trades which validates but I want to know when all items are valid then this will do the job.
-```csharp
-IObservable<bool> allValid = somedynamicdatasource
-                .TrueForAll(trade => trade.IsValidObservable, (trade, isvalid) => isvalid)
-```
-This operator flattens the observables and returns the combined state in one line of code. I love it.
+#### Create a derived list or cache
 
-**Example 4:**  will wire and un-wire items from the observable when they are added, updated or removed from the source.
-```csharp
-var myoperation = somedynamicdatasource.Connect() 
-			.MergeMany(trade=> trade.ObservePropertyChanged(t=>t.Amount))
-			.Subscribe(ObservableOfAmountChangedForAllItems=>//do something with Observable<PropChangedArg>)
+Although this example is very simple, it is one of the most powerful aspects of dynamic data.  Any dynamic data stream can be materialised into a derived collection.  
+
+If you have 
 ```
-**Example 5:**  will dispose items when removed from the source, or when myoperation is disposed.
+var myList = new SourceList<People>()
+```
+Then you can do this
+``` 
+var oldPeople = myList.Filter(person=>person.Age>65).AsObservableList();
+```
+and you have an observable list of pensioners.
+
+The same applies to a cache, the only difference is you call ```.AsObservableCache()``` to create a derived cache'
+
+In practise I have found this function very useful in a trading system where old items massively outnumber current items.  By creating a derived collection and exposing that to consumers has saved a huge amount of processing power and memory downstream.
+
+#### Group
+```
+var myoperation = somedynamicdatasource.GroupOn(person=>person.Status)
+```
+#### Transformation
+
+Map to a another object
+```
+var myoperation = somedynamicdatasource.Transform(person=>new PersonProxy(person)) 
+```
+Ceate a fully formed reactive tree
+```
+var myoperation = somedynamicdatasource.TransformToTree(person=>person.BossId) 
+```
+Flatten  a child enumerable
+```
+var myoperation = somedynamicdatasource.TransformMany(person=>person.Children) 
+```
+#### Aggregation
+
+if we have a a list of people we can aggregate as follows
 ```csharp
+var people= new SourceList<Person>();
+var observable = people.Connect();
+
+var count= observable.Count();
+var max= observable.Max(p=>p.Age);
+var min= observable.Min(p=>p.Age);
+var stdDev= observable.StdDev(p=>p.Age);
+```
+In the near future I will create even more aggregations.
+
+#### Join operators
+
+There are And, Or and Except logical operators
+```csharp
+var peopleA= new SourceCache<Person,string>(p=>p.Name);
+var peopleB= new SourceCache<Person,string>(p=>p.Name);
+var observableA = peopleA.Connect();
+var observableB = peopleB.Connect();
+
+var inBoth = observableA.And(observableB);
+var inEither= observableA.Or(observableB);
+var inOnlyOne= observableA.Xor(observableB);
+var inAandNotinB = observableA.Except(observableB);
+```
+
+#### Disposal handler
+
+To ensure an object is disposed when it is removed from a stream
+```
 var myoperation = somedynamicdatasource.Connect().DisposeMany()
 ```
-**Example 6:** Produces a distinct change set of currency pairs
-```csharp
-var currencyPairs= somedynamicdatasource .DistinctValues(trade => trade.CurrencyPair)
-```
+which will also dispose all objects when the stream is disposed. This is typically used when a transform function creates an object which is disposable.
 
-**Example 7:**  virtualise the results so only a limited range of data is included
-```csharp
-var controller =  new VirtualisingController(new VirtualRequest(0,25));
-var myoperation = somedynamicdatasource.Connect().Virtualise(controller)
-```
-the starting index and number of records can be changed using ``` _controller.Virualise(new VirtualRequest(start,size))```
+#### Distinct Values
 
-**Example 8:**  page the results so only a limited range of data is included
-```csharp
-var controller =  new PageController(new PageRequest(1,25));
-var myoperation = somedynamicdatasource.Connect().Page(controller)
+```DistinctValues()``` will produce an observable of distinct changes in the underlying collection.
 ```
-the starting index and number of records can be changed using ``` _controller.Change(new PageRequest(pageNumber,pageSize))``
+var people = personSource.DistinctValues(trade => trade.Age)
+```
+In this case a distinct ages.
+
+
+#### Virtualisation
+
+Visualise data to restrict by index and segment size
+```
+IObservable<IVirtualRequest> request; //request stream
+var virtualisedStream = somedynamicdatasource.Virtualise(request)
+```
+Visualise data to restrict by index and page size
+```
+IObservable<IPageRequest> request; //request stream
+var pagedStream = somedynamicdatasource.Page(request)
+```
+In either of the above, the result is re-evaluated when the request stream changes
+
+Top is an overload of ```Virtualise()``` and will return items matching the first 'n'  items.
+```
+var topStream = somedynamicdatasource.Top(10)
+```
+#### Observing binding changes
+
+If the collection has objects which implement ```INotifyPropertyChanged``` the the following operators are available
+```
+var ageChanged = peopleDataSource.WhenValueChanged(p => p.Age)
+```
+which returns an observable of the age when the value of Age has changes, .
+```
+var ageChanged = peopleDataSource.WhenPropertyChanged(p => p.Age)
+```
+which returns an observable of the person and age when the value of Age has changes, .
+```
+var personChanged = peopleDataSource.WhenAnyPropertyChanged()
+```
+which returns an observable of the person when any property has changed,.
+
+#### Observing item changes
+
+Binding is a very small part of dynamic data. The above notify property changed overloads are just an example when binding. If you have a domain object which has children observables you can use ```MergeMany()``` which subscribes to and unsubscribes from items according to collection changes.
+
+```csharp
+var myoperation = somedynamicdatasource.Connect() 
+			.MergeMany(trade=> trade.SomeObservable());
+```
+This wires and unwires ```SomeObservable``` as the collection changes.
+
+
 
 ### Why is the first Nuget release version 3
 Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx when it first came out. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
