@@ -185,6 +185,9 @@ namespace DynamicData
 
 		}
 
+
+
+
 		/// <summary>
 		/// Clones the list from the specified change set
 		/// </summary>
@@ -203,7 +206,6 @@ namespace DynamicData
 
 		    changes.ForEach(item =>
 		    {
-
 		        switch (item.Reason)
 		        {
 		            case ListChangeReason.Add:

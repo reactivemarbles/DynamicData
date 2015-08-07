@@ -36,8 +36,8 @@ namespace DynamicData.Internal
                  var removed = changes.Unified().Select(u=>u.Current);
                 _innerList.RemoveMany(removed);
                 return _innerList.CaptureChanges();
-
             }
+
             return ProcessImpl(changes);
 	    }
 

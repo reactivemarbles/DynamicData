@@ -21,10 +21,46 @@ namespace DynamicData
 	/// </summary>
 	public static class ObservableListEx
 	{
+        #region Populate changetset from standard rx observable
+
+            /*
+                made private because I need to re-engineer expiry stuff first
+            */
+
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet_XXX<TObject>(this IObservable<TObject> source,
+            Func<TObject, TimeSpan?> expireAfter,
+            int limitSizeTo,
+            IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return Observable.Create<IChangeSet<TObject>>(observer =>
+            {
+                var locker = new object();
+                var list = new SourceList<TObject>();
+                var sourceSubscriber = source.Subscribe(list.Add);
+
+                var expirer = expireAfter != null
+                    ? list.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
+                    : Disposable.Empty;
+
+                var sizeLimiter = limitSizeTo > 0
+                    ? list.LimitSizeTo(limitSizeTo, scheduler).Subscribe()
+                    : Disposable.Empty;
+
+                var notifier = list.Connect().SubscribeSafe(observer);
+
+                return new CompositeDisposable(list, sourceSubscriber, notifier, expirer, sizeLimiter);
+            });
+
+        }
+
+        #endregion
+
         #region Conversion
 
         /// <summary>
-        /// Removes the key which enables all observable cache features of dynamic data
+        /// Adds a key to the change set result which enables all observable cache features of dynamic data
         /// </summary>
         /// <remarks>
         /// All indexed changes are dropped i.e. sorting is not supported by this function

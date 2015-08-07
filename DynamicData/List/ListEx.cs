@@ -208,7 +208,7 @@ namespace DynamicData
 			{
 				if (index >= 0)
 				{
-					((List<T>)source).AddRange(items, index);
+                    ((List<T>)source).AddRange(items, index);
 				}
 				else
 				{
@@ -220,7 +220,8 @@ namespace DynamicData
 			{
 				if (index >= 0)
 				{
-					((IExtendedList<T>)source).InsertRange(items, index);
+                    
+                    ((IExtendedList<T>)source).InsertRange(items, index);
 				}
 				else
 				{
@@ -229,13 +230,20 @@ namespace DynamicData
 			}
 			else
 			{
-				items.ForEach(source.Add);
+			    if (index >= 0)
+			    {
+                    items.Reverse().ForEach(t=>source.Insert(index,t));
+                }
+			    else
+			    {
+                    items.ForEach(source.Add);
+                }
 			}
 
 		}
 
         /// <summary>
-        /// Removes the many items from a collection in an optimal way
+        /// Removes many items from the collection in an optimal way
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
@@ -277,8 +285,6 @@ namespace DynamicData
 			}
 			else
 			{
-
-
 				throw new NotSupportedException("Cannot remove range from {0}".FormatWith(source.GetType()));
 			}
 
