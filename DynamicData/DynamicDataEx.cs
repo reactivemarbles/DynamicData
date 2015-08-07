@@ -1835,6 +1835,29 @@ namespace DynamicData
 
 
         /// <summary>
+        /// Applied a logical Xor operator between the collections i.e items which are in any of the sources are included
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="others">The others.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// others
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            params IObservable<IChangeSet<TObject, TKey>>[] others)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (others == null || others.Length == 0) throw new ArgumentNullException(nameof(others));
+
+            return source.Combine(CombineOperator.ContainedInOne, others);
+        }
+
+
+        /// <summary>
         /// Applied a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>

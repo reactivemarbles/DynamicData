@@ -167,6 +167,10 @@ namespace DynamicData.Internal
                     {
                         return _sourceCaches.Any(s => s.Lookup(key).HasValue);
                     }
+                case CombineOperator.ContainedInOne:
+                    {
+                        return _sourceCaches.Count(s => s.Lookup(key).HasValue)==1;
+                    }
                 case CombineOperator.ExceptFor:
                     {
                         bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);

@@ -85,6 +85,7 @@
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />
     <Compile Include="CacheFixtures\TransformTreeFixture.cs" />
+    <Compile Include="CacheFixtures\XorFixture.cs" />
     <Compile Include="Domain\PersonEmployment.cs" />
     <Compile Include="Domain\PersonSorter.cs" />
     <Compile Include="Domain\PersonWithEmployment.cs" />

@@ -18,6 +18,11 @@ namespace DynamicData.Internal
         ContainedInAny,
 
         /// <summary>
+        /// Resultant stream is comprised of items which are in onlys the caches
+        /// </summary>
+        ContainedInOne,
+
+        /// <summary>
         /// Resultant stream is comprised of items which are in the first stream and not the others
         /// </summary>
         ExceptFor
