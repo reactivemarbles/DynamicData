@@ -119,7 +119,7 @@ var mydynamicdatasource = myObservable.ToObservableChangeSet();
 //2. Or specify a key like this
 var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> t.key);
 ```
-### Create a size or time expiring cache
+### Create a size or time based expiring cache
 
 The problem with the above is the cache will grow forever so there are overloads to specify size limitation or expiry times. The following shows how to limit the size and create a time expiring cache.
 ```csharp
@@ -146,7 +146,7 @@ No you can create an observable cache or an observable list, here are a few quic
 
 #### Bind to a complex stream
 
-The filters a stream of live trades, creates a proxy for each trade and order the result by most recent first. As the source is modified the observable collection will automatically reflect changes.
+This example a stream of live trades, creates a proxy for each trade and order the result by most recent first. The result is bound to the observable collection. (```ObservableCollectionExtended<T>``` is provided by dynamic data and is more efficient than the standard ``ObservableCollection<T>``` )
 ```
 //Dynamic data has it's own take on an observable collection (optimised for populating f
 var list = new ObservableCollectionExtended<TradeProxy>();
@@ -169,17 +169,19 @@ If you have
 ```
 var myList = new SourceList<People>()
 ```
-Then you can do this
+You can do this
 ``` 
 var oldPeople = myList.Filter(person=>person.Age>65).AsObservableList();
 ```
 and you have an observable list of pensioners.
 
-The same applies to a cache, the only difference is you call ```.AsObservableCache()``` to create a derived cache'
+The same applies to a cache.  The only difference is you call ```.AsObservableCache()``` to create a derived cache.
 
 In practise I have found this function very useful in a trading system where old items massively outnumber current items.  By creating a derived collection and exposing that to consumers has saved a huge amount of processing power and memory downstream.
 
 #### Group
+
+This operator pre-caches the specified groups according to the group selector.
 ```
 var myoperation = somedynamicdatasource.GroupOn(person=>person.Status)
 ```
