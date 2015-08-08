@@ -26,17 +26,17 @@ If you download the latest release of Dynamic Data from [Dynamic Data on nuget](
 ### The observable list
 
 Create an observable list like this:
-```
+```cs
 var myInts= new SourceList<int>();
 ```
 There are direct edit methods, for example
-```
+```cs
 myInts.AddRange(Enumerable.Range(0, 10000)); 
 myInts.Add(99999); 
 myInts.Remove(99999);
 ```
 Each amend operation will produce a change notification. A much more efficient option is to batch edit which produces a single notification.
-```
+```cs
 myInts.Edit(innerList =>
 {
    innerList.Clear();
@@ -44,7 +44,7 @@ myInts.Edit(innerList =>
 });
 ```
 If ``myInts`` is to be exposed publicly it can be made read only
-```
+```cs
 IObservableList<int> readonlyInts = myInts.AsObservableList();
 ```
 which hides the edit methods.
@@ -54,18 +54,18 @@ The list changes can be observed by calling ```myInts.Connect()```. This creates
 ### The observable cache
 
 Create an observable cache like this:
-```
+```cs
 var myCache= new SourceCache<TObject,TKey>(t => key);
 ```
 There are direct edit methods, for example
 
-```
+```cs
 myCache.Clear();
 myCache.AddOrUpdate(myItems);
 ```
 Each amend operation will produced a change notification. A much more efficient option is to batch edit which produces a single notification.
 
-```
+```cs
 myCache.BatchUpdate(innerCache =>
 			  {
 			      innerCache.Clear();
@@ -74,7 +74,7 @@ myCache.BatchUpdate(innerCache =>
 ```
 If ```myCache``` is to be exposed publicly it can be made read only
 
-```
+```cs
 IObservableCache<TObject,TKey> readonlyCache= myCache.AsObservableCache();
 ```
 which hides the edit methods.
@@ -87,7 +87,7 @@ The cache is observed by calling ```myInts.Connect()```. This creates an observa
 
 As stated in the blurb at the top of this document, Dynamic Data is based on the concept of an observable change set. Calling the ```Connect()``` on the list or the cache will produce an observable change set. 
 
-```
+```cs
 var myConnection = myDynamicDataSource.Connect();
 ```
 This opens the consumer to fluent and composable streams of data. But before I show some examples, there are some alternative ways to create an observable change set.
@@ -95,12 +95,12 @@ This opens the consumer to fluent and composable streams of data. But before I s
 ### Create an observable change set from a standard Rx observable
 
 Given either of the following observables
-```
+```cs
 IObservable<T> myObservable;
 IObservable<IEnumerable<T>> myObservable;
 ```
 an observable cache can be created like like 
-```
+```cs
 var myConnection = myObservable.ToObservableChangeSet(t=> t.key);
 ```
 
@@ -109,11 +109,11 @@ var myConnection = myObservable.ToObservableChangeSet(t=> t.key);
 The problem with the above is the cache will grow forever so there are overloads to specify size limitation or expiry times. The following shows how to limit the size and create a time expiring cache.
 
 Expire by time
-```
+```cs
 var myConnection = myObservable.ToObservableChangeSet(t=> t.key, expireAfter: item => TimeSpan.FromHours(1));
 ```
 where the expiry time for each item can be specified. Alternatively expire by size
-```
+```cs
 var myConnection = myObservable.ToObservableChangeSet(t=> t.key, limitSizeTo:10000);
 ```
 There is also an overload to expire by both time and size.
@@ -121,15 +121,15 @@ There is also an overload to expire by both time and size.
 ### Create an observable change set from an observable collection
 
 Another way is to create an observable change set from an observable collection.
-```
+```cs
 var myobservablecollection= new ObservableCollection<T>();
 ```
 To create a cache observable specify a key
-```
+```cs
 var myConnection = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
 or to create a list observable
-```
+```cs
 var myConnection = myobservablecollection.ToObservableChangeSet();
 ```
 This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
@@ -141,7 +141,7 @@ No you can create an observable cache or an observable list, here are a few quic
 #### Bind to a complex stream
 
 This example a stream of live trades, creates a proxy for each trade and order the result by most recent first. The result is bound to the observable collection. (```ObservableCollectionExtended<T>``` is provided by dynamic data and is more efficient than the standard ``ObservableCollection<T>``` )
-```
+```cs
 //Dynamic Data has it's own take on an observable collection (optimised for populating f
 var list = new ObservableCollectionExtended<TradeProxy>();
 var myoperation = myConnection 
@@ -160,11 +160,11 @@ Oh and I forgot to say, ```TradeProxy``` is disposable and ```DisposeMany()``` e
 Although this example is very simple, it is one of the most powerful aspects of Dynamic Data.  Any Dynamic Data stream can be materialised into a derived collection.  
 
 If you have 
-```
+```cs
 var myList = new SourceList<People>()
 ```
 You can do this
-``` 
+```cs
 var oldPeople = myList.Filter(person=>person.Age>65).AsObservableList();
 ```
 and you have an observable list of pensioners.
@@ -175,50 +175,50 @@ In practise I have found this function very useful in a trading system where old
 
 #### Filtering
 Filter the underlying data using the filter operators
-```
+```cs
 var myoperation = personChangeSet.Filter(person=>person.Age>50) 
 ```
 or to dynamically change a filter 
-```
+```cs
 IObservable<Func<Person,bool>> observablePredicate=...;
 var myoperation = personChangeSet.Filter(observablePredicate) 
 ```
 #### Sorting
 
 Filter the underlying data using the filter operators
-```
+```cs
 var myoperation = personChangeSet.Sort(SortExpressionComparer.Ascending(p=>p.Age) 
 ```
 or to dynamically change a sort
-```
+```cs
 IObservable<IComparer<Person>> observableComparer=...;
 var myoperation = personChangeSet.Sort(observableComparer) 
 ```
 #### Grouping
 
 This operator pre-caches the specified groups according to the group selector.
-```
+```cs
 var myoperation = personChangeSet.GroupOn(person=>person.Status)
 ```
 
 #### Transformation
 
 Map to a another object
-```
+```cs
 var myoperation = personChangeSet.Transform(person=>new PersonProxy(person)) 
 ```
 Ceate a fully formed reactive tree
-```
+```cs
 var myoperation = personChangeSet.TransformToTree(person=>person.BossId) 
 ```
 Flatten  a child enumerable
-```
+```cs
 var myoperation = personChangeSet.TransformMany(person=>person.Children) 
 ```
 #### Aggregation
 
 if we have a a list of people we can aggregate as follows
-```
+```cs
 var count= 	personChangeSet.Count();
 var max= 	personChangeSet.Max(p=>p.Age);
 var min= 	personChangeSet.Min(p=>p.Age);
@@ -230,7 +230,7 @@ In the near future I will create even more aggregations.
 #### Join operators
 
 There are And, Or, Xor and Except logical operators
-```csharp
+```cs
 var peopleA= new SourceCache<Person,string>(p=>p.Name);
 var peopleB= new SourceCache<Person,string>(p=>p.Name);
 
@@ -247,7 +247,7 @@ Currently the join operators are only implemented for cache observables
 #### Disposal handler
 
 To ensure an object is disposed when it is removed from a stream
-```
+```cs
 var myoperation = somedynamicdatasource.Connect().DisposeMany()
 ```
 which will also dispose all objects when the stream is disposed. This is typically used when a transform function creates an object which is disposable.
@@ -255,7 +255,7 @@ which will also dispose all objects when the stream is disposed. This is typical
 #### Distinct Values
 
 ```DistinctValues()``` will produce an observable of distinct changes in the underlying collection.
-```
+```cs
 var people = personSource.DistinctValues(trade => trade.Age)
 ```
 In this case a distinct ages.
@@ -264,33 +264,33 @@ In this case a distinct ages.
 #### Virtualisation
 
 Visualise data to restrict by index and segment size
-```
+```cs
 IObservable<IVirtualRequest> request; //request stream
 var virtualisedStream = somedynamicdatasource.Virtualise(request)
 ```
 Visualise data to restrict by index and page size
-```
+```cs
 IObservable<IPageRequest> request; //request stream
 var pagedStream = somedynamicdatasource.Page(request)
 ```
 In either of the above, the result is re-evaluated when the request stream changes
 
 Top is an overload of ```Virtualise()``` and will return items matching the first 'n'  items.
-```
+```cs
 var topStream = somedynamicdatasource.Top(10)
 ```
 #### Observing binding changes
 
 If the collection has objects which implement ```INotifyPropertyChanged``` the the following operators are available
-```
+```cs
 var ageChanged = peopleDataSource.WhenValueChanged(p => p.Age)
 ```
 which returns an observable of the age when the value of Age has changes, .
-```
+```cs
 var ageChanged = peopleDataSource.WhenPropertyChanged(p => p.Age)
 ```
 which returns an observable of the person and age when the value of Age has changes, .
-```
+```cs
 var personChanged = peopleDataSource.WhenAnyPropertyChanged()
 ```
 which returns an observable of the person when any property has changed,.
@@ -299,7 +299,7 @@ which returns an observable of the person when any property has changed,.
 
 Binding is a very small part of Dynamic Data. The above notify property changed overloads are just an example when binding. If you have a domain object which has children observables you can use ```MergeMany()``` which subscribes to and unsubscribes from items according to collection changes.
 
-```csharp
+```cs
 var myoperation = somedynamicdatasource.Connect() 
 			.MergeMany(trade=> trade.SomeObservable());
 ```
