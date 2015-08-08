@@ -21,6 +21,8 @@ The core of dynamic data is an observable cache which for most circumstances is 
 
 If you download the latest release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
 
+## Create And Consuming Dynamic Data Collections
+
 ### The observable list
 
 Create an observable list like this:
@@ -113,7 +115,6 @@ var myobservablecollection= new ObservableCollection<T>();
 ```
 To create a cache observable specify a key
 ```
-var myobservablecollection= new ObservableCollection<T>();
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
 or to create a list observable
