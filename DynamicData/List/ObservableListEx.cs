@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
+using DynamicData.Linq;
 using DynamicData.Operators;
 
 namespace DynamicData
@@ -441,23 +442,59 @@ namespace DynamicData
 			return source.Do(target.Clone);
 		}
 
-		#endregion
+        #endregion
 
-		#region Item operators
+        #region Item operators
 
-		/// <summary>
-		/// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
-		/// when it is no longer part of the stream.
-		/// </summary>
-		/// <typeparam name="T">The type of the object.</typeparam>
-		/// <typeparam name="TDestination">The type of the destination.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="observableSelector">The observable selector.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source
-		/// or
-		/// observableSelector</exception>
-		public static IObservable<TDestination> MergeMany<T, TDestination>([NotNull] this IObservable<IChangeSet<T>> source,
+        /// <summary>
+        /// Provides a call back for each item change.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="action">The action.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TObject>> ForEachChange<TObject>([NotNull]  this IObservable<IChangeSet<TObject>> source,
+              [NotNull] Action<Change<TObject>> action)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            return source.Do(changes => changes.ForEach(action));
+        }
+
+        /// <summary>
+        /// Provides a call back for each item change.
+        /// 
+        /// Range changes are flattened, so there is only need to check for Add, Replace, Remove and Clear
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="action">The action.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TObject>> ForEachItemChange<TObject>([NotNull]  this IObservable<IChangeSet<TObject>> source,
+              [NotNull] Action<ItemChange<TObject>> action)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            return source.Do(changes => changes.Flatten().ForEach(action));
+        }
+
+        /// <summary>
+        /// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
+        /// when it is no longer part of the stream.
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="observableSelector">The observable selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// observableSelector</exception>
+        public static IObservable<TDestination> MergeMany<T, TDestination>([NotNull] this IObservable<IChangeSet<T>> source,
 			[NotNull] Func<T, IObservable<TDestination>> observableSelector)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));

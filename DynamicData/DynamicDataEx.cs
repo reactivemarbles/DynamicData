@@ -205,6 +205,25 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Provides a call back for each change
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="action">The action.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> ForEachChange<TObject, TKey>(
+              [NotNull]  this IObservable<IChangeSet<TObject, TKey>> source,
+              [NotNull] Action<Change<TObject, TKey>> action)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            return source.Do(changes => changes.ForEach(action));
+        }
+
+        /// <summary>
         /// Ignores the update when the condition is met.
         /// The first parameter in the ignore function is the current value and the second parameter is the previous value
         /// </summary>

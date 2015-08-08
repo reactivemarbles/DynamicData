@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DynamicData.Annotations;
 
-namespace DynamicData.Internal
+namespace DynamicData.Linq
 {
     internal class AddKeyEnumerator<TObject, TKey>: IEnumerable<Change<TObject, TKey>>
     {

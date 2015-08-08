@@ -15,95 +15,70 @@ The benefit of at least 50 operators which are borne from pragmatic experience i
 - Blog at  http://dynamic-data.org/
 - You can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
 
-### Version 4 is available on Nuget  pre-release
+### Version 4 has been released
 
-The core of dynamic data is an observable cache which for most circumstances is great but sometimes there is the need simply for an observable list. Version 4 delivers this. It has been a great effort and consumed loads of my time, mental capacity and resolve but it is finally crystallising into a stable state.  
+The core of dynamic data is an observable cache which for most circumstances is great but sometimes there is the need simply for an observable list. Version 4 delivers this. It has been a great effort and consumed loads of my time, mental capacity and resolve but it is finally crystallising into a stable state. 
 
-If you download the latest pre-release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
+If you download the latest release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
 
-### Introducing the observable list
+### The observable list
 
-Create a source list like this.
-```csharp
-var myObservableList = new SourceList<T>()
+Create an observable list like this:
 ```
-Now you can connect to it using ```myObservableList.Connect()``` which creates an observable change set meaning that whenever there is an add, update, delete or move to ```myObservableList``` a notification is transmitted. 
-
-From here you can start composing sophisticated observations. For example if my list was a list of trades I can do this
-```csharp
-var mySubscription = myObservableList.Connect() 
-					.Filter(t=>trade.Status == TradeStatus.Live) 
-					.Transform(trade => new TradeProxy(trade)) //equivalent to rx .Select
-					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
-					.DisposeMany()
-					....//do something with the result
+var myInts= new SourceList<int>();
 ```
-where the source is filtered to include live trades only, transformed into a proxy, ordered by time and the proxy is disposed of when removed from the underlying filtered result.  As the list is edited the result set always reflects the changes made in the source list. Imagine how much plumbing would be required to maintain a collection to do all that yet dynamic data does it effectively in one line of code.
-
-If you are familiar with using dynamic data's observable cache you will recognise these operators. This is intentional as  I have tried to replicate the observable cache operators. So far I have created about 25 operators for the observable list and in time will try and replicate most if not all of the cache operators.
-
-Editing the source  list is easy as the list has the usual add / insert / remove methods.  For a batch edit I have provided a method which enables batch editing as follows
-```csharp
-_source.Edit(innerList =>
+There are direct edit methods, for example
+```
+myInts.AddRange(Enumerable.Range(0, 10000)); 
+myInts.Add(99999); 
+myInts.Remove(99999);
+```
+Each amend operation will produce a change notification. A much more efficient option is to batch edit which produces a single notification.
+```
+myInts.Edit(innerList =>
 {
-    innerList.Clear();
-    innerList.AddRange(myItemsToAdd);
+   innerList.Clear();
+   innerList.AddRange(Enumerable.Range(0, 10000));
 });
 ```
-This method will clear and load the source list yet produce a single notification which helps improve efficiency.
-
-The source list is thread-safe and can be shared but before sharing I  recommend you call ```myObservableList.AsObservableList()``` which hides the edit methods.  Additionally you can call ```.AsObservableList()``` on any observable change set. So for example if you want to share a filtered observable list you can do this.
-
-```csharp
-IObservableList<T> filteredObservableList = myObservableList.Connect()  
-					.Filter(t=>trade.Status == TradeStatus.Live) 
-					.AsObservableList();		
+If ``myInts``` is to be exposed publicly it can be made read only
 ```
-which is a self-maintaining filtered observable list.  I hope you think that is cool! 
-
-I am about to start documenting this a creating some examples so watch this space.
-
-### Introducing the observable cache
-
-Normally a cache is constructed using a key selector.
-```csharp
-var myObservableCache= new SourceCache<TObject,TKey>(t => key);
+IObservableList<int> readonlyInts = myInts.AsObservableList();
 ```
-but if you want the hash code to be used as a key you can construct it without specifying the key
-```csharp
-var myObservableCache= new SourceCache<TObject>();
-```
-Now you can connect to the cache using ```myObservableCache.Connect()``` which creates an observable change set meaning that whenever there is change to ```myObservableCache``` a notification is transmitted. 
+which hides the edit methods.
 
-Exactly like the observable list you can now start composing sophisticated observations. For example if the cache is a cache of trades you can do this
-```csharp
-var mySubscription = myObservableCache.Connect()  
-					.Filter(t=>trade.Status == TradeStatus.Live) 
-					.Transform(trade => new TradeProxy(trade)) //equivalent to rx .Select
-					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
-					.DisposeMany()
-					....//do something with the result
-```
-where the source is filtered to include live trades only, transformed into a proxy, ordered by time and the proxy is disposed of when removed from the underlying filtered result.  As the list is edited the result set always reflects the changes made in the source list. Imagine how much plumbing would be required to maintain a collection to do all that yet dynamic data does it effectively in one line of code.
+The list changes can be observed by calling ```myInts.Connect()```. This creates an observable change set for which there are dozens of list specific operators. The changes are transmitted as an Rx observable so are fluent and composable.
 
-Editing the source  cache is easy as it has the usual add / update / remove methods.  For a batch edit I have provided a method which enables batch editing as follows
-```csharp
-myObservableCache.BatchUpdate(innerCache =>
-				  {
-				      innerCache.Clear();
-				      innerCache.AddOrUpdate(myItems);
-				  });
-```
-This method will clear and load the source list yet produce a single notification which helps improve efficiency.
+### The observable cache
 
-The cache is thread-safe and can be shared but before sharing I  recommend you call ```myObservableCache.AsObservableCache()``` which hides the edit methods.  Additionally you can call ```.AsObservableCache()``` on any observable change set. So for example if you want to share a filtered observable cache you can do this.
-
-```csharp
-IObservableCache<T> filteredObservableCache = myObservableCache.Connect() 
-					.Filter(t=>trade.Status == TradeStatus.Live) 
-					.AsObservableCache();		
+Create an observable cache like this:
 ```
-which is a self-maintaining filtered observable cache. 
+var myCache= new SourceCache<TObject,TKey>(t => key);
+```
+There are direct edit methods, for example
+
+```
+myCache.Clear();
+myCache.AddOrUpdate(myItems);
+```
+Each amend operation will produced a change notification. A much more efficient option is to batch edit which produces a single notification.
+
+```
+myCache.BatchUpdate(innerCache =>
+			  {
+			      innerCache.Clear();
+			      innerCache.AddOrUpdate(myItems);
+			  });
+```
+If ```myCache``` is to be exposed publicly it can be made read only
+
+```
+IObservableCache<TObject,TKey> readonlyCache= myCache.AsObservableCache();
+```
+which hides the edit methods.
+
+The cache is observed by calling ```myInts.Connect()```. This creates an observable change set for which there are dozens of list specific operators. The changes are transmitted as an Rx observable so are fluent and composable.
+
 
 ### Create an observable change set from a standard Rx observable
 
@@ -179,46 +154,67 @@ The same applies to a cache.  The only difference is you call ```.AsObservableCa
 
 In practise I have found this function very useful in a trading system where old items massively outnumber current items.  By creating a derived collection and exposing that to consumers has saved a huge amount of processing power and memory downstream.
 
-#### Group
+#### Filtering
+Filter the underlying data using the filter operators
+```
+var myoperation = personChangeSet.Filter(person=>person.Age>50) 
+```
+or to dynamically change a filter 
+```
+IObservable<Func<Person,bool>> observablePredicate=...;
+var myoperation = personChangeSet.Filter(observablePredicate) 
+```
+#### Sorting
+
+Filter the underlying data using the filter operators
+```
+var myoperation = personChangeSet.Sort(SortExpressionComparer.Ascending(p=>p.Age) 
+```
+or to dynamically change a filter 
+```
+IObservable<IComparer<Person>> observableComparer=...;
+var myoperation = personChangeSet.Filter(observableComparer) 
+```
+#### Grouping
 
 This operator pre-caches the specified groups according to the group selector.
 ```
-var myoperation = somedynamicdatasource.GroupOn(person=>person.Status)
+var myoperation = personChangeSet.GroupOn(person=>person.Status)
 ```
+
 #### Transformation
 
 Map to a another object
 ```
-var myoperation = somedynamicdatasource.Transform(person=>new PersonProxy(person)) 
+var myoperation = personChangeSet.Transform(person=>new PersonProxy(person)) 
 ```
 Ceate a fully formed reactive tree
 ```
-var myoperation = somedynamicdatasource.TransformToTree(person=>person.BossId) 
+var myoperation = personChangeSet.TransformToTree(person=>person.BossId) 
 ```
 Flatten  a child enumerable
 ```
-var myoperation = somedynamicdatasource.TransformMany(person=>person.Children) 
+var myoperation = personChangeSet.TransformMany(person=>person.Children) 
 ```
 #### Aggregation
 
 if we have a a list of people we can aggregate as follows
-```csharp
-var people= new SourceList<Person>();
-var observable = people.Connect();
-
-var count= observable.Count();
-var max= observable.Max(p=>p.Age);
-var min= observable.Min(p=>p.Age);
-var stdDev= observable.StdDev(p=>p.Age);
+```
+var count= 	personChangeSet.Count();
+var max= 	personChangeSet.Max(p=>p.Age);
+var min= 	personChangeSet.Min(p=>p.Age);
+var stdDev= personChangeSet.StdDev(p=>p.Age);
+var avg= 	personChangeSet.Avg(p=>p.Age);
 ```
 In the near future I will create even more aggregations.
 
 #### Join operators
 
-There are And, Or and Except logical operators
+There are And, Or, Xor and Except logical operators
 ```csharp
 var peopleA= new SourceCache<Person,string>(p=>p.Name);
 var peopleB= new SourceCache<Person,string>(p=>p.Name);
+
 var observableA = peopleA.Connect();
 var observableB = peopleB.Connect();
 
@@ -227,6 +223,7 @@ var inEither= observableA.Or(observableB);
 var inOnlyOne= observableA.Xor(observableB);
 var inAandNotinB = observableA.Except(observableB);
 ```
+Currently the join operators are only implemented for cache observables
 
 #### Disposal handler
 
@@ -290,8 +287,7 @@ var myoperation = somedynamicdatasource.Connect()
 This wires and unwires ```SomeObservable``` as the collection changes.
 
 
-
-### Why is the first Nuget release version 3
+### Why was the first Nuget release version 3
 Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx when it first came out. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
 
 ### Want to know more?

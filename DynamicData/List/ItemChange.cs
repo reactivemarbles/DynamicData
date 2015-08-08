@@ -16,7 +16,12 @@ namespace DynamicData
 		/// </summary>
 		public readonly static ItemChange<T> Empty = new ItemChange<T>();
 
-		/// <summary>
+        /// <summary>
+        /// The reason for the change
+        /// </summary>
+        public ListChangeReason Reason { get;  }
+
+	    /// <summary>
 		/// The item which has changed
 		/// </summary>
 		public T Current { get; }
@@ -40,42 +45,53 @@ namespace DynamicData
 		/// </summary>
 		public int PreviousIndex { get; }
 
-		#region Construction
+        #region Construction
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="Change{TObject, TKey}" /> struct.
-		/// </summary>
-		/// <param name="current">The current.</param>
-		/// <param name="previous">The previous.</param>
-		/// <param name="currentIndex">Value of the current.</param>
-		/// <param name="previousIndex">Value of the previous.</param>
-		/// <exception cref="ArgumentException">
-		/// For ChangeReason.Add, a previous value cannot be specified
-		/// or
-		/// For ChangeReason.Change, must supply previous value
-		/// </exception>
-		/// <exception cref="System.ArgumentException">For ChangeReason.Add, a previous value cannot be specified
-		/// or
-		/// For ChangeReason.Change, must supply previous value</exception>
-		public ItemChange( T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Change{TObject, TKey}" /> struct.
+        /// </summary>
+        /// <param name="reason">The reason.</param>
+        /// <param name="current">The current.</param>
+        /// <param name="previous">The previous.</param>
+        /// <param name="currentIndex">Value of the current.</param>
+        /// <param name="previousIndex">Value of the previous.</param>
+        /// <exception cref="ArgumentException">For ChangeReason.Add, a previous value cannot be specified
+        /// or
+        /// For ChangeReason.Change, must supply previous value</exception>
+        /// <exception cref="System.ArgumentException">For ChangeReason.Add, a previous value cannot be specified
+        /// or
+        /// For ChangeReason.Change, must supply previous value</exception>
+        public ItemChange(ListChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
 			: this()
 		{
-			Current = current;
+		    Reason = reason;
+		    Current = current;
 			Previous = previous;
 			CurrentIndex = currentIndex;
 			PreviousIndex = previousIndex;
 		}
 
-		#endregion
+        public ItemChange(ListChangeReason reason, T current,int currentIndex)
+            : this()
+        {
+            Reason = reason;
+            Current = current;
+            CurrentIndex = currentIndex;
+            PreviousIndex = -1;
+            Previous = Optional<T>.None;
 
-		#region Equality
+         
+        }
+        #endregion
 
-		/// <summary>
-		///  Determines whether the specified object, is equal to this instance.
-		/// </summary>
-		/// <param name="other">The other.</param>
-		/// <returns></returns>
-		public bool Equals(ItemChange<T> other)
+        #region Equality
+
+        /// <summary>
+        ///  Determines whether the specified object, is equal to this instance.
+        /// </summary>
+        /// <param name="other">The other.</param>
+        /// <returns></returns>
+        public bool Equals(ItemChange<T> other)
 		{
 			return EqualityComparer<T>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
 		}

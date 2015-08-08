@@ -108,7 +108,7 @@ namespace DynamicData
 				throw new ArgumentException("PreviousIndex must be greater than or equal to zero");
 
 			Reason = ListChangeReason.Moved;
-			Item = new ItemChange<T>(current, Optional.None<T>(), currentIndex,previousIndex);
+			Item = new ItemChange<T>(Reason, current, Optional.None<T>(), currentIndex,previousIndex);
 		}
 
 		/// <summary>
@@ -138,7 +138,7 @@ namespace DynamicData
 				throw new ArgumentException("For ChangeReason.Change, must supply previous value");
 			}
 			Reason = reason;
-			Item = new ItemChange<T>(current, previous, currentIndex, previousIndex);
+			Item = new ItemChange<T>(Reason, current, previous, currentIndex, previousIndex);
 		}
 
 

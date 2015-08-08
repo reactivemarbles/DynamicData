@@ -81,6 +81,7 @@
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
     <Compile Include="Binding\ObservableCollectionToListFixture.cs" />
+    <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />
@@ -161,6 +162,7 @@
     <Compile Include="ListFixtures\FilterControllerFixtureWithDiffSet.cs" />
     <Compile Include="ListFixtures\FilterControllerFixtureWithClearAndReplace.cs" />
     <Compile Include="ListFixtures\FilterFixture.cs" />
+    <Compile Include="ListFixtures\ForEachChangeFixture.cs" />
     <Compile Include="ListFixtures\GroupOnFixture.cs" />
     <Compile Include="ListFixtures\MergeManyFixture.cs" />
     <Compile Include="ListFixtures\PageFixture.cs" />

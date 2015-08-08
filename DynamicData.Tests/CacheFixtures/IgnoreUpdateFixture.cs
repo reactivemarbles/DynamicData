@@ -1,4 +1,5 @@
-﻿using DynamicData.Tests.Domain;
+﻿using System;
+using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -10,13 +11,15 @@ namespace DynamicData.Tests.CacheFixtures
         private ChangeSetAggregator<Person, string> _results;
 
         [SetUp]
-        public void MyTestInitialize()
+        public void SetUp()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new ChangeSetAggregator<Person, string>
                 (
                      _source.Connect().IgnoreUpdateWhen((current,previous)=>current == previous)
                 );
+
+
         }
         
         [Test]

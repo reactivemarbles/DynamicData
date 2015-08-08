@@ -1,25 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DynamicData.Internal
+namespace DynamicData.Linq
 {
-
-    internal static class WithoutIndexEnumeratorEx
-    {
-        /// <summary>
-        /// Remove the index from the changes
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>>  source)
-        {
-            return new WithoutIndexEnumerator<T>(source);
-        }
-
-    }
-
-
     /// <summary>
     /// Index to remove the index. This is necessary for WhereReasonAre* operators. 
     /// Otherwise these operators could break subsequent operators when the subsequent operator relies on the index
