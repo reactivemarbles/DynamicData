@@ -21,7 +21,7 @@ The core of dynamic data is an observable cache which for most circumstances is 
 
 If you download the latest release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
 
-## Create Dynamic Data Collections
+## Create dynamic data Collections
 
 ### The observable list
 
