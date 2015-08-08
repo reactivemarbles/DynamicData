@@ -41,7 +41,7 @@ myInts.Edit(innerList =>
    innerList.AddRange(Enumerable.Range(0, 10000));
 });
 ```
-If ``myInts``` is to be exposed publicly it can be made read only
+If ``myInts`` is to be exposed publicly it can be made read only
 ```
 IObservableList<int> readonlyInts = myInts.AsObservableList();
 ```
@@ -77,45 +77,52 @@ IObservableCache<TObject,TKey> readonlyCache= myCache.AsObservableCache();
 ```
 which hides the edit methods.
 
-The cache is observed by calling ```myInts.Connect()```. This creates an observable change set for which there are dozens of list specific operators. The changes are transmitted as an Rx observable so are fluent and composable.
-
+The cache is observed by calling ```myInts.Connect()```. This creates an observable change set for which there are dozens of cache specific operators. The changes are transmitted as an Rx observable so are fluent and composable.
 
 ### Create an observable change set from a standard Rx observable
 
 Given either of the following observables
-```csharp
+```
 IObservable<T> myObservable;
 IObservable<IEnumerable<T>> myObservable;
 ```
 an observable cache can be created like like 
-```csharp
-//1. This option will create an observable where item's are identified using the hash code.
-var mydynamicdatasource = myObservable.ToObservableChangeSet();
-//2. Or specify a key like this
+```
 var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> t.key);
 ```
+
 ### Create a size or time based expiring cache
 
 The problem with the above is the cache will grow forever so there are overloads to specify size limitation or expiry times. The following shows how to limit the size and create a time expiring cache.
-```csharp
-//Time limit cache where the expiry time for each item can be specified
+
+Expire by time
+```
 var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> t.key, expireAfter: item => TimeSpan.FromHours(1));
-//limit the cache to a maximum size
+```
+where the expiry time for each item can be specified. Alternatively expire by size
+```
 var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> t.key, limitSizeTo:10000);
 ```
+There is also an overload to expire by both time and size.
 
 ### Create an observable change set from an observable collection
-Another way is to directly from an observable collection, you can do this
-```csharp
+
+Another way is to create an observable change set from an observable collection.
+```
 var myobservablecollection= new ObservableCollection<T>();
-// Use the hashcode for the key
-var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
-// or specify a key like this
+```
+To create a cache observable specify a key
+```
+var myobservablecollection= new ObservableCollection<T>();
 var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
+```
+or to create a list observable
+```
+var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
 ```
 This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
 
-### Now for some powerful examples
+## Some powerful examples
 
 No you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
@@ -152,7 +159,7 @@ and you have an observable list of pensioners.
 
 The same applies to a cache.  The only difference is you call ```.AsObservableCache()``` to create a derived cache.
 
-In practise I have found this function very useful in a trading system where old items massively outnumber current items.  By creating a derived collection and exposing that to consumers has saved a huge amount of processing power and memory downstream.
+In practise I have found this function very useful in a trading system where old items massively outnumber current items.  By creating a derived collection and exposing that to consumers has saved a huge amount of processing power and memory consumption.
 
 #### Filtering
 Filter the underlying data using the filter operators
@@ -170,10 +177,10 @@ Filter the underlying data using the filter operators
 ```
 var myoperation = personChangeSet.Sort(SortExpressionComparer.Ascending(p=>p.Age) 
 ```
-or to dynamically change a filter 
+or to dynamically change a sort
 ```
 IObservable<IComparer<Person>> observableComparer=...;
-var myoperation = personChangeSet.Filter(observableComparer) 
+var myoperation = personChangeSet.Sort(observableComparer) 
 ```
 #### Grouping
 
@@ -291,7 +298,7 @@ This wires and unwires ```SomeObservable``` as the collection changes.
 Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx when it first came out. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
 
 ### Want to know more?
-I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links above)  as I intend it to be a 'living document' and I promise it will be continually maintained. 
+I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links at top of document)  as I intend it to be a 'living document' and I promise it will be continually maintained. 
 
 Also if you following me on Twitter you will find out when new samples or blog posts have been updated.
 

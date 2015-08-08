@@ -71,7 +71,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.InsertRange(new RandomPersonGenerator().Take(5),2);
             _source.AddRange(new RandomPersonGenerator().Take(5));
 
-            Assert.AreEqual(10, messages.Count);
+            Assert.AreEqual(15, messages.Count);
             messageWriter.Dispose();
         }
     }
