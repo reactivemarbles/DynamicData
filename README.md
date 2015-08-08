@@ -1,10 +1,10 @@
 ## Dynamic Data
 
-Dynamic Data is a portable class library which brings the power of reactive (Rx) to collections.  
+Dynamic Data is a portable class library which brings the power of Reactive Extensions (Rx) to collections.  
 
-A collection which mutates can have adds, updates and removes (plus moves and re-evaluates but more about that another time). Dynamic Data has been evolved to take Rx to another dimension by introducing an observable cache and an observable list where changes are notified via an observable change set .  Operators receive these notifications then apply some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
+Mutable collections frequently experience additions, updates, and removals (among other changes). Dynamic Data provides two collection implementations, `ISourceCache<T>` and `ISourceList<T>`, that expose changes to the collection via an observable change set. The resulting observable change sets can be manipulated and transformed using Dynamic Data's robust and powerful array of change set operators. These operators receive change notifications, apply some logic, and subsequently provide their own change notifications. Because of this, operators are fully composable and can be chained together to perform powerful and very complicated operations while maintaining simple, fluent code.
 
-The benefit of at least 50 operators which are borne from pragmatic experience is that the management of in-memory data becomes easy and it is no exaggeration to say it can save thousands of lines of code by abstracting complicated and often repetitive operations.
+Using Dynamic Data's collections and change set operators makes in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
 
 ###Some links
 
@@ -17,25 +17,25 @@ The benefit of at least 50 operators which are borne from pragmatic experience i
 
 ### Version 4 has been released
 
-The core of Dynamic Data is an observable cache which for most circumstances is great but sometimes there is the need simply for an observable list. Version 4 delivers this. It has been a great effort and consumed loads of my time, mental capacity and resolve but it is finally crystallising into a stable state. 
+The core of Dynamic Data is the observable cache, which is great in most circumstances. However, sometimes the simplicity of an observable list is needed and version 4 delivers this. The addition of the observable list has been a great effort and has consumed loads of my time, mental capacity, and resolve. In spite of the difficulty, the observable list is finally crystallising into a stable state. 
 
-If you download the latest release of Dynamic Data from [Dynamic Data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
+Downloading the latest release of Dynamic Data from [Dynamic Data on nuget](https://www.nuget.org/packages/DynamicData/) will allow you to create and have fun with observable lists.
 
-## Create Dynamic Data collections
+## Create Dynamic Data Collections
 
-### The observable list
+### The Observable List
 
 Create an observable list like this:
 ```cs
-var myInts= new SourceList<int>();
+var myInts = new SourceList<int>();
 ```
-There are direct edit methods, for example
+The observable list provides the direct edit methods you would expect. For example:
 ```cs
 myInts.AddRange(Enumerable.Range(0, 10000)); 
 myInts.Add(99999); 
 myInts.Remove(99999);
 ```
-Each amend operation will produce a change notification. A much more efficient option is to batch edit which produces a single notification.
+Each of the amendments caused by the AddRange operation above will produce a unique change notification. When making multiple modifications, batch editing a list using the `.Edit` operator is much more efficient and produces only a single change notification.
 ```cs
 myInts.Edit(innerList =>
 {
@@ -43,13 +43,17 @@ myInts.Edit(innerList =>
    innerList.AddRange(Enumerable.Range(0, 10000));
 });
 ```
-If ``myInts`` is to be exposed publicly it can be made read only
+If ``myInts`` is to be exposed publicly it can be made read only using `.AsObservableList`
 ```cs
 IObservableList<int> readonlyInts = myInts.AsObservableList();
 ```
 which hides the edit methods.
 
-The list changes can be observed by calling ```myInts.Connect()```. This creates an observable change set for which there are dozens of list specific operators. The changes are transmitted as an Rx observable so are fluent and composable.
+The list's changes can be observed by calling `myInts.Connect()` like this:
+```cs
+IObservable<IChangeSet<int>> myIntsObservable = myInts.Connect();
+```
+This creates an observable change set for which there are dozens of operators. The changes are transmitted as an Rx observable, so they are fluent and composable.
 
 ### The observable cache
 
