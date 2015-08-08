@@ -85,7 +85,7 @@ The cache is observed by calling ```myInts.Connect()```. This creates an observa
 
 ### Connect to the cache or the list
 
-As stated in the blurb at the top of this document, dynamic data is based on the concept of an observable change set. Calling the ```Connect()``` on the list or the cache will produce and observable change set. 
+As stated in the blurb at the top of this document, dynamic data is based on the concept of an observable change set. Calling the ```Connect()``` on the list or the cache will produce an observable change set. 
 
 ```
 var myConnection = myDynamicDataSource.Connect();
@@ -101,7 +101,7 @@ IObservable<IEnumerable<T>> myObservable;
 ```
 an observable cache can be created like like 
 ```
-var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> t.key);
+var myConnection = myObservable.ToObservableChangeSet(t=> t.key);
 ```
 
 ### Create a size or time based expiring cache
@@ -110,11 +110,11 @@ The problem with the above is the cache will grow forever so there are overloads
 
 Expire by time
 ```
-var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> t.key, expireAfter: item => TimeSpan.FromHours(1));
+var myConnection = myObservable.ToObservableChangeSet(t=> t.key, expireAfter: item => TimeSpan.FromHours(1));
 ```
 where the expiry time for each item can be specified. Alternatively expire by size
 ```
-var mydynamicdatasource = myObservable.ToObservableChangeSet(t=> t.key, limitSizeTo:10000);
+var myConnection = myObservable.ToObservableChangeSet(t=> t.key, limitSizeTo:10000);
 ```
 There is also an overload to expire by both time and size.
 
@@ -126,11 +126,11 @@ var myobservablecollection= new ObservableCollection<T>();
 ```
 To create a cache observable specify a key
 ```
-var mydynamicdatasource = myobservablecollection.ToObservableChangeSet(t => t.Key);
+var myConnection = myobservablecollection.ToObservableChangeSet(t => t.Key);
 ```
 or to create a list observable
 ```
-var mydynamicdatasource = myobservablecollection.ToObservableChangeSet();
+var myConnection = myobservablecollection.ToObservableChangeSet();
 ```
 This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
 
@@ -144,7 +144,7 @@ This example a stream of live trades, creates a proxy for each trade and order t
 ```
 //Dynamic data has it's own take on an observable collection (optimised for populating f
 var list = new ObservableCollectionExtended<TradeProxy>();
-var myoperation = somedynamicdatasource
+var myoperation = myConnection 
 					.Filter(trade=>trade.Status == TradeStatus.Live) 
 					.Transform(trade => new TradeProxy(trade))
 					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))

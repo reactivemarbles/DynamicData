@@ -72,7 +72,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.BatchUpdate(updater => updater.AddOrUpdate(_generator.Take(10).ToArray()));
             _source.BatchUpdate(updater => updater.AddOrUpdate(_generator.Take(10).ToArray()));
 
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
 
             Assert.AreEqual(3, _results.Messages.Count, "Should be 3 updates");
             Assert.AreEqual(10, _results.Messages[0].Adds, "Should be 10 adds in the first update");
