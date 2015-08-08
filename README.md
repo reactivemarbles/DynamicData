@@ -1,8 +1,8 @@
 ## Dynamic Data
 
-Dynamic data is a portable class library which brings the power of reactive (rx) to collections.  
+Dynamic Data is a portable class library which brings the power of reactive (Rx) to collections.  
 
-A collection which mutates can have adds, updates and removes (plus moves and re-evaluates but more about that another time). Dynamic data has been evolved to take Rx to another dimension by introducing an observable cache and an observable list where changes are notified via an observable change set .  Operators receive these notifications then apply some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
+A collection which mutates can have adds, updates and removes (plus moves and re-evaluates but more about that another time). Dynamic Data has been evolved to take Rx to another dimension by introducing an observable cache and an observable list where changes are notified via an observable change set .  Operators receive these notifications then apply some logic and subsequently provides it's own notifications. In this way operators can be chained together to apply powerful and often very complicated operations with some very simple fluent code.
 
 The benefit of at least 50 operators which are borne from pragmatic experience is that the management of in-memory data becomes easy and it is no exaggeration to say it can save thousands of lines of code by abstracting complicated and often repetitive operations.
 
@@ -17,11 +17,11 @@ The benefit of at least 50 operators which are borne from pragmatic experience i
 
 ### Version 4 has been released
 
-The core of dynamic data is an observable cache which for most circumstances is great but sometimes there is the need simply for an observable list. Version 4 delivers this. It has been a great effort and consumed loads of my time, mental capacity and resolve but it is finally crystallising into a stable state. 
+The core of Dynamic Data is an observable cache which for most circumstances is great but sometimes there is the need simply for an observable list. Version 4 delivers this. It has been a great effort and consumed loads of my time, mental capacity and resolve but it is finally crystallising into a stable state. 
 
-If you download the latest release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
+If you download the latest release of Dynamic Data from [Dynamic Data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
 
-## Create dynamic data collections
+## Create Dynamic Data collections
 
 ### The observable list
 
@@ -81,11 +81,11 @@ which hides the edit methods.
 
 The cache is observed by calling ```myInts.Connect()```. This creates an observable change set for which there are dozens of cache specific operators. The changes are transmitted as an Rx observable so are fluent and composable.
 
-## Consume dynamic data
+## Consume Dynamic Data
 
 ### Connect to the cache or the list
 
-As stated in the blurb at the top of this document, dynamic data is based on the concept of an observable change set. Calling the ```Connect()``` on the list or the cache will produce an observable change set. 
+As stated in the blurb at the top of this document, Dynamic Data is based on the concept of an observable change set. Calling the ```Connect()``` on the list or the cache will produce an observable change set. 
 
 ```
 var myConnection = myDynamicDataSource.Connect();
@@ -142,7 +142,7 @@ No you can create an observable cache or an observable list, here are a few quic
 
 This example a stream of live trades, creates a proxy for each trade and order the result by most recent first. The result is bound to the observable collection. (```ObservableCollectionExtended<T>``` is provided by dynamic data and is more efficient than the standard ``ObservableCollection<T>``` )
 ```
-//Dynamic data has it's own take on an observable collection (optimised for populating f
+//Dynamic Data has it's own take on an observable collection (optimised for populating f
 var list = new ObservableCollectionExtended<TradeProxy>();
 var myoperation = myConnection 
 					.Filter(trade=>trade.Status == TradeStatus.Live) 
@@ -157,7 +157,7 @@ Oh and I forgot to say, ```TradeProxy``` is disposable and ```DisposeMany()``` e
 
 #### Create a derived list or cache
 
-Although this example is very simple, it is one of the most powerful aspects of dynamic data.  Any dynamic data stream can be materialised into a derived collection.  
+Although this example is very simple, it is one of the most powerful aspects of Dynamic Data.  Any Dynamic Data stream can be materialised into a derived collection.  
 
 If you have 
 ```
@@ -297,7 +297,7 @@ which returns an observable of the person when any property has changed,.
 
 #### Observing item changes
 
-Binding is a very small part of dynamic data. The above notify property changed overloads are just an example when binding. If you have a domain object which has children observables you can use ```MergeMany()``` which subscribes to and unsubscribes from items according to collection changes.
+Binding is a very small part of Dynamic Data. The above notify property changed overloads are just an example when binding. If you have a domain object which has children observables you can use ```MergeMany()``` which subscribes to and unsubscribes from items according to collection changes.
 
 ```csharp
 var myoperation = somedynamicdatasource.Connect() 
@@ -305,8 +305,8 @@ var myoperation = somedynamicdatasource.Connect()
 ```
 This wires and unwires ```SomeObservable``` as the collection changes.
 
-## History of dynamic data
-Even before rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using rx when it first came out. This also failed as my understanding of rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
+## History of Dynamic Data
+Even before Rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using Rx when it first came out. This also failed as my understanding of Rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
 
 ## Want to know more?
 I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links at top of document)  as I intend it to be a 'living document' and I promise it will be continually maintained. 
