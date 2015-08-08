@@ -21,7 +21,7 @@ The core of dynamic data is an observable cache which for most circumstances is 
 
 If you download the latest release of dynamic data from [dynamic data on nuget](https://www.nuget.org/packages/DynamicData/) you can create and have fun with the observable list.
 
-## Create And Consuming Dynamic Data Collections
+## Create Dynamic Data Collections
 
 ### The observable list
 
@@ -80,6 +80,17 @@ IObservableCache<TObject,TKey> readonlyCache= myCache.AsObservableCache();
 which hides the edit methods.
 
 The cache is observed by calling ```myInts.Connect()```. This creates an observable change set for which there are dozens of cache specific operators. The changes are transmitted as an Rx observable so are fluent and composable.
+
+## Consume dynamic data
+
+### Connect to the cache or the list
+
+As stated in the blurb at the top of this document, dynamic data is based on the concept of an observable change set. Calling the ```Connect()``` on the list or the cache will produce and observable change set. 
+
+```
+var myConnection = myDynamicDataSource.Connect();
+```
+This opens the consumer to fluent and composable streams of data. But before I show some examples, there are some alternative ways to create an observable change set.
 
 ### Create an observable change set from a standard Rx observable
 
