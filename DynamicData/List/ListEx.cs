@@ -272,10 +272,11 @@ namespace DynamicData
                         }
                     case ListChangeReason.RemoveRange:
                         {
-                            if (item.Range.Index < 0)
-                                throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
+                            //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
+                            //if (item.Range.Index < 0)
+                            //    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
 
-                            if (source is IExtendedList<T> || source is List<T>)
+                            if (item.Range.Index >= 0 && ( source is IExtendedList<T> || source is List<T>))
                             {
                                 source.RemoveRange(item.Range.Index, item.Range.Count);
                             }

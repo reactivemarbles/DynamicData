@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
-using DynamicData.Linq;
 
 namespace DynamicData.Internal
 {
@@ -31,8 +30,7 @@ namespace DynamicData.Internal
 		{
 			//TODO: This is very ineffiecient as it flattens range operation
 			//need to find a means of re-forming ranges
-			var enumerator = new UnifiedChangeEnumerator<TSource>(source);
-			var children = enumerator.SelectMany(change =>
+			var children = source.Unified().SelectMany(change =>
 			{
 				var many = _manyselector(change.Current);
 				return many.Select(m => new TransformedItem<TDestination>(change.Reason, m));
