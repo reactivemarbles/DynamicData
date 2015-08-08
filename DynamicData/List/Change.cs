@@ -48,8 +48,9 @@ namespace DynamicData
             if (reason.GetChangeType()== ChangeType.Item)
                 throw new IndexOutOfRangeException("ListChangeReason must be a range type for a range change");
 
-            if (reason== ListChangeReason.RemoveRange && index < 0)
-                    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
+            //ignore this case because WhereReasonsAre removes the index 
+            //if (reason== ListChangeReason.RemoveRange && index < 0)
+            //        throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
 
             Reason = reason;
 			Item = ItemChange<T>.Empty;

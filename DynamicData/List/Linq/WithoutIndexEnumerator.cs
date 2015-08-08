@@ -25,8 +25,6 @@ namespace DynamicData.Linq
                 if (change.Reason == ListChangeReason.Moved)
                 {
                     //exceptional case - makes no sense to remove index from move 
-                    //TODO: Consider whether Moves should be  ignored
-                    yield return change;
                     continue;
                 }
 
