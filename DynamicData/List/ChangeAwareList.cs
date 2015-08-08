@@ -147,9 +147,16 @@ namespace DynamicData
             _innerList.Insert(index, item);
         }
 
+
         protected virtual void RemoveItem(int index)
         {
             var item = _innerList[index];
+            RemoveItem(index, item);
+        }
+
+        protected virtual void RemoveItem(int index, T item)
+        {
+           
 
             //attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
             var last = Last;
@@ -202,7 +209,7 @@ namespace DynamicData
             }
             else
             {
-                //first add, so cannot infer range
+                //first remove, so cannot infer range
                 _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
             }
             _innerList.RemoveAt(index);
@@ -280,7 +287,7 @@ namespace DynamicData
         {
             var index = _innerList.IndexOf(item);
             if (index < 0) return false;
-            RemoveItem(index);
+            RemoveItem(index, item);
             return true;
         }
 
