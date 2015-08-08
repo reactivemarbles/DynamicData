@@ -55,7 +55,7 @@ The list changes can be observed by calling ```myInts.Connect()```. This creates
 
 Create an observable cache like this:
 ```cs
-var myCache= new SourceCache<TObject,TKey>(t => key);
+var myCache = new SourceCache<TObject,TKey>(t => key);
 ```
 There are direct edit methods, for example
 
@@ -122,15 +122,15 @@ There is also an overload to expire by both time and size.
 
 Another way is to create an observable change set from an observable collection.
 ```cs
-var myobservablecollection= new ObservableCollection<T>();
+var myObservableCollection = new ObservableCollection<T>();
 ```
 To create a cache observable specify a key
 ```cs
-var myConnection = myobservablecollection.ToObservableChangeSet(t => t.Key);
+var myConnection = myObservableCollection.ToObservableChangeSet(t => t.Key);
 ```
 or to create a list observable
 ```cs
-var myConnection = myobservablecollection.ToObservableChangeSet();
+var myConnection = myObservableCollection.ToObservableChangeSet();
 ```
 This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
 
@@ -165,7 +165,7 @@ var myList = new SourceList<People>()
 ```
 You can do this
 ```cs
-var oldPeople = myList.Filter(person=>person.Age>65).AsObservableList();
+var oldPeople = myList.Filter(person => person.Age > 65).AsObservableList();
 ```
 and you have an observable list of pensioners.
 
@@ -176,18 +176,18 @@ In practise I have found this function very useful in a trading system where old
 #### Filtering
 Filter the underlying data using the filter operators
 ```cs
-var myoperation = personChangeSet.Filter(person=>person.Age>50) 
+var myOperation = personChangeSet.Filter(person => person.Age > 50) 
 ```
 or to dynamically change a filter 
 ```cs
 IObservable<Func<Person,bool>> observablePredicate=...;
-var myoperation = personChangeSet.Filter(observablePredicate) 
+var myOperation = personChangeSet.Filter(observablePredicate) 
 ```
 #### Sorting
 
 Filter the underlying data using the filter operators
 ```cs
-var myoperation = personChangeSet.Sort(SortExpressionComparer.Ascending(p=>p.Age) 
+var myOperation = personChangeSet.Sort(SortExpressionComparer.Ascending(p => p.Age) 
 ```
 or to dynamically change a sort
 ```cs
@@ -198,32 +198,32 @@ var myoperation = personChangeSet.Sort(observableComparer)
 
 This operator pre-caches the specified groups according to the group selector.
 ```cs
-var myoperation = personChangeSet.GroupOn(person=>person.Status)
+var myOperation = personChangeSet.GroupOn(person => person.Status)
 ```
 
 #### Transformation
 
 Map to a another object
 ```cs
-var myoperation = personChangeSet.Transform(person=>new PersonProxy(person)) 
+var myOperation = personChangeSet.Transform(person => new PersonProxy(person)) 
 ```
 Ceate a fully formed reactive tree
 ```cs
-var myoperation = personChangeSet.TransformToTree(person=>person.BossId) 
+var myOperation = personChangeSet.TransformToTree(person => person.BossId) 
 ```
 Flatten  a child enumerable
 ```cs
-var myoperation = personChangeSet.TransformMany(person=>person.Children) 
+var myOperation = personChangeSet.TransformMany(person => person.Children) 
 ```
 #### Aggregation
 
 if we have a a list of people we can aggregate as follows
 ```cs
 var count= 	personChangeSet.Count();
-var max= 	personChangeSet.Max(p=>p.Age);
-var min= 	personChangeSet.Min(p=>p.Age);
-var stdDev= personChangeSet.StdDev(p=>p.Age);
-var avg= 	personChangeSet.Avg(p=>p.Age);
+var max= 	personChangeSet.Max(p => p.Age);
+var min= 	personChangeSet.Min(p => p.Age);
+var stdDev= personChangeSet.StdDev(p => p.Age);
+var avg= 	personChangeSet.Avg(p => p.Age);
 ```
 In the near future I will create even more aggregations.
 
@@ -231,8 +231,8 @@ In the near future I will create even more aggregations.
 
 There are And, Or, Xor and Except logical operators
 ```cs
-var peopleA= new SourceCache<Person,string>(p=>p.Name);
-var peopleB= new SourceCache<Person,string>(p=>p.Name);
+var peopleA = new SourceCache<Person,string>(p => p.Name);
+var peopleB = new SourceCache<Person,string>(p => p.Name);
 
 var observableA = peopleA.Connect();
 var observableB = peopleB.Connect();
@@ -248,7 +248,7 @@ Currently the join operators are only implemented for cache observables
 
 To ensure an object is disposed when it is removed from a stream
 ```cs
-var myoperation = somedynamicdatasource.Connect().DisposeMany()
+var myOperation = somedynamicdatasource.Connect().DisposeMany()
 ```
 which will also dispose all objects when the stream is disposed. This is typically used when a transform function creates an object which is disposable.
 
@@ -266,18 +266,18 @@ In this case a distinct ages.
 Visualise data to restrict by index and segment size
 ```cs
 IObservable<IVirtualRequest> request; //request stream
-var virtualisedStream = somedynamicdatasource.Virtualise(request)
+var virtualisedStream = someDynamicDataSource.Virtualise(request)
 ```
 Visualise data to restrict by index and page size
 ```cs
 IObservable<IPageRequest> request; //request stream
-var pagedStream = somedynamicdatasource.Page(request)
+var pagedStream = someDynamicDataSource.Page(request)
 ```
 In either of the above, the result is re-evaluated when the request stream changes
 
 Top is an overload of ```Virtualise()``` and will return items matching the first 'n'  items.
 ```cs
-var topStream = somedynamicdatasource.Top(10)
+var topStream = someDynamicDataSource.Top(10)
 ```
 #### Observing binding changes
 
@@ -301,7 +301,7 @@ Binding is a very small part of Dynamic Data. The above notify property changed 
 
 ```cs
 var myoperation = somedynamicdatasource.Connect() 
-			.MergeMany(trade=> trade.SomeObservable());
+			.MergeMany(trade => trade.SomeObservable());
 ```
 This wires and unwires ```SomeObservable``` as the collection changes.
 
