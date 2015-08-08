@@ -171,8 +171,7 @@ namespace DynamicData
                         break;
                     case ListChangeReason.Remove:
                         {
-                            var change = item.Item;
-                            source.RemoveAt(change.CurrentIndex);
+                            source.RemoveAt(item.Item.CurrentIndex);
                         }
                         break;
                     case ListChangeReason.RemoveRange:
@@ -273,11 +272,10 @@ namespace DynamicData
                         }
                     case ListChangeReason.RemoveRange:
                         {
-                            if (source is IExtendedList<T>)
-                            {
-                                source.RemoveRange(item.Range.Index, item.Range.Count);
-                            }
-                            else if (source is List<T>)
+                            if (item.Range.Index < 0)
+                                throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
+
+                            if (source is IExtendedList<T> || source is List<T>)
                             {
                                 source.RemoveRange(item.Range.Index, item.Range.Count);
                             }
