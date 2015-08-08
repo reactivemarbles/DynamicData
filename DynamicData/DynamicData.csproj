@@ -176,7 +176,6 @@
     <Compile Include="List\Internal\Virtualiser.cs" />
     <Compile Include="List\Linq\WithoutIndexEnumerator.cs" />
     <Compile Include="List\ItemChange.cs" />
-    <Compile Include="List\Linq\EnumerableEx.cs" />
     <Compile Include="List\ListChangeReason.cs" />
     <Compile Include="List\Linq\AddKeyEnumerator.cs" />
     <Compile Include="List\ListEx.cs" />
