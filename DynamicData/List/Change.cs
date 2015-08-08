@@ -4,6 +4,8 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
+
+ 
     /// <summary>
     ///   Container to describe a single change to a cache
     /// </summary>
@@ -30,34 +32,9 @@ namespace DynamicData
 		/// <value>
 		/// The type.
 		/// </value>
-		public ChangeType Type
-		{
-			get
-			{
-				switch (Reason)
-				{
-					case ListChangeReason.Add:
-						return ChangeType.Item;
-					case ListChangeReason.AddRange:
-						return ChangeType.Range;
-					case ListChangeReason.Replace:
-						return ChangeType.Item;
-					case ListChangeReason.Remove:
-						return ChangeType.Item;
-					case ListChangeReason.RemoveRange:
-						return ChangeType.Range;
-					case ListChangeReason.Moved:
-						return ChangeType.Item;
-					case ListChangeReason.Clear:
-						return ChangeType.Range;
-					default:
-						throw new ArgumentOutOfRangeException();
-				}
-			}
-		}
+		public ChangeType Type => Reason.GetChangeType();
 
-
-		#region Construction
+        #region Construction
 
 
 		/// <summary>
@@ -68,7 +45,13 @@ namespace DynamicData
 		/// <param name="index">The index.</param>
 		public Change(ListChangeReason reason, IEnumerable<T> items, int index = -1)
 		{
-			Reason = reason;
+            if (reason.GetChangeType()== ChangeType.Item)
+                throw new IndexOutOfRangeException("ListChangeReason must be a range type for a range change");
+
+            if (reason== ListChangeReason.RemoveRange && index < 0)
+                    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
+
+            Reason = reason;
 			Item = ItemChange<T>.Empty;
 			Range = new RangeChange<T>(items,index);
 		}
