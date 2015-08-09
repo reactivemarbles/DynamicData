@@ -2,9 +2,9 @@
 
 Dynamic Data is a portable class library which brings the power of Reactive Extensions (Rx) to collections.  
 
-Mutable collections frequently experience additions, updates, and removals (among other changes). Dynamic Data provides two collection implementations, `ISourceCache<T>` and `ISourceList<T>`, that expose changes to the collection via an observable change set. The resulting observable change sets can be manipulated and transformed using Dynamic Data's robust and powerful array of change set operators. These operators receive change notifications, apply some logic, and subsequently provide their own change notifications. Because of this, operators are fully composable and can be chained together to perform powerful and very complicated operations while maintaining simple, fluent code.
+Mutable collections frequently experience additions, updates, and removals (among other changes). Dynamic Data provides two collection implementations, `ISourceCache<T,K>` and `ISourceList<T>`, that expose changes to the collection via an observable change set. The resulting observable change sets can be manipulated and transformed using Dynamic Data's robust and powerful array of change set operators. These operators receive change notifications, apply some logic, and subsequently provide their own change notifications. Because of this, operators are fully composable and can be chained together to perform powerful and very complicated operations while maintaining simple, fluent code.
 
-Using Dynamic Data's collections and change set operators makes in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
+Using Dynamic Data's collections and change set operators make in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
 
 ###Some links
 
@@ -55,7 +55,7 @@ IObservable<IChangeSet<int>> myIntsObservable = myInts.Connect();
 ```
 This creates an observable change set for which there are dozens of operators. The changes are transmitted as an Rx observable, so they are fluent and composable.
 
-### The observable cache
+### The Observable Cache
 
 Create an observable cache like this:
 ```cs
@@ -67,7 +67,7 @@ There are direct edit methods, for example
 myCache.Clear();
 myCache.AddOrUpdate(myItems);
 ```
-Each amend operation will produced a change notification. A much more efficient option is to batch edit which produces a single notification.
+Each amend or update caused by the AddOrUpdate operation above will produce a unique change notification. When making multiple modifications, batch editing a cache using the `.BatchUpdate` operator is much more efficient and produces only a single change notification.
 
 ```cs
 myCache.BatchUpdate(innerCache =>
@@ -76,79 +76,84 @@ myCache.BatchUpdate(innerCache =>
 			      innerCache.AddOrUpdate(myItems);
 			  });
 ```
-If ```myCache``` is to be exposed publicly it can be made read only
+If `myCache` is to be exposed publicly it can be made read only using `.AsObservableCache`
 
 ```cs
-IObservableCache<TObject,TKey> readonlyCache= myCache.AsObservableCache();
+IObservableCache<TObject,TKey> readonlyCache = myCache.AsObservableCache();
 ```
 which hides the edit methods.
 
-The cache is observed by calling ```myInts.Connect()```. This creates an observable change set for which there are dozens of cache specific operators. The changes are transmitted as an Rx observable so are fluent and composable.
-
-## Consume Dynamic Data
-
-### Connect to the cache or the list
-
-As stated in the blurb at the top of this document, Dynamic Data is based on the concept of an observable change set. Calling the ```Connect()``` on the list or the cache will produce an observable change set. 
-
+The cache is observed by calling `myCache.Connect()` like this:
 ```cs
-var myConnection = myDynamicDataSource.Connect();
+IObservable<IChangeSet<TObject,TKey>> myCacheObservable = myCache.Connect();
 ```
-This opens the consumer to fluent and composable streams of data. But before I show some examples, there are some alternative ways to create an observable change set.
+This creates an observable change set for which there are dozens of operators. The changes are transmitted as an Rx observable, so they are fluent and composable.
 
-### Create an observable change set from a standard Rx observable
+## Creating Observable Change Sets
+As stated in the introduction of this document, Dynamic Data is based on the concept of creating and manipulating observable change sets. 
 
-Given either of the following observables
+The primary method of creating observable change sets is to connect to instances of `ISourceCache<T,K>` and `ISourceList<T>`. There are alternative methods to produce observables change sets however, depending on the data source.
+
+### Connect to a Cache or List
+Calling `Connect()` on a `ISourceList<T>` or `ISourceCache<T,K>` will produce an observable change set. 
+```cs
+var myObservableChangeSet = myDynamicDataSource.Connect();
+```
+
+### Create an Observable Change Set from an Rx Observable
+Given either of the following observables:
 ```cs
 IObservable<T> myObservable;
 IObservable<IEnumerable<T>> myObservable;
 ```
-an observable cache can be created like like 
+an observable change set can be created like by calling `.ToObservableChangeSet` like this:
 ```cs
-var myConnection = myObservable.ToObservableChangeSet(t=> t.key);
+var myObservableChangeSet = myObservable.ToObservableChangeSet(t=> t.key);
 ```
 
-### Create a size or time based expiring cache
+### Create an Observable Change Set from an Rx Observable with an Expiring Cache
+The problem with the example above is that the internal backing cache of the observable change set will grow in size forever. 
+To counter this behavior, there are overloads of `.ToObservableChangeSet` where a size limitation or expiry time can be specified for the internal cache.
 
-The problem with the above is the cache will grow forever so there are overloads to specify size limitation or expiry times. The following shows how to limit the size and create a time expiring cache.
-
-Expire by time
+To create a time expiring cache, call `.ToObservableChangeSet` and specify the expiry time using the expireAfter argument:
 ```cs
 var myConnection = myObservable.ToObservableChangeSet(t=> t.key, expireAfter: item => TimeSpan.FromHours(1));
 ```
-where the expiry time for each item can be specified. Alternatively expire by size
+
+To create a size limited cache, call `.ToObservableChangeSet` and specify the size limit using the limitSizeTo argument:
 ```cs
 var myConnection = myObservable.ToObservableChangeSet(t=> t.key, limitSizeTo:10000);
 ```
-There is also an overload to expire by both time and size.
+There is also an overload to specify expiration by both time and size.
 
-### Create an observable change set from an observable collection
-
-Another way is to create an observable change set from an observable collection.
+### Create an Observable Change Set from an Observable Collection
 ```cs
 var myObservableCollection = new ObservableCollection<T>();
 ```
-To create a cache observable specify a key
+To create a cache based observable change set, call `.ToObservableChangeSet` and specify a key selector for the backing cache
 ```cs
 var myConnection = myObservableCollection.ToObservableChangeSet(t => t.Key);
 ```
-or to create a list observable
+or to create a list based observable change set call `.ToObservableChangeSet` with no arguments
 ```cs
 var myConnection = myObservableCollection.ToObservableChangeSet();
 ```
-This method is only recommended for simple queries which act only on the UI thread as ```ObservableCollection``` is not thread safe.
+This method is only recommended for simple queries which act only on the UI thread as `ObservableCollection` is not thread safe.
 
-## Some powerful examples
-
+## Consuming Observable Change Sets
+The examples below illustrate the kind of things you can achieve after creating an observable change set. 
 No you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
-#### Bind to a complex stream
-
-This example a stream of live trades, creates a proxy for each trade and order the result by most recent first. The result is bound to the observable collection. (```ObservableCollectionExtended<T>``` is provided by dynamic data and is more efficient than the standard ``ObservableCollection<T>``` )
+#### Bind a Complex Stream to an Observable Collection
+This example first filters a stream of trades to select only live trades, then creates a proxy for each live trade, and finally orders the results by most recent first. The resulting trade proxies are bound on the dispatcher thread to the specified observable collection. 
 ```cs
-//Dynamic Data has it's own take on an observable collection (optimised for populating f
 var list = new ObservableCollectionExtended<TradeProxy>();
-var myoperation = myConnection 
+
+var myTradeCache = new SourceCache<Trade, long>(trade => trade.Id);
+
+var myTradeCacheObservable = myTradeCache.Connect();
+
+var myOperation = myTradeCacheObservable 
 					.Filter(trade=>trade.Status == TradeStatus.Live) 
 					.Transform(trade => new TradeProxy(trade))
 					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
@@ -157,83 +162,96 @@ var myoperation = myConnection
 					.DisposeMany()
 					.Subscribe()
 ```
-Oh and I forgot to say, ```TradeProxy``` is disposable and ```DisposeMany()``` ensures items are disposed when no longer part of the stream.
+Since the TradeProxy object is disposable, the `DisposeMany` operator ensures that the proxies objects are disposed when they are no longer part of this observable stream.
 
-#### Create a derived list or cache
+Note that `ObservableCollectionExtended<T>` is provided by Dynamic Data and is more efficient than the standard `ObservableCollection<T>`.
 
-Although this example is very simple, it is one of the most powerful aspects of Dynamic Data.  Any Dynamic Data stream can be materialised into a derived collection.  
+#### Create a Derived List or Cache
+This example shows how you can create derived collections from an observable change set. It applies a filter to a collection, and then creates a new observable collection that only contains items from the original collection that pass the filter.
+This pattern is incredibly useful when you want make modifications to an existing collection and then expose the modified collection to consumers. 
 
-If you have 
+Even though the code in this example is very simple, this is one of the most powerful aspects of Dynamic Data. 
+
+Given a SourceList 
 ```cs
-var myList = new SourceList<People>()
+var myList = new SourceList<People>();
 ```
-You can do this
+You can apply operators, in this case the `Filter()` operator, and then create a new observable list with `AsObservableList()`
 ```cs
-var oldPeople = myList.Filter(person => person.Age > 65).AsObservableList();
+var oldPeople = myList.Connect().Filter(person => person.Age > 65).AsObservableList();
 ```
-and you have an observable list of pensioners.
+The resulting observable list, oldPeople, will only contain people who are older than 65.
 
-The same applies to a cache.  The only difference is you call ```.AsObservableCache()``` to create a derived cache.
-
-In practise I have found this function very useful in a trading system where old items massively outnumber current items.  By creating a derived collection and exposing that to consumers has saved a huge amount of processing power and memory consumption.
+The same pattern can be used with SourceCache by using `.AsObservableCache()` to create derived caches.
 
 #### Filtering
-Filter the underlying data using the filter operators
+Filter the observable change set by using the `Filter` operator
 ```cs
-var myOperation = personChangeSet.Filter(person => person.Age > 50) 
+var myPeople = new SourceList<People>();
+var myPeopleObservable = myPeople.Connect();
+
+var myFilteredObservable = myPeopleObservable.Filter(person => person.Age > 50); 
 ```
-or to dynamically change a filter 
+or to filter a change set dynamically 
 ```cs
 IObservable<Func<Person,bool>> observablePredicate=...;
-var myOperation = personChangeSet.Filter(observablePredicate) 
+var myFilteredObservable = myPeopleObservable.Filter(observablePredicate); 
 ```
-#### Sorting
 
-Filter the underlying data using the filter operators
+#### Sorting
+Sort the observable change set by using the `Sort` operator
 ```cs
-var myOperation = personChangeSet.Sort(SortExpressionComparer.Ascending(p => p.Age) 
+var myPeople = new SourceList<People>();
+var myPeopleObservable = myPeople.Connect();
+var mySortedObservable = myPeopleObservable.Sort(SortExpressionComparer.Ascending(p => p.Age); 
 ```
-or to dynamically change a sort
+or to dynamically change sorting
 ```cs
 IObservable<IComparer<Person>> observableComparer=...;
-var myoperation = personChangeSet.Sort(observableComparer) 
+var mySortedObservable = myPeopleObservable.Sort(observableComparer);
 ```
 #### Grouping
-
-This operator pre-caches the specified groups according to the group selector.
+The `GroupOn` operator pre-caches the specified groups according to the group selector.
 ```cs
 var myOperation = personChangeSet.GroupOn(person => person.Status)
 ```
 
 #### Transformation
+The `Transform` operator allows you to map objects from the observable change set to another object
+```cs
+var myPeople = new SourceList<People>();
+var myPeopleObservable = myPeople.Connect();
+var myTransformedObservable = myPeopleObservable.Transform(person => new PersonProxy(person));
+```
 
-Map to a another object
+The `TransformToTree` operator allows you to create a fully formed reactive tree
 ```cs
-var myOperation = personChangeSet.Transform(person => new PersonProxy(person)) 
+var myPeople = new SourceList<People>();
+var myPeopleObservable = myPeople.Connect();
+var myTransformedObservable = myPeopleObservable.TransformToTree(person => person.BossId);
 ```
-Ceate a fully formed reactive tree
-```cs
-var myOperation = personChangeSet.TransformToTree(person => person.BossId) 
-```
-Flatten  a child enumerable
+
+Flatten a child enumerable
 ```cs
 var myOperation = personChangeSet.TransformMany(person => person.Children) 
 ```
+
 #### Aggregation
-
-if we have a a list of people we can aggregate as follows
+The `Count`, `Max`, `Min`, `Avg`, and `StdDev` operators allow you to perform aggregate functions on observable change sets
 ```cs
-var count= 	personChangeSet.Count();
-var max= 	personChangeSet.Max(p => p.Age);
-var min= 	personChangeSet.Min(p => p.Age);
-var stdDev= personChangeSet.StdDev(p => p.Age);
-var avg= 	personChangeSet.Avg(p => p.Age);
+var myPeople = new SourceList<People>();
+var myPeopleObservable = myPeople.Connect();
+
+var countObservable = 	 myPeopleObservable.Count();
+var maxObservable = 	 myPeopleObservable.Max(p => p.Age);
+var minObservable = 	 myPeopleObservable.Min(p => p.Age);
+var stdDevObservable =   myPeopleObservable.StdDev(p => p.Age);
+var avgObservable = 	 myPeopleObservable.Avg(p => p.Age);
 ```
-In the near future I will create even more aggregations.
+More aggregating operators will be added soon.
 
-#### Join operators
-
-There are And, Or, Xor and Except logical operators
+#### Logical Operators
+The `And`, `Or`, `Xor` and `Except` operators allow you to perform logical operations on observable change sets
 ```cs
 var peopleA = new SourceCache<Person,string>(p => p.Name);
 var peopleB = new SourceCache<Person,string>(p => p.Name);
@@ -246,24 +264,25 @@ var inEither= observableA.Or(observableB);
 var inOnlyOne= observableA.Xor(observableB);
 var inAandNotinB = observableA.Except(observableB);
 ```
-Currently the join operators are only implemented for cache observables
+Currently the join operators are only implemented for observable change sets based on `SourceCache`
 
-#### Disposal handler
-
-To ensure an object is disposed when it is removed from a stream
+#### Disposal
+The `DisposeMany` operator ensures that objects are disposed when removed from an observable stream
 ```cs
-var myOperation = somedynamicdatasource.Connect().DisposeMany()
+var myPeople = new SourceList<People>();
+var myPeopleObservable = myPeople.Connect();
+var myTransformedObservable = myPeopleObservable.Transform(person => new DisposablePersonProxy(person))
+                                                .DisposeMany();
 ```
-which will also dispose all objects when the stream is disposed. This is typically used when a transform function creates an object which is disposable.
+The `DisposeMany` operator is typically used when a transform function creates disposable objects.
 
 #### Distinct Values
-
-```DistinctValues()``` will produce an observable of distinct changes in the underlying collection.
+The `DistinctValues` operator will select distinct values from the underlying collection
 ```cs
-var people = personSource.DistinctValues(trade => trade.Age)
+var myPeople = new SourceList<People>();
+var myPeopleObservable = myPeople.Connect();
+var myDistinctObservable = myPeopleObservable.DistinctValues(person => person.Age);
 ```
-In this case a distinct ages.
-
 
 #### Virtualisation
 
@@ -283,21 +302,24 @@ Top is an overload of ```Virtualise()``` and will return items matching the firs
 ```cs
 var topStream = someDynamicDataSource.Top(10)
 ```
-#### Observing binding changes
 
-If the collection has objects which implement ```INotifyPropertyChanged``` the the following operators are available
+#### Observing Properties of Objects in a Collection
+If the collection is made up of objects that implement `INotifyPropertyChanged` then the following operators are available
+
+The `WhenValueChanged` operator returns an observable of the value of the specified property when it has changed
 ```cs
-var ageChanged = peopleDataSource.WhenValueChanged(p => p.Age)
+var ageChanged = peopleDataSource.Connect().WhenValueChanged(p => p.Age)
 ```
-which returns an observable of the age when the value of Age has changes, .
+
+The `WhenPropertyChanged` operator returns an observable made up of the value of the specified property as well as it's parent object when the specified property has changed
 ```cs
-var ageChanged = peopleDataSource.WhenPropertyChanged(p => p.Age)
+var ageChanged = peopleDataSource.Connect().WhenPropertyChanged(p => p.Age)
 ```
-which returns an observable of the person and age when the value of Age has changes, .
+
+The `WhenAnyPropertyChanged` operator returns an observable of objects when any of their properties have changed
 ```cs
-var personChanged = peopleDataSource.WhenAnyPropertyChanged()
+var personChanged = peopleDataSource.Connect().WhenAnyPropertyChanged()
 ```
-which returns an observable of the person when any property has changed,.
 
 #### Observing item changes
 
