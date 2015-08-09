@@ -55,7 +55,7 @@ IObservable<IChangeSet<int>> myIntsObservable = myInts.Connect();
 ```
 This creates an observable change set for which there are dozens of operators. The changes are transmitted as an Rx observable, so they are fluent and composable.
 
-### The observable cache
+### The Observable Cache
 
 Create an observable cache like this:
 ```cs
@@ -76,7 +76,7 @@ myCache.BatchUpdate(innerCache =>
 			      innerCache.AddOrUpdate(myItems);
 			  });
 ```
-If `myCache` is to be exposed publicly it can be made read only `.AsObservableCache`
+If `myCache` is to be exposed publicly it can be made read only using `.AsObservableCache`
 
 ```cs
 IObservableCache<TObject,TKey> readonlyCache = myCache.AsObservableCache();
@@ -302,21 +302,24 @@ Top is an overload of ```Virtualise()``` and will return items matching the firs
 ```cs
 var topStream = someDynamicDataSource.Top(10)
 ```
-#### Observing binding changes
 
-If the collection has objects which implement ```INotifyPropertyChanged``` the the following operators are available
+#### Observing Properties of Objects in a Collection
+If the collection is made up of objects that implement `INotifyPropertyChanged` then the following operators are available
+
+The `WhenValueChanged` operator returns an observable of the value of the specified property when it has changed
 ```cs
-var ageChanged = peopleDataSource.WhenValueChanged(p => p.Age)
+var ageChanged = peopleDataSource.Connect().WhenValueChanged(p => p.Age)
 ```
-which returns an observable of the age when the value of Age has changes, .
+
+The `WhenPropertyChanged` operator returns an observable made up of the value of the specified property as well as it's parent object when the specified property has changed
 ```cs
-var ageChanged = peopleDataSource.WhenPropertyChanged(p => p.Age)
+var ageChanged = peopleDataSource.Connect().WhenPropertyChanged(p => p.Age)
 ```
-which returns an observable of the person and age when the value of Age has changes, .
+
+The `WhenAnyPropertyChanged` operator returns an observable of objects when any of their properties have changed
 ```cs
-var personChanged = peopleDataSource.WhenAnyPropertyChanged()
+var personChanged = peopleDataSource.Connect().WhenAnyPropertyChanged()
 ```
-which returns an observable of the person when any property has changed,.
 
 #### Observing item changes
 
