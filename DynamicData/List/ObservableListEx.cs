@@ -514,7 +514,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<TValue> WhenAnyValueChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
+        public static IObservable<TValue> WhenValueChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
             [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue=true)
             where TObject:INotifyPropertyChanged
         {
@@ -543,6 +543,23 @@ namespace DynamicData
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
             return source.MergeMany(t => t.WhenPropertyChanged(propertyAccessor, notifyOnInitialValue));
+        }
+
+
+        /// <summary>
+        /// Watches each item in the collection and notifies when any of them has changed
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this IObservable<IChangeSet<TObject>> source)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return source.MergeMany(t => t.WhenAnyPropertyChanged());
         }
 
         /// <summary>

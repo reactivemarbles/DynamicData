@@ -24,20 +24,20 @@ namespace DynamicData
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             _innnerCache = new ObservableCache<TObject, TKey>(keySelector);  
         }
-        
+
         #region Delegated Members
-        
+
 
         /// <summary>
         /// Add, update and remove api via an action method. Enables the consumer to perform queries and updates
         /// safely within the innner caches lock.
-        /// 
         /// The result of the action will produce appropriate notifications.
         /// </summary>
         /// <param name="updateAction">The update action.</param>
-        public void BatchUpdate(Action<ISourceUpdater<TObject, TKey>> updateAction)
+        /// <param name="errorHandler">The error handler.</param>
+        public void BatchUpdate(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
         {
-            _innnerCache.UpdateFromSource(updateAction);
+            _innnerCache.UpdateFromSource(updateAction, errorHandler);
         }
 
 

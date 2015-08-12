@@ -19,7 +19,7 @@ namespace DynamicData.Kernel
 
         public void Then(Action<T> onComplete)
         {
-            if (onComplete == null) throw new ArgumentNullException("onComplete");
+            if (onComplete == null) throw new ArgumentNullException(nameof(onComplete));
 
             if (!ReferenceEquals(_result, null))
                 onComplete(_result);
@@ -27,12 +27,19 @@ namespace DynamicData.Kernel
 
         public void Then(Action<T> onComplete, Action<Exception> onError)
         {
-            if (onComplete == null) throw new ArgumentNullException("onComplete");
-            if (onError == null) throw new ArgumentNullException("onError");
+            if (onComplete == null) throw new ArgumentNullException(nameof(onComplete));
+
 
             if (_exception != null)
             {
-                onError(_exception);
+                if (onError != null)
+                {
+                    onError(_exception);
+                }
+                else
+                {
+                    throw _exception;
+                }
             }
             else
             {

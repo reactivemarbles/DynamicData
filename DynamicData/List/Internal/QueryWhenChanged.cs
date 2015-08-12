@@ -10,7 +10,6 @@ namespace DynamicData.Internal
 	internal class QueryWhenChanged<T>
 	{
 		private readonly IObservable<IChangeSet<T>> _source;
-		private readonly List<T> _list = new List<T>();
 
 		public QueryWhenChanged([NotNull] IObservable<IChangeSet<T>> source)
 		{
@@ -21,7 +20,14 @@ namespace DynamicData.Internal
 
 		public IObservable<IReadOnlyCollection<T>> Run()
 		{
-			return _source.Do(_list.Clone).Select(_=>new ReadOnlyCollectionLight<T>(_list, _list.Count));
+            return _source.Scan(new List<T>(), (list, changes) =>
+            {
+                list.Clone(changes);
+                return list;
+            }
+            
+            ).Select(list => new ReadOnlyCollectionLight<T>(list, list.Count));
+
 		}
 	}
 }

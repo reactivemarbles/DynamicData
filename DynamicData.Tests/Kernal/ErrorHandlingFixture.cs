@@ -96,9 +96,9 @@ namespace DynamicData.Tests.Kernal
             var subscriber = feeder.Connect()
                             .Filter(x=>true)
                             .Finally(() => completed = true)
-                            .Subscribe(updates => { Console.WriteLine(); }, ex => error = true);
+                            .Subscribe(updates => { Console.WriteLine(); });
 
-            feeder.BatchUpdate(updater => updater.AddOrUpdate(new TransformEntityWithError(new Entity())));
+            feeder.BatchUpdate(updater => updater.AddOrUpdate(new TransformEntityWithError(new Entity())), ex => error = true);
             subscriber.Dispose();
 
             Assert.IsTrue(error, "Error has not been invoked");
@@ -116,9 +116,9 @@ namespace DynamicData.Tests.Kernal
             var feeder = new SourceCache<ErrorInKey, int>(p=>p.Key);
  
             var subscriber = feeder.Connect().Finally(() => completed = true)
-                                 .Subscribe(updates => { Console.WriteLine(); }, ex => error = true);
+                                 .Subscribe(updates => { Console.WriteLine(); });
 
-            feeder.BatchUpdate(updater => updater.AddOrUpdate(new ErrorInKey()));
+            feeder.BatchUpdate(updater => updater.AddOrUpdate(new ErrorInKey()),ex=> error=true);
             subscriber.Dispose();
 
             Assert.IsTrue(error, "Error has not been invoked");

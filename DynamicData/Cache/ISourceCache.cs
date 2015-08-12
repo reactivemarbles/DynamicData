@@ -14,10 +14,10 @@ namespace DynamicData
         /// <summary>
         /// Action to apply a batch update to a cache. Multiple update methods can be invoked within a single batch operation.
         /// These operations are invoked within the cache's lock and is therefore thread safe.
-        /// 
         /// The result of the action will produce a single changeset
         /// </summary>
         /// <param name="updateAction">The update action.</param>
-        void BatchUpdate(Action<ISourceUpdater<TObject, TKey>> updateAction);
+        /// <param name="errorHandler">The error handler.</param>
+        void BatchUpdate(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null);
     }
 }

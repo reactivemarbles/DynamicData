@@ -92,6 +92,21 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
 
+        [Test]
+        [ExpectedException]
+        public void ForceError()
+        {
+            var person = _generator.Take(1).First();
+            _source.RemoveAt(1);
+        }
+
+        [Test]
+        public void HandleError()
+        {
+            Exception exception=null;
+            _source.Edit(innerList=> innerList.RemoveAt(1),ex=> exception=ex);
+            Assert.IsNotNull(exception);
+        }
 
         [Test]
         [ExpectedException(typeof(ArgumentException))]

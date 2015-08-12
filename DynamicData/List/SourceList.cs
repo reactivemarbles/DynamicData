@@ -48,16 +48,19 @@ namespace DynamicData
 					.Then(InvokeNext, _changes.OnError),()=> _changes.OnCompleted());
 
 		}
-		/// <summary>
-		/// Edit the inner list within the list's internal locking mechanism
-		/// </summary>
-		/// <param name="updateAction">The update action.</param>
-		public void Edit([NotNull] Action<IExtendedList<T>> updateAction)
+        /// <summary>
+        /// Edit the inner list within the list's internal locking mechanism
+        /// </summary>
+        /// <param name="updateAction">The update action.</param>
+        /// <param name="errorHandler">The error handler.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public void Edit([NotNull] Action<IExtendedList<T>> updateAction, Action<Exception> errorHandler=null)
 		{
 			if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
-			
-			_readerWriter.Write(updateAction)
-				.Then(InvokeNext, _changes.OnError);
+
+            _readerWriter.Write(updateAction)
+                .Then(InvokeNext, errorHandler);
+
 		}
 
 		private void InvokeNext(IChangeSet<T> changes)

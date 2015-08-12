@@ -64,20 +64,20 @@ namespace DynamicData
 
         #region Updating (for internal purposes only)
 
-       internal void UpdateFromIntermediate(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
+       internal void UpdateFromIntermediate(Action<IIntermediateUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             
            _readerWriter.Write(updateAction)
-                 .Then(InvokeNext, _changes.OnError);
+                 .Then(InvokeNext, errorHandler);
         }
 
-        internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
+        internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
            
             _readerWriter.Write(updateAction)
-                  .Then(InvokeNext, _changes.OnError);
+                  .Then(InvokeNext, errorHandler);
         }
 
         private void InvokeNext(IChangeSet<TObject, TKey> changes)
