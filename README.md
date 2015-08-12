@@ -35,7 +35,7 @@ myInts.AddRange(Enumerable.Range(0, 10000));
 myInts.Add(99999); 
 myInts.Remove(99999);
 ```
-Each of the amendments caused by the AddRange operation above will produce a unique change notification. When making multiple modifications, batch editing a list using the `.Edit` operator is much more efficient and produces only a single change notification.
+The `AddRange`, `Add` and `Remove` methods above will each produce a distinct change notification.  In order to increase efficiency when making multiple amendments, the list provides a means of batch editing. This is achieved using the `.Edit` method which ensures only a single change notification is produced.
 ```cs
 myInts.Edit(innerList =>
 {
@@ -67,7 +67,7 @@ There are direct edit methods, for example
 myCache.Clear();
 myCache.AddOrUpdate(myItems);
 ```
-Each amend or update caused by the AddOrUpdate operation above will produce a unique change notification. When making multiple modifications, batch editing a cache using the `.BatchUpdate` operator is much more efficient and produces only a single change notification.
+The `Clear` and `AddOrUpdate` methods above will each produce a distinct change notification.  In order to increase efficiency when making multiple amendments, the cache provides a means of batch editing. This is achieved using the `.BatchUpdate` method which ensures only a single change notification is produced.
 
 ```cs
 myCache.BatchUpdate(innerCache =>
