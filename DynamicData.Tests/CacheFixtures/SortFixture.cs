@@ -76,7 +76,7 @@ namespace DynamicData.Tests.CacheFixtures
             //create age 0 to ensure it is inserted first
             var insert = new Person("_Aaron", 0);
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(insert));
+            _source.AddOrUpdate(insert);
 
             Assert.AreEqual(101, _results.Data.Count, "Should be 101 people in the cache");
            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("_Aaron");
@@ -93,8 +93,9 @@ namespace DynamicData.Tests.CacheFixtures
             //create age 0 to ensure it is inserted first
             var insert = new Person("Marvin", 50);
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(insert));
-            //TODO: fixed Text
+            _source.AddOrUpdate(insert);
+
+
             Assert.AreEqual(101, _results.Data.Count, "Should be 101 people in the cache");
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("Marvin");
 
@@ -114,7 +115,7 @@ namespace DynamicData.Tests.CacheFixtures
             //create age 0 to ensure it is inserted first
             var insert = new Person("zzzzz", 1000);
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(insert));
+            _source.AddOrUpdate(insert);
 
             Assert.AreEqual(101, _results.Data.Count, "Should be 101 people in the cache");
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("zzzzz");
@@ -136,7 +137,7 @@ namespace DynamicData.Tests.CacheFixtures
            //create age 0 to ensure it is inserted first
            var remove = _results.Messages[0].SortedItems.First();
 
-           _source.BatchUpdate(updater => updater.Remove(remove.Key));
+           _source.Remove(remove.Key);
 
            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
            //TODO: fixed Text
@@ -159,9 +160,9 @@ namespace DynamicData.Tests.CacheFixtures
            //create age 0 to ensure it is inserted first
            var remove = _results.Messages[0].SortedItems.Skip(50).First();
 
-           _source.BatchUpdate(updater => updater.Remove(remove.Key));
+            _source.Remove(remove.Key);
 
-           Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
+            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
 
            //TODO: fixed Text
            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
@@ -182,9 +183,9 @@ namespace DynamicData.Tests.CacheFixtures
            //create age 0 to ensure it is inserted first
            var remove = _results.Messages[0].SortedItems.Last();
 
-           _source.BatchUpdate(updater => updater.Remove(remove.Key));
+            _source.Remove(remove.Key);
 
-           Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
+            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
 
            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
            Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
@@ -203,7 +204,7 @@ namespace DynamicData.Tests.CacheFixtures
            var toupdate = _results.Messages[0].SortedItems.First().Value;
            var update = new Person(toupdate.Name, toupdate.Age + 5);
 
-           _source.BatchUpdate(updater => updater.AddOrUpdate(update));
+           _source.AddOrUpdate(update);
 
            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
            //TODO: fixed Text
@@ -224,9 +225,9 @@ namespace DynamicData.Tests.CacheFixtures
            var toupdate = _results.Messages[0].SortedItems.Skip(50).First().Value;
           var update = new Person(toupdate.Name, toupdate.Age + 5);
 
-           _source.BatchUpdate(updater => updater.AddOrUpdate(update));
+            _source.AddOrUpdate(update);
 
-           Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
 
          var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
            
@@ -249,9 +250,9 @@ namespace DynamicData.Tests.CacheFixtures
           var toupdate = _results.Messages[0].SortedItems.Last().Value;
           var update = new Person(toupdate.Name, toupdate.Age + 5);
 
-           _source.BatchUpdate(updater => updater.AddOrUpdate(update));
+            _source.AddOrUpdate(update);
 
-           Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
            Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
@@ -272,7 +273,7 @@ namespace DynamicData.Tests.CacheFixtures
 
            var toupdate = people[3];
        
-           _source.BatchUpdate(updater =>
+           _source.Edit(updater =>
            {
                updater.Remove(people[0].Key);
                updater.Remove(people[1].Key);
@@ -298,7 +299,7 @@ namespace DynamicData.Tests.CacheFixtures
 
            var toupdate = people[3];
 
-           _source.BatchUpdate(updater =>
+           _source.Edit(updater =>
            {
                updater.Remove(people[0].Key);
                updater.Remove(people[1].Key);
@@ -330,7 +331,7 @@ namespace DynamicData.Tests.CacheFixtures
 
            var toupdate = people[3];
 
-           _source.BatchUpdate(updater =>
+           _source.Edit(updater =>
            {
                updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
                updater.AddOrUpdate(new Person("Mr","Z",50,"M"));
@@ -356,7 +357,7 @@ namespace DynamicData.Tests.CacheFixtures
 
            var toupdate = people[7];
 
-           _source.BatchUpdate(updater =>
+           _source.Edit(updater =>
            {
                updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
                updater.AddOrUpdate(new Person("Mr", "A", 10, "M"));
@@ -383,7 +384,7 @@ namespace DynamicData.Tests.CacheFixtures
 
            var toupdate = people[3];
 
-           _source.BatchUpdate(updater =>
+           _source.Edit(updater =>
            {
                updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
                updater.AddOrUpdate(new Person("Mr", "A", 10, "M"));
@@ -406,7 +407,7 @@ namespace DynamicData.Tests.CacheFixtures
            _source.AddOrUpdate(people);
 
 
-           _source.BatchUpdate(updater =>
+           _source.Edit(updater =>
            {
                updater.Clear();
                updater.AddOrUpdate(_generator.Take(10).ToArray());

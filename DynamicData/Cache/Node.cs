@@ -92,7 +92,7 @@ namespace DynamicData
         }
         internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction)
         {
-            _children.BatchUpdate(updateAction);
+            _children.Edit(updateAction);
         }
 
         #region Equality

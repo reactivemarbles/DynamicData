@@ -77,7 +77,7 @@ namespace DynamicData.Experimental
                                     var update = new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value);
                                     subject.OnNext(update);
                                 }
-                                _subscribers.BatchUpdate(updater => updater.AddOrUpdate(subject, key));
+                                _subscribers.Edit(updater => updater.AddOrUpdate(subject, key));
                             }
 
                             //set up subscription
@@ -93,7 +93,7 @@ namespace DynamicData.Experimental
                                     subscriber.Dispose();
                                     if (subject.RefCount == 0)
                                     {
-                                        _subscribers.BatchUpdate(updater => updater.Remove(key));
+                                        _subscribers.Edit(updater => updater.Remove(key));
                                     }
                                 }
                             });

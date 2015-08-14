@@ -38,7 +38,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void FiresBatchResultOnce()
         {
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
             {
                     updater.AddOrUpdate( new Person("Person1", 20));
                     updater.AddOrUpdate(new Person("Person2", 21));
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void DuplicatedResultsResultInNoAdditionalMessage()
         {
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
             {
                 updater.AddOrUpdate(new Person("Person1", 20));
                 updater.AddOrUpdate(new Person("Person1", 20));

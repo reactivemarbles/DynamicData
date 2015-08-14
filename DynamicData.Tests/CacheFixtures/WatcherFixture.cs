@@ -56,7 +56,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void AddNew()
         {
             var person = new Person("Adult1", 50);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
 
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
@@ -73,10 +73,10 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var first = new Person("Adult1", 50);
             var second = new Person("Adult1", 51);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(first));
+            _source.AddOrUpdate(first);
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(second));
+            _source.AddOrUpdate(second);
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
             Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
@@ -110,7 +110,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void Watch()
         {
             var person = new Person("Adult1", 50);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
             var result = new List<Change<Person, string>>(3);
             var watch = _watcher.Watch("Adult1").Subscribe(result.Add);
@@ -119,7 +119,7 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, result.Count, "Should be 1 updates");
             Assert.AreEqual(person, result[0].Current, "Should be 1 item in the cache");
 
-            _source.BatchUpdate(updater => updater.Remove(("Adult1")));
+            _source.Edit(updater => updater.Remove(("Adult1")));
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(500).Ticks);
 
             watch.Dispose();

@@ -44,7 +44,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddWillNotCallDispose()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new DisposableObject(1)));
+            _source.AddOrUpdate(new DisposableObject(1));
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
@@ -55,8 +55,8 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void RemoveWillCallDispose()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new DisposableObject(1)));
-            _source.BatchUpdate(updater => updater.Remove(1));
+            _source.AddOrUpdate(new DisposableObject(1));
+            _source.Edit(updater => updater.Remove(1));
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(0, _results.Data.Count, "Should be 0 items in the cache");
@@ -66,8 +66,8 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void UpdateWillCallDispose()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new DisposableObject(1)));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new DisposableObject(1)));
+            _source.AddOrUpdate(new DisposableObject(1));
+            _source.AddOrUpdate(new DisposableObject(1));
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
@@ -78,8 +78,8 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void EverythingIsDisposedWhenStreamIsDisposed()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new DisposableObject(i))));
-            _source.BatchUpdate(updater => updater.Clear());
+            _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new DisposableObject(i)));
+            _source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.IsTrue(_results.Messages[1].All(d => d.Current.IsDisposed));

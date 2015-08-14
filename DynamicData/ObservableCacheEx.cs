@@ -192,7 +192,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detination == null) throw new ArgumentNullException(nameof(detination));
 
-            return source.Subscribe(changes => detination.BatchUpdate(updater => updater.Update(changes)));
+            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
         }
 
 
@@ -556,7 +556,7 @@ namespace DynamicData
         public static void Clear<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Clear());
+            source.Edit(updater => updater.Clear());
         }
 
         /// <summary>
@@ -570,7 +570,7 @@ namespace DynamicData
         public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Evaluate(item));
+            source.Edit(updater => updater.Evaluate(item));
         }
 
         /// <summary>
@@ -584,7 +584,7 @@ namespace DynamicData
         public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source,  IEnumerable<TObject> items)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Evaluate(items));
+            source.Edit(updater => updater.Evaluate(items));
         }
 
 
@@ -600,7 +600,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TKey key)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Remove(key));
+            source.Edit(updater => updater.Remove(key));
         }
 
 
@@ -617,7 +617,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, IEnumerable<TKey> keys)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Remove(keys));
+            source.Edit(updater => updater.Remove(keys));
         }
 
 
@@ -632,7 +632,7 @@ namespace DynamicData
         public static void Clear<TObject, TKey>(this IIntermediateCache<TObject, TKey> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Clear());
+            source.Edit(updater => updater.Clear());
         }
         #endregion
     }

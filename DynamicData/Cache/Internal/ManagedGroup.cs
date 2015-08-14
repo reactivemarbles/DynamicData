@@ -15,7 +15,7 @@ namespace DynamicData.Internal
         
         internal void Update(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
         {
-            _cache.BatchUpdate(updateAction);
+            _cache.Edit(updateAction);
         }
 
         internal int Count

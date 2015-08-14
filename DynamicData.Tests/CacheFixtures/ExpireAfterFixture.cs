@@ -79,7 +79,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
          
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
             {
                 updater.AddOrUpdate(new Person("Name1", 20));
                 updater.AddOrUpdate(new Person("Name1", 21));

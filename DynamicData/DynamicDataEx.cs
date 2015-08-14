@@ -1393,7 +1393,7 @@ namespace DynamicData
                             {
                                 try
                                 {
-                                    cache.BatchUpdate(updater => updater.Remove(keys.Select(kv => kv.Key)));
+                                    cache.Edit(updater => updater.Remove(keys.Select(kv => kv.Key)));
                                 }
                                 catch (Exception ex)
                                 {
@@ -1527,7 +1527,7 @@ namespace DynamicData
                             var result = sizeLimiter.Update(changes);
 
                             var removes = result.Where(c => c.Reason == ChangeReason.Remove);
-                            root.BatchUpdate(updater => removes.ForEach(c => updater.Remove(c.Key)));
+                            root.Edit(updater => removes.ForEach(c => updater.Remove(c.Key)));
                             return result;
                         })
                         .FinallySafe(observer.OnCompleted)

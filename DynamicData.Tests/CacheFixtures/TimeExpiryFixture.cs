@@ -66,7 +66,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void ItemAddedIsExpired()
         {
-            _cache.BatchUpdate(updater => updater.AddOrUpdate(new Person("Name1",10)));
+            _cache.AddOrUpdate(new Person("Name1",10));
             
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
@@ -79,7 +79,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void ExpireIsCancelledWhenUpdated()
         {
-            _cache.BatchUpdate(updater =>
+            _cache.Edit(updater =>
                                {
                                    updater.AddOrUpdate(new Person("Name1", 20));
                                    updater.AddOrUpdate(new Person("Name1", 21));
@@ -101,7 +101,7 @@ namespace DynamicData.Tests.CacheFixtures
             const int size = 100;
             Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
 
-            _cache.BatchUpdate(updater => updater.AddOrUpdate(items));
+            _cache.AddOrUpdate(items);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
             
             Assert.AreEqual(0, _results.Data.Count, "Should be no data in the cache");

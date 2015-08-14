@@ -57,7 +57,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void ChangeSort()
         {
             var people = _generator.Take(100).ToArray();
-            _cache.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _cache.AddOrUpdate(people);
 
             var desc = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
 
@@ -73,7 +73,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void InlineChanges()
         {
             var people = _generator.Take(10000).ToArray();
-            _cache.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _cache.AddOrUpdate(people);
           
 
 

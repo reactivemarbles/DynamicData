@@ -54,8 +54,8 @@ namespace DynamicData.Tests.CacheFixtures
                 .AsObservableCache();
 
 
-            _personCache.BatchUpdate(updater => updater.AddOrUpdate(people));
-            _employmentCache.BatchUpdate(updater => updater.AddOrUpdate(emphistory));
+            _personCache.AddOrUpdate(people);
+            _employmentCache.AddOrUpdate(emphistory);
 
             Assert.AreEqual(numberOfPeople, allpeopleWithEmpHistory.Count);
             Assert.AreEqual(emphistory.Count, allpeopleWithEmpHistory.Items.SelectMany(d => d.EmpoymentData.Items).Count());
@@ -69,9 +69,9 @@ namespace DynamicData.Tests.CacheFixtures
 
                 );
             
-            _personCache.BatchUpdate(updater => updater.Remove("Person1"));
+            _personCache.Edit(updater => updater.Remove("Person1"));
             Assert.AreEqual(numberOfPeople - 1, allpeopleWithEmpHistory.Count);
-            _employmentCache.BatchUpdate(updater => updater.Remove(emphistory));
+            _employmentCache.Edit(updater => updater.Remove(emphistory));
             allpeopleWithEmpHistory.Dispose();
         }
 

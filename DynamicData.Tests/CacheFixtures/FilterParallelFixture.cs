@@ -53,7 +53,7 @@ namespace DynamicData.Tests.CacheFixtures
             var notmatched = new Person(key, 19);
             var matched = new Person(key, 21);
 
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
                                {
                                    updater.AddOrUpdate(notmatched);
                                    updater.AddOrUpdate(matched);
@@ -68,7 +68,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
         {
             const string key = "Adult1";
-            _source.BatchUpdate(updater => updater.Remove(key));
+            _source.Remove(key);
             Assert.AreEqual(0, _results.Messages.Count, "Should be 0 updates");
         }
 
@@ -77,7 +77,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should return 80 adds");
 
@@ -91,8 +91,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
-            _source.BatchUpdate(updater => updater.Remove(people));
+            _source.AddOrUpdate(people);
+            _source.Remove(people);
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");
@@ -107,7 +107,7 @@ namespace DynamicData.Tests.CacheFixtures
             foreach (var person in people)
             {
                 Person person1 = person;
-                _source.BatchUpdate(updater => updater.AddOrUpdate(person1));
+                _source.AddOrUpdate(person1);
             }
 
             Assert.AreEqual(80, _results.Messages.Count, "Should be 100 updates");
@@ -121,8 +121,8 @@ namespace DynamicData.Tests.CacheFixtures
         public void Clear()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
-            _source.BatchUpdate(updater => updater.Clear());
+            _source.AddOrUpdate(people);
+            _source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");
@@ -137,8 +137,8 @@ namespace DynamicData.Tests.CacheFixtures
             const string key = "Adult1";
             var person = new Person(key, 50);
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
-            _source.BatchUpdate(updater => updater.Remove(key));
+            _source.AddOrUpdate(person);
+            _source.Remove(key);
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
@@ -154,8 +154,8 @@ namespace DynamicData.Tests.CacheFixtures
             var newperson = new Person(key, 50);
             var updated = new Person(key, 51);
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(newperson));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(updated));
+            _source.AddOrUpdate(newperson);
+            _source.AddOrUpdate(updated);
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 adds");
@@ -167,7 +167,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             const string key = "Adult1";
 
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
                                {
                                    updater.AddOrUpdate(new Person(key, 50));
                                    updater.AddOrUpdate(new Person(key, 52));
@@ -188,8 +188,8 @@ namespace DynamicData.Tests.CacheFixtures
             var newperson = new Person(key, 10);
             var updated = new Person(key, 11);
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(newperson));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(updated));
+            _source.AddOrUpdate(newperson);
+            _source.AddOrUpdate(updated);
 
             Assert.AreEqual(0, _results.Messages.Count, "Should be no updates");
             Assert.AreEqual(0, _results.Data.Count, "Should nothing cached");

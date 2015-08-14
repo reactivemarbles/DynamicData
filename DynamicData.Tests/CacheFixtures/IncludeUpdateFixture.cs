@@ -23,9 +23,9 @@ namespace DynamicData.Tests.CacheFixtures
         public void IgnoreFunctionWillIgnoreSubsequentUpdatesOfAnItem()
         {
             var person = new Person("Person", 10);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
+            _source.AddOrUpdate(person);
+            _source.AddOrUpdate(person);
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");

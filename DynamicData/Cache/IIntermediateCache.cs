@@ -18,6 +18,6 @@ namespace DynamicData
         /// </summary>
         /// <param name="updateAction">The update action.</param>
         /// <param name="errorHandler">The error handler.</param>
-        void BatchUpdate(Action<IIntermediateUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null);
+        void Edit(Action<IIntermediateUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null);
     }
 }

@@ -41,7 +41,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void AddLessThanLimit()
         {
               var person = _generator.Take(1).First();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
@@ -69,8 +69,8 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddMoreThanLimitInBatched()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(_generator.Take(10).ToArray()));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(_generator.Take(10).ToArray()));
+            _source.AddOrUpdate(_generator.Take(10).ToArray());
+            _source.AddOrUpdate(_generator.Take(10).ToArray());
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
 
@@ -84,7 +84,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void Add()
         {
             var person = _generator.Take(1).First();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");

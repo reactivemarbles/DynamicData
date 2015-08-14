@@ -43,7 +43,7 @@ namespace DynamicData
         /// </summary>
         /// <param name="updateAction">The update action.</param>
         /// <param name="errorHandler">The error handler.</param>
-        public void BatchUpdate(Action<IIntermediateUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
+        public void Edit(Action<IIntermediateUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
         {
             _innnerCache.UpdateFromIntermediate(updateAction, errorHandler);
         }

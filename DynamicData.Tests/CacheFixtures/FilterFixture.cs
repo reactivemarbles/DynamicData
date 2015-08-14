@@ -52,7 +52,7 @@ namespace DynamicData.Tests.CacheFixtures
             var notmatched = new Person(key, 19);
             var matched = new Person(key, 21);
             
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
                     {
                         updater.AddOrUpdate(notmatched);
                         updater.AddOrUpdate(matched);
@@ -105,7 +105,7 @@ namespace DynamicData.Tests.CacheFixtures
             foreach (var person in people)
             {
                 Person person1 = person;
-                _source.BatchUpdate(updater => updater.AddOrUpdate(person1));
+                _source.AddOrUpdate(person1);
             }
 
             Assert.AreEqual(80, _results.Messages.Count, "Should be 100 updates");
@@ -165,7 +165,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             const string key = "Adult1";
 
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
                                {
                                    updater.AddOrUpdate(new Person(key, 50));
                                    updater.AddOrUpdate(new Person(key, 52));

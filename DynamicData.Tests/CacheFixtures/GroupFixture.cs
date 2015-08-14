@@ -123,7 +123,7 @@ namespace DynamicData.Tests.CacheFixtures
                                                         }
                                                         called = true;
                                                     });
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
                 {
                     updater.AddOrUpdate(new Person("Person1", 20));
                     updater.AddOrUpdate(new Person("Person2", 21));
@@ -148,7 +148,7 @@ namespace DynamicData.Tests.CacheFixtures
                                                         called = true;
                                          
                                                     });
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
                 {
                     updater.AddOrUpdate(new Person("Person1", 20));
                     updater.AddOrUpdate(new Person("Person2", 20));

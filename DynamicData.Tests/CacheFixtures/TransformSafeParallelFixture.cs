@@ -45,7 +45,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void AddWithNoError()
         {
             var person = new Person("Adult1", 50);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
@@ -56,7 +56,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void AddWithError()
         {
             var person = new Person("Person", 3);
-            _source.BatchUpdate(updater => updater.AddOrUpdate(person));
+            _source.AddOrUpdate(person);
 
             Assert.AreEqual(1, _errors.Count, "Should be 1 error reported");
             Assert.AreEqual(0, _results.Messages.Count, "Should be no messages");
@@ -70,9 +70,9 @@ namespace DynamicData.Tests.CacheFixtures
             var update2 = new Person(key, 2);
             var update3 = new Person(key, 3);
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(update1));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(update2));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(update3));
+            _source.AddOrUpdate(update1);
+            _source.AddOrUpdate(update2);
+            _source.AddOrUpdate(update3);
 
             Assert.AreEqual(1, _errors.Count, "Should be 1 error reported");
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 messages");
@@ -89,7 +89,7 @@ namespace DynamicData.Tests.CacheFixtures
             var update2 = new Person(key, 2);
             var update3 = new Person(key, 3);
 
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
                                {
                                    updater.AddOrUpdate(update1);
                                    updater.AddOrUpdate(update2);
@@ -110,8 +110,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
 
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
-            _source.BatchUpdate(updater => updater.Clear());
+            _source.AddOrUpdate(people);
+            _source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
 

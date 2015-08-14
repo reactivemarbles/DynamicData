@@ -227,6 +227,7 @@
     <Compile Include="Cache\Virtualiser.cs" />
     <Compile Include="Cache\VirtualRequest.cs" />
     <Compile Include="Cache\VirtualResponse.cs" />
+    <Compile Include="ObsoleteEx.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Cache\SourceCache.cs" />

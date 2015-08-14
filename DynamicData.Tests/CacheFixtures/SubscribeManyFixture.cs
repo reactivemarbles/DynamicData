@@ -56,7 +56,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddedItemWillbeSubscribed()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new SubscribeableObject(1)));
+            _source.AddOrUpdate(new SubscribeableObject(1));
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
@@ -66,8 +66,8 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void RemoveIsUnsubscribed()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new SubscribeableObject(1)));
-            _source.BatchUpdate(updater => updater.Remove(1));
+            _source.AddOrUpdate(new SubscribeableObject(1));
+            _source.Remove(1);
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(0, _results.Data.Count, "Should be 0 items in the cache");
@@ -77,8 +77,8 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void UpdateUnsubscribesPrevious()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new SubscribeableObject(1)));
-            _source.BatchUpdate(updater => updater.AddOrUpdate(new SubscribeableObject(1)));
+            _source.AddOrUpdate(new SubscribeableObject(1));
+            _source.AddOrUpdate(new SubscribeableObject(1));
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
@@ -89,8 +89,8 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void EverythingIsUnsubscribedWhenStreamIsDisposed()
         {
-            _source.BatchUpdate(updater => updater.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new SubscribeableObject(i))));
-            _source.BatchUpdate(updater => updater.Clear());
+            _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new SubscribeableObject(i)));
+            _source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.IsTrue(_results.Messages[1].All(d => !d.Current.IsSubscribed));

@@ -66,16 +66,16 @@ namespace DynamicData.Tests.Kernal
             bool error = false;
 
 
-            var feeder = new SourceCache<Entity, int>(e => e.Key);
+            var cache = new SourceCache<Entity, int>(e => e.Key);
 
-            var subscriber = feeder.Connect()
+            var subscriber = cache.Connect()
                             .Transform(e => new TransformEntityWithError(e))
 
                             .Finally(() => completed = true)
                             .Subscribe(updates => { Console.WriteLine(); }, ex => error = true);
 
-            feeder.BatchUpdate(updater => updater.AddOrUpdate(Enumerable.Range(0, 10000).Select(_ => new Entity()).ToArray()));
-            feeder.BatchUpdate(updater => updater.AddOrUpdate(new Entity()));
+            cache.AddOrUpdate(Enumerable.Range(0, 10000).Select(_ => new Entity()).ToArray());
+            cache.AddOrUpdate(new Entity());
 
 
             subscriber.Dispose();
@@ -91,14 +91,14 @@ namespace DynamicData.Tests.Kernal
             bool completed = false;
             bool error = false;
 
-            var feeder = new SourceCache<TransformEntityWithError, int>(e=>e.Key);
+            var source = new SourceCache<TransformEntityWithError, int>(e=>e.Key);
 
-            var subscriber = feeder.Connect()
+            var subscriber = source.Connect()
                             .Filter(x=>true)
                             .Finally(() => completed = true)
                             .Subscribe(updates => { Console.WriteLine(); });
 
-            feeder.BatchUpdate(updater => updater.AddOrUpdate(new TransformEntityWithError(new Entity())), ex => error = true);
+            source.Edit(updater => updater.AddOrUpdate(new TransformEntityWithError(new Entity())), ex => error = true);
             subscriber.Dispose();
 
             Assert.IsTrue(error, "Error has not been invoked");
@@ -113,12 +113,12 @@ namespace DynamicData.Tests.Kernal
             bool completed = false;
             bool error = false;
 
-            var feeder = new SourceCache<ErrorInKey, int>(p=>p.Key);
+            var cache = new SourceCache<ErrorInKey, int>(p=>p.Key);
  
-            var subscriber = feeder.Connect().Finally(() => completed = true)
+            var subscriber = cache.Connect().Finally(() => completed = true)
                                  .Subscribe(updates => { Console.WriteLine(); });
 
-            feeder.BatchUpdate(updater => updater.AddOrUpdate(new ErrorInKey()),ex=> error=true);
+            cache.Edit(updater => updater.AddOrUpdate(new ErrorInKey()),ex=> error=true);
             subscriber.Dispose();
 
             Assert.IsTrue(error, "Error has not been invoked");

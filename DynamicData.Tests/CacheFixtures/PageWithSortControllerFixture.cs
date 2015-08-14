@@ -46,8 +46,8 @@ namespace DynamicData.Tests.CacheFixtures
 		public void ChangePage()
 		{
 			var people = _generator.Take(100).ToArray();
-			_source.BatchUpdate(updater => updater.AddOrUpdate(people));
-			_pageController.Change(new PageRequest(2, 25));
+            _source.AddOrUpdate(people);
+            _pageController.Change(new PageRequest(2, 25));
 			
 			var expectedResult = people.OrderBy(p => p, _originalComparer).Skip(25).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
 			var actualResult = _aggregators.Messages[1].SortedItems.ToList();

@@ -45,7 +45,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void PageInitialBatch()
         {
             var people = _generator.Take(100).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
 
             Assert.AreEqual(25, _aggregators.Data.Count, "Should be 25 people in the cache");
             Assert.AreEqual(25, _aggregators.Messages[0].Response.PageSize,"Page size should be 25");
@@ -63,7 +63,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void ChangePage()
         {
             var people = _generator.Take(100).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
             _pageController.Change(new PageRequest(2,25));
 
 
@@ -77,7 +77,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void ChangePageSize()
         {
             var people = _generator.Take(100).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
             _pageController.Change(new PageRequest(1, 50));
 
             Assert.AreEqual(1, _aggregators.Messages[1].Response.Page, "Should be page 1");
@@ -96,7 +96,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void PageGreaterThanNumberOfPagesAvailable()
         {
             var people = _generator.Take(100).ToArray();
-            _source.BatchUpdate(updater => updater.AddOrUpdate(people));
+            _source.AddOrUpdate(people);
             _pageController.Change(new PageRequest(10, 25));
 
 

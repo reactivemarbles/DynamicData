@@ -28,7 +28,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void CanHandleABatchOfUpdates()
         {
-            _source.BatchUpdate(updater =>
+            _source.Edit(updater =>
                 {
                     var torequery = new Person("Adult1", 44);
 

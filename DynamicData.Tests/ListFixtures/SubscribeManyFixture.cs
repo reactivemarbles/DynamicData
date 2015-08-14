@@ -79,7 +79,7 @@ namespace DynamicData.Tests.ListFixtures
 		//public void UpdateUnsubscribesPrevious()
 		//{
 		//	_source.Add(new SubscribeableObject(1));
-		//	_source.BatchUpdate(updater => updater.AddOrUpdate(new SubscribeableObject(1)));
+		//	_source.AddOrUpdate(new SubscribeableObject(1)));
 
 		//	Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
 		//	Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
