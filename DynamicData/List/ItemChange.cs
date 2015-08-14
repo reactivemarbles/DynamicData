@@ -71,6 +71,12 @@ namespace DynamicData
 			PreviousIndex = previousIndex;
 		}
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ItemChange{T}"/> struct.
+        /// </summary>
+        /// <param name="reason">The reason.</param>
+        /// <param name="current">The current.</param>
+        /// <param name="currentIndex">Index of the current.</param>
         public ItemChange(ListChangeReason reason, T current,int currentIndex)
             : this()
         {

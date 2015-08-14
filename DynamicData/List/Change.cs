@@ -174,25 +174,41 @@ namespace DynamicData
 			}
 		}
 
-		public static bool operator ==(Change<T> left, Change<T> right)
-		{
-			return Equals(left, right);
-		}
+        /// <summary>
+        /// Implements the operator ==.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator ==(Change<T> left, Change<T> right)
+        {
+            return Equals(left, right);
+        }
 
-		public static bool operator !=(Change<T> left, Change<T> right)
-		{
-			return !Equals(left, right);
-		}
+        /// <summary>
+        /// Implements the operator !=.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator !=(Change<T> left, Change<T> right)
+        {
+            return !Equals(left, right);
+        }
 
-		#endregion
+        #endregion
 
-		/// <summary>
-		/// Returns a <see cref="System.String" /> that represents this instance.
-		/// </summary>
-		/// <returns>
-		/// A <see cref="System.String" /> that represents this instance.
-		/// </returns>
-		public override string ToString()
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
 		{
 			return Range!=null ? $"{Reason}. {Range.Count} changes"
 			    : $"{Reason}. Current: {Item.Current}, Previous: {Item.Previous}";

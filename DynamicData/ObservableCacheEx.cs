@@ -314,7 +314,6 @@ namespace DynamicData
                    return source.Connect()
                        .FinallySafe(observer.OnCompleted) 
                        .ObserveOn(scheduler ?? Scheduler.Default)
-
                         .Transform((t, v) =>
                         {
                             var index = Interlocked.Increment(ref orderItemWasAdded);
@@ -322,10 +321,9 @@ namespace DynamicData
                         })
                         .Subscribe(changes =>
                         {
-                            var result = sizeLimiter.CloneAndReturnExpiredOnly	(changes);
-
+                            var result = sizeLimiter.CloneAndReturnExpiredOnly(changes);
                             if (result.Count == 0) return;
-                            source.BatchUpdate(updater => result.ForEach(c => updater.Remove(c.Key)));
+                            source.Edit(updater => result.ForEach(c => updater.Remove(c.Key)));
                         });
                 });
 
@@ -432,7 +430,7 @@ namespace DynamicData
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater=>updater.AddOrUpdate(item));
+            source.Edit(updater=>updater.AddOrUpdate(item));
         }
 
         /// <summary>
@@ -448,7 +446,7 @@ namespace DynamicData
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.AddOrUpdate(items));
+            source.Edit(updater => updater.AddOrUpdate(items));
         }
 
         /// <summary>
@@ -464,7 +462,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Remove(item));
+            source.Edit(updater => updater.Remove(item));
         }
 
         /// <summary>
@@ -479,7 +477,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Remove(key));
+            source.Edit(updater => updater.Remove(key));
         }
 
         /// <summary>
@@ -494,7 +492,7 @@ namespace DynamicData
         public static void RemoveKey<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.RemoveKey(key));
+            source.Edit(updater => updater.RemoveKey(key));
         }
 
         /// <summary>
@@ -510,7 +508,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Remove(items));
+            source.Edit(updater => updater.Remove(items));
         }
 
         /// <summary>
@@ -526,7 +524,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.Remove(keys));
+            source.Edit(updater => updater.Remove(keys));
         }
 
         /// <summary>
@@ -542,7 +540,7 @@ namespace DynamicData
         public static void RemoveKeys<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.BatchUpdate(updater => updater.RemoveKeys(keys));
+            source.Edit(updater => updater.RemoveKeys(keys));
         }
 
 
