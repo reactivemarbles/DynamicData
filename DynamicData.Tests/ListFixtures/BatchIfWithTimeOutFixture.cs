@@ -44,7 +44,7 @@ namespace DynamicData.Tests.ListFixtures
             //should timeout 
             _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
 
-			_source.Edit(list => list.Add(new Person("A", 1)));
+			_source.Add(new Person("A", 1));
 
 			//go forward an arbitary amount of time
 			// _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
@@ -58,18 +58,19 @@ namespace DynamicData.Tests.ListFixtures
             //advance otherwise nothing happens
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-			_source.Edit(list => list.Add(new Person("A", 1)));
 
-			Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
+            _source.Add(new Person("A", 1));
+
+            Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
         }
 
         [Test]
         public void ResultsWillBeReceivedIfNotPaused()
         {
-			_source.Edit(list => list.Add(new Person("A", 1)));
+            _source.Add(new Person("A", 1));
 
-			//go forward an arbitary amount of time
-			_scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+            //go forward an arbitary amount of time
+            _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 update");
         }
 
@@ -80,17 +81,17 @@ namespace DynamicData.Tests.ListFixtures
             ////advance otherwise nothing happens
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-			_source.Edit(list => list.Add(new Person("A", 1)));
+            _source.Add(new Person("A", 1));
 
-			//go forward an arbitary amount of time
-			Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
+            //go forward an arbitary amount of time
+            Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
 
             _pausingSubject.OnNext(false);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-			_source.Edit(list => list.Add(new Person("B", 1)));
+            _source.Add(new Person("B", 1));
 
-			Assert.AreEqual(2, _results.Messages.Count, "There should be no messages");
+            Assert.AreEqual(2, _results.Messages.Count, "There should be no messages");
         }
     }
 }

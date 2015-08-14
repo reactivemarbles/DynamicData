@@ -37,19 +37,19 @@ namespace DynamicData.Tests.ListFixtures
         public void NoResultsWillBeReceivedBeforeClosingBuffer()
         {
 
-            _source.Edit(list=>list.Add( new Person("A", 1)));
+            _source.Add(new Person("A", 1));
             Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
         }
 
         [Test]
         public void ResultsWillBeReceivedAfterClosingBuffer()
         {
-			_source.Edit(list => list.Add(new Person("A", 1)));
+            _source.Add(new Person("A", 1));
 
 
 
-			//go forward an arbitary amount of time
-			_scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
+            //go forward an arbitary amount of time
+            _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 update");
         }
 

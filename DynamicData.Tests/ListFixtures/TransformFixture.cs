@@ -48,8 +48,8 @@ namespace DynamicData.Tests.ListFixtures
             const string key = "Adult1";
             var person = new Person(key, 50);
 
-            _source.Edit(updater => updater.Add(person));
-            _source.Edit(updater => updater.Remove(person));
+            _source.Add( person);
+            _source.Remove(person);
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
@@ -65,8 +65,8 @@ namespace DynamicData.Tests.ListFixtures
             var newperson = new Person(key, 50);
             var updated = new Person(key, 51);
 
-            _source.Edit(updater => updater.Add(newperson));
-            _source.Edit(updater => updater.Add(updated));
+            _source.Add(newperson);
+            _source.Add(updated);
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 adds");

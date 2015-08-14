@@ -28,7 +28,7 @@ namespace DynamicData.Tests.ListFixtures
         public void AddMatched()
         {
             var person = new Person("Adult1", 50);
-            _source.Edit(list=>list.Add(person));
+            _source.Add(person);
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
@@ -41,7 +41,7 @@ namespace DynamicData.Tests.ListFixtures
 
 			var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
 
-			_source.Edit(list => list.AddRange(itemstoadd));
+			_source.AddRange(itemstoadd);
 
 			Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
 			Assert.AreEqual(ListChangeReason.AddRange, _results.Messages[0].First().Reason, "Should be 1 updates");
@@ -56,7 +56,7 @@ namespace DynamicData.Tests.ListFixtures
 
 			var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
 
-			_source.Edit(list => list.AddRange(itemstoadd));
+			_source.AddRange(itemstoadd);
 			_source.Clear();
 
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
@@ -69,9 +69,9 @@ namespace DynamicData.Tests.ListFixtures
         public void AddNotMatched()
         {
             var person = new Person("Adult1", 10);
-			_source.Edit(list => list.Add(person));
+            _source.Add(person);
 
-			Assert.AreEqual(0, _results.Messages.Count, "Should have no item updates");
+            Assert.AreEqual(0, _results.Messages.Count, "Should have no item updates");
             Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
         }
 
@@ -96,7 +96,7 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
         {
-			_source.Edit(list => list.Remove(new Person("anyone",1)));
+			_source.Remove(new Person("anyone",1));
 			Assert.AreEqual(0, _results.Messages.Count, "Should be 0 updates");
         }
         
@@ -105,7 +105,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
-            _source.Edit(list=>list.Add(people));
+            _source.AddRange(people);
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should return 80 adds");
 
@@ -133,7 +133,7 @@ namespace DynamicData.Tests.ListFixtures
             foreach (var person in people)
             {
                 Person person1 = person;
-				_source.Edit(list => list.Add(person1));
+				_source.Add(person1);
 			}
 
             Assert.AreEqual(80, _results.Messages.Count, "Should be 80 updates");
@@ -163,8 +163,8 @@ namespace DynamicData.Tests.ListFixtures
             const string key = "Adult1";
             var person = new Person(key, 50);
 
-			_source.Edit(list => list.Add(person));
-			_source.Edit(list => list.Remove(person));
+			_source.Add(person);
+			_source.Remove(person);
 
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
@@ -202,8 +202,8 @@ namespace DynamicData.Tests.ListFixtures
             var newperson = new Person(key, 10);
             var updated = new Person(key, 11);
 
-			_source.Edit(list => list.Add(newperson));
-			_source.Edit(list => list.Add(updated));
+			_source.Add(newperson);
+			_source.Add(updated);
 
 
 			Assert.AreEqual(0, _results.Messages.Count, "Should be no updates");

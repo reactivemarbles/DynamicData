@@ -178,7 +178,7 @@ namespace DynamicData.Tests.CacheFixtures
       
                                                     });
             var person = new Person("Person1", 20);
-            //load feeder
+
             _source.AddOrUpdate(person); 
 
             //remove
@@ -192,7 +192,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void ReceivesUpdateWhenFeederIsInvoked()
         {
             bool called = false;
-            IDisposable subscriber = _source.Connect().Group(p => p.Age)
+            var subscriber = _source.Connect().Group(p => p.Age)
                                             .Subscribe(updates => { called = true; });
             _source.AddOrUpdate(new Person("Person1", 20));
             subscriber.Dispose();
