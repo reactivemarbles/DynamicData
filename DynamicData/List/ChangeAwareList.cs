@@ -21,8 +21,7 @@ namespace DynamicData
             if (_innerList.Count==0 && copy.Removes == copy.TotalChanges && copy.TotalChanges>1)
             {
                 var removed = copy.Unified().Select(u => u.Current);
-                var change = new Change<T>(ListChangeReason.Clear, removed);
-                return new ChangeSet<T> { change };
+                return new ChangeSet<T> { new Change<T>(ListChangeReason.Clear, removed) };
             }
             return copy;
         }

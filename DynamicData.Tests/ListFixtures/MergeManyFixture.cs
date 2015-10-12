@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-	[TestFixture]
+    [TestFixture]
 	public class MergeManyFixture
 	{
 		private class ObjectWithObservable

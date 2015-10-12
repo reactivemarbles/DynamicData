@@ -76,12 +76,17 @@ namespace DynamicData.Linq
                         foreach (var item in change.Range)
                         {
                             var key = _keySelector(item);
-                            yield return new Change<TObject, TKey>(ChangeReason.Add, key, item);
+                            yield return new Change<TObject, TKey>(ChangeReason.Remove, key, item);
                         }
                     }
                         break;
                     case ListChangeReason.Moved:
-                        yield break;
+                    {
+
+                        var key = _keySelector(change.Item.Current);
+                        yield return new Change<TObject, TKey>(ChangeReason.Moved, key, change.Item.Current, change.Item.Previous,change.Item.CurrentIndex,change.Item.PreviousIndex);
+                        break;
+                    }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

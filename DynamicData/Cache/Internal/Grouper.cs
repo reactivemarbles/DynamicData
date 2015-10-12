@@ -7,57 +7,36 @@ namespace DynamicData.Internal
 {
     internal sealed class Grouper<TObject, TKey, TGroupKey>
     {
-        #region fields
-
         private readonly IDictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>> _groupCache = new Dictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>>();
-
         private readonly Func<TObject, TGroupKey> _groupSelectorKey;
         private readonly IDictionary<TKey, ChangeWithGroup> _itemCache = new Dictionary<TKey, ChangeWithGroup>();
-        private readonly object _locker = new object();
 
         private struct ChangeWithGroup : IEquatable<ChangeWithGroup>
         {
-            private readonly TGroupKey _groupKey;
-            private readonly TObject _item;
-            private readonly TKey _key;
-            private readonly ChangeReason _reason;
-
             /// <summary>
             ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
             /// </summary>
             public ChangeWithGroup(Change<TObject, TKey> change, Func<TObject, TGroupKey> keySelector)
             {
-                _groupKey = keySelector(change.Current);
-                _item = change.Current;
-                _key = change.Key;
-                _reason = change.Reason;
+                GroupKey = keySelector(change.Current);
+                Item = change.Current;
+                Key = change.Key;
+                Reason = change.Reason;
             }
 
-            public TObject Item
-            {
-                get { return _item; }
-            }
+            public TObject Item { get; }
 
-            public TKey Key
-            {
-                get { return _key; }
-            }
+            public TKey Key { get; }
 
-            public TGroupKey GroupKey
-            {
-                get { return _groupKey; }
-            }
+            public TGroupKey GroupKey { get; }
 
-            public ChangeReason Reason
-            {
-                get { return _reason; }
-            }
+            public ChangeReason Reason { get; }
 
             #region Equality members
 
             public bool Equals(ChangeWithGroup other)
             {
-                return _key.Equals(other._key);
+                return Key.Equals(other.Key);
             }
 
             public override bool Equals(object obj)
@@ -68,7 +47,7 @@ namespace DynamicData.Internal
 
             public override int GetHashCode()
             {
-                return _key.GetHashCode();
+                return Key.GetHashCode();
             }
 
             public static bool operator ==(ChangeWithGroup left, ChangeWithGroup right)
@@ -91,22 +70,16 @@ namespace DynamicData.Internal
             /// </returns>
             public override string ToString()
             {
-                return string.Format("Key: {0}, GroupKey: {1}, Item: {2}", Key, _groupKey,_item);
+                return $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";
             }
         }
 
-        #endregion
-
-        #region Construction
-
+        
         public Grouper(Func<TObject, TGroupKey> groupSelectorKey)
         {
             _groupSelectorKey = groupSelectorKey;
         }
 
-        #endregion
-
-        #region Construction
 
         public IGroupChangeSet<TObject, TKey, TGroupKey> Update(IChangeSet<TObject, TKey> updates)
         {
@@ -243,27 +216,20 @@ namespace DynamicData.Internal
                                 });
 
 
-                                if (groupCache.Count == 0)
-                                {
-                                    _groupCache.RemoveIfContained(group.Key);
-                                    result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, group.Key,groupCache));
-                                }
+                                if (groupCache.Count != 0) return;
 
+                                _groupCache.RemoveIfContained(@group.Key);
+                                result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key,groupCache));
                             });
             return new GroupChangeSet<TObject, TKey, TGroupKey>(result);
         }
 
-
-
-        #endregion
-
         private Tuple<ManagedGroup<TObject, TKey, TGroupKey>, bool> GetCache(TGroupKey key)
         {
-            Optional<ManagedGroup<TObject, TKey, TGroupKey>> cache = _groupCache.Lookup(key);
+            var cache = _groupCache.Lookup(key);
             if (cache.HasValue)
-            {
                 return Tuple.Create(cache.Value, false);
-            }
+
             var newcache = new ManagedGroup<TObject, TKey, TGroupKey>(key);
             _groupCache[key] = newcache;
             return Tuple.Create(newcache, true);

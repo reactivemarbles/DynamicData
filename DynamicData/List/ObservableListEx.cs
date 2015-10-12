@@ -22,7 +22,7 @@ namespace DynamicData
 	/// </summary>
 	public static class ObservableListEx
 	{
-        #region Populate changetset from standard rx observable
+        #region Populate change set from standard rx observable
 
             /*
                 made private because I need to re-engineer expiry stuff first
@@ -59,6 +59,23 @@ namespace DynamicData
         #endregion
 
         #region Conversion
+
+        /// <summary>
+        /// Removes the index from all changes.
+        /// 
+        /// NB: This operator has been introduced as a temporary fix for creating an Or operator using merge many.
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<T>> RemoveIndex<T>([NotNull] this IObservable<IChangeSet<T>> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return source.Select(changes => new ChangeSet<T>(changes.YieldWithoutIndex()));
+        }
+
+
 
         /// <summary>
         /// Adds a key to the change set result which enables all observable cache features of dynamic data
@@ -247,9 +264,7 @@ namespace DynamicData
         #endregion
 
         #region Core List Operators
-
-
-
+        
         /// <summary>
         /// Filters the source using the specified valueSelector
         /// </summary>
@@ -282,8 +297,6 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-
-           
             var predicates = filterController
                 .EvaluateChanged
                 .Merge(filterController.FilterChanged);

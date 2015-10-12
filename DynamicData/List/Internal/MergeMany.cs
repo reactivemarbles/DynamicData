@@ -26,7 +26,8 @@ namespace DynamicData.Internal
 					observer =>
 					{
 					    var locker = new object();
-					        return _source.SubscribeMany(t => _observableSelector(t).Synchronize(locker).Subscribe(observer.OnNext))
+					        return _source
+                                .SubscribeMany(t => _observableSelector(t).Synchronize(locker).Subscribe(observer.OnNext))
 					            .Subscribe(t => { }, observer.OnError);
 					});
 		}

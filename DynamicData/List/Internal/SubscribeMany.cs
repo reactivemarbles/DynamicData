@@ -31,8 +31,7 @@ namespace DynamicData.Internal
 											.DisposeMany()
 											.Subscribe();
 
-						var result = shared.SubscribeSafe(observer);
-						return new CompositeDisposable(subscriptions, result, shared.Connect());
+						return new CompositeDisposable(subscriptions, shared.SubscribeSafe(observer), shared.Connect());
 					});
 		}
 	}

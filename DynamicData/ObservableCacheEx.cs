@@ -314,12 +314,8 @@ namespace DynamicData
                    return source.Connect()
                        .FinallySafe(observer.OnCompleted) 
                        .ObserveOn(scheduler ?? Scheduler.Default)
-                        .Transform((t, v) =>
-                        {
-                            var index = Interlocked.Increment(ref orderItemWasAdded);
-                            return new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, index);
-                        })
-                        .Subscribe(changes =>
+                       .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded)))
+                       .Subscribe(changes =>
                         {
                             var result = sizeLimiter.CloneAndReturnExpiredOnly(changes);
                             if (result.Count == 0) return;

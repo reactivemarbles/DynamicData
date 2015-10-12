@@ -109,7 +109,7 @@ namespace DynamicData
 
                     case ListChangeReason.Clear:
                         {
-                            source.Clear();
+                            source.ClearOrRemoveMany(item);
                         }
                         break;
                 }
@@ -181,6 +181,8 @@ namespace DynamicData
                         break;
                     case ListChangeReason.Clear:
                         {
+                            //TODO: Need to resolve the issue of not being able to use ClearOrRemoveMany()!!!
+                            //i.e. need to store transformed reference so we can correctly clear
                             source.Clear();
                         }
                         break;
@@ -233,15 +235,14 @@ namespace DynamicData
                         }
                     case ListChangeReason.Clear:
                         {
-                            source.Clear();
+                            source.ClearOrRemoveMany(item);
                             break;
                         }
                     case ListChangeReason.Replace:
                         {
 
                             var change = item.Item;
-                            bool hasIndex = change.CurrentIndex >= 0;
-                            if (hasIndex && change.CurrentIndex == change.PreviousIndex)
+                            if (change.CurrentIndex >= 0 && change.CurrentIndex == change.PreviousIndex)
                             {
                                 source[change.CurrentIndex] = change.Current;
                             }
@@ -311,6 +312,28 @@ namespace DynamicData
 
 
         }
+
+        /// <summary>
+        /// Clears the collection if the number of items in the range is the same as the source collection. Otherwise a  remove many operation is applied.
+        /// 
+        /// NB: This is because an observable change set may be a composite of multiple change sets in which case if one of them has clear operation applied it should not clear the entire result.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="change">The change.</param>
+        private static void ClearOrRemoveMany<T>(this IList<T> source, Change<T> change)
+        {
+            //apply this to other operators
+            if (source.Count == change.Range.Count)
+            {
+                source.Clear();
+            }
+            else
+            {
+                source.RemoveMany(change.Range);
+            }
+        }
+
 
         #endregion
         
@@ -508,7 +531,7 @@ namespace DynamicData
 			{
 				if (index >= 0)
 				{
-                    ((List<T>)source).AddRange(items, index);
+                    ((List<T>)source).InsertRange(index,items);
 				}
 				else
 				{
@@ -571,7 +594,7 @@ namespace DynamicData
         /// <param name="count">The count.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.NotSupportedException">Cannot remove range</exception>
-        public static void RemoveRange<T>(this IList<T> source,  int index,int count)
+        private static void RemoveRange<T>(this IList<T> source,  int index,int count)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
