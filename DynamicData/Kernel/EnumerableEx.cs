@@ -12,6 +12,19 @@ namespace DynamicData.Kernel
 	public static class EnumerableEx
 	{
         /// <summary>
+        /// Casts the enumerable to an array if it is already an array.  Otherwise call ToArray
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static T[] AsArray<T>(this IEnumerable<T> source)
+        {
+            return source as T[] ?? source.ToArray();
+        }
+
+
+
+        /// <summary>
         /// Finds the index of many items as specified in the secondary enumerable.
         /// </summary>
         /// <typeparam name="T"></typeparam>

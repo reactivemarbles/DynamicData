@@ -78,6 +78,8 @@
     <Compile Include="List\FilterPolicy.cs" />
     <Compile Include="List\IChangeSetAdaptor.cs" />
     <Compile Include="List\Internal\BufferIf.cs" />
+    <Compile Include="List\Internal\ChangeAwareListWithRefCounts.cs" />
+    <Compile Include="List\Internal\Combiner.cs" />
     <Compile Include="List\Internal\DeferUntilLoaded.cs" />
     <Compile Include="List\Internal\Distinct.cs" />
     <Compile Include="List\Internal\ExpirableItem.cs" />
@@ -165,6 +167,7 @@
     <Compile Include="List\Internal\Pager.cs" />
     <Compile Include="List\Internal\QueryWhenChanged.cs" />
     <Compile Include="List\Internal\RefCount.cs" />
+    <Compile Include="List\Internal\ReferenceCountTracker.cs" />
     <Compile Include="List\Internal\SizeLimiter.cs" />
     <Compile Include="List\Internal\SubscribeMany.cs" />
     <Compile Include="List\Internal\Transformer.cs" />

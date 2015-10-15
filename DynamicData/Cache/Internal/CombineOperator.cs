@@ -8,23 +8,23 @@ namespace DynamicData.Internal
     public enum CombineOperator
     {
         /// <summary>
-        /// Resultant stream is comprised of items which are in each the caches
+        /// Apply a logical And between two or more observable change sets
         /// </summary>
-        ContainedInEach,
+        And,
 
         /// <summary>
-        /// Resultant stream is comprised of items which are in any of the caches
+        /// Apply a logical Or between two or more observable change sets
         /// </summary>
-        ContainedInAny,
+        Or,
 
         /// <summary>
-        /// Resultant stream is comprised of items which are in onlys the caches
+        /// Apply a logical Xor between two or more observable change sets
         /// </summary>
-        ContainedInOne,
+        Xor,
 
         /// <summary>
-        /// Resultant stream is comprised of items which are in the first stream and not the others
+        /// Include the items in the first changeset and exclude any items belonging to the other
         /// </summary>
-        ExceptFor
+        Except
     }
 }

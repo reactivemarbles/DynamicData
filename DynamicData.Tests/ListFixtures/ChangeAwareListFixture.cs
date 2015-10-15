@@ -1,5 +1,4 @@
-﻿
-using System.Linq;
+﻿using System.Linq;
 using DynamicData.Kernel;
 using NUnit.Framework;
 

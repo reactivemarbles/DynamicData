@@ -52,6 +52,7 @@ namespace DynamicData
             if (args.Range.Count == 0) return;
             _changes.Add(args);
             _innerList.InsertRange(index, args.Range);
+            OnInsertItems(index, args.Range);
         }
 
         public void RemoveRange(int index, int count)
@@ -62,14 +63,37 @@ namespace DynamicData
 
             _changes.Add(args);
             _innerList.RemoveRange(index, count);
+            OnRemoveItems(index, args.Range);
         }
 
-        public void Clear()
+        public virtual void Clear()
         {
             if (_innerList.Count == 0) return;
             var toremove = _innerList.ToList();
             _changes.Add(new Change<T>(ListChangeReason.Clear, toremove));
             _innerList.Clear();
+        }
+
+        #endregion
+
+
+        #region Subclass overrides
+
+        protected virtual void OnSetItem(int index, T newItem, T oldItem)
+        {
+
+        }
+
+        protected virtual void OnInsertItems(int startIndex, IEnumerable<T> items)
+        {
+
+        }
+
+
+
+        protected virtual void OnRemoveItems(int startIndex, IEnumerable<T> items)
+        {
+
         }
 
         #endregion
@@ -147,7 +171,7 @@ namespace DynamicData
         }
 
 
-        protected virtual void RemoveItem(int index)
+        protected  void RemoveItem(int index)
         {
             var item = _innerList[index];
             RemoveItem(index, item);
@@ -219,6 +243,7 @@ namespace DynamicData
             var previous = _innerList[index];
             _changes.Add(new Change<T>(ListChangeReason.Replace, item, previous, index, index));
             _innerList[index] = item;
+            OnSetItem(index, item, previous);
         }
 
         public virtual void Move(T item, int destination)
@@ -252,7 +277,7 @@ namespace DynamicData
         #region IList<T> implementation
 
 
-        public bool Contains(T item)
+        public virtual bool Contains(T item)
         {
             return _innerList.Contains(item);
         }

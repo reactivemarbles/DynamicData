@@ -1827,7 +1827,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (others == null || others.Length == 0) throw new ArgumentNullException(nameof(others));
 
-            return source.Combine(CombineOperator.ContainedInEach, others);
+            return source.Combine(CombineOperator.And, others);
         }
 
         /// <summary>
@@ -1849,7 +1849,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (others == null || others.Length == 0) throw new ArgumentNullException(nameof(others));
 
-            return source.Combine(CombineOperator.ContainedInAny, others);
+            return source.Combine(CombineOperator.Or, others);
         }
 
 
@@ -1872,7 +1872,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (others == null || others.Length == 0) throw new ArgumentNullException(nameof(others));
 
-            return source.Combine(CombineOperator.ContainedInOne, others);
+            return source.Combine(CombineOperator.Xor, others);
         }
 
 
@@ -1895,7 +1895,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (others == null || others.Length == 0) throw new ArgumentNullException(nameof(others));
 
-            return source.Combine(CombineOperator.ExceptFor, others);
+            return source.Combine(CombineOperator.Except, others);
         }
 
 

@@ -170,6 +170,7 @@
     <Compile Include="ListFixtures\Performance.cs" />
     <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
     <Compile Include="ListFixtures\RefCountFixture.cs" />
+    <Compile Include="ListFixtures\RemoveManyFixture.cs" />
     <Compile Include="ListFixtures\SizeLimitFixture.cs" />
     <Compile Include="ListFixtures\SortFixture.cs" />
     <Compile Include="ListFixtures\SubscribeManyFixture.cs" />

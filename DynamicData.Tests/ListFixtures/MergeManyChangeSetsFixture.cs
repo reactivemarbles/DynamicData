@@ -18,7 +18,7 @@ namespace DynamicData.Tests.ListFixtures
             parent.Add(c);
 
             var d = parent.Connect()
-                .MergeMany(e => e.Connect())
+                .MergeMany(e => e.Connect().RemoveIndex())
                 .AsObservableList();
 
             Assert.AreEqual(d.Count,0); 
@@ -41,6 +41,8 @@ namespace DynamicData.Tests.ListFixtures
             // Fails below
             Assert.AreEqual(d.Count,2);
             CollectionAssert.AreEquivalent(d.Items, new[] { 1, 2});
+
+
         }
     }
 }

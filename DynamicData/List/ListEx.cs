@@ -578,12 +578,28 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (itemsToRemove == null) throw new ArgumentNullException(nameof(itemsToRemove));
 
+            var items = itemsToRemove.AsArray();
+
             //match all indicies and and remove in reverse as it is more efficient
-            source.IndexOfMany(itemsToRemove)
+            var toRemove = source.IndexOfMany(items)
               .OrderByDescending(x => x.Index)
-              .ToArray()
-              .ForEach(x => source.RemoveAt(x.Index));
+              .ToArray();
+
+            if (items.Length == toRemove.Length)
+            {
+                //Fast remove because we know the index of all 
+                toRemove.ForEach(t => source.RemoveAt(t.Index));
+
+            }
+            else
+            {
+                //assume there are some duplicates or missing items
+                items.ForEach(t => source.Remove(t));
+            }
+
         }
+
+        
 
         /// <summary>
         /// Removes the number of items, starting at the specified index

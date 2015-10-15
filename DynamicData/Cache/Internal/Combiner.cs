@@ -159,19 +159,19 @@ namespace DynamicData.Internal
         {
             switch (_type)
             {
-                case CombineOperator.ContainedInEach:
+                case CombineOperator.And:
                     {
                         return _sourceCaches.All(s => s.Lookup(key).HasValue);
                     }
-                case CombineOperator.ContainedInAny:
+                case CombineOperator.Or:
                     {
                         return _sourceCaches.Any(s => s.Lookup(key).HasValue);
                     }
-                case CombineOperator.ContainedInOne:
+                case CombineOperator.Xor:
                     {
                         return _sourceCaches.Count(s => s.Lookup(key).HasValue)==1;
                     }
-                case CombineOperator.ExceptFor:
+                case CombineOperator.Except:
                     {
                         bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
                         bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
