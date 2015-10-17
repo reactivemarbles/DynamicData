@@ -575,28 +575,36 @@ namespace DynamicData
         /// </exception>
         public static void RemoveMany<T>(this IList<T> source, [NotNull] IEnumerable<T> itemsToRemove)
         {
+            /*
+                This may seem OTT but for large sets of data where there are many removes scattered
+                across the source collection IndexOf lookups can result in very slow updates
+                (especially for subsequent operators) 
+            */
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (itemsToRemove == null) throw new ArgumentNullException(nameof(itemsToRemove));
 
-            var items = itemsToRemove.AsArray();
+            var toRemoveArray = itemsToRemove.AsArray();
 
             //match all indicies and and remove in reverse as it is more efficient
-            var toRemove = source.IndexOfMany(items)
+            var toRemove = source.IndexOfMany(toRemoveArray)
               .OrderByDescending(x => x.Index)
               .ToArray();
 
-            if (items.Length == toRemove.Length)
-            {
-                //Fast remove because we know the index of all 
-                toRemove.ForEach(t => source.RemoveAt(t.Index));
+            //if there are duplicates, it could be that an item exists in the
+            //source collection more than once - in that case the fast remove 
+            //would remove each instance
+            var hasDuplicates = toRemove.Duplicates(t => t.Item).Any();
 
+            if (hasDuplicates)
+            {
+                //Slow remove but safe
+                toRemoveArray.ForEach(t => source.Remove(t));
             }
             else
             {
-                //assume there are some duplicates or missing items
-                items.ForEach(t => source.Remove(t));
+                //Fast remove because we know the index of all and we remove in order
+                toRemove.ForEach(t => source.RemoveAt(t.Index));
             }
-
         }
 
         

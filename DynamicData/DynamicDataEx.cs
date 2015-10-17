@@ -1831,7 +1831,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Applied a logical Or operator between the collections i.e items which are in any of the sources are included
+        /// Apply a logical Or operator between the collections i.e items which are in any of the sources are included
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1854,7 +1854,8 @@ namespace DynamicData
 
 
         /// <summary>
-        /// Applied a logical Xor operator between the collections i.e items which are in any of the sources are included
+        /// Apply a logical Xor operator between the collections. 
+        /// Items which are only in one of the sources are included in the result
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1877,7 +1878,7 @@ namespace DynamicData
 
 
         /// <summary>
-        /// Applied a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
+        /// Apply a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>

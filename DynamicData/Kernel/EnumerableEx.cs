@@ -17,14 +17,34 @@ namespace DynamicData.Kernel
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
         /// <returns></returns>
-        public static T[] AsArray<T>(this IEnumerable<T> source)
+        public static T[] AsArray<T>([NotNull] this IEnumerable<T> source)
         {
-            return source as T[] ?? source.ToArray();
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return  source as T[] ?? source.ToArray();
         }
 
-
-
         /// <summary>
+        /// Returns any duplicated values from the source
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="valueSelector">The value selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IEnumerable<T> Duplicates<T,TValue>([NotNull] this IEnumerable<T> source,
+	        [NotNull] Func<T,TValue> valueSelector )
+	    {
+	        if (source == null) throw new ArgumentNullException(nameof(source));
+	        if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+	        return source.GroupBy(valueSelector)
+                        .Where(group=>group.Count()>1)
+                        .SelectMany(t=>t);
+	    }
+
+
+	    /// <summary>
         /// Finds the index of many items as specified in the secondary enumerable.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -100,10 +120,19 @@ namespace DynamicData.Kernel
 			return source ?? Enumerable.Empty<T>();
 		}
 
+
+
 		internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
 		{
 			return new HashSet<T>(source);
 		}
 
-	}
+
+        internal static IEnumerable<T> EnumerateOne<T>(this T source)
+        {
+            yield return source;
+        }
+
+
+    }
 }

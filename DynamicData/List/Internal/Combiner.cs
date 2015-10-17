@@ -35,7 +35,7 @@ namespace DynamicData.Internal
                         var list = new ReferenceCountTracker<T>();
                         _sourceLists.Add(list);
 
-                        disposable.Add(item.Subscribe(changes =>
+                        disposable.Add(item.Synchronize(_locker).Subscribe(changes =>
                         {
                             CloneSourceList(list, changes);
 
@@ -45,8 +45,6 @@ namespace DynamicData.Internal
                         }));
                     }
                 }
-
-
                 return disposable;
             });
         }

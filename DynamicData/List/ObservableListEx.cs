@@ -193,7 +193,7 @@ namespace DynamicData
 
 		#endregion
 
-		#region Populate into an observable cache
+		#region Populate into an observable list
 
 
 		/// <summary>
@@ -1026,5 +1026,75 @@ namespace DynamicData
 
         #endregion
 
+        #region Logical collection operators
+
+
+        /// <summary>
+        /// Apply a logical Or operator between the collections.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="others">The others.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Or<T>([NotNull] this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
+        {
+            return source.Combine(CombineOperator.Or, others);
+        }
+
+
+        /// <summary>
+        /// Apply a logical Xor operator between the collections.
+        /// Items which are only in one of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="others">The others.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Xor<T>([NotNull] this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
+        {
+            return source.Combine(CombineOperator.Xor, others);
+        }
+
+
+        /// <summary>
+        /// Apply a logical And operator between the collections.
+        /// Items which are in all of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="others">The others.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> And<T>([NotNull] this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
+        {
+            return source.Combine(CombineOperator.And, others);
+        }
+
+        /// <summary>
+        /// Apply a logical Except operator between the collections.
+        /// Items which are in the source and not in the others are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="others">The others.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Except<T>([NotNull] this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
+        {
+            return source.Combine(CombineOperator.Except, others);
+        }
+
+
+        private static IObservable<IChangeSet<T>> Combine<T>([NotNull] this IObservable<IChangeSet<T>> source,
+            CombineOperator type,
+            params IObservable<IChangeSet<T>>[] others)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (others.Length==0) throw new ArgumentException("Must be at least one item to combine with", nameof(others));
+
+            var items = source.EnumerateOne().Union(others).ToList();
+            return new Combiner<T>(items, type).Run();
+        }
+
+        #endregion
     }
 }

@@ -5,7 +5,6 @@ namespace DynamicData.Internal
 {
     internal class ChangeAwareListWithRefCounts<T> : ChangeAwareList<T>
     {
-
         private readonly ReferenceCountTracker<T> _tracker = new ReferenceCountTracker<T>();
 
         protected override void InsertItem(int index, T item)
