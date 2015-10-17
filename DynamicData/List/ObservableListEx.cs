@@ -13,6 +13,7 @@ using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Linq;
+using DynamicData.List.Linq;
 using DynamicData.Operators;
 
 namespace DynamicData
@@ -344,21 +345,39 @@ namespace DynamicData
 			return new Sort<T>(source, comparer, options).Run();
 		}
 
+        /// <summary>
+        /// Reverse sort of the changset
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// comparer
+        /// </exception>
+        public static IObservable<IChangeSet<T>> Reverse<T>(this IObservable<IChangeSet<T>> source)
+        {
+            var reverser = new Reverser<T>();
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return source.Select(changes => new ChangeSet<T>(reverser.Reverse(changes)));
+        }
 
-		/// <summary>
-		/// Projects each update item to a new form using the specified transform function
-		/// </summary>
-		/// <typeparam name="TSource">The type of the source.</typeparam>
-		/// <typeparam name="TDestination">The type of the destination.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="transformFactory">The transform factory.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// valueSelector
-		/// </exception>
-		public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory)
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// valueSelector
+        /// </exception>
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));

@@ -51,7 +51,7 @@ namespace DynamicData.Tests.ListFixtures
         public void UpdateWillCallDispose()
         {
             _source.Add(new DisposableObject(1));
-            _source.Replace(0,new DisposableObject(1));
+            _source.ReplaceAt(0,new DisposableObject(1));
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");

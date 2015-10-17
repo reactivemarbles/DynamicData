@@ -55,7 +55,7 @@ namespace DynamicData.Tests.ListFixtures
 			var person = new Person("Adult1", 50);
 			var amended = new Person("Adult1", 60);
 			_source.Add(person);
-			_source.Replace(0,amended);
+			_source.ReplaceAt(0,amended);
 
 			Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
 			Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");

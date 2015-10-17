@@ -174,6 +174,7 @@
     <Compile Include="List\Internal\TransformMany.cs" />
     <Compile Include="List\Internal\UnifiedChange.cs" />
     <Compile Include="List\Linq\ItemChangeEnumerator.cs" />
+    <Compile Include="List\Linq\ReverseEnumerator.cs" />
     <Compile Include="List\Linq\UnifiedChangeEnumerator.cs" />
     <Compile Include="List\IExtendedList.cs" />
     <Compile Include="List\Internal\Virtualiser.cs" />
@@ -183,7 +184,7 @@
     <Compile Include="List\Linq\AddKeyEnumerator.cs" />
     <Compile Include="List\ListEx.cs" />
     <Compile Include="List\IChangeSet.cs" />
-    <Compile Include="List\ChangeAwareList.cs" />
+    <Compile Include="List\Internal\ChangeAwareList.cs" />
     <Compile Include="List\IObservableList.cs" />
     <Compile Include="List\ISourceList.cs" />
     <Compile Include="List\ObservableListEx.cs" />

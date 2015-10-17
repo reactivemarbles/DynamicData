@@ -122,8 +122,8 @@ namespace DynamicData.Internal
                 }
                 case CombineOperator.Except:
                 {
-                    bool first = _sourceLists.Take(1).Any(s => s.Contains(item));
-                    bool others = _sourceLists.Skip(1).Any(s => s.Contains(item));
+                    var first = _sourceLists[0].Contains(item);
+                    var others = _sourceLists.Skip(1).Any(s => s.Contains(item));
                     return first && !others;
                 }
                 default:

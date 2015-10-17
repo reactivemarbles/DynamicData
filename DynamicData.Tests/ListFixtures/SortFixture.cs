@@ -70,7 +70,7 @@ namespace DynamicData.Tests.ListFixtures
 			_source.AddRange(people);
 
 			var shouldbefirst = new Person("__A", 99);
-            _source.Replace(10, shouldbefirst);
+            _source.ReplaceAt(10, shouldbefirst);
 
 			Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
 

@@ -34,6 +34,13 @@ namespace DynamicData.Tests.ListFixtures
         }
 
         [Test]
+        public void NothingFromOther()
+        {
+            _source2.Add(1);
+            Assert.AreEqual(0, _results.Data.Count);
+        }
+
+        [Test]
         public void ExcludedWhenItemIsInTwoSources()
         {
             _source1.Add(1);

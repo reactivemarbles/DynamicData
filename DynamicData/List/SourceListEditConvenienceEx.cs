@@ -153,13 +153,13 @@ namespace DynamicData
 	    }
 
 	    /// <summary>
-		/// Replaces the item at 
+		/// Replaces the item at the specified index with the new item
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="source">The source.</param>
 		/// <param name="index">The index.</param>
 		/// <param name="item">The item.</param>
-		public static void Replace<T>([NotNull] this ISourceList<T> source, int index, T item)
+		public static void ReplaceAt<T>([NotNull] this ISourceList<T> source, int index, T item)
 	    {
 	        if (source == null) throw new ArgumentNullException(nameof(source));
 	        source.Edit(list => list[index]=item);

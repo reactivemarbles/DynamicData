@@ -36,14 +36,25 @@ namespace DynamicData
 
         #region Construction
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Change{T}"/> class.
+        /// </summary>
+        /// <param name="reason">The reason.</param>
+        /// <param name="current">The current.</param>
+        /// <param name="index">The index.</param>
+        public Change(ListChangeReason reason, T current, int index = -1)
+            : this(reason, current, Optional.None<T>(), index, -1)
+        {
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="Change{T}"/> class.
-		/// </summary>
-		/// <param name="reason">The reason.</param>
-		/// <param name="items">The items.</param>
-		/// <param name="index">The index.</param>
-		public Change(ListChangeReason reason, IEnumerable<T> items, int index = -1)
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Change{T}"/> class.
+        /// </summary>
+        /// <param name="reason">The reason.</param>
+        /// <param name="items">The items.</param>
+        /// <param name="index">The index.</param>
+        public Change(ListChangeReason reason, IEnumerable<T> items, int index = -1)
 		{
             if (reason.GetChangeType()== ChangeType.Item)
                 throw new IndexOutOfRangeException("ListChangeReason must be a range type for a range change");
@@ -58,17 +69,7 @@ namespace DynamicData
 		}
 
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="Change{T}"/> class.
-		/// </summary>
-		/// <param name="reason">The reason.</param>
-		/// <param name="current">The current.</param>
-		/// <param name="index">The index.</param>
-		public Change(ListChangeReason reason, T current, int index = -1)
-			: this(reason, current, Optional.None<T>(), index, -1)
-		{
 
-		}
 
 
 		/// <summary>
@@ -83,7 +84,6 @@ namespace DynamicData
 		/// PreviousIndex must be greater than or equal to zero
 		/// </exception>
 		public Change(T current, int currentIndex, int previousIndex)
-
 		{
 			if (currentIndex < 0)
 				throw new ArgumentException("CurrentIndex must be greater than or equal to zero");
