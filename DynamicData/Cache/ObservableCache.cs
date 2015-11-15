@@ -32,7 +32,7 @@ namespace DynamicData
         {
             _readerWriter = new ReaderWriter<TObject, TKey>();
 
-            var loader = source.Synchronize(_locker)
+            var loader = source
                             .FinallySafe(_changes.OnCompleted)
                             .Subscribe(changes => _readerWriter.Write(changes)
                                                         .Then(InvokeNext, _changes.OnError)

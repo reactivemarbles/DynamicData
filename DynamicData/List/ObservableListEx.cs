@@ -13,7 +13,6 @@ using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Linq;
-using DynamicData.List.Linq;
 using DynamicData.Operators;
 
 namespace DynamicData
