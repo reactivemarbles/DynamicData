@@ -20,13 +20,14 @@ namespace DynamicData.Binding
         {
             foreach (var item in this)
             {
+                if (x == null && y == null) return 0;
+                if (x == null) return -1;
+                if (y == null) return 1;
+
                 var yValue = item.Expression(y);
 
                 int result = item.Expression(x).CompareTo(yValue);
-                if (result == 0)
-                {
-                    continue;
-                }
+                if (result == 0) continue;
 
                 return (item.Direction == SortDirection.Ascending) ? result : -result;
             }

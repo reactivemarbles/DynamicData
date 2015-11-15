@@ -107,6 +107,8 @@ namespace DynamicData.Binding
         /// <param name="source">The source.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
+
+        [Obsolete("Prefer WhenValueChanged or WhenPropertyChanged")]
         public static IObservable<TValue> Value<TObject, TValue>([NotNull] this IObservable<PropertyValue<TObject, TValue>> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -114,13 +116,15 @@ namespace DynamicData.Binding
 		}
 
 
-		/// <summary>
-		/// Observes property changed for the specified object
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <returns></returns>
-		public static IObservable<string> ObservePropertyChanges<T>(this T source)
+        /// <summary>
+        /// Observes property changed for the specified object
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+
+        [Obsolete("Prefer WhenValueChanged or WhenPropertyChanged")]
+        public static IObservable<string> ObservePropertyChanges<T>(this T source)
 			where T : INotifyPropertyChanged
 		{
 
