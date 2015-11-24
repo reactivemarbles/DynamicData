@@ -1102,6 +1102,23 @@ namespace DynamicData
             return foo.AsObservableList();
 
         } 
+        public static IObservableList<T> DynamicUnion<T>
+            ([NotNull] this IObservableList<IObservableList<T>> sources)
+        {
+            var foo = sources
+                .Connect()
+                .MergeMany(c => c.Connect().Transform(o => new {o}))
+                .Transform(c => c.o);
+
+            var bar = sources
+                .Connect()
+                .Transform(c => c.Connect().AsAggregator())
+                .WhereReasonsAre(ListChangeReason.Remove)
+                .Select(a=>new ChangeSet<T>(new [] {new Change<T>(ListChangeReason.Clear, a.SelectMany(v=>v.Item.Current.Data.Items)) }));
+
+            return foo.Merge(bar).AsObservableList();
+
+        } 
 
 
         /// <summary>
