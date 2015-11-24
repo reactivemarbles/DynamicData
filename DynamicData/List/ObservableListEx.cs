@@ -1061,7 +1061,13 @@ namespace DynamicData
             return source.Combine(CombineOperator.Or, others);
         }
 
-        public static IObservableList<T> DynamicOr<T>
+        /// <summary>
+        /// Performs a dynamic concatentation of the input lists
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources"></param>
+        /// <returns></returns>
+        public static IObservableList<T> DynamicConcat<T>
             ([NotNull] this IObservableList<IObservableList<T>> sources)
         {
             var foo = sources

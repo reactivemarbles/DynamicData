@@ -24,13 +24,14 @@ namespace DynamicData.Tests.ListFixtures
             _source.Dispose();
         }
 
+
         [Test]
         public void ShouldWork()
         {
             var a = new SourceList<int>();
             var b = new SourceList<int>();
             var c = new SourceList<int>();
-            var target = _source.DynamicOr().Connect().AsAggregator();
+            var target = _source.DynamicConcat().Connect().AsAggregator();
 
             CollectionAssert.AreEqual(target.Data.Items, new int [] {  });
 
