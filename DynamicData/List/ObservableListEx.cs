@@ -1062,7 +1062,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Performs a dynamic concatentation of the input lists
+        /// Performs a dynamic concatentation of the input lists. Order will be preserved but
+        /// the performance may suck a little.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="sources"></param>
@@ -1102,6 +1103,14 @@ namespace DynamicData
             return foo.AsObservableList();
 
         } 
+
+        /// <summary>
+        /// Apply a concatenation of all the lists without preserving order. Child
+        /// lists can be added and removed
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources"></param>
+        /// <returns></returns>
         public static IObservableList<T> DynamicConcatNonOrderPreserving<T>
             ([NotNull] this IObservableList<IObservableList<T>> sources)
         {
