@@ -1113,7 +1113,7 @@ namespace DynamicData
                 .Connect()
                 .Transform(c => c.Connect().AsAggregator())
                 .WhereReasonsAre(ListChangeReason.Remove)
-                .Select(a=>new ChangeSet<T>(new [] {new Change<T>(ListChangeReason.Clear, a.SelectMany(v=>v.Item.Current.Data.Items)) }));
+                .Select(a=>new ChangeSet<T>(new [] {new Change<T>(ListChangeReason.RemoveRange, a.SelectMany(v=>v.Item.Current.Data.Items)) }));
 
             return foo.Merge(bar).AsObservableList();
 
