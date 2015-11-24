@@ -26,12 +26,12 @@ namespace DynamicData.Tests.ListFixtures
 
 
         [Test]
-        public void ShouldWork()
+        public void DynamicConcatOrderPreservingShouldWork()
         {
             var a = new SourceList<int>();
             var b = new SourceList<int>();
             var c = new SourceList<int>();
-            var target = _source.DynamicConcat().Connect().AsAggregator();
+            var target = _source.DynamicConcatOrderPreserving().Connect().AsAggregator();
 
             CollectionAssert.AreEqual(target.Data.Items, new int [] {  });
 
@@ -66,12 +66,12 @@ namespace DynamicData.Tests.ListFixtures
         }
 
         [Test]
-        public void ShouldWork2()
+        public void DynamicConcatNonOrderPreservingShouldWork()
         {
             var a = new SourceList<int>();
             var b = new SourceList<int>();
             var c = new SourceList<int>();
-            var target = _source.DynamicUnion().Connect().AsAggregator();
+            var target = _source.DynamicConcatNonOrderPreserving().Connect().AsAggregator();
 
             CollectionAssert.AreEqual(target.Data.Items, new int [] {  });
 

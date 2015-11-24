@@ -1067,7 +1067,7 @@ namespace DynamicData
         /// <typeparam name="T"></typeparam>
         /// <param name="sources"></param>
         /// <returns></returns>
-        public static IObservableList<T> DynamicConcat<T>
+        public static IObservableList<T> DynamicConcatOrderPreserving<T>
             ([NotNull] this IObservableList<IObservableList<T>> sources)
         {
             var foo = sources
@@ -1102,13 +1102,12 @@ namespace DynamicData
             return foo.AsObservableList();
 
         } 
-        public static IObservableList<T> DynamicUnion<T>
+        public static IObservableList<T> DynamicConcatNonOrderPreserving<T>
             ([NotNull] this IObservableList<IObservableList<T>> sources)
         {
             var foo = sources
                 .Connect()
-                .MergeMany(c => c.Connect().Transform(o => new {o}))
-                .Transform(c => c.o);
+                .MergeMany(c => c.Connect());
 
             var bar = sources
                 .Connect()
