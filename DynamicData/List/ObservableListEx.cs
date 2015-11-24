@@ -14,6 +14,7 @@ using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Linq;
 using DynamicData.Operators;
+using DynamicData.Tests;
 
 namespace DynamicData
 {
@@ -1058,6 +1059,90 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Or<T>([NotNull] this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
         {
             return source.Combine(CombineOperator.Or, others);
+        }
+
+        /// <summary>
+        /// Performs a dynamic concatentation of the input lists. Order will be preserved but
+        /// the performance may suck a little.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources"></param>
+        /// <returns></returns>
+        public static IObservableList<T> DynamicConcatOrderPreserving<T>
+            ([NotNull] this IObservableList<IObservableList<T>> sources)
+        {
+            var foo = sources
+                .Connect()
+                .ToCollection()
+                .Select
+                (collection =>
+                 {
+                     var enumerable = collection
+                         .Select(a => a.Connect().ToCollection())
+                         .ToList();
+                     var observables = enumerable.Count == 0 
+                     ? Observable.Return(new List<T>())
+                     : enumerable
+                         .CombineLatest(list => list.SelectMany(p => p).ToList());
+
+                     return observables;
+
+                 })
+                .Switch()
+                .StartWith(new List<T>())
+                .Buffer(2, 1)
+                .Where(b=>b.Count==2)
+                .Select
+                (pair =>
+                 new ChangeSet<T>
+                     (new[]
+                      {
+                          new Change<T>(ListChangeReason.Clear, pair[0]), new Change<T>(ListChangeReason.AddRange, pair[1])
+                      }));
+
+            return foo.AsObservableList();
+
+        } 
+
+        /// <summary>
+        /// Apply a concatenation of all the lists without preserving order. Child
+        /// lists can be added and removed
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources"></param>
+        /// <returns></returns>
+        public static IObservableList<T> DynamicConcatNonOrderPreserving<T>
+            ([NotNull] this IObservableList<IObservableList<T>> sources)
+        {
+            var foo = sources
+                .Connect()
+                .MergeMany(c => c.Connect());
+
+            var bar = sources
+                .Connect()
+                .Transform(c => c.Connect().AsAggregator())
+                .WhereReasonsAre(ListChangeReason.Remove)
+                .Select(a=>new ChangeSet<T>(new [] {new Change<T>(ListChangeReason.RemoveRange, a.SelectMany(v=>v.Item.Current.Data.Items)) }));
+
+            return foo.Merge(bar).AsObservableList();
+
+        }
+
+        /// <summary>
+        /// A non order preserving logical or. Duplicates are removed
+        /// from the final output.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources"></param>
+        /// <returns></returns>
+        public static IObservableList<T> DynamicOr<T>
+            ([NotNull] this IObservableList<IObservableList<T>> sources)
+        {
+            return sources
+                .DynamicConcatNonOrderPreserving()
+                .Connect()
+                .DistinctValues(v => v)
+                .AsObservableList();
         }
 
 
