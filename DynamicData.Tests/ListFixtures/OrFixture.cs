@@ -71,5 +71,23 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(5, _results.Data.Count);
             CollectionAssert.AreEquivalent(Enumerable.Range(6, 5), _results.Data.Items);
         }
+
+        [Test]
+        public void DuplicateItemsAreReferenceCounted()
+        {
+            _source1.AddRange(new [] {2,3,4});
+            _source2.AddRange(new [] {3,4,5});
+
+            Assert.AreEqual(4,_results.Data.Count);
+            CollectionAssert.AreEqual(_results.Data.Items,new[] {2,3,4,5});
+
+            _source1.Remove(2);
+            CollectionAssert.AreEqual(_results.Data.Items,new[] {3,4,5});
+            _source1.Remove(3);
+            CollectionAssert.AreEqual(_results.Data.Items,new[] {3,4,5});
+            _source2.Remove(3);
+            CollectionAssert.AreEqual(_results.Data.Items,new[] {4,5});
+            
+        }
     }
 }

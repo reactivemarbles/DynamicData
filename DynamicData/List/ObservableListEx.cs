@@ -14,6 +14,7 @@ using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Linq;
 using DynamicData.Operators;
+using DynamicData.Tests;
 
 namespace DynamicData
 {
@@ -1059,6 +1060,42 @@ namespace DynamicData
         {
             return source.Combine(CombineOperator.Or, others);
         }
+
+        public static IObservableList<T> DynamicOr<T>
+            ([NotNull] this IObservableList<IObservableList<T>> sources)
+        {
+            var foo = sources
+                .Connect()
+                .ToCollection()
+                .Select
+                (collection =>
+                 {
+                     var enumerable = collection
+                         .Select(a => a.Connect().ToCollection())
+                         .ToList();
+                     var observables = enumerable.Count == 0 
+                     ? Observable.Return(new List<T>())
+                     : enumerable
+                         .CombineLatest(list => list.SelectMany(p => p).ToList());
+
+                     return observables;
+
+                 })
+                .Switch()
+                .StartWith(new List<T>())
+                .Buffer(2, 1)
+                .Where(b=>b.Count==2)
+                .Select
+                (pair =>
+                 new ChangeSet<T>
+                     (new[]
+                      {
+                          new Change<T>(ListChangeReason.Clear, pair[0]), new Change<T>(ListChangeReason.AddRange, pair[1])
+                      }));
+
+            return foo.AsObservableList();
+
+        } 
 
 
         /// <summary>
