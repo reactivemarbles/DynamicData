@@ -1126,7 +1126,24 @@ namespace DynamicData
 
             return foo.Merge(bar).AsObservableList();
 
-        } 
+        }
+
+        /// <summary>
+        /// A non order preserving logical or. Duplicates are removed
+        /// from the final output.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources"></param>
+        /// <returns></returns>
+        public static IObservableList<T> DynamicOr<T>
+            ([NotNull] this IObservableList<IObservableList<T>> sources)
+        {
+            return sources
+                .DynamicConcatNonOrderPreserving()
+                .Connect()
+                .DistinctValues(v => v)
+                .AsObservableList();
+        }
 
 
         /// <summary>
