@@ -13,10 +13,10 @@ namespace DynamicData.Internal
         private readonly IList<ReferenceCountTracker<T>> _sourceLists = new List<ReferenceCountTracker<T>>();
         private readonly ChangeAwareListWithRefCounts<T> _resultList = new ChangeAwareListWithRefCounts<T>();
         private readonly object _locker = new object();
-        private readonly List<IObservable<IChangeSet<T>>> _source;
+        private readonly ICollection<IObservable<IChangeSet<T>>> _source;
         private readonly CombineOperator _type;
 
-        public Combiner([NotNull] List<IObservable<IChangeSet<T>>> source, CombineOperator type)
+        public Combiner([NotNull] ICollection<IObservable<IChangeSet<T>>> source, CombineOperator type)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             _source = source;

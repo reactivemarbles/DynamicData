@@ -1046,6 +1046,17 @@ namespace DynamicData
 
         #region Logical collection operators
 
+        /// <summary>
+        /// Apply a logical Or operator between the collections.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Or<T>([NotNull] this ICollection<IObservable<IChangeSet<T>>> sources)
+        {
+            return sources.Combine(CombineOperator.Or);
+        }
 
         /// <summary>
         /// Apply a logical Or operator between the collections.
@@ -1060,7 +1071,6 @@ namespace DynamicData
             return source.Combine(CombineOperator.Or, others);
         }
 
-
         /// <summary>
         /// Apply a logical Xor operator between the collections.
         /// Items which are only in one of the sources are included in the result
@@ -1074,6 +1084,17 @@ namespace DynamicData
             return source.Combine(CombineOperator.Xor, others);
         }
 
+        /// <summary>
+        /// Apply a logical Xor operator between the collections.
+        /// Items which are only in one of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources">The sources.</param>
+        /// <returns></returns>>
+        public static IObservable<IChangeSet<T>> Xor<T>([NotNull] this ICollection<IObservable<IChangeSet<T>>> sources)
+        {
+            return sources.Combine(CombineOperator.Xor);
+        }
 
         /// <summary>
         /// Apply a logical And operator between the collections.
@@ -1089,6 +1110,18 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Apply a logical And operator between the collections.
+        /// Items which are in all of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources">The sources.</param>
+        /// <returns></returns>>
+        public static IObservable<IChangeSet<T>> And<T>([NotNull] this ICollection<IObservable<IChangeSet<T>>> sources)
+        {
+            return sources.Combine(CombineOperator.And);
+        }
+
+        /// <summary>
         /// Apply a logical Except operator between the collections.
         /// Items which are in the source and not in the others are included in the result
         /// </summary>
@@ -1101,6 +1134,25 @@ namespace DynamicData
             return source.Combine(CombineOperator.Except, others);
         }
 
+        /// <summary>
+        /// Apply a logical Except operator between the collections.
+        /// Items which are in the source and not in the others are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources">The sources.</param>
+        /// <returns></returns>>
+        public static IObservable<IChangeSet<T>> Except<T>([NotNull] this ICollection<IObservable<IChangeSet<T>>> sources)
+        {
+            return sources.Combine(CombineOperator.Except);
+        }
+
+        private static IObservable<IChangeSet<T>> Combine<T>([NotNull] this ICollection<IObservable<IChangeSet<T>>> sources,
+            CombineOperator type)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return new Combiner<T>(sources, type).Run();
+        }
 
         private static IObservable<IChangeSet<T>> Combine<T>([NotNull] this IObservable<IChangeSet<T>> source,
             CombineOperator type,
