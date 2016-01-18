@@ -49,7 +49,8 @@ namespace DynamicData.Internal
 					.Select(predicate =>
 					{
 						Requery(predicate);
-						return _filtered.CaptureChanges();
+						var changed = _filtered.CaptureChanges();
+					    return changed;
 					});
 				
 				var shared = _source.Synchronize(locker).Publish();
@@ -74,8 +75,9 @@ namespace DynamicData.Internal
 									.Select(changes =>
 									{
 										_filtered.Filter(changes, _predicate);
-										return _filtered.CaptureChanges();
-									});
+                                        var changed = _filtered.CaptureChanges();
+                                        return changed;
+                                    });
 
 				var subscriber = refresher.Merge(filter).NotEmpty().SubscribeSafe(observer);
 

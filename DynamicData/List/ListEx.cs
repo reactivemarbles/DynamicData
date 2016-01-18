@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
@@ -152,6 +153,9 @@ namespace DynamicData
                         }
                     case ListChangeReason.AddRange:
                         {
+                            if (item.Range.Index==4)
+                               Debug.WriteLine("");
+
                             source.AddOrInsertRange(item.Range.Select(transformFactory), item.Range.Index);
                             break;
                         }

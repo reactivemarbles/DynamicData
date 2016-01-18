@@ -70,12 +70,13 @@ namespace DynamicData.Internal
                         tracker.Remove(change.Item.Current);
                         break;
                     case ListChangeReason.RemoveRange:
+                    case ListChangeReason.Clear:
                         foreach (var t in change.Range)
                             tracker.Remove(t);
                         break;
-                    case ListChangeReason.Clear:
-                        tracker.Clear();
-                        break;
+                    //case ListChangeReason.Clear:
+                    //    tracker.Clear();
+                    //    break;
                 }
             });
         }

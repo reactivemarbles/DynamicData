@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using DynamicData.Kernel;
 
@@ -47,6 +48,7 @@ namespace DynamicData.Internal
 
         public void InsertRange(IEnumerable<T> collection, int index)
         {
+
             var args = new Change<T>(ListChangeReason.AddRange, collection, index);
             if (args.Range.Count == 0) return;
             _changes.Add(args);
@@ -155,6 +157,10 @@ namespace DynamicData.Internal
                     }
                     range.Insert(insertPosition, item);
 
+                    if (range.Index == 4 && range.Count==4)
+                        Debug.WriteLine("");
+
+
                     if (index < range.Index)
                         range.SetStartingIndex(index);
                 }
@@ -197,6 +203,8 @@ namespace DynamicData.Internal
                 {
                     //Nb: double check this one as it is the same as clause above. Can it be correct?
                     _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { item, previousItem.Current }, index);
+
+
                 }
                 else
                 {
