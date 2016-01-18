@@ -1831,6 +1831,25 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Applied a logical And operator between the collections i.e items which are in all of the sources are included
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// others
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.And);
+        }
+
+        /// <summary>
         /// Apply a logical Or operator between the collections i.e items which are in any of the sources are included
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -1852,6 +1871,24 @@ namespace DynamicData
             return source.Combine(CombineOperator.Or, others);
         }
 
+        /// <summary>
+        /// Apply a logical Or operator between the collections i.e items which are in any of the sources are included
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// others
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Or);
+        }
 
         /// <summary>
         /// Apply a logical Xor operator between the collections. 
@@ -1876,6 +1913,25 @@ namespace DynamicData
             return source.Combine(CombineOperator.Xor, others);
         }
 
+        /// <summary>
+        /// Apply a logical Xor operator between the collections. 
+        /// Items which are only in one of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// others
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Xor);
+        }
 
         /// <summary>
         /// Apply a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
@@ -1899,6 +1955,62 @@ namespace DynamicData
             return source.Combine(CombineOperator.Except, others);
         }
 
+        /// <summary>
+        /// Apply a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The sources.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// others
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Except);
+        }
+
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(
+            this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources,
+            CombineOperator type)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return Observable.Create<IChangeSet<TObject, TKey>>
+                (
+                    observer =>
+                    {
+                        Action<IChangeSet<TObject, TKey>> updateAction = updates =>
+                        {
+                            try
+                            {
+                                observer.OnNext(updates);
+                            }
+                            catch (Exception ex)
+                            {
+                                observer.OnError(ex);
+                                observer.OnCompleted();
+                            }
+                        };
+                        IDisposable subscriber = Disposable.Empty;
+                        try
+                        {
+                            var combiner = new Combiner<TObject, TKey>(type, updateAction);
+                            subscriber = combiner.Subscribe(sources.ToArray());
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                            observer.OnCompleted();
+                        }
+
+                        return subscriber;
+                    });
+        }
 
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(
             this IObservable<IChangeSet<TObject, TKey>> source,
