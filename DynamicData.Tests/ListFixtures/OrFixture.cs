@@ -1,15 +1,34 @@
-﻿using System.Linq;
-using DynamicData.Tests.Domain;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
-using DynamicData;
 
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    public class OrFixture
+    public class OrFixture : OrFixtureBase
     {
-        private ISourceList<int> _source1;
-        private ISourceList<int> _source2;
+        protected override IObservable<IChangeSet<int>> CreateObservable()
+        {
+            return _source1.Connect().Or(_source2.Connect());
+        }
+    }
+
+    [TestFixture]
+    public class OrCollectionFixture : OrFixtureBase
+    {
+        protected override IObservable<IChangeSet<int>> CreateObservable()
+        {
+            var list = new List<IObservable<IChangeSet<int>>> {_source1.Connect(), _source2.Connect()};
+            return list.Or();
+        }
+    }
+
+    [TestFixture]
+    public abstract class OrFixtureBase
+    {
+        protected ISourceList<int> _source1;
+        protected ISourceList<int> _source2;
         private ChangeSetAggregator<int> _results;
 
         [SetUp]
@@ -17,8 +36,10 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source1 = new SourceList<int>();
             _source2 = new SourceList<int>();
-            _results = _source1.Connect().Or(_source2.Connect()).AsAggregator();
+            _results = CreateObservable().AsAggregator();
         }
+
+        protected abstract IObservable<IChangeSet<int>> CreateObservable();
 
         [TearDown]
         public void Cleanup()

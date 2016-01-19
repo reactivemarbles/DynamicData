@@ -1,14 +1,35 @@
 
+using System;
+using System.Collections.Generic;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-    public class ExceptFixture
+    public class ExceptFixture : ExceptFixtureBase
     {
-        private ISourceCache<Person, string> _targetSource;
-        private ISourceCache<Person, string> _exceptSource;
+        protected override IObservable<IChangeSet<Person, string>> CreateObservable()
+        {
+            return _targetSource.Connect().Except(_exceptSource.Connect());
+        }
+    }
+
+    [TestFixture]
+    public class ExceptCollectionFixture : ExceptFixtureBase
+    {
+        protected override IObservable<IChangeSet<Person, string>> CreateObservable()
+        {
+            var l = new List<IObservable<IChangeSet<Person, string>>> { _targetSource.Connect(), _exceptSource.Connect() };
+            return l.Except();
+        }
+    }
+
+    [TestFixture]
+    public abstract class ExceptFixtureBase
+    {
+        protected ISourceCache<Person, string> _targetSource;
+        protected ISourceCache<Person, string> _exceptSource;
         private ChangeSetAggregator<Person, string> _results;
 
         [SetUp]
@@ -16,8 +37,10 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _targetSource = new SourceCache<Person, string>(p => p.Name);
             _exceptSource = new SourceCache<Person, string>(p => p.Name);
-            _results = _targetSource.Connect().Except(_exceptSource.Connect()).AsAggregator();
+            _results = CreateObservable().AsAggregator();
         }
+
+        protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();
 
         [TearDown]
         public void Cleanup()
