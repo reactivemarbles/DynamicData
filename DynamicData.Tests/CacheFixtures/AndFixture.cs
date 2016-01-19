@@ -1,30 +1,46 @@
-
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
-
-
+    [TestFixture]
+    public class AndFixture : AndFixtureBase
+    {
+        protected override IObservable<IChangeSet<Person, string>> CreateObservable()
+        {
+            return _source1.Connect().And(_source2.Connect());
+        }
+    }
 
     [TestFixture]
-    public class AndFixture
+    public class AndCollectionFixture : AndFixtureBase
     {
-        private ISourceCache<Person, string> _source1;
-        private ISourceCache<Person, string> _source2;
+        protected override IObservable<IChangeSet<Person, string>> CreateObservable()
+        {
+            var l = new List<IObservable<IChangeSet<Person, string>>> { _source1.Connect(), _source2.Connect() };
+            return l.And();
+        }
+    }
+
+    [TestFixture]
+    public abstract class AndFixtureBase
+    {
+        protected ISourceCache<Person, string> _source1;
+        protected ISourceCache<Person, string> _source2;
         private ChangeSetAggregator<Person, string> _results;
-        private IDisposable _itemChanges;
 
         [SetUp]
         public void Initialise()
         {
             _source1 = new SourceCache<Person, string>(p => p.Name);
             _source2 = new SourceCache<Person, string>(p => p.Name);
-            _results = _source1.Connect().And(_source2.Connect()).AsAggregator();
-
+            _results = CreateObservable().AsAggregator();
         }
+
+        protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();
 
         [TearDown]
         public void Cleanup()

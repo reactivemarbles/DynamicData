@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
@@ -5,10 +7,29 @@ using NUnit.Framework;
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-    public class OrFixture
+    public class OrFixture : OrFixtureBase
     {
-        private ISourceCache<Person, string> _source1;
-        private ISourceCache<Person, string> _source2;
+        protected override IObservable<IChangeSet<Person, string>> CreateObservable()
+        {
+            return _source1.Connect().Or(_source2.Connect());
+        }
+    }
+
+    [TestFixture]
+    public class OrCollectionFixture : OrFixtureBase
+    {
+        protected override IObservable<IChangeSet<Person, string>> CreateObservable()
+        {
+            var l = new List<IObservable<IChangeSet<Person, string>>> { _source1.Connect(), _source2.Connect() };
+            return l.Or();
+        }
+    }
+
+    [TestFixture]
+    public abstract class OrFixtureBase
+    {
+        protected ISourceCache<Person, string> _source1;
+        protected ISourceCache<Person, string> _source2;
         private ChangeSetAggregator<Person, string> _results;
 
         [SetUp]
@@ -16,8 +37,10 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source1 = new SourceCache<Person, string>(p => p.Name);
             _source2 = new SourceCache<Person, string>(p => p.Name);
-            _results = _source1.Connect().Or(_source2.Connect()).AsAggregator();
+            _results = CreateObservable().AsAggregator();
         }
+
+        protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();
 
         [TearDown]
         public void Cleanup()
