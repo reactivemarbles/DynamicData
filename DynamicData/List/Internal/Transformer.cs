@@ -106,7 +106,6 @@ namespace DynamicData.Internal
                             {
                                 _transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
                             }
-
                             break;
                         }
                     case ListChangeReason.AddRange:
@@ -130,7 +129,6 @@ namespace DynamicData.Internal
                         break;
                     case ListChangeReason.Remove:
                         {
-                            //CHECK INDEX IF >0
                             var change = item.Item;
                             bool hasIndex = change.CurrentIndex >= 0;
 
@@ -143,7 +141,7 @@ namespace DynamicData.Internal
                                 var toremove = _transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
 
                                 if (toremove!=null)
-                                _transformed.Remove(toremove);
+                                 _transformed.Remove(toremove);
                             }
        
                         }

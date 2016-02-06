@@ -19,13 +19,10 @@
   </metadata>
   <files>
 
-    <!--Net45 files including PLinq-->
+    <!--Net45 files-->
     <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\net45\DynamicData.dll" />
     <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
     <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" target="lib\net45\DynamicData.xml" />
-    <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.dll" target="lib\net45\DynamicData.Plinq.dll" />
-    <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.pdb" target="lib\net45\DynamicData.Plinq.pdb" />
-    <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.xml" target="lib\net45\DynamicData.Plinq.xml" />
 
     <!--Portable files-->
     <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" />

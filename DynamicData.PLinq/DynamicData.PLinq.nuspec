@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>DynamicData.Plinq</id>
+    <version>$version$</version>
+    <title>Dynamic Data</title>
+    <authors>Roland Pheasant</authors>
+    <copyright>Roland Pheasant</copyright>
+    <projectUrl>http://dynamic-data.org</projectUrl>
+    <owners>Roland Pheasant</owners>
+    <licenseUrl>http://opensource.org/licenses/MS-PL</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      PLinq extensions for dynamic data
+    </description>
+    <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</tags>
+  </metadata>
+  <files>
+    <!--Net45 files including PLinq-->
+    <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.dll" target="lib\net45\DynamicData.Plinq.dll" />
+    <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.pdb" target="lib\net45\DynamicData.Plinq.pdb" />
+    <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.xml" target="lib\net45\DynamicData.Plinq.xml" />
+  </files>
+</package>
