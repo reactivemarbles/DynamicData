@@ -28,7 +28,7 @@ namespace DynamicData.Internal
 
 		private IChangeSet<TDestination> Process(IChangeSet<TSource> source)
 		{
-			//TODO: This is very ineffiecient as it flattens range operation
+			//TODO: This is very inefficient as it flattens range operation
 			//need to find a means of re-forming ranges
 			var children = source.Unified().SelectMany(change =>
 			{
@@ -59,11 +59,11 @@ namespace DynamicData.Internal
 		}
 
 
-		/// <summary>
-		///  Staging object for ManyTransform.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		internal struct TransformedItem<T>
+        /// <summary>
+        ///  Staging object for ManyTransform.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        internal struct TransformedItem<T>
 		{
 			public ListChangeReason Reason { get; }
 			public T Current { get; }

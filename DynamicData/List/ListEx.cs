@@ -119,84 +119,6 @@ namespace DynamicData
 
         }
 
-        /// <summary>
-        /// Clones the source list with the specified change set, transforming the items using the specified factory
-        /// </summary>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="changes">The changes.</param>
-        /// <param name="transformFactory">The transform factory.</param>
-        /// <exception cref="System.ArgumentNullException">
-        /// source
-        /// or
-        /// changes
-        /// or
-        /// transformFactory
-        /// </exception>
-        public static void Transform<TSource, TDestination>(this IList<TDestination> source, IChangeSet<TSource> changes, Func<TSource, TDestination> transformFactory)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-
-            source.EnsureCapacityFor(changes);
-            changes.ForEach(item =>
-            {
-                switch (item.Reason)
-                {
-                    case ListChangeReason.Add:
-                        {
-                            var change = item.Item;
-                            source.Insert(change.CurrentIndex, transformFactory(change.Current));
-                            break;
-                        }
-                    case ListChangeReason.AddRange:
-                        {
-                            if (item.Range.Index==4)
-                               Debug.WriteLine("");
-
-                            source.AddOrInsertRange(item.Range.Select(transformFactory), item.Range.Index);
-                            break;
-                        }
-                    case ListChangeReason.Replace:
-                        {
-                            var change = item.Item;
-                            if (change.CurrentIndex == change.PreviousIndex)
-                            {
-                                source[change.CurrentIndex] = transformFactory(change.Current);
-                            }
-                            else
-                            {
-                                source.RemoveAt(change.PreviousIndex);
-                                source.Insert(change.CurrentIndex, transformFactory(change.Current));
-                            }
-                        }
-                        break;
-                    case ListChangeReason.Remove:
-                        {
-                            source.RemoveAt(item.Item.CurrentIndex);
-                        }
-                        break;
-                    case ListChangeReason.RemoveRange:
-                        {
-                            source.RemoveRange(item.Range.Index, item.Range.Count);
-                        }
-                        break;
-                    case ListChangeReason.Clear:
-                        {
-                            //TODO: Need to resolve the issue of not being able to use ClearOrRemoveMany()!!!
-                            //i.e. need to store transformed reference so we can correctly clear
-                            source.Clear();
-                        }
-                        break;
-                }
-            });
-
-        }
-
-
-
 
         /// <summary>
         /// Clones the list from the specified change set
@@ -325,7 +247,7 @@ namespace DynamicData
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
         /// <param name="change">The change.</param>
-        private static void ClearOrRemoveMany<T>(this IList<T> source, Change<T> change)
+        internal static void ClearOrRemoveMany<T>(this IList<T> source, Change<T> change)
         {
             //apply this to other operators
             if (source.Count == change.Range.Count)
@@ -449,9 +371,6 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (items == null) throw new ArgumentNullException(nameof(items));
-
-			if (source is List<T>)
-			{ }
 
 
 			items.ForEach(source.Add);

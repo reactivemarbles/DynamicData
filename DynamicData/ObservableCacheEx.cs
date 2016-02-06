@@ -173,7 +173,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detination == null) throw new ArgumentNullException(nameof(detination));
 
-            return source.Subscribe(changes => detination.BatchUpdate(updater => updater.Update(changes)));
+            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
         }
 
         /// <summary>

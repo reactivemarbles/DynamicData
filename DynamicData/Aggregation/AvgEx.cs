@@ -475,15 +475,13 @@ namespace DynamicData.Aggregation
 
 
         /// <summary>
-        /// Continuous calculation of the average of the underlying data source.
+        /// Averages the specified value selector.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source observable</param>
-        /// <param name="valueSelector">The function which returns the value</param>
-        /// <param name="emptyValue">The resulting average value when there is no data</param>
-        /// <returns>
-        /// An obervable of averages
-        /// </returns>umentNullException"></exception>
+        /// <param name="source">The source.</param>
+        /// <param name="valueSelector">The value selector.</param>
+        /// <param name="emptyValue">The empty value.</param>
+        /// <returns></returns>
         public static IObservable<decimal> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull]  Func<T, decimal?> valueSelector, decimal emptyValue = 0)
         {
             return source.Avg(t => valueSelector(t).GetValueOrDefault(), emptyValue);

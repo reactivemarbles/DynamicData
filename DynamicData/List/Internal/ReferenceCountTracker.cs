@@ -11,8 +11,7 @@ namespace DynamicData.Internal
     internal class ReferenceCountTracker<T>
     {
         private Dictionary<T, int> ReferenceCounts { get; } = new Dictionary<T, int>();
-
-
+        
         public IEnumerable<T> Items => ReferenceCounts.Keys;
 
         public int this[T item] => ReferenceCounts[item];

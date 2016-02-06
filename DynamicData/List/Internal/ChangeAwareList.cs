@@ -108,6 +108,7 @@ namespace DynamicData.Internal
 
         protected virtual void InsertItem(int index, T item)
         {
+
             //attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
             var last = Last;
 

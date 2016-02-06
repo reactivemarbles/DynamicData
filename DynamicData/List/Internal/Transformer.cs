@@ -1,22 +1,29 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-	internal class Transformer<TSource, TDestination>
+    internal class Transformer<TSource, TDestination>
 	{
 		private readonly IObservable<IChangeSet<TSource>> _source;
 		private readonly Func<TSource, TDestination> _factory;
-		private readonly ChangeAwareList<TDestination> _transformed = new ChangeAwareList<TDestination>();
 
-		public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
+		private readonly ChangeAwareList<TransformedItemContainer> _transformed = new ChangeAwareList<TransformedItemContainer>();
+	    private readonly Func<TSource, TransformedItemContainer> _containerFactory;
+
+        public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (factory == null) throw new ArgumentNullException(nameof(factory));
-			_source = source;
+
+            _source = source;
 			_factory = factory;
-		}
+            _containerFactory = item => new TransformedItemContainer(item, _factory(item));
+        }
 
 
 		public IObservable<IChangeSet<TDestination>> Run()
@@ -26,8 +33,123 @@ namespace DynamicData.Internal
 
 		private IChangeSet<TDestination> Process(IChangeSet<TSource> changes)
 		{
-			_transformed.Transform(changes, _factory);
-			return _transformed.CaptureChanges();
+			Transform(changes);
+			var changed = _transformed.CaptureChanges();
+        
+		    return changed.Transform(container => container.Destination);
 		}
-	}
+
+	    private class TransformedItemContainer : IEquatable<TransformedItemContainer>
+	    {
+	        public TSource Item { get;  }
+	        public TDestination Destination { get;  }
+
+	        public TransformedItemContainer(TSource item, TDestination destination)
+	        {
+	            Item = item;
+	            Destination = destination;
+	        }
+
+            #region Equality
+
+	        public bool Equals(TransformedItemContainer other)
+	        {
+	            if (ReferenceEquals(null, other)) return false;
+	            if (ReferenceEquals(this, other)) return true;
+	            return EqualityComparer<TSource>.Default.Equals(Item, other.Item);
+	        }
+
+	        public override bool Equals(object obj)
+	        {
+	            if (ReferenceEquals(null, obj)) return false;
+	            if (ReferenceEquals(this, obj)) return true;
+	            if (obj.GetType() != this.GetType()) return false;
+	            return Equals((TransformedItemContainer) obj);
+	        }
+
+	        public override int GetHashCode()
+	        {
+	            return EqualityComparer<TSource>.Default.GetHashCode(Item);
+	        }
+
+	        public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right)
+	        {
+	            return Equals(left, right);
+	        }
+
+	        public static bool operator !=(TransformedItemContainer left, TransformedItemContainer right)
+	        {
+	            return !Equals(left, right);
+	        }
+
+	        #endregion
+        }
+
+        private  void Transform(IChangeSet<TSource> changes)
+        {
+            if (changes == null) throw new ArgumentNullException(nameof(changes));
+
+            _transformed.EnsureCapacityFor(changes);
+
+            changes.ForEach(item =>
+            {
+                switch (item.Reason)
+                {
+                    case ListChangeReason.Add:
+                        {
+                            var change = item.Item;
+                            if (change.CurrentIndex < 0 | change.CurrentIndex>= _transformed.Count)
+                            {
+                                _transformed.Add(_containerFactory(change.Current));
+                            }
+                            else
+                            {
+                                _transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                            }
+
+                            break;
+                        }
+                    case ListChangeReason.AddRange:
+                        {
+                            _transformed.AddOrInsertRange(item.Range.Select(_containerFactory), item.Range.Index);
+                            break;
+                        }
+                    case ListChangeReason.Replace:
+                        {
+                            var change = item.Item;
+                            if (change.CurrentIndex == change.PreviousIndex)
+                            {
+                                _transformed[change.CurrentIndex] = _containerFactory(change.Current);
+                            }
+                            else
+                            {
+                                _transformed.RemoveAt(change.PreviousIndex);
+                                _transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                            }
+                        }
+                        break;
+                    case ListChangeReason.Remove:
+                        {
+                            _transformed.RemoveAt(item.Item.CurrentIndex);
+                        }
+                        break;
+                    case ListChangeReason.RemoveRange:
+                        {
+                            _transformed.RemoveRange(item.Range.Index, item.Range.Count);
+                        }
+                        break;
+                    case ListChangeReason.Clear:
+                        {
+                            //i.e. need to store transformed reference so we can correctly clear
+                            var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, _transformed);
+                            _transformed.ClearOrRemoveMany(toClear);
+                        }
+                        break;
+                }
+            });
+
+        }
+
+
+    }
 }
