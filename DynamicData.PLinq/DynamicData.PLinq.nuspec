@@ -3,7 +3,7 @@
   <metadata>
     <id>DynamicData.Plinq</id>
     <version>$version$</version>
-    <title>Dynamic Data</title>
+    <title>PLinq extensions for Dynamic Data</title>
     <authors>Roland Pheasant</authors>
     <copyright>Roland Pheasant</copyright>
     <projectUrl>http://dynamic-data.org</projectUrl>
