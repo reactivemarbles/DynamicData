@@ -41,12 +41,12 @@ namespace DynamicData.Internal
 
 	    private class TransformedItemContainer : IEquatable<TransformedItemContainer>
 	    {
-	        public TSource Item { get;  }
+	        public TSource Source { get;  }
 	        public TDestination Destination { get;  }
 
-	        public TransformedItemContainer(TSource item, TDestination destination)
+	        public TransformedItemContainer(TSource source, TDestination destination)
 	        {
-	            Item = item;
+	            Source = source;
 	            Destination = destination;
 	        }
 
@@ -56,7 +56,7 @@ namespace DynamicData.Internal
 	        {
 	            if (ReferenceEquals(null, other)) return false;
 	            if (ReferenceEquals(this, other)) return true;
-	            return EqualityComparer<TSource>.Default.Equals(Item, other.Item);
+	            return EqualityComparer<TSource>.Default.Equals(Source, other.Source);
 	        }
 
 	        public override bool Equals(object obj)
@@ -69,7 +69,7 @@ namespace DynamicData.Internal
 
 	        public override int GetHashCode()
 	        {
-	            return EqualityComparer<TSource>.Default.GetHashCode(Item);
+	            return EqualityComparer<TSource>.Default.GetHashCode(Source);
 	        }
 
 	        public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right)
@@ -130,12 +130,35 @@ namespace DynamicData.Internal
                         break;
                     case ListChangeReason.Remove:
                         {
-                            _transformed.RemoveAt(item.Item.CurrentIndex);
+                            //CHECK INDEX IF >0
+                            var change = item.Item;
+                            bool hasIndex = change.CurrentIndex >= 0;
+
+                            if (hasIndex)
+                            {
+                                _transformed.RemoveAt(item.Item.CurrentIndex);
+                            }
+                            else
+                            {
+                                var toremove = _transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
+
+                                if (toremove!=null)
+                                _transformed.Remove(toremove);
+                            }
+       
                         }
                         break;
                     case ListChangeReason.RemoveRange:
                         {
-                            _transformed.RemoveRange(item.Range.Index, item.Range.Count);
+                            if (item.Range.Index >= 0)
+                            {
+                                _transformed.RemoveRange(item.Range.Index, item.Range.Count);
+                            }
+                            else
+                            {
+                                var toremove = _transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
+                                _transformed.RemoveMany(toremove);
+                            }
                         }
                         break;
                     case ListChangeReason.Clear:
