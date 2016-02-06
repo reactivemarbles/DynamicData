@@ -166,6 +166,27 @@ namespace DynamicData.Internal
                             _transformed.ClearOrRemoveMany(toClear);
                         }
                         break;
+
+                    case ListChangeReason.Moved:
+                        {
+                            var change = item.Item;
+                            bool hasIndex = change.CurrentIndex >= 0;
+                            if (!hasIndex)
+                                throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+
+                            var collection = _transformed as IExtendedList<TransformedItemContainer>;
+                            if (collection != null)
+                            {
+                                collection.Move(change.PreviousIndex, change.CurrentIndex);
+                            }
+                            else
+                            {
+                                var current = _transformed[change.PreviousIndex];
+                                _transformed.RemoveAt(change.PreviousIndex);
+                                _transformed.Insert(change.CurrentIndex, current);
+                            }
+                            break;
+                        }
                 }
             });
 

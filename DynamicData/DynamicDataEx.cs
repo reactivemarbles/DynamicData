@@ -1259,8 +1259,15 @@ namespace DynamicData
             return source.Do(cache.Clone);
         }
 
-        internal static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-            [NotNull] IDictionary<TKey, TObject> target)
+        /// <summary>
+        /// Clones the list items to the specified collection
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="target">The target.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,[NotNull] IDictionary<TKey, TObject> target)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1278,6 +1285,37 @@ namespace DynamicData
                             break;
                         case ChangeReason.Remove:
                             target.Remove(item.Key);
+                            break;
+                    }
+                }
+            });
+
+        }
+
+        public static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] ICollection<TObject> target)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            return source.Do(changes =>
+            {
+                foreach (var item in changes)
+                {
+                    switch (item.Reason)
+                    {
+                        case ChangeReason.Add:
+                        {
+                            target.Add(item.Current);
+                        }
+                        break;
+
+                        case ChangeReason.Update:
+                        {
+                            target.Remove(item.Previous.Value);
+                            target.Add(item.Current);
+                        }
+                            break;
+                        case ChangeReason.Remove:
+                            target.Remove(item.Current);
                             break;
                     }
                 }

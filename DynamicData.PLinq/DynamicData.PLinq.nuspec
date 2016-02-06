@@ -11,7 +11,7 @@
     <licenseUrl>http://opensource.org/licenses/MS-PL</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
-      PLinq extensions for dynamic data
+      PLinq extensions for dynamic data. This is the recommended Dynamic Data package when targetting net 4.5 or above
     </description>
     <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</tags>
   </metadata>

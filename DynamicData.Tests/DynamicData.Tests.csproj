@@ -77,7 +77,7 @@
     <Compile Include="AggregationTests\MinFixture.cs" />
     <Compile Include="AggregationTests\StdDevFixture.cs" />
     <Compile Include="Binding\BindChangeSetFixture.cs" />
-    <Compile Include="Binding\BindFromObservaleListFixture.cs" />
+    <Compile Include="Binding\BindFromObservableListFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
     <Compile Include="Binding\ObservableCollectionToListFixture.cs" />
@@ -151,6 +151,7 @@
     <Compile Include="CacheFixtures\TransformFixture.cs" />
     <Compile Include="ListFixtures\AndFixture.cs" />
     <Compile Include="ListFixtures\BatchFixture.cs" />
+    <Compile Include="ListFixtures\CloneFixture.cs" />
     <Compile Include="ListFixtures\BufferFixture.cs" />
     <Compile Include="ListFixtures\BatchIfFixture.cs" />
     <Compile Include="ListFixtures\BatchIfWithTimeOutFixture.cs" />
