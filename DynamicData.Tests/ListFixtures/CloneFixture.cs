@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
@@ -22,9 +21,11 @@ namespace DynamicData.Tests.ListFixtures
        [SetUp]
         public void SetUp()
         {
-            _collection = new ObservableCollectionExtended<Person>();
+            _collection = new Collection<Person>();
              _source = new SourceCache<Person, string>(p => p.Name);
-             _cloner = _source.Connect().Clone(_collection).Subscribe();
+             _cloner = _source.Connect()
+                    .Clone(_collection)
+                        .Subscribe();
         }
 
         [TearDown]

@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -671,8 +672,7 @@ namespace DynamicData
         /// <param name="keySelector">The key selector.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey, TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source,
-            Func<TObject, TDestinationKey> keySelector)
+        public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey, TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source, Func<TObject, TDestinationKey> keySelector)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
@@ -1292,6 +1292,14 @@ namespace DynamicData
 
         }
 
+        /// <summary>
+        /// Clones the changes  into the specified collection
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="target">The target.</param>
+        /// <returns></returns>
         public static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] ICollection<TObject> target)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -1303,16 +1311,16 @@ namespace DynamicData
                     switch (item.Reason)
                     {
                         case ChangeReason.Add:
-                        {
-                            target.Add(item.Current);
-                        }
-                        break;
+                            {
+                                target.Add(item.Current);
+                            }
+                            break;
 
                         case ChangeReason.Update:
-                        {
-                            target.Remove(item.Previous.Value);
-                            target.Add(item.Current);
-                        }
+                            {
+                                target.Remove(item.Previous.Value);
+                                target.Add(item.Current);
+                            }
                             break;
                         case ChangeReason.Remove:
                             target.Remove(item.Current);
@@ -1344,7 +1352,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TimeSpan?> timeSelector)
         {
-            return ExpireAfter<TObject, TKey>(source, timeSelector, Scheduler.Default);
+            return ExpireAfter(source, timeSelector, Scheduler.Default);
         }
 
         /// <summary>
@@ -1637,8 +1645,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="filter">The filter.</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
-            this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (filter == null)
@@ -1658,9 +1665,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="predicate">The predicate.</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(
-                    [NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
-                    [NotNull] IObservable<Func<TObject, bool>> predicate)
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,[NotNull] IObservable<Func<TObject, bool>> predicate)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
@@ -1672,6 +1677,7 @@ namespace DynamicData
 
             return filter.Merge(data).NotEmpty();
         }
+
 
         /// <summary>
         /// A filtered observerable where the filter is changed using the filter controller
@@ -2012,9 +2018,7 @@ namespace DynamicData
             return sources.Combine(CombineOperator.Except);
         }
 
-        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(
-            this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources,
-            CombineOperator type)
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources,CombineOperator type)
         {
             if (sources == null) throw new ArgumentNullException(nameof(sources));
 
@@ -2031,7 +2035,6 @@ namespace DynamicData
                             catch (Exception ex)
                             {
                                 observer.OnError(ex);
-                                observer.OnCompleted();
                             }
                         };
                         IDisposable subscriber = Disposable.Empty;

@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
-
     /// <summary>
     /// Extensions to help with maintainence of a list
     /// </summary>
@@ -62,8 +59,6 @@ namespace DynamicData
                             source.AddRange(matches);
                         }
                         break;
-
-
                     case ListChangeReason.Replace:
                         {
                             var change = item.Item;

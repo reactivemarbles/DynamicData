@@ -62,6 +62,7 @@ namespace DynamicData.Binding
                     handler => source.PropertyChanged += handler,
                     handler => source.PropertyChanged -= handler
                 )
+                .Where(x=>x.EventArgs.PropertyName!="IsSelected")
                 .Select(x => source);
         }
 
