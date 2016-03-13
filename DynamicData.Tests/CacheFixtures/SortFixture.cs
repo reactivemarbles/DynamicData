@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
@@ -51,6 +53,83 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.Dispose();
             _results.Dispose();
+        }
+
+        public class TestString : IEquatable<TestString>
+        {
+            private readonly string name;
+
+            public TestString(string name)
+            {
+                this.name = name;
+            }
+
+            public static implicit operator TestString(string source)
+            {
+                return new TestString(source);
+            }
+
+            public static implicit operator string(TestString source)
+            {
+                return source.name;
+            }
+
+            public bool Equals(TestString other)
+            {
+                return StringComparer.InvariantCultureIgnoreCase.Equals(this.name, other.name);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return base.Equals(obj as TestString);
+            }
+
+            public override int GetHashCode()
+            {
+                return StringComparer.InvariantCultureIgnoreCase.GetHashCode(this.name);
+            }
+        }
+
+        public class ViewModel
+        {
+            public string Name { get; set; }
+
+            public ViewModel(string name)
+            {
+                this.Name = name;
+            }
+
+            public class Comparer : IComparer<ViewModel>
+            {
+                public int Compare(ViewModel x, ViewModel y)
+                {
+                    return StringComparer.InvariantCultureIgnoreCase.Compare(x.Name, y.Name);
+                }
+            }
+        }
+
+        [Test]
+        public void SortAfterFilter()
+        {
+            var source = new SourceCache<Person, string>(p => p.Key);
+
+            var filterSubject = new BehaviorSubject<Func<Person, bool>>(p => true);
+
+            var agg = new SortedChangeSetAggregator<ViewModel, TestString>(source.Connect()
+                .Filter(filterSubject)
+                .Group(x => (TestString)x.Key)
+                .Transform(x => new ViewModel(x.Key))
+                .Sort(new ViewModel.Comparer()));
+
+            source.Edit(x =>
+            {
+                x.AddOrUpdate(new Person("A", 1, "F"));
+                x.AddOrUpdate(new Person("a", 1, "M"));
+                x.AddOrUpdate(new Person("B", 1, "F"));
+                x.AddOrUpdate(new Person("b", 1, "M"));
+            });
+
+            filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.InvariantCultureIgnoreCase));
         }
 
         [Test]
