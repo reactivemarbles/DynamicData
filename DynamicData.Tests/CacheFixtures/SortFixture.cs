@@ -81,7 +81,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             public override bool Equals(object obj)
             {
-                return base.Equals(obj as TestString);
+                return Equals(obj as TestString);
             }
 
             public override int GetHashCode()
@@ -131,6 +131,8 @@ namespace DynamicData.Tests.CacheFixtures
 
             filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.InvariantCultureIgnoreCase));
         }
+
+
 
         [Test]
         public void SortInitialBatch()

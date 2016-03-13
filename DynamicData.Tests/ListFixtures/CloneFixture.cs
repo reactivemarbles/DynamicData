@@ -7,9 +7,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-
-
-	[TestFixture]
+    [TestFixture]
     public class CloneFixture
 	{
 	    private ICollection<Person> _collection = new Collection<Person>();

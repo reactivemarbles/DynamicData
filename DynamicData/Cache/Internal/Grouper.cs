@@ -79,8 +79,7 @@ namespace DynamicData.Internal
         {
             _groupSelectorKey = groupSelectorKey;
         }
-
-
+        
         public IGroupChangeSet<TObject, TKey, TGroupKey> Update(IChangeSet<TObject, TKey> updates)
         {
             return HandleUpdates(updates);
@@ -93,7 +92,7 @@ namespace DynamicData.Internal
             return HandleUpdates(new ChangeSet<TObject, TKey>(items), true);
         }
 
-        private GroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IEnumerable<Change<TObject, TKey>> changes,bool isRegrouping = false)
+        private GroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IEnumerable<Change<TObject, TKey>> changes, bool isRegrouping = false)
         {
             var result = new List<Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>>();
             //i) evaluate which groups each update should be in 

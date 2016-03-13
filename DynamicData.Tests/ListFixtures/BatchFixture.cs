@@ -3,6 +3,7 @@ using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 
 namespace DynamicData.Tests.ListFixtures

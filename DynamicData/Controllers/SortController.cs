@@ -25,7 +25,7 @@ namespace DynamicData.Controllers
         /// <exception cref="System.ArgumentNullException">defaultSort</exception>
         public SortController(IComparer<T>  defaultSort)
         {
-            if (defaultSort == null) throw new ArgumentNullException("defaultSort");
+            if (defaultSort == null) throw new ArgumentNullException(nameof(defaultSort));
             SetDefaultSort(defaultSort);
             
         }
@@ -37,7 +37,7 @@ namespace DynamicData.Controllers
         /// <exception cref="System.ArgumentNullException">defaultSort</exception>
         public void SetDefaultSort(IComparer<T> defaultSort)
         {
-            if (defaultSort == null) throw new ArgumentNullException("defaultSort");
+            if (defaultSort == null) throw new ArgumentNullException(nameof(defaultSort));
             _defaultSort = defaultSort;
             Change(defaultSort);
         }
@@ -65,7 +65,7 @@ namespace DynamicData.Controllers
         /// <exception cref="System.ArgumentNullException">comparer</exception>
         public void Change(IComparer<T> comparer)
         {
-            if (comparer == null) throw new ArgumentNullException("comparer");
+            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
             _currentSort = comparer;
             _sortSubject.OnNext(_currentSort);
         }

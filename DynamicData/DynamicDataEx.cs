@@ -2507,6 +2507,7 @@ namespace DynamicData
                 (
                     observer =>
                         {
+             
                             var grouper = new Grouper<TObject, TKey, TGroupKey>(groupSelectorKey);
 
                             var groups = source.Select(grouper.Update)
