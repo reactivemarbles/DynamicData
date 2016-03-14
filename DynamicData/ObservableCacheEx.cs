@@ -21,7 +21,7 @@ namespace DynamicData
     /// </summary>
     public static class ObservableCacheEx
     {
-        #region Populate changetset from observables
+        #region Populate changeset from observables
 
 
         /// <summary>
@@ -161,19 +161,19 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="detination">The detination.</param>
+        /// <param name="destination">The destination.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
         /// or
-        /// detination
+        /// destination
         /// </exception>
-        public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> detination)
+        public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (detination == null) throw new ArgumentNullException(nameof(detination));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
 
-            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+            return source.Subscribe(changes => destination.Edit(updater => updater.Update(changes)));
         }
 
         /// <summary>
@@ -182,17 +182,17 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="detination">The detination.</param>
+        /// <param name="destination">The destination.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
-        /// detination</exception>
-        public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> detination)
+        /// destination</exception>
+        public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (detination == null) throw new ArgumentNullException(nameof(detination));
+            if (destination == null) throw new ArgumentNullException(nameof(destination));
 
-            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+            return source.Subscribe(changes => destination.Edit(updater => updater.Update(changes)));
         }
 
 
