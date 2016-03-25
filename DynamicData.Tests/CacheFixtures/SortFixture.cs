@@ -14,19 +14,6 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
-    public static class KeyValueCollectionEx
-    {
-        public static IDictionary<TKey, IndexedItem<TObject, TKey>> Indexed<TObject, TKey>(this 
-            IKeyValueCollection<TObject, TKey> source)
-        {
-
-            return source
-                .Select((kv, idx) => new IndexedItem<TObject, TKey>(kv.Value, kv.Key, idx))
-                .ToDictionary(i=>i.Key); 
-        }
-
-    }
-
     [TestFixture]
     public class SortFixture
     {
@@ -132,7 +119,30 @@ namespace DynamicData.Tests.CacheFixtures
             filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.InvariantCultureIgnoreCase));
         }
 
+        [Test]
+        public void SortAfterFilterList()
+        {
+            var source = new SourceList<Person>();
 
+            var filterSubject = new BehaviorSubject<Func<Person, bool>>(p => true);
+
+
+            var agg = source.Connect()
+                .Filter(filterSubject)
+                .Transform(x => new ViewModel(x.Name))
+                .Sort(new ViewModel.Comparer())
+                .AsAggregator();
+
+            source.Edit(x =>
+            {
+                x.Add(new Person("A", 1, "F"));
+                x.Add(new Person("a", 1, "M"));
+                x.Add(new Person("B", 1, "F"));
+                x.Add(new Person("b", 1, "M"));
+            });
+
+            filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.InvariantCultureIgnoreCase));
+        }
 
         [Test]
         public void SortInitialBatch()

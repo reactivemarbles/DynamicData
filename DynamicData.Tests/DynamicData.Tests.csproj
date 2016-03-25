@@ -82,6 +82,7 @@
     <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
     <Compile Include="Binding\ObservableCollectionToListFixture.cs" />
     <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
+    <Compile Include="CacheFixtures\KeyValueCollectionEx.cs" />
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />
