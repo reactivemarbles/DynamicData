@@ -82,6 +82,7 @@
     <Compile Include="List\Internal\Combiner.cs" />
     <Compile Include="List\Internal\DeferUntilLoaded.cs" />
     <Compile Include="List\Internal\Distinct.cs" />
+    <Compile Include="List\Internal\DynamicCombiner.cs" />
     <Compile Include="List\Internal\ExpirableItem.cs" />
     <Compile Include="List\Internal\ExpireAfter.cs" />
     <Compile Include="List\Internal\Group.cs" />

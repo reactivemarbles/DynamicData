@@ -1,4 +1,4 @@
-﻿namespace DynamicData.Aggregation
+﻿ namespace DynamicData.Aggregation
 {
 
     /// <summary>

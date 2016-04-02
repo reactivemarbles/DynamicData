@@ -29,16 +29,8 @@ namespace DynamicData.Linq
                 else
                 {
                     int index;
-                    if (change.Range.Index == -1 )
-                    {
-                        index = lastKnownIndex;
-                    }
-                    else
-                    {
-                        index = change.Range.Index;
-                    }
-
-
+                    index = change.Range.Index == -1 ? lastKnownIndex : change.Range.Index;
+                    
                     foreach (var item in change.Range)
                     {
                        

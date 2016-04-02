@@ -74,9 +74,6 @@ namespace DynamicData.Internal
                         foreach (var t in change.Range)
                             tracker.Remove(t);
                         break;
-                    //case ListChangeReason.Clear:
-                    //    tracker.Clear();
-                    //    break;
                 }
             });
         }
