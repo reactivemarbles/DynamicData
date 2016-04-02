@@ -161,6 +161,7 @@
     <Compile Include="ListFixtures\DeferUntilLoadedFixture.cs" />
     <Compile Include="ListFixtures\DisposeManyFixture.cs" />
     <Compile Include="ListFixtures\DistinctValuesFixture.cs" />
+    <Compile Include="ListFixtures\DynamicAndFixture.cs" />
     <Compile Include="ListFixtures\DynamicOrFixture.cs" />
     <Compile Include="ListFixtures\ExceptFixture.cs" />
     <Compile Include="ListFixtures\ExpireAfterFixture.cs" />
