@@ -8,6 +8,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
+
     internal sealed class DynamicCombiner<T>
     {
         private readonly IObservableList<IObservable<IChangeSet<T>>> _source;

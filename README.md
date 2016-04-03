@@ -2,6 +2,7 @@
 
 Dynamic Data is a portable class library which brings the power of Reactive Extensions (Rx) to collections.  
 
+Managing asynchronous collections can be very difficult.  
 Mutable collections frequently experience additions, updates, and removals (among other changes). Dynamic Data provides two collection implementations, `ISourceCache<T,K>` and `ISourceList<T>`, that expose changes to the collection via an observable change set. The resulting observable change sets can be manipulated and transformed using Dynamic Data's robust and powerful array of change set operators. These operators receive change notifications, apply some logic, and subsequently provide their own change notifications. Because of this, operators are fully composable and can be chained together to perform powerful and very complicated operations while maintaining simple, fluent code.
 
 Using Dynamic Data's collections and change set operators make in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
@@ -259,7 +260,27 @@ var inEither= observableA.Or(observableB);
 var inOnlyOne= observableA.Xor(observableB);
 var inAandNotinB = observableA.Except(observableB);
 ```
-Currently the join operators are only implemented for observable change sets based on `SourceCache`
+
+A recent and very powerful feature is dynamic logical operators. From version 4.6 onwards you can dynamically include and exclude collections from the resulting list. 
+```cs
+var list1 = new SourceList<int>();
+var list2 = new SourceList<int>();
+var list3  = new SourceList<int>();
+	
+var combined = new SourceList<ISourceList<int>>();
+
+//child lists can be added or removed any time
+combined.Add(list1);
+combined.Add(list2);
+combined.Add(list3);
+
+//The operators look after themselves 
+var inAll = combined.And();
+var inAny = combined.Or();
+var inOnlyOne= combined.Xor();
+var inFirstAndNotAnyOther = combined.Except();
+```
+ 
 
 #### Disposal
 The `DisposeMany` operator ensures that objects are disposed when removed from an observable stream
@@ -327,7 +348,7 @@ var myoperation = somedynamicdatasource.Connect()
 This wires and unwires ```SomeObservable``` as the collection changes.
 
 ## History of Dynamic Data
-Even before Rx existed I had implemented a similar concept using old fashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using Rx when it first came out. This also failed as my understanding of Rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
+Even before Rx existed I had implemented a similar concept using old f ashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using Rx when it first came out. This also failed as my understanding of Rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
 
 ## Want to know more?
 I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links at top of document)  as I intend it to be a 'living document' and I promise it will be continually maintained. 

@@ -10,6 +10,7 @@ namespace DynamicData.Tests.ListFixtures
 	public class Performance
 	{
 		[Test]
+        [Explicit]
 		public void Test()
 		{
 			for (int i = 1; i < 8; i++)
@@ -21,30 +22,30 @@ namespace DynamicData.Tests.ListFixtures
 				Timer.ToConsole(() =>
 				{
 					WithRange(items);
-				}, 1, string.Format("With Range for {0}", amount));
+				}, 1, $"With Range for {amount}");
 
 				Timer.ToConsole(() =>
 				{
 					WithCapacity(items);
-				}, 1, string.Format("With capacity for {0}", amount));
+				}, 1, $"With capacity for {amount}");
 
 				Timer.ToConsole(() =>
 				{
 					WithoutCapacity(items);
-				}, 1, string.Format("Without capacity for {0}", amount));
+				}, 1, $"Without capacity for {amount}");
 
 
 				Timer.ToConsole(() =>
 				{
 					Dictionary(items);
-				}, 1, string.Format("Dictionary for {0}", amount));
+				}, 1, $"Dictionary for {amount}");
 
 
 
 				Timer.ToConsole(() =>
 				{
 					HashSet(items);
-				}, 1, string.Format("HasSet for {0}", amount));
+				}, 1, $"HashSet for {amount}");
 
 				Console.WriteLine();
 			}
@@ -61,7 +62,7 @@ namespace DynamicData.Tests.ListFixtures
 				Timer.ToConsole(() =>
 				{
 					WithoutCapacity(items);
-				}, 10, string.Format("With capacity for {0}", amount));
+				}, 10, $"With capacity for {amount}");
 			}
 		}
 

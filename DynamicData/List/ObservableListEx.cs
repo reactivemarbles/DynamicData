@@ -658,21 +658,37 @@ namespace DynamicData
 			return new OnBeingRemoved<T>(source, removeAction).Run();
 		}
 
-		#endregion
 
-		#region Reason filtering
+        /// <summary>
+		/// Callback for each item as and when it is being added to the stream
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="addAction">The add action.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> OnItemAdded<T>(this IObservable<IChangeSet<T>> source,Action<T> addAction)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (addAction == null) throw new ArgumentNullException(nameof(addAction));
+            return new OnBeingAdded<T>(source, addAction).Run();
+        }
+
+
+        #endregion
+
+        #region Reason filtering
 
 
 
-		/// <summary>
-		/// Includes changes for the specified reasons only
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="reasons">The reasons.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentException">Must enter at least 1 reason</exception>
-		public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
+        /// <summary>
+        /// Includes changes for the specified reasons only
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="reasons">The reasons.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentException">Must enter at least 1 reason</exception>
+        public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
 		{
             if (reasons.Length == 0)
                 throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));

@@ -160,13 +160,13 @@ namespace DynamicData.Tests.ListFixtures
         {
             _v = v;
             Constructed++;
-            Console.WriteLine("{0} VM.ctor", _v);
+            //Console.WriteLine("{0} VM.ctor", _v);
         }
 
         public void Dispose()
         {
             Destructed++;
-            Console.WriteLine("{0} VM.disp", _v);
+           // Console.WriteLine("{0} VM.disp", _v);
         }
 
         public bool Equals(XVm other)

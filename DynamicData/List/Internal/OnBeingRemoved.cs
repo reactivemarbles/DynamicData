@@ -7,7 +7,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-	internal sealed class OnBeingRemoved<T>
+    internal sealed class OnBeingRemoved<T>
 	{
 		private readonly IObservable<IChangeSet<T>> _source;
 		private readonly Action<T> _callback;

@@ -13,11 +13,11 @@ namespace DynamicData.Internal
     ///     Combines multiple caches using logical opertators
     /// </summary>
     internal sealed class Combiner<TObject, TKey>
-
     {
-        private readonly Cache<TObject, TKey> _combinedCache = new Cache<TObject, TKey>();
-        private readonly object _locker = new object();
         private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
+        private readonly Cache<TObject, TKey> _combinedCache = new Cache<TObject, TKey>();
+
+        private readonly object _locker = new object();
         private readonly CombineOperator _type;
         private readonly Action<IChangeSet<TObject, TKey>> _updatedCallback;
 
@@ -59,9 +59,7 @@ namespace DynamicData.Internal
             }
 
             if (notifications.Count != 0)
-            {
                 _updatedCallback(notifications);
-            }
         }
 
         private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
@@ -76,39 +74,34 @@ namespace DynamicData.Internal
                 {
                     case ChangeReason.Add:
                     case ChangeReason.Update:
+                    {
+                        // get the current key.
+                        //check whether the item should belong to the cache
+                        var cached = updater.Lookup(key);
+                        var contained = cached.HasValue;
+                        var match = MatchesConstraint(key);
 
+                        if (match)
                         {
-                            // get the current key.
-                            //check whether the item should belong to the cache
-                            Optional<TObject> cached = updater.Lookup(key);
-                            bool contained = cached.HasValue;
-
-                            bool match = MatchesConstraint(key);
-
-                            if (match)
+                            if (contained)
                             {
-                                if (contained)
-                                {
-                                    if (!ReferenceEquals(update.Current, cached.Value))
-                                    {
-                                        updater.AddOrUpdate(update.Current, key);
-                                    }
-                                }
-                                else
-                                {
+                                if (!ReferenceEquals(update.Current, cached.Value))
                                     updater.AddOrUpdate(update.Current, key);
-                                }
                             }
                             else
                             {
-                                if (contained)
-                                {
-                                    updater.Remove(key);
-                                }
+                                updater.AddOrUpdate(update.Current, key);
                             }
                         }
+                        else
+                        {
+                            if (contained)
+                                updater.Remove(key);
+                 
+                        }
+                    }
                         break;
-                   
+
                     case ChangeReason.Remove:
                     {
                         var cached = updater.Lookup(key);
@@ -123,36 +116,30 @@ namespace DynamicData.Internal
 
                             if (!cached.HasValue)
                             {
-                                updater.AddOrUpdate(firstOne,key);
+                                updater.AddOrUpdate(firstOne, key);
                             }
-                            else if (!ReferenceEquals(firstOne,cached.Value))
+                            else if (!ReferenceEquals(firstOne, cached.Value))
                             {
-                                updater.AddOrUpdate(firstOne,key);
+                                updater.AddOrUpdate(firstOne, key);
                             }
                         }
                         else
                         {
-                           if (contained)
-                               updater.Remove(key);
+                            if (contained)
+                                updater.Remove(key);
                         }
 
                     }
-
-
-                        break;
+                    break;
 
                     case ChangeReason.Evaluate:
-                        {
-                            updater.Evaluate( key);
-                        }
-
-                        break;
+                    {
+                        updater.Evaluate(key);
+                    }
+                    break;
                 }
             }
             return updater.AsChangeSet();
-
-            // }
-            // return up
         }
 
         private bool MatchesConstraint(TKey key)

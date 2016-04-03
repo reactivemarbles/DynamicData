@@ -2018,6 +2018,12 @@ namespace DynamicData
             return sources.Combine(CombineOperator.Except);
         }
 
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>([NotNull] this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return new DynamicCombiner<TObject, TKey>(source, type).Run();
+        }
+
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources,CombineOperator type)
         {
             if (sources == null) throw new ArgumentNullException(nameof(sources));
