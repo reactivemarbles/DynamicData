@@ -56,13 +56,16 @@ namespace DynamicData.Internal
                         if (notifications.Count != 0)
                             observer.OnNext(notifications);
 
-                        //NEED TO RE-EVALUATE ALL FOR 'AND' OPERATOR
-                        if (_type != CombineOperator.And) return;
 
-                        var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Tracker.Items).ToArray();
-                        var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultList, itemsToCheck);
-                        if (notification2.Count != 0)
-                            observer.OnNext(notification2);
+                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                        {
+                            var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Tracker.Items).ToArray();
+                            var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultList, itemsToCheck);
+                            if (notification2.Count != 0)
+                                observer.OnNext(notification2);
+                        }
+
+
                     })
                     .Subscribe();
 
@@ -75,13 +78,12 @@ namespace DynamicData.Internal
                         if (notifications.Count != 0)
                             observer.OnNext(notifications);
 
-                        //NEED TO RE-EVALUATE ALL FOR 'AND' OPERATOR
-                        if (_type != CombineOperator.And) return;
-                        
-                        var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultList, resultList.ToArray());
-                        if (notification2.Count != 0)
+                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                        {
+                            var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultList,resultList.ToArray());
+                            if (notification2.Count != 0)
                                 observer.OnNext(notification2);
-
+                        }
                     })
                     .Subscribe();
 

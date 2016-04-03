@@ -1258,8 +1258,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically apply a logical Except operator between the items in the outer observable list.
-        /// Items which are in any of the sources are included in the result
+        /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="sources">The source.</param>
@@ -1270,8 +1269,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically apply a logical Except operator between the items in the outer observable list.
-        /// Items which are in any of the sources are included in the result
+        /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="sources">The source.</param>
@@ -1282,8 +1280,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically apply a logical Except operator between the items in the outer observable list.
-        /// Items which are in any of the sources are included in the result
+        /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="sources">The source.</param>
