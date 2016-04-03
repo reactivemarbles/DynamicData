@@ -131,7 +131,6 @@ namespace DynamicData.Internal
                 {
                     resultingList.AddOrUpdate(item, key);
                 }
-               
             }
             else
             {

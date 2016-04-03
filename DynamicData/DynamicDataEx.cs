@@ -2018,6 +2018,27 @@ namespace DynamicData
             return sources.Combine(CombineOperator.Except);
         }
 
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>([NotNull] this IObservableList<IObservableCache<TObject, TKey>> source, CombineOperator type)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                var connections = source.Connect().Transform(x => x.Connect()).AsObservableList();
+                var subscriber = connections.Combine(type).SubscribeSafe(observer);
+                return new CompositeDisposable(subscriber);
+            });
+        }
+
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>([NotNull] this IObservableList<ISourceCache<TObject, TKey>> source, CombineOperator type)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                var connections = source.Connect().Transform(x => x.Connect()).AsObservableList();
+                var subscriber = connections.Combine(type).SubscribeSafe(observer);
+                return new CompositeDisposable(subscriber);
+            });
+        }
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>([NotNull] this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
