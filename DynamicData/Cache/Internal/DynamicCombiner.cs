@@ -59,7 +59,8 @@ namespace DynamicData.Internal
 
                         if (_type == CombineOperator.And || _type == CombineOperator.Except)
                         {
-                            var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Cache.KeyValues).ToArray();
+                           // var itemsToCheck = resultCache.KeyValues.ToArray();
+                           var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Cache.KeyValues).ToArray();
                             var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultCache, itemsToCheck);
                             if (notification2.Count != 0)
                                 observer.OnNext(notification2);

@@ -1874,6 +1874,8 @@ namespace DynamicData
             return source.Combine(CombineOperator.And, others);
         }
 
+
+
         /// <summary>
         /// Applied a logical And operator between the collections i.e items which are in all of the sources are included
         /// </summary>
@@ -1892,6 +1894,52 @@ namespace DynamicData
 
             return sources.Combine(CombineOperator.And);
         }
+
+        /// <summary>
+        /// Dynamically apply a logical And operator between the items in the outer observable list.
+        /// Items which are in all of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.And);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical And operator between the items in the outer observable list.
+        /// Items which are in all of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.And);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical And operator between the items in the outer observable list.
+        /// Items which are in all of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.And);
+        }
+
 
         /// <summary>
         /// Apply a logical Or operator between the collections i.e items which are in any of the sources are included
@@ -1935,6 +1983,52 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Dynamically apply a logical Or operator between the items in the outer observable list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Or);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical Or operator between the items in the outer observable list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Or);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical Or operator between the items in the outer observable list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Or);
+        }
+
+
+        /// <summary>
         /// Apply a logical Xor operator between the collections. 
         /// Items which are only in one of the sources are included in the result
         /// </summary>
@@ -1976,6 +2070,54 @@ namespace DynamicData
 
             return sources.Combine(CombineOperator.Xor);
         }
+
+        /// <summary>
+        /// Dynamically apply a logical Xor operator between the items in the outer observable list.
+        /// Items which are only in one of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Xor);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical Xor operator between the items in the outer observable list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Xor);
+        }
+
+
+        /// <summary>
+        /// Dynamically apply a logical Xor operator between the items in the outer observable list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Xor);
+        }
+
+
 
         /// <summary>
         /// Apply a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
@@ -2837,9 +2979,7 @@ namespace DynamicData
 
         #region Adaptor
 
-
-
-
+        
         /// <summary>
         /// Inject side effects into the stream using the specified adaptor
         /// </summary>
