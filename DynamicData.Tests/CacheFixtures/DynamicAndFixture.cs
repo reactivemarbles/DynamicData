@@ -137,7 +137,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.RemoveAt(2);
             _source.RemoveAt(1);
             _source.RemoveAt(0);
-         //   _source.Clear();
+           //s _source.Clear();
 
             Assert.AreEqual(0, _results.Data.Count);
         }
