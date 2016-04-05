@@ -12,6 +12,12 @@ namespace DynamicData.Internal
     {
         private readonly IObservableList<IObservable<IChangeSet<TObject, TKey>>> _source;
         private readonly CombineOperator _type;
+
+        //this is the resulting cache which produces all notifications
+        private readonly Cache<TObject, TKey> _resultCache = new Cache<TObject, TKey>();
+
+        private readonly IntermediateUpdater<TObject, TKey> _updater;
+
         private readonly object _locker = new object();
 
         public DynamicCombiner([NotNull] IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
@@ -19,14 +25,14 @@ namespace DynamicData.Internal
             if (source == null) throw new ArgumentNullException(nameof(source));
             _source = source;
             _type = type;
+            _updater = new IntermediateUpdater<TObject, TKey>(_resultCache);
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
             return Observable.Create<IChangeSet<TObject,TKey>>(observer =>
             {
-                //this is the resulting cache which produces all notifications
-                 var resultCache = new Cache<TObject, TKey>();
+                
 
                 //Transform to a merge container. 
                 //This populates a RefTracker when the original source is subscribed to
@@ -42,7 +48,9 @@ namespace DynamicData.Internal
                     .Subscribe(changes =>
                     {
                         //Populate result list and chck for changes
-                        var notifications = UpdateResultList(sourceLists.Items.AsArray(), resultCache, changes);
+                         UpdateResultList(sourceLists.Items.AsArray(),  changes);
+
+                        var notifications = _updater.AsChangeSet();
                         if (notifications.Count != 0)
                             observer.OnNext(notifications);
                     });
@@ -52,20 +60,18 @@ namespace DynamicData.Internal
                     .OnItemRemoved(mc =>
                     {
                         //Remove items if required
-                        var notifications = ProcessChanges(sourceLists.Items.AsArray(), resultCache, mc.Cache.KeyValues);
-                        if (notifications.Count != 0)
-                            observer.OnNext(notifications);
-
-
+                        ProcessChanges(sourceLists.Items.AsArray(),  mc.Cache.KeyValues);
+                        
                         if (_type == CombineOperator.And || _type == CombineOperator.Except)
                         {
                            // var itemsToCheck = resultCache.KeyValues.ToArray();
                            var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Cache.KeyValues).ToArray();
-                            var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultCache, itemsToCheck);
-                            if (notification2.Count != 0)
-                                observer.OnNext(notification2);
+                           ProcessChanges(sourceLists.Items.AsArray(),  itemsToCheck);
                         }
 
+                        var notifications = _updater.AsChangeSet();
+                        if (notifications.Count != 0)
+                            observer.OnNext(notifications);
 
                     })
                     .Subscribe();
@@ -75,16 +81,14 @@ namespace DynamicData.Internal
                     .WhereReasonsAre(ListChangeReason.Add, ListChangeReason.AddRange)
                     .ForEachItemChange(mc =>
                     {
-                        var notifications = ProcessChanges(sourceLists.Items.AsArray(), resultCache, mc.Current.Cache.KeyValues);
+                        ProcessChanges(sourceLists.Items.AsArray(),  mc.Current.Cache.KeyValues);
+                        
+                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                           ProcessChanges(sourceLists.Items.AsArray(),  _resultCache.KeyValues.ToArray());
+
+                        var notifications = _updater.AsChangeSet();
                         if (notifications.Count != 0)
                             observer.OnNext(notifications);
-
-                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
-                        {
-                            var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultCache, resultCache.KeyValues.ToArray());
-                            if (notification2.Count != 0)
-                                observer.OnNext(notification2);
-                        }
                     })
                     .Subscribe();
 
@@ -92,77 +96,73 @@ namespace DynamicData.Internal
             });
         }
 
-        private IChangeSet<TObject, TKey> UpdateResultList(MergeContainer[] sourceLists, Cache<TObject, TKey> resultingList, IChangeSet<TObject,TKey> changes)
+        private void UpdateResultList(MergeContainer[] sourceLists, IChangeSet<TObject,TKey> changes)
         {
-            //child caches have been updated before we reached this point.
-            var updater = new IntermediateUpdater<TObject, TKey>(resultingList);
+
             changes.ForEach(change =>
             {
-                ProcessItem(sourceLists, updater, change.Current, change.Key);
+                ProcessItem(sourceLists,  change.Current, change.Key);
             });
-            return updater.AsChangeSet();
         }
 
 
-        private IChangeSet<TObject, TKey> ProcessChanges(MergeContainer[] sourceLists, Cache<TObject, TKey> resultingList, IEnumerable<KeyValuePair<TKey, TObject>> items)
+        private void ProcessChanges(MergeContainer[] sourceLists, IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
-            //check whether the item should be removed from the list
-            var updater = new   IntermediateUpdater<TObject, TKey>(resultingList);
+            //check whether the item should be removed from the list (or in the case of And, added)
             items.ForEach(item =>
             {
-                ProcessItem(sourceLists, updater, item.Value,item.Key);
+                ProcessItem(sourceLists,  item.Value,item.Key);
             });
-            return updater.AsChangeSet();
         }
 
-        private void ProcessItem(MergeContainer[] sourceLists, IntermediateUpdater<TObject, TKey> resultingList,TObject item, TKey key)
+        private void ProcessItem(MergeContainer[] sourceLists, TObject item, TKey key)
         {
             //TODO: Check whether individual items should be updated
 
-            var cached = resultingList.Lookup(key);
+            var cached = _updater.Lookup(key);
             var shouldBeInResult = MatchesConstraint(sourceLists, key);
 
             if (shouldBeInResult)
             {
                 if (!cached.HasValue)
                 {
-                    resultingList.AddOrUpdate(item, key);
+                    _updater.AddOrUpdate(item, key);
                 }
                 else if (!ReferenceEquals(item, cached.Value))
                 {
-                    resultingList.AddOrUpdate(item, key);
+                    _updater.AddOrUpdate(item, key);
                 }
             }
             else
             {
                 if (cached.HasValue)
-                    resultingList.Remove(key);
+                    _updater.Remove(key);
             }
         }
 
-        private bool MatchesConstraint(MergeContainer[] sourceLists, TKey key)
+        private bool MatchesConstraint(MergeContainer[] sources, TKey key)
         {
-            if (sourceLists.Length == 0)
+            if (sources.Length == 0)
                 return false;
 
             switch (_type)
             {
                 case CombineOperator.And:
                     {
-                        return sourceLists.All(s => s.Cache.Lookup(key).HasValue);
+                        return sources.All(s => s.Cache.Lookup(key).HasValue);
                     }
                 case CombineOperator.Or:
                     {
-                        return sourceLists.Any(s => s.Cache.Lookup(key).HasValue);
+                        return sources.Any(s => s.Cache.Lookup(key).HasValue);
                     }
                 case CombineOperator.Xor:
                     {
-                        return sourceLists.Count(s => s.Cache.Lookup(key).HasValue) == 1;
+                        return sources.Count(s => s.Cache.Lookup(key).HasValue) == 1;
                     }
                 case CombineOperator.Except:
                     {
-                        bool first = sourceLists.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
-                        bool others = sourceLists.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
+                        bool first = sources.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
+                        bool others = sources.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
                         return first && !others;
                     }
                 default:

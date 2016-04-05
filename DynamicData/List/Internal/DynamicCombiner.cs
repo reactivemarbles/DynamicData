@@ -133,6 +133,9 @@ namespace DynamicData.Internal
 
         private bool MatchesConstraint(MergeContainer[] sourceLists ,T item)
         {
+            if (sourceLists.Length == 0)
+                return false;
+
             switch (_type)
             {
                 case CombineOperator.And:

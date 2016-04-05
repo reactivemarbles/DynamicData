@@ -82,7 +82,9 @@
     <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
     <Compile Include="Binding\ObservableCollectionToListFixture.cs" />
     <Compile Include="CacheFixtures\DynamicAndFixture.cs" />
+    <Compile Include="CacheFixtures\DynamicExceptFixture.cs" />
     <Compile Include="CacheFixtures\DynamicOrFixture.cs" />
+    <Compile Include="CacheFixtures\DynamicXorFixture.cs" />
     <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
     <Compile Include="CacheFixtures\KeyValueCollectionEx.cs" />
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />

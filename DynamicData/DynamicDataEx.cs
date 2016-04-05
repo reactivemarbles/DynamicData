@@ -2120,7 +2120,8 @@ namespace DynamicData
 
 
         /// <summary>
-        /// Apply a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
+        /// Dynamically apply a logical Except operator between the collections 
+        /// Items from the first collection in the outer list are included unless contained in any of the other lists
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2142,7 +2143,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Apply a logical Intersect operator between the collections i.e items from the first set are included unless contained in the other
+        /// Dynamically apply a logical Except operator between the collections 
+        /// Items from the first collection in the outer list are included unless contained in any of the other lists
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2159,6 +2161,53 @@ namespace DynamicData
 
             return sources.Combine(CombineOperator.Except);
         }
+
+        /// <summary>
+        /// Dynamically apply a logical Except operator between the collections 
+        /// Items from the first collection in the outer list are included unless contained in any of the other lists
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Except);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical Except operator between the items in the outer observable list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Except);
+        }
+
+
+        /// <summary>
+        /// Dynamically apply a logical Except operator between the items in the outer observable list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
+        {
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+            return sources.Combine(CombineOperator.Except);
+        }
+
 
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>([NotNull] this IObservableList<IObservableCache<TObject, TKey>> source, CombineOperator type)
         {

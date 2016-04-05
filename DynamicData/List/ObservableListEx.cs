@@ -24,11 +24,78 @@ namespace DynamicData
 	{
         #region Populate change set from standard rx observable
 
-            /*
-                made private because I need to re-engineer expiry stuff first
-            */
 
-        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet_XXX<TObject>(this IObservable<TObject> source,
+        /// <summary>
+        /// Converts the observable to an observable changeset.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="scheduler">The scheduler (only used for time expiry).</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this IObservable<TObject> source,
+            IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return ToObservableChangeSet(source, null, -1, scheduler);
+        }
+
+        /// <summary>
+        /// Converts the observable to an observable changeset, allowing time expiry to be specified
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache</param>
+        /// <param name="scheduler">The scheduler (only used for time expiry).</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this IObservable<TObject> source,
+            Func<TObject, TimeSpan?> expireAfter,
+            IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (expireAfter == null) throw new ArgumentNullException(nameof(expireAfter));
+
+            return ToObservableChangeSet<TObject>(source, expireAfter, -1, scheduler);
+        }
+
+        /// <summary>
+        /// Converts the observable to an observable changeset, with a specified limit of how large the list can be.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit</param>
+        /// <param name="scheduler">The scheduler (only used for time expiry).</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this IObservable<TObject> source,
+            int limitSizeTo,
+            IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return ToObservableChangeSet<TObject>(source, null, limitSizeTo, scheduler);
+        }
+
+        /// <summary>
+        /// Converts the observable to an observable changeset, allowing size and time limit to be specified
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache</param>
+        /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit</param>
+        /// <param name="scheduler">The scheduler (only used for time expiry).</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this IObservable<TObject> source,
             Func<TObject, TimeSpan?> expireAfter,
             int limitSizeTo,
             IScheduler scheduler = null)
@@ -37,7 +104,6 @@ namespace DynamicData
 
             return Observable.Create<IChangeSet<TObject>>(observer =>
             {
-                var locker = new object();
                 var list = new SourceList<TObject>();
                 var sourceSubscriber = source.Subscribe(list.Add);
 
@@ -53,7 +119,97 @@ namespace DynamicData
 
                 return new CompositeDisposable(list, sourceSubscriber, notifier, expirer, sizeLimiter);
             });
+        }
 
+        /// <summary>
+        /// Converts the observable to an observable changeset.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="scheduler">The scheduler (only used for time expiry).</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this IObservable<IEnumerable<TObject>> source,
+            IScheduler scheduler = null)
+        {
+            return ToObservableChangeSet<TObject>(source, null, -1, scheduler);
+        }
+
+
+        /// <summary>
+        /// Converts the observable to an observable changeset, allowing size and time limit to be specified
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit</param>
+        /// <param name="scheduler">The scheduler (only used for time expiry).</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this IObservable<IEnumerable<TObject>> source,
+            int limitSizeTo,
+            IScheduler scheduler = null)
+        {
+            return ToObservableChangeSet<TObject>(source, null, limitSizeTo, scheduler);
+        }
+
+        /// <summary>
+        /// Converts the observable to an observable changeset, allowing size to be specified
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache</param>
+        /// <param name="scheduler">The scheduler (only used for time expiry).</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this IObservable<IEnumerable<TObject>> source,
+            Func<TObject, TimeSpan?> expireAfter,
+            IScheduler scheduler = null)
+        {
+            return ToObservableChangeSet<TObject>(source, expireAfter, 0, scheduler);
+        }
+
+        /// <summary>
+        /// Converts the observable to an observable changeset, allowing size and time limit to be specified
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache</param>
+        /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit</param>
+        /// <param name="scheduler">The scheduler (only used for time expiry).</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        private static IObservable<IChangeSet<TObject>> ToObservableChangeSet<TObject>(this IObservable<IEnumerable<TObject>> source,
+            Func<TObject, TimeSpan?> expireAfter,
+            int limitSizeTo,
+            IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return Observable.Create<IChangeSet<TObject>>(observer =>
+            {
+                var list = new SourceList<TObject>();
+                var sourceSubscriber = source.Subscribe(list.AddRange);
+
+                var expirer = expireAfter != null
+                    ? list.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
+                    : Disposable.Empty;
+
+                var sizeLimiter = limitSizeTo > 0
+                    ? list.LimitSizeTo(limitSizeTo, scheduler).Subscribe()
+                    : Disposable.Empty;
+
+                var notifier = list.Connect().SubscribeSafe(observer);
+
+                return new CompositeDisposable(list, sourceSubscriber, notifier, expirer, sizeLimiter);
+            });
         }
 
         #endregion
