@@ -1768,7 +1768,7 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject,TKey>> Sort<TObject,TKey>(this IObservable<IChangeSet<TObject,TKey>> source,
                                                                        IComparer<TObject> comparer, 
                                                                        SortOptimisations sortOptimisations=SortOptimisations.None,
-                                                                        int resetThreshold = -1)
+                                                                      int resetThreshold = -1)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
@@ -1802,12 +1802,10 @@ namespace DynamicData
             var sorter = new Sorter<TObject, TKey>(sortOptimisations, resetThreshold: resetThreshold);
             var locker = new object();
 
-            var comparerChanged = sortController
-                .ComparerChanged
+            var comparerChanged = sortController.ComparerChanged
                 .Synchronize(locker).Select(sorter.Sort);
 
-            var sortAgain = sortController
-                .SortAgain
+            var sortAgain = sortController.SortAgain
                 .Synchronize(locker).Select(_ => sorter.Sort());
 
             var dataChanged = source.Synchronize(locker)
@@ -2373,18 +2371,17 @@ namespace DynamicData
             
             var transformer = new Transformer<TDestination, TSource, TKey>(null);
 
-            var locker = new object();
-		    var transformed = source
-		        .Synchronize(locker)
-		        .Select(updates => transformer.Transform(updates, transformFactory));
+            var transformed = source
+                .Select(updates => transformer.Transform(updates, transformFactory));
             
 		    if (forceTransform != null)
 		    {
-		        var forced = forceTransform
+                var locker = new object();
+                var forced = forceTransform
 		            .Synchronize(locker)
 		            .Select(shouldTransform => transformer.ForceTransform(shouldTransform, transformFactory));
 
-		        transformed = transformed.Merge(forced);
+		        transformed = transformed.Synchronize(locker).Merge(forced);
 		    }
 
             return transformed.NotEmpty();
@@ -2553,9 +2550,9 @@ namespace DynamicData
                     }
                 );
         }
-        
+
         #endregion
-        
+
         #region Transform safe
 
 
@@ -2571,6 +2568,8 @@ namespace DynamicData
         /// <param name="errorHandler">Provides the option to safely handle errors without killing the stream.
         ///  If not specified the stream will terminate as per rx convention.
         /// </param>
+       /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
+
         /// <returns>
         /// A transformed update collection
         /// </returns>
@@ -2587,7 +2586,20 @@ namespace DynamicData
             if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
 
             var transformer = new Transformer<TDestination, TSource, TKey>(errorHandler);
-            return source.Select(updates => transformer.Transform(updates, transformFactory)).NotEmpty();
+            var transformed = source
+                .Select(updates => transformer.Transform(updates, transformFactory));
+
+            if (forceTransform != null)
+            {
+                var locker = new object();
+                var forced = forceTransform
+                    .Synchronize(locker)
+                    .Select(shouldTransform => transformer.ForceTransform(shouldTransform, transformFactory));
+
+                transformed = transformed.Synchronize(locker).Merge(forced);
+            }
+
+            return transformed.NotEmpty();
         }
 
         /// <summary>
@@ -2602,6 +2614,7 @@ namespace DynamicData
         /// <param name="errorHandler">Provides the option to safely handle errors without killing the stream.
         ///  If not specified the stream will terminate as per rx convention.
         /// </param>
+        /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
         /// <returns>
         /// A transformed update collection
         /// </returns>
@@ -2610,14 +2623,29 @@ namespace DynamicData
         /// transformFactory</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TKey, TDestination> transformFactory,
-            Action<Error<TSource, TKey>> errorHandler)
+            Action<Error<TSource, TKey>> errorHandler,
+             IObservable<Func<TSource, TKey, bool>> forceTransform = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
             if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
 
             var transformer = new Transformer<TDestination, TSource, TKey>(errorHandler);
-            return source.Select(updates => transformer.Transform(updates, transformFactory)).NotEmpty();
+
+            var transformed = source
+                .Select(updates => transformer.Transform(updates, transformFactory));
+
+            if (forceTransform != null)
+            {
+                var locker = new object();
+                var forced = forceTransform
+                    .Synchronize(locker)
+                    .Select(shouldTransform => transformer.ForceTransform(shouldTransform, transformFactory));
+
+                transformed = transformed.Synchronize(locker).Merge(forced);
+            }
+
+            return transformed.NotEmpty();
         }
 
         #endregion

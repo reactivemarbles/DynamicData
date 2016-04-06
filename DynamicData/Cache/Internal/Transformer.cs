@@ -13,9 +13,9 @@ namespace DynamicData.Internal
         {
         }
 
-        protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformResult> factory)
+        protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, Optional<TransformResult>> factory)
         {
-            var transformed = updates.Select(factory).ToArray();
+            var transformed = updates.Select(factory).SelectValues().ToArray();
             return ProcessUpdates(transformed);
         }
 

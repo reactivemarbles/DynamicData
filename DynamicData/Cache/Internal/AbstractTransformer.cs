@@ -46,7 +46,7 @@ namespace DynamicData.Internal
             return DoTransform(toTransform, kvp => Transform(kvp, x => transformFactory(x.Value,x.Key)));
         }
 
-        private TransformResult Transform(Change<TSource, TKey> change, Func<Change<TSource, TKey>, TDestination> transformFactory)
+        private Optional<TransformResult> Transform(Change<TSource, TKey> change, Func<Change<TSource, TKey>, TDestination> transformFactory)
         {
             try
             {
@@ -57,6 +57,8 @@ namespace DynamicData.Internal
                 }
 
                 var existing = _updater.Lookup(change.Key);
+                if (!existing.HasValue)
+                    return Optional.None<TransformResult>();
                 return new TransformResult(change, existing.Value);
             }
             catch (Exception ex)
@@ -91,7 +93,7 @@ namespace DynamicData.Internal
             }
         }
 
-        protected abstract IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformResult> factory);
+        protected abstract IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, Optional<TransformResult>> factory);
         
         protected abstract IChangeSet<TDestination, TKey> DoTransform(IEnumerable<KeyValuePair<TKey, TSource>> items, Func<KeyValuePair<TKey, TSource>, TransformResult> factory);
 

@@ -17,11 +17,11 @@ namespace DynamicData.PLinq
         }
 
 
-        protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformResult> factory)
+        protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, Optional<TransformResult>> factory)
         {
             var transformed = updates.ShouldParallelise(_parallelisationOptions)
-                ? updates.Parallelise(_parallelisationOptions).Select(factory).ToArray()
-                : updates.Select(factory).ToArray();
+                ? updates.Parallelise(_parallelisationOptions).Select(factory).SelectValues().ToArray()
+                : updates.Select(factory).SelectValues().ToArray();
 
             return ProcessUpdates(transformed);
         }
