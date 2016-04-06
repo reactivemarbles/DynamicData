@@ -2340,12 +2340,43 @@ namespace DynamicData
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			return source.StartWith(new ChangeSet<TObject, TKey>(ChangeReason.Add, key, item));
-		}
+        }
 
 
-		#endregion
+        #endregion
 
-		#region  Transform
+        #region  Transform
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="forceTransform">Invoke to force a new transform for all items</param>#
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TKey, TDestination> transformFactory,
+            IObservable<Unit> forceTransform)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (forceTransform == null) throw new ArgumentNullException(nameof(forceTransform));
+
+            return source.Transform(transformFactory, forceTransform.Select(x =>
+            {
+                Func<TSource, TKey, bool> shouldForceItem = (t,k) => true;
+                return shouldForceItem;
+            }));
+        }
+
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
@@ -2387,7 +2418,32 @@ namespace DynamicData
             return transformed.NotEmpty();
         }
 
-
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="forceTransform">Invoke to force a new transform for all items</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(
+            this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TDestination> transformFactory,
+            IObservable<Unit> forceTransform)
+        {
+            return source.Transform(transformFactory,  forceTransform.Select(x =>
+            {
+                Func<TSource, bool> shouldForceItem = t => true;
+                return shouldForceItem;
+            }));
+        }
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
         /// </summary>
@@ -2556,6 +2612,7 @@ namespace DynamicData
         #region Transform safe
 
 
+
         /// <summary>
         /// Projects each update item to a new form using the specified transform function,
         /// providing an error handling action to safely handle transform errors without killing the stream.
@@ -2568,7 +2625,45 @@ namespace DynamicData
         /// <param name="errorHandler">Provides the option to safely handle errors without killing the stream.
         ///  If not specified the stream will terminate as per rx convention.
         /// </param>
-       /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
+        /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TDestination> transformFactory,
+            Action<Error<TSource, TKey>> errorHandler,
+             IObservable<Unit> forceTransform)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
+            if (forceTransform == null) throw new ArgumentNullException(nameof(forceTransform));
+
+            return source.TransformSafe(transformFactory, errorHandler, forceTransform.Select(x =>
+            {
+                Func<TSource, bool> shouldForceItem = t => true;
+                return shouldForceItem;
+            }));
+        }
+
+
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function,
+        /// providing an error handling action to safely handle transform errors without killing the stream.
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="errorHandler">Provides the option to safely handle errors without killing the stream.
+        ///  If not specified the stream will terminate as per rx convention.
+        /// </param>
+        /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
 
         /// <returns>
         /// A transformed update collection
@@ -2578,7 +2673,7 @@ namespace DynamicData
         /// transformFactory</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TDestination> transformFactory,
-             Action<Error<TSource, TKey>> errorHandler,
+            Action<Error<TSource, TKey>> errorHandler,
             IObservable<Func<TSource, bool>> forceTransform = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2601,6 +2696,10 @@ namespace DynamicData
 
             return transformed.NotEmpty();
         }
+
+
+
+
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function,
@@ -2648,6 +2747,41 @@ namespace DynamicData
             return transformed.NotEmpty();
         }
 
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function,
+        /// providing an error handling action to safely handle transform errors without killing the stream.
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="errorHandler">Provides the option to safely handle errors without killing the stream.
+        ///  If not specified the stream will terminate as per rx convention.
+        /// </param>
+        /// <param name="forceTransform">Invoke to force a new transform for all items</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+        Func<TSource, TKey, TDestination> transformFactory,
+        Action<Error<TSource, TKey>> errorHandler,
+        IObservable<Unit> forceTransform)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (forceTransform == null) throw new ArgumentNullException(nameof(forceTransform));
+
+            return source.TransformSafe(transformFactory, errorHandler, forceTransform.Select(x =>
+            {
+                Func<TSource, TKey, bool> shouldForceItem = (t, k) => true;
+                return shouldForceItem;
+            }));
+        }
         #endregion
 
         #region Distinct values
