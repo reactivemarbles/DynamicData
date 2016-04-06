@@ -1,153 +1,176 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
-using DynamicData.Operators;
 
 namespace DynamicData.Internal
 {
-
-
     internal abstract class AbstractTransformer<TDestination, TSource, TKey>
     {
-        private readonly object _locker = new object();
         private readonly Action<Error<TSource, TKey>> _exceptionCallback;
-        private readonly IIntermediateUpdater<TDestination, TKey> _updater;
+        private readonly IIntermediateUpdater<TransformedItemContainer, TKey> _updater;
 
         public AbstractTransformer(Action<Error<TSource, TKey>> exceptionCallback)
         {
-            _updater = new IntermediateUpdater<TDestination, TKey>(new Cache<TDestination, TKey>());
+            _updater = new IntermediateUpdater<TransformedItemContainer, TKey>(new Cache<TransformedItemContainer, TKey>());
             _exceptionCallback = exceptionCallback;
         }
-
-
+        
         public IChangeSet<TDestination, TKey> Transform(IChangeSet<TSource, TKey> updates, Func<TSource, TDestination> transformFactory)
         {
-            var notifications = DoTransform(updates, update =>
-            {
-                try
-                {
-                    if (update.Reason == ChangeReason.Add || update.Reason == ChangeReason.Update)
-                    {
-                        return new TransformedItem(update.Key, transformFactory(update.Current), update);
-                    }
-
-                    return new TransformedItem(update.Key, Optional.None<TDestination>(), update);
-                }
-                catch (Exception ex)
-                {
-                    //only handle errors if a handler has been specified
-                    if (_exceptionCallback != null)
-                    {
-                        return new TransformedItem(ex, update);
-                    }
-                    throw;
-                }
-            });
-            return notifications;
+            return DoTransform(updates, update => Transform(update, change => transformFactory(change.Current)));
         }
-
 
         public IChangeSet<TDestination, TKey> Transform(IChangeSet<TSource, TKey> updates, Func<TSource, TKey, TDestination> transformFactory)
         {
-            IChangeSet<TDestination, TKey> notifications;
-            lock (_locker)
-            {
-                notifications = DoTransform(updates, update =>
-                {
-                    try
-                    {
-                        if (update.Reason == ChangeReason.Add || update.Reason == ChangeReason.Update)
-                        {
-                            return new TransformedItem(update.Key, transformFactory(update.Current, update.Key), update);
-                        }
-                        return new TransformedItem(update.Key, Optional.None<TDestination>(), update);
-                    }
-                    catch (Exception ex)
-                    {
-                        //only handle errors if a handler has been specified
-                        if (_exceptionCallback != null)
-                        {
-                            return new TransformedItem(ex, update);
-                        }
-                        throw;
-                    }
-                });
-            }
-            return notifications;
+            return DoTransform(updates, update => Transform(update, change => transformFactory(change.Current,change.Key)));
         }
 
+        public IChangeSet<TDestination, TKey> ForceTransform(Func<TSource,  bool> shouldForce, Func<TSource,  TDestination> transformFactory)
+        {
+            var toTransform = _updater.KeyValues
+                .Select(x => new KeyValuePair<TKey, TSource>(x.Key, x.Value.Source))
+                .Where(kvp => shouldForce(kvp.Value))
+                .ToArray();
 
-        protected abstract IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory);
+            return DoTransform(toTransform, kvp => Transform(kvp, x => transformFactory(x.Value)));
+        }
 
-        protected IChangeSet<TDestination, TKey> ProcessUpdates(TransformedItem[] transformedItems)
+        public IChangeSet<TDestination, TKey> ForceTransform(Func<TSource, TKey, bool> shouldForce, Func<TSource, TKey, TDestination> transformFactory)
+        {
+            var toTransform = _updater.KeyValues
+                .Select(x=> new KeyValuePair<TKey,TSource>(x.Key,x.Value.Source))
+                .Where(kvp => shouldForce(kvp.Value, kvp.Key))
+                .ToArray();
+
+            return DoTransform(toTransform, kvp => Transform(kvp, x => transformFactory(x.Value,x.Key)));
+        }
+
+        private TransformResult Transform(Change<TSource, TKey> change, Func<Change<TSource, TKey>, TDestination> transformFactory)
+        {
+            try
+            {
+                if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
+                {
+                    var destination = transformFactory(change);
+                    return new TransformResult(change, new TransformedItemContainer(change.Key, change.Current, destination));
+                }
+
+                var existing = _updater.Lookup(change.Key);
+                return new TransformResult(change, existing.Value);
+            }
+            catch (Exception ex)
+            {
+                //only handle errors if a handler has been specified
+                if (_exceptionCallback != null)
+                    return new TransformResult(change, ex);
+
+                throw;
+            }
+        }
+
+        private TransformResult Transform(KeyValuePair<TKey, TSource> kvp, Func<KeyValuePair<TKey, TSource>, TDestination> transformFactory)
+        {
+            //let's assume that there will always be an original when we force a transform!
+            var original = _updater.Lookup(kvp.Key);
+            var change = new Change<TSource, TKey>(ChangeReason.Add, kvp.Key, original.Value.Source);
+
+            try
+            {
+                var transformed = transformFactory(kvp);
+                var container = new TransformedItemContainer(kvp.Key, kvp.Value, transformed);
+                return new TransformResult(change, container);
+            }
+            catch (Exception ex)
+            {
+                //only handle errors if a handler has been specified
+                if (_exceptionCallback != null)
+                    return new TransformResult(change, ex);
+
+                throw;
+            }
+        }
+
+        protected abstract IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformResult> factory);
+        
+        protected abstract IChangeSet<TDestination, TKey> DoTransform(IEnumerable<KeyValuePair<TKey, TSource>> items, Func<KeyValuePair<TKey, TSource>, TransformResult> factory);
+
+        protected IChangeSet<TDestination, TKey> ProcessUpdates(TransformResult[] transformedItems)
         {
             //check for errors and callback if a handler has been specified
-            var errors = transformedItems.Where(t => t.Error.HasValue).ToArray();
+            var errors = transformedItems.Where(t => !t.Success).ToArray();
             if (errors.Any())
+                errors.ForEach(t => _exceptionCallback(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
+     
+            foreach (var result in transformedItems)
             {
-                errors.ForEach(t => _exceptionCallback(new Error<TSource, TKey>(t.Error.Value, t.Change.Current, t.Change.Key)));
-            }
-
-            foreach (var update in transformedItems)
-            {
-                if (update.Error.HasValue)
+                if (!result.Success)
                     continue;
 
-                TKey key = update.Key.Value;
-                switch (update.Change.Reason)
+                TKey key = result.Container.Key;
+                switch (result.Change.Reason)
                 {
                     case ChangeReason.Add:
                     case ChangeReason.Update:
-                    {
-                        _updater.AddOrUpdate(update.Transformed.Value, key);
-                    }
+                        _updater.AddOrUpdate(result.Container, key);
                         break;
 
                     case ChangeReason.Remove:
-                    {
                         _updater.Remove(key);
-                    }
                         break;
 
                     case ChangeReason.Evaluate:
-                    {
                         _updater.Evaluate(key);
-                    }
                         break;
                 }
             }
 
-            return _updater.AsChangeSet();
+            var changes = _updater.AsChangeSet();
+            var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
+                   change.Key,
+                   change.Current.Destination,
+                   change.Previous.Convert(x=>x.Destination),
+                   change.CurrentIndex,
+                   change.PreviousIndex));
+
+            return new ChangeSet<TDestination, TKey>(transformed);
         }
 
-
-        protected struct TransformedItem
+        protected class TransformedItemContainer
         {
-            public TransformedItem(TKey key, Optional<TDestination> transformed, Change<TSource, TKey> change)
+            public TKey Key { get; }
+            public TSource Source { get; }
+            public TDestination Destination { get; }
+
+            public TransformedItemContainer(TKey key, TSource source, TDestination destination)
             {
                 Key = key;
-                Transformed = transformed;
-                Change = change;
-                Error = Optional.None<Exception>();
+                Source = source;
+                Destination = destination;
             }
-
-
-            public TransformedItem(Exception exception, Change<TSource, TKey> change)
-            {
-                Key = Optional.None<TKey>();
-                Transformed = Optional.None<TDestination>();
-                Change = change;
-                Error = exception;
-            }
-
-            public Optional<TDestination> Transformed { get; }
-
-            public Optional<TKey> Key { get; }
-
-            public Change<TSource, TKey> Change { get; }
-
-            public Optional<Exception> Error { get; }
         }
 
+        protected class TransformResult
+        {
+            public Change<TSource, TKey> Change { get;  }
+            public Exception Error { get;  }
+            public bool Success { get; }
+
+            public TransformedItemContainer Container { get;  }
+
+            public TransformResult(Change<TSource, TKey> change, TransformedItemContainer container)
+            {
+                Change = change;
+                Container = container;
+                Success = true;
+            }
+            
+            public TransformResult(Change<TSource, TKey> change, Exception error)
+            {
+                Change = change;
+                Error = error;
+                Success = false;
+            }
+        }
     }
 }

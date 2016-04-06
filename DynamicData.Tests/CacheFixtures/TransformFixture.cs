@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
@@ -20,8 +21,28 @@ namespace DynamicData.Tests.CacheFixtures
         public void Initialise()
         {
 
+
+            //var personCache = new SourceCache<Person,string>(p=>p.Name);
+          
+            ////invoke OnNext to re-transform
+            //var forceTransform = new Subject<Func<Person, string, bool>>();
+
+            //var transformed = personCache.Connect()
+            //    .Transform(p => new PersonProxy(p), forceTransform);
+
+            ////Use selector to choose which people should be transformed again
+            //forceTransform.OnNext((person,key)=>true);
+
+
            _source = new SourceCache<Person, string>(p=>p.Key);
             _results = new ChangeSetAggregator<PersonWithGender, string>(_source.Connect().Transform(_transformFactory));
+        }
+
+        private class PersonProxy
+        {
+            public PersonProxy(Person person)
+            {
+            }
         }
 
         [TearDown]

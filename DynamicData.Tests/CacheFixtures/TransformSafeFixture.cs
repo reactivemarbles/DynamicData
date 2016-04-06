@@ -89,11 +89,11 @@ namespace DynamicData.Tests.CacheFixtures
             var update2 = new Person(key, 2);
             var update3 = new Person(key, 3);
 
-            _source.Edit(updater =>
+            _source.Edit(innerCache =>
                                {
-                                   updater.AddOrUpdate(update1);
-                                   updater.AddOrUpdate(update2);
-                                   updater.AddOrUpdate(update3);
+                                   innerCache.AddOrUpdate(update1);
+                                   innerCache.AddOrUpdate(update2);
+                                   innerCache.AddOrUpdate(update3);
                                });
 
             Assert.AreEqual(1, _errors.Count, "Should be 1 error reported");

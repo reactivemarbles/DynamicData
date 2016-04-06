@@ -1,10 +1,7 @@
-﻿
-
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
-using DynamicData.Operators;
-
 
 namespace DynamicData.Internal
 {
@@ -16,12 +13,16 @@ namespace DynamicData.Internal
         {
         }
 
-        protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory)
+        protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformResult> factory)
         {
             var transformed = updates.Select(factory).ToArray();
-
             return ProcessUpdates(transformed);
         }
 
+        protected override IChangeSet<TDestination, TKey> DoTransform(IEnumerable<KeyValuePair<TKey, TSource>> items, Func<KeyValuePair<TKey, TSource>, TransformResult> factory)
+        {
+            var transformed = items.Select(factory).ToArray();
+            return ProcessUpdates(transformed);
+        }
     }
 }

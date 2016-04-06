@@ -2349,30 +2349,45 @@ namespace DynamicData
 
 		#region  Transform
 
-		/// <summary>
-		/// Projects each update item to a new form using the specified transform function
-		/// </summary>
-		/// <typeparam name="TDestination">The type of the destination.</typeparam>
-		/// <typeparam name="TSource">The type of the source.</typeparam>
-		/// <typeparam name="TKey">The type of the key.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="transformFactory">The transform factory.</param>
-		/// <returns>
-		/// A transformed update collection
-		/// </returns>
-		/// <exception cref="System.ArgumentNullException">source
-		/// or
-		/// transformFactory</exception>
-		public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
-            Func<TSource, TKey, TDestination> transformFactory)
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TKey, TDestination> transformFactory,
+            IObservable<Func<TSource, TKey,bool>> forceTransform =null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-
+            
             var transformer = new Transformer<TDestination, TSource, TKey>(null);
-		    return source
-		        .Select(updates => transformer.Transform(updates, transformFactory))
-		        .NotEmpty();
+
+            var locker = new object();
+		    var transformed = source
+		        .Synchronize(locker)
+		        .Select(updates => transformer.Transform(updates, transformFactory));
+            
+		    if (forceTransform != null)
+		    {
+		        var forced = forceTransform
+		            .Synchronize(locker)
+		            .Select(shouldTransform => transformer.ForceTransform(shouldTransform, transformFactory));
+
+		        transformed = transformed.Merge(forced);
+		    }
+
+            return transformed.NotEmpty();
         }
 
 
@@ -2384,6 +2399,7 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
         /// <returns>
         /// A transformed update collection
         /// </returns>
@@ -2391,15 +2407,29 @@ namespace DynamicData
         /// or
         /// transformFactory</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
-            Func<TSource, TDestination> transformFactory)
+            Func<TSource, TDestination> transformFactory,
+            IObservable<Func<TSource, bool>> forceTransform = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
             var transformer = new Transformer<TDestination, TSource, TKey>(null);
-            return source
-                .Select(updates => transformer.Transform(updates, transformFactory))
-                .NotEmpty();
+
+            var locker = new object();
+            var transformed = source
+                .Synchronize(locker)
+                .Select(updates => transformer.Transform(updates, transformFactory));
+
+            if (forceTransform != null)
+            {
+                var forced = forceTransform
+                    .Synchronize(locker)
+                    .Select(shouldTransform => transformer.ForceTransform(shouldTransform, transformFactory));
+
+                transformed = transformed.Merge(forced);
+            }
+
+            return transformed.NotEmpty();
         }
 
 
@@ -2549,7 +2579,8 @@ namespace DynamicData
         /// transformFactory</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, TDestination> transformFactory,
-             Action<Error<TSource, TKey>> errorHandler)
+             Action<Error<TSource, TKey>> errorHandler,
+            IObservable<Func<TSource, bool>> forceTransform = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));

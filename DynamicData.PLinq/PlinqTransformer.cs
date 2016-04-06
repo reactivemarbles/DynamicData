@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Internal;
 using DynamicData.Kernel;
@@ -15,7 +16,8 @@ namespace DynamicData.PLinq
             _parallelisationOptions = parallelisationOptions;
         }
 
-        protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformedItem> factory)
+
+        protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, TransformResult> factory)
         {
             var transformed = updates.ShouldParallelise(_parallelisationOptions)
                 ? updates.Parallelise(_parallelisationOptions).Select(factory).ToArray()
@@ -23,5 +25,17 @@ namespace DynamicData.PLinq
 
             return ProcessUpdates(transformed);
         }
+
+        protected override IChangeSet<TDestination, TKey> DoTransform(IEnumerable<KeyValuePair<TKey, TSource>> items, Func<KeyValuePair<TKey, TSource>, TransformResult> factory)
+        {
+            var keyValuePairs = items.AsArray();
+
+            var transformed = keyValuePairs.ShouldParallelise(_parallelisationOptions)
+                ? keyValuePairs.Parallelise(_parallelisationOptions).Select(factory).ToArray()
+                : keyValuePairs.Select(factory).ToArray();
+
+            return ProcessUpdates(transformed);
+        }
+
     }
 }
