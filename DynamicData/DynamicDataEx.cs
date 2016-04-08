@@ -2438,11 +2438,8 @@ namespace DynamicData
             Func<TSource, TDestination> transformFactory,
             IObservable<Unit> forceTransform)
         {
-            return source.Transform(transformFactory,  forceTransform.Select(x =>
-            {
-                Func<TSource, bool> shouldForceItem = t => true;
-                return shouldForceItem;
-            }));
+            Func<TSource, bool> shouldForceItem = t => true;
+            return source.Transform(transformFactory,  forceTransform.Select(x => shouldForceItem));
         }
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
