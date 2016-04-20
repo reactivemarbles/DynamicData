@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using DynamicData.Internal;
 using DynamicData.Kernel;
 using NUnit.Framework;
@@ -205,6 +206,25 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert collection
             Assert.AreEqual(0, _list.Count);
+        }
+
+        [Test]
+        public void ThrowWhenRemovingItemOutsideOfBoundaries()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveAt(0));
+        }
+
+        [Test]
+        public void ThrowWhenRemovingRangeThatBeginsOutsideOfBoundaries()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveRange(0, 1));
+        }
+
+        [Test]
+        public void ThrowWhenRemovingRangeThatFinishesOutsideOfBoundaries()
+        {
+            _list.Add(0);
+            Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveRange(0, 2));
         }
 
     }
