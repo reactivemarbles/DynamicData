@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
@@ -208,6 +211,21 @@ namespace DynamicData.Tests.ListFixtures
 
 			Assert.AreEqual(0, _results.Messages.Count, "Should be no updates");
             Assert.AreEqual(0, _results.Data.Count, "Should nothing cached");
+        }
+
+        [Test]
+        public void FilterSubscribedToMultipleTimes()
+        {
+            var source = new SourceList<Person>();
+            var filtered = source.Connect()
+                                  .Filter(new FilterController<Person>(person => true));
+
+            filtered.Subscribe();
+
+            filtered.Filter(new FilterController<Person>(person => true))
+                    .Subscribe();
+
+            Assert.DoesNotThrow(() => source.Add(new Person("test", 1)));
         }
     }
 }
