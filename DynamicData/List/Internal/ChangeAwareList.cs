@@ -56,6 +56,9 @@ namespace DynamicData.Internal
 
         public void RemoveRange(int index, int count)
         {
+            if (index >= _innerList.Count || index + count > _innerList.Count)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
             var toremove = _innerList.Skip(index).Take(count).ToList();
             if (toremove.Count == 0) return;
             var args = new Change<T>(ListChangeReason.RemoveRange, toremove, index);
