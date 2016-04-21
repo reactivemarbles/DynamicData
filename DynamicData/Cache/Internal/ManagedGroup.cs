@@ -12,33 +12,22 @@ namespace DynamicData.Internal
         {
             _groupKey = groupKey;
         }
-        
+
         internal void Update(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
         {
             _cache.Edit(updateAction);
         }
 
-        internal int Count
-        {
-            get { return _cache.Count; }
-        }
+        internal int Count { get { return _cache.Count; } }
 
-        internal IChangeSet<TObject, TKey>  GetInitialUpdates()
+        internal IChangeSet<TObject, TKey> GetInitialUpdates()
         {
             return _cache.GetInitialUpdates();
         }
 
-        public TGroupKey Key
-        {
-            get { return _groupKey; }
-        }
+        public TGroupKey Key { get { return _groupKey; } }
 
-        public IObservableCache<TObject, TKey> Cache
-        {
-            get { return _cache; }
-        }
-
-
+        public IObservableCache<TObject, TKey> Cache { get { return _cache; } }
 
         #region Equality members
 
@@ -74,11 +63,9 @@ namespace DynamicData.Internal
 
         #endregion
 
-
-
-        public  void Dispose()
+        public void Dispose()
         {
-           _cache.Dispose();
+            _cache.Dispose();
         }
 
         /// <summary>

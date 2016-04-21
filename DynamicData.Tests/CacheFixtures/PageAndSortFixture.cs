@@ -8,11 +8,9 @@ namespace DynamicData.Tests.CacheFixtures
     [TestFixture]
     public class PageAndSortFixture
     {
-
         [Test]
         public void DoNotThrowAWobblyWhenRemovingaMutatedValue()
         {
-
             var pageController = new PageController();
             var sortController = new SortController<TestVm>(SortExpressionComparer<TestVm>.Ascending(t => t.DateFavorited ?? DateTime.MinValue));
             var filterController = new FilterController<TestVm>(myVm => myVm.Id != 0);
@@ -27,11 +25,11 @@ namespace DynamicData.Tests.CacheFixtures
 
             bool error = false;
             itemCache.Connect()
-                .Filter(filterController)
-                .Sort(sortController)
-                .Page(pageController)//error doesnt occur with paging disabled
-                .Bind(items)
-                .Subscribe(changes => { }, ex => error = true);
+                     .Filter(filterController)
+                     .Sort(sortController)
+                     .Page(pageController) //error doesnt occur with paging disabled
+                     .Bind(items)
+                     .Subscribe(changes => { }, ex => error = true);
 
             pageController.Change(new PageRequest(1, 100));
 
@@ -52,6 +50,5 @@ namespace DynamicData.Tests.CacheFixtures
                 Id = id;
             }
         }
-
     }
 }

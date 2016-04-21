@@ -35,7 +35,6 @@ namespace DynamicData.Tests.ListFixtures
 
             var people = new RandomPersonGenerator().Take(100);
             people.ForEach(_source.Add);
- 
 
             Assert.AreEqual(100, messages.Count);
             messageWriter.Dispose();
@@ -53,7 +52,6 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.AddRange(new RandomPersonGenerator().Take(100));
 
-
             Assert.AreEqual(100, messages.Count);
             messageWriter.Dispose();
         }
@@ -68,7 +66,7 @@ namespace DynamicData.Tests.ListFixtures
                 .ForEachItemChange(messages.Add)
                 .Subscribe();
             _source.AddRange(new RandomPersonGenerator().Take(5));
-            _source.InsertRange(new RandomPersonGenerator().Take(5),2);
+            _source.InsertRange(new RandomPersonGenerator().Take(5), 2);
             _source.AddRange(new RandomPersonGenerator().Take(5));
 
             Assert.AreEqual(15, messages.Count);

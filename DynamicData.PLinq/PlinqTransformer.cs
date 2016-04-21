@@ -16,7 +16,6 @@ namespace DynamicData.PLinq
             _parallelisationOptions = parallelisationOptions;
         }
 
-
         protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, Optional<TransformResult>> factory)
         {
             var transformed = updates.ShouldParallelise(_parallelisationOptions)
@@ -36,6 +35,5 @@ namespace DynamicData.PLinq
 
             return ProcessUpdates(transformed);
         }
-
     }
 }

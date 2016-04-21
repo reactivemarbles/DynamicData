@@ -51,8 +51,8 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void AddManyInSuccession()
         {
-            Enumerable.Range(1,10)
-                    .ForEach(_list.Add);
+            Enumerable.Range(1, 10)
+                      .ForEach(_list.Add);
 
             //assert changes
             var changes = _list.CaptureChanges();
@@ -60,14 +60,13 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(10, changes.Adds);
             CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
             //assert collection
-            CollectionAssert.AreEqual(Enumerable.Range(1,10), _list);
+            CollectionAssert.AreEqual(Enumerable.Range(1, 10), _list);
         }
 
         [Test]
         public void AddRange()
         {
-            _list.AddRange(Enumerable.Range(1,10));
-
+            _list.AddRange(Enumerable.Range(1, 10));
 
             //assert changes
             var changes = _list.CaptureChanges();
@@ -78,6 +77,7 @@ namespace DynamicData.Tests.ListFixtures
             //assert collection
             CollectionAssert.AreEqual(Enumerable.Range(1, 10), _list);
         }
+
         [Test]
         public void AddSecondRange()
         {
@@ -99,7 +99,7 @@ namespace DynamicData.Tests.ListFixtures
         public void InsertRangeInCentre()
         {
             _list.AddRange(Enumerable.Range(1, 10));
-            _list.InsertRange(Enumerable.Range(11, 10),5);
+            _list.InsertRange(Enumerable.Range(11, 10), 5);
             var changes = _list.CaptureChanges();
 
             //assert changes
@@ -108,10 +108,9 @@ namespace DynamicData.Tests.ListFixtures
             CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
             CollectionAssert.AreEqual(Enumerable.Range(11, 10), changes.Skip(1).First().Range);
 
-
             var shouldBe = Enumerable.Range(1, 5)
-                .Union(Enumerable.Range(11, 10))
-                .Union(Enumerable.Range(6, 5));
+                                     .Union(Enumerable.Range(11, 10))
+                                     .Union(Enumerable.Range(6, 5));
             //assert collection
             CollectionAssert.AreEqual(shouldBe, _list);
         }
@@ -132,13 +131,14 @@ namespace DynamicData.Tests.ListFixtures
             //assert collection
             Assert.AreEqual(0, _list.Count);
         }
+
         [Test]
         public void RemoveRange()
         {
             _list.AddRange(Enumerable.Range(1, 10));
             _list.ClearChanges();
 
-            _list.RemoveRange(5,3);
+            _list.RemoveRange(5, 3);
 
             //assert changes
             var changes = _list.CaptureChanges();
@@ -148,7 +148,7 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert collection
             var shouldBe = Enumerable.Range(1, 5)
-                .Union(Enumerable.Range(9, 2));
+                                     .Union(Enumerable.Range(9, 2));
             //assert collection
             CollectionAssert.AreEqual(shouldBe, _list);
         }
@@ -159,7 +159,7 @@ namespace DynamicData.Tests.ListFixtures
             _list.AddRange(Enumerable.Range(1, 10));
             _list.ClearChanges();
 
-            _list.ToArray().ForEach(i=>_list.Remove(i));
+            _list.ToArray().ForEach(i => _list.Remove(i));
 
             //assert changes (should batch)s
             var changes = _list.CaptureChanges();
@@ -177,7 +177,7 @@ namespace DynamicData.Tests.ListFixtures
             _list.AddRange(Enumerable.Range(1, 10));
             _list.ClearChanges();
 
-            _list.OrderByDescending(i=>i).ToArray().ForEach(i => _list.Remove(i));
+            _list.OrderByDescending(i => i).ToArray().ForEach(i => _list.Remove(i));
 
             //assert changes (should batch)
             var changes = _list.CaptureChanges();
@@ -206,6 +206,5 @@ namespace DynamicData.Tests.ListFixtures
             //assert collection
             Assert.AreEqual(0, _list.Count);
         }
-
     }
 }

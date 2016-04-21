@@ -49,7 +49,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(100, results.Messages.Sum(x => x.Removes), "Should be 100 removes");
             Assert.AreEqual(100, results.Data.Count, "Should be 1 item in the cache");
 
-
             var expected = people.Skip(100).ToArray().OrderBy(p => p.Name).ToArray();
             var actual = results.Data.Items.OrderBy(p => p.Name).ToArray();
             CollectionAssert.AreEqual(expected, actual, "Only second hundred should be in the cache");

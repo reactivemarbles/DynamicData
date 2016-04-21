@@ -14,8 +14,8 @@ namespace DynamicData.Tests.CacheFixtures
         [SetUp]
         public void Initialise()
         {
-            _source =new SourceCache<Person, string>(p=>p.Key);
-            _results = new ChangeSetAggregator<Person, string>(_source.Connect().Filter(p => p.Age > 20,new ParallelisationOptions(ParallelType.Ordered)));
+            _source = new SourceCache<Person, string>(p => p.Key);
+            _results = new ChangeSetAggregator<Person, string>(_source.Connect().Filter(p => p.Age > 20, new ParallelisationOptions(ParallelType.Ordered)));
         }
 
         [TearDown]
@@ -54,10 +54,10 @@ namespace DynamicData.Tests.CacheFixtures
             var matched = new Person(key, 21);
 
             _source.Edit(updater =>
-                               {
-                                   updater.AddOrUpdate(notmatched);
-                                   updater.AddOrUpdate(matched);
-                               });
+            {
+                updater.AddOrUpdate(notmatched);
+                updater.AddOrUpdate(matched);
+            });
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(matched, _results.Messages[0].First().Current, "Should be same person");
@@ -81,10 +81,9 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should return 80 adds");
 
-            var filtered = people.Where(p => p.Age > 20).OrderBy(p=>p.Name).ToArray();
+            var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Name).ToArray();
             CollectionAssert.AreEqual(filtered, _results.Data.Items.OrderBy(p => p.Name), "Incorrect Filter result");
         }
-
 
         [Test]
         public void BatchRemoves()
@@ -113,8 +112,7 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(80, _results.Messages.Count, "Should be 100 updates");
             Assert.AreEqual(80, _results.Data.Count, "Should be 100 in the cache");
             var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
-            CollectionAssert.AreEqual(filtered, _results.Data.Items.OrderBy(p=>p.Age), "Incorrect Filter result");
-
+            CollectionAssert.AreEqual(filtered, _results.Data.Items.OrderBy(p => p.Age), "Incorrect Filter result");
         }
 
         [Test]
@@ -128,7 +126,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");
             Assert.AreEqual(80, _results.Messages[1].Removes, "Should be 80 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
-
         }
 
         [Test]
@@ -168,12 +165,12 @@ namespace DynamicData.Tests.CacheFixtures
             const string key = "Adult1";
 
             _source.Edit(updater =>
-                               {
-                                   updater.AddOrUpdate(new Person(key, 50));
-                                   updater.AddOrUpdate(new Person(key, 52));
-                                   updater.AddOrUpdate(new Person(key, 53));
-                                   updater.Remove(key);
-                               });
+            {
+                updater.AddOrUpdate(new Person(key, 50));
+                updater.AddOrUpdate(new Person(key, 52));
+                updater.AddOrUpdate(new Person(key, 53));
+                updater.Remove(key);
+            });
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 adds");

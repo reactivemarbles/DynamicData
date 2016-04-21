@@ -3,42 +3,28 @@ using System.Collections.Generic;
 
 namespace DynamicData.Internal
 {
-    internal sealed class ExpirableItem<TObject, TKey> :  IEquatable<ExpirableItem<TObject, TKey>>
+    internal sealed class ExpirableItem<TObject, TKey> : IEquatable<ExpirableItem<TObject, TKey>>
     {
         private readonly TKey _key;
         private readonly TObject _value;
         private readonly DateTime _expireAt;
         private readonly long _index;
 
-
         public ExpirableItem(TObject value, TKey key, DateTime dateTime, long index = 0)
         {
-       
             _value = value;
             _key = key;
             _expireAt = dateTime;
             _index = index;
         }
 
-        public TObject Value
-        {
-            get { return _value; }
-        }
+        public TObject Value { get { return _value; } }
 
-        public TKey Key
-        {
-            get { return _key; }
-        }
+        public TKey Key { get { return _key; } }
 
-        public DateTime ExpireAt
-        {
-            get { return _expireAt; }
-        }
+        public DateTime ExpireAt { get { return _expireAt; } }
 
-        public long Index
-        {
-            get { return _index; }
-        }
+        public long Index { get { return _index; } }
 
         #region Equality members
 
@@ -54,14 +40,14 @@ namespace DynamicData.Internal
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((ExpirableItem<TObject, TKey>) obj);
+            return Equals((ExpirableItem<TObject, TKey>)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return (EqualityComparer<TKey>.Default.GetHashCode(_key)*397) ^ _expireAt.GetHashCode();
+                return (EqualityComparer<TKey>.Default.GetHashCode(_key) * 397) ^ _expireAt.GetHashCode();
             }
         }
 

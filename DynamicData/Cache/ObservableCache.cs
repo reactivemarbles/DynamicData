@@ -14,7 +14,7 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    internal sealed class ObservableCache<TObject, TKey> :  IObservableCache<TObject, TKey>                   
+    internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
         #region Fields
 
@@ -23,7 +23,7 @@ namespace DynamicData
         private readonly IReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _disposer;
         private readonly object _locker = new object();
-        
+
         #endregion
 
         #region Construction
@@ -33,21 +33,21 @@ namespace DynamicData
             _readerWriter = new ReaderWriter<TObject, TKey>();
 
             var loader = source
-                            .FinallySafe(_changes.OnCompleted)
-                            .Subscribe(changes => _readerWriter.Write(changes)
-                                                        .Then(InvokeNext, _changes.OnError)
-                                      );
+                .FinallySafe(_changes.OnCompleted)
+                .Subscribe(changes => _readerWriter.Write(changes)
+                                                   .Then(InvokeNext, _changes.OnError)
+                );
 
-
-            _disposer = Disposable.Create(() => {
-                                                  loader.Dispose();
-                                                  _changes.OnCompleted();
-                                                  if (_countChanged.IsValueCreated)
-                                                      _countChanged.Value.OnCompleted();
-                                              });
+            _disposer = Disposable.Create(() =>
+            {
+                loader.Dispose();
+                _changes.OnCompleted();
+                if (_countChanged.IsValueCreated)
+                    _countChanged.Value.OnCompleted();
+            });
         }
 
-        public ObservableCache(Func<TObject, TKey> keySelector=null)
+        public ObservableCache(Func<TObject, TKey> keySelector = null)
         {
             _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
 
@@ -56,7 +56,6 @@ namespace DynamicData
                 _changes.OnCompleted();
                 if (_countChanged.IsValueCreated)
                     _countChanged.Value.OnCompleted();
-     
             });
         }
 
@@ -64,20 +63,20 @@ namespace DynamicData
 
         #region Updating (for internal purposes only)
 
-       internal void UpdateFromIntermediate(Action<IIntermediateUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
+        internal void UpdateFromIntermediate(Action<IIntermediateUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
-            
-           _readerWriter.Write(updateAction)
-                 .Then(InvokeNext, errorHandler);
+
+            _readerWriter.Write(updateAction)
+                         .Then(InvokeNext, errorHandler);
         }
 
         internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
-           
+
             _readerWriter.Write(updateAction)
-                  .Then(InvokeNext, errorHandler);
+                         .Then(InvokeNext, errorHandler);
         }
 
         private void InvokeNext(IChangeSet<TObject, TKey> changes)
@@ -92,7 +91,6 @@ namespace DynamicData
 
                     if (_countChanged.IsValueCreated)
                         _countChanged.Value.OnNext(_readerWriter.Count);
-     
                 }
                 catch (Exception ex)
                 {
@@ -100,10 +98,11 @@ namespace DynamicData
                 }
             }
         }
+
         #endregion
 
         #region Accessors
-       
+
         public Optional<TObject> Lookup(TKey key)
         {
             return _readerWriter.Lookup(key);
@@ -111,14 +110,14 @@ namespace DynamicData
 
         public IEnumerable<TKey> Keys => _readerWriter.Keys;
 
-        public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues => _readerWriter.KeyValues;
+        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _readerWriter.KeyValues;
 
         public IEnumerable<TObject> Items => _readerWriter.Items;
 
         public int Count => _readerWriter.Count;
 
         #endregion
-        
+
         #region Observable
 
         public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
@@ -128,37 +127,36 @@ namespace DynamicData
             return Observable.Create<Change<TObject, TKey>>
                 (
                     observer =>
+                    {
+                        lock (_locker)
                         {
-                            lock (_locker)
+                            Action<Change<TObject, TKey>> nextAction = c =>
                             {
-                                Action<Change<TObject, TKey>> nextAction = c =>
+                                try
                                 {
-                                    try
-                                    {
-                                        observer.OnNext(c);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        observer.OnError(ex);
-                                    }
-                                };
+                                    observer.OnNext(c);
+                                }
+                                catch (Exception ex)
+                                {
+                                    observer.OnError(ex);
+                                }
+                            };
 
-                                var initial = _readerWriter.Lookup(key);
-                                if (initial.HasValue)
-                                    nextAction(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
-                                
-                                return  _changes.FinallySafe(observer.OnCompleted).Subscribe(changes =>
+                            var initial = _readerWriter.Lookup(key);
+                            if (initial.HasValue)
+                                nextAction(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+
+                            return _changes.FinallySafe(observer.OnCompleted).Subscribe(changes =>
+                            {
+                                var matches = changes.Where(update => update.Key.Equals(key));
+                                foreach (var match in matches)
                                 {
-                                    var matches = changes.Where(update => update.Key.Equals(key));
-                                    foreach (var match in matches)
-                                    {
-                                        nextAction(match);
-                                    }
-                                });
-                            }
-                        });
+                                    nextAction(match);
+                                }
+                            });
+                        }
+                    });
         }
-
 
         public IObservable<IChangeSet<TObject, TKey>> Connect()
         {
@@ -172,7 +170,7 @@ namespace DynamicData
                             if (initial.Count > 0) observer.OnNext(initial);
 
                             return _changes.FinallySafe(observer.OnCompleted)
-                                        .SubscribeSafe(observer);
+                                           .SubscribeSafe(observer);
                         }
                     });
         }
@@ -183,27 +181,28 @@ namespace DynamicData
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
                     observer =>
+                    {
+                        lock (_locker)
                         {
-                            lock (_locker)
-                            {
-                                var filterer = new StaticFilter<TObject, TKey>(filter);
-                                var filtered = filterer.Filter(GetInitialUpdates());
-                                if (filtered.Count!=0)
-                                    observer.OnNext(filtered);
+                            var filterer = new StaticFilter<TObject, TKey>(filter);
+                            var filtered = filterer.Filter(GetInitialUpdates());
+                            if (filtered.Count != 0)
+                                observer.OnNext(filtered);
 
-                                return _changes
-                                    .FinallySafe(observer.OnCompleted)
-                                    .Select(filterer.Filter)
-                                    .NotEmpty()
-                                    .SubscribeSafe(observer);
-                            }
-                        });
+                            return _changes
+                                .FinallySafe(observer.OnCompleted)
+                                .Select(filterer.Filter)
+                                .NotEmpty()
+                                .SubscribeSafe(observer);
+                        }
+                    });
         }
 
         internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null)
         {
-               return  _readerWriter.AsInitialUpdates(filter);
+            return _readerWriter.AsInitialUpdates(filter);
         }
+
         #endregion
 
         public void Dispose()

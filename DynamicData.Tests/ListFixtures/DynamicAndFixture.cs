@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    public  class DynamicAndFixture
+    public class DynamicAndFixture
     {
         private ISourceList<int> _source1;
         private ISourceList<int> _source2;
@@ -64,7 +64,6 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(0, _results.Data.Count);
         }
 
-
         [Test]
         public void CombineRange()
         {
@@ -103,10 +102,9 @@ namespace DynamicData.Tests.ListFixtures
 
             _source2.AddRange(Enumerable.Range(6, 5));
             Assert.AreEqual(5, _results.Data.Count);
-            
+
             _source.Add(_source2.Connect());
             Assert.AreEqual(0, _results.Data.Count);
-
 
             _source.RemoveAt(2);
             Assert.AreEqual(5, _results.Data.Count);

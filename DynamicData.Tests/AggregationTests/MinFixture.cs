@@ -6,8 +6,6 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
 {
-
-
     [TestFixture]
     public class MinFixture
     {
@@ -31,8 +29,8 @@ namespace DynamicData.Tests.AggregationTests
             var result = 0;
 
             var accumulator = _source.Connect()
-                .Minimum(p => p.Age)
-                .Subscribe(x => result = x);
+                                     .Minimum(p => p.Age)
+                                     .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
@@ -49,8 +47,8 @@ namespace DynamicData.Tests.AggregationTests
             var result = 0;
 
             var accumulator = _source.Connect()
-                .Minimum(p => p.Age)
-                .Subscribe(x => result = x);
+                                     .Minimum(p => p.Age)
+                                     .Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
@@ -69,9 +67,9 @@ namespace DynamicData.Tests.AggregationTests
             var somepropChanged = _source.Connect().WhenValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
-                .Minimum(p => p.Age)
-                .InvalidateWhen(somepropChanged)
-                .Subscribe(x => min = x);
+                                     .Minimum(p => p.Age)
+                                     .InvalidateWhen(somepropChanged)
+                                     .Subscribe(x => min = x);
 
             var personc = new Person("C", 5);
             _source.AddOrUpdate(new Person("A", 10));
@@ -81,16 +79,11 @@ namespace DynamicData.Tests.AggregationTests
 
             _source.AddOrUpdate(personc);
 
-
-
-
             personc.Age = 11;
 
             Assert.AreEqual(10, min, "Min should be 10 after inline change");
             accumulator.Dispose();
         }
-
-
 
         [TestCase(100)]
         [TestCase(1000)]
@@ -99,7 +92,6 @@ namespace DynamicData.Tests.AggregationTests
         [Explicit]
         public void CachePerformance(int n)
         {
-
             /*
                 Tricks to make it fast = 
 
@@ -118,9 +110,8 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                .Minimum(i => i)
-                .Subscribe(result => runningSum = result);
-
+                                 .Minimum(i => i)
+                                 .Subscribe(result => runningSum = result);
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
             for (int i = 1; i < n; i++)
@@ -136,9 +127,7 @@ namespace DynamicData.Tests.AggregationTests
 
             Console.WriteLine("Total items: {0}. Sum = {1}", n, runningSum);
             Console.WriteLine("Cache Summation: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
-
         }
-
 
         [TestCase(100)]
         [TestCase(1000)]
@@ -153,9 +142,8 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = list.Connect()
-                .Minimum(i => i)
-                .Subscribe(result => runningSum = result);
-
+                                .Minimum(i => i)
+                                .Subscribe(result => runningSum = result);
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
             for (int i = 0; i < n; i++)
@@ -170,8 +158,6 @@ namespace DynamicData.Tests.AggregationTests
 
             Console.WriteLine("Total items: {0}. Sum = {1}", n, runningSum);
             Console.WriteLine("List: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
-
         }
-
     }
 }

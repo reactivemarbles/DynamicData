@@ -10,7 +10,7 @@ namespace DynamicData.Experimental
     /// </summary>
     /// <typeparam name="TObject"></typeparam>
     /// <typeparam name="TKey"></typeparam>
-    public interface IWatcher<TObject, TKey>: IDisposable
+    public interface IWatcher<TObject, TKey> : IDisposable
     {
         /// <summary>
         /// Watches updates which match the specified key.

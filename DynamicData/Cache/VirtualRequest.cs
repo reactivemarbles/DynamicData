@@ -12,9 +12,9 @@ namespace DynamicData
         /// The default request value
         /// </summary>
         public static readonly VirtualRequest Default = new VirtualRequest(0, 25);
+
         private readonly int _size = 25;
         private readonly int _startIndex;
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualRequest"/> class.
@@ -32,28 +32,19 @@ namespace DynamicData
         /// </summary>
         public VirtualRequest()
         {
-            
         }
 
         /// <summary>
         /// The maximumn number of items to return
         /// </summary>
-        public int Size
-        {
-            get { return _size; }
-        }
+        public int Size { get { return _size; } }
 
         /// <summary>
         /// The first index in the virualised list
         /// </summary>
-        public int StartIndex
-        {
-            get { return _startIndex; }
-        }
+        public int StartIndex { get { return _startIndex; } }
 
- 
         #region Equality members
-
 
         private sealed class StartIndexSizeEqualityComparer : IEqualityComparer<IVirtualRequest>
         {
@@ -70,7 +61,7 @@ namespace DynamicData
             {
                 unchecked
                 {
-                    return (obj.StartIndex*397) ^ obj.Size;
+                    return (obj.StartIndex * 397) ^ obj.Size;
                 }
             }
         }
@@ -83,12 +74,7 @@ namespace DynamicData
         /// <value>
         /// The start index size comparer.
         /// </value>
-        public static IEqualityComparer<IVirtualRequest> StartIndexSizeComparer
-        {
-            get { return StartIndexSizeComparerInstance; }
-        }
-
- 
+        public static IEqualityComparer<IVirtualRequest> StartIndexSizeComparer { get { return StartIndexSizeComparerInstance; } }
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object of the same type.
@@ -111,7 +97,7 @@ namespace DynamicData
         /// <param name="obj">The object to compare with the current object. </param>
         public override bool Equals(object obj)
         {
-            return Equals((IVirtualRequest) obj);
+            return Equals((IVirtualRequest)obj);
         }
 
         /// <summary>
@@ -124,20 +110,19 @@ namespace DynamicData
         {
             unchecked
             {
-                return (_startIndex*397) ^ _size;
+                return (_startIndex * 397) ^ _size;
             }
         }
 
-		#endregion
+        #endregion
 
-
-		/// <summary>
-		/// Returns a <see cref="System.String" /> that represents this instance.
-		/// </summary>
-		/// <returns>
-		/// A <see cref="System.String" /> that represents this instance.
-		/// </returns>
-		public override string ToString()
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
         {
             return string.Format("StartIndex: {0}, Size: {1}", _startIndex, _size);
         }

@@ -31,24 +31,23 @@ namespace DynamicData.Internal
             _locker = locker;
         }
 
-        public  IObservable<IEnumerable<T>> Run()
+        public IObservable<IEnumerable<T>> Run()
         {
-
             return Observable.Create<IEnumerable<T>>(observer =>
             {
                 var dateTime = _scheduler.Now.DateTime;
                 long orderItemWasAdded = -1;
-                
+
                 var autoRemover = _sourceList.Connect()
-                    .Synchronize(_locker)
-                    .Do(x => dateTime = _scheduler.Now.DateTime)
-                    .Convert(t =>
-                    {
-                        var removeAt = _expireAfter(t);
-                        var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;
-                        return new ExpirableItem<T>(t, expireAt, Interlocked.Increment(ref orderItemWasAdded));
-                    })
-                    .AsObservableList();
+                                             .Synchronize(_locker)
+                                             .Do(x => dateTime = _scheduler.Now.DateTime)
+                                             .Convert(t =>
+                                             {
+                                                 var removeAt = _expireAfter(t);
+                                                 var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;
+                                                 return new ExpirableItem<T>(t, expireAt, Interlocked.Increment(ref orderItemWasAdded));
+                                             })
+                                             .AsObservableList();
 
                 Action removalAction = () =>
                 {
@@ -57,13 +56,12 @@ namespace DynamicData.Internal
                         lock (_locker)
                         {
                             var toRemove = autoRemover.Items
-                                .Where(ei => ei.ExpireAt <= _scheduler.Now.DateTime)
-                                .Select(ei => ei.Item)
-                                .ToList();
+                                                      .Where(ei => ei.ExpireAt <= _scheduler.Now.DateTime)
+                                                      .Select(ei => ei.Item)
+                                                      .ToList();
 
                             observer.OnNext(toRemove);
                         }
-
                     }
                     catch (Exception ex)
                     {
@@ -81,25 +79,23 @@ namespace DynamicData.Internal
                 {
                     //create a timer for each distinct time
                     removalSubscripion.Disposable = autoRemover.Connect()
-                        .DistinctValues(ei => ei.ExpireAt)
-                        .SubscribeMany(datetime =>
-                        {
-                            //  Console.WriteLine("Set expiry for {0}. Now={1}", datetime, DateTime.Now);
-                            var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
-                            return Observable.Timer(expireAt, _scheduler)
-                                .Take(1)
-                                .Subscribe(_ => removalAction());
-                        })
-                        .Subscribe();
+                                                               .DistinctValues(ei => ei.ExpireAt)
+                                                               .SubscribeMany(datetime =>
+                                                               {
+                                                                   //  Console.WriteLine("Set expiry for {0}. Now={1}", datetime, DateTime.Now);
+                                                                   var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
+                                                                   return Observable.Timer(expireAt, _scheduler)
+                                                                                    .Take(1)
+                                                                                    .Subscribe(_ => removalAction());
+                                                               })
+                                                               .Subscribe();
                 }
                 return Disposable.Create(() =>
                 {
                     removalSubscripion.Dispose();
                     autoRemover.Dispose();
                 });
-
             });
         }
-
     }
 }

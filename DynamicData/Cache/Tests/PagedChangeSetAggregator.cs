@@ -13,8 +13,8 @@ namespace DynamicData.Tests
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public class PagedChangeSetAggregator<TObject, TKey> : IDisposable
     {
-	    private readonly IDisposable _disposer;
-	    private Exception _error;
+        private readonly IDisposable _disposer;
+        private Exception _error;
         private ChangeSummary _summary = ChangeSummary.Empty;
 
         /// <summary>
@@ -41,42 +41,41 @@ namespace DynamicData.Tests
             });
         }
 
+        /// <summary>
+        /// The data of the steam cached inorder to apply assertions
+        /// </summary>
+        public IObservableCache<TObject, TKey> Data { get; }
 
-		/// <summary>
-		/// The data of the steam cached inorder to apply assertions
-		/// </summary>
-		public IObservableCache<TObject, TKey> Data { get; }
+        /// <summary>
+        /// Record of all received messages.
+        /// </summary>
+        /// <value>
+        /// The messages.
+        /// </value>
+        public IList<IPagedChangeSet<TObject, TKey>> Messages { get; } = new List<IPagedChangeSet<TObject, TKey>>();
 
-	    /// <summary>
-		/// Record of all received messages.
-		/// </summary>
-		/// <value>
-		/// The messages.
-		/// </value>
-		public IList<IPagedChangeSet<TObject, TKey>> Messages { get; } = new List<IPagedChangeSet<TObject, TKey>>();
+        /// <summary>
+        /// The aggregated change summary.
+        /// </summary>
+        /// <value>
+        /// The summary.
+        /// </value>
+        public ChangeSummary Summary => _summary;
 
-	    /// <summary>
-		/// The aggregated change summary.
-		/// </summary>
-		/// <value>
-		/// The summary.
-		/// </value>
-		public ChangeSummary Summary => _summary;
+        /// <summary>
+        /// Gets and error.
+        /// </summary>
+        /// <value>
+        /// The error.
+        /// </value>
+        public Exception Error => _error;
 
-		/// <summary>
-		/// Gets and error.
-		/// </summary>
-		/// <value>
-		/// The error.
-		/// </value>
-		public Exception Error => _error;
-
-		/// <summary>
-		/// Releases unmanaged and - optionally - managed resources.
-		/// </summary>
-		public void Dispose()
-		{
-			_disposer.Dispose();
-		}
-	}
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _disposer.Dispose();
+        }
+    }
 }

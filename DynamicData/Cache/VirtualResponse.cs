@@ -18,33 +18,23 @@ namespace DynamicData
             _startIndex = startIndex;
             _totalSize = totalSize;
         }
+
         /// <summary>
         /// The requested size of the virtualised data
         /// </summary>
-        public int Size
-        {
-            get { return _size; }
-        }
+        public int Size { get { return _size; } }
 
         /// <summary>
         /// The starting index
         /// </summary>
-        public int StartIndex
-        {
-            get { return _startIndex; }
-        }
+        public int StartIndex { get { return _startIndex; } }
 
         /// <summary>
         /// Gets the total size of the underlying cache
         /// </summary>
-        public int TotalSize
-        {
-            get { return _totalSize; }
-        }
+        public int TotalSize { get { return _totalSize; } }
 
         #region Equality members
-
-
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object of the same type.
@@ -67,7 +57,7 @@ namespace DynamicData
         /// <param name="obj">The object to compare with the current object. </param>
         public override bool Equals(object obj)
         {
-            return Equals((IVirtualResponse) obj);
+            return Equals((IVirtualResponse)obj);
         }
 
         /// <summary>
@@ -81,8 +71,8 @@ namespace DynamicData
             unchecked
             {
                 int hashCode = _size;
-                hashCode = (hashCode*397) ^ _startIndex;
-                hashCode = (hashCode*397) ^ _totalSize;
+                hashCode = (hashCode * 397) ^ _startIndex;
+                hashCode = (hashCode * 397) ^ _totalSize;
                 return hashCode;
             }
         }
@@ -107,8 +97,8 @@ namespace DynamicData
                 unchecked
                 {
                     int hashCode = obj.TotalSize;
-                    hashCode = (hashCode*397) ^ obj.StartIndex;
-                    hashCode = (hashCode*397) ^ obj.Size;
+                    hashCode = (hashCode * 397) ^ obj.StartIndex;
+                    hashCode = (hashCode * 397) ^ obj.Size;
                     return hashCode;
                 }
             }
@@ -116,10 +106,7 @@ namespace DynamicData
 
         private static readonly IEqualityComparer<IVirtualResponse> TotalSizeStartIndexSizeComparerInstance = new TotalSizeStartIndexSizeEqualityComparer();
 
-        public static IEqualityComparer<IVirtualResponse> DefaultComparer
-        {
-            get { return TotalSizeStartIndexSizeComparerInstance; }
-        }
+        public static IEqualityComparer<IVirtualResponse> DefaultComparer { get { return TotalSizeStartIndexSizeComparerInstance; } }
 
         #endregion
 

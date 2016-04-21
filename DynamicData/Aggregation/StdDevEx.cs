@@ -26,7 +26,6 @@ namespace DynamicData.Aggregation
             return source.ForAggregation().StdDev(valueSelector, fallbackValue);
         }
 
-
         /// <summary>
         /// Continual computation of the standard deviation of the  values in the underlying data source
         /// </summary>
@@ -41,7 +40,6 @@ namespace DynamicData.Aggregation
             return source.ForAggregation().StdDev(valueSelector, fallbackValue);
         }
 
-
         /// <summary>
         /// Continual computation of the standard deviation of the  values in the underlying data source
         /// </summary>
@@ -55,7 +53,6 @@ namespace DynamicData.Aggregation
         {
             return source.ForAggregation().StdDev(valueSelector, fallbackValue);
         }
-
 
         /// <summary>
         /// Continual computation of the standard deviation of the  values in the underlying data source
@@ -80,7 +77,7 @@ namespace DynamicData.Aggregation
         /// <param name="fallbackValue">The fallback value.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T,float> valueSelector, float fallbackValue = 0)
+        public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, float> valueSelector, float fallbackValue = 0)
         {
             return source.ForAggregation().StdDev(valueSelector, fallbackValue);
         }
@@ -103,7 +100,7 @@ namespace DynamicData.Aggregation
         {
             return source.ForAggregation().StdDev(valueSelector, fallbackValue);
         }
-      
+
         /// <summary>
         /// Continual computation of the standard deviation of the  values in the underlying data source
         /// </summary>
@@ -118,7 +115,7 @@ namespace DynamicData.Aggregation
         {
             return source.ForAggregation().StdDev(valueSelector, fallbackValue);
         }
-      
+
         /// <summary>
         /// Continual computation of the standard deviation of the  values in the underlying data source
         /// </summary>
@@ -168,7 +165,6 @@ namespace DynamicData.Aggregation
 
         #region From  From IAggregateChangeSet<TObject>
 
-
         /// <summary>
         /// Continual computation of the standard deviation of the  values in the underlying data source
         /// </summary>
@@ -180,14 +176,14 @@ namespace DynamicData.Aggregation
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<double> StdDev<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
-            [NotNull] Func<T, int> valueSelector,
-            int fallbackValue=0)
+                                                    [NotNull] Func<T, int> valueSelector,
+                                                    int fallbackValue = 0)
         {
             return source.StdDevCalc(t => (long)valueSelector(t),
-                fallbackValue,
-                (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-                (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-                values=> Math.Sqrt(values.SumOfSquares -(values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d /(values.Count-1) ));
+                                     fallbackValue,
+                                     (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+                                     (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+                                     values => Math.Sqrt(values.SumOfSquares - (values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d / (values.Count - 1)));
         }
 
         /// <summary>
@@ -201,14 +197,14 @@ namespace DynamicData.Aggregation
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<double> StdDev<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
-            [NotNull] Func<T, long> valueSelector,
-            long fallbackValue = 0)
+                                                    [NotNull] Func<T, long> valueSelector,
+                                                    long fallbackValue = 0)
         {
             return source.StdDevCalc(valueSelector,
-                fallbackValue,
-                (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-                (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-                values => Math.Sqrt(values.SumOfSquares - (values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d / (values.Count - 1)));
+                                     fallbackValue,
+                                     (current, item) => new StdDev<long>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+                                     (current, item) => new StdDev<long>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+                                     values => Math.Sqrt(values.SumOfSquares - (values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d / (values.Count - 1)));
         }
 
         /// <summary>
@@ -222,8 +218,8 @@ namespace DynamicData.Aggregation
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<double> StdDev<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
-            [NotNull] Func<T, decimal> valueSelector,
-            decimal fallbackValue = 0M)
+                                                    [NotNull] Func<T, decimal> valueSelector,
+                                                    decimal fallbackValue = 0M)
         {
             throw new NotImplementedException("For some reason there is a problem with decimal value inference");
 
@@ -234,6 +230,26 @@ namespace DynamicData.Aggregation
             //    values => Math.Sqrt((double)values.SumOfSquares - (double)(values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d / (values.Count - 1)));
         }
 
+        /// <summary>
+        /// Continual computation of the standard deviation of the  values in the underlying data source
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="valueSelector">The value selector.</param>
+        /// <param name="fallbackValue">The fallback value.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<double> StdDev<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
+                                                    [NotNull] Func<T, double> valueSelector,
+                                                    double fallbackValue = 0)
+        {
+            return source.StdDevCalc(valueSelector,
+                                     fallbackValue,
+                                     (current, item) => new StdDev<double>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+                                     (current, item) => new StdDev<double>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+                                     values => Math.Sqrt(values.SumOfSquares - (values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d / (values.Count - 1)));
+        }
 
         /// <summary>
         /// Continual computation of the standard deviation of the  values in the underlying data source
@@ -246,45 +262,22 @@ namespace DynamicData.Aggregation
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<double> StdDev<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
-            [NotNull] Func<T, double> valueSelector,
-            double fallbackValue = 0)
+                                                    [NotNull] Func<T, float> valueSelector,
+                                                    float fallbackValue = 0)
         {
             return source.StdDevCalc(valueSelector,
-                fallbackValue,
-                (current, item) => new StdDev<double>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-                (current, item) => new StdDev<double>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-                values => Math.Sqrt(values.SumOfSquares - (values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d / (values.Count - 1)));
+                                     fallbackValue,
+                                     (current, item) => new StdDev<float>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
+                                     (current, item) => new StdDev<float>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
+                                     values => Math.Sqrt(values.SumOfSquares - (values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d / (values.Count - 1)));
         }
-
-
-        /// <summary>
-        /// Continual computation of the standard deviation of the  values in the underlying data source
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="valueSelector">The value selector.</param>
-        /// <param name="fallbackValue">The fallback value.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static IObservable<double> StdDev<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
-            [NotNull] Func<T, float> valueSelector,
-            float fallbackValue = 0)
-        {
-            return source.StdDevCalc(valueSelector,
-                fallbackValue,
-                (current, item) => new StdDev<float>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)),
-                (current, item) => new StdDev<float>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)),
-                values => Math.Sqrt(values.SumOfSquares - (values.SumOfItems * values.SumOfItems) / values.Count) * (1.0d / (values.Count - 1)));
-        }
-
 
         private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source,
-            Func<TObject, TValue> valueSelector,
-            TResult fallbackValue, 
-            [NotNull] Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction,
-            [NotNull] Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction,
-            [NotNull] Func<StdDev<TValue>, TResult> resultAction)
+                                                                                 Func<TObject, TValue> valueSelector,
+                                                                                 TResult fallbackValue,
+                                                                                 [NotNull] Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction,
+                                                                                 [NotNull] Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction,
+                                                                                 [NotNull] Func<StdDev<TValue>, TResult> resultAction)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
@@ -295,16 +288,14 @@ namespace DynamicData.Aggregation
             return source.Scan(default(StdDev<TValue>), (state, changes) =>
             {
                 return changes.Aggregate(state, (current, aggregateItem) =>
-                    aggregateItem.Type == AggregateType.Add
-                        ? addAction(current, valueSelector(aggregateItem.Item))
-                        : removeAction(current, valueSelector(aggregateItem.Item))
+                                                    aggregateItem.Type == AggregateType.Add
+                                                        ? addAction(current, valueSelector(aggregateItem.Item))
+                                                        : removeAction(current, valueSelector(aggregateItem.Item))
                     );
             })
-            .Select(values => values.Count < 2 ? fallbackValue : resultAction(values));
+                         .Select(values => values.Count < 2 ? fallbackValue : resultAction(values));
         }
-        
+
         #endregion
-
     }
-
 }

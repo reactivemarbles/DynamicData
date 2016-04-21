@@ -15,8 +15,7 @@ namespace DynamicData.PLinq
     {
         private readonly ParallelisationOptions _parallelisationOptions;
 
-
-        public PLinqFilteredUpdater( Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
+        public PLinqFilteredUpdater(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
             : base(new Cache<TObject, TKey>(), filter)
         {
             _parallelisationOptions = parallelisationOptions;
@@ -28,13 +27,11 @@ namespace DynamicData.PLinq
             _parallelisationOptions = parallelisationOptions;
         }
 
-
-
-	    protected override IEnumerable<Change<TObject, TKey>> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory)
+        protected override IEnumerable<Change<TObject, TKey>> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory)
         {
             var keyValuePairs = items as KeyValuePair<TKey, TObject>[] ?? items.ToArray();
 
-            return  keyValuePairs.ShouldParallelise(_parallelisationOptions)
+            return keyValuePairs.ShouldParallelise(_parallelisationOptions)
                 ? keyValuePairs.Parallelise(_parallelisationOptions).Select(factory).SelectValues()
                 : keyValuePairs.Select(factory).SelectValues();
         }
@@ -44,12 +41,9 @@ namespace DynamicData.PLinq
             if (updates.ShouldParallelise(_parallelisationOptions))
             {
                 return updates.Parallelise(_parallelisationOptions)
-                    .Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
+                              .Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
             }
             return updates.Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
-
         }
-
-
     }
 }

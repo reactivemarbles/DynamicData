@@ -1,18 +1,15 @@
-﻿
-
-using System.Linq;
+﻿using System.Linq;
 using DynamicData.Operators;
-
 
 namespace DynamicData.Internal
 {
-    internal sealed class Paginator<TObject, TKey> 
+    internal sealed class Paginator<TObject, TKey>
     {
         #region Fields
 
-        private IKeyValueCollection<TObject, TKey> _all =new KeyValueCollection<TObject, TKey>();
-        private IKeyValueCollection<TObject, TKey> _current =new KeyValueCollection<TObject, TKey>();
-        private IPageRequest _request=null;
+        private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
+        private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
+        private IPageRequest _request = null;
         private readonly FilteredIndexCalculator<TObject, TKey> _changedCalculator = new FilteredIndexCalculator<TObject, TKey>();
         private bool _isLoaded;
 
@@ -22,17 +19,17 @@ namespace DynamicData.Internal
 
         public Paginator()
         {
-            _request =  PageRequest.Default;
+            _request = PageRequest.Default;
             _isLoaded = false;
         }
 
         #endregion
 
         #region Pagination
-        
+
         public IPagedChangeSet<TObject, TKey> Paginate(IPageRequest parameters)
         {
-            if (parameters==null || parameters.Page < 0 || parameters.Size < 1)
+            if (parameters == null || parameters.Page < 0 || parameters.Size < 1)
             {
                 return null;
             }
@@ -41,7 +38,6 @@ namespace DynamicData.Internal
                 return null;
 
             _request = parameters;
-
 
             return Paginate();
         }
@@ -53,11 +49,11 @@ namespace DynamicData.Internal
             return Paginate(updates);
         }
 
-        private IPagedChangeSet<TObject, TKey> Paginate(ISortedChangeSet<TObject, TKey> updates=null)
+        private IPagedChangeSet<TObject, TKey> Paginate(ISortedChangeSet<TObject, TKey> updates = null)
         {
             if (_isLoaded == false) return null;
             if (_request == null) return null;
-     
+
             var previous = _current;
 
             int pages = CalculatePages();
@@ -65,10 +61,10 @@ namespace DynamicData.Internal
             int skip = _request.Size * (page - 1);
 
             var paged = _all.Skip(skip)
-                                 .Take(_request.Size)
-                                 .ToList();
+                            .Take(_request.Size)
+                            .ToList();
 
-            _current = new KeyValueCollection<TObject, TKey>(paged, _all.Comparer, updates?.SortedItems.SortReason ?? SortReason.DataChanged,_all.Optimisations);
+            _current = new KeyValueCollection<TObject, TKey>(paged, _all.Comparer, updates?.SortedItems.SortReason ?? SortReason.DataChanged, _all.Optimisations);
 
             //check for changes within the current virtualised page.  Notify if there have been changes or if the overall count has changed
             var notifications = _changedCalculator.Calculate(_current, previous, updates);
@@ -78,8 +74,7 @@ namespace DynamicData.Internal
             }
             var response = new PageResponse(_request.Size, _all.Count, page, pages);
 
-          return new PagedChangeSet<TObject, TKey>(_current,notifications,response);
-    
+            return new PagedChangeSet<TObject, TKey>(_current, notifications, response);
         }
 
         private int CalculatePages()

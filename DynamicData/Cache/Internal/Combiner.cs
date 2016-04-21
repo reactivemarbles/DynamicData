@@ -1,11 +1,8 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
 using DynamicData.Kernel;
-
 
 namespace DynamicData.Internal
 {
@@ -26,7 +23,7 @@ namespace DynamicData.Internal
             _type = type;
             _updatedCallback = updatedCallback;
         }
-        
+
         public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
         {
             //subscribe
@@ -97,7 +94,6 @@ namespace DynamicData.Internal
                         {
                             if (contained)
                                 updater.Remove(key);
-                 
                         }
                     }
                         break;
@@ -111,8 +107,8 @@ namespace DynamicData.Internal
                         if (shouldBeIncluded)
                         {
                             var firstOne = _sourceCaches.Select(s => s.Lookup(key))
-                                .SelectValues()
-                                .First();
+                                                        .SelectValues()
+                                                        .First();
 
                             if (!cached.HasValue)
                             {
@@ -128,15 +124,14 @@ namespace DynamicData.Internal
                             if (contained)
                                 updater.Remove(key);
                         }
-
                     }
-                    break;
+                        break;
 
                     case ChangeReason.Evaluate:
                     {
                         updater.Evaluate(key);
                     }
-                    break;
+                        break;
                 }
             }
             return updater.AsChangeSet();
@@ -147,23 +142,23 @@ namespace DynamicData.Internal
             switch (_type)
             {
                 case CombineOperator.And:
-                    {
-                        return _sourceCaches.All(s => s.Lookup(key).HasValue);
-                    }
+                {
+                    return _sourceCaches.All(s => s.Lookup(key).HasValue);
+                }
                 case CombineOperator.Or:
-                    {
-                        return _sourceCaches.Any(s => s.Lookup(key).HasValue);
-                    }
+                {
+                    return _sourceCaches.Any(s => s.Lookup(key).HasValue);
+                }
                 case CombineOperator.Xor:
-                    {
-                        return _sourceCaches.Count(s => s.Lookup(key).HasValue)==1;
-                    }
+                {
+                    return _sourceCaches.Count(s => s.Lookup(key).HasValue) == 1;
+                }
                 case CombineOperator.Except:
-                    {
-                        bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
-                        bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
-                        return first && !others;
-                    }
+                {
+                    bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
+                    bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
+                    return first && !others;
+                }
                 default:
                     throw new ArgumentOutOfRangeException();
             }

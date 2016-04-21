@@ -2,7 +2,7 @@
 
 namespace DynamicData.Experimental
 {
-    internal interface ISubjectWithRefCount<T> :ISubject<T>
+    internal interface ISubjectWithRefCount<T> : ISubject<T>
     {
         /// <summary>number of subscribers 
         /// </summary>

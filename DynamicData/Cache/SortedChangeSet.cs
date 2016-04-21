@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace DynamicData
 {
-    internal class SortedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>,ISortedChangeSet<TObject, TKey>
+    internal class SortedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, ISortedChangeSet<TObject, TKey>
     {
         public SortedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates)
             : base(updates)
@@ -26,7 +26,7 @@ namespace DynamicData
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
 
-            return Equals((SortedChangeSet<TObject, TKey>) obj);
+            return Equals((SortedChangeSet<TObject, TKey>)obj);
         }
 
         public override int GetHashCode()

@@ -17,7 +17,6 @@ namespace DynamicData.Linq
             _changeSet = changeSet;
         }
 
-
         public IEnumerator<Change<T>> GetEnumerator()
         {
             foreach (var change in _changeSet)

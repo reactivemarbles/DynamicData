@@ -4,7 +4,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Diagnostics;
 
-
 namespace DynamicData.Tests
 {
     /// <summary>
@@ -16,7 +15,6 @@ namespace DynamicData.Tests
     {
         private readonly IDisposable _disposer;
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ChangeSetAggregator{TObject, TKey}"/> class.
         /// </summary>
@@ -26,21 +24,19 @@ namespace DynamicData.Tests
             var published = source.Publish();
 
             Data = published.AsObservableCache();
-            
+
             var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex);
             var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
             var connected = published.Connect();
 
             _disposer = Disposable.Create(() =>
-                                              {
-                                                  Data.Dispose();
-                                                  connected.Dispose();
-                                                  summariser.Dispose();
-                                                  results.Dispose();
-                                              });
+            {
+                Data.Dispose();
+                connected.Dispose();
+                summariser.Dispose();
+                results.Dispose();
+            });
         }
-
-
 
         /// <summary>
         /// Gets the data.
@@ -75,9 +71,9 @@ namespace DynamicData.Tests
         public Exception Error { get; private set; }
 
         /// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		public void Dispose()
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
         {
             _disposer.Dispose();
         }

@@ -24,24 +24,13 @@ namespace DynamicData.Tests.Domain
             _key = name;
         }
 
-
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get { return _name; } }
 
         public int Age { get; set; }
 
-        public string KeyValue
-        {
-            get { return _keyValue; }
-        }
+        public string KeyValue { get { return _keyValue; } }
 
-
-        public IEnumerable<PersonWithRelations> Relations
-        {
-            get { return _relations; }
-        }
+        public IEnumerable<PersonWithRelations> Relations { get { return _relations; } }
 
         public IEnumerable<Pet> Pet { get; set; }
 
@@ -55,10 +44,7 @@ namespace DynamicData.Tests.Domain
         /// <summary>
         ///     The key
         /// </summary>
-        public string Key
-        {
-            get { return _key; }
-        }
+        public string Key { get { return _key; } }
 
         #endregion
     }

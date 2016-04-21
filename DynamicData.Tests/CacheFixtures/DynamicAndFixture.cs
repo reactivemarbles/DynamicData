@@ -50,7 +50,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
         }
 
-
         [Test]
         public void UpdatingBothProducesResults()
         {
@@ -64,7 +63,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
-
 
         [Test]
         public void RemovingFromOneRemovesFromResult()
@@ -91,7 +89,6 @@ namespace DynamicData.Tests.CacheFixtures
             _source1.AddOrUpdate(person);
             _source2.AddOrUpdate(person);
 
-
             var personUpdated = new Person("Adult1", 51);
             _source2.AddOrUpdate(personUpdated);
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
@@ -108,7 +105,6 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.Add(_source1.Connect());
             _source.Add(_source2.Connect());
-            
 
             Assert.AreEqual(10, _results.Data.Count);
             CollectionAssert.AreEquivalent(items.Skip(10).Take(10), _results.Data.Items);
@@ -133,14 +129,12 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Add(_source2.Connect());
             _source.Add(_source3.Connect());
 
-
             _source.RemoveAt(2);
             _source.RemoveAt(1);
             _source.RemoveAt(0);
-           //s _source.Clear();
+            //s _source.Clear();
 
             Assert.AreEqual(0, _results.Data.Count);
         }
-
     }
 }

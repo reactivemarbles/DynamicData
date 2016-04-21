@@ -19,7 +19,7 @@ namespace DynamicData.Tests.ListFixtures
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
         {
-            var l = new List<IObservable<IChangeSet<int>>> {_source1.Connect(), _source2.Connect()};
+            var l = new List<IObservable<IChangeSet<int>>> { _source1.Connect(), _source2.Connect() };
             return l.And();
         }
     }
@@ -72,7 +72,6 @@ namespace DynamicData.Tests.ListFixtures
             _source1.Remove(1);
             Assert.AreEqual(0, _results.Data.Count);
         }
-
 
         [Test]
         public void CombineRange()

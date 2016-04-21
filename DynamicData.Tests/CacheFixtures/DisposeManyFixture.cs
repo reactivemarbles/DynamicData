@@ -7,7 +7,7 @@ namespace DynamicData.Tests.CacheFixtures
     [TestFixture]
     public class DisposeManyFixture
     {
-        private class DisposableObject: IDisposable
+        private class DisposableObject : IDisposable
         {
             public bool IsDisposed { get; private set; }
             public int Id { get; private set; }
@@ -24,13 +24,13 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         private ISourceCache<DisposableObject, int> _source;
-      
+
         private ChangeSetAggregator<DisposableObject, int> _results;
 
         [SetUp]
         public void Initialise()
         {
-            _source = new SourceCache<DisposableObject, int>(p=>p.Id);
+            _source = new SourceCache<DisposableObject, int>(p => p.Id);
             _results = new ChangeSetAggregator<DisposableObject, int>(_source.Connect().DisposeMany());
         }
 
@@ -51,13 +51,12 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(false, _results.Data.Items.First().IsDisposed, "Should not be disposed");
         }
 
-
         [Test]
         public void RemoveWillCallDispose()
         {
             _source.AddOrUpdate(new DisposableObject(1));
             _source.Remove(1);
-           
+
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(0, _results.Data.Count, "Should be 0 items in the cache");
             Assert.AreEqual(true, _results.Messages[1].First().Current.IsDisposed, "Should be disposed");
@@ -78,12 +77,11 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void EverythingIsDisposedWhenStreamIsDisposed()
         {
-            _source.AddOrUpdate(Enumerable.Range(1,10).Select(i=>new DisposableObject(i)));
+            _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new DisposableObject(i)));
             _source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.IsTrue(_results.Messages[1].All(d=>d.Current.IsDisposed));
-
+            Assert.IsTrue(_results.Messages[1].All(d => d.Current.IsDisposed));
         }
     }
 }

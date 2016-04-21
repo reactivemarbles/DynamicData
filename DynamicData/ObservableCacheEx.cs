@@ -15,14 +15,12 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-    
     /// <summary>
     /// The entry point for the dynamic data sub system
     /// </summary>
     public static class ObservableCacheEx
     {
         #region Populate changetset from observables
-
 
         /// <summary>
         /// Converts the observable to an observable changeset. The items are uniquely identified by the hashcode
@@ -59,10 +57,10 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// keySelector</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<TObject> source, Func<TObject,TKey> keySelector, 
-            Func<TObject, TimeSpan?> expireAfter=null,
-            int limitSizeTo = -1,
-            IScheduler scheduler=null)
+        public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<TObject> source, Func<TObject, TKey> keySelector,
+                                                                                                  Func<TObject, TimeSpan?> expireAfter = null,
+                                                                                                  int limitSizeTo = -1,
+                                                                                                  IScheduler scheduler = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
@@ -72,7 +70,7 @@ namespace DynamicData
                 var cache = new SourceCache<TObject, TKey>(keySelector);
                 var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
 
-                var expirer = expireAfter !=null
+                var expirer = expireAfter != null
                     ? cache.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
                     : Disposable.Empty;
 
@@ -84,7 +82,6 @@ namespace DynamicData
 
                 return new CompositeDisposable(cache, sourceSubscriber, notifier, expirer, sizeLimiter);
             });
-
         }
 
         /// <summary>
@@ -100,13 +97,12 @@ namespace DynamicData
         /// or
         /// keySelector</exception>
         public static IObservable<IChangeSet<TObject, int>> ToObservableChangeSet<TObject>(
-            this IObservable<IEnumerable<TObject>> source, 
+            this IObservable<IEnumerable<TObject>> source,
             Func<TObject, TimeSpan?> expireAfter = null,
             int limitSizeTo = -1,
             IScheduler scheduler = null)
         {
             return source.ToObservableChangeSet(t => t.GetHashCode(), expireAfter, limitSizeTo, scheduler);
- 
         }
 
         /// <summary>
@@ -124,9 +120,9 @@ namespace DynamicData
         /// or
         /// keySelector</exception>
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector,
-            Func<TObject, TimeSpan?> expireAfter=null,
-            int limitSizeTo = -1,
-            IScheduler scheduler=null)
+                                                                                                  Func<TObject, TimeSpan?> expireAfter = null,
+                                                                                                  int limitSizeTo = -1,
+                                                                                                  IScheduler scheduler = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
@@ -137,7 +133,7 @@ namespace DynamicData
                 var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
 
                 var expirer = expireAfter != null
-                    ? cache.ExpireAfter(expireAfter,scheduler ?? Scheduler.Default).Subscribe((kvp) => { },observer.OnError)
+                    ? cache.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe((kvp) => { }, observer.OnError)
                     : Disposable.Empty;
 
                 var sizeLimiter = limitSizeTo > 0
@@ -153,7 +149,6 @@ namespace DynamicData
         #endregion
 
         #region Populate into an observable cache
-        
 
         /// <summary>
         /// Populates a source into the specified cache.
@@ -195,7 +190,6 @@ namespace DynamicData
             return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
         }
 
-
         /// <summary>
         /// Populate a cache from an obserable stream.
         /// </summary>
@@ -214,6 +208,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             return observable.Subscribe(source.AddOrUpdate);
         }
+
         /// <summary>
         /// Populate a cache from an obserable stream.
         /// </summary>
@@ -251,15 +246,15 @@ namespace DynamicData
             return new AnomynousObservableCache<TObject, TKey>(source);
         }
 
-		/// <summary>
-		/// Converts the source to an read only observable cache
-		/// </summary>
-		/// <typeparam name="TObject">The type of the object.</typeparam>
-		/// <typeparam name="TKey">The type of the key.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        /// <summary>
+        /// Converts the source to an read only observable cache
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             return new AnomynousObservableCache<TObject, TKey>(source);
@@ -281,11 +276,9 @@ namespace DynamicData
             return source.Connect().Filter(filterController);
         }
 
-
         #endregion
 
         #region Size / time limiters
-
 
         /// <summary>
         /// Limits the number of records in the cache to the size specified.  When the size is reached
@@ -300,30 +293,29 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         /// <exception cref="System.ArgumentException">Size limit must be greater than zero</exception>
         public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this ISourceCache<TObject, TKey> source,
-                    int sizeLimit, IScheduler scheduler = null)
+                                                                                                       int sizeLimit, IScheduler scheduler = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (sizeLimit <= 0) throw new ArgumentException("Size limit must be greater than zero");
 
+            return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(observer =>
+            {
+                long orderItemWasAdded = -1;
+                var sizeLimiter = new SizeLimiter<TObject, TKey>(sizeLimit);
 
-                return Observable.Create< IEnumerable<KeyValuePair<TKey, TObject>>>(observer =>
-                {
-                     long orderItemWasAdded = -1;
-                       var sizeLimiter = new SizeLimiter<TObject, TKey>(sizeLimit);
-
-                   return source.Connect()
-                       .FinallySafe(observer.OnCompleted) 
-                       .ObserveOn(scheduler ?? Scheduler.Default)
-                       .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded)))
-                       .Subscribe(changes =>
-                        {
-                            var result = sizeLimiter.CloneAndReturnExpiredOnly(changes);
-                            if (result.Count == 0) return;
-                            source.Edit(updater => result.ForEach(c => updater.Remove(c.Key)));
-                        });
-                });
-
+                return source.Connect()
+                             .FinallySafe(observer.OnCompleted)
+                             .ObserveOn(scheduler ?? Scheduler.Default)
+                             .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded)))
+                             .Subscribe(changes =>
+                             {
+                                 var result = sizeLimiter.CloneAndReturnExpiredOnly(changes);
+                                 if (result.Count == 0) return;
+                                 source.Edit(updater => result.ForEach(c => updater.Remove(c.Key)));
+                             });
+            });
         }
+
         /// <summary>
         /// Automatically removes items from the cache after the time specified by
         /// the time selector elapses. 
@@ -337,8 +329,8 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
-            Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler = null)
+        public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
+                                                                                                       Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler = null)
         {
             return source.ExpireAfter(timeSelector, null, scheduler);
         }
@@ -358,10 +350,10 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
-            Func<TObject, TimeSpan?> timeSelector,TimeSpan? interval=null)
+        public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
+                                                                                                       Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval = null)
         {
-            return ExpireAfter(source, timeSelector, interval,  Scheduler.Default);
+            return ExpireAfter(source, timeSelector, interval, Scheduler.Default);
         }
 
         /// <summary>
@@ -380,34 +372,33 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// timeSelector</exception>
-        public static IObservable<IEnumerable<KeyValuePair<TKey,TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
-            Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
+        public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source,
+                                                                                                       Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
 
-            return Observable.Create<IEnumerable<KeyValuePair<TKey,TObject>>>(observer =>
+            return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(observer =>
             {
                 scheduler = scheduler ?? Scheduler.Default;
                 return source.Connect()
-                    .ForExpiry(timeSelector, pollingInterval, scheduler)
-                    .FinallySafe(observer.OnCompleted)
-                    .Subscribe(toRemove =>
-                    {
-                        try
-                        {
-                            //remove from cache and notify which items have been auto removed
-                            var keyValuePairs = toRemove as KeyValuePair<TKey, TObject>[] ?? toRemove.ToArray();
-                            if (keyValuePairs.Length == 0) return;
-                            source.Remove(keyValuePairs.Select(kv => kv.Key));
-                            observer.OnNext(keyValuePairs);
-                        }
-                        catch (Exception ex)
-                        {
-                            observer.OnError(ex);
-                        }
-                    });
-
+                             .ForExpiry(timeSelector, pollingInterval, scheduler)
+                             .FinallySafe(observer.OnCompleted)
+                             .Subscribe(toRemove =>
+                             {
+                                 try
+                                 {
+                                     //remove from cache and notify which items have been auto removed
+                                     var keyValuePairs = toRemove as KeyValuePair<TKey, TObject>[] ?? toRemove.ToArray();
+                                     if (keyValuePairs.Length == 0) return;
+                                     source.Remove(keyValuePairs.Select(kv => kv.Key));
+                                     observer.OnNext(keyValuePairs);
+                                 }
+                                 catch (Exception ex)
+                                 {
+                                     observer.OnError(ex);
+                                 }
+                             });
             });
         }
 
@@ -426,7 +417,7 @@ namespace DynamicData
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.Edit(updater=>updater.AddOrUpdate(item));
+            source.Edit(updater => updater.AddOrUpdate(item));
         }
 
         /// <summary>
@@ -539,7 +530,6 @@ namespace DynamicData
             source.Edit(updater => updater.RemoveKeys(keys));
         }
 
-
         /// <summary>
         /// Clears all data
         /// </summary>
@@ -575,12 +565,11 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="items">The items.</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source,  IEnumerable<TObject> items)
+        public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             source.Edit(updater => updater.Evaluate(items));
         }
-
 
         /// <summary>
         /// Removes the specified key from the cache.
@@ -596,7 +585,6 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             source.Edit(updater => updater.Remove(key));
         }
-
 
         /// <summary>
         /// Removes the specified keys from the cache. 
@@ -614,8 +602,6 @@ namespace DynamicData
             source.Edit(updater => updater.Remove(keys));
         }
 
-
-
         /// <summary>
         /// Clears all items from the cache
         /// </summary>
@@ -628,6 +614,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             source.Edit(updater => updater.Clear());
         }
+
         #endregion
     }
 }

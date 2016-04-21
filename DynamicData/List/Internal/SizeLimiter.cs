@@ -27,25 +27,26 @@ namespace DynamicData.Internal
 
         public IObservable<IEnumerable<T>> Run()
         {
-            var emptyResult = new  List<T>();
+            var emptyResult = new List<T>();
             long orderItemWasAdded = -1;
 
             return _sourceList.Connect()
-                    .ObserveOn(_scheduler)
-                    .Synchronize(_locker)
-                    .Transform(t => new ExpirableItem<T>(t, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded)))
-                    .ToCollection()
-                    .Select(list =>
-                    {
-                        var numbertoExpire = list.Count - _sizeLimit;
-                        if (numbertoExpire < 0)
-                            return emptyResult;
+                              .ObserveOn(_scheduler)
+                              .Synchronize(_locker)
+                              .Transform(t => new ExpirableItem<T>(t, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded)))
+                              .ToCollection()
+                              .Select(list =>
+                              {
+                                  var numbertoExpire = list.Count - _sizeLimit;
+                                  if (numbertoExpire < 0)
+                                      return emptyResult;
 
-                        var dueForExpiry = list.OrderBy(exp => exp.ExpireAt).ThenBy(exp => exp.Index)
-                            .Take(numbertoExpire)
-                            .Select(item => item.Item)
-                            .ToList();
-                        return  dueForExpiry;
-                    }).Where(items => items.Count != 0);
+                                  var dueForExpiry = list.OrderBy(exp => exp.ExpireAt).ThenBy(exp => exp.Index)
+                                                         .Take(numbertoExpire)
+                                                         .Select(item => item.Item)
+                                                         .ToList();
+                                  return dueForExpiry;
+                              }).Where(items => items.Count != 0);
         }
-}}
+    }
+}

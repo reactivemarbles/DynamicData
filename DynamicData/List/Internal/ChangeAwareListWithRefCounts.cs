@@ -9,7 +9,6 @@ namespace DynamicData.Internal
 
         protected override void InsertItem(int index, T item)
         {
-
             _tracker.Add(item);
             base.InsertItem(index, item);
         }
@@ -27,7 +26,7 @@ namespace DynamicData.Internal
 
         protected override void OnRemoveItems(int startIndex, IEnumerable<T> items)
         {
-            items.ForEach(t=>_tracker.Remove(t));
+            items.ForEach(t => _tracker.Remove(t));
         }
 
         protected override void OnSetItem(int index, T newItem, T oldItem)

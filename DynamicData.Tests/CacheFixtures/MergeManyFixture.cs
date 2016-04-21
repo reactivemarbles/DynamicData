@@ -11,7 +11,7 @@ namespace DynamicData.Tests.CacheFixtures
         private class ObjectWithObservable
         {
             private readonly int _id;
-            private readonly ISubject<bool> _changed= new Subject<bool>();
+            private readonly ISubject<bool> _changed = new Subject<bool>();
             private bool _value;
 
             public ObjectWithObservable(int id)
@@ -25,15 +25,9 @@ namespace DynamicData.Tests.CacheFixtures
                 _changed.OnNext(value);
             }
 
-            public IObservable<bool> Observable
-            {
-                get { return _changed.AsObservable(); }
-            }
+            public IObservable<bool> Observable { get { return _changed.AsObservable(); } }
 
-            public int Id
-            {
-                get { return _id; }
-            }
+            public int Id { get { return _id; } }
         }
 
         private SourceCache<ObjectWithObservable, int> _source;
@@ -56,20 +50,16 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void InvocationOnlyWhenChildIsInvoked()
         {
-            bool invoked=false;
-
+            bool invoked = false;
 
             var stream = _source.Connect()
-                    .MergeMany(o => o.Observable)
-                    .Subscribe(o =>
-                               {
-                                   invoked = true;
-                               });
+                                .MergeMany(o => o.Observable)
+                                .Subscribe(o => { invoked = true; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
 
-            Assert.IsFalse(invoked,"Error. The operator should not have been invoked");
+            Assert.IsFalse(invoked, "Error. The operator should not have been invoked");
 
             item.InvokeObservable(true);
             Assert.IsTrue(invoked, "The observable should have notified");
@@ -81,11 +71,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
             var stream = _source.Connect()
-                    .MergeMany(o => o.Observable)
-                    .Subscribe(o =>
-                    {
-                        invoked = true;
-                    });
+                                .MergeMany(o => o.Observable)
+                                .Subscribe(o => { invoked = true; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -102,11 +89,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
             var stream = _source.Connect()
-                    .MergeMany(o => o.Observable)
-                    .Subscribe(o =>
-                    {
-                        invoked = true;
-                    });
+                                .MergeMany(o => o.Observable)
+                                .Subscribe(o => { invoked = true; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);

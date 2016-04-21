@@ -11,10 +11,8 @@ using DynamicData.Annotations;
 using DynamicData.Binding;
 using NUnit.Framework;
 
-
 namespace DynamicData.Tests.ListFixtures
 {
-
     public static class DynamicDataExtensions
     {
         public static IObservable<IChangeSet<TObj>> FilterOnProperty<TObj, TProp>(
@@ -22,7 +20,6 @@ namespace DynamicData.Tests.ListFixtures
             Expression<Func<TObj, TProp>> selectProp,
             Func<TObj, bool> predicate) where TObj : INotifyPropertyChanged
         {
-
             return Observable.Create<IChangeSet<TObj>>(observer =>
             {
                 //share the connection, otherwise the entire observable chain is duplicated 
@@ -31,11 +28,11 @@ namespace DynamicData.Tests.ListFixtures
                 //do not filter on initial value otherwise every object loaded will invoke a requery
                 //+ start with predicate to ensure filter when loaded loaded
                 var changedMatchFunc = source.WhenPropertyChanged(selectProp, false)
-                                            .Select(_ => predicate)
-                                            .StartWith(predicate);
+                                             .Select(_ => predicate)
+                                             .StartWith(predicate);
 
                 // filter all in source, based on match funcs that update on prop change
-                var changedAndMatching = source.Filter(changedMatchFunc,FilterPolicy.CalculateDiffSet);
+                var changedAndMatching = source.Filter(changedMatchFunc, FilterPolicy.CalculateDiffSet);
 
                 var publisher = changedAndMatching.SubscribeSafe(observer);
 
@@ -45,7 +42,6 @@ namespace DynamicData.Tests.ListFixtures
     }
 
     [TestFixture]
-
     class _TestSubmittedExternally
     {
         [Test]
@@ -55,8 +51,8 @@ namespace DynamicData.Tests.ListFixtures
             var listB = new SourceList<X>();
 
             using (IObservableList<X> list = listA.Connect()
-                                                .Or(listB.Connect())
-                                                .AsObservableList())
+                                                  .Or(listB.Connect())
+                                                  .AsObservableList())
             {
                 var nameA1 = "A1";
                 var a1 = new X(nameA1);
@@ -84,7 +80,7 @@ namespace DynamicData.Tests.ListFixtures
                 Assert.AreEqual(4, count);
 
                 IObservable<IChangeSet<X>> obsFiltered = list.Connect()
-                    .FilterOnProperty(v => v.IsConnected, v => v.IsConnected);
+                                                             .FilterOnProperty(v => v.IsConnected, v => v.IsConnected);
 
                 using (IObservableList<X> obsFilteredAsList = obsFiltered.AsObservableList())
                 {
@@ -135,14 +131,14 @@ namespace DynamicData.Tests.ListFixtures
 
                         //FIX: Maybe a debate required!  List B already contains b1, so not regarded as a new item in the Or result
                         Debug.Assert(listB.Items.Contains(b1));
-                        listA.Add(b1); 
-                      //  ctorCount++;
+                        listA.Add(b1);
+                        //  ctorCount++;
                         Assert.That(XVm.Constructed, Is.EqualTo(ctorCount));
                         Assert.That(XVm.Destructed, Is.EqualTo(dtorCount));
 
                         Console.WriteLine("--disp");
                     }
-                    dtorCount +=2; //FIX: Should be +3 s this is what 
+                    dtorCount += 2; //FIX: Should be +3 s this is what 
                     Assert.That(XVm.Constructed, Is.EqualTo(ctorCount));
                     Assert.That(XVm.Destructed, Is.EqualTo(dtorCount));
                 }
@@ -166,7 +162,7 @@ namespace DynamicData.Tests.ListFixtures
         public void Dispose()
         {
             Destructed++;
-           // Console.WriteLine("{0} VM.disp", _v);
+            // Console.WriteLine("{0} VM.disp", _v);
         }
 
         public bool Equals(XVm other)
@@ -217,18 +213,10 @@ namespace DynamicData.Tests.ListFixtures
         }
 
         [PublicAPI]
-        public string Name
-        {
-            get { return _name; }
-            set { this.SetAndRaise(ref _name, value); }
-        }
+        public string Name { get { return _name; } set { this.SetAndRaise(ref _name, value); } }
 
         [PublicAPI]
-        public bool IsConnected
-        {
-            get { return _isConnected; }
-            set { this.SetAndRaise(ref _isConnected, value); }
-        }
+        public bool IsConnected { get { return _isConnected; } set { this.SetAndRaise(ref _isConnected, value); } }
 
         public bool Equals(X other)
         {

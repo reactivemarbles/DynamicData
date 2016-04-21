@@ -17,9 +17,8 @@ namespace DynamicData.Tests.ListFixtures
         public void Initialise()
         {
             _source = new SourceList<Person>();
-            _controller = new VirtualisingController(new VirtualRequest(0,25));
+            _controller = new VirtualisingController(new VirtualRequest(0, 25));
             _results = _source.Connect().Virtualise(_controller).AsAggregator();
-   
         }
 
         [TearDown]
@@ -38,8 +37,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var expected = people.Take(25).ToArray();
 
-           CollectionAssert.AreEqual(expected, _results.Data.Items);
-
+            CollectionAssert.AreEqual(expected, _results.Data.Items);
         }
 
         [Test]
@@ -47,7 +45,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            _controller.Virtualise(new VirtualRequest(25,25));
+            _controller.Virtualise(new VirtualRequest(25, 25));
 
             var expected = people.Skip(25).Take(25).ToArray();
             CollectionAssert.AreEqual(expected, _results.Data.Items);
@@ -61,7 +59,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var expected = people.Take(25).ToArray();
 
-            _source.InsertRange(_generator.Take(100),50);
+            _source.InsertRange(_generator.Take(100), 50);
             CollectionAssert.AreEqual(expected, _results.Data.Items);
         }
 
@@ -70,15 +68,14 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            
+
             var newPerson = new Person("A", 1);
             _source.Insert(10, newPerson);
-
 
             var message = _results.Messages[1].ElementAt(0);
             var removedPerson = people.ElementAt(24);
 
-            Assert.AreEqual(newPerson,_results.Data.Items.ElementAt(10));
+            Assert.AreEqual(newPerson, _results.Data.Items.ElementAt(10));
             Assert.AreEqual(removedPerson, message.Item.Current);
             Assert.AreEqual(ListChangeReason.Remove, message.Reason);
         }
@@ -94,7 +91,6 @@ namespace DynamicData.Tests.ListFixtures
 
             CollectionAssert.AreEqual(expected, _results.Data.Items);
 
-
             var removedMessage = _results.Messages[2].ElementAt(0);
             var removedPerson = people.ElementAt(25);
             Assert.AreEqual(removedPerson, removedMessage.Item.Current);
@@ -104,7 +100,6 @@ namespace DynamicData.Tests.ListFixtures
             var addedPerson = people.ElementAt(50);
             Assert.AreEqual(addedPerson, addedMessage.Item.Current);
             Assert.AreEqual(ListChangeReason.Add, addedMessage.Reason);
-
         }
 
         [Test]
@@ -113,7 +108,7 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
             var personToMove = people[0];
-            _source.Move(0,10);
+            _source.Move(0, 10);
 
             var actualPersonAtIndex10 = _results.Data.Items.ElementAt(10);
             Assert.AreEqual(personToMove, actualPersonAtIndex10);

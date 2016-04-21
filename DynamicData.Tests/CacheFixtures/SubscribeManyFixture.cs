@@ -1,5 +1,4 @@
-﻿
-using System.Linq;
+﻿using System.Linq;
 using System.Reactive.Disposables;
 using NUnit.Framework;
 
@@ -27,23 +26,21 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 Id = id;
             }
-
         }
-        
+
         private ISourceCache<SubscribeableObject, int> _source;
         private ChangeSetAggregator<SubscribeableObject, int> _results;
 
         [SetUp]
         public void Initialise()
         {
-            _source = new SourceCache<SubscribeableObject, int>(p=>p.Id);
+            _source = new SourceCache<SubscribeableObject, int>(p => p.Id);
             _results = new ChangeSetAggregator<SubscribeableObject, int>(
-                                                _source.Connect().SubscribeMany(subscribeable =>
-                                                {
-                                                    subscribeable.Subscribe();
-                                                    return Disposable.Create(subscribeable.UnSubscribe);
-                                                }));
-
+                _source.Connect().SubscribeMany(subscribeable =>
+                {
+                    subscribeable.Subscribe();
+                    return Disposable.Create(subscribeable.UnSubscribe);
+                }));
         }
 
         [TearDown]
@@ -94,7 +91,6 @@ namespace DynamicData.Tests.CacheFixtures
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.IsTrue(_results.Messages[1].All(d => !d.Current.IsSubscribed));
-
         }
     }
 }

@@ -29,7 +29,6 @@ namespace DynamicData.Kernel
         {
             if (onComplete == null) throw new ArgumentNullException(nameof(onComplete));
 
-
             if (_exception != null)
             {
                 if (onError != null)
@@ -47,16 +46,12 @@ namespace DynamicData.Kernel
             }
         }
 
-
         public void OnError(Action<Exception> action)
         {
-            if (action != null && _exception!=null)
+            if (action != null && _exception != null)
                 action(_exception);
         }
 
-        public T Result
-        {
-            get { return _result; }
-        }
+        public T Result { get { return _result; } }
     }
 }

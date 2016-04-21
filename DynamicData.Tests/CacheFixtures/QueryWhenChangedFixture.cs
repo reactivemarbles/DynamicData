@@ -9,13 +9,12 @@ namespace DynamicData.Tests.CacheFixtures
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;
-      
+
         [SetUp]
         public void Initialise()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _results = new ChangeSetAggregator<Person, string>(_source.Connect(p => p.Age > 20));
-
         }
 
         [TearDown]
@@ -31,8 +30,8 @@ namespace DynamicData.Tests.CacheFixtures
             bool invoked = false;
             _source.AddOrUpdate(new Person("A", 1));
             var subscription = _source.Connect()
-                .QueryWhenChanged()
-                .Subscribe(x => invoked = true);
+                                      .QueryWhenChanged()
+                                      .Subscribe(x => invoked = true);
             Assert.IsTrue(invoked, "Should have received on next");
             subscription.Dispose();
         }
@@ -42,10 +41,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
 
-
             var subscription = _source.Connect()
-                .QueryWhenChanged()
-                .Subscribe(x => invoked = true);
+                                      .QueryWhenChanged()
+                                      .Subscribe(x => invoked = true);
 
             Assert.IsFalse(invoked, "Should have received on next");
 
@@ -61,8 +59,8 @@ namespace DynamicData.Tests.CacheFixtures
             bool invoked = false;
             _source.AddOrUpdate(new Person("A", 1));
             var subscription = _source.Connect()
-                .QueryWhenChanged(query=>query.Count)
-                .Subscribe(x => invoked = true);
+                                      .QueryWhenChanged(query => query.Count)
+                                      .Subscribe(x => invoked = true);
             Assert.IsTrue(invoked, "Should have received on next");
             subscription.Dispose();
         }
@@ -72,10 +70,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
 
-
             var subscription = _source.Connect()
-                .QueryWhenChanged(query => query.Count)
-                .Subscribe(x => invoked = true);
+                                      .QueryWhenChanged(query => query.Count)
+                                      .Subscribe(x => invoked = true);
 
             Assert.IsFalse(invoked, "Should have received on next");
 

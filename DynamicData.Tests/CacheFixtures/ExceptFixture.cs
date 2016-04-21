@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using DynamicData.Tests.Domain;
@@ -60,7 +59,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
         }
 
-
         [Test]
         public void DoNotIncludeExceptListItems()
         {
@@ -68,11 +66,9 @@ namespace DynamicData.Tests.CacheFixtures
             _exceptSource.AddOrUpdate(person);
             _targetSource.AddOrUpdate(person);
 
-
             Assert.AreEqual(0, _results.Messages.Count, "Should have no updates");
             Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
         }
-
 
         [Test]
         public void RemovedAnItemFromExceptThenIncludesTheItem()
@@ -80,13 +76,10 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _exceptSource.AddOrUpdate(person);
             _targetSource.AddOrUpdate(person);
-         
 
             _exceptSource.Remove(person);
             Assert.AreEqual(1, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
         }
-
-
     }
 }

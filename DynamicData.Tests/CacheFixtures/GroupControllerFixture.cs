@@ -17,24 +17,23 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         private readonly Func<Person, AgeBracket> _grouper = p =>
-                                                             {
-                                                                 if (p.Age <= 19) return AgeBracket.Under20;
-                                                                 return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
-                                                             };
+        {
+            if (p.Age <= 19) return AgeBracket.Under20;
+            return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
+        };
 
         private ISourceCache<Person, string> _source;
-        private GroupController  _controller;
+        private GroupController _controller;
         private IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
-        
+
         [SetUp]
         public void Initialise()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
-            _controller =new GroupController();
+            _controller = new GroupController();
             _grouped = _source.Connect().Group(_grouper, _controller).AsObservableCache();
-       }
+        }
 
-            
         [Test]
         public void RegroupRecaluatesGroupings()
         {
@@ -63,16 +62,13 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.IsTrue(IsContainedIn("P3", AgeBracket.Under20));
             Assert.IsTrue(IsContainedIn("P4", AgeBracket.Adult));
 
-
-
             Assert.IsTrue(IsContainedOnlyInOneGroup("P1"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P2"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P3"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P4"));
-
         }
 
-                [Test]
+        [Test]
         public void RegroupRecaluatesGroupings2()
         {
             var p1 = new Person("P1", 10);
@@ -93,22 +89,19 @@ namespace DynamicData.Tests.CacheFixtures
             p3.Age = 15;
             p4.Age = 30;
 
-           // _controller.RefreshGroup();
+            // _controller.RefreshGroup();
 
-           _source.Evaluate(new []{p1,p2,p3,p4});
+            _source.Evaluate(new[] { p1, p2, p3, p4 });
 
             Assert.IsTrue(IsContainedIn("P1", AgeBracket.Adult));
             Assert.IsTrue(IsContainedIn("P2", AgeBracket.Pensioner));
             Assert.IsTrue(IsContainedIn("P3", AgeBracket.Under20));
             Assert.IsTrue(IsContainedIn("P4", AgeBracket.Adult));
 
-
-
             Assert.IsTrue(IsContainedOnlyInOneGroup("P1"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P2"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P3"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P4"));
-
         }
 
         private bool IsContainedIn(string name, AgeBracket bracket)
@@ -125,6 +118,5 @@ namespace DynamicData.Tests.CacheFixtures
 
             return person.Count == 1;
         }
-
     }
 }

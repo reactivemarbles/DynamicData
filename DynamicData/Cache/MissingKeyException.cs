@@ -5,7 +5,7 @@ namespace DynamicData
     /// <summary>
     /// Thrown when a key is expected in a cache but not found
     /// </summary>
-    public class MissingKeyException:Exception
+    public class MissingKeyException : Exception
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MissingKeyException"/> class.
@@ -18,7 +18,8 @@ namespace DynamicData
         /// Initializes a new instance of the <see cref="MissingKeyException"/> class.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-        public MissingKeyException(string message) : base(message)
+        public MissingKeyException(string message)
+            : base(message)
         {
         }
 
@@ -27,9 +28,9 @@ namespace DynamicData
         /// </summary>
         /// <param name="message">The error message that explains the reason for the exception.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-        public MissingKeyException(string message, Exception innerException) : base(message, innerException)
+        public MissingKeyException(string message, Exception innerException)
+            : base(message, innerException)
         {
         }
-
     }
 }

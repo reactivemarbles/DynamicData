@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
@@ -7,22 +6,20 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Binding
 {
-
-
-	[TestFixture]
+    [TestFixture]
     public class BindChangeSetFixture
     {
         private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
-        private ISourceCache<Person,string> _source;
+        private ISourceCache<Person, string> _source;
         private IDisposable _binder;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-            
-       [SetUp]
+
+        [SetUp]
         public void SetUp()
         {
             _collection = new ObservableCollectionExtended<Person>();
-             _source = new SourceCache<Person, string>(p => p.Name);
-             _binder = _source.Connect().Bind(_collection).Subscribe();
+            _source = new SourceCache<Person, string>(p => p.Name);
+            _binder = _source.Connect().Bind(_collection).Subscribe();
         }
 
         [TearDown]
@@ -31,7 +28,7 @@ namespace DynamicData.Tests.Binding
             _binder.Dispose();
             _source.Dispose();
         }
-        
+
         [Test]
         public void AddToSourceAddsToDestination()
         {
@@ -54,7 +51,6 @@ namespace DynamicData.Tests.Binding
             Assert.AreEqual(personUpdated, _collection.First(), "Should be updated person");
         }
 
-
         [Test]
         public void RemoveSourceRemovesFromTheDestination()
         {
@@ -64,7 +60,7 @@ namespace DynamicData.Tests.Binding
 
             Assert.AreEqual(0, _collection.Count, "Should be 1 item in the collection");
         }
-        
+
         [Test]
         public void BatchAdd()
         {
@@ -72,7 +68,7 @@ namespace DynamicData.Tests.Binding
             _source.AddOrUpdate(people);
 
             Assert.AreEqual(100, _collection.Count, "Should be 100 items in the collection");
-            CollectionAssert.AreEquivalent(people,_collection, "Collections should be equivalent");
+            CollectionAssert.AreEquivalent(people, _collection, "Collections should be equivalent");
         }
 
         [Test]
@@ -83,6 +79,5 @@ namespace DynamicData.Tests.Binding
             _source.Clear();
             Assert.AreEqual(0, _collection.Count, "Should be 100 items in the collection");
         }
-
     }
 }

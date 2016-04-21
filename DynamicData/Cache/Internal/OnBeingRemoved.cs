@@ -17,17 +17,17 @@ namespace DynamicData.Internal
         public void RegisterForRemoval(IChangeSet<TObject, TKey> changes)
         {
             changes.ForEach(change =>
-                            {
-                                switch (change.Reason)
-                                {
-                                    case ChangeReason.Update:
-                                        change.Previous.IfHasValue(t => _callback(t));
-                                        break;
-                                    case ChangeReason.Remove:
-                                        _callback(change.Current);
-                                    break;
-                                }
-                            });
+            {
+                switch (change.Reason)
+                {
+                    case ChangeReason.Update:
+                        change.Previous.IfHasValue(t => _callback(t));
+                        break;
+                    case ChangeReason.Remove:
+                        _callback(change.Current);
+                        break;
+                }
+            });
             _cache.Clone(changes);
         }
 
@@ -37,5 +37,4 @@ namespace DynamicData.Internal
             _cache.Clear();
         }
     }
-
 }

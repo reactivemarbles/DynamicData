@@ -6,7 +6,6 @@ namespace DynamicData.Internal
     {
         private readonly IFilter<TObject, TKey> _filter;
 
-
         public StaticFilter(IFilter<TObject, TKey> filter)
         {
             _filter = filter;

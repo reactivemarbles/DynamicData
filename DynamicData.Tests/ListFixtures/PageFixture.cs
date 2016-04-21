@@ -17,7 +17,7 @@ namespace DynamicData.Tests.ListFixtures
         public void Initialise()
         {
             _source = new SourceList<Person>();
-            _controller = new PageController(new PageRequest(1,25));
+            _controller = new PageController(new PageRequest(1, 25));
             _results = _source.Connect().Page(_controller).AsAggregator();
         }
 
@@ -43,7 +43,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            _controller.Change(new PageRequest(2,25));
+            _controller.Change(new PageRequest(2, 25));
 
             var expected = people.Skip(25).Take(25).ToArray();
             CollectionAssert.AreEqual(expected, _results.Data.Items);
@@ -87,7 +87,7 @@ namespace DynamicData.Tests.ListFixtures
             var expected = people.Skip(26).Take(25).ToArray();
 
             CollectionAssert.AreEqual(expected, _results.Data.Items);
-            
+
             var removedMessage = _results.Messages[2].ElementAt(0);
             var removedPerson = people.ElementAt(25);
             Assert.AreEqual(removedPerson, removedMessage.Item.Current);

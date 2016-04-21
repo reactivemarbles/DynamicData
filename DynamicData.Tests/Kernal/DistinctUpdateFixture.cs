@@ -12,7 +12,7 @@ namespace DynamicData.Tests.Kernal
         public void Add()
         {
             var person = new Person("Person", 10);
-            var update = new Change<Person,Person>(ChangeReason.Add, person,person);
+            var update = new Change<Person, Person>(ChangeReason.Add, person, person);
 
             Assert.AreEqual(person, update.Key);
             Assert.AreEqual(ChangeReason.Add, update.Reason);
@@ -37,7 +37,7 @@ namespace DynamicData.Tests.Kernal
         {
             var current = new Person("Person", 10);
             var previous = new Person("Person", 9);
-            var update = new Change<Person,Person>(ChangeReason.Update, current,current, previous);
+            var update = new Change<Person, Person>(ChangeReason.Update, current, current, previous);
 
             Assert.AreEqual(current, update.Key);
             Assert.AreEqual(ChangeReason.Update, update.Reason);
@@ -47,11 +47,11 @@ namespace DynamicData.Tests.Kernal
         }
 
         [Test]
-        [ExpectedException(typeof (ArgumentException))]
+        [ExpectedException(typeof(ArgumentException))]
         public void UpdateWillThrowIfNoPreviousValueIsSupplied()
         {
             var current = new Person("Person", 10);
-            var update = new Change<Person,Person>(ChangeReason.Update, current,current);
+            var update = new Change<Person, Person>(ChangeReason.Update, current, current);
         }
     }
 }

@@ -27,14 +27,13 @@ namespace DynamicData
         /// </summary>
         /// <param name="items">The items.</param>
         void AddOrUpdate(IEnumerable<TObject> items);
-       
+
         /// <summary>
         /// Adds or update the item, 
         /// </summary>
         /// <param name="item">The item.</param>
         void AddOrUpdate(TObject item);
 
-        
         /// <summary>
         /// Evaluates the specified items.
         /// </summary>
@@ -59,7 +58,6 @@ namespace DynamicData
         /// <param name="key">The key.</param>
         void Evaluate(TKey key);
 
-
         /// <summary>
         /// Sends a signal for operators to recalculate it's state 
         /// </summary>
@@ -76,7 +74,6 @@ namespace DynamicData
         /// </summary>
         /// <param name="keys">The keys.</param>
         void Remove(IEnumerable<TKey> keys);
-
 
         /// <summary>
         /// Overload of remove due to ambiguous method when TObject and TKey are of the same type
@@ -111,6 +108,5 @@ namespace DynamicData
         /// Updates using changes using the specified changeset
         /// </summary>
         void Update(IChangeSet<TObject, TKey> changes);
-
     }
 }

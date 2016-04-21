@@ -8,99 +8,94 @@ using DynamicData.Annotations;
 
 namespace DynamicData.Internal
 {
-	internal class BufferIf<T>
-	{
-		private readonly IObservable<IChangeSet<T>> _source;
-		private readonly IObservable<bool> _pauseIfTrueSelector;
-		private readonly bool _intialPauseState;
-		private readonly TimeSpan _timeOut;
-		private readonly IScheduler _scheduler;
+    internal class BufferIf<T>
+    {
+        private readonly IObservable<IChangeSet<T>> _source;
+        private readonly IObservable<bool> _pauseIfTrueSelector;
+        private readonly bool _intialPauseState;
+        private readonly TimeSpan _timeOut;
+        private readonly IScheduler _scheduler;
 
-		public BufferIf([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<bool> pauseIfTrueSelector,
-			bool intialPauseState = false, TimeSpan? timeOut = null, IScheduler scheduler = null)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
+        public BufferIf([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<bool> pauseIfTrueSelector,
+                        bool intialPauseState = false, TimeSpan? timeOut = null, IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
-			_source = source;
-			_pauseIfTrueSelector = pauseIfTrueSelector;
-			_intialPauseState = intialPauseState;
-			_timeOut = timeOut ?? TimeSpan.Zero;
-			_scheduler = scheduler ?? Scheduler.Default;
-		}
+            _source = source;
+            _pauseIfTrueSelector = pauseIfTrueSelector;
+            _intialPauseState = intialPauseState;
+            _timeOut = timeOut ?? TimeSpan.Zero;
+            _scheduler = scheduler ?? Scheduler.Default;
+        }
 
-		public IObservable<IChangeSet<T>> Run()
-		{
-			return Observable.Create<IChangeSet<T>>
-				(
-					observer =>
-					{
-						var locker = new object();
-						var paused = _intialPauseState;
-						var buffer = new List<Change<T>>();
-						var timeoutSubscriber = new SerialDisposable();
-						var timeoutSubject = new Subject<bool>();
+        public IObservable<IChangeSet<T>> Run()
+        {
+            return Observable.Create<IChangeSet<T>>
+                (
+                    observer =>
+                    {
+                        var locker = new object();
+                        var paused = _intialPauseState;
+                        var buffer = new List<Change<T>>();
+                        var timeoutSubscriber = new SerialDisposable();
+                        var timeoutSubject = new Subject<bool>();
 
-						var bufferSelector = Observable.Return(_intialPauseState)
-							.Concat(_pauseIfTrueSelector.Merge(timeoutSubject))
-							.ObserveOn(_scheduler)
-							.Synchronize(locker)
-							.Publish();
+                        var bufferSelector = Observable.Return(_intialPauseState)
+                                                       .Concat(_pauseIfTrueSelector.Merge(timeoutSubject))
+                                                       .ObserveOn(_scheduler)
+                                                       .Synchronize(locker)
+                                                       .Publish();
 
-						var pause = bufferSelector.Where(state => state)
-							.Subscribe(_ =>
-							{
-								paused = true;
-								//add pause timeout if required
-								if (_timeOut != TimeSpan.Zero)
-									timeoutSubscriber.Disposable = Observable.Timer(_timeOut, _scheduler)
-										.Select(l => false)
-										.SubscribeSafe(timeoutSubject);
-							});
+                        var pause = bufferSelector.Where(state => state)
+                                                  .Subscribe(_ =>
+                                                  {
+                                                      paused = true;
+                                                      //add pause timeout if required
+                                                      if (_timeOut != TimeSpan.Zero)
+                                                          timeoutSubscriber.Disposable = Observable.Timer(_timeOut, _scheduler)
+                                                                                                   .Select(l => false)
+                                                                                                   .SubscribeSafe(timeoutSubject);
+                                                  });
 
+                        var resume = bufferSelector.Where(state => !state)
+                                                   .Subscribe(_ =>
+                                                   {
+                                                       paused = false;
+                                                       //publish changes and clear buffer
+                                                       if (buffer.Count == 0) return;
+                                                       observer.OnNext(new ChangeSet<T>(buffer));
+                                                       buffer.Clear();
 
-						var resume = bufferSelector.Where(state => !state)
-							.Subscribe(_ =>
-							{
-								paused = false;
-								//publish changes and clear buffer
-								if (buffer.Count == 0) return;
-								observer.OnNext(new ChangeSet<T>(buffer));
-								buffer.Clear();
+                                                       //kill off timeout if required
+                                                       timeoutSubscriber.Disposable = Disposable.Empty;
+                                                   });
 
-								//kill off timeout if required
-								timeoutSubscriber.Disposable = Disposable.Empty;
-							});
+                        var updateSubscriber = _source.Synchronize(locker)
+                                                      .Subscribe(updates =>
+                                                      {
+                                                          if (paused)
+                                                          {
+                                                              buffer.AddRange(updates);
+                                                          }
+                                                          else
+                                                          {
+                                                              observer.OnNext(updates);
+                                                          }
+                                                      });
 
-						var updateSubscriber = _source.Synchronize(locker)
-							.Subscribe(updates =>
-							{
-								if (paused)
-								{
-									buffer.AddRange(updates);
-								}
-								else
-								{
-									observer.OnNext(updates);
-								}
-							});
+                        var connected = bufferSelector.Connect();
 
-
-						var connected = bufferSelector.Connect();
-
-						return Disposable.Create(() =>
-						{
-							connected.Dispose();
-							pause.Dispose();
-							resume.Dispose();
-							updateSubscriber.Dispose();
-							timeoutSubject.OnCompleted();
-							timeoutSubscriber.Dispose();
-						});
-					});
-
-		}
-
-
-	}
+                        return Disposable.Create(() =>
+                        {
+                            connected.Dispose();
+                            pause.Dispose();
+                            resume.Dispose();
+                            updateSubscriber.Dispose();
+                            timeoutSubject.OnCompleted();
+                            timeoutSubscriber.Dispose();
+                        });
+                    });
+        }
+    }
 }

@@ -16,8 +16,6 @@ namespace DynamicData
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public interface IIntermediateUpdater<TObject, TKey> : IQuery<TObject, TKey> //:IUpdater<TObject,TKey>
     {
-
-
         /// <summary>
         /// Adds or updates the specified item / key pair
         /// </summary>

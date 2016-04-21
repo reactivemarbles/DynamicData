@@ -27,7 +27,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             public IObservable<bool> Observable => _changed.AsObservable();
 
-	        public int Id => _id;
+            public int Id => _id;
         }
 
         private ISourceCache<ObjectWithObservable, int> _source;
@@ -49,13 +49,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
 
-
             var stream = _source.Connect()
-                .MergeMany((o, key) => o.Observable)
-                .Subscribe(o =>
-                           {
-                               invoked = true;
-                           });
+                                .MergeMany((o, key) => o.Observable)
+                                .Subscribe(o => { invoked = true; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -72,11 +68,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
             var stream = _source.Connect()
-                .MergeMany((o,key) => o.Observable)
-                .Subscribe(o =>
-                           {
-                               invoked = true;
-                           });
+                                .MergeMany((o, key) => o.Observable)
+                                .Subscribe(o => { invoked = true; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -93,11 +86,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
             var stream = _source.Connect()
-                .MergeMany((o, key) => o.Observable)
-                .Subscribe(o =>
-                           {
-                               invoked = true;
-                           });
+                                .MergeMany((o, key) => o.Observable)
+                                .Subscribe(o => { invoked = true; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);

@@ -13,7 +13,7 @@ namespace DynamicData.Tests.CacheFixtures
         [SetUp]
         public void MyTestInitialize()
         {
-            _source = new SourceCache<Person, string>(p=>p.Key);
+            _source = new SourceCache<Person, string>(p => p.Key);
             _results = _source.Connect().AsAggregator();
         }
 
@@ -24,22 +24,21 @@ namespace DynamicData.Tests.CacheFixtures
             _results.Dispose();
         }
 
-
         [Test]
         public void CanHandleABatchOfUpdates()
         {
             _source.Edit(updater =>
-                {
-                    var torequery = new Person("Adult1", 44);
+            {
+                var torequery = new Person("Adult1", 44);
 
-                    updater.AddOrUpdate(new Person("Adult1", 40));
-                    updater.AddOrUpdate(new Person("Adult1", 41));
-                    updater.AddOrUpdate(new Person("Adult1", 42));
-                    updater.AddOrUpdate(new Person("Adult1", 43));
-                    updater.Evaluate(torequery);
-                    updater.Remove(torequery);
-                    updater.Evaluate(torequery);
-                });
+                updater.AddOrUpdate(new Person("Adult1", 40));
+                updater.AddOrUpdate(new Person("Adult1", 41));
+                updater.AddOrUpdate(new Person("Adult1", 42));
+                updater.AddOrUpdate(new Person("Adult1", 43));
+                updater.Evaluate(torequery);
+                updater.Remove(torequery);
+                updater.Evaluate(torequery);
+            });
 
             Assert.AreEqual(6, _results.Summary.Overall.Count, "Should be  6 up`dates");
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 message");
@@ -56,7 +55,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             int? result = null;
             var subscription = _source.CountChanged
-                .Subscribe(count => result = count);
+                                      .Subscribe(count => result = count);
 
             Assert.IsTrue(result.HasValue, "Count has not been invoked. Should start at zero");
             Assert.AreEqual(0, result.Value, "Count should be zero");
@@ -70,7 +69,7 @@ namespace DynamicData.Tests.CacheFixtures
             var generator = new RandomPersonGenerator();
             int? result = null;
             var subscription = _source.CountChanged
-                .Subscribe(count => result = count);
+                                      .Subscribe(count => result = count);
 
             _source.AddOrUpdate(generator.Take(100));
 
@@ -79,7 +78,6 @@ namespace DynamicData.Tests.CacheFixtures
             subscription.Dispose();
         }
 
-
         [Test]
         public void SubscribesDisposesCorrectly()
         {
@@ -87,12 +85,12 @@ namespace DynamicData.Tests.CacheFixtures
             bool errored = false;
             bool completed = false;
             IDisposable subscription = _source.Connect()
-                .FinallySafe(() => completed = true)
-                .Subscribe(updates => { called = true; }, ex => errored = true,() => completed = true);
+                                              .FinallySafe(() => completed = true)
+                                              .Subscribe(updates => { called = true; }, ex => errored = true, () => completed = true);
             _source.AddOrUpdate(new Person("Adult1", 40));
 
             //_stream.
-              subscription.Dispose();
+            subscription.Dispose();
             _source.Dispose();
 
             Assert.IsFalse(errored, "Should be no error");

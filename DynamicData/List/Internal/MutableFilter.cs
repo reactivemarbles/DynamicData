@@ -17,8 +17,8 @@ namespace DynamicData.Internal
         private Func<T, bool> _predicate = t => false;
 
         public MutableFilter([NotNull] IObservable<IChangeSet<T>> source,
-            [NotNull] IObservable<Func<T, bool>> predicates,
-            FilterPolicy filterPolicy = FilterPolicy.ClearAndReplace)
+                             [NotNull] IObservable<Func<T, bool>> predicates,
+                             FilterPolicy filterPolicy = FilterPolicy.ClearAndReplace)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicates == null) throw new ArgumentNullException(nameof(predicates));
@@ -38,12 +38,12 @@ namespace DynamicData.Internal
 
                 //requery wehn controller either fires changed or requery event
                 var refresher = _predicates.Synchronize(locker)
-                    .Select(predicate =>
-                    {
-                        Requery(predicate, allWithMatch, all, filtered);
-                        var changed = filtered.CaptureChanges();
-                        return changed;
-                    });
+                                           .Select(predicate =>
+                                           {
+                                               Requery(predicate, allWithMatch, all, filtered);
+                                               var changed = filtered.CaptureChanges();
+                                               return changed;
+                                           });
 
                 var shared = _source.Synchronize(locker).Publish();
 
@@ -64,12 +64,12 @@ namespace DynamicData.Internal
 
                 //filter result list
                 var filter = shared.Synchronize(locker)
-                                    .Select(changes =>
-                                    {
-                                        filtered.Filter(changes, _predicate);
-                                        var changed = filtered.CaptureChanges();
-                                        return changed;
-                                    });
+                                   .Select(changes =>
+                                   {
+                                       filtered.Filter(changes, _predicate);
+                                       var changed = filtered.CaptureChanges();
+                                       return changed;
+                                   });
 
                 var subscriber = refresher.Merge(filter).NotEmpty().SubscribeSafe(observer);
 
@@ -127,6 +127,5 @@ namespace DynamicData.Internal
                 IsMatch = isMatch;
             }
         }
-
     }
 }

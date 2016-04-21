@@ -6,7 +6,7 @@ namespace DynamicData
 {
     internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>
     {
-	    public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
+        public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
             : base(updates)
         {
             Response = response;
@@ -14,16 +14,16 @@ namespace DynamicData
         }
 
         public IKeyValueCollection<TObject, TKey> SortedItems { get; }
-		public IPageResponse Response { get; }
+        public IPageResponse Response { get; }
 
-		#region Equality Members
+        #region Equality Members
 
-		/// <summary>
-		/// Equalses the specified other.
-		/// </summary>
-		/// <param name="other">The other.</param>
-		/// <returns></returns>
-		public bool Equals(PagedChangeSet<TObject, TKey> other)
+        /// <summary>
+        /// Equalses the specified other.
+        /// </summary>
+        /// <param name="other">The other.</param>
+        /// <returns></returns>
+        public bool Equals(PagedChangeSet<TObject, TKey> other)
         {
             return SortedItems.SequenceEqual(other.SortedItems);
             // return Equals(this.SortedItems, other.SortedItems);

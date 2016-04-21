@@ -1,24 +1,17 @@
 ﻿namespace DynamicData
 {
+    internal interface ISupportsCapcity
+    {
+        int Capacity { get; set; }
+        int Count { get; }
+    }
 
-
-
-	internal interface ISupportsCapcity
-	{
-		int Capacity { get; set; }
-		int Count { get; }
-	}
-
-
-
-
-
-	/// <summary>
-	///  The reason for an individual change.  
-	/// 
-	/// Used to signal consumers of any changes to the underlying cache
-	/// </summary>
-	public enum ChangeReason
+    /// <summary>
+    ///  The reason for an individual change.  
+    /// 
+    /// Used to signal consumers of any changes to the underlying cache
+    /// </summary>
+    public enum ChangeReason
     {
         /// <summary>
         ///  An item has been added
@@ -44,6 +37,5 @@
         /// An item has been moved in a sorted collection
         /// </summary>
         Moved,
-
     }
 }

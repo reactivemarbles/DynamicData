@@ -1,5 +1,4 @@
 ﻿using System;
-
 using System.Linq;
 using System.Reactive.Linq;
 
@@ -42,9 +41,8 @@ namespace DynamicData.Aggregation
         public static IObservable<int> Count<TObject>(this IObservable<IAggregateChangeSet<TObject>> source)
         {
             return source.Accumlate(0, t => 1,
-                (current, increment) => current + increment,
-                (current, increment) => current - increment);
+                                    (current, increment) => current + increment,
+                                    (current, increment) => current - increment);
         }
-
     }
 }

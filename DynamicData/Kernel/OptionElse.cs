@@ -2,18 +2,16 @@
 
 namespace DynamicData.Kernel
 {
-
-	/// <summary>
-	/// Continuation container used for the else optator on an option object.
-	/// </summary>
-	public class OptionElse
+    /// <summary>
+    /// Continuation container used for the else optator on an option object.
+    /// </summary>
+    public class OptionElse
     {
-
         internal readonly static OptionElse NoAction = new OptionElse(false);
 
         private readonly bool _shouldRunAction;
 
-        internal OptionElse(bool shouldRunAction=true)
+        internal OptionElse(bool shouldRunAction = true)
         {
             _shouldRunAction = shouldRunAction;
         }
@@ -27,7 +25,6 @@ namespace DynamicData.Kernel
         {
             if (action == null) throw new ArgumentNullException("action");
             if (_shouldRunAction) action();
-
         }
     }
 }

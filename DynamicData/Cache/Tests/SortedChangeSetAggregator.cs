@@ -15,7 +15,7 @@ namespace DynamicData.Tests
     {
         private readonly IDisposable _disposer;
 
-	    /// <summary>
+        /// <summary>
         /// Initializes a new instance of the <see cref="SortedChangeSetAggregator{TObject, TKey}"/> class.
         /// </summary>
         /// <param name="source">The source.</param>
@@ -28,7 +28,6 @@ namespace DynamicData.Tests
             Data = published.AsObservableCache();
             var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
 
-
             var connected = published.Connect();
             _disposer = Disposable.Create(() =>
             {
@@ -39,40 +38,38 @@ namespace DynamicData.Tests
             });
         }
 
-		/// <summary>
-		/// The data of the steam cached inorder to apply assertions
-		/// </summary>
-		public IObservableCache<TObject, TKey> Data { get; }
-
-		/// <summary>
-		/// Record of all received messages.
-		/// </summary>
-		/// <value>
-		/// The messages.
-		/// </value>
-		public IList<ISortedChangeSet<TObject, TKey>> Messages { get; } = new List<ISortedChangeSet<TObject, TKey>>();
+        /// <summary>
+        /// The data of the steam cached inorder to apply assertions
+        /// </summary>
+        public IObservableCache<TObject, TKey> Data { get; }
 
         /// <summary>
-		/// The aggregated change summary.
-		/// </summary>
-		/// <value>
-		/// The summary.
-		/// </value>
-		public ChangeSummary Summary { get; private set; } = ChangeSummary.Empty;
-
-
-        /// <summary>
-		/// Gets and error.
-		/// </summary>
-
-		public Exception Error { get; private set; }
+        /// Record of all received messages.
+        /// </summary>
+        /// <value>
+        /// The messages.
+        /// </value>
+        public IList<ISortedChangeSet<TObject, TKey>> Messages { get; } = new List<ISortedChangeSet<TObject, TKey>>();
 
         /// <summary>
-		/// Releases unmanaged and - optionally - managed resources.
-		/// </summary>
-		public void Dispose()
-		{
-			_disposer.Dispose();
-		}
-	}
+        /// The aggregated change summary.
+        /// </summary>
+        /// <value>
+        /// The summary.
+        /// </value>
+        public ChangeSummary Summary { get; private set; } = ChangeSummary.Empty;
+
+        /// <summary>
+        /// Gets and error.
+        /// </summary>
+        public Exception Error { get; private set; }
+
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _disposer.Dispose();
+        }
+    }
 }

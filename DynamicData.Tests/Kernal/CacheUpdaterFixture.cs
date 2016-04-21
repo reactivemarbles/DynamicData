@@ -50,7 +50,7 @@ namespace DynamicData.Tests.Kernal
         public void BatchOfUniqueUpdates()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
-            _updater.AddOrUpdate(people,p=>p.Key);
+            _updater.AddOrUpdate(people, p => p.Key);
             IChangeSet<Person, string> updates = _updater.AsChangeSet();
 
             CollectionAssert.AreEqual(people, _cache.Items);
@@ -59,13 +59,12 @@ namespace DynamicData.Tests.Kernal
             Assert.AreEqual(updates.Count, 100, "Should be 100 updates");
         }
 
-
         [Test]
         public void BatchRemoves()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
-            _updater.AddOrUpdate(people,p=>p.Key);
-            _updater.Remove(people,p=>p.Key);
+            _updater.AddOrUpdate(people, p => p.Key);
+            _updater.Remove(people, p => p.Key);
             IChangeSet<Person, string> updates = _updater.AsChangeSet();
 
             Assert.AreEqual(0, _cache.Count, "Everything should be removed");
@@ -78,8 +77,7 @@ namespace DynamicData.Tests.Kernal
         //public void BatchSuccessiveUpdates()
         //{
         //    var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
-           
-            
+
         //    _updater.AddOrUpdate(people, p => p.Key);
 
         //    IChangeSet<Person, string> updates = _updater.AsChangeSet();

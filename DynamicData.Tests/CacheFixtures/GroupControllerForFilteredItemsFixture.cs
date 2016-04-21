@@ -17,10 +17,10 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         private readonly Func<Person, AgeBracket> _grouper = p =>
-                                                             {
-                                                                 if (p.Age <= 19) return AgeBracket.Under20;
-                                                                 return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
-                                                             };
+        {
+            if (p.Age <= 19) return AgeBracket.Under20;
+            return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
+        };
 
         private ISourceCache<Person, string> _source;
         private GroupController _controller;
@@ -31,10 +31,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _controller = new GroupController();
-            _grouped = _source.Connect(p => _grouper(p)!= AgeBracket.Pensioner)
-                .Group(_grouper, _controller).AsObservableCache();
+            _grouped = _source.Connect(p => _grouper(p) != AgeBracket.Pensioner)
+                              .Group(_grouper, _controller).AsObservableCache();
         }
-
 
         [Test]
         public void RegroupRecaluatesGroupings()
@@ -63,7 +62,6 @@ namespace DynamicData.Tests.CacheFixtures
 
             Assert.IsTrue(IsContainedOnlyInOneGroup("P1"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P2"));
-
         }
 
         [Test]
@@ -96,13 +94,10 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.IsTrue(IsContainedIn("P3", AgeBracket.Under20));
             Assert.IsTrue(IsContainedIn("P4", AgeBracket.Adult));
 
-
-
             Assert.IsTrue(IsContainedOnlyInOneGroup("P1"));
             Assert.IsTrue(IsNotContainedAnyWhere("P2"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P3"));
             Assert.IsTrue(IsContainedOnlyInOneGroup("P4"));
-
         }
 
         private bool IsContainedIn(string name, AgeBracket bracket)
@@ -126,6 +121,5 @@ namespace DynamicData.Tests.CacheFixtures
 
             return person.Count == 0;
         }
-
     }
 }

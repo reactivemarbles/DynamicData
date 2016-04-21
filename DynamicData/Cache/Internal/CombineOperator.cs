@@ -1,6 +1,4 @@
-﻿
-
-namespace DynamicData.Internal
+﻿namespace DynamicData.Internal
 {
     /// <summary>
     /// How the multiple streams are combinedL

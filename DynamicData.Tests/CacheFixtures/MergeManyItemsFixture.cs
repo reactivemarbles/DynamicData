@@ -27,7 +27,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             public IObservable<bool> Observable => _changed.AsObservable();
 
-	        public int Id => _id;
+            public int Id => _id;
         }
 
         private ISourceCache<ObjectWithObservable, int> _source;
@@ -49,14 +49,13 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
 
-
             var stream = _source.Connect()
-                .MergeManyItems(o => o.Observable)
-                .Subscribe(o =>
-                {
-                    invoked = true;
-                    Assert.IsTrue(o.Item.Id==1, "Item id should be 1");
-                });
+                                .MergeManyItems(o => o.Observable)
+                                .Subscribe(o =>
+                                {
+                                    invoked = true;
+                                    Assert.IsTrue(o.Item.Id == 1, "Item id should be 1");
+                                });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -73,12 +72,12 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
             var stream = _source.Connect()
-                .MergeManyItems(o => o.Observable)
-                .Subscribe(o =>
-                {
-                    invoked = true;
-                    Assert.IsTrue(o.Item.Id == 1, "Item id should be 1");
-                });
+                                .MergeManyItems(o => o.Observable)
+                                .Subscribe(o =>
+                                {
+                                    invoked = true;
+                                    Assert.IsTrue(o.Item.Id == 1, "Item id should be 1");
+                                });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -95,12 +94,12 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
             var stream = _source.Connect()
-                .MergeManyItems(o => o.Observable)
-                .Subscribe(o =>
-                {
-                    invoked = true;
-                    Assert.IsTrue(o.Item.Id == 1, "Item id should be 1");
-                });
+                                .MergeManyItems(o => o.Observable)
+                                .Subscribe(o =>
+                                {
+                                    invoked = true;
+                                    Assert.IsTrue(o.Item.Id == 1, "Item id should be 1");
+                                });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);

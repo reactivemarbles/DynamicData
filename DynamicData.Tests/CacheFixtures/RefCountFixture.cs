@@ -3,7 +3,6 @@ using DynamicData.Tests.Domain;
 using NUnit.Framework;
 using System;
 
-
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
@@ -15,7 +14,6 @@ namespace DynamicData.Tests.CacheFixtures
         public void MyTestInitialize()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
-
         }
 
         [TearDown]
@@ -23,7 +21,6 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.Dispose();
         }
-
 
         [Test]
         public void ChainIsInvokedOnceForMultipleSubscribers()
@@ -33,10 +30,10 @@ namespace DynamicData.Tests.CacheFixtures
 
             //Some expensive transform (or chain of operations)
             var longChain = _source.Connect()
-                .Transform(p => p)
-                .Do(_ => created++)
-                .Finally(() => disposals++)
-                .RefCount();
+                                   .Transform(p => p)
+                                   .Do(_ => created++)
+                                   .Finally(() => disposals++)
+                                   .RefCount();
 
             var suscriber1 = longChain.Subscribe();
             var suscriber2 = longChain.Subscribe();
@@ -56,23 +53,23 @@ namespace DynamicData.Tests.CacheFixtures
         {
             int created = 0;
             int disposals = 0;
-            
+
             //must have data so transform is invoked
             _source.AddOrUpdate(new Person("Name", 10));
 
             //Some expensive transform (or chain of operations)
             var longChain = _source.Connect()
-                .Transform(p => p)
-                .Do(_ => created++)
-                .Finally(() => disposals++)
-                .RefCount();
+                                   .Transform(p => p)
+                                   .Do(_ => created++)
+                                   .Finally(() => disposals++)
+                                   .RefCount();
 
             var suscriber = longChain.Subscribe();
             suscriber.Dispose();
 
             suscriber = longChain.Subscribe();
             suscriber.Dispose();
-            
+
             Assert.AreEqual(2, created);
             Assert.AreEqual(2, disposals);
         }

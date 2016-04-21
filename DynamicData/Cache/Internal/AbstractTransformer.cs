@@ -15,7 +15,7 @@ namespace DynamicData.Internal
             _updater = new IntermediateUpdater<TransformedItemContainer, TKey>(new Cache<TransformedItemContainer, TKey>());
             _exceptionCallback = exceptionCallback;
         }
-        
+
         public IChangeSet<TDestination, TKey> Transform(IChangeSet<TSource, TKey> updates, Func<TSource, TDestination> transformFactory)
         {
             return DoTransform(updates, update => Transform(update, change => transformFactory(change.Current)));
@@ -23,15 +23,15 @@ namespace DynamicData.Internal
 
         public IChangeSet<TDestination, TKey> Transform(IChangeSet<TSource, TKey> updates, Func<TSource, TKey, TDestination> transformFactory)
         {
-            return DoTransform(updates, update => Transform(update, change => transformFactory(change.Current,change.Key)));
+            return DoTransform(updates, update => Transform(update, change => transformFactory(change.Current, change.Key)));
         }
 
-        public IChangeSet<TDestination, TKey> ForceTransform(Func<TSource,  bool> shouldForce, Func<TSource,  TDestination> transformFactory)
+        public IChangeSet<TDestination, TKey> ForceTransform(Func<TSource, bool> shouldForce, Func<TSource, TDestination> transformFactory)
         {
             var toTransform = _updater.KeyValues
-                .Select(x => new KeyValuePair<TKey, TSource>(x.Key, x.Value.Source))
-                .Where(kvp => shouldForce(kvp.Value))
-                .ToArray();
+                                      .Select(x => new KeyValuePair<TKey, TSource>(x.Key, x.Value.Source))
+                                      .Where(kvp => shouldForce(kvp.Value))
+                                      .ToArray();
 
             return DoTransform(toTransform, kvp => Transform(kvp, x => transformFactory(x.Value)));
         }
@@ -39,11 +39,11 @@ namespace DynamicData.Internal
         public IChangeSet<TDestination, TKey> ForceTransform(Func<TSource, TKey, bool> shouldForce, Func<TSource, TKey, TDestination> transformFactory)
         {
             var toTransform = _updater.KeyValues
-                .Select(x=> new KeyValuePair<TKey,TSource>(x.Key,x.Value.Source))
-                .Where(kvp => shouldForce(kvp.Value, kvp.Key))
-                .ToArray();
+                                      .Select(x => new KeyValuePair<TKey, TSource>(x.Key, x.Value.Source))
+                                      .Where(kvp => shouldForce(kvp.Value, kvp.Key))
+                                      .ToArray();
 
-            return DoTransform(toTransform, kvp => Transform(kvp, x => transformFactory(x.Value,x.Key)));
+            return DoTransform(toTransform, kvp => Transform(kvp, x => transformFactory(x.Value, x.Key)));
         }
 
         private Optional<TransformResult> Transform(Change<TSource, TKey> change, Func<Change<TSource, TKey>, TDestination> transformFactory)
@@ -94,7 +94,7 @@ namespace DynamicData.Internal
         }
 
         protected abstract IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, Optional<TransformResult>> factory);
-        
+
         protected abstract IChangeSet<TDestination, TKey> DoTransform(IEnumerable<KeyValuePair<TKey, TSource>> items, Func<KeyValuePair<TKey, TSource>, TransformResult> factory);
 
         protected IChangeSet<TDestination, TKey> ProcessUpdates(TransformResult[] transformedItems)
@@ -103,7 +103,7 @@ namespace DynamicData.Internal
             var errors = transformedItems.Where(t => !t.Success).ToArray();
             if (errors.Any())
                 errors.ForEach(t => _exceptionCallback(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
-     
+
             foreach (var result in transformedItems)
             {
                 if (!result.Success)
@@ -129,11 +129,11 @@ namespace DynamicData.Internal
 
             var changes = _updater.AsChangeSet();
             var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
-                   change.Key,
-                   change.Current.Destination,
-                   change.Previous.Convert(x=>x.Destination),
-                   change.CurrentIndex,
-                   change.PreviousIndex));
+                                                                                      change.Key,
+                                                                                      change.Current.Destination,
+                                                                                      change.Previous.Convert(x => x.Destination),
+                                                                                      change.CurrentIndex,
+                                                                                      change.PreviousIndex));
 
             return new ChangeSet<TDestination, TKey>(transformed);
         }
@@ -154,11 +154,11 @@ namespace DynamicData.Internal
 
         protected class TransformResult
         {
-            public Change<TSource, TKey> Change { get;  }
-            public Exception Error { get;  }
+            public Change<TSource, TKey> Change { get; }
+            public Exception Error { get; }
             public bool Success { get; }
 
-            public TransformedItemContainer Container { get;  }
+            public TransformedItemContainer Container { get; }
 
             public TransformResult(Change<TSource, TKey> change, TransformedItemContainer container)
             {
@@ -166,7 +166,7 @@ namespace DynamicData.Internal
                 Container = container;
                 Success = true;
             }
-            
+
             public TransformResult(Change<TSource, TKey> change, Exception error)
             {
                 Change = change;

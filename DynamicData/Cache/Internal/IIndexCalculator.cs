@@ -24,7 +24,6 @@ namespace DynamicData.Internal
         /// <returns></returns>
         IChangeSet<TObject, TKey> ChangeComparer(KeyValueComparer<TObject, TKey> comparer);
 
-
         /// <summary>
         /// Reorders the current list.  Required when the list is sorted on mutable values
         /// </summary>
@@ -37,11 +36,11 @@ namespace DynamicData.Internal
         /// <value>
         /// The comparer.
         /// </value>
-        IComparer<KeyValuePair<TKey,TObject>> Comparer { get; }
+        IComparer<KeyValuePair<TKey, TObject>> Comparer { get; }
 
         /// <summary>
         /// Gets the list.
         /// </summary>
-        List<KeyValuePair<TKey,TObject>> List { get; }
+        List<KeyValuePair<TKey, TObject>> List { get; }
     }
 }

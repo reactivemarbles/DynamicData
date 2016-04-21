@@ -126,15 +126,13 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(5, _results.Data.Count);
             CollectionAssert.AreEquivalent(result, _results.Data.Items);
 
-
             _source.RemoveAt(0);
             result = Enumerable.Range(1, 5).Union(Enumerable.Range(6, 5));
             Assert.AreEqual(10, _results.Data.Count);
             CollectionAssert.AreEquivalent(result, _results.Data.Items);
 
-
             _source.Add(_source1.Connect());
-             result = Enumerable.Range(6, 5);
+            result = Enumerable.Range(6, 5);
             Assert.AreEqual(5, _results.Data.Count);
             CollectionAssert.AreEquivalent(result, _results.Data.Items);
         }

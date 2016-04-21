@@ -1,6 +1,6 @@
 namespace DynamicData
 {
-     /// <summary>
+    /// <summary>
     /// A keyed value
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>

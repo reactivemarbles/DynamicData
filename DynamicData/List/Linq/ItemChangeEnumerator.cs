@@ -1,11 +1,8 @@
-
 using System.Collections;
 using System.Collections.Generic;
 
 namespace DynamicData.Linq
 {
-
-
     internal class ItemChangeEnumerator<T> : IEnumerable<ItemChange<T>>
     {
         private readonly IChangeSet<T> _changeSet;
@@ -24,16 +21,15 @@ namespace DynamicData.Linq
                 if (change.Type == ChangeType.Item)
                 {
                     lastKnownIndex = change.Item.CurrentIndex;
-                    yield return new ItemChange<T>(change.Reason, change.Item.Current, change.Item.Previous, change.Item.CurrentIndex,change.Item.PreviousIndex);
+                    yield return new ItemChange<T>(change.Reason, change.Item.Current, change.Item.Previous, change.Item.CurrentIndex, change.Item.PreviousIndex);
                 }
                 else
                 {
                     int index;
                     index = change.Range.Index == -1 ? lastKnownIndex : change.Range.Index;
-                    
+
                     foreach (var item in change.Range)
                     {
-                       
                         switch (change.Reason)
                         {
                             case ListChangeReason.AddRange:
@@ -47,12 +43,10 @@ namespace DynamicData.Linq
                                 break;
                             default:
                                 yield break;
-
                         }
                         index++;
                         lastKnownIndex = index;
                     }
-                   
                 }
             }
         }

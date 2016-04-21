@@ -16,7 +16,7 @@ namespace DynamicData
         /// <value>
         /// The comparer.
         /// </value>
-        IComparer<KeyValuePair<TKey,TObject>> Comparer { get; }
+        IComparer<KeyValuePair<TKey, TObject>> Comparer { get; }
 
         /// <summary>
         /// The count of items.
@@ -40,7 +40,7 @@ namespace DynamicData
         /// <value>
         /// The optimisations.
         /// </value>
-         SortOptimisations Optimisations { get; }
+        SortOptimisations Optimisations { get; }
 
         /// <summary>
         /// Gets the element at the specified index in the read-only list.
@@ -51,6 +51,6 @@ namespace DynamicData
         /// </returns>
         /// <param name="index">The zero-based index of the element to get. </param>
         /// <returns></returns>
-        KeyValuePair<TKey,TObject> this[int index] { get; }
+        KeyValuePair<TKey, TObject> this[int index] { get; }
     }
 }

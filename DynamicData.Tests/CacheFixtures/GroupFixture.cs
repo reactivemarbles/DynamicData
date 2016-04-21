@@ -12,7 +12,7 @@ namespace DynamicData.Tests.CacheFixtures
         [SetUp]
         public void Initialise()
         {
-            _source =new SourceCache<Person, string>(p=>p.Name);
+            _source = new SourceCache<Person, string>(p => p.Name);
         }
 
         [TearDown]
@@ -20,8 +20,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.Dispose();
         }
-        private ISourceCache<Person, string> _source;
 
+        private ISourceCache<Person, string> _source;
 
         [Test]
         public void Add()
@@ -30,28 +30,23 @@ namespace DynamicData.Tests.CacheFixtures
             IDisposable subscriber = _source.Connect().Group(p => p.Age)
                                             .Subscribe(
                                                 updates =>
-                                                    {
-                                                        Assert.AreEqual(1, updates.Count, "Should be 1 add");
-                                                        Assert.AreEqual(ChangeReason.Add, updates.First().Reason);
-                                                        called = true;
-                                                     
-                                                    });
+                                                {
+                                                    Assert.AreEqual(1, updates.Count, "Should be 1 add");
+                                                    Assert.AreEqual(ChangeReason.Add, updates.First().Reason);
+                                                    called = true;
+                                                });
             _source.AddOrUpdate(new Person("Person1", 20));
 
             subscriber.Dispose();
             Assert.IsTrue(called, "No update has been invoked");
         }
 
-
         [Test]
         public void UpdateNotPossible()
         {
             bool called = false;
             IDisposable subscriber = _source.Connect().Group(p => p.Age).Skip(1)
-                                            .Subscribe(updates =>
-                                                {
-                                                    called = true;
-                                                });
+                                            .Subscribe(updates => { called = true; });
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.AddOrUpdate(new Person("Person1", 20));
             subscriber.Dispose();
@@ -63,10 +58,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool called = false;
             IDisposable subscriber = _source.Connect().Group(p => p.Age)
-                                            .Subscribe(updates =>
-                                            {
-                                                called = true;
-                                            });
+                                            .Subscribe(updates => { called = true; });
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.AddOrUpdate(new Person("Person1", 21));
             subscriber.Dispose();
@@ -85,14 +77,12 @@ namespace DynamicData.Tests.CacheFixtures
                                                     Assert.AreEqual(1, updates.Count, "Should be 1 add");
                                                     Assert.AreEqual(ChangeReason.Remove, updates.First().Reason);
                                                     called = true;
-                                  
                                                 });
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.Remove(new Person("Person1", 20));
             subscriber.Dispose();
             Assert.IsTrue(called, "Notification should have fired");
         }
-
 
         [Test]
         public void FiresCompletedWhenDisposed()
@@ -101,11 +91,10 @@ namespace DynamicData.Tests.CacheFixtures
             IDisposable subscriber = _source.Connect().Group(p => p.Age)
                                             .Subscribe(updates => { },
                                                        () => { completed = true; });
-      _source.Dispose();
+            _source.Dispose();
             subscriber.Dispose();
             Assert.IsTrue(completed, "Completed has not been invoked");
         }
-
 
         [Test]
         public void FiresManyValueForBatchOfDifferentAdds()
@@ -114,22 +103,21 @@ namespace DynamicData.Tests.CacheFixtures
             IDisposable subscriber = _source.Connect().Group(p => p.Age)
                                             .Subscribe(
                                                 updates =>
+                                                {
+                                                    Assert.AreEqual(4, updates.Count, "Should be 4 adds");
+                                                    foreach (var update in updates)
                                                     {
-                                           
-                                                        Assert.AreEqual(4, updates.Count, "Should be 4 adds");
-                                                        foreach (var update in updates)
-                                                        {
-                                                            Assert.AreEqual(ChangeReason.Add, update.Reason);
-                                                        }
-                                                        called = true;
-                                                    });
+                                                        Assert.AreEqual(ChangeReason.Add, update.Reason);
+                                                    }
+                                                    called = true;
+                                                });
             _source.Edit(updater =>
-                {
-                    updater.AddOrUpdate(new Person("Person1", 20));
-                    updater.AddOrUpdate(new Person("Person2", 21));
-                    updater.AddOrUpdate(new Person("Person3", 22));
-                    updater.AddOrUpdate(new Person("Person4", 23));
-                });
+            {
+                updater.AddOrUpdate(new Person("Person1", 20));
+                updater.AddOrUpdate(new Person("Person2", 21));
+                updater.AddOrUpdate(new Person("Person3", 22));
+                updater.AddOrUpdate(new Person("Person4", 23));
+            });
 
             subscriber.Dispose();
             Assert.IsTrue(called, "No update has been invoked");
@@ -142,19 +130,18 @@ namespace DynamicData.Tests.CacheFixtures
             IDisposable subscriber = _source.Connect().Group(p => p.Age)
                                             .Subscribe(
                                                 updates =>
-                                                    {
-                                                        Assert.AreEqual(1, updates.Count, "Should be 1 add");
-                                                        Assert.AreEqual(ChangeReason.Add, updates.First().Reason);
-                                                        called = true;
-                                         
-                                                    });
+                                                {
+                                                    Assert.AreEqual(1, updates.Count, "Should be 1 add");
+                                                    Assert.AreEqual(ChangeReason.Add, updates.First().Reason);
+                                                    called = true;
+                                                });
             _source.Edit(updater =>
-                {
-                    updater.AddOrUpdate(new Person("Person1", 20));
-                    updater.AddOrUpdate(new Person("Person2", 20));
-                    updater.AddOrUpdate(new Person("Person3", 20));
-                    updater.AddOrUpdate(new Person("Person4", 20));
-                });
+            {
+                updater.AddOrUpdate(new Person("Person1", 20));
+                updater.AddOrUpdate(new Person("Person2", 20));
+                updater.AddOrUpdate(new Person("Person3", 20));
+                updater.AddOrUpdate(new Person("Person4", 20));
+            });
 
             subscriber.Dispose();
             Assert.IsTrue(called, "No update has been invoked");
@@ -168,21 +155,20 @@ namespace DynamicData.Tests.CacheFixtures
             IDisposable subscriber = _source.Connect().Group(p => p.Age).Skip(1)
                                             .Subscribe(
                                                 updates =>
+                                                {
+                                                    Assert.AreEqual(1, updates.Count, "Should be 1 update");
+                                                    foreach (var update in updates)
                                                     {
-                                                        Assert.AreEqual(1, updates.Count, "Should be 1 update");
-                                                        foreach (var update in updates)
-                                                        {
-                                                            Assert.AreEqual(ChangeReason.Remove, update.Reason);
-                                                        }
-                                                        called = true;
-      
-                                                    });
+                                                        Assert.AreEqual(ChangeReason.Remove, update.Reason);
+                                                    }
+                                                    called = true;
+                                                });
             var person = new Person("Person1", 20);
 
-            _source.AddOrUpdate(person); 
+            _source.AddOrUpdate(person);
 
             //remove
-            _source.Remove(person); 
+            _source.Remove(person);
 
             subscriber.Dispose();
             Assert.IsTrue(called, "No update has been invoked");
@@ -193,7 +179,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool called = false;
             var subscriber = _source.Connect().Group(p => p.Age)
-                                            .Subscribe(updates => { called = true; });
+                                    .Subscribe(updates => { called = true; });
             _source.AddOrUpdate(new Person("Person1", 20));
             subscriber.Dispose();
             Assert.IsTrue(called, "Subscription has not been invoked");

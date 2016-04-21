@@ -16,7 +16,6 @@ namespace DynamicData.Tests.ListFixtures
         private IDisposable _sizeLimiter;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-
         [SetUp]
         public void Initialise()
         {
@@ -24,8 +23,8 @@ namespace DynamicData.Tests.ListFixtures
             _source = new SourceList<Person>();
             _sizeLimiter = _source.LimitSizeTo(10, _scheduler).Subscribe();
             _results = _source.Connect()
-                .Sort(SortExpressionComparer<Person>.Ascending(p=>p.Name))
-                .AsAggregator();
+                              .Sort(SortExpressionComparer<Person>.Ascending(p => p.Name))
+                              .AsAggregator();
         }
 
         [TearDown]
@@ -36,13 +35,11 @@ namespace DynamicData.Tests.ListFixtures
             _results.Dispose();
         }
 
-
         [Test]
         public void AddLessThanLimit()
         {
             var person = _generator.Take(1).First();
             _source.Add(person);
-
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
@@ -51,14 +48,12 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
 
-
         [Test]
         public void AddMoreThanLimit()
         {
             var people = _generator.Take(100).OrderBy(p => p.Name).ToArray();
             _source.AddRange(people);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
-
 
             _source.Dispose();
             Assert.AreEqual(10, _results.Data.Count, "Should be 10 items in the cache");
@@ -103,8 +98,8 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void HandleError()
         {
-            Exception exception=null;
-            _source.Edit(innerList=> innerList.RemoveAt(1),ex=> exception=ex);
+            Exception exception = null;
+            _source.Edit(innerList => innerList.RemoveAt(1), ex => exception = ex);
             Assert.IsNotNull(exception);
         }
 
@@ -117,22 +112,18 @@ namespace DynamicData.Tests.ListFixtures
             new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0);
         }
 
-
         //[Test]
         //public void OnCompleteIsInvokedWhenSourceisDisposed()
         //{
         //    bool completed = false;
 
-
         //    var subscriber = _source.LimitSizeTo(10)
         //        .FinallySafe(() => completed = true)
         //        .Subscribe();
-            
+
         //    _source.Dispose();
         //    _scheduler.Start();
         //    Assert.IsTrue(completed, "Completed has not been called");
         //}
-
-
     }
 }

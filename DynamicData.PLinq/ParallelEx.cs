@@ -11,13 +11,11 @@ namespace DynamicData.PLinq
     {
         #region Parallelisation
 
-
         internal static bool ShouldParallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
         {
             return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered)
                    && (option.Threshold >= 0 && source.Count >= option.Threshold);
         }
-
 
         internal static ParallelQuery<Change<TObject, TKey>> Parallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
         {
@@ -33,14 +31,13 @@ namespace DynamicData.PLinq
             }
         }
 
-        internal static bool ShouldParallelise<TObject, TKey>(this IEnumerable<KeyValuePair<TKey,TObject>> source, ParallelisationOptions option)
+        internal static bool ShouldParallelise<TObject, TKey>(this IEnumerable<KeyValuePair<TKey, TObject>> source, ParallelisationOptions option)
         {
             return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered)
                    && (option.Threshold >= 0 && source.Skip(option.Threshold).Any());
         }
 
-
-        internal static ParallelQuery<KeyValuePair<TKey,TObject>> Parallelise<TObject, TKey>(this IEnumerable<KeyValuePair<TKey,TObject>> source, ParallelisationOptions option)
+        internal static ParallelQuery<KeyValuePair<TKey, TObject>> Parallelise<TObject, TKey>(this IEnumerable<KeyValuePair<TKey, TObject>> source, ParallelisationOptions option)
         {
             switch (option.Type)
             {
@@ -54,33 +51,29 @@ namespace DynamicData.PLinq
             }
         }
 
-        internal static IEnumerable<T> Parallelise<T>(this   IEnumerable<T> source, ParallelisationOptions option)
+        internal static IEnumerable<T> Parallelise<T>(this IEnumerable<T> source, ParallelisationOptions option)
         {
             switch (option.Type)
             {
-
                 case ParallelType.Parallelise:
+                {
+                    var parallelise = source as T[] ?? source.ToArray();
+                    if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)
                     {
-                        var parallelise = source as T[] ?? source.ToArray();
-                        if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)
-                        {
-                            return parallelise.AsParallel();
-
-                        }
-                        return parallelise;
+                        return parallelise.AsParallel();
                     }
+                    return parallelise;
+                }
 
                 case ParallelType.Ordered:
+                {
+                    var parallelise = source as T[] ?? source.ToArray();
+                    if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)
                     {
-                        var parallelise = source as T[] ?? source.ToArray();
-                        if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)
-                        {
-                            return parallelise.AsParallel().AsOrdered();
-
-                        }
-                        return parallelise;
-
+                        return parallelise.AsParallel().AsOrdered();
                     }
+                    return parallelise;
+                }
                 default:
                     return source;
             }
@@ -88,5 +81,4 @@ namespace DynamicData.PLinq
 
         #endregion
     }
-
 }

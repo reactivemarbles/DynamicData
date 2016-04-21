@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
-   [TestFixture()]
+    [TestFixture()]
     class TimeExpiryFixture
     {
         private ISourceCache<Person, string> _cache;
@@ -22,9 +22,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _scheduler = new TestScheduler();
 
-            _cache = new SourceCache<Person, string>(p=>p.Key);
+            _cache = new SourceCache<Person, string>(p => p.Key);
             _results = new ChangeSetAggregator<Person, string>(_cache.Connect());
-            _remover = _cache.ExpireAfter(p=>TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
+            _remover = _cache.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
         }
 
         [TearDown]
@@ -34,8 +34,6 @@ namespace DynamicData.Tests.CacheFixtures
             _results.Dispose();
             _remover.Dispose();
             _cache.Dispose();
-
-
         }
 
         [Test()]
@@ -55,7 +53,7 @@ namespace DynamicData.Tests.CacheFixtures
             Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
             _cache.AddOrUpdate(items);
 
-            var xxx = _cache.ExpireAfter(removeFunc,_scheduler).Subscribe();
+            var xxx = _cache.ExpireAfter(removeFunc, _scheduler).Subscribe();
             _scheduler.AdvanceBy(TimeSpan.FromSeconds(5).Ticks);
 
             _scheduler.AdvanceBy(TimeSpan.FromSeconds(5).Ticks);
@@ -66,8 +64,8 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void ItemAddedIsExpired()
         {
-            _cache.AddOrUpdate(new Person("Name1",10));
-            
+            _cache.AddOrUpdate(new Person("Name1", 10));
+
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
@@ -75,16 +73,14 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Messages[1].Removes, "Should be 1 removes in the second update");
         }
 
-
         [Test]
         public void ExpireIsCancelledWhenUpdated()
         {
             _cache.Edit(updater =>
-                               {
-                                   updater.AddOrUpdate(new Person("Name1", 20));
-                                   updater.AddOrUpdate(new Person("Name1", 21));
-                               });
-
+            {
+                updater.AddOrUpdate(new Person("Name1", 20));
+                updater.AddOrUpdate(new Person("Name1", 21));
+            });
 
             _scheduler.AdvanceBy(TimeSpan.FromSeconds(150).Ticks);
 
@@ -103,12 +99,11 @@ namespace DynamicData.Tests.CacheFixtures
 
             _cache.AddOrUpdate(items);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
-            
+
             Assert.AreEqual(0, _results.Data.Count, "Should be no data in the cache");
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(100, _results.Messages[0].Adds, "Should be 100 adds in the first message");
             Assert.AreEqual(100, _results.Messages[1].Removes, "Should be 100 removes in the second message");
         }
     }
-
 }

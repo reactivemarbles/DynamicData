@@ -8,7 +8,7 @@ namespace DynamicData.Controllers
     /// <summary>
     /// Dynamic page controller
     /// </summary>
-    public sealed class PageController: IDisposable
+    public sealed class PageController : IDisposable
     {
         private readonly ISubject<IPageRequest> _subject = new ReplaySubject<IPageRequest>(1);
 
@@ -17,7 +17,7 @@ namespace DynamicData.Controllers
         /// </summary>
         public PageController()
         {
-        //    OnNext(PageRequest.Default);
+            //    OnNext(PageRequest.Default);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace DynamicData.Controllers
         /// </value>
         public IObservable<IPageRequest> Changed => _subject.AsObservable();
 
-	    /// <summary>
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()

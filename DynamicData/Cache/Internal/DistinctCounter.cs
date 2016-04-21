@@ -4,7 +4,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-
     internal sealed class DistinctCounter<TObject, TKey, TValue>
     {
         private readonly Func<TObject, TValue> _valueSelector;
@@ -22,12 +21,12 @@ namespace DynamicData.Internal
             var result = new List<Change<TValue, TValue>>();
 
             Action<TValue> addAction = value => _valueCounters.Lookup(value)
-                .IfHasValue(count => _valueCounters[value] = count + 1)
-                .Else(() =>
-                {
-                    _valueCounters[value] = 1;
-                    result.Add(new Change<TValue, TValue>(ChangeReason.Add, value, value));
-                });
+                                                              .IfHasValue(count => _valueCounters[value] = count + 1)
+                                                              .Else(() =>
+                                                              {
+                                                                  _valueCounters[value] = 1;
+                                                                  result.Add(new Change<TValue, TValue>(ChangeReason.Add, value, value));
+                                                              });
 
             Action<TValue> removeAction = value =>
             {
@@ -44,7 +43,7 @@ namespace DynamicData.Internal
                 result.Add(new Change<TValue, TValue>(ChangeReason.Remove, value, value));
             };
 
-            updates.ForEach(change =>
+            foreach(var change in updates)
             {
                 var key = change.Key;
                 switch (change.Reason)
@@ -61,7 +60,7 @@ namespace DynamicData.Internal
                     {
                         var value = _valueSelector(change.Current);
                         var previous = _itemCache[key];
-                        if (value.Equals(previous)) return;
+                        if (value.Equals(previous)) return new DistinctChangeSet<TValue>(result);
 
                         removeAction(previous);
                         addAction(value);
@@ -76,7 +75,7 @@ namespace DynamicData.Internal
                         break;
                     }
                 }
-            });
+            }
             return new DistinctChangeSet<TValue>(result);
         }
     }

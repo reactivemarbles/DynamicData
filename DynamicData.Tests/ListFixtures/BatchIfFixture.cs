@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-	[TestFixture]
+    [TestFixture]
     public class BatchIfFixture
     {
         private ISourceList<Person> _source;
@@ -15,7 +15,6 @@ namespace DynamicData.Tests.ListFixtures
 
         private ISubject<bool> _pausingSubject = new Subject<bool>();
 
-
         [SetUp]
         public void MyTestInitialize()
         {
@@ -23,7 +22,6 @@ namespace DynamicData.Tests.ListFixtures
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
             _results = _source.Connect().BufferIf(_pausingSubject, _scheduler).AsAggregator();
-
         }
 
         [TearDown]
@@ -40,18 +38,16 @@ namespace DynamicData.Tests.ListFixtures
             //advance otherwise nothing happens
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
+            _source.Add(new Person("A", 1));
 
-			_source.Add(new Person("A", 1));
-
-			//go forward an arbitary amount of time
-			_scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+            //go forward an arbitary amount of time
+            _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
             Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
         }
 
         [Test]
         public void ResultsWillBeReceivedIfNotPaused()
         {
-
             _source.Add(new Person("A", 1));
 
             //go forward an arbitary amount of time
@@ -65,7 +61,6 @@ namespace DynamicData.Tests.ListFixtures
             _pausingSubject.OnNext(true);
             ////advance otherwise nothing happens
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-
 
             _source.Add(new Person("A", 1));
 

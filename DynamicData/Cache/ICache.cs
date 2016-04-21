@@ -1,4 +1,3 @@
-
 namespace DynamicData
 {
     internal interface ICache<TObject, TKey> : IQuery<TObject, TKey>

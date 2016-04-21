@@ -10,16 +10,17 @@ namespace DynamicData.Tests.CacheFixtures
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<PersonWithGender, string> _results;
+
         private readonly Func<Person, PersonWithGender> _transformFactory = p =>
-                                                                                {
-                                                                                    string gender = p.Age % 2 == 0 ? "M" : "F";
-                                                                                    return new PersonWithGender(p, gender);
-                                                                                };
+        {
+            string gender = p.Age % 2 == 0 ? "M" : "F";
+            return new PersonWithGender(p, gender);
+        };
+
         [SetUp]
         public void Initialise()
         {
-
-            _source =new SourceCache<Person, string>(p=>p.Name);
+            _source = new SourceCache<Person, string>(p => p.Name);
 
             var pTransform = _source.Connect().Transform(_transformFactory);
             _results = new ChangeSetAggregator<PersonWithGender, string>(pTransform);
@@ -42,7 +43,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
             Assert.AreEqual(_transformFactory(person), _results.Data.Items.First(), "Should be same person");
         }
-
 
         [Test]
         public void Remove()
@@ -85,17 +85,15 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(100, _results.Messages[0].Adds, "Should return 100 adds");
 
             var transformed = people.Select(_transformFactory).ToArray();
-            
-            CollectionAssert.AreEqual(transformed, _results.Data.Items.OrderBy(p=>p.Age), "Incorrect transform result");
-        }
 
+            CollectionAssert.AreEqual(transformed, _results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+        }
 
         [Test]
         public void SameKeyChanges()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name", i)).ToArray();
             _source.AddOrUpdate(people);
-
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Messages[0].Adds, "Should return 1 adds");
@@ -121,9 +119,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(100, _results.Messages[0].Adds, "Should be 80 addes");
             Assert.AreEqual(100, _results.Messages[1].Removes, "Should be 80 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
-
         }
-
-
     }
 }

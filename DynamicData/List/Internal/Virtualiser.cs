@@ -15,7 +15,7 @@ namespace DynamicData.Internal
         private readonly List<T> _all = new List<T>();
         private readonly ChangeAwareList<T> _virtualised = new ChangeAwareList<T>();
 
-        private IVirtualRequest _parameters = new VirtualRequest(0,25);
+        private IVirtualRequest _parameters = new VirtualRequest(0, 25);
 
         public Virtualiser([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IVirtualRequest> requests)
         {
@@ -33,11 +33,11 @@ namespace DynamicData.Internal
                 .Select(Virtualise);
 
             var datachanged = _source
-                 .Synchronize(locker)
+                .Synchronize(locker)
                 .Select(Virtualise);
 
             return request.Merge(datachanged)
-                .Where(changes => changes != null && changes.Count != 0);
+                          .Where(changes => changes != null && changes.Count != 0);
         }
 
         private IChangeSet<T> Virtualise(IVirtualRequest request)
@@ -49,16 +49,16 @@ namespace DynamicData.Internal
             return Virtualise();
         }
 
-        private IChangeSet<T> Virtualise(IChangeSet<T> changeset=null)
+        private IChangeSet<T> Virtualise(IChangeSet<T> changeset = null)
         {
             if (changeset != null) _all.Clone(changeset);
 
             var previous = _virtualised;
 
             var current = _all.Skip(_parameters.StartIndex)
-                .Take(_parameters.Size)
-                .ToList();
-            
+                              .Take(_parameters.Size)
+                              .ToList();
+
             var adds = current.Except(previous);
             var removes = previous.Except(current);
 
@@ -67,13 +67,12 @@ namespace DynamicData.Internal
             adds.ForEach(t =>
             {
                 var index = current.IndexOf(t);
-                _virtualised.Insert(index,t);
+                _virtualised.Insert(index, t);
             });
 
-
             var moves = changeset.EmptyIfNull()
-                            .Where(change => change.Reason == ListChangeReason.Moved 
-                                    && change.MovedWithinRange(_parameters.StartIndex, _parameters.StartIndex + _parameters.Size));
+                                 .Where(change => change.Reason == ListChangeReason.Moved
+                                                  && change.MovedWithinRange(_parameters.StartIndex, _parameters.StartIndex + _parameters.Size));
 
             foreach (var change in moves)
             {
@@ -81,9 +80,7 @@ namespace DynamicData.Internal
                 var currentIndex = change.Item.CurrentIndex - _parameters.StartIndex;
                 var previousIndex = change.Item.PreviousIndex - _parameters.StartIndex;
                 _virtualised.Move(previousIndex, currentIndex);
-
             }
-
 
             //find replaces [Is this ever the case that it can be reached]
             for (var i = 0; i < current.Count; i++)
@@ -95,12 +92,9 @@ namespace DynamicData.Internal
                     continue;
 
                 var index = _virtualised.IndexOf(currentItem);
-                _virtualised.Move(i,index);
-
+                _virtualised.Move(i, index);
             }
             return _virtualised.CaptureChanges();
-
         }
     }
-
 }

@@ -8,9 +8,7 @@ namespace DynamicData.Tests.AggregationTests
     [TestFixture]
     public class StdDevFixture
     {
-
         //TODO: TEST ACURACY
-
 
         [TestCase(100)]
         [TestCase(1000)]
@@ -19,7 +17,6 @@ namespace DynamicData.Tests.AggregationTests
         [Explicit]
         public void CachePerformance(int n)
         {
-
             /*
                 Tricks to make it fast = 
 
@@ -38,9 +35,8 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                .StdDev(i => i)
-                .Subscribe(result => calculated = result);
-
+                                 .StdDev(i => i)
+                                 .Subscribe(result => calculated = result);
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
             for (int i = 1; i < n; i++)
@@ -56,9 +52,7 @@ namespace DynamicData.Tests.AggregationTests
 
             Console.WriteLine("Total items: {0}. Value = {1}", n, calculated);
             Console.WriteLine("Cache: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
-
         }
-
 
         [TestCase(100)]
         [TestCase(1000)]
@@ -73,9 +67,9 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = list.Connect()
-                .Sum(i => i)
-                .Subscribe(result => calculated = result);
-            
+                                .Sum(i => i)
+                                .Subscribe(result => calculated = result);
+
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
             for (int i = 1; i < n; i++)
                 list.Add(i);
@@ -89,8 +83,6 @@ namespace DynamicData.Tests.AggregationTests
 
             Console.WriteLine("Total items: {0}. Value = {1}", n, calculated);
             Console.WriteLine("List: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
-
         }
-
     }
 }

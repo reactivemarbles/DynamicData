@@ -7,7 +7,6 @@ namespace DynamicData.Internal
 {
     internal class Transformer<TDestination, TSource, TKey> : AbstractTransformer<TDestination, TSource, TKey>
     {
-
         public Transformer(Action<Error<TSource, TKey>> exceptionCallback)
             : base(exceptionCallback)
         {

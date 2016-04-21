@@ -1,5 +1,4 @@
-﻿
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using DynamicData.Binding;
@@ -9,19 +8,18 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Binding
 {
-	[TestFixture]
+    [TestFixture]
     public class ObservableCollectionToObservableChangeSetFixture
     {
         private TestObservableCollection<Person> _collection;
         private ChangeSetAggregator<Person, string> _results;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        
 
         [SetUp]
         public void SetUp()
         {
             _collection = new TestObservableCollection<Person>();
-            _results = _collection.ToObservableChangeSet(p=>p.Name).AsAggregator();
+            _results = _collection.ToObservableChangeSet(p => p.Name).AsAggregator();
         }
 
         [TearDown]
@@ -86,13 +84,10 @@ namespace DynamicData.Tests.Binding
 
         private class TestObservableCollection<T> : ObservableCollection<T>
         {
-
-
             public void Reset()
             {
                 this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
-
     }
 }

@@ -47,7 +47,7 @@ namespace DynamicData.Tests.Kernal
         }
 
         [Test]
-        [ExpectedException(typeof (ArgumentException))]
+        [ExpectedException(typeof(ArgumentException))]
         public void UpdateWillThrowIfNoPreviousValueIsSupplied()
         {
             var current = new Person("Person", 10);

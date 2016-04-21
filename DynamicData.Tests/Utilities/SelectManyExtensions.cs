@@ -16,12 +16,12 @@ namespace DynamicData.Tests.Utilities
 
             T[] selectManyRecursive = source as T[] ?? source.ToArray();
             return !selectManyRecursive.Any()
-                       ? selectManyRecursive
-                       : selectManyRecursive.Concat(
-                           selectManyRecursive
-                               .SelectMany(i => selector(i).EmptyIfNull())
-                               .SelectManyRecursive(selector)
-                             );
+                ? selectManyRecursive
+                : selectManyRecursive.Concat(
+                    selectManyRecursive
+                        .SelectMany(i => selector(i).EmptyIfNull())
+                        .SelectManyRecursive(selector)
+                    );
         }
 
         public static IEnumerable<TSource> RecursiveSelect<TSource>(this IEnumerable<TSource> source,

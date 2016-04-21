@@ -1,13 +1,12 @@
 ﻿using System;
+
 namespace DynamicData.Tests
 {
-
-	/// <summary>
-	/// Test extensions
-	/// </summary>
-	public static class ListTextEx
+    /// <summary>
+    /// Test extensions
+    /// </summary>
+    public static class ListTextEx
     {
-
         /// <summary>
         /// Aggregates all events and statistics for a changeset to help assertions when testing
         /// </summary>
@@ -17,7 +16,5 @@ namespace DynamicData.Tests
         {
             return new ChangeSetAggregator<T>(source);
         }
-
     }
-
 }

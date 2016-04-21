@@ -16,8 +16,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
             _observable = _source.Connect()
-                .TrueForAll(o => o.Observable.StartWith(o.Value), (obj, invoked) => invoked);
-
+                                 .TrueForAll(o => o.Observable.StartWith(o.Value), (obj, invoked) => invoked);
         }
 
         [TearDown]
@@ -30,17 +29,14 @@ namespace DynamicData.Tests.CacheFixtures
         public void InitialItemReturnsFalseWhenObservaleHasNoValue()
         {
             bool? valuereturned = null;
-            var subscribed = _observable.Subscribe(result =>
-            {
-                valuereturned = result;
-            });
+            var subscribed = _observable.Subscribe(result => { valuereturned = result; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
 
             Assert.IsTrue(valuereturned.HasValue, "An intial value should have been called");
             Assert.AreEqual(false, valuereturned.Value, "The intial value should be false");
-   
+
             subscribed.Dispose();
         }
 
@@ -48,15 +44,12 @@ namespace DynamicData.Tests.CacheFixtures
         public void InlineObservableChangeProducesResult()
         {
             bool? valuereturned = null;
-            var subscribed = _observable.Subscribe(result =>
-            {
-                valuereturned = result;
-            });
+            var subscribed = _observable.Subscribe(result => { valuereturned = result; });
 
             var item = new ObjectWithObservable(1);
             item.InvokeObservable(true);
             _source.AddOrUpdate(item);
-         
+
             Assert.AreEqual(true, valuereturned.Value, "Value should be true");
             subscribed.Dispose();
         }
@@ -65,10 +58,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void MultipleValuesReturnTrue()
         {
             bool? valuereturned = null;
-            var subscribed = _observable.Subscribe(result =>
-            {
-                valuereturned = result;
-            });
+            var subscribed = _observable.Subscribe(result => { valuereturned = result; });
 
             var item1 = new ObjectWithObservable(1);
             var item2 = new ObjectWithObservable(2);
@@ -87,11 +77,9 @@ namespace DynamicData.Tests.CacheFixtures
 
             //Assert.AreEqual(false, valuereturned.Value, "Value should be true");
             subscribed.Dispose();
-
         }
 
-
-    private class ObjectWithObservable
+        private class ObjectWithObservable
         {
             private readonly int _id;
             private readonly ISubject<bool> _changed = new Subject<bool>();
@@ -108,21 +96,11 @@ namespace DynamicData.Tests.CacheFixtures
                 _changed.OnNext(value);
             }
 
-            public IObservable<bool> Observable
-            {
-                get { return _changed; }
-            }
+            public IObservable<bool> Observable { get { return _changed; } }
 
-        public bool Value
-        {
-            get { return _value; }
+            public bool Value { get { return _value; } }
+
+            public int Id { get { return _id; } }
         }
-
-            public int Id
-            {
-                get { return _id; }
-            }
-        }
-
     }
 }

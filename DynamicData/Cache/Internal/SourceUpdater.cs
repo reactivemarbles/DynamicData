@@ -9,7 +9,7 @@ namespace DynamicData.Internal
     {
         private readonly ICache<TObject, TKey> _cache;
         private readonly IKeySelector<TObject, TKey> _keySelector;
-        private   ChangeSet<TObject, TKey> _queue = new  ChangeSet<TObject, TKey>();
+        private ChangeSet<TObject, TKey> _queue = new ChangeSet<TObject, TKey>();
 
         public SourceUpdater(ICache<TObject, TKey> cache, IKeySelector<TObject, TKey> keySelector)
         {
@@ -24,7 +24,7 @@ namespace DynamicData.Internal
 
         public IEnumerable<TKey> Keys => _cache.Keys;
 
-        public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues => _cache.KeyValues;
+        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
 
         public Optional<TObject> Lookup(TKey key)
         {
@@ -46,15 +46,13 @@ namespace DynamicData.Internal
             items.ForEach(AddOrUpdate);
         }
 
-
-        
         public void AddOrUpdate(TObject item)
         {
             TKey key = _keySelector.GetKey(item);
             var previous = _cache.Lookup(key);
             _queue.Add(previous.HasValue
-                               ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
-                               : new Change<TObject, TKey>(ChangeReason.Add, key, item));
+                ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
+                : new Change<TObject, TKey>(ChangeReason.Add, key, item));
             _cache.AddOrUpdate(item, key);
         }
 
@@ -62,8 +60,8 @@ namespace DynamicData.Internal
         {
             var previous = _cache.Lookup(key);
             _queue.Add(previous.HasValue
-                               ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
-                               : new Change<TObject, TKey>(ChangeReason.Add, key, item));
+                ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
+                : new Change<TObject, TKey>(ChangeReason.Add, key, item));
             _cache.AddOrUpdate(item, key);
         }
 
@@ -84,15 +82,13 @@ namespace DynamicData.Internal
             if (keys == null) throw new ArgumentNullException(nameof(keys));
             keys.ForEach(Evaluate);
         }
-        
-        
+
         public void Evaluate(TObject item)
         {
             TKey key = _keySelector.GetKey(item);
             var existing = _cache.Lookup(key);
             if (existing.HasValue)
                 _queue.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, item));
-          
         }
 
         public void Evaluate(TKey key)
@@ -100,7 +96,6 @@ namespace DynamicData.Internal
             var existing = _cache.Lookup(key);
             if (existing.HasValue)
                 _queue.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, existing.Value));
-  
         }
 
         public void Remove(IEnumerable<TObject> items)
@@ -140,7 +135,6 @@ namespace DynamicData.Internal
             Remove(key);
         }
 
-
         public void Clear()
         {
             var toremove = _cache.KeyValues.Select(t => new Change<TObject, TKey>(ChangeReason.Remove, t.Key, t.Value));
@@ -148,17 +142,13 @@ namespace DynamicData.Internal
             _cache.Clear();
         }
 
-        public int Count
-        {
-            get { return _cache.Count; }
-        }
+        public int Count { get { return _cache.Count; } }
 
         public Optional<TObject> Lookup(TObject item)
         {
             TKey key = _keySelector.GetKey(item);
             return Lookup(key);
         }
-
 
         public void Update(IChangeSet<TObject, TKey> changes)
         {
@@ -169,9 +159,9 @@ namespace DynamicData.Internal
                 {
                     case ChangeReason.Update:
                     case ChangeReason.Add:
-                        {
-                            AddOrUpdate(item.Current, item.Key);
-                        }
+                    {
+                        AddOrUpdate(item.Current, item.Key);
+                    }
                         break;
                     case ChangeReason.Remove:
                     {
@@ -196,9 +186,8 @@ namespace DynamicData.Internal
         public IChangeSet<TObject, TKey> AsChangeSet()
         {
             var result = _queue;
-            _queue=  new ChangeSet<TObject, TKey>();
+            _queue = new ChangeSet<TObject, TKey>();
             return result;
         }
     }
-
 }

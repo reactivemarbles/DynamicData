@@ -12,10 +12,7 @@ namespace DynamicData.Internal
             _keySelector = keySelector;
         }
 
-        public Type Type
-        {
-            get { return typeof (TObject); }
-        }
+        public Type Type { get { return typeof(TObject); } }
 
         public TKey GetKey(TObject item)
         {
@@ -25,9 +22,8 @@ namespace DynamicData.Internal
             }
             catch (Exception ex)
             {
-                throw new KeySelectorException("Error returning key",ex);
+                throw new KeySelectorException("Error returning key", ex);
             }
-
         }
     }
 }

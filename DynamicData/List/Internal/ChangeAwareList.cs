@@ -18,7 +18,7 @@ namespace DynamicData.Internal
             _changes = new List<Change<T>>();
 
             //we can infer this is a Clear
-            if (_innerList.Count==0 && copy.Removes == copy.TotalChanges && copy.TotalChanges>1)
+            if (_innerList.Count == 0 && copy.Removes == copy.TotalChanges && copy.TotalChanges > 1)
             {
                 var removed = copy.Unified().Select(u => u.Current);
                 return new ChangeSet<T> { new Change<T>(ListChangeReason.Clear, removed) };
@@ -29,11 +29,10 @@ namespace DynamicData.Internal
         /// <summary>
         /// Clears the changes (for testing).
         /// </summary>
-        internal void  ClearChanges()
+        internal void ClearChanges()
         {
             _changes = new List<Change<T>>();
         }
-
 
         #region Range support
 
@@ -48,7 +47,6 @@ namespace DynamicData.Internal
 
         public void InsertRange(IEnumerable<T> collection, int index)
         {
-
             var args = new Change<T>(ListChangeReason.AddRange, collection, index);
             if (args.Range.Count == 0) return;
             _changes.Add(args);
@@ -77,24 +75,18 @@ namespace DynamicData.Internal
 
         #endregion
 
-
         #region Subclass overrides
 
         protected virtual void OnSetItem(int index, T newItem, T oldItem)
         {
-
         }
 
         protected virtual void OnInsertItems(int startIndex, IEnumerable<T> items)
         {
-
         }
-
-
 
         protected virtual void OnRemoveItems(int startIndex, IEnumerable<T> items)
         {
-
         }
 
         #endregion
@@ -108,7 +100,6 @@ namespace DynamicData.Internal
 
         protected virtual void InsertItem(int index, T item)
         {
-
             //attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
             var last = Last;
 
@@ -158,9 +149,8 @@ namespace DynamicData.Internal
                     }
                     range.Insert(insertPosition, item);
 
-                    if (range.Index == 4 && range.Count==4)
+                    if (range.Index == 4 && range.Count == 4)
                         Debug.WriteLine("");
-
 
                     if (index < range.Index)
                         range.SetStartingIndex(index);
@@ -176,8 +166,7 @@ namespace DynamicData.Internal
             _innerList.Insert(index, item);
         }
 
-
-        protected  void RemoveItem(int index)
+        protected void RemoveItem(int index)
         {
             var item = _innerList[index];
             RemoveItem(index, item);
@@ -185,8 +174,6 @@ namespace DynamicData.Internal
 
         protected virtual void RemoveItem(int index, T item)
         {
-           
-
             //attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
             var last = Last;
             if (last.HasValue && last.Value.Reason == ListChangeReason.Remove)
@@ -204,18 +191,14 @@ namespace DynamicData.Internal
                 {
                     //Nb: double check this one as it is the same as clause above. Can it be correct?
                     _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { item, previousItem.Current }, index);
-
-
                 }
                 else
                 {
                     _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
                 }
-
             }
             else if (last.HasValue && last.Value.Reason == ListChangeReason.RemoveRange)
             {
-
                 //add to the end of the previous batch
                 var range = last.Value.Range;
                 if (range.Index == index)
@@ -272,18 +255,13 @@ namespace DynamicData.Internal
 
         #region ISupportsCapcity
 
-        public int Capacity
-        {
-            get { return _innerList.Capacity; }
-            set { _innerList.Capacity = value; }
-        }
+        public int Capacity { get { return _innerList.Capacity; } set { _innerList.Capacity = value; } }
 
         public int Count => _innerList.Count;
 
         #endregion
 
         #region IList<T> implementation
-
 
         public virtual bool Contains(T item)
         {
@@ -323,11 +301,7 @@ namespace DynamicData.Internal
             return true;
         }
 
-        public T this[int index]
-        {
-            get { return _innerList[index]; }
-            set { SetItem(index, value); }
-        }
+        public T this[int index] { get { return _innerList[index]; } set { SetItem(index, value); } }
 
         public IEnumerator<T> GetEnumerator()
         {

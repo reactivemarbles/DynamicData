@@ -4,7 +4,6 @@ namespace DynamicData.Tests.Domain
 {
     public class PersonNoKey
     {
-
         private readonly string _name;
         private int _age;
         private readonly string _keyValue;
@@ -14,28 +13,13 @@ namespace DynamicData.Tests.Domain
             _name = name;
             _age = age;
             _keyValue = this.Name;
-
         }
 
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get { return _name; } }
 
-        public int Age
-        {
-            get { return _age; }
-            set { _age = value; }
+        public int Age { get { return _age; } set { _age = value; } }
 
-        }
-
-        public string KeyValue
-        {
-            get { return _keyValue; }
-        }
-
-
-
+        public string KeyValue { get { return _keyValue; } }
 
         public override string ToString()
         {
@@ -104,15 +88,8 @@ namespace DynamicData.Tests.Domain
 
         private static readonly IEqualityComparer<PersonNoKey> NameAgeComparerInstance = new NameAgeEqualityComparer();
 
-
-        public static IEqualityComparer<PersonNoKey> NameAgeComparer
-        {
-            get { return NameAgeComparerInstance; }
-        }
-
+        public static IEqualityComparer<PersonNoKey> NameAgeComparer { get { return NameAgeComparerInstance; } }
 
         #endregion
-
-
     }
 }

@@ -8,11 +8,9 @@ namespace DynamicData.Kernel
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public sealed class Error<TObject, TKey>: IKeyValue<TObject,TKey>, IEquatable<Error<TObject, TKey>>
+    public sealed class Error<TObject, TKey> : IKeyValue<TObject, TKey>, IEquatable<Error<TObject, TKey>>
     {
-
-
-	    /// <summary>
+        /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object"/> class.
         /// </summary>
         public Error(Exception exception, TObject value, TKey key)
@@ -22,57 +20,55 @@ namespace DynamicData.Kernel
             Key = key;
         }
 
-		/// <summary>
-		/// Gets the key.
-		/// </summary>
-		public TKey Key { get; }
+        /// <summary>
+        /// Gets the key.
+        /// </summary>
+        public TKey Key { get; }
 
-		/// <summary>
-		/// Gets the object.
-		/// </summary>
-		public TObject Value { get; }
+        /// <summary>
+        /// Gets the object.
+        /// </summary>
+        public TObject Value { get; }
 
-		/// <summary>
-		/// The exception.
-		/// </summary>
-		public Exception Exception { get; }
+        /// <summary>
+        /// The exception.
+        /// </summary>
+        public Exception Exception { get; }
 
+        #region Equality members
 
-		#region Equality members
-
-		/// <summary>
-		/// Implements the operator ==.
-		/// </summary>
-		/// <param name="left">The left.</param>
-		/// <param name="right">The right.</param>
-		/// <returns>
-		/// The result of the operator.
-		/// </returns>
-		public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right)
+        /// <summary>
+        /// Implements the operator ==.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right)
         {
             return Equals(left, right);
         }
 
-		/// <summary>
-		/// Implements the operator !=.
-		/// </summary>
-		/// <param name="left">The left.</param>
-		/// <param name="right">The right.</param>
-		/// <returns>
-		/// The result of the operator.
-		/// </returns>
-		public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right)
+        /// <summary>
+        /// Implements the operator !=.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right)
         {
             return !Equals(left, right);
         }
 
-
-		/// <summary>
-		/// Equalses the specified other.
-		/// </summary>
-		/// <param name="other">The other.</param>
-		/// <returns></returns>
-		public bool Equals(Error<TObject, TKey> other)
+        /// <summary>
+        /// Equalses the specified other.
+        /// </summary>
+        /// <param name="other">The other.</param>
+        /// <returns></returns>
+        public bool Equals(Error<TObject, TKey> other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -90,7 +86,7 @@ namespace DynamicData.Kernel
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is Error<TObject, TKey> && Equals((Error<TObject, TKey>) obj);
+            return obj is Error<TObject, TKey> && Equals((Error<TObject, TKey>)obj);
         }
 
         /// <summary>
@@ -104,8 +100,8 @@ namespace DynamicData.Kernel
             unchecked
             {
                 int hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
-                hashCode = (hashCode*397) ^ EqualityComparer<TObject>.Default.GetHashCode(Value);
-                hashCode = (hashCode*397) ^ (Exception != null ? Exception.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ EqualityComparer<TObject>.Default.GetHashCode(Value);
+                hashCode = (hashCode * 397) ^ (Exception != null ? Exception.GetHashCode() : 0);
                 return hashCode;
             }
         }

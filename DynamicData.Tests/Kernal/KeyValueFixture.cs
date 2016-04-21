@@ -11,7 +11,7 @@ namespace DynamicData.Tests.Kernal
         public void Create()
         {
             var person = new Person("Person", 10);
-            var kv = new KeyValuePair<string,Person>("Person", person);
+            var kv = new KeyValuePair<string, Person>("Person", person);
 
             Assert.AreEqual("Person", kv.Key);
             Assert.AreEqual(person, kv.Value);

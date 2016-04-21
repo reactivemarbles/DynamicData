@@ -15,14 +15,14 @@ namespace DynamicData.Tests.CacheFixtures
         public void ReTransformAll()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
-            var forceTransform = new Subject<Unit>();    
+            var forceTransform = new Subject<Unit>();
 
             using (var stub = new TransformStub(forceTransform))
             {
                 stub.Source.AddOrUpdate(people);
-               forceTransform.OnNext(Unit.Default);
+                forceTransform.OnNext(Unit.Default);
 
-                Assert.AreEqual(2,stub.Results.Messages.Count);
+                Assert.AreEqual(2, stub.Results.Messages.Count);
                 Assert.AreEqual(10, stub.Results.Messages[1].Updates);
 
                 for (int i = 1; i <= 10; i++)
@@ -40,12 +40,12 @@ namespace DynamicData.Tests.CacheFixtures
         public void ReTransformSelected()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
-            var forceTransform = new Subject<Func<Person,bool>>();
+            var forceTransform = new Subject<Func<Person, bool>>();
 
             using (var stub = new TransformStub(forceTransform))
             {
                 stub.Source.AddOrUpdate(people);
-                forceTransform.OnNext(person=> person.Age<=5);
+                forceTransform.OnNext(person => person.Age <= 5);
 
                 Assert.AreEqual(2, stub.Results.Messages.Count);
                 Assert.AreEqual(5, stub.Results.Messages[1].Updates);
@@ -74,13 +74,11 @@ namespace DynamicData.Tests.CacheFixtures
             }
         }
 
-
         [Test]
         public void Remove()
         {
             const string key = "Adult1";
             var person = new Person(key, 50);
-
 
             using (var stub = new TransformStub())
             {
@@ -116,14 +114,11 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void BatchOfUniqueUpdates()
         {
-
-
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
             using (var stub = new TransformStub())
             {
-  
                 stub.Source.AddOrUpdate(people);
-                
+
                 Assert.AreEqual(1, stub.Results.Messages.Count, "Should be 1 updates");
                 Assert.AreEqual(100, stub.Results.Messages[0].Adds, "Should return 100 adds");
 
@@ -131,7 +126,6 @@ namespace DynamicData.Tests.CacheFixtures
                 CollectionAssert.AreEqual(transformed, stub.Results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
             }
         }
-
 
         [Test]
         public void SameKeyChanges()
@@ -169,22 +163,20 @@ namespace DynamicData.Tests.CacheFixtures
                 Assert.AreEqual(100, stub.Results.Messages[1].Removes, "Should be 80 removes");
                 Assert.AreEqual(0, stub.Results.Data.Count, "Should be nothing cached");
             }
-
         }
 
-        private class TransformStub: IDisposable
+        private class TransformStub : IDisposable
         {
-
-            public ISourceCache<Person, string> Source { get; } = new SourceCache<Person, string>(p=>p.Name);
+            public ISourceCache<Person, string> Source { get; } = new SourceCache<Person, string>(p => p.Name);
             public ChangeSetAggregator<PersonWithGender, string> Results { get; }
 
-            public Func<Person, PersonWithGender> TransformFactory { get; } = p => new PersonWithGender(p, p.Age%2 == 0 ? "M" : "F");
+            public Func<Person, PersonWithGender> TransformFactory { get; } = p => new PersonWithGender(p, p.Age % 2 == 0 ? "M" : "F");
 
             public TransformStub()
             {
                 Results = new ChangeSetAggregator<PersonWithGender, string>
                     (
-                        Source.Connect().Transform(TransformFactory)
+                    Source.Connect().Transform(TransformFactory)
                     );
             }
 
@@ -192,16 +184,15 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 Results = new ChangeSetAggregator<PersonWithGender, string>
                     (
-                        Source.Connect().Transform(TransformFactory, retransformer)
+                    Source.Connect().Transform(TransformFactory, retransformer)
                     );
             }
 
-
-            public TransformStub(IObservable<Func<Person,  bool>> retransformer)
+            public TransformStub(IObservable<Func<Person, bool>> retransformer)
             {
                 Results = new ChangeSetAggregator<PersonWithGender, string>
                     (
-                        Source.Connect().Transform(TransformFactory, retransformer)
+                    Source.Connect().Transform(TransformFactory, retransformer)
                     );
             }
 
@@ -209,9 +200,7 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 Source.Dispose();
                 Results.Dispose();
-
             }
         }
     }
-
 }

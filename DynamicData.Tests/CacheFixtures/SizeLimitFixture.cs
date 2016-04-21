@@ -16,16 +16,14 @@ namespace DynamicData.Tests.CacheFixtures
         private IDisposable _sizeLimiter;
 
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
- 
 
         [SetUp]
         public void Initialise()
         {
             _scheduler = new TestScheduler();
-            _source =new SourceCache<Person, string>(p=>p.Key);
-            _sizeLimiter = _source.LimitSizeTo(10,_scheduler).FinallySafe(()=>Console.WriteLine()).Subscribe();
+            _source = new SourceCache<Person, string>(p => p.Key);
+            _sizeLimiter = _source.LimitSizeTo(10, _scheduler).FinallySafe(() => Console.WriteLine()).Subscribe();
             _results = _source.Connect().AsAggregator();
-
         }
 
         [TearDown]
@@ -36,29 +34,25 @@ namespace DynamicData.Tests.CacheFixtures
             _results.Dispose();
         }
 
-
         [Test]
         public void AddLessThanLimit()
         {
-              var person = _generator.Take(1).First();
+            var person = _generator.Take(1).First();
             _source.AddOrUpdate(person);
 
-
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
-       
+
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
 
-
         [Test]
         public void AddMoreThanLimit()
         {
-            var people = _generator.Take(100).OrderBy(p=>p.Name).ToArray();
+            var people = _generator.Take(100).OrderBy(p => p.Name).ToArray();
             _source.AddOrUpdate(people);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
-
 
             _source.Dispose();
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
@@ -91,16 +85,14 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
 
-
         [Test]
         [ExpectedException(typeof(ArgumentException))]
         public void ThrowsIfSizeLimitIsZero()
         {
-           // Initialise();
+            // Initialise();
 
             new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0);
-       }
-
+        }
 
         [Test]
         public void OnCompleteIsInvokedWhenFeederIsDisposed()
@@ -108,8 +100,8 @@ namespace DynamicData.Tests.CacheFixtures
             bool completed = false;
 
             var subscriber = _source.LimitSizeTo(10)
-                .Finally(() => completed = true)
-                .Subscribe(updates => { Console.WriteLine(); });
+                                    .Finally(() => completed = true)
+                                    .Subscribe(updates => { Console.WriteLine(); });
 
             _source.Dispose();
 
@@ -128,6 +120,5 @@ namespace DynamicData.Tests.CacheFixtures
 
         //    Assert.IsTrue(completed, "Completed has not been called");
         //}
-
     }
 }

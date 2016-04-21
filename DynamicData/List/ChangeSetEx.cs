@@ -8,11 +8,11 @@ using DynamicData.Linq;
 
 namespace DynamicData
 {
-	/// <summary>
-	/// Change set extensions
-	/// </summary>
-	public static class ChangeSetEx
-	{
+    /// <summary>
+    /// Change set extensions
+    /// </summary>
+    public static class ChangeSetEx
+    {
         /// <summary>
         /// Remove the index from the changes
         /// </summary>
@@ -37,7 +37,6 @@ namespace DynamicData
             return new UnifiedChangeEnumerator<T>(source);
         }
 
-
         /// <summary>
         /// Returns a flattend source with the index
         /// </summary>
@@ -59,27 +58,26 @@ namespace DynamicData
         /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public static ChangeType GetChangeType(this ListChangeReason source)
         {
-                switch (source)
-                {
-                    case ListChangeReason.Add:
-                        return ChangeType.Item;
-                    case ListChangeReason.AddRange:
-                        return ChangeType.Range;
-                    case ListChangeReason.Replace:
-                        return ChangeType.Item;
-                    case ListChangeReason.Remove:
-                        return ChangeType.Item;
-                    case ListChangeReason.RemoveRange:
-                        return ChangeType.Range;
-                    case ListChangeReason.Moved:
-                        return ChangeType.Item;
-                    case ListChangeReason.Clear:
-                        return ChangeType.Range;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+            switch (source)
+            {
+                case ListChangeReason.Add:
+                    return ChangeType.Item;
+                case ListChangeReason.AddRange:
+                    return ChangeType.Range;
+                case ListChangeReason.Replace:
+                    return ChangeType.Item;
+                case ListChangeReason.Remove:
+                    return ChangeType.Item;
+                case ListChangeReason.RemoveRange:
+                    return ChangeType.Range;
+                case ListChangeReason.Moved:
+                    return ChangeType.Item;
+                case ListChangeReason.Clear:
+                    return ChangeType.Range;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-        
+        }
 
         /// <summary>
         /// Transforms the changeset into a different type using the specified transform function.
@@ -95,27 +93,25 @@ namespace DynamicData
         /// transformer
         /// </exception>
         public static IChangeSet<TDestination> Transform<TSource, TDestination>([NotNull] this IChangeSet<TSource> source,
-			[NotNull] Func<TSource, TDestination>  transformer)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (transformer == null) throw new ArgumentNullException(nameof(transformer));
+                                                                                [NotNull] Func<TSource, TDestination> transformer)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformer == null) throw new ArgumentNullException(nameof(transformer));
 
-			var changes = source.Select(change =>
-			{
-				if (change.Type == ChangeType.Item)
-				{
-					return new Change<TDestination>(change.Reason,
-						transformer(change.Item.Current),
-						change.Item.Previous.Convert(transformer),
-						change.Item.CurrentIndex,
-						change.Item.PreviousIndex);
-				}
-				return new Change<TDestination>(change.Reason, change.Range.Select(transformer), change.Range.Index);
-			});
+            var changes = source.Select(change =>
+            {
+                if (change.Type == ChangeType.Item)
+                {
+                    return new Change<TDestination>(change.Reason,
+                                                    transformer(change.Item.Current),
+                                                    change.Item.Previous.Convert(transformer),
+                                                    change.Item.CurrentIndex,
+                                                    change.Item.PreviousIndex);
+                }
+                return new Change<TDestination>(change.Reason, change.Range.Select(transformer), change.Range.Index);
+            });
 
-			return new ChangeSet<TDestination>(changes);
-		}
-
-
+            return new ChangeSet<TDestination>(changes);
+        }
     }
 }

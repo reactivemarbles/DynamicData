@@ -14,7 +14,7 @@ namespace DynamicData.Tests.CacheFixtures
         [SetUp]
         public void Initialise()
         {
-            _source = new SourceCache<Person, string>(p=>p.Name);
+            _source = new SourceCache<Person, string>(p => p.Name);
             _results = _source.Connect().DistinctValues(p => p.Age).AsAggregator();
         }
 
@@ -29,7 +29,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void FiresAddWhenaNewItemIsAdded()
         {
             _source.AddOrUpdate(new Person("Person1", 20));
-            
+
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
             Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
@@ -40,9 +40,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.Edit(updater =>
             {
-                    updater.AddOrUpdate( new Person("Person1", 20));
-                    updater.AddOrUpdate(new Person("Person2", 21));
-                    updater.AddOrUpdate(new Person("Person3", 22));
+                updater.AddOrUpdate(new Person("Person1", 20));
+                updater.AddOrUpdate(new Person("Person2", 21));
+                updater.AddOrUpdate(new Person("Person3", 22));
             });
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
@@ -78,7 +78,5 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
             Assert.AreEqual(1, _results.Messages.Skip(1).First().Removes, "Second messsage should be a remove");
         }
-
-
-     }
+    }
 }

@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    public  class DynamicOrFixture
+    public class DynamicOrFixture
     {
         private ISourceList<int> _source1;
         private ISourceList<int> _source2;
@@ -55,6 +55,7 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(1, _results.Data.Count);
             Assert.AreEqual(1, _results.Data.Items.First());
         }
+
         [Test]
         public void RemovedWhenNoLongerInEither()
         {

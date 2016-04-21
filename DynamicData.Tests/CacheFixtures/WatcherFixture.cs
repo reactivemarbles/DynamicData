@@ -34,8 +34,8 @@ namespace DynamicData.Tests.CacheFixtures
             _results = new ChangeSetAggregator<SelfObservingPerson, string>
                 (
                 _source.Connect()
-                    .Transform(p => new SelfObservingPerson(_watcher.Watch(p.Key).Select(w => w.Current)))
-                    .DisposeMany()
+                       .Transform(p => new SelfObservingPerson(_watcher.Watch(p.Key).Select(w => w.Current)))
+                       .DisposeMany()
                 );
 
             _cleanUp = Disposable.Create(() =>
@@ -58,7 +58,6 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
 
-
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
@@ -66,7 +65,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, result.UpdateCount, "Person should have received 1 update");
             Assert.AreEqual(false, result.Completed, "Person should have received 1 update");
         }
-
 
         [Test]
         public void Update()
@@ -103,7 +101,6 @@ namespace DynamicData.Tests.CacheFixtures
             var secondResult = _results.Messages[1].First();
             Assert.AreEqual(1, secondResult.Current.UpdateCount, "Second Person should have received 1 update");
             Assert.AreEqual(true, secondResult.Current.Completed, "Second person  should have received 1 update");
-       
         }
 
         [Test]
@@ -114,7 +111,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             var result = new List<Change<Person, string>>(3);
             var watch = _watcher.Watch("Adult1").Subscribe(result.Add);
-            
+
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
             Assert.AreEqual(1, result.Count, "Should be 1 updates");
             Assert.AreEqual(person, result[0].Current, "Should be 1 item in the cache");

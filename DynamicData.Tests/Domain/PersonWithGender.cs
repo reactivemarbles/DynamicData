@@ -13,30 +13,19 @@ namespace DynamicData.Tests.Domain
             _name = person.Name;
             _age = person.Age;
             _gender = gender;
-
         }
 
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get { return _name; } }
 
-        public int Age
-        {
-            get { return _age; }
-        }
+        public int Age { get { return _age; } }
 
-        public string Gender
-        {
-            get { return _gender; }
-        }
+        public string Gender { get { return _gender; } }
 
         public PersonWithGender(string name, int age, string gender)
         {
             _name = name;
             _age = age;
             _gender = gender;
-
         }
 
         #region Equality Members
@@ -82,13 +71,11 @@ namespace DynamicData.Tests.Domain
             }
         }
 
-        
         #endregion
 
         public override string ToString()
         {
-            return string.Format("{0}. {1} ({2})", this.Name, this.Age,this.Gender);
+            return string.Format("{0}. {1} ({2})", this.Name, this.Age, this.Gender);
         }
-
     }
 }

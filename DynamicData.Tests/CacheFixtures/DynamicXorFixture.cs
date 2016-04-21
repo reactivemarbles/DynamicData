@@ -37,7 +37,6 @@ namespace DynamicData.Tests.CacheFixtures
             _results.Dispose();
         }
 
-
         [Test]
         public void UpdatingOneSourceOnlyProducesResult()
         {
@@ -51,7 +50,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
         }
 
-
         [Test]
         public void UpdatingBothDoeNotProducesResult()
         {
@@ -63,7 +61,6 @@ namespace DynamicData.Tests.CacheFixtures
             _source2.AddOrUpdate(person);
             Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
         }
-
 
         [Test]
         public void RemovingFromOneDoesNotFromResult()
@@ -90,12 +87,12 @@ namespace DynamicData.Tests.CacheFixtures
             _source1.AddOrUpdate(person);
             _source2.AddOrUpdate(person);
 
-
             var personUpdated = new Person("Adult1", 51);
             _source2.AddOrUpdate(personUpdated);
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
         }
+
         [Test]
         public void AddAndRemoveLists()
         {

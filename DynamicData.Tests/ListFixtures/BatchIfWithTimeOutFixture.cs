@@ -16,15 +16,13 @@ namespace DynamicData.Tests.ListFixtures
 
         private ISubject<bool> _pausingSubject = new Subject<bool>();
 
-
         [SetUp]
         public void MyTestInitialize()
         {
             _pausingSubject = new Subject<bool>();
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
-            _results = _source.Connect().BufferIf(_pausingSubject,TimeSpan.FromMinutes(1), _scheduler).AsAggregator();
-
+            _results = _source.Connect().BufferIf(_pausingSubject, TimeSpan.FromMinutes(1), _scheduler).AsAggregator();
         }
 
         [TearDown]
@@ -35,7 +33,6 @@ namespace DynamicData.Tests.ListFixtures
             _pausingSubject.OnCompleted();
         }
 
-
         [Test]
         public void WillApplyTimeout()
         {
@@ -44,11 +41,11 @@ namespace DynamicData.Tests.ListFixtures
             //should timeout 
             _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
 
-			_source.Add(new Person("A", 1));
+            _source.Add(new Person("A", 1));
 
-			//go forward an arbitary amount of time
-			// _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-			Assert.AreEqual(1, _results.Messages.Count, "There should be no messages");
+            //go forward an arbitary amount of time
+            // _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+            Assert.AreEqual(1, _results.Messages.Count, "There should be no messages");
         }
 
         [Test]
@@ -57,7 +54,6 @@ namespace DynamicData.Tests.ListFixtures
             _pausingSubject.OnNext(true);
             //advance otherwise nothing happens
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-
 
             _source.Add(new Person("A", 1));
 
