@@ -12,41 +12,67 @@ namespace DynamicData.Binding
     /// </summary>
     public static class NotifyPropertyChangedEx
     {
-        /// <summary>
-        /// Observes property changes for the specified property, starting with the current value
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TValue">The type of the value.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="propertyAccessor">The property accessor.</param>
-        /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
-        public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>(
-            [NotNull] this TObject source,
+	    /// <summary>
+	    /// Observes property changes for the specified property, starting with the current value
+	    /// </summary>
+	    /// <typeparam name="TObject">The type of the object.</typeparam>
+	    /// <typeparam name="TValue">The type of the value.</typeparam>
+	    /// <param name="source">The source.</param>
+	    /// <param name="propertyAccessor">The property accessor.</param>
+	    /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+	    /// <returns></returns>
+	    /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
+	    public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>(
+	        [NotNull] this TObject source,
             Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+	        if (source == null)
+	            throw new ArgumentNullException(nameof(source));
+	        if (propertyAccessor == null)
+	            throw new ArgumentNullException(nameof(propertyAccessor));
 
             var member = propertyAccessor.GetProperty();
             var accessor = propertyAccessor.Compile();
 
-            Func<PropertyValue<TObject, TValue>> factory = () => new PropertyValue<TObject, TValue>(source, accessor(source));
-
-            var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
-                (
-                    handler => source.PropertyChanged += handler,
-                    handler => source.PropertyChanged -= handler
-                )
-                                            .Where(args => args.EventArgs.PropertyName == member.Name)
-                                            .Select(x => factory());
-
-            return !notifyOnInitialValue ? propertyChanged : propertyChanged.StartWith(factory());
-        }
+	        return WhenPropertyChanged(source, accessor, member.Name, notifyOnInitialValue);
+	    }
 
         /// <summary>
+	    /// Observes property changes for the specified property, starting with the current value
+	    /// </summary>
+	    /// <typeparam name="TObject">The type of the object.</typeparam>
+	    /// <typeparam name="TValue">The type of the value.</typeparam>
+	    /// <param name="source">The source.</param>
+	    /// <param name="propertyAccessor">The property accessor.</param>
+	    /// <param name="propertyName">The property name to observe.</param>
+	    /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+	    /// <returns></returns>
+	    /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
+	    public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>(
+	        [NotNull] this TObject source,
+	        Func<TObject, TValue> propertyAccessor, string propertyName, bool notifyOnInitialValue = true)
+	        where TObject : INotifyPropertyChanged
+	    {
+	        if (source == null)
+	            throw new ArgumentNullException(nameof(source));
+	        if (propertyAccessor == null)
+	            throw new ArgumentNullException(nameof(propertyAccessor));
+
+	        Func<PropertyValue<TObject, TValue>> factory = () => new PropertyValue<TObject, TValue>(source, propertyAccessor(source));
+
+	        var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+	            (
+	                handler => source.PropertyChanged += handler,
+	                handler => source.PropertyChanged -= handler
+	            )
+	                                        .Where(args => args.EventArgs.PropertyName == propertyName)
+	                                        .Select(x => factory());
+
+	        return !notifyOnInitialValue ? propertyChanged : propertyChanged.StartWith(factory());
+	    }
+
+	    /// <summary>
         /// Notifies when any any property on the object has changed
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -66,29 +92,26 @@ namespace DynamicData.Binding
                              .Select(x => source);
         }
 
-        /// <summary>
-        /// Observes property changes for the specified property, starting with the current value
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TValue">The type of the value.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="propertyAccessor">The property accessor.</param>
-        /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static IObservable<TValue> WhenValueChanged<TObject, TValue>([NotNull] this TObject source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
-            where TObject : INotifyPropertyChanged
-        {
+	    /// <summary>
+	    /// Observes property changes for the specified property, starting with the current value
+	    /// </summary>
+	    /// <typeparam name="TObject">The type of the object.</typeparam>
+	    /// <typeparam name="TValue">The type of the value.</typeparam>
+	    /// <param name="source">The source.</param>
+	    /// <param name="propertyAccessor">The property accessor.</param>
+	    /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+	    /// <returns></returns>
+	    /// <exception cref="System.ArgumentNullException">
+	    /// </exception>
+	    public static IObservable<TValue> WhenValueChanged<TObject, TValue>([NotNull] this TObject source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+	        where TObject : INotifyPropertyChanged
+	    {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
             var member = propertyAccessor.GetProperty();
             var accessor = propertyAccessor.Compile();
-
-            Func<PropertyValue<TObject, TValue>> factory =
-                () => new PropertyValue<TObject, TValue>(source, accessor(source));
-
+            
             var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
                 (
                     handler => source.PropertyChanged += handler,
@@ -98,6 +121,36 @@ namespace DynamicData.Binding
                                             .Select(x => accessor(source));
 
             return !notifyOnInitialValue ? propertyChanged : propertyChanged.StartWith(accessor(source));
+        }
+
+        /// <summary>
+        /// Observes property changes for the specified property, starting with the current value
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyAccessor">The property accessor.</param>
+        /// <param name="propertyName">The property name to observe.</param>
+        /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<TValue> WhenValueChanged<TObject, TValue>([NotNull] this TObject source, Func<TObject, TValue> propertyAccessor, string propertyName, bool notifyOnInitialValue = true)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (propertyAccessor == null)
+                throw new ArgumentNullException(nameof(propertyAccessor));
+
+            var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+                (
+                    handler => source.PropertyChanged += handler,
+                    handler => source.PropertyChanged -= handler
+                ).Where(args => args.EventArgs.PropertyName == propertyName)
+                                            .Select(x => propertyAccessor(source));
+
+            return !notifyOnInitialValue ? propertyChanged : propertyChanged.StartWith(propertyAccessor(source));
         }
 
         /// <summary>
@@ -133,7 +186,7 @@ namespace DynamicData.Binding
                              .Select(x => x.EventArgs.PropertyName);
         }
 
-        private static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+	    internal static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
             var property = GetMember(expression) as PropertyInfo;
             if (property == null)
