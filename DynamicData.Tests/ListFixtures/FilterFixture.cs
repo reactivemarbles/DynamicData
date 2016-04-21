@@ -7,18 +7,18 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-	[TestFixture]
+    [TestFixture]
     public class FilterFixture
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;
-        
+
         [SetUp]
         public void Initialise()
         {
             _source = new SourceList<Person>();
             _results = _source.Connect(p => p.Age > 20).AsAggregator();
-  }
+        }
 
         [TearDown]
         public void Cleanup()
@@ -38,37 +38,33 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
 
-		[Test]
-		public void AddRange()
-		{
+        [Test]
+        public void AddRange()
+        {
+            var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
 
-			var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
+            _source.AddRange(itemstoadd);
 
-			_source.AddRange(itemstoadd);
+            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
+            Assert.AreEqual(ListChangeReason.AddRange, _results.Messages[0].First().Reason, "Should be 1 updates");
+            Assert.AreEqual(80, _results.Data.Count, "Should be 50 item in the cache");
+        }
 
-			Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-			Assert.AreEqual(ListChangeReason.AddRange, _results.Messages[0].First().Reason, "Should be 1 updates");
-			Assert.AreEqual(80, _results.Data.Count, "Should be 50 item in the cache");
-		}
+        [Test]
+        public void ClearFixture()
+        {
+            var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
 
+            _source.AddRange(itemstoadd);
+            _source.Clear();
 
+            Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
+            Assert.AreEqual(ListChangeReason.AddRange, _results.Messages[0].First().Reason, "First reason should be add range");
+            Assert.AreEqual(ListChangeReason.Clear, _results.Messages[1].First().Reason, "Second reason should be clear");
+            Assert.AreEqual(0, _results.Data.Count, "Should be 50 item in the cache");
+        }
 
-		[Test]
-		public void ClearFixture()
-		{
-
-			var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
-
-			_source.AddRange(itemstoadd);
-			_source.Clear();
-
-			Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
-			Assert.AreEqual(ListChangeReason.AddRange, _results.Messages[0].First().Reason, "First reason should be add range");
-			Assert.AreEqual(ListChangeReason.Clear, _results.Messages[1].First().Reason, "Second reason should be clear");
-			Assert.AreEqual(0, _results.Data.Count, "Should be 50 item in the cache");
-		}
-
-		[Test]
+        [Test]
         public void AddNotMatched()
         {
             var person = new Person("Adult1", 10);
@@ -84,25 +80,25 @@ namespace DynamicData.Tests.ListFixtures
             const string key = "Adult1";
             var notmatched = new Person(key, 19);
             var matched = new Person(key, 21);
-            
+
             _source.Edit(list =>
-                    {
-						list.Add(notmatched);
-						list.Add(matched);
-                    });
+            {
+                list.Add(notmatched);
+                list.Add(matched);
+            });
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(matched, _results.Messages[0].First().Range.First(), "Should be same person");
             Assert.AreEqual(matched, _results.Data.Items.First(), "Should be same person");
         }
-        
+
         [Test]
         public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
         {
-			_source.Remove(new Person("anyone",1));
-			Assert.AreEqual(0, _results.Messages.Count, "Should be 0 updates");
+            _source.Remove(new Person("anyone", 1));
+            Assert.AreEqual(0, _results.Messages.Count, "Should be 0 updates");
         }
-        
+
         [Test]
         public void BatchOfUniqueUpdates()
         {
@@ -115,15 +111,15 @@ namespace DynamicData.Tests.ListFixtures
             var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
             CollectionAssert.AreEqual(filtered, _results.Data.Items.OrderBy(p => p.Age), "Incorrect Filter result");
         }
-        
+
         [Test]
         public void BatchRemoves()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
-			_source.AddRange(people);
-			_source.Clear();
+            _source.AddRange(people);
+            _source.Clear();
 
-			Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
+            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");
             Assert.AreEqual(80, _results.Messages[1].Removes, "Should be 80 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
@@ -136,28 +132,26 @@ namespace DynamicData.Tests.ListFixtures
             foreach (var person in people)
             {
                 Person person1 = person;
-				_source.Add(person1);
-			}
+                _source.Add(person1);
+            }
 
             Assert.AreEqual(80, _results.Messages.Count, "Should be 80 updates");
             Assert.AreEqual(80, _results.Data.Count, "Should be 100 in the cache");
             var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
             CollectionAssert.AreEqual(filtered, _results.Data.Items.OrderBy(p => p.Age), "Incorrect Filter result");
-  
         }
 
         [Test]
         public void Clear()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
-			_source.AddRange(people);
-			_source.Clear();
+            _source.AddRange(people);
+            _source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");
             Assert.AreEqual(80, _results.Messages[1].Removes, "Should be 80 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
-
         }
 
         [Test]
@@ -166,31 +160,29 @@ namespace DynamicData.Tests.ListFixtures
             const string key = "Adult1";
             var person = new Person(key, 50);
 
-			_source.Add(person);
-			_source.Remove(person);
+            _source.Add(person);
+            _source.Remove(person);
 
-			Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
+            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 80 addes");
             Assert.AreEqual(1, _results.Messages[1].Removes, "Should be 80 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
         }
 
-
-
         [Test]
         public void SameKeyChanges()
         {
             const string key = "Adult1";
 
-	        var toaddandremove = new Person(key, 53);
+            var toaddandremove = new Person(key, 53);
             _source.Edit(updater =>
-                               {
-                                   updater.Add(new Person(key, 50));
-                                   updater.Add(new Person(key, 52));
-                                   updater.Add(toaddandremove);
-                                   updater.Remove(toaddandremove);
-                               });
+            {
+                updater.Add(new Person(key, 50));
+                updater.Add(new Person(key, 52));
+                updater.Add(toaddandremove);
+                updater.Remove(toaddandremove);
+            });
 
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(3, _results.Messages[0].Adds, "Should be 3 adds");
@@ -205,11 +197,10 @@ namespace DynamicData.Tests.ListFixtures
             var newperson = new Person(key, 10);
             var updated = new Person(key, 11);
 
-			_source.Add(newperson);
-			_source.Add(updated);
+            _source.Add(newperson);
+            _source.Add(updated);
 
-
-			Assert.AreEqual(0, _results.Messages.Count, "Should be no updates");
+            Assert.AreEqual(0, _results.Messages.Count, "Should be no updates");
             Assert.AreEqual(0, _results.Data.Count, "Should nothing cached");
         }
 
@@ -218,7 +209,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             var source = new SourceList<Person>();
             var filtered = source.Connect()
-                                  .Filter(new FilterController<Person>(person => true));
+                                 .Filter(new FilterController<Person>(person => true));
 
             filtered.Subscribe();
 

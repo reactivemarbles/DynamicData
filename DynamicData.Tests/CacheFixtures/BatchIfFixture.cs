@@ -15,7 +15,6 @@ namespace DynamicData.Tests.CacheFixtures
 
         private ISubject<bool> _pausingSubject = new Subject<bool>();
 
-
         [SetUp]
         public void MyTestInitialize()
         {
@@ -23,7 +22,6 @@ namespace DynamicData.Tests.CacheFixtures
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
-
         }
 
         [TearDown]

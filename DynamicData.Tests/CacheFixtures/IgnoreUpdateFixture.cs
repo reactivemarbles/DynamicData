@@ -16,12 +16,10 @@ namespace DynamicData.Tests.CacheFixtures
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new ChangeSetAggregator<Person, string>
                 (
-                     _source.Connect().IgnoreUpdateWhen((current,previous)=>current == previous)
+                _source.Connect().IgnoreUpdateWhen((current, previous) => current == previous)
                 );
-
-
         }
-        
+
         [Test]
         public void IgnoreFunctionWillIgnoreSubsequentUpdatesOfAnItem()
         {
@@ -29,16 +27,15 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(person);
             _source.AddOrUpdate(person);
             _source.AddOrUpdate(person);
-            
+
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-       }
+        }
 
         [TearDown]
         public void Cleanup()
         {
             _source.Dispose();
         }
-
     }
 }

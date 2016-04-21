@@ -59,12 +59,12 @@ namespace DynamicData.Experimental
         {
             Interlocked.Increment(ref _refCount);
             var subscriber = _subject.Subscribe(observer);
- 
-              return  Disposable.Create(() =>
-              {
-                  subscriber.Dispose();
-                  Interlocked.Decrement(ref _refCount);
-              });
+
+            return Disposable.Create(() =>
+            {
+                subscriber.Dispose();
+                Interlocked.Decrement(ref _refCount);
+            });
         }
 
         /// <summary>number of subscribers 

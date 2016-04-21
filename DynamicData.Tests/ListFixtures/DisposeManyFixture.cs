@@ -7,9 +7,8 @@ namespace DynamicData.Tests.ListFixtures
     [TestFixture]
     public class DisposeManyFixture
     {
-
         private ISourceList<DisposableObject> _source;
-		private ChangeSetAggregator<DisposableObject> _results;
+        private ChangeSetAggregator<DisposableObject> _results;
 
         [SetUp]
         public void Initialise()
@@ -35,13 +34,12 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(false, _results.Data.Items.First().IsDisposed, "Should not be disposed");
         }
 
-
         [Test]
         public void RemoveWillCallDispose()
         {
             _source.Add(new DisposableObject(1));
             _source.RemoveAt(0);
-           
+
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(0, _results.Data.Count, "Should be 0 items in the cache");
             Assert.AreEqual(true, _results.Messages[1].First().Item.Current.IsDisposed, "Should be disposed");
@@ -51,7 +49,7 @@ namespace DynamicData.Tests.ListFixtures
         public void UpdateWillCallDispose()
         {
             _source.Add(new DisposableObject(1));
-            _source.ReplaceAt(0,new DisposableObject(1));
+            _source.ReplaceAt(0, new DisposableObject(1));
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
@@ -62,32 +60,30 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void EverythingIsDisposedWhenStreamIsDisposed()
         {
-	        var toadd = Enumerable.Range(1, 10).Select(i => new DisposableObject(i));
+            var toadd = Enumerable.Range(1, 10).Select(i => new DisposableObject(i));
             _source.AddRange(toadd);
             _source.Clear();
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
 
-	        var itemsCleared = _results.Messages[1].First().Range;
-            Assert.IsTrue(itemsCleared.All(d=>d.IsDisposed));
-
+            var itemsCleared = _results.Messages[1].First().Range;
+            Assert.IsTrue(itemsCleared.All(d => d.IsDisposed));
         }
 
-		private class DisposableObject : IDisposable
-		{
-			public bool IsDisposed { get; private set; }
-			public int Id { get; private set; }
+        private class DisposableObject : IDisposable
+        {
+            public bool IsDisposed { get; private set; }
+            public int Id { get; private set; }
 
-			public DisposableObject(int id)
-			{
-				Id = id;
-			}
+            public DisposableObject(int id)
+            {
+                Id = id;
+            }
 
-			public void Dispose()
-			{
-				IsDisposed = true;
-			}
-		}
-
-	}
+            public void Dispose()
+            {
+                IsDisposed = true;
+            }
+        }
+    }
 }

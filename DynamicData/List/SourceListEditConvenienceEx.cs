@@ -4,36 +4,35 @@ using DynamicData.Annotations;
 
 namespace DynamicData
 {
-	/// <summary>
-	/// Convenience methods for a source list
-	/// </summary>
-	public static class SourceListEditConvenienceEx
-	{
+    /// <summary>
+    /// Convenience methods for a source list
+    /// </summary>
+    public static class SourceListEditConvenienceEx
+    {
+        /// <summary>
+        /// Clears all items from the specified source list
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        public static void Clear<T>([NotNull] this ISourceList<T> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list.Clear());
+        }
 
-		/// <summary>
-		/// Clears all items from the specified source list
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		public static void Clear<T>([NotNull] this ISourceList<T> source)
-		{
-		    if (source == null) throw new ArgumentNullException(nameof(source));
-		    source.Edit(list => list.Clear());
-		}
+        /// <summary>
+        /// Adds the specified item to the source list
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="item">The item.</param>
+        public static void Add<T>([NotNull] this ISourceList<T> source, T item)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list.Add(item));
+        }
 
-	    /// <summary>
-		/// Adds the specified item to the source list
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="item">The item.</param>
-		public static void Add<T>([NotNull] this ISourceList<T> source, T item)
-		{
-		    if (source == null) throw new ArgumentNullException(nameof(source));
-		    source.Edit(list=>list.Add(item));
-		}
-
-	    /// <summary>
+        /// <summary>
         /// Adds the specified item to the source list
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -43,10 +42,10 @@ namespace DynamicData
         public static void Insert<T>([NotNull] this ISourceList<T> source, int index, T item)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.Edit(list => list.Insert(index,item));
+            source.Edit(list => list.Insert(index, item));
         }
 
-	    /// <summary>
+        /// <summary>
         /// Adds the specified items to the source list
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -58,30 +57,30 @@ namespace DynamicData
             source.Edit(list => list.AddRange(items));
         }
 
-	    /// <summary>
-		/// Inserts the elements of a collection into the <see cref="T:System.Collections.Generic.List`1" /> at the specified index.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="items">The items.</param>
-		/// <param name="index">The zero-based index at which the new elements should be inserted.</param>
-		public static void InsertRange<T>([NotNull] this ISourceList<T> source, IEnumerable<T> items, int index)
-		{
-		    if (source == null) throw new ArgumentNullException(nameof(source));
-		    source.Edit(list => list.AddRange(items, index));
-		}
+        /// <summary>
+        /// Inserts the elements of a collection into the <see cref="T:System.Collections.Generic.List`1" /> at the specified index.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="items">The items.</param>
+        /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
+        public static void InsertRange<T>([NotNull] this ISourceList<T> source, IEnumerable<T> items, int index)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list.AddRange(items, index));
+        }
 
-	    /// <summary>
-		/// Removes the specified item from the source list
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="item">The item.</param>
-		public static void Remove<T>([NotNull] this ISourceList<T> source, T item)
-		{
-		    if (source == null) throw new ArgumentNullException(nameof(source));
-		    source.Edit(list => list.Remove(item));
-		}
+        /// <summary>
+        /// Removes the specified item from the source list
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="item">The item.</param>
+        public static void Remove<T>([NotNull] this ISourceList<T> source, T item)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list.Remove(item));
+        }
 
         /// <summary>
         /// Removes the items from source in an optimised manner
@@ -96,7 +95,6 @@ namespace DynamicData
             source.Edit(list => list.RemoveMany(itemsToRemove));
         }
 
-
         /// <summary>
         /// Moves an item from the original to the destination index
         /// </summary>
@@ -106,10 +104,10 @@ namespace DynamicData
         public static void Move<T>([NotNull] this ISourceList<T> source, int original, int destination)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.Edit(list => list.Move(original,destination));
+            source.Edit(list => list.Move(original, destination));
         }
 
-	    /// <summary>
+        /// <summary>
         /// Removes a range of elements from the <see cref="T:System.Collections.Generic.List`1" />.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -119,25 +117,22 @@ namespace DynamicData
         /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="count" /> is less than 0.</exception>
         /// <exception cref="T:System.ArgumentException"><paramref name="index" /> and <paramref name="count" /> do not denote a valid range of elements in the <see cref="T:System.Collections.Generic.List`1" />.</exception>
         public static void RemoveRange<T>([NotNull] this ISourceList<T> source, int index, int count)
-	    {
-	        if (source == null) throw new ArgumentNullException(nameof(source));
-	        source.Edit(list => list.RemoveRange(index,count));
-	    }
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list.RemoveRange(index, count));
+        }
 
-
-	    /// <summary>
-		/// Removes the element at the spedified index
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="index">The index.</param>
-		public static void RemoveAt<T>([NotNull] this ISourceList<T> source, int index)
-	    {
-	        if (source == null) throw new ArgumentNullException(nameof(source));
-	        source.Edit(list => list.RemoveAt(index));
-	    }
-
-
+        /// <summary>
+        /// Removes the element at the spedified index
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="index">The index.</param>
+        public static void RemoveAt<T>([NotNull] this ISourceList<T> source, int index)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list.RemoveAt(index));
+        }
 
         /// <summary>
         /// Replaces the specified original with the destinaton object
@@ -147,27 +142,27 @@ namespace DynamicData
         /// <param name="original">The original.</param>
         /// <param name="destination">The destination.</param>
         public static void Replace<T>([NotNull] this ISourceList<T> source, T original, T destination)
-	    {
-	        if (source == null) throw new ArgumentNullException(nameof(source));
-	        source.Edit(list => list.Replace(original, destination));
-	    }
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list.Replace(original, destination));
+        }
 
-	    /// <summary>
-		/// Replaces the item at the specified index with the new item
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="index">The index.</param>
-		/// <param name="item">The item.</param>
-		public static void ReplaceAt<T>([NotNull] this ISourceList<T> source, int index, T item)
-	    {
-	        if (source == null) throw new ArgumentNullException(nameof(source));
-	        source.Edit(list => list[index]=item);
-	    }
+        /// <summary>
+        /// Replaces the item at the specified index with the new item
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="index">The index.</param>
+        /// <param name="item">The item.</param>
+        public static void ReplaceAt<T>([NotNull] this ISourceList<T> source, int index, T item)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(list => list[index] = item);
+        }
 
-	    //public static int ElementAt<T>(this ISourceList<T> source, int index)
-		//{
-		//	source.Edit(list => list[index] = item);
-		//}
-	}
+        //public static int ElementAt<T>(this ISourceList<T> source, int index)
+        //{
+        //	source.Edit(list => list[index] = item);
+        //}
+    }
 }

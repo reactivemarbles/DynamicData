@@ -5,13 +5,13 @@ using DynamicData.Annotations;
 
 namespace DynamicData.Linq
 {
-    internal class AddKeyEnumerator<TObject, TKey>: IEnumerable<Change<TObject, TKey>>
+    internal class AddKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject, TKey>>
     {
         private readonly IChangeSet<TObject> _source;
         private readonly Func<TObject, TKey> _keySelector;
 
         public AddKeyEnumerator([NotNull] IChangeSet<TObject> source,
-            [NotNull] Func<TObject,TKey> keySelector)
+                                [NotNull] Func<TObject, TKey> keySelector)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
@@ -37,9 +37,9 @@ namespace DynamicData.Linq
                         var item = change.Item.Current;
                         var key = _keySelector(item);
                         yield return new Change<TObject, TKey>(ChangeReason.Add, key, item);
-                    }
-                        break;
 
+                        break;
+                    }
                     case ListChangeReason.AddRange:
                     {
                         foreach (var item in change.Range)
@@ -47,9 +47,9 @@ namespace DynamicData.Linq
                             var key = _keySelector(item);
                             yield return new Change<TObject, TKey>(ChangeReason.Add, key, item);
                         }
-                    }
 
                         break;
+                    }
                     case ListChangeReason.Replace:
                     {
                         //replace is a remove and add
@@ -60,16 +60,17 @@ namespace DynamicData.Linq
                         var current = change.Item.Current;
                         var currentKey = _keySelector(current);
                         yield return new Change<TObject, TKey>(ChangeReason.Add, currentKey, current);
-                    }
+
                         break;
+                    }
                     case ListChangeReason.Remove:
                     {
                         var item = change.Item.Current;
                         var key = _keySelector(item);
                         yield return new Change<TObject, TKey>(ChangeReason.Remove, key, item);
-                    }
 
                         break;
+                    }
                     case ListChangeReason.Clear:
                     case ListChangeReason.RemoveRange:
                     {
@@ -78,13 +79,13 @@ namespace DynamicData.Linq
                             var key = _keySelector(item);
                             yield return new Change<TObject, TKey>(ChangeReason.Remove, key, item);
                         }
-                    }
+
                         break;
+                    }
                     case ListChangeReason.Moved:
                     {
-
                         var key = _keySelector(change.Item.Current);
-                        yield return new Change<TObject, TKey>(ChangeReason.Moved, key, change.Item.Current, change.Item.Previous,change.Item.CurrentIndex,change.Item.PreviousIndex);
+                        yield return new Change<TObject, TKey>(ChangeReason.Moved, key, change.Item.Current, change.Item.Previous, change.Item.CurrentIndex, change.Item.PreviousIndex);
                         break;
                     }
                     default:

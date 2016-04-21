@@ -26,7 +26,8 @@ namespace DynamicData.Binding
         /// Initializes a new instance of the <see cref="T:System.Collections.ObjectModel.ObservableCollection`1"/> class that contains elements copied from the specified list.
         /// </summary>
         /// <param name="list">The list from which the elements are copied.</param><exception cref="T:System.ArgumentNullException">The <paramref name="list"/> parameter cannot be null.</exception>
-        public ObservableCollectionExtended(List<T> list) : base(list)
+        public ObservableCollectionExtended(List<T> list)
+            : base(list)
         {
         }
 
@@ -45,7 +46,7 @@ namespace DynamicData.Binding
 
         private bool _suspendNotifications;
         private bool _suspendCount;
-    
+
         /// <summary>
         /// Suspends notifications. When disposed, a reset notification is fired
         /// </summary>
@@ -54,7 +55,7 @@ namespace DynamicData.Binding
         {
             _suspendCount = true;
             _suspendNotifications = true;
-            
+
             return Disposable.Create(() =>
             {
                 _suspendCount = false;
@@ -74,19 +75,18 @@ namespace DynamicData.Binding
             _suspendCount = true;
             return Disposable.Create(() =>
             {
-
                 _suspendCount = false;
-             
-                if (Count!=count)
+
+                if (Count != count)
                     OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             });
         }
 
-		/// <summary>
-		/// Raises the <see cref="E:PropertyChanged" /> event.
-		/// </summary>
-		/// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
-		protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        /// <summary>
+        /// Raises the <see cref="E:PropertyChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             if (_suspendCount && e.PropertyName == "Count")
                 return;
@@ -94,22 +94,17 @@ namespace DynamicData.Binding
             base.OnPropertyChanged(e);
         }
 
-		/// <summary>
-		/// Raises the <see cref="E:CollectionChanged" /> event.
-		/// </summary>
-		/// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
-		protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        /// <summary>
+        /// Raises the <see cref="E:CollectionChanged" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
+        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             if (_suspendNotifications) return;
             base.OnCollectionChanged(e);
         }
 
-
-
-
         #endregion
-
-
 
         /// <summary>
         /// Clears the list and Loads the specified items.
@@ -119,12 +114,9 @@ namespace DynamicData.Binding
         {
             CheckReentrancy();
             Clear();
-			
-         
-            foreach(var item in items)
+
+            foreach (var item in items)
                 Add(item);
-
         }
-
     }
 }

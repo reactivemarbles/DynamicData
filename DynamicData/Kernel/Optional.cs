@@ -34,7 +34,6 @@ namespace DynamicData.Kernel
     /// The equivalent of a nullable type which works on value and reference types
     /// </summary>
     /// <typeparam name="T">The underlying value type of the <see cref="T:System.Nullable`1"/> generic type.</typeparam><filterpriority>1</filterpriority>
-
 #if !SILVERLIGHT && !PORTABLE && !PORTABLE40
 	[Serializable]
 #endif
@@ -43,12 +42,10 @@ namespace DynamicData.Kernel
         private readonly bool _hasValue;
         private readonly T _value;
 
-
         /// <summary>
         /// The default valueless optional
         /// </summary>
-        public readonly static Optional<T> None =default(Optional<T>);
-
+        public readonly static Optional<T> None = default(Optional<T>);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Optional{T}"/> struct.
@@ -56,7 +53,7 @@ namespace DynamicData.Kernel
         /// <param name="value">The value.</param>
         internal Optional(T value)
         {
-            if (ReferenceEquals(value,null))
+            if (ReferenceEquals(value, null))
             {
                 _hasValue = false;
                 _value = default(T);
@@ -78,8 +75,6 @@ namespace DynamicData.Kernel
             return new Optional<T>(value);
         }
 
-
-
         /// <summary>
         /// Gets a value indicating whether the current <see cref="T:System.Nullable`1"/> object has a value.
         /// </summary>
@@ -89,7 +84,7 @@ namespace DynamicData.Kernel
         /// </returns>
         public bool HasValue => _hasValue;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the value of the current <see cref="T:System.Nullable`1"/> value.
         /// </summary>
         /// 
@@ -129,57 +124,57 @@ namespace DynamicData.Kernel
             return value.Value;
         }
 
-		#region Equality members
+        #region Equality members
 
-		/// <summary>
-		/// Implements the operator ==.
-		/// </summary>
-		/// <param name="left">The left.</param>
-		/// <param name="right">The right.</param>
-		/// <returns>
-		/// The result of the operator.
-		/// </returns>
-		public static bool operator ==(Optional<T> left, Optional<T> right)
+        /// <summary>
+        /// Implements the operator ==.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator ==(Optional<T> left, Optional<T> right)
         {
             return left.Equals(right);
         }
 
-		/// <summary>
-		/// Implements the operator !=.
-		/// </summary>
-		/// <param name="left">The left.</param>
-		/// <param name="right">The right.</param>
-		/// <returns>
-		/// The result of the operator.
-		/// </returns>
-		public static bool operator !=(Optional<T> left, Optional<T> right)
+        /// <summary>
+        /// Implements the operator !=.
+        /// </summary>
+        /// <param name="left">The left.</param>
+        /// <param name="right">The right.</param>
+        /// <returns>
+        /// The result of the operator.
+        /// </returns>
+        public static bool operator !=(Optional<T> left, Optional<T> right)
         {
             return !left.Equals(right);
         }
 
-		/// <summary>
-		/// Equalses the specified other.
-		/// </summary>
-		/// <param name="other">The other.</param>s
-		/// <returns></returns>
-		public bool Equals(Optional<T> other)
+        /// <summary>
+        /// Equalses the specified other.
+        /// </summary>
+        /// <param name="other">The other.</param>s
+        /// <returns></returns>
+        public bool Equals(Optional<T> other)
         {
             if (!HasValue) return !other.HasValue;
             if (!other.HasValue) return false;
             return _hasValue.Equals(other._hasValue) && EqualityComparer<T>.Default.Equals(_value, other._value);
         }
 
-		/// <summary>
-		/// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
-		/// </summary>
-		/// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
-		/// <returns>
-		///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
-		/// </returns>
-		public override bool Equals(object obj)
+        /// <summary>
+        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
+        public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is Optional<T> && Equals((Optional<T>) obj);
+            return obj is Optional<T> && Equals((Optional<T>)obj);
         }
 
         /// <summary>
@@ -193,23 +188,21 @@ namespace DynamicData.Kernel
         {
             unchecked
             {
-                return (_hasValue.GetHashCode()*397) ^ EqualityComparer<T>.Default.GetHashCode(_value);
+                return (_hasValue.GetHashCode() * 397) ^ EqualityComparer<T>.Default.GetHashCode(_value);
             }
         }
 
-		#endregion
+        #endregion
 
-
-		/// <summary>
-		/// Returns a <see cref="System.String" /> that represents this instance.
-		/// </summary>
-		/// <returns>
-		/// A <see cref="System.String" /> that represents this instance.
-		/// </returns>
-		public override string ToString()
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
         {
             return !HasValue ? "<None>" : _value.ToString();
         }
     }
-
 }

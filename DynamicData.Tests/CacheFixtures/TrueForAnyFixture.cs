@@ -28,10 +28,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void InitialItemReturnsFalseWhenObservaleHasNoValue()
         {
             bool? valuereturned = null;
-            var subscribed = _observable.Subscribe(result =>
-            {
-                valuereturned = result;
-            });
+            var subscribed = _observable.Subscribe(result => { valuereturned = result; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -46,10 +43,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void InlineObservableChangeProducesResult()
         {
             bool? valuereturned = null;
-            var subscribed = _observable.Subscribe(result =>
-            {
-                valuereturned = result;
-            });
+            var subscribed = _observable.Subscribe(result => { valuereturned = result; });
 
             var item = new ObjectWithObservable(1);
             item.InvokeObservable(true);
@@ -63,10 +57,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void MultipleValuesReturnTrue()
         {
             bool? valuereturned = null;
-            var subscribed = _observable.Subscribe(result =>
-            {
-                valuereturned = result;
-            });
+            var subscribed = _observable.Subscribe(result => { valuereturned = result; });
 
             var item1 = new ObjectWithObservable(1);
             var item2 = new ObjectWithObservable(2);
@@ -79,9 +70,7 @@ namespace DynamicData.Tests.CacheFixtures
             item1.InvokeObservable(true);
             Assert.AreEqual(true, valuereturned.Value, "Value should be true");
             subscribed.Dispose();
-
         }
-
 
         private class ObjectWithObservable
         {
@@ -100,21 +89,11 @@ namespace DynamicData.Tests.CacheFixtures
                 _changed.OnNext(value);
             }
 
-            public IObservable<bool> Observable
-            {
-                get { return _changed; }
-            }
+            public IObservable<bool> Observable { get { return _changed; } }
 
-            public bool Value
-            {
-                get { return _value; }
-            }
+            public bool Value { get { return _value; } }
 
-            public int Id
-            {
-                get { return _id; }
-            }
+            public int Id { get { return _id; } }
         }
-
     }
 }

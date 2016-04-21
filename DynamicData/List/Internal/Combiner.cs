@@ -40,7 +40,7 @@ namespace DynamicData.Internal
                             CloneSourceList(list, changes);
 
                             var notifications = UpdateResultList(changes);
-                            if (notifications.Count!=0)
+                            if (notifications.Count != 0)
                                 observer.OnNext(notifications);
                         }));
                     }
@@ -51,7 +51,7 @@ namespace DynamicData.Internal
 
         private void CloneSourceList(ReferenceCountTracker<T> tracker, IChangeSet<T> changes)
         {
-            changes.ForEach(change =>
+            foreach(var change in changes)
             {
                 switch (change.Reason)
                 {
@@ -75,13 +75,13 @@ namespace DynamicData.Internal
                             tracker.Remove(t);
                         break;
                 }
-            });
+            }
         }
 
         private IChangeSet<T> UpdateResultList(IChangeSet<T> changes)
         {
             //child caches have been updated before we reached this point.
-            changes.Flatten().ForEach(change =>
+            foreach(var change in changes.Flatten())
             {
                 var item = change.Current;
                 var isInResult = _resultList.Contains(item);
@@ -97,8 +97,7 @@ namespace DynamicData.Internal
                     if (isInResult)
                         _resultList.Remove(item);
                 }
-
-            });
+            }
             return _resultList.CaptureChanges();
         }
 

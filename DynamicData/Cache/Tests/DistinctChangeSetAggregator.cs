@@ -16,7 +16,6 @@ namespace DynamicData.Tests
         private ChangeSummary _summary = ChangeSummary.Empty;
         private Exception _error;
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DistinctChangeSetAggregator{TValue}"/> class.
         /// </summary>
@@ -45,17 +44,17 @@ namespace DynamicData.Tests
         /// </summary>
         public IObservableCache<TValue, TValue> Data { get; }
 
-	    /// <summary>
+        /// <summary>
         /// Gets the messages.
         /// </summary>
         public IList<IChangeSet<TValue, TValue>> Messages { get; } = new List<IChangeSet<TValue, TValue>>();
 
-	    /// <summary>
+        /// <summary>
         /// Gets the summary.
         /// </summary>
         public ChangeSummary Summary => _summary;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the error.
         /// </summary>
         /// <value>
@@ -63,12 +62,12 @@ namespace DynamicData.Tests
         /// </value>
         public Exception Error => _error;
 
-		/// <summary>
-		/// Releases unmanaged and - optionally - managed resources.
-		/// </summary>
-		public void Dispose()
-		{
-			_disposer.Dispose();
-		}
-	}
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _disposer.Dispose();
+        }
+    }
 }

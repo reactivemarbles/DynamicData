@@ -14,7 +14,7 @@ namespace DynamicData.Tests.CacheFixtures
         [SetUp]
         public void Initialise()
         {
-            _source = new SourceCache<Person, string>(p=>p.Name);
+            _source = new SourceCache<Person, string>(p => p.Name);
         }
 
         [TearDown]
@@ -35,9 +35,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
             messageWriter.Dispose();
 
-            Assert.AreEqual(100,messages.Count);
+            Assert.AreEqual(100, messages.Count);
         }
-
-
     }
 }

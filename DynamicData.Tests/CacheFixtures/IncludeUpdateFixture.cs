@@ -36,6 +36,5 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.Dispose();
         }
-
     }
 }

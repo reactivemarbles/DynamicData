@@ -7,7 +7,7 @@ namespace DynamicData.Controllers
     /// <summary>
     /// Virtualisation controller
     /// </summary>
-    public class VirtualisingController: IDisposable
+    public class VirtualisingController : IDisposable
     {
         private readonly ISubject<IVirtualRequest> _subject = new ReplaySubject<IVirtualRequest>(1);
         private IVirtualRequest _request;
@@ -55,12 +55,12 @@ namespace DynamicData.Controllers
         /// </value>
         public IObservable<IVirtualRequest> Changed => _subject.AsObservable();
 
-		/// <summary>
-		/// Releases unmanaged and - optionally - managed resources.
-		/// </summary>
-		public void Dispose()
-		{
-			_subject.OnCompleted();
-		}
-	}
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _subject.OnCompleted();
+        }
+    }
 }

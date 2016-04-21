@@ -2,17 +2,16 @@
 
 namespace DynamicData.Internal
 {
-    internal class KeyValueComparer<TObject, TKey> : IComparer<KeyValuePair<TKey,TObject>>
+    internal class KeyValueComparer<TObject, TKey> : IComparer<KeyValuePair<TKey, TObject>>
     {
         private readonly IComparer<TObject> _comparer;
 
-        public KeyValueComparer(IComparer<TObject> comparer=null)
+        public KeyValueComparer(IComparer<TObject> comparer = null)
         {
             _comparer = comparer;
         }
 
-
-        public int Compare(KeyValuePair<TKey,TObject> x, KeyValuePair<TKey,TObject> y)
+        public int Compare(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
         {
             if (_comparer != null)
             {

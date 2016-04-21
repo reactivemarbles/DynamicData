@@ -8,13 +8,12 @@ namespace DynamicData.Internal
 {
     internal class KeyValueCollection<TObject, TKey> : IKeyValueCollection<TObject, TKey>
     {
-        private readonly List<KeyValuePair<TKey,TObject>> _items;
+        private readonly List<KeyValuePair<TKey, TObject>> _items;
 
-
-	    public KeyValueCollection(IEnumerable<KeyValuePair<TKey,TObject>> items, 
-            IComparer<KeyValuePair<TKey,TObject>> comparer, 
-            SortReason sortReason, 
-            SortOptimisations optimisations)
+        public KeyValueCollection(IEnumerable<KeyValuePair<TKey, TObject>> items,
+                                  IComparer<KeyValuePair<TKey, TObject>> comparer,
+                                  SortReason sortReason,
+                                  SortOptimisations optimisations)
         {
             if (items == null) throw new ArgumentNullException("items");
             _items = items.ToList();
@@ -26,10 +25,9 @@ namespace DynamicData.Internal
         public KeyValueCollection()
         {
             Optimisations = SortOptimisations.None;
-            _items = new List<KeyValuePair<TKey,TObject>>();
+            _items = new List<KeyValuePair<TKey, TObject>>();
             Comparer = new KeyValueComparer<TObject, TKey>();
         }
-
 
         /// <summary>
         /// Gets the comparer used to peform the sort
@@ -37,18 +35,17 @@ namespace DynamicData.Internal
         /// <value>
         /// The comparer.
         /// </value>
-        public IComparer<KeyValuePair<TKey,TObject>> Comparer { get; }
+        public IComparer<KeyValuePair<TKey, TObject>> Comparer { get; }
 
-	    public int Count => _items.Count;
+        public int Count => _items.Count;
 
-	    public KeyValuePair<TKey,TObject> this[int index] => _items[index];
+        public KeyValuePair<TKey, TObject> this[int index] => _items[index];
 
-	    public SortReason SortReason { get; }
+        public SortReason SortReason { get; }
 
-	    public SortOptimisations Optimisations { get; }
+        public SortOptimisations Optimisations { get; }
 
-
-	    public IEnumerator<KeyValuePair<TKey,TObject>> GetEnumerator()
+        public IEnumerator<KeyValuePair<TKey, TObject>> GetEnumerator()
         {
             return _items.GetEnumerator();
         }

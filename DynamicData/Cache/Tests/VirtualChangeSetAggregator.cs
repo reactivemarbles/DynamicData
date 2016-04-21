@@ -30,15 +30,13 @@ namespace DynamicData.Tests
 
             var connected = published.Connect();
             _disposer = Disposable.Create(() =>
-                                              {
-                                                  connected.Dispose();
-                                                  summariser.Dispose();
-                                                  results.Dispose();
-                                                  error.Dispose();
-                                              });
+            {
+                connected.Dispose();
+                summariser.Dispose();
+                results.Dispose();
+                error.Dispose();
+            });
         }
-
-
 
         /// <summary>
         /// Gets the data.
@@ -73,9 +71,9 @@ namespace DynamicData.Tests
         public Exception Error { get; private set; }
 
         /// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		public void Dispose()
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
         {
             _disposer.Dispose();
         }

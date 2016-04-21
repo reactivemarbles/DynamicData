@@ -18,7 +18,7 @@ namespace DynamicData.Binding
         /// Initializes a new instance of the <see cref="T:System.Object" /> class.
         /// </summary>
         /// <param name="refreshThreshold">The number of changes before a Reset event is used</param>
-        public SortedObservableCollectionAdaptor(int refreshThreshold=25)
+        public SortedObservableCollectionAdaptor(int refreshThreshold = 25)
         {
             _refreshThreshold = refreshThreshold;
         }
@@ -35,16 +35,13 @@ namespace DynamicData.Binding
                 case SortReason.InitialLoad:
                 case SortReason.ComparerChanged:
                 case SortReason.Reset:
-                {
                     using (collection.SuspendNotifications())
                     {
-                        collection.Load(changes.SortedItems.Select(kv=>kv.Value));
+                        collection.Load(changes.SortedItems.Select(kv => kv.Value));
                     }
-                }
                     break;
 
                 case SortReason.DataChanged:
-                {
                     if (changes.Count > _refreshThreshold)
                     {
                         using (collection.SuspendNotifications())
@@ -59,10 +56,9 @@ namespace DynamicData.Binding
                             DoUpdate(changes, collection);
                         }
                     }
-                }
                     break;
-                case SortReason.Reorder:
 
+                case SortReason.Reorder:
                     //Updates will only be moves, so appply logic
                     using (collection.SuspendCount())
                     {
@@ -70,16 +66,14 @@ namespace DynamicData.Binding
                     }
                     break;
 
-
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
         }
-        
-        private void DoUpdate(ISortedChangeSet<TObject, TKey> updates,IObservableCollection<TObject> list)
+
+        private void DoUpdate(ISortedChangeSet<TObject, TKey> updates, IObservableCollection<TObject> list)
         {
-            updates.ForEach(update =>
+            foreach(var update in updates)
             {
                 switch (update.Reason)
                 {
@@ -93,15 +87,11 @@ namespace DynamicData.Binding
                         list.Move(update.PreviousIndex, update.CurrentIndex);
                         break;
                     case ChangeReason.Update:
-                    {
                         list.RemoveAt(update.PreviousIndex);
                         list.Insert(update.CurrentIndex, update.Current);
-                    }
                         break;
-
                 }
-            });
+            }
         }
-
     }
 }

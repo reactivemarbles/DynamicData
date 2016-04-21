@@ -34,7 +34,6 @@ namespace DynamicData.Tests.ListFixtures
             _results.Dispose();
         }
 
-
         [Test]
         public void IncludedWhenItemIsInOneSource()
         {
@@ -74,7 +73,6 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(1, _results.Data.Count);
         }
 
-
         [Test]
         public void CombineRange()
         {
@@ -111,7 +109,6 @@ namespace DynamicData.Tests.ListFixtures
             CollectionAssert.AreEquivalent(Enumerable.Range(1, 5), _results.Data.Items);
         }
 
-
         [Test]
         public void AddAndRemoveLists()
         {
@@ -133,12 +130,12 @@ namespace DynamicData.Tests.ListFixtures
                 innerList.AddRange(Enumerable.Range(3, 5));
             });
 
-             result = Enumerable.Range(1, 2);
+            result = Enumerable.Range(1, 2);
             Assert.AreEqual(2, _results.Data.Count);
             CollectionAssert.AreEquivalent(result, _results.Data.Items);
 
             _source.RemoveAt(1);
-             result = Enumerable.Range(1, 5);
+            result = Enumerable.Range(1, 5);
             Assert.AreEqual(5, _results.Data.Count);
             CollectionAssert.AreEquivalent(result, _results.Data.Items);
 

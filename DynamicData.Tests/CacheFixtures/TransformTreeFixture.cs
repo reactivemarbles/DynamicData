@@ -13,11 +13,11 @@ namespace DynamicData.Tests.CacheFixtures
         [SetUp]
         public void SetUp()
         {
-            _sourceCache =  new SourceCache<EmployeeDto, int>(e => e.Id);
+            _sourceCache = new SourceCache<EmployeeDto, int>(e => e.Id);
 
             _result = _sourceCache.Connect()
-                            .TransformToTree(e => e.BossId)
-                            .AsObservableCache();
+                                  .TransformToTree(e => e.BossId)
+                                  .AsObservableCache();
         }
 
         [TearDown]
@@ -35,7 +35,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             var firstNode = _result.Items.First();
             Assert.AreEqual(3, firstNode.Children.Count);
-            
+
             var secondNode = _result.Items.Skip(1).First();
             Assert.AreEqual(0, secondNode.Children.Count);
         }
@@ -57,7 +57,6 @@ namespace DynamicData.Tests.CacheFixtures
             var firstNode = _result.Items.First();
             Assert.AreEqual(3, firstNode.Children.Count);
             Assert.AreEqual(changed.Name, firstNode.Item.Name);
-
         }
 
         [Test]
@@ -65,10 +64,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
 
-
             var changed = new EmployeeDto(2)
             {
-                BossId =1,
+                BossId = 1,
                 Name = "Employee 2 (with name change)"
             };
 
@@ -108,7 +106,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddMissingChild()
         {
-            var boss = new EmployeeDto(2) {BossId = 0, Name = "Boss"};
+            var boss = new EmployeeDto(2) { BossId = 0, Name = "Boss" };
             var minion = new EmployeeDto(1) { BossId = 2, Name = "DogsBody" };
             _sourceCache.AddOrUpdate(boss);
             _sourceCache.AddOrUpdate(minion);
@@ -151,7 +149,6 @@ namespace DynamicData.Tests.CacheFixtures
                 Name = "Employee4"
             });
 
-
             //if this throws, then employee 4 is no a child of boss 1
             var emp4 = _result.Lookup(1).Value.Children.Lookup(4).Value;
 
@@ -161,9 +158,8 @@ namespace DynamicData.Tests.CacheFixtures
             //lookup previous boss (emp 4 should no longet be a child)
             var emp3 = _result.Lookup(1).Value.Children.Lookup(3).Value;
 
-
             //emp 4 must be removed from previous boss's child collection
-            Assert.IsFalse( emp3.Children.Lookup(4).HasValue);
+            Assert.IsFalse(emp3.Children.Lookup(4).HasValue);
         }
 
         [Test]
@@ -172,13 +168,12 @@ namespace DynamicData.Tests.CacheFixtures
             _sourceCache.AddOrUpdate(new EmployeeDto(1) { BossId = 2, Name = "E1" });
             _sourceCache.AddOrUpdate(new EmployeeDto(2) { BossId = 1, Name = "E2" });
 
-
             //we expect the children of node 4  to be pushed up become new roots
             Assert.AreEqual(1, _result.Count);
-
         }
 
         #region Employees
+
         private IEnumerable<EmployeeDto> CreateEmployees()
         {
             yield return new EmployeeDto(1)
@@ -228,13 +223,10 @@ namespace DynamicData.Tests.CacheFixtures
                 BossId = 1,
                 Name = "Employee8"
             };
-
-
         }
 
         public class EmployeeDto : IEquatable<EmployeeDto>
         {
-
             public EmployeeDto(int id)
             {
                 Id = id;
@@ -278,17 +270,12 @@ namespace DynamicData.Tests.CacheFixtures
 
             #endregion
 
-
-
             public override string ToString()
             {
                 return $"Name: {Name}, Id: {Id}, BossId: {BossId}";
             }
         }
 
-
         #endregion
-
-
     }
 }

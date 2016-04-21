@@ -4,31 +4,29 @@ using System.Linq;
 
 namespace DynamicData
 {
-	/// <summary>
-	/// Multipe change container
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public class RangeChange<T> : IEnumerable<T>
-	{
-
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
-		/// </summary>
-		/// <param name="items">The items.</param>
-		/// <param name="index">The index.</param>
-		public RangeChange(IEnumerable<T> items, int index = -1)
-		{
-			Index = index;
-			_items = items as List<T> ?? items.ToList();
-		}
+    /// <summary>
+    /// Multipe change container
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class RangeChange<T> : IEnumerable<T>
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
+        /// </summary>
+        /// <param name="items">The items.</param>
+        /// <param name="index">The index.</param>
+        public RangeChange(IEnumerable<T> items, int index = -1)
+        {
+            Index = index;
+            _items = items as List<T> ?? items.ToList();
+        }
 
         /// <summary>
         /// Adds the specified item to the range.
         /// </summary>
         /// <param name="item">The item.</param>
         public void Add(T item)
-	    {
+        {
             _items.Add(item);
         }
 
@@ -39,9 +37,8 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         public void Insert(int index, T item)
         {
-            _items.Insert(index,item);
+            _items.Insert(index, item);
         }
-
 
         /// <summary>
         /// Sets the index of the starting index of the range
@@ -60,7 +57,6 @@ namespace DynamicData
         /// </summary>
         public int Count => _items.Count;
 
-
         /// <summary>
         /// Gets the index initial index i.e. for the initial starting point of the range insertion
         /// </summary>
@@ -74,26 +70,24 @@ namespace DynamicData
         /// </summary>
         /// <returns></returns>
         public IEnumerator<T> GetEnumerator()
-		{
-			return _items.GetEnumerator();
-		}
+        {
+            return _items.GetEnumerator();
+        }
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
-		/// <summary>
-		/// Returns a <see cref="System.String" /> that represents this instance.
-		/// </summary>
-		/// <returns>
-		/// A <see cref="System.String" /> that represents this instance.
-		/// </returns>
-		public override string ToString()
-		{
-			return $"Range<{typeof (T).Name}>. Count={Count}";
-		}
-
-	}
-
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
+        public override string ToString()
+        {
+            return $"Range<{typeof(T).Name}>. Count={Count}";
+        }
+    }
 }

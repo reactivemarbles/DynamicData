@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DynamicData.Internal
 {
-    internal sealed class SubscriptionContainer<TObject, TKey>: IDisposable, IEquatable<SubscriptionContainer<TObject, TKey>>
+    internal sealed class SubscriptionContainer<TObject, TKey> : IDisposable, IEquatable<SubscriptionContainer<TObject, TKey>>
     {
         private readonly IDisposable _cleanUp;
         private readonly TObject _item;
@@ -28,9 +28,7 @@ namespace DynamicData.Internal
             _cleanUp.Dispose();
         }
 
-
         #region Equality
-
 
         public bool Equals(SubscriptionContainer<TObject, TKey> other)
         {
@@ -44,7 +42,7 @@ namespace DynamicData.Internal
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((SubscriptionContainer<TObject, TKey>) obj);
+            return Equals((SubscriptionContainer<TObject, TKey>)obj);
         }
 
         public override int GetHashCode()
@@ -69,5 +67,4 @@ namespace DynamicData.Internal
             return string.Format("Key: {0}, Item: {1}", _key, _item);
         }
     }
-
 }

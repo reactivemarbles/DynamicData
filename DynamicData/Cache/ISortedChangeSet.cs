@@ -7,12 +7,11 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public interface ISortedChangeSet<TObject, TKey> :IChangeSet<TObject,TKey> 
+    public interface ISortedChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>
     {
         /// <summary>
         /// All cached items in sort order
         /// </summary>
         IKeyValueCollection<TObject, TKey> SortedItems { get; }
     }
-
 }

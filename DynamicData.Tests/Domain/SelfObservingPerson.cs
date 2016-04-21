@@ -16,27 +16,18 @@ namespace DynamicData.Tests.Domain
 
         public SelfObservingPerson(IObservable<Person> observable)
         {
-            _cleanUp = observable.FinallySafe( () => _completed=true).Subscribe(p =>
+            _cleanUp = observable.FinallySafe(() => _completed = true).Subscribe(p =>
             {
                 _person = p;
                 _updateCount++;
             });
         }
 
-        public Person Person
-        {
-            get { return _person; }
-        }
+        public Person Person { get { return _person; } }
 
-        public int UpdateCount
-        {
-            get { return _updateCount; }
-        }
+        public int UpdateCount { get { return _updateCount; } }
 
-        public bool Completed
-        {
-            get { return _completed; }
-        }
+        public bool Completed { get { return _completed; } }
 
         #region Overrides of IDisposable
 

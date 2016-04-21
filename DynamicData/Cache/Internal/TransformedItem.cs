@@ -25,20 +25,11 @@ namespace DynamicData.Internal
             _previous = previous;
         }
 
-        public ChangeReason Reason
-        {
-            get { return _reason; }
-        }
+        public ChangeReason Reason { get { return _reason; } }
 
-        public T Current
-        {
-            get { return _current; }
-        }
+        public T Current { get { return _current; } }
 
-        public Optional<T> Previous
-        {
-            get { return _previous; }
-        }
+        public Optional<T> Previous { get { return _previous; } }
 
         #region Equality
 
@@ -51,16 +42,16 @@ namespace DynamicData.Internal
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is TransformedItem<T> && Equals((TransformedItem<T>) obj);
+            return obj is TransformedItem<T> && Equals((TransformedItem<T>)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = (int) _reason;
-                hashCode = (hashCode*397) ^ EqualityComparer<T>.Default.GetHashCode(_current);
-                hashCode = (hashCode*397) ^ _previous.GetHashCode();
+                var hashCode = (int)_reason;
+                hashCode = (hashCode * 397) ^ EqualityComparer<T>.Default.GetHashCode(_current);
+                hashCode = (hashCode * 397) ^ _previous.GetHashCode();
                 return hashCode;
             }
         }

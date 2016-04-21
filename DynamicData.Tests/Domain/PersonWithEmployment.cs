@@ -14,20 +14,11 @@ namespace DynamicData.Tests.Domain
             _empData = source.Cache;
         }
 
-        public string Person
-        {
-            get { return _source.Key; }
-        }
+        public string Person { get { return _source.Key; } }
 
-        public IObservableCache<PersonEmployment, PersonEmpKey> EmpoymentData
-        {
-            get { return _empData; }
-        }
+        public IObservableCache<PersonEmployment, PersonEmpKey> EmpoymentData { get { return _empData; } }
 
-        public int EmployementCount
-        {
-            get { return _empData.Count; }
-        }
+        public int EmployementCount { get { return _empData.Count; } }
 
         public void Dispose()
         {

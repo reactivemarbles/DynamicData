@@ -10,7 +10,7 @@ namespace DynamicData
     /// Extensions to help with maintainence of a list
     /// </summary>
     public static class ListEx
-	{
+    {
         #region Apply operators to a list
 
         internal static bool MovedWithinRange<T>(this Change<T> source, int startIndex, int endIndex)
@@ -23,7 +23,6 @@ namespace DynamicData
 
             return current >= startIndex && current <= endIndex
                    || previous >= startIndex && previous <= endIndex;
-
         }
 
         /// <summary>
@@ -41,79 +40,72 @@ namespace DynamicData
 
             //TODO: Check for missing index
 
-            changes.ForEach(item =>
+            foreach(var item in changes)
             {
-
                 switch (item.Reason)
                 {
                     case ListChangeReason.Add:
-                        {
-                            var change = item.Item;
-                            var match = predicate(change.Current);
-                            if (match) source.Add(change.Current);
-                        }
+                    {
+                        var change = item.Item;
+                        var match = predicate(change.Current);
+                        if (match) source.Add(change.Current);
                         break;
+                    }
                     case ListChangeReason.AddRange:
-                        {
-                            var matches = item.Range.Where(predicate).ToList();
-                            source.AddRange(matches);
-                        }
+                    {
+                        var matches = item.Range.Where(predicate).ToList();
+                        source.AddRange(matches);
                         break;
+                    }
                     case ListChangeReason.Replace:
+                    {
+                        var change = item.Item;
+                        var match = predicate(change.Current);
+                        var wasMatch = predicate(change.Previous.Value);
+
+                        if (match)
                         {
-                            var change = item.Item;
-                            var match = predicate(change.Current);
-                            var wasMatch = predicate(change.Previous.Value);
-
-                            if (match)
+                            if (wasMatch)
                             {
-                                if (wasMatch)
-                                {
-                                    //an update, so get the latest index
-                                    var previous = source.FindItemAndIndex(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
-                                        .ValueOrThrow(() => new InvalidOperationException("Cannot find item. Expected to be in the list"));
+                                //an update, so get the latest index
+                                var previous = source.FindItemAndIndex(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
+                                                     .ValueOrThrow(() => new InvalidOperationException("Cannot find item. Expected to be in the list"));
 
-                                    //replace inline
-                                    source[previous.Index] = change.Current;
-                                }
-                                else
-                                {
-                                    source.Add(change.Current);
-                                }
+                                //replace inline
+                                source[previous.Index] = change.Current;
                             }
                             else
                             {
-                                if (wasMatch)
-                                    source.Remove(change.Previous.Value);
+                                source.Add(change.Current);
                             }
                         }
-
+                        else
+                        {
+                            if (wasMatch)
+                                source.Remove(change.Previous.Value);
+                        }
                         break;
+                    }
                     case ListChangeReason.Remove:
-                        {
-                            var change = item.Item;
-                            var wasMatch = predicate(change.Current);
-                            if (wasMatch) source.Remove(change.Current);
-                        }
+                    {
+                        var change = item.Item;
+                        var wasMatch = predicate(change.Current);
+                        if (wasMatch) source.Remove(change.Current);
                         break;
-
+                    }
                     case ListChangeReason.RemoveRange:
-                        {
-                            source.RemoveMany(item.Range.Where(predicate));
-                        }
+                    {
+                        source.RemoveMany(item.Range.Where(predicate));
                         break;
-
+                    }
                     case ListChangeReason.Clear:
-                        {
-                            source.ClearOrRemoveMany(item);
-                        }
+                    {
+                        source.ClearOrRemoveMany(item);
                         break;
+                    }
                 }
-            });
-
-
+            }
         }
-
 
         /// <summary>
         /// Clones the list from the specified change set
@@ -131,107 +123,104 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (changes == null) throw new ArgumentNullException(nameof(changes));
 
-            changes.ForEach(item =>
+            foreach(var item in changes)
             {
                 switch (item.Reason)
                 {
                     case ListChangeReason.Add:
+                    {
+                        var change = item.Item;
+                        bool hasIndex = change.CurrentIndex >= 0;
+                        if (hasIndex)
                         {
-                            var change = item.Item;
-                            bool hasIndex = change.CurrentIndex >= 0;
-                            if (hasIndex)
-                            {
-                                source.Insert(change.CurrentIndex, change.Current);
-                            }
-                            else
-                            {
-                                source.Add(change.Current);
-                            }
-                            break;
+                            source.Insert(change.CurrentIndex, change.Current);
                         }
+                        else
+                        {
+                            source.Add(change.Current);
+                        }
+                        break;
+                    }
                     case ListChangeReason.AddRange:
-                        {
-                            source.AddOrInsertRange(item.Range, item.Range.Index);
-                            break;
-                        }
+                    {
+                        source.AddOrInsertRange(item.Range, item.Range.Index);
+                        break;
+                    }
                     case ListChangeReason.Clear:
-                        {
-                            source.ClearOrRemoveMany(item);
-                            break;
-                        }
+                    {
+                        source.ClearOrRemoveMany(item);
+                        break;
+                    }
                     case ListChangeReason.Replace:
+                    {
+                        var change = item.Item;
+                        if (change.CurrentIndex >= 0 && change.CurrentIndex == change.PreviousIndex)
                         {
-
-                            var change = item.Item;
-                            if (change.CurrentIndex >= 0 && change.CurrentIndex == change.PreviousIndex)
-                            {
-                                source[change.CurrentIndex] = change.Current;
-                            }
-                            else
-                            {
-                                //is this best? or replace + move?
-                                source.RemoveAt(change.PreviousIndex);
-                                source.Insert(change.CurrentIndex, change.Current);
-                            }
-
+                            source[change.CurrentIndex] = change.Current;
                         }
+                        else
+                        {
+                            //is this best? or replace + move?
+                            source.RemoveAt(change.PreviousIndex);
+                            source.Insert(change.CurrentIndex, change.Current);
+                        }
+
                         break;
+                    }
                     case ListChangeReason.Remove:
+                    {
+                        var change = item.Item;
+                        bool hasIndex = change.CurrentIndex >= 0;
+                        if (hasIndex)
                         {
-
-                            var change = item.Item;
-                            bool hasIndex = change.CurrentIndex >= 0;
-                            if (hasIndex)
-                            {
-                                source.RemoveAt(change.CurrentIndex);
-                            }
-                            else
-                            {
-                                source.Remove(change.Current);
-                            }
-
-                            break;
+                            source.RemoveAt(change.CurrentIndex);
                         }
-                    case ListChangeReason.RemoveRange:
+                        else
                         {
-                            //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
-                            //if (item.Range.Index < 0)
-                            //    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
+                            source.Remove(change.Current);
+                        }
 
-                            if (item.Range.Index >= 0 && ( source is IExtendedList<T> || source is List<T>))
-                            {
-                                source.RemoveRange(item.Range.Index, item.Range.Count);
-                            }
-                            else
-                            {
-                                source.RemoveMany(item.Range);
-                            }
+                        break;
+                    }
+                    case ListChangeReason.RemoveRange:
+                    {
+                        //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
+                        //if (item.Range.Index < 0)
+                        //    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
+
+                        if (item.Range.Index >= 0 && (source is IExtendedList<T> || source is List<T>))
+                        {
+                            source.RemoveRange(item.Range.Index, item.Range.Count);
+                        }
+                        else
+                        {
+                            source.RemoveMany(item.Range);
+                        }
+
+                        break;
+                    }
+                    case ListChangeReason.Moved:
+                    {
+                        var change = item.Item;
+                        bool hasIndex = change.CurrentIndex >= 0;
+                        if (!hasIndex)
+                            throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+
+                        var collection = source as IExtendedList<T>;
+                        if (collection != null)
+                        {
+                            collection.Move(change.PreviousIndex, change.CurrentIndex);
+                        }
+                        else
+                        {
+                            //check this works whatever the index is 
+                            source.RemoveAt(change.PreviousIndex);
+                            source.Insert(change.CurrentIndex, change.Current);
                         }
                         break;
-                    case ListChangeReason.Moved:
-                        {
-                            var change = item.Item;
-                            bool hasIndex = change.CurrentIndex >= 0;
-                            if (!hasIndex)
-                                throw new UnspecifiedIndexException("Cannot move as an index was not specified");
-
-                            var collection = source as IExtendedList<T>;
-                            if (collection != null)
-                            {
-                                collection.Move(change.PreviousIndex, change.CurrentIndex);
-                            }
-                            else
-                            {
-                                //check this works whatever the index is 
-                                source.RemoveAt(change.PreviousIndex);
-                                source.Insert(change.CurrentIndex, change.Current);
-                            }
-                            break;
-                        }
+                    }
                 }
-            });
-
-
+            }
         }
 
         /// <summary>
@@ -255,11 +244,9 @@ namespace DynamicData
             }
         }
 
-
         #endregion
-        
-        #region Binary Search / Lookup
 
+        #region Binary Search / Lookup
 
         /// <summary>
         /// Performs a binary search on the specified collection.
@@ -269,87 +256,85 @@ namespace DynamicData
         /// <param name="value">The value to search for.</param>
         /// <returns></returns>
         public static int BinarySearch<TItem>(this IList<TItem> list, TItem value)
-		{
-			return BinarySearch(list, value, Comparer<TItem>.Default);
-		}
+        {
+            return BinarySearch(list, value, Comparer<TItem>.Default);
+        }
 
-		/// <summary>
-		/// Performs a binary search on the specified collection.
-		/// </summary>
-		/// <typeparam name="TItem">The type of the item.</typeparam>
-		/// <param name="list">The list to be searched.</param>
-		/// <param name="value">The value to search for.</param>
-		/// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
-		/// <returns></returns>
-		public static int BinarySearch<TItem>(this IList<TItem> list, TItem value, IComparer<TItem> comparer)
-		{
-			return list.BinarySearch(value, comparer.Compare);
-		}
+        /// <summary>
+        /// Performs a binary search on the specified collection.
+        /// </summary>
+        /// <typeparam name="TItem">The type of the item.</typeparam>
+        /// <param name="list">The list to be searched.</param>
+        /// <param name="value">The value to search for.</param>
+        /// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
+        /// <returns></returns>
+        public static int BinarySearch<TItem>(this IList<TItem> list, TItem value, IComparer<TItem> comparer)
+        {
+            return list.BinarySearch(value, comparer.Compare);
+        }
 
-		/// <summary>
-		/// Performs a binary search on the specified collection.
-		/// 
-		/// Thanks to http://stackoverflow.com/questions/967047/how-to-perform-a-binary-search-on-ilistt
-		/// </summary>
-		/// <typeparam name="TItem">The type of the item.</typeparam>
-		/// <typeparam name="TSearch">The type of the searched item.</typeparam>
-		/// <param name="list">The list to be searched.</param>
-		/// <param name="value">The value to search for.</param>
-		/// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
-		/// <returns></returns>
-		public static int BinarySearch<TItem, TSearch>(this IList<TItem> list, TSearch value, Func<TSearch, TItem, int> comparer)
-		{
-			if (list == null)
-				throw new ArgumentNullException(nameof(list));
+        /// <summary>
+        /// Performs a binary search on the specified collection.
+        /// 
+        /// Thanks to http://stackoverflow.com/questions/967047/how-to-perform-a-binary-search-on-ilistt
+        /// </summary>
+        /// <typeparam name="TItem">The type of the item.</typeparam>
+        /// <typeparam name="TSearch">The type of the searched item.</typeparam>
+        /// <param name="list">The list to be searched.</param>
+        /// <param name="value">The value to search for.</param>
+        /// <param name="comparer">The comparer that is used to compare the value with the list items.</param>
+        /// <returns></returns>
+        public static int BinarySearch<TItem, TSearch>(this IList<TItem> list, TSearch value, Func<TSearch, TItem, int> comparer)
+        {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
 
-			if (comparer == null)
-				throw new ArgumentNullException(nameof(comparer));
-		
+            if (comparer == null)
+                throw new ArgumentNullException(nameof(comparer));
 
-			int lower = 0;
-			int upper = list.Count - 1;
+            int lower = 0;
+            int upper = list.Count - 1;
 
-			while (lower <= upper)
-			{
-				int middle = lower + (upper - lower) / 2;
-				int comparisonResult = comparer(value, list[middle]);
-				if (comparisonResult < 0)
-				{
-					upper = middle - 1;
-				}
-				else if (comparisonResult > 0)
-				{
-					lower = middle + 1;
-				}
-				else
-				{
-					return middle;
-				}
-			}
+            while (lower <= upper)
+            {
+                int middle = lower + (upper - lower) / 2;
+                int comparisonResult = comparer(value, list[middle]);
+                if (comparisonResult < 0)
+                {
+                    upper = middle - 1;
+                }
+                else if (comparisonResult > 0)
+                {
+                    lower = middle + 1;
+                }
+                else
+                {
+                    return middle;
+                }
+            }
 
-			return ~lower;
-		}
+            return ~lower;
+        }
 
-		/// <summary>
-		/// Lookups the item using the specified comparer. If matched, the item's index is also returned
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="item">The item.</param>
-		/// <param name="equalityComparer">The equality comparer.</param>
-		/// <returns></returns>
-		public static Optional<ItemWithIndex<T>> FindItemAndIndex<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer = null)
-		{
-			var comparer = equalityComparer ?? EqualityComparer<T>.Default;
+        /// <summary>
+        /// Lookups the item using the specified comparer. If matched, the item's index is also returned
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="item">The item.</param>
+        /// <param name="equalityComparer">The equality comparer.</param>
+        /// <returns></returns>
+        public static Optional<ItemWithIndex<T>> FindItemAndIndex<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer = null)
+        {
+            var comparer = equalityComparer ?? EqualityComparer<T>.Default;
 
-			var result = source.WithIndex().FirstOrDefault(x => comparer.Equals(x.Item, item));
-			return !Equals(result, null) ? result : Optional.None<ItemWithIndex<T>>();
-		}
+            var result = source.WithIndex().FirstOrDefault(x => comparer.Equals(x.Item, item));
+            return !Equals(result, null) ? result : Optional.None<ItemWithIndex<T>>();
+        }
 
         #endregion
 
         #region Amendment
-
 
         /// <summary>
         /// Adds the  items to the specified list
@@ -363,13 +348,12 @@ namespace DynamicData
         /// items
         /// </exception>
         public static void Add<T>(this IList<T> source, IEnumerable<T> items)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (items == null) throw new ArgumentNullException(nameof(items));
 
-
-			items.ForEach(source.Add);
-		}
+            items.ForEach(source.Add);
+        }
 
         /// <summary>
         /// Adds the range to the source ist
@@ -383,24 +367,23 @@ namespace DynamicData
         /// items
         /// </exception>
         public static void AddRange<T>(this IList<T> source, IEnumerable<T> items)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (items == null) throw new ArgumentNullException(nameof(items));
 
-			if (source is List<T>)
-			{
-				((List<T>)source).AddRange(items);
-			}
-			else if (source is IExtendedList<T>)
-			{
-				((IExtendedList<T>)source).AddRange(items);
-			}
-			else
-			{
-				items.ForEach(source.Add);
-			}
-
-		}
+            if (source is List<T>)
+            {
+                ((List<T>)source).AddRange(items);
+            }
+            else if (source is IExtendedList<T>)
+            {
+                ((IExtendedList<T>)source).AddRange(items);
+            }
+            else
+            {
+                items.ForEach(source.Add);
+            }
+        }
 
         /// <summary>
         /// Adds the range to the list. The starting range is at the specified index
@@ -411,25 +394,24 @@ namespace DynamicData
         /// <param name="index">The index.</param>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static void AddRange<T>(this IList<T> source, IEnumerable<T> items,int index)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+        public static void AddRange<T>(this IList<T> source, IEnumerable<T> items, int index)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (items == null) throw new ArgumentNullException(nameof(items));
 
-			if (source is List<T>)
-			{
-				((List<T>)source).InsertRange(index,items);
-			}
-			else if (source is IExtendedList<T>)
-			{
-				((IExtendedList<T>)source).InsertRange(items,index);
-			}
-			else
-			{
-				items.ForEach(source.Add);
-			}
-
-		}
+            if (source is List<T>)
+            {
+                ((List<T>)source).InsertRange(index, items);
+            }
+            else if (source is IExtendedList<T>)
+            {
+                ((IExtendedList<T>)source).InsertRange(items, index);
+            }
+            else
+            {
+                items.ForEach(source.Add);
+            }
+        }
 
         /// <summary>
         /// Adds the range if a negative is specified, otherwise the range is added at the end of the list
@@ -441,47 +423,44 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static void AddOrInsertRange<T>(this IList<T> source, IEnumerable<T> items, int index)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (items == null) throw new ArgumentNullException(nameof(items));
 
-			if (source is List<T>)
-			{
-				if (index >= 0)
-				{
-                    ((List<T>)source).InsertRange(index,items);
-				}
-				else
-				{
-					((List<T>)source).AddRange(items);
-				}
-
-			}
-			else if (source is IExtendedList<T>)
-			{
-				if (index >= 0)
-				{
-                    
-                    ((IExtendedList<T>)source).InsertRange(items, index);
-				}
-				else
-				{
-					((IExtendedList<T>)source).AddRange(items);
-				}
-			}
-			else
-			{
-			    if (index >= 0)
-			    {
-                    items.Reverse().ForEach(t=>source.Insert(index,t));
+            if (source is List<T>)
+            {
+                if (index >= 0)
+                {
+                    ((List<T>)source).InsertRange(index, items);
                 }
-			    else
-			    {
+                else
+                {
+                    ((List<T>)source).AddRange(items);
+                }
+            }
+            else if (source is IExtendedList<T>)
+            {
+                if (index >= 0)
+                {
+                    ((IExtendedList<T>)source).InsertRange(items, index);
+                }
+                else
+                {
+                    ((IExtendedList<T>)source).AddRange(items);
+                }
+            }
+            else
+            {
+                if (index >= 0)
+                {
+                    items.Reverse().ForEach(t => source.Insert(index, t));
+                }
+                else
+                {
                     items.ForEach(source.Add);
                 }
-			}
-
-		}
+            }
+        }
 
         /// <summary>
         /// Removes many items from the collection in an optimal way
@@ -505,8 +484,8 @@ namespace DynamicData
 
             //match all indicies and and remove in reverse as it is more efficient
             var toRemove = source.IndexOfMany(toRemoveArray)
-              .OrderByDescending(x => x.Index)
-              .ToArray();
+                                 .OrderByDescending(x => x.Index)
+                                 .ToArray();
 
             //if there are duplicates, it could be that an item exists in the
             //source collection more than once - in that case the fast remove 
@@ -525,8 +504,6 @@ namespace DynamicData
             }
         }
 
-        
-
         /// <summary>
         /// Removes the number of items, starting at the specified index
         /// </summary>
@@ -536,94 +513,91 @@ namespace DynamicData
         /// <param name="count">The count.</param>
         /// <exception cref="System.ArgumentNullException"></exception>
         /// <exception cref="System.NotSupportedException">Cannot remove range</exception>
-        private static void RemoveRange<T>(this IList<T> source,  int index,int count)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+        private static void RemoveRange<T>(this IList<T> source, int index, int count)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
 
-			if (source is List<T>)
-			{
-				((List<T>)source).RemoveRange(index, count);
-			}
-			else if (source is IExtendedList<T>)
-			{
-				((IExtendedList<T>)source).RemoveRange(index, count);
-			}
-			else
-			{
-				throw new NotSupportedException("Cannot remove range from {0}".FormatWith(source.GetType()));
-			}
+            if (source is List<T>)
+            {
+                ((List<T>)source).RemoveRange(index, count);
+            }
+            else if (source is IExtendedList<T>)
+            {
+                ((IExtendedList<T>)source).RemoveRange(index, count);
+            }
+            else
+            {
+                throw new NotSupportedException("Cannot remove range from {0}".FormatWith(source.GetType()));
+            }
+        }
 
-		}
+        /// <summary>
+        /// Removes the  items from the specified list
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="items">The items.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// items
+        /// </exception>
+        public static void Remove<T>(this IList<T> source, IEnumerable<T> items)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (items == null) throw new ArgumentNullException(nameof(items));
 
-		/// <summary>
-		/// Removes the  items from the specified list
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="items">The items.</param>
-		/// <exception cref="System.ArgumentNullException">
-		/// source
-		/// or
-		/// items
-		/// </exception>
-		public static void Remove<T>(this IList<T> source, IEnumerable<T> items)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+            items.ForEach(t => source.Remove(t));
+        }
 
-			items.ForEach(t=>source.Remove(t));
-		}
+        /// <summary>
+        /// Replaces the specified item.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="original">The original.</param>
+        /// <param name="replacewith">The replacewith.</param>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// items</exception>
+        public static void Replace<T>(this IList<T> source, [NotNull] T original, [NotNull] T replacewith)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (original == null) throw new ArgumentNullException(nameof(original));
+            if (replacewith == null) throw new ArgumentNullException(nameof(replacewith));
 
-		/// <summary>
-		/// Replaces the specified item.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="original">The original.</param>
-		/// <param name="replacewith">The replacewith.</param>
-		/// <exception cref="System.ArgumentNullException">source
-		/// or
-		/// items</exception>
-		public static void Replace<T>(this IList<T> source, [NotNull]  T original, [NotNull] T replacewith)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (original == null) throw new ArgumentNullException(nameof(original));
-			if (replacewith == null) throw new ArgumentNullException(nameof(replacewith));
+            var index = source.IndexOf(original);
+            source[index] = replacewith;
+        }
 
-			var index = source.IndexOf(original);
-			source[index] = replacewith;
-		}
-
-		/// <summary>
-		/// Ensures the collection has enough capacity where capacity
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The enumerable.</param>
-		/// <param name="changes">The changes.</param>
-		/// <exception cref="ArgumentNullException">enumerable</exception>
-		public static void EnsureCapacityFor<T>(this IEnumerable<T> source, IChangeSet changes)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (changes == null) throw new ArgumentNullException(nameof(changes));
-			if (source is List<T>)
-			{
-				var list = (List<T>)source;
-				list.Capacity = list.Count + changes.Adds;
-			}
-			else if (source is ISupportsCapcity)
-			{
-				var list = (ISupportsCapcity)source;
-				list.Capacity = list.Count + changes.Adds;
-			}
+        /// <summary>
+        /// Ensures the collection has enough capacity where capacity
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The enumerable.</param>
+        /// <param name="changes">The changes.</param>
+        /// <exception cref="ArgumentNullException">enumerable</exception>
+        public static void EnsureCapacityFor<T>(this IEnumerable<T> source, IChangeSet changes)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (changes == null) throw new ArgumentNullException(nameof(changes));
+            if (source is List<T>)
+            {
+                var list = (List<T>)source;
+                list.Capacity = list.Count + changes.Adds;
+            }
+            else if (source is ISupportsCapcity)
+            {
+                var list = (ISupportsCapcity)source;
+                list.Capacity = list.Count + changes.Adds;
+            }
             else if (source is IChangeSet)
-			{
-				var original = (IChangeSet)source;
-				original.Capacity = original.Count + changes.Count;
-			}
-		}
+            {
+                var original = (IChangeSet)source;
+                original.Capacity = original.Count + changes.Count;
+            }
+        }
 
-
-		#endregion
-
-	}
+        #endregion
+    }
 }

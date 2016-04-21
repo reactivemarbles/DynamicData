@@ -7,42 +7,41 @@ namespace DynamicData.Internal
     {
         private readonly ICache<TObject, TKey> _cache;
 
-		public AnomynousQuery(Cache<TObject, TKey> cache)
+        public AnomynousQuery(Cache<TObject, TKey> cache)
         {
             _cache = cache;
         }
 
         public int Count => _cache.Count;
 
-	    public IEnumerable<TObject> Items => _cache.Items;
+        public IEnumerable<TObject> Items => _cache.Items;
 
-	    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
+        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
 
-	    public IEnumerable<TKey> Keys => _cache.Keys;
+        public IEnumerable<TKey> Keys => _cache.Keys;
 
-	    public Optional<TObject> Lookup(TKey key)
+        public Optional<TObject> Lookup(TKey key)
         {
             return _cache.Lookup(key);
         }
     }
 
-	//internal class AnomynousList<T> : IReadOnlyCollection<T>
-	//{
-	//	private readonly IList<T> _list;
+    //internal class AnomynousList<T> : IReadOnlyCollection<T>
+    //{
+    //	private readonly IList<T> _list;
 
-	//	public AnomynousList(IList<T> list)
-	//	{
-	//		_list = list;
-	//	}
+    //	public AnomynousList(IList<T> list)
+    //	{
+    //		_list = list;
+    //	}
 
-	//	public int Count => _list.Count;
+    //	public int Count => _list.Count;
 
-	//	public IEnumerable<T> Items => _list;
+    //	public IEnumerable<T> Items => _list;
 
-
-	//	public Optional<T> Lookup(TKey key)
-	//	{
-	//		return _list.Lookup(key);
-	//	}
-	//}
+    //	public Optional<T> Lookup(TKey key)
+    //	{
+    //		return _list.Lookup(key);
+    //	}
+    //}
 }

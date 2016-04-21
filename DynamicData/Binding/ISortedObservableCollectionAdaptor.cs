@@ -15,6 +15,4 @@ namespace DynamicData.Binding
         /// <param name="collection">The collection.</param>
         void Adapt(ISortedChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection);
     }
-
-
 }

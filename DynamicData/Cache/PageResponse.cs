@@ -11,34 +11,21 @@ namespace DynamicData
         private readonly int _page;
         private readonly int _pages;
 
-        public PageResponse(int pageSize,int totalSize, int page, int pages)
+        public PageResponse(int pageSize, int totalSize, int page, int pages)
         {
             _pageSize = pageSize;
             _totalSize = totalSize;
             _page = page;
             _pages = pages;
-
         }
 
-        public int PageSize
-        {
-            get { return _pageSize; }
-        }
+        public int PageSize { get { return _pageSize; } }
 
-        public int Page
-        {
-            get { return _page; }
-        }
+        public int Page { get { return _page; } }
 
-        public int Pages
-        {
-            get { return _pages; }
-        }
+        public int Pages { get { return _pages; } }
 
-        public int TotalSize
-        {
-            get { return _totalSize; }
-        }
+        public int TotalSize { get { return _totalSize; } }
 
         #region Equality members
 
@@ -78,9 +65,9 @@ namespace DynamicData
             unchecked
             {
                 int hashCode = _pages;
-                hashCode = (hashCode*397) ^ _page;
-                hashCode = (hashCode*397) ^ _totalSize;
-                hashCode = (hashCode*397) ^ _pageSize;
+                hashCode = (hashCode * 397) ^ _page;
+                hashCode = (hashCode * 397) ^ _totalSize;
+                hashCode = (hashCode * 397) ^ _pageSize;
                 return hashCode;
             }
         }
@@ -115,10 +102,7 @@ namespace DynamicData
 
         private static readonly IEqualityComparer<IPageResponse> PageResponseComparerInstance = new PageResponseEqualityComparer();
 
-        public static IEqualityComparer<IPageResponse> DefaultComparer
-        {
-            get { return PageResponseComparerInstance; }
-        }
+        public static IEqualityComparer<IPageResponse> DefaultComparer { get { return PageResponseComparerInstance; } }
 
         #endregion
 

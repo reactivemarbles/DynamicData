@@ -19,7 +19,7 @@ namespace DynamicData.Tests.ListFixtures
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
         {
-            var list = new List<IObservable<IChangeSet<int>>> {_source1.Connect(), _source2.Connect()};
+            var list = new List<IObservable<IChangeSet<int>>> { _source1.Connect(), _source2.Connect() };
             return list.Or();
         }
     }
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source1.Add(1);
 
-            Assert.AreEqual(1,_results.Data.Count);
+            Assert.AreEqual(1, _results.Data.Count);
             Assert.AreEqual(1, _results.Data.Items.First());
         }
 
@@ -66,6 +66,7 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(1, _results.Data.Count);
             Assert.AreEqual(1, _results.Data.Items.First());
         }
+
         [Test]
         public void RemovedWhenNoLongerInEither()
         {
@@ -77,10 +78,10 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void CombineRange()
         {
-            _source1.AddRange(Enumerable.Range(1,5));
+            _source1.AddRange(Enumerable.Range(1, 5));
             _source2.AddRange(Enumerable.Range(6, 5));
             Assert.AreEqual(10, _results.Data.Count);
-            CollectionAssert.AreEquivalent(Enumerable.Range(1, 10),_results.Data.Items);
+            CollectionAssert.AreEquivalent(Enumerable.Range(1, 10), _results.Data.Items);
         }
 
         [Test]

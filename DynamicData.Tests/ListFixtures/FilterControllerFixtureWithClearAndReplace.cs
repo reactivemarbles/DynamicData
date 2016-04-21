@@ -65,19 +65,16 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(80, _results.Messages[1].Removes, "Should be 80 removes in the second message");
             Assert.AreEqual(90, _results.Messages[1].Adds, "Should be 90 adds in the second message");
 
-
             foreach (var person in people)
             {
                 person.Age = person.Age - 10;
             }
             _filter.Reevaluate();
 
-
             Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
             Assert.AreEqual(3, _results.Messages.Count, "Should be 3 update messages");
             // Assert.AreEqual(10, _results.Messages[2].Removes, "Should be 10 removes in the third message");
         }
-
 
         #region Static filter tests
 
@@ -125,9 +122,6 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
         {
-
-
-
             _source.Remove(new Person("A", 1));
             Assert.AreEqual(0, _results.Messages.Count, "Should be 0 updates");
         }
@@ -144,7 +138,6 @@ namespace DynamicData.Tests.ListFixtures
             var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
             CollectionAssert.AreEqual(filtered, _results.Data.Items.OrderBy(p => p.Age), "Incorrect Filter result");
         }
-
 
         [Test]
         public void BatchRemoves()
@@ -174,7 +167,6 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(80, _results.Data.Count, "Should be 80 in the cache");
             var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
             CollectionAssert.AreEqual(filtered, _results.Data.Items.OrderBy(p => p.Age), "Incorrect Filter result");
-
         }
 
         [Test]
@@ -188,7 +180,6 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(80, _results.Messages[0].Adds, "Should be 80 addes");
             Assert.AreEqual(80, _results.Messages[1].Removes, "Should be 80 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
-
         }
 
         [Test]
@@ -247,13 +238,13 @@ namespace DynamicData.Tests.ListFixtures
             var newperson = new Person(key, 10);
             var updated = new Person(key, 11);
 
-
             _source.Add(newperson);
             _source.Replace(newperson, updated);
 
             Assert.AreEqual(0, _results.Messages.Count, "Should be no updates");
             Assert.AreEqual(0, _results.Data.Count, "Should nothing cached");
         }
+
         #endregion
     }
 }

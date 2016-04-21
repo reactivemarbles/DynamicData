@@ -12,22 +12,20 @@ namespace DynamicData.Controllers
     /// <typeparam name="T"></typeparam>
     public sealed class SortController<T> : IDisposable
     {
-        private readonly ISubject<IComparer<T> > _sortSubject = new ReplaySubject<IComparer<T>>(1);
+        private readonly ISubject<IComparer<T>> _sortSubject = new ReplaySubject<IComparer<T>>(1);
         private readonly ISubject<Unit> _resortSubject = new Subject<Unit>();
-        private  IComparer<T> _defaultSort;
+        private IComparer<T> _defaultSort;
         private IComparer<T> _currentSort;
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SortController{T}"/> class.
         /// </summary>
         /// <param name="defaultSort">The default sort.</param>
         /// <exception cref="System.ArgumentNullException">defaultSort</exception>
-        public SortController(IComparer<T>  defaultSort)
+        public SortController(IComparer<T> defaultSort)
         {
             if (defaultSort == null) throw new ArgumentNullException(nameof(defaultSort));
             SetDefaultSort(defaultSort);
-            
         }
 
         /// <summary>
@@ -70,7 +68,6 @@ namespace DynamicData.Controllers
             _sortSubject.OnNext(_currentSort);
         }
 
-
         /// <summary>
         /// Observable which is fired when the sort comparer is changed
         /// </summary>
@@ -79,7 +76,7 @@ namespace DynamicData.Controllers
         /// </value>
         public IObservable<IComparer<T>> ComparerChanged => _sortSubject.AsObservable();
 
-	    /// <summary>
+        /// <summary>
         /// Observable which is fired when the sort comparer is changed
         /// </summary>
         /// <value>
@@ -87,11 +84,10 @@ namespace DynamicData.Controllers
         /// </value>
         public IObservable<Unit> SortAgain => _resortSubject.AsObservable();
 
-
-	    /// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		public void Dispose()
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
         {
             _sortSubject.OnCompleted();
             _resortSubject.OnCompleted();

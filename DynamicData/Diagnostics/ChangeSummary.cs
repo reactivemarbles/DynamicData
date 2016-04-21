@@ -10,7 +10,7 @@
         /// <summary>
         /// An empty instance of change summary
         /// </summary>
-        public readonly static ChangeSummary Empty  = new ChangeSummary();
+        public readonly static ChangeSummary Empty = new ChangeSummary();
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
@@ -40,7 +40,7 @@
         /// </value>
         public ChangeStatistics Latest { get; }
 
-	    /// <summary>
+        /// <summary>
         /// Gets the overall change count
         /// </summary>
         /// <value>
@@ -48,34 +48,33 @@
         /// </value>
         public ChangeStatistics Overall { get; }
 
-	    #region Equality members
+        #region Equality members
 
+        /// <summary>
+        /// Equalses the specified other.
+        /// </summary>
+        /// <param name="other">The other.</param>
+        /// <returns></returns>
+        public bool Equals(ChangeSummary other)
+        {
+            return _index == other._index && Equals(Latest, other.Latest) && Equals(Overall, other.Overall);
+        }
 
-		/// <summary>
-		/// Equalses the specified other.
-		/// </summary>
-		/// <param name="other">The other.</param>
-		/// <returns></returns>
-		public bool Equals(ChangeSummary other)
-		{
-			return _index == other._index && Equals(Latest, other.Latest) && Equals(Overall, other.Overall);
-		}
-
-		/// <summary>
-		///     Determines whether the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />.
-		/// </summary>
-		/// <returns>
-		///     true if the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />; otherwise, false.
-		/// </returns>
-		/// <param name="obj">
-		///     The <see cref="T:System.Object" /> to compare with the current <see cref="T:System.Object" />.
-		/// </param>
-		public override bool Equals(object obj)
+        /// <summary>
+        ///     Determines whether the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />.
+        /// </summary>
+        /// <returns>
+        ///     true if the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />; otherwise, false.
+        /// </returns>
+        /// <param name="obj">
+        ///     The <see cref="T:System.Object" /> to compare with the current <see cref="T:System.Object" />.
+        /// </param>
+        public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((ChangeSummary) obj);
+            return Equals((ChangeSummary)obj);
         }
 
         /// <summary>
@@ -89,8 +88,8 @@
             unchecked
             {
                 int hashCode = _index;
-                hashCode = (hashCode*397) ^ (Latest?.GetHashCode() ?? 0);
-                hashCode = (hashCode*397) ^ (Overall?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (Latest?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (Overall?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

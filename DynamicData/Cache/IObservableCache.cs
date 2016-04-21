@@ -31,22 +31,19 @@ namespace DynamicData
         /// <returns></returns>
         IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter);
 
-
         /// <summary>
         /// A count changed observable starting with the current count
         /// </summary>
         IObservable<int> CountChanged { get; }
     }
 
-
-
     /// <summary>
     ///   /// A cache for observing and querying in memory data. With additional data access operators
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public interface IObservableCache<TObject, TKey> :IConnectableCache<TObject, TKey>,  IDisposable
-    {      
+    public interface IObservableCache<TObject, TKey> : IConnectableCache<TObject, TKey>, IDisposable
+    {
         /// <summary>
         /// Gets the keys
         /// </summary>
@@ -60,7 +57,7 @@ namespace DynamicData
         /// <summary>
         /// Gets the key value pairs
         /// </summary>
-        IEnumerable<KeyValuePair<TKey,TObject>> KeyValues { get; }
+        IEnumerable<KeyValuePair<TKey, TObject>> KeyValues { get; }
 
         /// <summary>
         /// Lookup a single item using the specified key.
@@ -76,6 +73,5 @@ namespace DynamicData
         /// The total count of cached items
         /// </summary>
         int Count { get; }
-    
     }
 }

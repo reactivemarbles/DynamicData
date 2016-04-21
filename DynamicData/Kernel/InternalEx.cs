@@ -5,19 +5,18 @@ using DynamicData.Annotations;
 
 namespace DynamicData.Kernel
 {
-	/// <summary>
-	/// 
-	/// </summary>
-	public static class InternalEx
+    /// <summary>
+    /// 
+    /// </summary>
+    public static class InternalEx
     {
-		[StringFormatMethod("parameters")]
-		internal static string FormatWith(this string source, params object[] parameters)
+        [StringFormatMethod("parameters")]
+        internal static string FormatWith(this string source, params object[] parameters)
         {
             return string.Format(source, parameters);
         }
 
-		
-		/// <summary>
+        /// <summary>
         /// Retries the with back off.
         /// </summary>
         /// <remarks>
@@ -29,23 +28,22 @@ namespace DynamicData.Kernel
         /// <param name="source">The source.</param>
         /// <param name="backOffStrategy">The back off strategy.</param>
         /// <returns></returns>
-        public static IObservable<TSource> RetryWithBackOff<TSource, TException>(this IObservable<TSource> source, Func<TException , int , TimeSpan?> backOffStrategy)
+        public static IObservable<TSource> RetryWithBackOff<TSource, TException>(this IObservable<TSource> source, Func<TException, int, TimeSpan?> backOffStrategy)
             where TException : Exception
-                {
-                    Func<int, IObservable<TSource>> retry = null;
+        {
+            Func<int, IObservable<TSource>> retry = null;
 
-                    retry = (failureCount) => source.Catch<TSource, TException>(error =>
-                    {
-                        TimeSpan? delay = backOffStrategy(error, failureCount);
-                        if (!delay.HasValue)
-                            return Observable.Throw<TSource>(error);
+            retry = (failureCount) => source.Catch<TSource, TException>(error =>
+            {
+                TimeSpan? delay = backOffStrategy(error, failureCount);
+                if (!delay.HasValue)
+                    return Observable.Throw<TSource>(error);
 
-                        return Observable.Timer(delay.Value).SelectMany(retry(failureCount + 1));
-                    });
+                return Observable.Timer(delay.Value).SelectMany(retry(failureCount + 1));
+            });
 
-                    return retry(0);
-                }
-
+            return retry(0);
+        }
 
         /// <summary>
         /// Schedules a recurring action.
@@ -85,13 +83,10 @@ namespace DynamicData.Kernel
         {
             return scheduler.Schedule(interval(), scheduleNext =>
             {
-                    action();
-                    var next = interval();
-                    scheduleNext(next);
+                action();
+                var next = interval();
+                scheduleNext(next);
             });
         }
     }
-
- 
-    
 }

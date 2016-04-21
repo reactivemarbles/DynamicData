@@ -26,7 +26,6 @@ namespace DynamicData.Internal
         {
             foreach (var change in _source)
             {
-
                 switch (change.Reason)
                 {
                     case ChangeReason.Add:
@@ -47,5 +46,5 @@ namespace DynamicData.Internal
         {
             return GetEnumerator();
         }
-    } 
+    }
 }

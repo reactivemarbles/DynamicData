@@ -16,19 +16,10 @@ namespace DynamicData.Internal
             _source = source.Do(value => _latestValue = value);
         }
 
-        public TObject Item
-        {
-            get { return _item; }
-        }
+        public TObject Item { get { return _item; } }
 
-        public Optional<TValue> LatestValue
-        {
-            get { return _latestValue; }
-        }
+        public Optional<TValue> LatestValue { get { return _latestValue; } }
 
-        public IObservable<TValue> Observable
-        {
-            get { return _source; }
-        }
+        public IObservable<TValue> Observable { get { return _source; } }
     }
 }

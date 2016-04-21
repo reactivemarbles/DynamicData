@@ -60,7 +60,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
         }
 
-
         [Test]
         public void UpdatingBothProducesResultsAndDoesNotDuplicateTheMessage()
         {
@@ -71,7 +70,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
-
 
         [Test]
         public void RemovingFromOneDoesNotFromResult()
@@ -91,7 +89,6 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source1.AddOrUpdate(person);
             _source2.AddOrUpdate(person);
-
 
             var personUpdated = new Person("Adult1", 51);
             _source2.AddOrUpdate(personUpdated);

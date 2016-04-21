@@ -14,7 +14,6 @@ namespace DynamicData.Tests.ListFixtures
         public void MyTestInitialize()
         {
             _source = new SourceList<Person>();
-
         }
 
         [TearDown]
@@ -22,7 +21,6 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source.Dispose();
         }
-
 
         [Test]
         public void ChainIsInvokedOnceForMultipleSubscribers()
@@ -32,10 +30,10 @@ namespace DynamicData.Tests.ListFixtures
 
             //Some expensive transform (or chain of operations)
             var longChain = _source.Connect()
-                .Transform(p => p)
-                .Do(_ => created++)
-                .Finally(() => disposals++)
-                .RefCount();
+                                   .Transform(p => p)
+                                   .Do(_ => created++)
+                                   .Finally(() => disposals++)
+                                   .RefCount();
 
             var suscriber1 = longChain.Subscribe();
             var suscriber2 = longChain.Subscribe();
@@ -61,10 +59,10 @@ namespace DynamicData.Tests.ListFixtures
 
             //Some expensive transform (or chain of operations)
             var longChain = _source.Connect()
-                .Transform(p => p)
-                .Do(_ => created++)
-                .Finally(() => disposals++)
-                .RefCount();
+                                   .Transform(p => p)
+                                   .Do(_ => created++)
+                                   .Finally(() => disposals++)
+                                   .RefCount();
 
             var suscriber = longChain.Subscribe();
             suscriber.Dispose();

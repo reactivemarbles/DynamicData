@@ -38,14 +38,14 @@ namespace DynamicData.Internal
                 .Select(Page);
 
             return request.Merge(datachanged)
-                .Where(changes => changes != null && changes.Count != 0);
+                          .Where(changes => changes != null && changes.Count != 0);
         }
 
         private IChangeSet<T> Page(IPageRequest request)
         {
             if (request == null || request.Page < 0 || request.Size < 1)
                 return null;
-            
+
             if (request.Size == _parameters.Size && request.Page == _parameters.Page)
                 return null;
 
@@ -64,9 +64,8 @@ namespace DynamicData.Internal
             int skip = _parameters.Size * (page - 1);
 
             var current = _all.Skip(skip)
-                                 .Take(_parameters.Size)
-                                 .ToList();
-
+                              .Take(_parameters.Size)
+                              .ToList();
 
             var adds = current.Except(previous);
             var removes = previous.Except(current);
@@ -81,10 +80,9 @@ namespace DynamicData.Internal
 
             var startIndex = skip;
 
-
             var moves = changeset.EmptyIfNull()
-                .Where(change => change.Reason == ListChangeReason.Moved
-                        && change.MovedWithinRange(startIndex, startIndex + _parameters.Size));
+                                 .Where(change => change.Reason == ListChangeReason.Moved
+                                                  && change.MovedWithinRange(startIndex, startIndex + _parameters.Size));
 
             foreach (var change in moves)
             {
@@ -92,10 +90,7 @@ namespace DynamicData.Internal
                 var currentIndex = change.Item.CurrentIndex - startIndex;
                 var previousIndex = change.Item.PreviousIndex - startIndex;
                 _paged.Move(previousIndex, currentIndex);
-
             }
-
-
 
             //find replaces [Is this ever the case that it can be reached]
             for (int i = 0; i < current.Count; i++)
@@ -108,10 +103,8 @@ namespace DynamicData.Internal
 
                 var index = _paged.IndexOf(currentItem);
                 _paged.Move(i, index);
-
             }
             return _paged.CaptureChanges();
-
         }
 
         private int CalculatePages()
@@ -130,6 +123,5 @@ namespace DynamicData.Internal
             }
             return pages + 1;
         }
-
     }
 }

@@ -11,15 +11,15 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void InitialiStatusIsLoadding()
         {
-            bool invoked=false;
-            var status=ConnectionStatus.Pending;
-            var subscription = new Subject<int>().MonitorStatus().Subscribe(s=>
-                {
-                    invoked = true;
+            bool invoked = false;
+            var status = ConnectionStatus.Pending;
+            var subscription = new Subject<int>().MonitorStatus().Subscribe(s =>
+            {
+                invoked = true;
                 status = s;
             });
             Assert.IsTrue(invoked, "No status has been received");
-            Assert.AreEqual(ConnectionStatus.Pending,status, "No status has been received");
+            Assert.AreEqual(ConnectionStatus.Pending, status, "No status has been received");
             subscription.Dispose();
         }
 
@@ -28,7 +28,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             bool invoked = false;
             var status = ConnectionStatus.Pending;
-            var subject =  new Subject<int>();
+            var subject = new Subject<int>();
             var subscription = subject.MonitorStatus().Subscribe(s =>
             {
                 invoked = true;
@@ -53,17 +53,13 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 invoked = true;
                 status = s;
-            }, ex =>
-               {
-                   exception = ex;
-               });
+            }, ex => { exception = ex; });
 
             subject.OnError(new Exception("Test"));
             subscription.Dispose();
 
             Assert.IsTrue(invoked, "No update has been received");
             Assert.AreEqual(ConnectionStatus.Errored, status, "Status should be ConnectionStatus.Faulted");
-          
         }
 
         [Test]
@@ -73,13 +69,13 @@ namespace DynamicData.Tests.CacheFixtures
             int invocations = 0;
             var subject = new Subject<int>();
             var subscription = subject
-                        .MonitorStatus()
-                        .Where(status => status == ConnectionStatus.Loaded)
-                        .Subscribe(s =>
-                            {
-                                invoked = true;
-                                invocations++;
-                            });
+                .MonitorStatus()
+                .Where(status => status == ConnectionStatus.Loaded)
+                .Subscribe(s =>
+                {
+                    invoked = true;
+                    invocations++;
+                });
 
             subject.OnNext(1);
             subject.OnNext(1);
@@ -89,8 +85,5 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, invocations, "Status should be ConnectionStatus.Loaded");
             subscription.Dispose();
         }
-
-
-
     }
 }

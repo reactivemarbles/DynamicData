@@ -9,6 +9,7 @@ namespace DynamicData.Operators
         /// The page to move to
         /// </summary>
         int Page { get; }
+
         /// <summary>
         /// The page size
         /// </summary>

@@ -27,7 +27,7 @@ namespace DynamicData.Internal
                     if (refCount == 1)
 
                         list = _source.AsObservableList();
-                  
+
                     // ReSharper disable once PossibleNullReferenceException (never the case!)
                     var subscriber = list.Connect().SubscribeSafe(observer);
 
@@ -44,8 +44,6 @@ namespace DynamicData.Internal
                     });
                 }
             });
-
-        } 
-
+        }
     }
 }

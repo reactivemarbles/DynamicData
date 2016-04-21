@@ -1,53 +1,33 @@
 ﻿using System;
 using DynamicData.Binding;
 
-
 namespace DynamicData.Tests.Domain
 {
-    public class Person :AbstractNotifyPropertyChanged, IKey<string>, IEquatable<Person>
+    public class Person : AbstractNotifyPropertyChanged, IKey<string>, IEquatable<Person>
     {
         private readonly string _name;
-        private  int _age;
+        private int _age;
         private readonly string _gender;
-
-
 
         public Person(string firstname, string lastname, int age, string gender = "F")
             : this(firstname + " " + lastname, age, gender)
         {
         }
 
-        public Person(string name, int age,string gender = "F")
+        public Person(string name, int age, string gender = "F")
         {
-            _name= name;
+            _name = name;
             _age = age;
             _gender = gender;
-
         }
 
+        public string Name { get { return _name; } }
 
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Gender { get { return _gender; } }
 
-        public string Gender
-        {
-            get { return _gender; }
-        }
+        public int Age { get { return _age; } set { SetAndRaise(ref _age, value); } }
 
-
-        public int Age
-        {
-            get { return _age; }
-            set { SetAndRaise(ref _age,value); }
-        }
-
-        public string Key
-        {
-            get { return _name; }
-        }
-
+        public string Key { get { return _name; } }
 
         public override string ToString()
         {
@@ -68,7 +48,7 @@ namespace DynamicData.Tests.Domain
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Person) obj);
+            return Equals((Person)obj);
         }
 
         public override int GetHashCode()
@@ -77,8 +57,5 @@ namespace DynamicData.Tests.Domain
         }
 
         #endregion
-
-
     }
-
 }

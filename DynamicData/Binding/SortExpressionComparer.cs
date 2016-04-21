@@ -9,14 +9,13 @@ namespace DynamicData.Binding
     /// <typeparam name="T"></typeparam>
     public class SortExpressionComparer<T> : List<SortExpression<T>>, IComparer<T>
     {
-
-		/// <summary>
-		/// Compares x and y
-		/// </summary>
-		/// <param name="x">The x.</param>
-		/// <param name="y">The y.</param>
-		/// <returns></returns>
-		public int Compare(T x, T y)
+        /// <summary>
+        /// Compares x and y
+        /// </summary>
+        /// <param name="x">The x.</param>
+        /// <param name="y">The y.</param>
+        /// <returns></returns>
+        public int Compare(T x, T y)
         {
             foreach (var item in this)
             {

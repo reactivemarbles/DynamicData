@@ -23,14 +23,14 @@ namespace DynamicData.Tests.CacheFixtures
                 IsDisposed = true;
             }
         }
-        
+
         private ISourceCache<DisposableObject, int> _source;
         private ChangeSetAggregator<DisposableObject, int> _results;
 
         [SetUp]
         public void Initialise()
         {
-            _source = new SourceCache<DisposableObject, int>(p=>p.Id);
+            _source = new SourceCache<DisposableObject, int>(p => p.Id);
             _results = new ChangeSetAggregator<DisposableObject, int>(_source.Connect().DisposeMany());
         }
 
@@ -50,7 +50,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
             Assert.AreEqual(false, _results.Data.Items.First().IsDisposed, "Should not be disposed");
         }
-
 
         [Test]
         public void RemoveWillCallDispose()
@@ -83,7 +82,6 @@ namespace DynamicData.Tests.CacheFixtures
 
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.IsTrue(_results.Messages[1].All(d => d.Current.IsDisposed));
-
         }
     }
 }

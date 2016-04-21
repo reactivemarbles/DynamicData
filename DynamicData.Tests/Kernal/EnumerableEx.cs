@@ -5,9 +5,8 @@ namespace DynamicData.Tests.CacheFixtures
 {
     public static class EnumerableEx
     {
-
         public static IEnumerable<TResult> PrevCurrentNextZip<T, TResult>(this IEnumerable<T> source,
-            Func<T, T, T, TResult> selector)
+                                                                          Func<T, T, T, TResult> selector)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");
@@ -30,9 +29,8 @@ namespace DynamicData.Tests.CacheFixtures
             }
         }
 
-
         public static IEnumerable<TResult> CurrentNextZip<T, TResult>(this IEnumerable<T> source,
-            Func< T, T, TResult> selector)
+                                                                      Func<T, T, TResult> selector)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");
@@ -45,7 +43,7 @@ namespace DynamicData.Tests.CacheFixtures
                 while (enumerator.MoveNext())
                 {
                     var next = enumerator.Current;
-                    yield return selector( curr, next);
+                    yield return selector(curr, next);
                     curr = next;
                 }
 
@@ -54,7 +52,7 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         public static IEnumerable<TResult> PrevCurrentZip<T, TResult>(this IEnumerable<T> source,
-            Func<T, T,  TResult> selector)
+                                                                      Func<T, T, TResult> selector)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (selector == null) throw new ArgumentNullException("selector");

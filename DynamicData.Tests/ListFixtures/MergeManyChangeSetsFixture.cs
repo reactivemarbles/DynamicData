@@ -18,10 +18,10 @@ namespace DynamicData.Tests.ListFixtures
             parent.Add(c);
 
             var d = parent.Connect()
-                .MergeMany(e => e.Connect().RemoveIndex())
-                .AsObservableList();
+                          .MergeMany(e => e.Connect().RemoveIndex())
+                          .AsObservableList();
 
-            Assert.AreEqual(d.Count,0); 
+            Assert.AreEqual(d.Count, 0);
 
             a.Add(1);
 
@@ -35,14 +35,11 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(d.Count, 4);
             CollectionAssert.AreEquivalent(d.Items, new[] { 1, 2, 3, 5 });
 
-
             b.Clear();
 
             // Fails below
-            Assert.AreEqual(d.Count,2);
-            CollectionAssert.AreEquivalent(d.Items, new[] { 1, 2});
-
-
+            Assert.AreEqual(d.Count, 2);
+            CollectionAssert.AreEquivalent(d.Items, new[] { 1, 2 });
         }
     }
 }

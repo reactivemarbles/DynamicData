@@ -15,19 +15,19 @@ namespace DynamicData.Tests.CacheFixtures
         private IList<Error<Person, string>> _errors;
 
         private readonly Func<Person, PersonWithGender> _transformFactory = p =>
-                                                                                {
-                                                                                    if (p.Age % 3 == 0)
-                                                                                    {
-                                                                                        throw new Exception($"Cannot transform {p}");
-                                                                                    }
-                                                                                    string gender = p.Age % 2 == 0 ? "M" : "F";
-                                                                                    return new PersonWithGender(p, gender);
-                                                                                };
+        {
+            if (p.Age % 3 == 0)
+            {
+                throw new Exception($"Cannot transform {p}");
+            }
+            string gender = p.Age % 2 == 0 ? "M" : "F";
+            return new PersonWithGender(p, gender);
+        };
 
         [SetUp]
         public void Initialise()
         {
-            _source = new SourceCache<Person, string>(p=>p.Name);
+            _source = new SourceCache<Person, string>(p => p.Name);
             _errors = new List<Error<Person, string>>();
 
             var safeTransform = _source.Connect().TransformSafe(_transformFactory, error => _errors.Add(error));
@@ -90,20 +90,18 @@ namespace DynamicData.Tests.CacheFixtures
             var update3 = new Person(key, 3);
 
             _source.Edit(updater =>
-                               {
-                                   updater.AddOrUpdate(update1);
-                                   updater.AddOrUpdate(update2);
-                                   updater.AddOrUpdate(update3);
-                               });
+            {
+                updater.AddOrUpdate(update1);
+                updater.AddOrUpdate(update2);
+                updater.AddOrUpdate(update3);
+            });
 
             Assert.AreEqual(1, _errors.Count, "Should be 1 error reported");
             Assert.AreEqual(1, _results.Messages.Count, "Should be 1 messages");
 
             Assert.AreEqual(1, _results.Data.Count, "Should 1 item in the cache");
             Assert.AreEqual(_transformFactory(update2), _results.Data.Items.First(), "Change 2 shoud be the only item cached");
-
         }
-
 
         [Test]
         public void UpdateBatchAndClear()
@@ -119,9 +117,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(67, _results.Messages[0].Adds, "Should be 67 add");
             Assert.AreEqual(67, _results.Messages[1].Removes, "Should be 67 removes");
             Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
-
         }
-
-
     }
 }

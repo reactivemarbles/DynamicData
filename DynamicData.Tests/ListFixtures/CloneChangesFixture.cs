@@ -11,19 +11,19 @@ namespace DynamicData.Tests.ListFixtures
     {
         private ChangeAwareList<int> _source;
         private List<int> _clone;
+
         [SetUp]
         public void Setup()
         {
             _source = new ChangeAwareList<int>();
             _clone = new List<int>();
-
         }
 
         [Test]
         public void Add()
         {
             _source.Add(1);
-            
+
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
 
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source.Add(1);
             _source.Add(2);
-            
+
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
             CollectionAssert.AreEqual(_source, _clone);
@@ -46,7 +46,7 @@ namespace DynamicData.Tests.ListFixtures
         public void AddManyInSuccession()
         {
             Enumerable.Range(1, 10)
-                .ForEach(_source.Add);
+                      .ForEach(_source.Add);
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
@@ -62,6 +62,7 @@ namespace DynamicData.Tests.ListFixtures
             _clone.Clone(changes);
             CollectionAssert.AreEqual(_source, _clone);
         }
+
         [Test]
         public void AddSecondRange()
         {
@@ -93,6 +94,7 @@ namespace DynamicData.Tests.ListFixtures
             _clone.Clone(changes);
             CollectionAssert.AreEqual(_source, _clone);
         }
+
         [Test]
         public void RemoveRange()
         {
@@ -140,18 +142,16 @@ namespace DynamicData.Tests.ListFixtures
             CollectionAssert.AreEqual(_source, _clone);
         }
 
-
         [Test]
         public void RemoveInnerRange()
         {
             _source.AddRange(Enumerable.Range(1, 10));
 
-            _source.RemoveRange(5,3);
+            _source.RemoveRange(5, 3);
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
             CollectionAssert.AreEqual(_source, _clone);
         }
-
 
         [Test]
         public void RemoveManyPartial()
@@ -163,6 +163,5 @@ namespace DynamicData.Tests.ListFixtures
             _clone.Clone(changes);
             CollectionAssert.AreEqual(_source, _clone);
         }
-
     }
 }

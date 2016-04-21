@@ -15,15 +15,13 @@ namespace DynamicData.Tests.CacheFixtures
 
         private ISubject<bool> _pausingSubject = new Subject<bool>();
 
-
         [SetUp]
         public void MyTestInitialize()
         {
             _pausingSubject = new Subject<bool>();
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
-            _results = _source.Connect().BatchIf(_pausingSubject,TimeSpan.FromMinutes(1), _scheduler).AsAggregator();
-
+            _results = _source.Connect().BatchIf(_pausingSubject, TimeSpan.FromMinutes(1), _scheduler).AsAggregator();
         }
 
         [TearDown]
@@ -33,7 +31,6 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Dispose();
             _pausingSubject.OnCompleted();
         }
-
 
         [Test]
         public void WillApplyTimeout()
@@ -46,7 +43,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new Person("A", 1));
 
             //go forward an arbitary amount of time
-           // _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+            // _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
             Assert.AreEqual(1, _results.Messages.Count, "There should be no messages");
         }
 
@@ -82,7 +79,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new Person("A", 1));
 
             //go forward an arbitary amount of time
-             Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
+            Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
 
             _pausingSubject.OnNext(false);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);

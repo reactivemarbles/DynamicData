@@ -8,24 +8,16 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Kernal
 {
     [TestFixture]
-    public  class ErrorHandlingFixture
+    public class ErrorHandlingFixture
     {
         [SetUp]
         public void Initialise()
         {
-
         }
-        
-        private class Entity 
-        {
 
-            public int Key
-            {
-                get
-                {
-                    return   10;
-                }
-            }
+        private class Entity
+        {
+            public int Key { get { return 10; } }
         }
 
         private class TransformEntityWithError
@@ -38,45 +30,29 @@ namespace DynamicData.Tests.Kernal
                 throw new Exception("Error transforming entity");
             }
 
-
-            public int Key
-            {
-                get { return 10; }
-            }
+            public int Key { get { return 10; } }
         }
 
         private class ErrorInKey
         {
-
-            public int Key
-            {
-                get
-                {
-                    throw new Exception("Calling Key");
-                }
-            }
+            public int Key { get { throw new Exception("Calling Key"); } }
         }
-
 
         [Test]
         public void TransformError()
         {
-
             bool completed = false;
             bool error = false;
-
 
             var cache = new SourceCache<Entity, int>(e => e.Key);
 
             var subscriber = cache.Connect()
-                            .Transform(e => new TransformEntityWithError(e))
-
-                            .Finally(() => completed = true)
-                            .Subscribe(updates => { Console.WriteLine(); }, ex => error = true);
+                                  .Transform(e => new TransformEntityWithError(e))
+                                  .Finally(() => completed = true)
+                                  .Subscribe(updates => { Console.WriteLine(); }, ex => error = true);
 
             cache.AddOrUpdate(Enumerable.Range(0, 10000).Select(_ => new Entity()).ToArray());
             cache.AddOrUpdate(new Entity());
-
 
             subscriber.Dispose();
 
@@ -87,16 +63,15 @@ namespace DynamicData.Tests.Kernal
         [Test]
         public void FilterError()
         {
-
             bool completed = false;
             bool error = false;
 
-            var source = new SourceCache<TransformEntityWithError, int>(e=>e.Key);
+            var source = new SourceCache<TransformEntityWithError, int>(e => e.Key);
 
             var subscriber = source.Connect()
-                            .Filter(x=>true)
-                            .Finally(() => completed = true)
-                            .Subscribe(updates => { Console.WriteLine(); });
+                                   .Filter(x => true)
+                                   .Finally(() => completed = true)
+                                   .Subscribe(updates => { Console.WriteLine(); });
 
             source.Edit(updater => updater.AddOrUpdate(new TransformEntityWithError(new Entity())), ex => error = true);
             subscriber.Dispose();
@@ -105,25 +80,22 @@ namespace DynamicData.Tests.Kernal
             Assert.IsTrue(completed, "Completed has not been called");
         }
 
-
         [Test]
         public void ErrorUpdatingStreamIsHandled()
         {
-
             bool completed = false;
             bool error = false;
 
-            var cache = new SourceCache<ErrorInKey, int>(p=>p.Key);
- 
-            var subscriber = cache.Connect().Finally(() => completed = true)
-                                 .Subscribe(updates => { Console.WriteLine(); });
+            var cache = new SourceCache<ErrorInKey, int>(p => p.Key);
 
-            cache.Edit(updater => updater.AddOrUpdate(new ErrorInKey()),ex=> error=true);
+            var subscriber = cache.Connect().Finally(() => completed = true)
+                                  .Subscribe(updates => { Console.WriteLine(); });
+
+            cache.Edit(updater => updater.AddOrUpdate(new ErrorInKey()), ex => error = true);
             subscriber.Dispose();
 
             Assert.IsTrue(error, "Error has not been invoked");
             Assert.IsTrue(completed, "Completed has not been called");
         }
-
     }
 }

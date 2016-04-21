@@ -10,17 +10,15 @@ namespace DynamicData.Tests.CacheFixtures
     [TestFixture]
     public class GroupFromDistinctFixture
     {
-          
-        private ISourceCache<Person, string>  _personCache;
+        private ISourceCache<Person, string> _personCache;
         private ISourceCache<PersonEmployment, PersonEmpKey> _employmentCache;
 
         [SetUp]
         public void SetStream()
         {
-            _personCache = new SourceCache<Person, string>(p=>p.Key);
-            _employmentCache = new SourceCache<PersonEmployment, PersonEmpKey>(e=>e.Key);
+            _personCache = new SourceCache<Person, string>(p => p.Key);
+            _employmentCache = new SourceCache<PersonEmployment, PersonEmpKey>(e => e.Key);
         }
-
 
         [TearDown]
         public void CleanUp()
@@ -28,7 +26,6 @@ namespace DynamicData.Tests.CacheFixtures
             _personCache?.Dispose();
             _employmentCache?.Dispose();
         }
-
 
         [Test]
         public void GroupFromDistinct()
@@ -42,17 +39,16 @@ namespace DynamicData.Tests.CacheFixtures
 
             //create 0-3 jobs for each person and select from companies
             var emphistory = Enumerable.Range(1, numberOfPeople).SelectMany(i =>
-                                                                                {
-                                                                                    var companiestogenrate = random.Next(0, 4);
-                                                                                    return Enumerable.Range(0, companiestogenrate).Select(c => new PersonEmployment("Person{0}".FormatWith(i), companies[c]));
-                                                                                }).ToList();
+            {
+                var companiestogenrate = random.Next(0, 4);
+                return Enumerable.Range(0, companiestogenrate).Select(c => new PersonEmployment("Person{0}".FormatWith(i), companies[c]));
+            }).ToList();
 
             // Cache results
             var allpeopleWithEmpHistory = _employmentCache.Connect()
-                .Group(e => e.Name, _personCache.Connect().DistinctValues(p => p.Name))
-                .Transform(x => new PersonWithEmployment(x))
-                .AsObservableCache();
-
+                                                          .Group(e => e.Name, _personCache.Connect().DistinctValues(p => p.Name))
+                                                          .Transform(x => new PersonWithEmployment(x))
+                                                          .AsObservableCache();
 
             _personCache.AddOrUpdate(people);
             _employmentCache.AddOrUpdate(emphistory);
@@ -62,20 +58,13 @@ namespace DynamicData.Tests.CacheFixtures
 
             //check grouped items have the same key as the parent
             allpeopleWithEmpHistory.Items.ForEach
-                (p =>
-                     {
-                         Assert.IsTrue(p.EmpoymentData.Items.All(emph => emph.Name == p.Person));
-                     }
-
+                (p => { Assert.IsTrue(p.EmpoymentData.Items.All(emph => emph.Name == p.Person)); }
                 );
-            
+
             _personCache.Edit(updater => updater.Remove("Person1"));
             Assert.AreEqual(numberOfPeople - 1, allpeopleWithEmpHistory.Count);
             _employmentCache.Edit(updater => updater.Remove(emphistory));
             allpeopleWithEmpHistory.Dispose();
         }
-
-
-        
     }
 }

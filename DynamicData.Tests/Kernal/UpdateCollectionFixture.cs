@@ -20,7 +20,6 @@ namespace DynamicData.Tests.Kernal
             Assert.Fail("Not implemented");
         }
 
-
         public void RequeryItems()
         {
             Assert.Fail("Not implemented");

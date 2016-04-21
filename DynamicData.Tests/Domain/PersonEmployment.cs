@@ -1,6 +1,5 @@
 namespace DynamicData.Tests.Domain
 {
-
     public struct PersonEmpKey
     {
         private readonly string _name;
@@ -26,14 +25,14 @@ namespace DynamicData.Tests.Domain
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is PersonEmpKey && Equals((PersonEmpKey) obj);
+            return obj is PersonEmpKey && Equals((PersonEmpKey)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((_name != null ? _name.GetHashCode() : 0)*397) ^ (_company != null ? _company.GetHashCode() : 0);
+                return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ (_company != null ? _company.GetHashCode() : 0);
             }
         }
     }
@@ -51,20 +50,11 @@ namespace DynamicData.Tests.Domain
             _key = new PersonEmpKey(this);
         }
 
-        public string Name
-        {
-            get { return _name; }
-        }
+        public string Name { get { return _name; } }
 
-        public string Company
-        {
-            get { return _company; }
-        }
+        public string Company { get { return _company; } }
 
-        public PersonEmpKey Key
-        {
-            get { return _key; }
-        }
+        public PersonEmpKey Key { get { return _key; } }
 
         protected bool Equals(PersonEmployment other)
         {
@@ -76,14 +66,14 @@ namespace DynamicData.Tests.Domain
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((PersonEmployment) obj);
+            return Equals((PersonEmployment)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((_name != null ? _name.GetHashCode() : 0)*397) ^ (_company != null ? _company.GetHashCode() : 0);
+                return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ (_company != null ? _company.GetHashCode() : 0);
             }
         }
 
@@ -92,6 +82,4 @@ namespace DynamicData.Tests.Domain
             return string.Format("Name: {0}, Company: {1}", _name, _company);
         }
     }
-
-
 }

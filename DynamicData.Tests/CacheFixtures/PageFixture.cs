@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-	public class PageFixture
+    public class PageFixture
     {
         private ISourceCache<Person, string> _source;
         private PagedChangeSetAggregator<Person, string> _aggregators;
@@ -23,14 +23,13 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
-
-            _source = new SourceCache<Person, string>(p=>p.Key);
-            _pageController = new PageController(new PageRequest(1,25));
+            _source = new SourceCache<Person, string>(p => p.Key);
+            _pageController = new PageController(new PageRequest(1, 25));
             _aggregators = new PagedChangeSetAggregator<Person, string>
                 (
-                    _source.Connect()
-                    .Sort(_comparer)          
-                    .Page(_pageController)
+                _source.Connect()
+                       .Sort(_comparer)
+                       .Page(_pageController)
                 );
         }
 
@@ -48,30 +47,27 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(people);
 
             Assert.AreEqual(25, _aggregators.Data.Count, "Should be 25 people in the cache");
-            Assert.AreEqual(25, _aggregators.Messages[0].Response.PageSize,"Page size should be 25");
-            Assert.AreEqual(1, _aggregators.Messages[0].Response.Page,"Should be page 1");
+            Assert.AreEqual(25, _aggregators.Messages[0].Response.PageSize, "Page size should be 25");
+            Assert.AreEqual(1, _aggregators.Messages[0].Response.Page, "Should be page 1");
             Assert.AreEqual(4, _aggregators.Messages[0].Response.Pages, "Should be page 4 pages");
 
-            var expectedResult = people.OrderBy(p => p, _comparer).Take(25).Select(p => new KeyValuePair<string,Person>(p.Name, p)).ToList();
+            var expectedResult = people.OrderBy(p => p, _comparer).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[0].SortedItems.ToList();
 
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
         }
-
 
         [Test]
         public void ChangePage()
         {
             var people = _generator.Take(100).ToArray();
             _source.AddOrUpdate(people);
-            _pageController.Change(new PageRequest(2,25));
+            _pageController.Change(new PageRequest(2, 25));
 
-
-
-            var expectedResult = people.OrderBy(p => p, _comparer).Skip(25).Take(25).Select(p => new KeyValuePair<string,Person>(p.Name, p)).ToList();
+            var expectedResult = people.OrderBy(p => p, _comparer).Skip(25).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[1].SortedItems.ToList();
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
-       }
+        }
 
         [Test]
         public void ChangePageSize()
@@ -81,16 +77,12 @@ namespace DynamicData.Tests.CacheFixtures
             _pageController.Change(new PageRequest(1, 50));
 
             Assert.AreEqual(1, _aggregators.Messages[1].Response.Page, "Should be page 1");
-        
 
-            var expectedResult = people.OrderBy(p => p, _comparer).Take(50).Select(p => new KeyValuePair<string,Person>(p.Name, p)).ToList();
+            var expectedResult = people.OrderBy(p => p, _comparer).Take(50).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
-
-
         }
-
 
         [Test]
         public void PageGreaterThanNumberOfPagesAvailable()
@@ -99,15 +91,13 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(people);
             _pageController.Change(new PageRequest(10, 25));
 
-
             Assert.AreEqual(4, _aggregators.Messages[1].Response.Page, "Page should move to the last page");
-      
 
-            var expectedResult = people.OrderBy(p => p, _comparer).Skip(75).Take(25).Select(p => new KeyValuePair<string,Person>(p.Name, p)).ToList();
+            var expectedResult = people.OrderBy(p => p, _comparer).Skip(75).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
-      }
+        }
 
         [Test]
         [ExpectedException(typeof(ArgumentNullException))]
@@ -120,7 +110,7 @@ namespace DynamicData.Tests.CacheFixtures
         [ExpectedException(typeof(ArgumentException))]
         public void ThrowsForNegativeSizeParameters()
         {
-            _pageController.Change(new PageRequest(1,-1));
+            _pageController.Change(new PageRequest(1, -1));
         }
 
         [Test]

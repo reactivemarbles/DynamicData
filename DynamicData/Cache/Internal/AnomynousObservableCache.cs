@@ -7,30 +7,30 @@ namespace DynamicData.Internal
     internal sealed class AnomynousObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
         private readonly IObservableCache<TObject, TKey> _cache;
-		
-        public AnomynousObservableCache(IObservable<IChangeSet<TObject,TKey>> source)
+
+        public AnomynousObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
         {
-	        if (source == null) throw new ArgumentNullException("source");
-	        _cache = new ObservableCache<TObject,TKey>(source);
+            if (source == null) throw new ArgumentNullException("source");
+            _cache = new ObservableCache<TObject, TKey>(source);
         }
 
-	    /// <summary>
+        /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object"/> class.
         /// </summary>
         public AnomynousObservableCache(IObservableCache<TObject, TKey> cache)
         {
-	        if (cache == null) throw new ArgumentNullException("cache");
-	        _cache = new ObservableCache<TObject, TKey>(cache.Connect());
+            if (cache == null) throw new ArgumentNullException("cache");
+            _cache = new ObservableCache<TObject, TKey>(cache.Connect());
         }
 
-	    #region Delgated Members
+        #region Delgated Members
 
         /// <summary>
         /// A count changed observable starting with the current count
         /// </summary>
         public IObservable<int> CountChanged => _cache.CountChanged;
 
-	    /// <summary>
+        /// <summary>
         /// Watches updates from a single item using the specified key
         /// </summary>
         /// <param name="key">The key.</param>
@@ -64,22 +64,22 @@ namespace DynamicData.Internal
         /// </summary>
         public IEnumerable<TKey> Keys => _cache.Keys;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the Items
         /// </summary>
         public IEnumerable<TObject> Items => _cache.Items;
-		
-		/// <summary>
-		/// The total count of cached items
-		/// </summary>
-		public int Count => _cache.Count;
 
-		/// <summary>
-		/// Gets the key value pairs
-		/// </summary>
-		public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues => _cache.KeyValues;
+        /// <summary>
+        /// The total count of cached items
+        /// </summary>
+        public int Count => _cache.Count;
 
-	    /// <summary>
+        /// <summary>
+        /// Gets the key value pairs
+        /// </summary>
+        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
+
+        /// <summary>
         /// Lookup a single item using the specified key.
         /// </summary>
         /// <remarks>
@@ -92,9 +92,7 @@ namespace DynamicData.Internal
             return _cache.Lookup(key);
         }
 
-
-
-	    /// <summary>
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
@@ -103,6 +101,5 @@ namespace DynamicData.Internal
         }
 
         #endregion
-
     }
 }

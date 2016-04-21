@@ -11,7 +11,8 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>> where TObject : class
+    public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
+        where TObject : class
     {
         private readonly ISourceCache<Node<TObject, TKey>, TKey> _children = new SourceCache<Node<TObject, TKey>, TKey>(n => n.Key);
         private readonly IDisposable _cleanUp;
@@ -47,7 +48,7 @@ namespace DynamicData
         /// The item
         /// </summary>
         public TObject Item { get; }
-        
+
         /// <summary>
         /// The key
         /// </summary>
@@ -90,12 +91,14 @@ namespace DynamicData
                 return i;
             }
         }
+
         internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction)
         {
             _children.Edit(updateAction);
         }
 
         #region Equality
+
         public bool Equals(Node<TObject, TKey> other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -127,8 +130,6 @@ namespace DynamicData
         }
 
         #endregion
-
-
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.

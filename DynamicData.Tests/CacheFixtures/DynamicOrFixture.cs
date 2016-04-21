@@ -50,7 +50,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
         }
 
-
         [Test]
         public void UpdatingBothProducesResultsAndDoesNotDuplicateTheMessage()
         {
@@ -64,7 +63,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
             Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
         }
-
 
         [Test]
         public void RemovingFromOneDoesNotFromResult()
@@ -91,7 +89,6 @@ namespace DynamicData.Tests.CacheFixtures
             _source1.AddOrUpdate(person);
             _source2.AddOrUpdate(person);
 
-
             var personUpdated = new Person("Adult1", 51);
             _source2.AddOrUpdate(personUpdated);
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
@@ -111,14 +108,13 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Add(_source1.Connect());
             _source.Add(_source2.Connect());
             _source.Add(_source3.Connect());
-            
+
             Assert.AreEqual(100, _results.Data.Count);
             CollectionAssert.AreEquivalent(items, _results.Data.Items);
 
             _source.RemoveAt(1);
             var result = items.Take(10)
-                    .Union(items.Skip(20));
-
+                              .Union(items.Skip(20));
 
             Assert.AreEqual(90, _results.Data.Count);
             CollectionAssert.AreEquivalent(result, _results.Data.Items);
@@ -141,6 +137,5 @@ namespace DynamicData.Tests.CacheFixtures
 
             Assert.AreEqual(0, _results.Data.Count);
         }
-
     }
 }

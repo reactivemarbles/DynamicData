@@ -8,7 +8,6 @@ namespace DynamicData
     /// </summary>
     public static class ObsoleteEx
     {
-
         /// <summary>
         /// Action to apply a batch update to a cache. Multiple update methods can be invoked within a single batch operation.
         /// These operations are invoked within the cache's lock and is therefore thread safe.
@@ -19,11 +18,10 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="updateAction">The update action.</param>
         /// <param name="errorHandler">Optionally pass in an error handler</param>
-
         [Obsolete("Prfer Edit() as it provides a consistent semantics with ISourceList<T>")]
         public static void BatchUpdate<TObject, TKey>([NotNull] this ISourceCache<TObject, TKey> source,
-            [NotNull] Action<ISourceUpdater<TObject, TKey>> updateAction,
-            Action<Exception> errorHandler = null)
+                                                      [NotNull] Action<ISourceUpdater<TObject, TKey>> updateAction,
+                                                      Action<Exception> errorHandler = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
@@ -40,11 +38,10 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="updateAction">The update action.</param>
         /// <param name="errorHandler">Optionally pass in an error handler</param>
-
         [Obsolete("Prfer Edit() as it provides a consistent semantics with ISourceList<T>")]
         public static void BatchUpdate<TObject, TKey>([NotNull] this IIntermediateCache<TObject, TKey> source,
-            [NotNull] Action<IIntermediateUpdater<TObject, TKey>> updateAction,
-            Action<Exception> errorHandler = null)
+                                                      [NotNull] Action<IIntermediateUpdater<TObject, TKey>> updateAction,
+                                                      Action<Exception> errorHandler = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));

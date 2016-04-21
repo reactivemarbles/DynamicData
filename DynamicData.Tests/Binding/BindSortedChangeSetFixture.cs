@@ -23,10 +23,9 @@ namespace DynamicData.Tests.Binding
             _collection = new ObservableCollectionExtended<Person>();
             _source = new SourceCache<Person, string>(p => p.Name);
             _binder = _source.Connect()
-                .Sort(_comparer,resetThreshold:25)
-                .Bind(_collection)
-                .Subscribe();
-
+                             .Sort(_comparer, resetThreshold: 25)
+                             .Bind(_collection)
+                             .Subscribe();
         }
 
         [TearDown]
@@ -57,7 +56,6 @@ namespace DynamicData.Tests.Binding
             Assert.AreEqual(1, _collection.Count, "Should be 1 item in the collection");
             Assert.AreEqual(personUpdated, _collection.First(), "Should be updated person");
         }
-
 
         [Test]
         public void RemoveSourceRemovesFromTheDestination()
@@ -100,14 +98,13 @@ namespace DynamicData.Tests.Binding
         public void LargeUpdateInvokesAReset()
         {
             //update once as intital load is always a reset
-            _source.AddOrUpdate(new Person("Me",21));
+            _source.AddOrUpdate(new Person("Me", 21));
 
             bool invoked = false;
             _collection.CollectionChanged += (sender, e) =>
             {
                 invoked = true;
-                Assert.AreEqual(NotifyCollectionChangedAction.Reset,e.Action);
-
+                Assert.AreEqual(NotifyCollectionChangedAction.Reset, e.Action);
             };
             _source.AddOrUpdate(_generator.Take(100));
 
@@ -131,8 +128,7 @@ namespace DynamicData.Tests.Binding
             _source.AddOrUpdate(_generator.Take(24));
 
             Assert.IsTrue(invoked);
-            Assert.IsFalse(resetinvoked,"Reset should not has been invoked");
+            Assert.IsFalse(resetinvoked, "Reset should not has been invoked");
         }
-
     }
 }

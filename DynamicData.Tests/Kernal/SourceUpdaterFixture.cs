@@ -14,7 +14,7 @@ namespace DynamicData.Tests.Kernal
         public void Initialise()
         {
             _cache = new Cache<Person, string>();
-            _updater = new SourceUpdater<Person, string>(_cache,new KeySelector<Person, string>( p => p.Name));
+            _updater = new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(p => p.Name));
         }
 
         private Cache<Person, string> _cache;
@@ -59,7 +59,6 @@ namespace DynamicData.Tests.Kernal
                                            updates);
             Assert.AreEqual(updates.Count, 100, "Should be 100 updates");
         }
-
 
         [Test]
         public void BatchRemoves()
@@ -138,9 +137,8 @@ namespace DynamicData.Tests.Kernal
             Assert.AreEqual(updates.Count, 200, "Should be 200 updates");
         }
 
-
         [Test]
-        [ExpectedException(typeof (ArgumentNullException))]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void NullSelectorWillThrow()
         {
             new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null));

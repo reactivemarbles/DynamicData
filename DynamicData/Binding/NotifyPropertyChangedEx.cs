@@ -7,11 +7,11 @@ using DynamicData.Annotations;
 
 namespace DynamicData.Binding
 {
-	/// <summary>
-	/// Property changes notification
-	/// </summary>
-	public static class NotifyPropertyChangedEx
-	{
+    /// <summary>
+    /// Property changes notification
+    /// </summary>
+    public static class NotifyPropertyChangedEx
+    {
         /// <summary>
         /// Observes property changes for the specified property, starting with the current value
         /// </summary>
@@ -24,27 +24,27 @@ namespace DynamicData.Binding
         /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
         public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>(
             [NotNull] this TObject source,
-			Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue=true)
-			where TObject : INotifyPropertyChanged
-		{
+            Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+            where TObject : INotifyPropertyChanged
+        {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-			var member = propertyAccessor.GetProperty();
-			var accessor = propertyAccessor.Compile();
+            var member = propertyAccessor.GetProperty();
+            var accessor = propertyAccessor.Compile();
 
-			Func<PropertyValue<TObject, TValue>> factory =() => new PropertyValue<TObject, TValue>(source, accessor(source));
+            Func<PropertyValue<TObject, TValue>> factory = () => new PropertyValue<TObject, TValue>(source, accessor(source));
 
-			var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
-				(
-					handler => source.PropertyChanged += handler,
-					handler => source.PropertyChanged -= handler
-				)
-				.Where(args => args.EventArgs.PropertyName == member.Name)
-				.Select(x => factory());
+            var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+                (
+                    handler => source.PropertyChanged += handler,
+                    handler => source.PropertyChanged -= handler
+                )
+                                            .Where(args => args.EventArgs.PropertyName == member.Name)
+                                            .Select(x => factory());
 
             return !notifyOnInitialValue ? propertyChanged : propertyChanged.StartWith(factory());
-		}
+        }
 
         /// <summary>
         /// Notifies when any any property on the object has changed
@@ -54,7 +54,7 @@ namespace DynamicData.Binding
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this TObject source)
-                where TObject : INotifyPropertyChanged
+            where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
@@ -62,8 +62,8 @@ namespace DynamicData.Binding
                     handler => source.PropertyChanged += handler,
                     handler => source.PropertyChanged -= handler
                 )
-                .Where(x=>x.EventArgs.PropertyName!="IsSelected")
-                .Select(x => source);
+                             .Where(x => x.EventArgs.PropertyName != "IsSelected")
+                             .Select(x => source);
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace DynamicData.Binding
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<TValue> WhenValueChanged<TObject, TValue>([NotNull] this TObject source,Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+        public static IObservable<TValue> WhenValueChanged<TObject, TValue>([NotNull] this TObject source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -94,8 +94,8 @@ namespace DynamicData.Binding
                     handler => source.PropertyChanged += handler,
                     handler => source.PropertyChanged -= handler
                 )
-                .Where(args => args.EventArgs.PropertyName == member.Name)
-                .Select(x => accessor(source));
+                                            .Where(args => args.EventArgs.PropertyName == member.Name)
+                                            .Select(x => accessor(source));
 
             return !notifyOnInitialValue ? propertyChanged : propertyChanged.StartWith(accessor(source));
         }
@@ -108,14 +108,12 @@ namespace DynamicData.Binding
         /// <param name="source">The source.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-
         [Obsolete("Prefer WhenValueChanged or WhenPropertyChanged")]
         public static IObservable<TValue> Value<TObject, TValue>([NotNull] this IObservable<PropertyValue<TObject, TValue>> source)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			return source.Select(prop => prop.Value);
-		}
-
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return source.Select(prop => prop.Value);
+        }
 
         /// <summary>
         /// Observes property changed for the specified object
@@ -123,63 +121,60 @@ namespace DynamicData.Binding
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
         /// <returns></returns>
-
         [Obsolete("Prefer WhenValueChanged or WhenPropertyChanged")]
         public static IObservable<string> ObservePropertyChanges<T>(this T source)
-			where T : INotifyPropertyChanged
-		{
+            where T : INotifyPropertyChanged
+        {
+            return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+                (
+                    handler => source.PropertyChanged += handler,
+                    handler => source.PropertyChanged -= handler
+                )
+                             .Select(x => x.EventArgs.PropertyName);
+        }
 
-			return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
-				(
-					handler => source.PropertyChanged += handler,
-					handler => source.PropertyChanged -= handler
-				)
-				.Select(x => x.EventArgs.PropertyName);
-		}
+        private static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+        {
+            var property = GetMember(expression) as PropertyInfo;
+            if (property == null)
+                throw new ArgumentException("Not a property expression");
 
+            return property;
+        }
 
-		private static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
-		{
-			var property = GetMember(expression) as PropertyInfo;
-			if (property == null)
-				throw new ArgumentException("Not a property expression");
+        private static MemberInfo GetMember<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+        {
+            if (expression == null)
+                throw new ArgumentException("Not a property expression");
 
-			return property;
-		}
+            return GetMemberInfo(expression);
+        }
 
-		private static MemberInfo GetMember<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
-		{
-			if (expression == null)
-				throw new ArgumentException("Not a property expression");
+        private static MemberInfo GetMemberInfo(LambdaExpression lambda)
+        {
+            if (lambda == null)
+                throw new ArgumentException("Not a property expression");
 
-			return GetMemberInfo(expression);
-		}
+            MemberExpression memberExpression = null;
+            if (lambda.Body.NodeType == ExpressionType.Convert)
+            {
+                memberExpression = ((UnaryExpression)lambda.Body).Operand as MemberExpression;
+            }
+            else if (lambda.Body.NodeType == ExpressionType.MemberAccess)
+            {
+                memberExpression = lambda.Body as MemberExpression;
+            }
+            else if (lambda.Body.NodeType == ExpressionType.Call)
+            {
+                return ((MethodCallExpression)lambda.Body).Method;
+            }
 
-		private static MemberInfo GetMemberInfo(LambdaExpression lambda)
-		{
-			if (lambda == null)
-				throw new ArgumentException("Not a property expression");
+            if (memberExpression == null)
+            {
+                throw new ArgumentException("Not a member access");
+            }
 
-			MemberExpression memberExpression = null;
-			if (lambda.Body.NodeType == ExpressionType.Convert)
-			{
-				memberExpression = ((UnaryExpression)lambda.Body).Operand as MemberExpression;
-			}
-			else if (lambda.Body.NodeType == ExpressionType.MemberAccess)
-			{
-				memberExpression = lambda.Body as MemberExpression;
-			}
-			else if (lambda.Body.NodeType == ExpressionType.Call)
-			{
-				return ((MethodCallExpression)lambda.Body).Method;
-			}
-
-			if (memberExpression == null)
-			{
-				throw new ArgumentException("Not a member access");
-			}
-
-			return memberExpression.Member;
-		}
-	}
+            return memberExpression.Member;
+        }
+    }
 }

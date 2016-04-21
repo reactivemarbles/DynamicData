@@ -1,10 +1,7 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using DynamicData.Operators;
-
-
 
 namespace DynamicData.Internal
 {
@@ -16,22 +13,21 @@ namespace DynamicData.Internal
         private readonly int _resetThreshold;
         private readonly object _locker = new object();
 
-        private KeyValueComparer<TObject,TKey> _comparer;
+        private KeyValueComparer<TObject, TKey> _comparer;
         private IKeyValueCollection<TObject, TKey> _sorted = new KeyValueCollection<TObject, TKey>();
         private bool _haveReceivedData = false;
         private bool _initialised = false;
         private IndexCalculator<TObject, TKey> _calculator;
 
-        public Sorter(SortOptimisations optimisations,  
-            IComparer<TObject> comparer=null,
-            int resetThreshold = -1)
+        public Sorter(SortOptimisations optimisations,
+                      IComparer<TObject> comparer = null,
+                      int resetThreshold = -1)
         {
             _optimisations = optimisations;
             _resetThreshold = resetThreshold;
             _updater = new IntermediateUpdater<TObject, TKey>(_cache);
             _comparer = new KeyValueComparer<TObject, TKey>(comparer);
         }
-
 
         /// <summary>
         /// Sorts the specified changes. Will return null if there are no changes
@@ -42,10 +38,8 @@ namespace DynamicData.Internal
         {
             lock (_locker)
             {
- 
                 return DoSort(SortReason.DataChanged, changes);
             }
-
         }
 
         /// <summary>
@@ -55,7 +49,6 @@ namespace DynamicData.Internal
         /// <returns></returns>
         public ISortedChangeSet<TObject, TKey> Sort(IComparer<TObject> comparer)
         {
-
             lock (_locker)
             {
                 _comparer = new KeyValueComparer<TObject, TKey>(comparer);
@@ -75,7 +68,6 @@ namespace DynamicData.Internal
             }
         }
 
-
         /// <summary>
         /// Sorts using the specified sorter. Will return null if there are no changes
         /// </summary>
@@ -91,7 +83,6 @@ namespace DynamicData.Internal
                 _haveReceivedData = true;
                 if (_comparer == null)
                     return null;
-
             }
 
             //if the comparer is not set, return nothing
@@ -130,7 +121,6 @@ namespace DynamicData.Internal
                     break;
                 case SortReason.DataChanged:
                 {
-
                     changeSet = _calculator.Calculate(changes);
                 }
                     break;

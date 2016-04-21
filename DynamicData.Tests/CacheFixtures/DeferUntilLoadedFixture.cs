@@ -3,7 +3,6 @@ using System.Linq;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
-
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
@@ -17,20 +16,19 @@ namespace DynamicData.Tests.CacheFixtures
 
             var cache = new SourceCache<Person, string>(p => p.Name);
 
-
             var deferStream = cache.Connect().DeferUntilLoaded()
-                                .Subscribe(changes =>
-                                           {
-                                               updateReceived = true;
-                                               result = changes;
-                                           });
+                                   .Subscribe(changes =>
+                                   {
+                                       updateReceived = true;
+                                       result = changes;
+                                   });
 
-            Assert.IsFalse(updateReceived,"No update should be received");
-            cache.AddOrUpdate(new Person("Test",1));
+            Assert.IsFalse(updateReceived, "No update should be received");
+            cache.AddOrUpdate(new Person("Test", 1));
 
-            Assert.IsTrue(updateReceived,"Replace should be received");
-            Assert.AreEqual(1,result.Adds);
-            Assert.AreEqual(new Person("Test",1), result.First().Current);
+            Assert.IsTrue(updateReceived, "Replace should be received");
+            Assert.AreEqual(1, result.Adds);
+            Assert.AreEqual(new Person("Test", 1), result.First().Current);
             deferStream.Dispose();
         }
 
@@ -41,9 +39,8 @@ namespace DynamicData.Tests.CacheFixtures
 
             var cache = new SourceCache<Person, string>(p => p.Name);
 
-
             var deferStream = cache.Connect().SkipInitial()
-                                .Subscribe(changes => updateReceived = true);
+                                   .Subscribe(changes => updateReceived = true);
 
             Assert.IsFalse(updateReceived, "No update should be received");
 

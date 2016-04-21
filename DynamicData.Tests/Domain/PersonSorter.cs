@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace DynamicData.Tests.Domain
 {
-    public class PersonSorter: IComparer<Person>
+    public class PersonSorter : IComparer<Person>
     {
         #region Implementation of IComparer<in Person>
 

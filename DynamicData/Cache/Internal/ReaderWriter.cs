@@ -31,7 +31,7 @@ namespace DynamicData.Internal
         }
 
         #region Writers
-        
+
         public Continuation<IChangeSet<TObject, TKey>> Write(IChangeSet<TObject, TKey> changes)
         {
             if (changes == null) throw new ArgumentNullException("changes");
@@ -86,15 +86,14 @@ namespace DynamicData.Internal
                 {
                     return new Continuation<IChangeSet<TObject, TKey>>(ex);
                 }
-
             }
             return new Continuation<IChangeSet<TObject, TKey>>(result);
         }
-        
+
         #endregion
 
         #region Accessors
-        
+
         public IEnumerable<TKey> Keys
         {
             get
@@ -132,8 +131,8 @@ namespace DynamicData.Internal
                 }
                 return result;
             }
-
         }
+
         public Optional<TObject> Lookup(TKey key)
         {
             return _cache.Lookup(key);
@@ -141,6 +140,6 @@ namespace DynamicData.Internal
 
         public int Count => _cache.Count;
 
-	    #endregion
+        #endregion
     }
 }

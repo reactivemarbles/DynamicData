@@ -10,7 +10,7 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public  class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey> 
+    public class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey>
     {
         private readonly ObservableCache<TObject, TKey> _innnerCache;
 
@@ -22,11 +22,10 @@ namespace DynamicData
         public SourceCache(Func<TObject, TKey> keySelector)
         {
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-            _innnerCache = new ObservableCache<TObject, TKey>(keySelector);  
+            _innnerCache = new ObservableCache<TObject, TKey>(keySelector);
         }
 
         #region Delegated Members
-
 
         /// <summary>
         /// Add, update and remove api via an action method. Enables the consumer to perform queries and updates
@@ -40,13 +39,12 @@ namespace DynamicData
             _innnerCache.UpdateFromSource(updateAction, errorHandler);
         }
 
-
         /// <summary>
         /// A count changed observable starting with the current count
         /// </summary>
         public IObservable<int> CountChanged => _innnerCache.CountChanged;
 
-	    /// <summary>
+        /// <summary>
         /// Returns a filtered stream of cache changes preceeded with the initital filtered state
         /// </summary>
         /// <param name="filter">The filter.</param>
@@ -64,6 +62,7 @@ namespace DynamicData
         {
             return _innnerCache.Connect();
         }
+
         /// <summary>
         /// Returns an observable of any changes which match the specified key,  preceeded with the initital cache state
         /// </summary>
@@ -79,22 +78,22 @@ namespace DynamicData
         /// </summary>
         public int Count => _innnerCache.Count;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the Items
         /// </summary>
         public IEnumerable<TObject> Items => _innnerCache.Items;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the key value pairs
         /// </summary>
-        public IEnumerable<KeyValuePair<TKey,TObject>> KeyValues => _innnerCache.KeyValues;
+        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innnerCache.KeyValues;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the keys
         /// </summary>
         public IEnumerable<TKey> Keys => _innnerCache.Keys;
 
-	    /// <summary>
+        /// <summary>
         /// Lookup a single item using the specified key.
         /// </summary>
         /// <remarks>
@@ -107,15 +106,14 @@ namespace DynamicData
             return _innnerCache.Lookup(key);
         }
 
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _innnerCache.Dispose();
+        }
 
-		/// <summary>
-		/// Releases unmanaged and - optionally - managed resources.
-		/// </summary>
-		public void Dispose()
-		{
-			_innnerCache.Dispose();
-		}
-
-		#endregion
-	}
+        #endregion
+    }
 }

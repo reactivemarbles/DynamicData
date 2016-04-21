@@ -1,6 +1,4 @@
-﻿
-
-namespace DynamicData.Aggregation
+﻿namespace DynamicData.Aggregation
 {
     /// <summary>
     /// The type of aggregation
@@ -11,6 +9,7 @@ namespace DynamicData.Aggregation
         /// The add
         /// </summary>
         Add,
+
         /// <summary>
         /// The remove
         /// </summary>

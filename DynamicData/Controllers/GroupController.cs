@@ -9,7 +9,7 @@ namespace DynamicData.Controllers
     /// <summary>
     /// Controller used to inject meta data into a group stream.
     /// </summary>
-    public sealed class GroupController: IDisposable
+    public sealed class GroupController : IDisposable
     {
         private readonly ISubject<Unit> _regroupSubject = new ReplaySubject<Unit>();
         private readonly IDisposable _cleanUp;
@@ -32,12 +32,12 @@ namespace DynamicData.Controllers
 
         internal IObservable<Unit> Regrouped => _regroupSubject.AsObservable();
 
-	    /// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		public void Dispose()
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
         {
-           _cleanUp.Dispose();
+            _cleanUp.Dispose();
         }
     }
 }

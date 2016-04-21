@@ -50,7 +50,7 @@ namespace DynamicData.Tests.CacheFixtures
             var remover = _source.ExpireAfter(removeFunc, _scheduler).Subscribe();
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(5010).Ticks);
 
-            Assert.AreEqual(60,_source.Count,"40 items should have been removed from the cache");
+            Assert.AreEqual(60, _source.Count, "40 items should have been removed from the cache");
 
             _scheduler.AdvanceBy(TimeSpan.FromSeconds(5).Ticks);
             Assert.AreEqual(20, _source.Count, "80 items should have been removed from the cache");
@@ -62,7 +62,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void ItemAddedIsExpired()
         {
             var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
-          
+
             _source.AddOrUpdate(new Person("Name1", 10));
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(200).Ticks);
@@ -73,18 +73,16 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Messages[1].Removes, "Should be 1 removes in the second update");
         }
 
-
         [Test]
         public void ExpireIsCancelledWhenUpdated()
         {
             var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
-         
+
             _source.Edit(updater =>
             {
                 updater.AddOrUpdate(new Person("Name1", 20));
                 updater.AddOrUpdate(new Person("Name1", 21));
             });
-
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(200).Ticks);
             remover.Dispose();
@@ -110,7 +108,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(100, _results.Messages[0].Adds, "Should be 100 adds in the first message");
             Assert.AreEqual(100, _results.Messages[1].Removes, "Should be 100 removes in the second message");
-
         }
     }
 }

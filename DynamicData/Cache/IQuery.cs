@@ -3,8 +3,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
-
     /// <summary>
     /// Exposes internal cache state to enable querying
     /// </summary>
@@ -12,7 +10,6 @@ namespace DynamicData
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public interface IQuery<TObject, TKey>
     {
-
         /// <summary>
         /// Lookup a single item using the specified key.
         /// </summary>
@@ -20,8 +17,7 @@ namespace DynamicData
         /// Fast indexed lookup
         /// </remarks>
         /// <param name="key">The key.</param>
-         Optional<TObject> Lookup(TKey key);
-
+        Optional<TObject> Lookup(TKey key);
 
         /// <summary>
         /// Gets the keys.
@@ -32,15 +28,14 @@ namespace DynamicData
         /// Gets the items.
         /// </summary>
         IEnumerable<TObject> Items { get; }
-        
+
         /// <summary>
         /// Gets the items together with their keys
         /// </summary>
         /// <value>
         /// The key values.
         /// </value>
-        IEnumerable<KeyValuePair<TKey,TObject>> KeyValues { get; }
-
+        IEnumerable<KeyValuePair<TKey, TObject>> KeyValues { get; }
 
         /// <summary>
         /// Gets the count.

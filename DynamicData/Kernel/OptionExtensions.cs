@@ -4,13 +4,11 @@ using System.Linq;
 
 namespace DynamicData.Kernel
 {
-
-	/// <summary>
-	/// Extensions for optional
-	/// </summary>
-	public static class OptionExtensions
+    /// <summary>
+    /// Extensions for optional
+    /// </summary>
+    public static class OptionExtensions
     {
-
         /// <summary>
         /// Returns the value if the nullable has a value, otherwise returns the result of the value selector
         /// </summary>
@@ -19,12 +17,12 @@ namespace DynamicData.Kernel
         /// <param name="defaultValue">The default value</param>
         /// <returns></returns>
         public static T ValueOr<T>(this T? source, T defaultValue)
-            where T:struct
-	    {
-	        return source ?? defaultValue;
-	    }
+            where T : struct
+        {
+            return source ?? defaultValue;
+        }
 
-	    /// <summary>
+        /// <summary>
         /// Returns the value if the optional has a value, otherwise returns the result of the value selector
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -32,7 +30,7 @@ namespace DynamicData.Kernel
         /// <param name="valueSelector">The value selector.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">valueSelector</exception>
-        public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector )
+        public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector)
         {
             if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
             return source.HasValue ? source.Value : valueSelector();
@@ -63,11 +61,8 @@ namespace DynamicData.Kernel
             if (source.HasValue)
                 return source.Value;
 
-            throw  exceptionGenerator();
+            throw exceptionGenerator();
         }
-
-
-
 
         /// <summary>
         /// Converts the option value if it has a value, otherwise returns the result of the fallback converter
@@ -106,36 +101,33 @@ namespace DynamicData.Kernel
             return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
         }
 
-
-		/// <summary>
-		/// Filters where Optional<typeparam name="T"></typeparam> has a value
-		/// and return the values only
-		/// </summary>
-		/// <param name="source">The source.</param>
-		/// <returns></returns>
-		public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
+        /// <summary>
+        /// Filters where Optional<typeparam name="T"></typeparam> has a value
+        /// and return the values only
+        /// </summary>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
         {
             return source.Where(t => t.HasValue).Select(t => t.Value);
         }
 
-
-		/// <summary>
-		/// Overloads a TryGetValue of the dictionary wrapping the result as an Optional<typeparam>
-		///         <name>&amp;gt;TValue</name>
-		///     </typeparam>
-		/// </summary>
-		/// <typeparam name="TValue">The type of the value.</typeparam>
-		/// <typeparam name="TKey">The type of the key.</typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="key">The key.</param>
-		/// <returns></returns>
-		public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
+        /// <summary>
+        /// Overloads a TryGetValue of the dictionary wrapping the result as an Optional<typeparam>
+        ///         <name>&amp;gt;TValue</name>
+        ///     </typeparam>
+        /// </summary>
+        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="key">The key.</param>
+        /// <returns></returns>
+        public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         {
             TValue contained;
             bool result = source.TryGetValue(key, out contained);
             return result ? contained : Optional.None<TValue>();
         }
-
 
         /// <summary>
         /// Removes item if contained in the cache
@@ -148,26 +140,25 @@ namespace DynamicData.Kernel
         public static bool RemoveIfContained<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         {
             if (source.ContainsKey(key))
-              return  source.Remove(key);
+                return source.Remove(key);
 
             return false;
         }
 
-		/// <summary>
-		/// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam>
-		///         <name>&amp;gt;T</name>
-		///     </typeparam> container
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <param name="selector">The selector.</param>
-		/// <returns></returns>
-		public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
+        /// <summary>
+        /// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam>
+        ///         <name>&amp;gt;T</name>
+        ///     </typeparam> container
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="selector">The selector.</param>
+        /// <returns></returns>
+        public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         {
             var result = source.FirstOrDefault(selector);
             return !Equals(result, null) ? result : Optional.None<T>();
         }
-
 
         /// <summary>
         /// Invokes the specified action when 
@@ -176,7 +167,7 @@ namespace DynamicData.Kernel
         /// <param name="source">The source.</param>
         /// <param name="action">The action.</param>
         /// <returns></returns>
-        public static OptionElse IfHasValue<T>(this Optional<T> source,  Action<T> action)
+        public static OptionElse IfHasValue<T>(this Optional<T> source, Action<T> action)
         {
             if (!source.HasValue) return new OptionElse();
             action(source.Value);

@@ -19,7 +19,7 @@ namespace DynamicData.Tests.CacheFixtures
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
         {
-            var l = new List<IObservable<IChangeSet<Person, string>>> {_source1.Connect(), _source2.Connect()};
+            var l = new List<IObservable<IChangeSet<Person, string>>> { _source1.Connect(), _source2.Connect() };
             return l.Xor();
         }
     }
@@ -59,7 +59,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
         }
 
-
         [Test]
         public void UpdatingBothDoeNotProducesResult()
         {
@@ -68,7 +67,6 @@ namespace DynamicData.Tests.CacheFixtures
             _source2.AddOrUpdate(person);
             Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
         }
-
 
         [Test]
         public void RemovingFromOneDoesNotFromResult()
@@ -88,7 +86,6 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source1.AddOrUpdate(person);
             _source2.AddOrUpdate(person);
-
 
             var personUpdated = new Person("Adult1", 51);
             _source2.AddOrUpdate(personUpdated);

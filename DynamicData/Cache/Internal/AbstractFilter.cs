@@ -4,8 +4,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-
-	internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
+    internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
     {
         private readonly ICache<TObject, TKey> _cache;
         private readonly Func<TObject, bool> _filter;
@@ -15,7 +14,7 @@ namespace DynamicData.Internal
             if (cache == null) throw new ArgumentNullException(nameof(cache));
             _cache = cache;
 
-            if (filter==null)
+            if (filter == null)
             {
                 _filter = t => true;
             }
@@ -27,15 +26,15 @@ namespace DynamicData.Internal
 
         public Func<TObject, bool> Filter => _filter;
 
-	    public IChangeSet<TObject, TKey> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items)
+        public IChangeSet<TObject, TKey> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
             //this is an internal method only so we can be sure there are no duplicate keys in the result
             //(therefore safe to parallelise)
-            Func<KeyValuePair<TKey,TObject>, Optional<Change<TObject, TKey>>> factory = kv =>
+            Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory = kv =>
             {
                 var exisiting = _cache.Lookup(kv.Key);
                 var matches = _filter(kv.Value);
-                 
+
                 if (matches)
                 {
                     if (!exisiting.HasValue)
@@ -50,17 +49,13 @@ namespace DynamicData.Internal
                 return Optional.None<Change<TObject, TKey>>();
             };
 
-
-
-            var result = Evaluate(items, factory); 
+            var result = Evaluate(items, factory);
             var changes = new ChangeSet<TObject, TKey>(result);
             _cache.Clone(changes);
             return changes;
-
         }
 
-        protected abstract IEnumerable<Change<TObject, TKey>> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey,TObject>, Optional<Change<TObject, TKey>>> factory);
-
+        protected abstract IEnumerable<Change<TObject, TKey>> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
 
         public IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates)
         {
@@ -69,7 +64,6 @@ namespace DynamicData.Internal
         }
 
         protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates);
-
 
         private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> result)
         {
@@ -90,7 +84,7 @@ namespace DynamicData.Internal
                     {
                         if (matches)
                         {
-                            _cache.AddOrUpdate(u.Current,u.Key);
+                            _cache.AddOrUpdate(u.Current, u.Key);
                             change = new Change<TObject, TKey>(ChangeReason.Add, key, u.Current);
                         }
                     }
@@ -155,7 +149,7 @@ namespace DynamicData.Internal
 
         protected struct UpdateWithFilter
         {
-	        /// <summary>
+            /// <summary>
             /// Initializes a new instance of the <see cref="T:System.Object"/> class.
             /// </summary>
             public UpdateWithFilter(bool isMatch, Change<TObject, TKey> change)
@@ -163,12 +157,9 @@ namespace DynamicData.Internal
                 IsMatch = isMatch;
                 Change = change;
             }
-			public Change<TObject, TKey> Change { get; }
-			public bool IsMatch { get; }
 
-
-
-		}
-
+            public Change<TObject, TKey> Change { get; }
+            public bool IsMatch { get; }
+        }
     }
 }

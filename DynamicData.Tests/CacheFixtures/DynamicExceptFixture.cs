@@ -36,7 +36,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Dispose();
             _results.Dispose();
         }
-        
+
         [Test]
         public void UpdatingOneSourceOnlyProducesResult()
         {
@@ -50,7 +50,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
         }
 
-
         [Test]
         public void DoNotIncludeExceptListItems()
         {
@@ -61,11 +60,9 @@ namespace DynamicData.Tests.CacheFixtures
             _source2.AddOrUpdate(person);
             _source1.AddOrUpdate(person);
 
-
             Assert.AreEqual(0, _results.Messages.Count, "Should have no updates");
             Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
         }
-
 
         [Test]
         public void RemovedAnItemFromExceptThenIncludesTheItem()
@@ -77,7 +74,6 @@ namespace DynamicData.Tests.CacheFixtures
             _source2.AddOrUpdate(person);
             _source1.AddOrUpdate(person);
 
-
             _source2.Remove(person);
             Assert.AreEqual(1, _results.Messages.Count, "Should be 2 updates");
             Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
@@ -86,12 +82,11 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddAndRemoveLists()
         {
-            var items = _generator.Take(100).OrderBy(p=>p.Name).ToArray();
+            var items = _generator.Take(100).OrderBy(p => p.Name).ToArray();
 
             _source1.AddOrUpdate(items);
             _source2.AddOrUpdate(items.Take(10));
             _source3.AddOrUpdate(items.Skip(90).Take(10));
-
 
             _source.Add(_source1.Connect());
             _source.Add(_source2.Connect());

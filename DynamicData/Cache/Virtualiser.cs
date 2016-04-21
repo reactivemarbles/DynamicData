@@ -1,15 +1,14 @@
-﻿
-using System.Linq;
+﻿using System.Linq;
 using DynamicData.Internal;
 
 namespace DynamicData
-{    
-    internal sealed class Virtualiser<TObject,TKey> 
+{
+    internal sealed class Virtualiser<TObject, TKey>
     {
         #region Fields
 
         private readonly FilteredIndexCalculator<TObject, TKey> _changedCalculator = new FilteredIndexCalculator<TObject, TKey>();
-        private IKeyValueCollection<TObject, TKey> _all =new KeyValueCollection<TObject, TKey>();
+        private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
         private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
         private IVirtualRequest _parameters;
         private bool _isLoaded;
@@ -18,7 +17,7 @@ namespace DynamicData
 
         #region Construction
 
-        public Virtualiser(VirtualRequest request=null)
+        public Virtualiser(VirtualRequest request = null)
         {
             _parameters = request ?? new VirtualRequest();
         }
@@ -26,7 +25,7 @@ namespace DynamicData
         #endregion
 
         #region Virtualisation
-        
+
         /// <summary>
         /// Virtualises using specified parameters.  Returns null if there are no changed
         /// </summary>
@@ -34,7 +33,7 @@ namespace DynamicData
         /// <returns></returns>
         public IVirtualChangeSet<TObject, TKey> Virtualise(IVirtualRequest parameters)
         {
-            if (parameters==null || parameters.StartIndex < 0 || parameters.Size < 1)
+            if (parameters == null || parameters.StartIndex < 0 || parameters.Size < 1)
             {
                 return null;
             }
@@ -49,19 +48,17 @@ namespace DynamicData
         {
             _isLoaded = true;
             _all = updates.SortedItems;
-            return Virtualise( updates);
+            return Virtualise(updates);
         }
-
-
 
         private IVirtualChangeSet<TObject, TKey> Virtualise(ISortedChangeSet<TObject, TKey> updates = null)
         {
             if (_isLoaded == false) return null;
-            
+
             var previous = _current;
             var virualised = _all.Skip(_parameters.StartIndex)
-                                  .Take(_parameters.Size)
-                                  .ToList();
+                                 .Take(_parameters.Size)
+                                 .ToList();
 
             _current = new KeyValueCollection<TObject, TKey>(virualised, _all.Comparer, updates?.SortedItems.SortReason ?? SortReason.DataChanged, _all.Optimisations);
 

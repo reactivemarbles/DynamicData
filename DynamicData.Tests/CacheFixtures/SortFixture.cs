@@ -27,11 +27,10 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
-
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new SortedChangeSetAggregator<Person, string>
                 (
-                    _source.Connect().Sort(_comparer)
+                _source.Connect().Sort(_comparer)
                 );
         }
 
@@ -103,10 +102,10 @@ namespace DynamicData.Tests.CacheFixtures
             var filterSubject = new BehaviorSubject<Func<Person, bool>>(p => true);
 
             var agg = new SortedChangeSetAggregator<ViewModel, TestString>(source.Connect()
-                .Filter(filterSubject)
-                .Group(x => (TestString)x.Key)
-                .Transform(x => new ViewModel(x.Key))
-                .Sort(new ViewModel.Comparer()));
+                                                                                 .Filter(filterSubject)
+                                                                                 .Group(x => (TestString)x.Key)
+                                                                                 .Transform(x => new ViewModel(x.Key))
+                                                                                 .Sort(new ViewModel.Comparer()));
 
             source.Edit(x =>
             {
@@ -126,12 +125,11 @@ namespace DynamicData.Tests.CacheFixtures
 
             var filterSubject = new BehaviorSubject<Func<Person, bool>>(p => true);
 
-
             var agg = source.Connect()
-                .Filter(filterSubject)
-                .Transform(x => new ViewModel(x.Name))
-                .Sort(new ViewModel.Comparer())
-                .AsAggregator();
+                            .Filter(filterSubject)
+                            .Transform(x => new ViewModel(x.Name))
+                            .Sort(new ViewModel.Comparer())
+                            .AsAggregator();
 
             source.Edit(x =>
             {
@@ -152,7 +150,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
 
-            var expectedResult = people.OrderBy(p=>p,_comparer).Select(p => new KeyValuePair<string,Person>(p.Name, p)).ToList();
+            var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
@@ -163,18 +161,19 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var people = _generator.Take(100).ToArray();
             _source.AddOrUpdate(people);
-            
+
             //create age 0 to ensure it is inserted first
             var insert = new Person("_Aaron", 0);
 
             _source.AddOrUpdate(insert);
 
             Assert.AreEqual(101, _results.Data.Count, "Should be 101 people in the cache");
-           var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("_Aaron");
+            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("_Aaron");
 
-           Assert.IsTrue(indexedItem.HasValue,"Item has not been inserted");
-            Assert.AreEqual(0,indexedItem.Value.Index,"Inserted item should have index of zero");
+            Assert.IsTrue(indexedItem.HasValue, "Item has not been inserted");
+            Assert.AreEqual(0, indexedItem.Value.Index, "Inserted item should have index of zero");
         }
+
         [Test]
         public void AppendInMiddle()
         {
@@ -186,7 +185,6 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.AddOrUpdate(insert);
 
-
             Assert.AreEqual(101, _results.Data.Count, "Should be 101 people in the cache");
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("Marvin");
 
@@ -197,7 +195,7 @@ namespace DynamicData.Tests.CacheFixtures
             CollectionAssert.AreEquivalent(sortedResult, list);
         }
 
-       [Test]
+        [Test]
         public void AppendAtEnd()
         {
             var people = _generator.Take(100).ToArray();
@@ -213,331 +211,307 @@ namespace DynamicData.Tests.CacheFixtures
 
             Assert.IsTrue(indexedItem.HasValue, "Item has not been inserted");
 
-         
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
             CollectionAssert.AreEquivalent(sortedResult, list);
         }
 
-       [Test]
-       public void RemoveFirst()
-       {
-           var people = _generator.Take(100).ToArray();
-           _source.AddOrUpdate(people);
+        [Test]
+        public void RemoveFirst()
+        {
+            var people = _generator.Take(100).ToArray();
+            _source.AddOrUpdate(people);
 
-           //create age 0 to ensure it is inserted first
-           var remove = _results.Messages[0].SortedItems.First();
+            //create age 0 to ensure it is inserted first
+            var remove = _results.Messages[0].SortedItems.First();
 
-           _source.Remove(remove.Key);
+            _source.Remove(remove.Key);
 
-           Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
-           //TODO: fixed Text
-           var indexedItem = _results.Messages[1].SortedItems.Indexed() .Lookup(remove.Key);
-           Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
+            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
+            //TODO: fixed Text
+            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
+            Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
 
-           var list = _results.Messages[1].SortedItems.ToList();
-           var sortedResult = list.OrderBy(p => _comparer).ToList();
-           CollectionAssert.AreEquivalent(sortedResult, list);
-       }
+            var list = _results.Messages[1].SortedItems.ToList();
+            var sortedResult = list.OrderBy(p => _comparer).ToList();
+            CollectionAssert.AreEquivalent(sortedResult, list);
+        }
 
+        [Test]
+        public void RemoveFromMiddle()
+        {
+            var people = _generator.Take(100).ToArray();
+            _source.AddOrUpdate(people);
 
-
-       [Test]
-       public void RemoveFromMiddle()
-       {
-           var people = _generator.Take(100).ToArray();
-           _source.AddOrUpdate(people);
-
-           //create age 0 to ensure it is inserted first
-           var remove = _results.Messages[0].SortedItems.Skip(50).First();
+            //create age 0 to ensure it is inserted first
+            var remove = _results.Messages[0].SortedItems.Skip(50).First();
 
             _source.Remove(remove.Key);
 
             Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
 
-           //TODO: fixed Text
-           var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-          Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
+            //TODO: fixed Text
+            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
+            Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
 
-           var list = _results.Messages[1].SortedItems.ToList();
-           var sortedResult = list.OrderBy(p => _comparer).ToList();
-           CollectionAssert.AreEquivalent(sortedResult, list);
-       }
+            var list = _results.Messages[1].SortedItems.ToList();
+            var sortedResult = list.OrderBy(p => _comparer).ToList();
+            CollectionAssert.AreEquivalent(sortedResult, list);
+        }
 
+        [Test]
+        public void RemoveFromEnd()
+        {
+            var people = _generator.Take(100).ToArray();
+            _source.AddOrUpdate(people);
 
-       [Test]
-       public void RemoveFromEnd()
-       {
-           var people = _generator.Take(100).ToArray();
-           _source.AddOrUpdate(people);
-
-           //create age 0 to ensure it is inserted first
-           var remove = _results.Messages[0].SortedItems.Last();
+            //create age 0 to ensure it is inserted first
+            var remove = _results.Messages[0].SortedItems.Last();
 
             _source.Remove(remove.Key);
 
             Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
 
-           var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-           Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
+            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
+            Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
 
-           var list = _results.Messages[1].SortedItems.ToList();
-           var sortedResult = list.OrderBy(p => _comparer).ToList();
-           CollectionAssert.AreEquivalent(sortedResult, list);
-       }
+            var list = _results.Messages[1].SortedItems.ToList();
+            var sortedResult = list.OrderBy(p => _comparer).ToList();
+            CollectionAssert.AreEquivalent(sortedResult, list);
+        }
 
-       [Test]
-       public void UpdateFirst()
-       {
-           var people = _generator.Take(100).ToArray();
-           _source.AddOrUpdate(people);
+        [Test]
+        public void UpdateFirst()
+        {
+            var people = _generator.Take(100).ToArray();
+            _source.AddOrUpdate(people);
 
-           var toupdate = _results.Messages[0].SortedItems.First().Value;
-           var update = new Person(toupdate.Name, toupdate.Age + 5);
+            var toupdate = _results.Messages[0].SortedItems.First().Value;
+            var update = new Person(toupdate.Name, toupdate.Age + 5);
 
-           _source.AddOrUpdate(update);
+            _source.AddOrUpdate(update);
 
-           Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
-           //TODO: fixed Text
-          var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
-           Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
-           Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value),"Change in not the same reference");
-           var list = _results.Messages[1].SortedItems.ToList();
-           var sortedResult = list.OrderBy(p => _comparer).ToList();
-           CollectionAssert.AreEquivalent(sortedResult, list);
-       }
+            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            //TODO: fixed Text
+            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
+            Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
+            Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value), "Change in not the same reference");
+            var list = _results.Messages[1].SortedItems.ToList();
+            var sortedResult = list.OrderBy(p => _comparer).ToList();
+            CollectionAssert.AreEquivalent(sortedResult, list);
+        }
 
-       [Test]
-       public void UpdateMiddle()
-       {
-           var people = _generator.Take(100).ToArray();
-           _source.AddOrUpdate(people);
+        [Test]
+        public void UpdateMiddle()
+        {
+            var people = _generator.Take(100).ToArray();
+            _source.AddOrUpdate(people);
 
-           var toupdate = _results.Messages[0].SortedItems.Skip(50).First().Value;
-          var update = new Person(toupdate.Name, toupdate.Age + 5);
+            var toupdate = _results.Messages[0].SortedItems.Skip(50).First().Value;
+            var update = new Person(toupdate.Name, toupdate.Age + 5);
 
             _source.AddOrUpdate(update);
 
             Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
 
-         var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
-           
-           Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
-           Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value), "Change in not the same reference");
-           var list = _results.Messages[1].SortedItems.ToList();
-           var sortedResult = list.OrderBy(p => _comparer).ToList();
-           CollectionAssert.AreEquivalent(sortedResult, list);
-       }
+            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
+            Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
+            Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value), "Change in not the same reference");
+            var list = _results.Messages[1].SortedItems.ToList();
+            var sortedResult = list.OrderBy(p => _comparer).ToList();
+            CollectionAssert.AreEquivalent(sortedResult, list);
+        }
 
-       [Test]
-       public void UpdateLast()
-       {
-           //TODO: fixed Text
+        [Test]
+        public void UpdateLast()
+        {
+            //TODO: fixed Text
 
-           var people = _generator.Take(100).ToArray();
-           _source.AddOrUpdate(people);
+            var people = _generator.Take(100).ToArray();
+            _source.AddOrUpdate(people);
 
-          var toupdate = _results.Messages[0].SortedItems.Last().Value;
-          var update = new Person(toupdate.Name, toupdate.Age + 5);
+            var toupdate = _results.Messages[0].SortedItems.Last().Value;
+            var update = new Person(toupdate.Name, toupdate.Age + 5);
 
             _source.AddOrUpdate(update);
 
             Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
-           var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
+            var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
-           Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
-           Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value), "Change in not the same reference");
-           var list = _results.Messages[1].SortedItems.ToList();
-           var sortedResult = list.OrderBy(p => _comparer).ToList();
-           CollectionAssert.AreEquivalent(sortedResult, list);
-       }
+            Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
+            Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value), "Change in not the same reference");
+            var list = _results.Messages[1].SortedItems.ToList();
+            var sortedResult = list.OrderBy(p => _comparer).ToList();
+            CollectionAssert.AreEquivalent(sortedResult, list);
+        }
 
+        [Test]
+        public void BatchUpdate1()
+        {
+            var people = _generator.Take(10).ToArray();
+            _source.AddOrUpdate(people);
+            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
 
-
-       [Test]
-       public void BatchUpdate1()
-       {
-           var people = _generator.Take(10).ToArray();
-           _source.AddOrUpdate(people);
-           var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
-
-           var toupdate = people[3];
-       
-           _source.Edit(updater =>
-           {
-               updater.Remove(people[0].Key);
-               updater.Remove(people[1].Key);
-               updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age -24));
-              updater.Remove(people[7]);
-           });
-
-           var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
-
-
-           adaptor.Adapt(_results.Messages.Last(), list);
-
-
-           var shouldbe = _results.Messages.Last().SortedItems.Select(p=>p.Value).ToList();
-           CollectionAssert.AreEquivalent(shouldbe, list);
-       }
-
-       [Test]
-       public void BatchUpdateWhereUpdateMovesTheIndexDown()
-       {
-           var people = _generator.Take(10).ToArray();
-           _source.AddOrUpdate(people);
-
-           var toupdate = people[3];
-
-           _source.Edit(updater =>
-           {
-               updater.Remove(people[0].Key);
-               updater.Remove(people[1].Key);
-
-               updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age + 50));
-
-               updater.AddOrUpdate(_generator.Take(2));
-           
-               updater.Remove(people[7]);
-           });
-
-           var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
-           var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
-           adaptor.Adapt(_results.Messages.Last(), list);
-
-
-           var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-           CollectionAssert.AreEquivalent(shouldbe, list);
-       }
-
-       [Test]
-       public void BatchUpdate2()
-       {
-           var people = _generator.Take(10).ToArray();
-           _source.AddOrUpdate(people);
-
-
-           var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
-
-           var toupdate = people[3];
-
-           _source.Edit(updater =>
-           {
-               updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
-               updater.AddOrUpdate(new Person("Mr","Z",50,"M"));
-           });
-
-           var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
-
-
-           adaptor.Adapt(_results.Messages.Last(), list);
-
-
-
-           var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-           CollectionAssert.AreEquivalent(shouldbe, list);
-       }
-
-       [Test]
-       public void BatchUpdate3()
-       {
-           var people = _generator.Take(10).ToArray();
-           _source.AddOrUpdate(people);
-           var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
-
-           var toupdate = people[7];
-
-           _source.Edit(updater =>
-           {
-               updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
-               updater.AddOrUpdate(new Person("Mr", "A", 10, "M"));
-               updater.AddOrUpdate(new Person("Mr", "B", 40, "M"));
-               updater.AddOrUpdate(new Person("Mr", "C", 70, "M"));
-           });
-
-           var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
-
-
-           adaptor.Adapt(_results.Messages.Last(), list);
-
-           var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-           CollectionAssert.AreEquivalent(shouldbe, list);
-       }
-
-       [Test]
-       public void BatchUpdate4()
-       {
-           var people = _generator.Take(10).ToArray();
-           _source.AddOrUpdate(people);
-
-           var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
-
-           var toupdate = people[3];
-
-           _source.Edit(updater =>
-           {
-               updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
-               updater.AddOrUpdate(new Person("Mr", "A", 10, "M"));
-               updater.Remove(people[5]);
-               updater.AddOrUpdate(new Person("Mr", "C", 70, "M"));
-           });
-
-           var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
-
-           adaptor.Adapt(_results.Messages.Last(), list);
-
-           var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-           CollectionAssert.AreEquivalent(shouldbe, list);
-       }
-
-       [Test]
-       public void BatchUpdate6()
-       {
-           var people = _generator.Take(10).ToArray();
-           _source.AddOrUpdate(people);
-
-
-           _source.Edit(updater =>
-           {
-               updater.Clear();
-               updater.AddOrUpdate(_generator.Take(10).ToArray());
-               updater.Clear();
-
-           });
-
-
-           var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
-
-           var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
-
-
-           adaptor.Adapt(_results.Messages.Last(), list);
-
-
-
-           var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-           CollectionAssert.AreEquivalent(shouldbe, list);
-       }
-
-
-
-       [Test]
-       public void InlineUpdateProducesAReplace()
-       {
-           var people = _generator.Take(10).ToArray();
-           _source.AddOrUpdate(people);
             var toupdate = people[3];
 
-           _source.AddOrUpdate(new Person(toupdate.Name,toupdate.Age+1));
+            _source.Edit(updater =>
+            {
+                updater.Remove(people[0].Key);
+                updater.Remove(people[1].Key);
+                updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
+                updater.Remove(people[7]);
+            });
 
-           var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
-           var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
-           adaptor.Adapt(_results.Messages.Last(), list);
+            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
 
-           var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-           CollectionAssert.AreEquivalent(shouldbe, list);
-       }
-    
+            adaptor.Adapt(_results.Messages.Last(), list);
+
+            var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
+            CollectionAssert.AreEquivalent(shouldbe, list);
+        }
+
+        [Test]
+        public void BatchUpdateWhereUpdateMovesTheIndexDown()
+        {
+            var people = _generator.Take(10).ToArray();
+            _source.AddOrUpdate(people);
+
+            var toupdate = people[3];
+
+            _source.Edit(updater =>
+            {
+                updater.Remove(people[0].Key);
+                updater.Remove(people[1].Key);
+
+                updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age + 50));
+
+                updater.AddOrUpdate(_generator.Take(2));
+
+                updater.Remove(people[7]);
+            });
+
+            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
+            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
+            adaptor.Adapt(_results.Messages.Last(), list);
+
+            var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
+            CollectionAssert.AreEquivalent(shouldbe, list);
+        }
+
+        [Test]
+        public void BatchUpdate2()
+        {
+            var people = _generator.Take(10).ToArray();
+            _source.AddOrUpdate(people);
+
+            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
+
+            var toupdate = people[3];
+
+            _source.Edit(updater =>
+            {
+                updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
+                updater.AddOrUpdate(new Person("Mr", "Z", 50, "M"));
+            });
+
+            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
+
+            adaptor.Adapt(_results.Messages.Last(), list);
+
+            var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
+            CollectionAssert.AreEquivalent(shouldbe, list);
+        }
+
+        [Test]
+        public void BatchUpdate3()
+        {
+            var people = _generator.Take(10).ToArray();
+            _source.AddOrUpdate(people);
+            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
+
+            var toupdate = people[7];
+
+            _source.Edit(updater =>
+            {
+                updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
+                updater.AddOrUpdate(new Person("Mr", "A", 10, "M"));
+                updater.AddOrUpdate(new Person("Mr", "B", 40, "M"));
+                updater.AddOrUpdate(new Person("Mr", "C", 70, "M"));
+            });
+
+            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
+
+            adaptor.Adapt(_results.Messages.Last(), list);
+
+            var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
+            CollectionAssert.AreEquivalent(shouldbe, list);
+        }
+
+        [Test]
+        public void BatchUpdate4()
+        {
+            var people = _generator.Take(10).ToArray();
+            _source.AddOrUpdate(people);
+
+            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
+
+            var toupdate = people[3];
+
+            _source.Edit(updater =>
+            {
+                updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age - 24));
+                updater.AddOrUpdate(new Person("Mr", "A", 10, "M"));
+                updater.Remove(people[5]);
+                updater.AddOrUpdate(new Person("Mr", "C", 70, "M"));
+            });
+
+            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
+
+            adaptor.Adapt(_results.Messages.Last(), list);
+
+            var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
+            CollectionAssert.AreEquivalent(shouldbe, list);
+        }
+
+        [Test]
+        public void BatchUpdate6()
+        {
+            var people = _generator.Take(10).ToArray();
+            _source.AddOrUpdate(people);
+
+            _source.Edit(updater =>
+            {
+                updater.Clear();
+                updater.AddOrUpdate(_generator.Take(10).ToArray());
+                updater.Clear();
+            });
+
+            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
+
+            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
+
+            adaptor.Adapt(_results.Messages.Last(), list);
+
+            var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
+            CollectionAssert.AreEquivalent(shouldbe, list);
+        }
+
+        [Test]
+        public void InlineUpdateProducesAReplace()
+        {
+            var people = _generator.Take(10).ToArray();
+            _source.AddOrUpdate(people);
+            var toupdate = people[3];
+
+            _source.AddOrUpdate(new Person(toupdate.Name, toupdate.Age + 1));
+
+            var list = new ObservableCollectionExtended<Person>(people.OrderBy(p => p, _comparer));
+            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
+            adaptor.Adapt(_results.Messages.Last(), list);
+
+            var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
+            CollectionAssert.AreEquivalent(shouldbe, list);
+        }
     }
 }
