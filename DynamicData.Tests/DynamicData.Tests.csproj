@@ -194,6 +194,7 @@
     <Compile Include="ListFixtures\XOrFixture.cs" />
     <Compile Include="ListFixtures\_TestSubmittedExternally.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\NotifyPropertyChangedExFixture.cs" />
     <Compile Include="Utilities\SelectManyExtensions.cs" />
     <Compile Include="CacheFixtures\SourceCacheFixture.cs" />
     <Compile Include="Utilities\Timer.cs" />
