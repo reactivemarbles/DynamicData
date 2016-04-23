@@ -11,8 +11,6 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly Func<T, TValue> _valueSelector;
-        private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
-        private readonly ChangeAwareList<TValue> _result = new ChangeAwareList<TValue>();
 
         public Distinct([NotNull] IObservable<IChangeSet<T>> source,
                         [NotNull] Func<T, TValue> valueSelector)
@@ -25,33 +23,40 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<TValue>> Run()
         {
-            return _source.Transform(t => new ItemWithValue<T, TValue>(t, _valueSelector(t)))
-                          .Select(Process)
-                          .NotEmpty();
+            return Observable.Create<IChangeSet<TValue>>(observer =>
+            {
+                var valueCounters = new Dictionary<TValue, int>();
+                var result = new ChangeAwareList<TValue>();
+                
+                return _source.Transform(t => new ItemWithValue<T, TValue>(t, _valueSelector(t)))
+                    .Select(changes => Process(valueCounters, result, changes))
+                    .NotEmpty()
+                    .SubscribeSafe(observer);
+            });
         }
 
-        private IChangeSet<TValue> Process(IChangeSet<ItemWithValue<T, TValue>> updates)
+        private IChangeSet<TValue> Process(Dictionary<TValue, int> valueCounters, ChangeAwareList<TValue> result, IChangeSet<ItemWithValue<T, TValue>> updates)
         {
-            Action<TValue> addAction = value => _valueCounters.Lookup(value)
-                                                              .IfHasValue(count => _valueCounters[value] = count + 1)
+            Action<TValue> addAction = value => valueCounters.Lookup(value)
+                                                              .IfHasValue(count => valueCounters[value] = count + 1)
                                                               .Else(() =>
                                                               {
-                                                                  _valueCounters[value] = 1;
-                                                                  _result.Add(value);
+                                                                  valueCounters[value] = 1;
+                                                                  result.Add(value);
                                                               });
 
             Action<TValue> removeAction = value =>
             {
-                var counter = _valueCounters.Lookup(value);
+                var counter = valueCounters.Lookup(value);
                 if (!counter.HasValue) return;
 
                 //decrement counter
                 var newCount = counter.Value - 1;
-                _valueCounters[value] = newCount;
+                valueCounters[value] = newCount;
                 if (newCount != 0) return;
 
                 //if there are none, then remove and notify
-                _result.Remove(value);
+                result.Remove(value);
             };
 
             foreach(var change in updates)
@@ -74,7 +79,7 @@ namespace DynamicData.Internal
                     {
                         var value = change.Item.Current.Value;
                         var previous = change.Item.Previous.Value.Value;
-                        if (value.Equals(previous)) return _result.CaptureChanges();
+                        if (value.Equals(previous)) return result.CaptureChanges();
 
                         removeAction(previous);
                         addAction(value);
@@ -93,13 +98,13 @@ namespace DynamicData.Internal
                     }
                     case ListChangeReason.Clear:
                     {
-                        _result.Clear();
-                        _valueCounters.Clear();
+                            result.Clear();
+                            valueCounters.Clear();
                         break;
                     }
                 }
             }
-            return _result.CaptureChanges();
+            return result.CaptureChanges();
         }
     }
 }

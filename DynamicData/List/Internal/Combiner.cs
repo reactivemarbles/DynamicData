@@ -4,14 +4,12 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Kernel;
+
 
 namespace DynamicData.Internal
 {
     internal sealed class Combiner<T>
     {
-        private readonly IList<ReferenceCountTracker<T>> _sourceLists = new List<ReferenceCountTracker<T>>();
-        private readonly ChangeAwareListWithRefCounts<T> _resultList = new ChangeAwareListWithRefCounts<T>();
         private readonly object _locker = new object();
         private readonly ICollection<IObservable<IChangeSet<T>>> _source;
         private readonly CombineOperator _type;
@@ -28,18 +26,21 @@ namespace DynamicData.Internal
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var disposable = new CompositeDisposable();
+                var sourceLists = new List<ReferenceCountTracker<T>>();
+                var resultList = new ChangeAwareListWithRefCounts<T>();
+
                 lock (_locker)
                 {
                     foreach (var item in _source)
                     {
                         var list = new ReferenceCountTracker<T>();
-                        _sourceLists.Add(list);
+                        sourceLists.Add(list);
 
                         disposable.Add(item.Synchronize(_locker).Subscribe(changes =>
                         {
                             CloneSourceList(list, changes);
 
-                            var notifications = UpdateResultList(changes);
+                            var notifications = UpdateResultList(changes, sourceLists, resultList);
                             if (notifications.Count != 0)
                                 observer.OnNext(notifications);
                         }));
@@ -78,49 +79,49 @@ namespace DynamicData.Internal
             }
         }
 
-        private IChangeSet<T> UpdateResultList(IChangeSet<T> changes)
+        private IChangeSet<T> UpdateResultList(IChangeSet<T> changes, List<ReferenceCountTracker<T>> sourceLists, ChangeAwareListWithRefCounts<T> resultList)
         {
             //child caches have been updated before we reached this point.
             foreach(var change in changes.Flatten())
             {
                 var item = change.Current;
-                var isInResult = _resultList.Contains(item);
-                var shouldBeInResult = MatchesConstraint(item);
+                var isInResult = resultList.Contains(item);
+                var shouldBeInResult = MatchesConstraint(sourceLists, item);
 
                 if (shouldBeInResult)
                 {
                     if (!isInResult)
-                        _resultList.Add(item);
+                        resultList.Add(item);
                 }
                 else
                 {
                     if (isInResult)
-                        _resultList.Remove(item);
+                        resultList.Remove(item);
                 }
             }
-            return _resultList.CaptureChanges();
+            return resultList.CaptureChanges();
         }
 
-        private bool MatchesConstraint(T item)
+        private bool MatchesConstraint(List<ReferenceCountTracker<T>> sourceLists, T item)
         {
             switch (_type)
             {
                 case CombineOperator.And:
                 {
-                    return _sourceLists.All(s => s.Contains(item));
+                    return sourceLists.All(s => s.Contains(item));
                 }
                 case CombineOperator.Or:
                 {
-                    return _sourceLists.Any(s => s.Contains(item));
+                    return sourceLists.Any(s => s.Contains(item));
                 }
                 case CombineOperator.Xor:
                 {
-                    return _sourceLists.Count(s => s.Contains(item)) == 1;
+                    return sourceLists.Count(s => s.Contains(item)) == 1;
                 }
                 case CombineOperator.Except:
                 {
-                    var first = _sourceLists[0].Contains(item);
-                    var others = _sourceLists.Skip(1).Any(s => s.Contains(item));
+                    var first = sourceLists[0].Contains(item);
+                    var others = sourceLists.Skip(1).Any(s => s.Contains(item));
                     return first && !others;
                 }
                 default:

@@ -487,7 +487,13 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
-            return new Sort<T>(source, comparer, options).Run();
+
+            return Observable.Create<IChangeSet<T>>(observer =>
+            {
+                return new Sort<T>(source, comparer, options).Run().SubscribeSafe(observer);
+            });
+
+
         }
 
         /// <summary>
@@ -525,7 +531,11 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-            return new Transformer<TSource, TDestination>(source, transformFactory).Run();
+
+            return Observable.Create<IChangeSet<TDestination>>(observer =>
+            {
+                return new Transformer<TSource, TDestination>(source, transformFactory).Run().SubscribeSafe(observer);
+            });
         }
 
         /// <summary>
@@ -691,7 +701,8 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<TValue> WhenValueChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
-                                                                            [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+                                                                            [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, 
+                                                                            bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -715,7 +726,8 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
-                                                                                                       [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+                                                                                                       [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, 
+                                                                                                       bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -835,10 +847,9 @@ namespace DynamicData
                 throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
 
             var matches = reasons.ToHashSet();
-            return source.Select(updates =>
+            return source.Select(changes =>
             {
-                var filtered = updates.Where(u => matches.Contains(u.Reason)).YieldWithoutIndex();
-                ;
+                var filtered = changes.Where(change => matches.Contains(change.Reason)).YieldWithoutIndex();
                 return new ChangeSet<T>(filtered);
             }).NotEmpty();
         }
@@ -1041,12 +1052,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-
-            return source.CountChanged.Where(count => count != 0)
-                         .Take(1)
-                         .Select(_ => ChangeSet<T>.Empty)
-                         .Concat(source.Connect())
-                         .NotEmpty();
+            return  source.Connect().DeferUntilLoaded();
         }
 
         #endregion

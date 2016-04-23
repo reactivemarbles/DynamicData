@@ -11,8 +11,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly Action<T> _callback;
-        private readonly List<T> _items = new List<T>();
-
+        
         public OnBeingRemoved([NotNull] IObservable<IChangeSet<T>> source, [NotNull] Action<T> callback)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -23,24 +22,23 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<T>> Run()
         {
-            return Observable.Create<IChangeSet<T>>
-                (
-                    observer =>
+            return Observable.Create<IChangeSet<T>>(observer =>
                     {
+                        var items = new List<T>();
                         var subscriber = _source
-                            .Do(RegisterForRemoval, observer.OnError)
+                            .Do(changes => RegisterForRemoval(items, changes), observer.OnError)
                             .SubscribeSafe(observer);
 
                         return Disposable.Create(() =>
                         {
                             subscriber.Dispose();
-                            _items.ForEach(t => _callback(t));
-                            _items.Clear();
+                            items.ForEach(t => _callback(t));
+                            items.Clear();
                         });
                     });
         }
 
-        private void RegisterForRemoval(IChangeSet<T> changes)
+        private void RegisterForRemoval(IList<T> items, IChangeSet<T> changes)
         {
             foreach(var change in changes)
             {
@@ -56,11 +54,11 @@ namespace DynamicData.Internal
                         change.Range.ForEach(_callback);
                         break;
                     case ListChangeReason.Clear:
-                        _items.ForEach(_callback);
+                        items.ForEach(_callback);
                         break;
                 }
             }
-            _items.Clone(changes);
+            items.Clone(changes);
         }
     }
 }

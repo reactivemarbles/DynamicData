@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Controllers;
 using DynamicData.Kernel;
 
 namespace DynamicData.Internal
@@ -12,9 +11,6 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<IVirtualRequest> _requests;
-        private readonly List<T> _all = new List<T>();
-        private readonly ChangeAwareList<T> _virtualised = new ChangeAwareList<T>();
-
         private IVirtualRequest _parameters = new VirtualRequest(0, 25);
 
         public Virtualiser([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IVirtualRequest> requests)
@@ -27,47 +23,55 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<T>> Run()
         {
-            var locker = new object();
-            var request = _requests
-                .Synchronize(locker)
-                .Select(Virtualise);
+            return Observable.Create<IChangeSet<T>>(observer =>
+            {
+                var locker = new object();
+                var all = new List<T>();
+                var virtualised = new ChangeAwareList<T>();
 
-            var datachanged = _source
-                .Synchronize(locker)
-                .Select(Virtualise);
+                var requestStream = _requests
+                    .Synchronize(locker)
+                    .Select(request => Virtualise(all, virtualised, request));
 
-            return request.Merge(datachanged)
-                          .Where(changes => changes != null && changes.Count != 0);
+                var datachanged = _source
+                    .Synchronize(locker)
+                    .Select(changes => Virtualise(all, virtualised, changes));
+
+                return requestStream.Merge(datachanged)
+                    .Where(changes => changes != null && changes.Count != 0)
+                    .SubscribeSafe(observer);
+            });
+
         }
 
-        private IChangeSet<T> Virtualise(IVirtualRequest request)
+        private IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request)
         {
             if (request == null || request.StartIndex < 0 || request.Size < 1)
                 return null;
 
             _parameters = request;
-            return Virtualise();
+            return Virtualise(all, virtualised);
         }
 
-        private IChangeSet<T> Virtualise(IChangeSet<T> changeset = null)
+        private IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IChangeSet<T> changeset = null)
         {
-            if (changeset != null) _all.Clone(changeset);
+            if (changeset != null) all.Clone(changeset);
 
-            var previous = _virtualised;
+            var previous = virtualised;
 
-            var current = _all.Skip(_parameters.StartIndex)
+            var current = all.Skip(_parameters.StartIndex)
                               .Take(_parameters.Size)
                               .ToList();
 
             var adds = current.Except(previous);
             var removes = previous.Except(current);
 
-            _virtualised.RemoveMany(removes);
+            virtualised.RemoveMany(removes);
 
             adds.ForEach(t =>
             {
                 var index = current.IndexOf(t);
-                _virtualised.Insert(index, t);
+                virtualised.Insert(index, t);
             });
 
             var moves = changeset.EmptyIfNull()
@@ -79,7 +83,7 @@ namespace DynamicData.Internal
                 //check whether an item has moved within the same page
                 var currentIndex = change.Item.CurrentIndex - _parameters.StartIndex;
                 var previousIndex = change.Item.PreviousIndex - _parameters.StartIndex;
-                _virtualised.Move(previousIndex, currentIndex);
+                virtualised.Move(previousIndex, currentIndex);
             }
 
             //find replaces [Is this ever the case that it can be reached]
@@ -91,10 +95,10 @@ namespace DynamicData.Internal
                 if (ReferenceEquals(currentItem, previousItem))
                     continue;
 
-                var index = _virtualised.IndexOf(currentItem);
-                _virtualised.Move(i, index);
+                var index = virtualised.IndexOf(currentItem);
+                virtualised.Move(i, index);
             }
-            return _virtualised.CaptureChanges();
+            return virtualised.CaptureChanges();
         }
     }
 }

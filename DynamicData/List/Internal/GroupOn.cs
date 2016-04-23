@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
-using DynamicData.Linq;
 
 namespace DynamicData.Internal
 {
@@ -12,9 +11,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<TObject>> _source;
         private readonly Func<TObject, TGroupKey> _groupSelector;
-        private readonly ChangeAwareList<IGroup<TObject, TGroupKey>> _groupings = new ChangeAwareList<IGroup<TObject, TGroupKey>>();
-        private readonly IDictionary<TGroupKey, Group<TObject, TGroupKey>> _groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
-
+        
         public GroupOn([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -25,28 +22,34 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> Run()
         {
-            return _source.Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
-                          .Select(Process)
-                          .DisposeMany() //dispose removes as the grouping is disposable
-                          .NotEmpty();
+            return Observable.Create<IChangeSet<IGroup<TObject, TGroupKey>>>(observer =>
+            {
+                var groupings = new ChangeAwareList<IGroup<TObject, TGroupKey>>();
+                var groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
+                
+                return _source.Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
+                              .Select(changes => Process(groupings, groupCache, changes))
+                              .DisposeMany() //dispose removes as the grouping is disposable
+                              .NotEmpty()
+                              .SubscribeSafe(observer);
+            });
+
         }
 
-        private IChangeSet<IGroup<TObject, TGroupKey>> Process(IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
+        private IChangeSet<IGroup<TObject, TGroupKey>> Process(ChangeAwareList<IGroup<TObject, TGroupKey>> result, IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection, IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
         {
             //TODO.This flattened enumerator is inefficient as range operations are lost.
             //maybe can infer within each grouping whether we can regroup i.e. Another enumerator!!!
-            //var enumerator = new UnifiedChangeEnumerator<ItemWithValue<TObject, TGroupKey>>(changes);
 
-            foreach (var grouping in changes.Unified()
-                                            .GroupBy(change => change.Current.Value))
+            foreach (var grouping in changes.Unified().GroupBy(change => change.Current.Value))
             {
                 //lookup group and if created, add to result set
                 var currentGroup = grouping.Key;
-                var lookup = GetCache(currentGroup);
+                var lookup = GetCache(groupCollection, currentGroup);
                 var groupCache = lookup.Group;
 
                 if (lookup.WasCreated)
-                    _groupings.Add(groupCache);
+                    result.Add(groupCache);
 
                 //start a group edit session, so all changes are batched
                 groupCache.Edit(
@@ -79,14 +82,14 @@ namespace DynamicData.Internal
                                         //add to new group
                                         list.Add(change.Current.Item);
 
-                                        //remove from old group
-                                        _groupCache.Lookup(previousGroup)
+                                            //remove from old group
+                                            groupCollection.Lookup(previousGroup)
                                                    .IfHasValue(g =>
                                                    {
                                                        g.Edit(oldList => oldList.Remove(previousItem));
                                                        if (g.List.Count != 0) return;
-                                                       _groupCache.Remove(g.GroupKey);
-                                                       _groupings.Remove(g);
+                                                       groupCollection.Remove(g.GroupKey);
+                                                       result.Remove(g);
                                                    });
                                     }
 
@@ -108,21 +111,21 @@ namespace DynamicData.Internal
 
                 if (groupCache.List.Count == 0)
                 {
-                    _groupCache.Remove(groupCache.GroupKey);
-                    _groupings.Remove(groupCache);
+                    groupCollection.Remove(groupCache.GroupKey);
+                    result.Remove(groupCache);
                 }
             }
-            return _groupings.CaptureChanges();
+            return result.CaptureChanges();
         }
 
-        private GroupWithAddIndicator GetCache(TGroupKey key)
+        private GroupWithAddIndicator GetCache(IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCaches, TGroupKey key)
         {
-            var cache = _groupCache.Lookup(key);
+            var cache = groupCaches.Lookup(key);
             if (cache.HasValue)
                 return new GroupWithAddIndicator(cache.Value, false);
 
             var newcache = new Group<TObject, TGroupKey>(key);
-            _groupCache[key] = newcache;
+            groupCaches[key] = newcache;
             return new GroupWithAddIndicator(newcache, true);
         }
 

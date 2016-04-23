@@ -8,7 +8,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly Func<T, bool> _predicate;
-        private readonly ChangeAwareList<T> _filtered = new ChangeAwareList<T>();
+
 
         public ImmutableFilter([NotNull] IObservable<IChangeSet<T>> source, [NotNull] Func<T, bool> predicate)
         {
@@ -20,12 +20,15 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<T>> Run()
         {
-            return _source.Select(changes =>
+            return Observable.Create<IChangeSet<T>>(observer =>
             {
-                _filtered.Filter(changes, _predicate);
-                return _filtered.CaptureChanges();
-            })
-                          .NotEmpty();
+                var filtered = new ChangeAwareList<T>();
+                 return _source.Select(changes =>
+                {
+                    filtered.Filter(changes, _predicate);
+                    return filtered.CaptureChanges();
+                }).NotEmpty().SubscribeSafe(observer);
+            });
         }
     }
 }

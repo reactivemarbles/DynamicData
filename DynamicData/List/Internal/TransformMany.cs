@@ -11,7 +11,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
         private readonly Func<TSource, IEnumerable<TDestination>> _manyselector;
-        private readonly ChangeAwareList<TDestination> _transformed = new ChangeAwareList<TDestination>();
+
 
         public TransformMany([NotNull] IObservable<IChangeSet<TSource>> source,
                              [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector)
@@ -23,10 +23,15 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<TDestination>> Run()
         {
-            return _source.Select(Process).NotEmpty();
+            return Observable.Create<IChangeSet<TDestination>>(observer =>
+            {
+                var transformed = new ChangeAwareList<TDestination>();
+                return _source.Select(changes=>Process(transformed,changes)).NotEmpty().SubscribeSafe(observer);
+            });
+  
         }
 
-        private IChangeSet<TDestination> Process(IChangeSet<TSource> source)
+        private IChangeSet<TDestination> Process(ChangeAwareList<TDestination> transformed, IChangeSet<TSource> source)
         {
             //TODO: This is very inefficient as it flattens range operation
             //need to find a means of re-forming ranges
@@ -41,21 +46,21 @@ namespace DynamicData.Internal
                 switch (child.Reason)
                 {
                     case ListChangeReason.Add:
-                        _transformed.Add(child.Current);
+                        transformed.Add(child.Current);
                         break;
                     case ListChangeReason.Replace:
-                        _transformed.Remove(child.Previous.Value);
-                        _transformed.Add(child.Current);
+                        transformed.Remove(child.Previous.Value);
+                        transformed.Add(child.Current);
                         break;
                     case ListChangeReason.Remove:
-                        _transformed.Remove(child.Current);
+                        transformed.Remove(child.Current);
                         break;
                     case ListChangeReason.Clear:
-                        _transformed.Clear();
+                        transformed.Clear();
                         break;
                 }
             }
-            return _transformed.CaptureChanges();
+            return transformed.CaptureChanges();
         }
 
         /// <summary>
@@ -109,7 +114,7 @@ namespace DynamicData.Internal
 
             public override string ToString()
             {
-                return string.Format("Reason: {0}, Current: {1}, Previous: {2}", Reason, Current, Previous);
+                return $"Reason: {Reason}, Current: {Current}, Previous: {Previous}";
             }
         }
     }
