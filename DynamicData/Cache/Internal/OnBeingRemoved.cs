@@ -10,7 +10,7 @@ namespace DynamicData.Internal
 
         public OnBeingRemoved(Action<TObject> callback)
         {
-            if (callback == null) throw new ArgumentNullException("callback");
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
             _callback = callback;
         }
 
