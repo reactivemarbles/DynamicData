@@ -20,5 +20,8 @@
     <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.dll" target="lib\net45\DynamicData.Plinq.dll" />
     <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.pdb" target="lib\net45\DynamicData.Plinq.pdb" />
     <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.xml" target="lib\net45\DynamicData.Plinq.xml" />
+
+    <!--Source code -->
+    <file src="..\..\DynamicData\DynamicData\**\*.cs" target="src" />
   </files>
 </package>

@@ -28,5 +28,7 @@
     <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" />
     <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" />
     <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" />
+
+    <file src="..\..\DynamicData\DynamicData\**\*.cs" target="src" />
   </files>
 </package>
