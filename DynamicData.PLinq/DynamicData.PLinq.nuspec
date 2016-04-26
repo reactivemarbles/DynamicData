@@ -22,6 +22,6 @@
     <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.xml" target="lib\net45\DynamicData.Plinq.xml" />
 
     <!--Source code -->
-    <file src="..\..\DynamicData\DynamicData\**\*.cs" target="src" />
+    <file src="..\DynamicData.Plinq\**\*.cs" target="src" />
   </files>
 </package>
