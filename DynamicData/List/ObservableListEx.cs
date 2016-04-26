@@ -13,6 +13,7 @@ using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Linq;
+using DynamicData.List.Internal;
 using DynamicData.Operators;
 
 namespace DynamicData
@@ -468,6 +469,30 @@ namespace DynamicData
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
             return new MutableFilter<T>(source, predicate, filterPolicy).Run();
+        }
+
+
+        /// <summary>
+        /// Filters source on the specified property using the specified predicate.
+        /// 
+        /// The filter will automatically reapply when a property changes 
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TProperty">The type of the property.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertySelector">The property selector.</param>
+        /// <param name="predicate">The predicate.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source,
+             Expression<Func<TObject, TProperty>> propertySelector,
+             Func<TObject, bool> predicate) where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate).Run();
         }
 
         /// <summary>

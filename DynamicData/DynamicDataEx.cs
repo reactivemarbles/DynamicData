@@ -1682,6 +1682,48 @@ namespace DynamicData
             });
         }
 
+        /// <summary>
+        /// Filters source on the specified property using the specified predicate.
+        /// 
+        /// The filter will automatically reapply when a property changes 
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TProperty">The type of the property.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertySelector">The property selector.</param>
+        /// <param name="predicate">The predicate.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> FilterOnProperty<TObject, TKey, TProperty>(this IObservable<IChangeSet<TObject, TKey>> source,
+                Expression<Func<TObject, TProperty>> propertySelector,
+                Func<TObject, bool> predicate) where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                //share the connection, otherwise the entire observable chain is duplicated 
+                var shared = source.Publish();
+
+                //watch each property and build a new predicate when a property changed
+                //do not filter on initial value otherwise every object loaded will invoke a requery
+                var predicateStream = shared.WhenPropertyChanged(propertySelector, false)
+                                        .Select(_ => predicate)
+                                        .StartWith(predicate);
+
+                //requery when the above filter changes
+                var changedAndMatching = shared.Filter(predicateStream);
+
+                var publisher = changedAndMatching.SubscribeSafe(observer);
+
+                return new CompositeDisposable(publisher, shared.Connect());
+            });
+        }
+
         #endregion
 
         #region Interface aware

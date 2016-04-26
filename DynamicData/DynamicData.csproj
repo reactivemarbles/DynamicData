@@ -86,6 +86,7 @@
     <Compile Include="List\Internal\DynamicCombiner.cs" />
     <Compile Include="List\Internal\ExpirableItem.cs" />
     <Compile Include="List\Internal\ExpireAfter.cs" />
+    <Compile Include="List\Internal\FilterOnProperty.cs" />
     <Compile Include="List\Internal\Group.cs" />
     <Compile Include="List\Internal\GroupOn.cs" />
     <Compile Include="List\IGroup.cs" />
