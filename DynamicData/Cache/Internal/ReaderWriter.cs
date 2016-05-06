@@ -34,7 +34,7 @@ namespace DynamicData.Internal
 
         public Continuation<IChangeSet<TObject, TKey>> Write(IChangeSet<TObject, TKey> changes)
         {
-            if (changes == null) throw new ArgumentNullException("changes");
+            if (changes == null) throw new ArgumentNullException(nameof(changes));
             IChangeSet<TObject, TKey> result;
             lock (_locker)
             {
@@ -53,7 +53,7 @@ namespace DynamicData.Internal
 
         public Continuation<IChangeSet<TObject, TKey>> Write(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException("updateAction");
+            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             IChangeSet<TObject, TKey> result;
             lock (_locker)
             {
@@ -72,7 +72,7 @@ namespace DynamicData.Internal
 
         public Continuation<IChangeSet<TObject, TKey>> Write(Action<ISourceUpdater<TObject, TKey>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException("updateAction");
+            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
             IChangeSet<TObject, TKey> result;
             lock (_locker)

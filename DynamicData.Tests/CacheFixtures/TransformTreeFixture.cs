@@ -170,6 +170,9 @@ namespace DynamicData.Tests.CacheFixtures
 
             //we expect the children of node 4  to be pushed up become new roots
             Assert.AreEqual(1, _result.Count);
+
+            var firstNode = _result.Items.First();
+            Assert.AreEqual(1, firstNode.Item.Id);
         }
 
         #region Employees

@@ -15,24 +15,51 @@ namespace DynamicData.Tests.ListFixtures
 {
     public static class DynamicDataExtensions
     {
-        public static IObservable<IChangeSet<TObj>> FilterOnProperty<TObj, TProp>(
-            this IObservable<IChangeSet<TObj>> source,
+        public static IObservable<IChangeSet<TObj, TKey>> FilterOnProperty<TObj, TKey, TProp>(this IObservable<IChangeSet<TObj, TKey>> source,
             Expression<Func<TObj, TProp>> selectProp,
             Func<TObj, bool> predicate) where TObj : INotifyPropertyChanged
         {
+
+            return Observable.Create<IChangeSet<TObj, TKey>>(observer =>
+            {
+                //share the connection, otherwise the entire observable chain is duplicated 
+                var shared = source.Publish();
+
+                //do not filter on initial value otherwise every object loaded will invoke a requery
+                var changed = shared.WhenPropertyChanged(selectProp, false)
+                    .Select(v => v.Sender);
+
+                //start with predicate to ensure filter on loaded
+                var changedMatchFunc = changed.Select(_ => predicate).StartWith(predicate);
+
+                // filter all in source, based on match funcs that update on prop change
+                var changedAndMatching = shared.Filter(changedMatchFunc);
+
+                var publisher = changedAndMatching.SubscribeSafe(observer);
+
+                return new CompositeDisposable(publisher, shared.Connect());
+            });
+        }
+
+        public static IObservable<IChangeSet<TObj>> FilterOnProperty<TObj, TProp>(this IObservable<IChangeSet<TObj>> source,
+            Expression<Func<TObj, TProp>> selectProp,
+            Func<TObj, bool> predicate) where TObj : INotifyPropertyChanged
+        {
+
             return Observable.Create<IChangeSet<TObj>>(observer =>
             {
                 //share the connection, otherwise the entire observable chain is duplicated 
                 var shared = source.Publish();
 
                 //do not filter on initial value otherwise every object loaded will invoke a requery
-                //+ start with predicate to ensure filter when loaded loaded
-                var changedMatchFunc = source.WhenPropertyChanged(selectProp, false)
-                                             .Select(_ => predicate)
-                                             .StartWith(predicate);
+                var changed = shared.WhenPropertyChanged(selectProp, false)
+                    .Select(v => v.Sender);
+
+                //start with predicate to ensure filter on loaded
+                var changedMatchFunc = changed.Select(_ => predicate).StartWith(predicate);
 
                 // filter all in source, based on match funcs that update on prop change
-                var changedAndMatching = source.Filter(changedMatchFunc, FilterPolicy.CalculateDiffSet);
+                var changedAndMatching = shared.Filter(changedMatchFunc, FilterPolicy.CalculateDiffSet);
 
                 var publisher = changedAndMatching.SubscribeSafe(observer);
 
@@ -40,7 +67,6 @@ namespace DynamicData.Tests.ListFixtures
             });
         }
     }
-
     [TestFixture]
     class _TestSubmittedExternally
     {
@@ -109,25 +135,25 @@ namespace DynamicData.Tests.ListFixtures
                         Assert.That(XVm.Constructed, Is.EqualTo(ctorCount));
                         Assert.That(XVm.Destructed, Is.EqualTo(dtorCount));
 
-                        Console.WriteLine("--remove");
+                        //Console.WriteLine("--remove");
                         listA.Remove(a1);
                         dtorCount++;
                         Assert.That(XVm.Constructed, Is.EqualTo(ctorCount));
                         Assert.That(XVm.Destructed, Is.EqualTo(dtorCount));
 
-                        Console.WriteLine("--add");
+                      //  Console.WriteLine("--add");
                         listA.Add(a1);
                         ctorCount++;
                         Assert.That(XVm.Constructed, Is.EqualTo(ctorCount));
                         Assert.That(XVm.Destructed, Is.EqualTo(dtorCount));
 
-                        Console.WriteLine("--clear");
+                       // Console.WriteLine("--clear");
                         listA.Clear();
                         dtorCount += 2; //FIX:  List A contains 2 items (was adding 4)
                         Assert.That(XVm.Constructed, Is.EqualTo(ctorCount));
                         Assert.That(XVm.Destructed, Is.EqualTo(dtorCount));
 
-                        Console.WriteLine("--add");
+                     //   Console.WriteLine("--add");
 
                         //FIX: Maybe a debate required!  List B already contains b1, so not regarded as a new item in the Or result
                         Debug.Assert(listB.Items.Contains(b1));
@@ -136,7 +162,7 @@ namespace DynamicData.Tests.ListFixtures
                         Assert.That(XVm.Constructed, Is.EqualTo(ctorCount));
                         Assert.That(XVm.Destructed, Is.EqualTo(dtorCount));
 
-                        Console.WriteLine("--disp");
+                    //    Console.WriteLine("--disp");
                     }
                     dtorCount += 2; //FIX: Should be +3 s this is what 
                     Assert.That(XVm.Constructed, Is.EqualTo(ctorCount));
