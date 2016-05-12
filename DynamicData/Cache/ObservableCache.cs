@@ -23,7 +23,7 @@ namespace DynamicData
         private readonly IReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _disposer;
         private readonly object _locker = new object();
-
+        private readonly object _writeLock = new object();
         #endregion
 
         #region Construction
@@ -33,6 +33,7 @@ namespace DynamicData
             _readerWriter = new ReaderWriter<TObject, TKey>();
 
             var loader = source
+                .Synchronize(_locker)
                 .FinallySafe(_changes.OnCompleted)
                 .Subscribe(changes => _readerWriter.Write(changes)
                                                    .Then(InvokeNext, _changes.OnError)
@@ -66,17 +67,22 @@ namespace DynamicData
         internal void UpdateFromIntermediate(Action<IIntermediateUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            lock (_writeLock)
+            {
+                _readerWriter.Write(updateAction)
+                    .Then(InvokeNext, errorHandler);
+            }
 
-            _readerWriter.Write(updateAction)
-                         .Then(InvokeNext, errorHandler);
         }
 
         internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
-
-            _readerWriter.Write(updateAction)
-                         .Then(InvokeNext, errorHandler);
+            lock (_writeLock)
+            {
+                _readerWriter.Write(updateAction)
+                    .Then(InvokeNext, errorHandler);
+            }
         }
 
         private void InvokeNext(IChangeSet<TObject, TKey> changes)

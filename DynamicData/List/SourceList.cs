@@ -21,7 +21,7 @@ namespace DynamicData
         private readonly ReaderWriter<T> _readerWriter;
         private readonly IDisposable _disposer;
         private readonly object _locker = new object();
-
+        private readonly object _writeLock = new object();
         /// <summary>
         /// Initializes a new instance of the <see cref="SourceList{T}"/> class.
         /// </summary>
@@ -58,8 +58,13 @@ namespace DynamicData
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
-            _readerWriter.Write(updateAction)
-                         .Then(InvokeNext, errorHandler);
+            lock (_writeLock)
+            {
+                _readerWriter.Write(updateAction)
+                    .Then(InvokeNext, errorHandler);
+
+            }
+
         }
 
         private void InvokeNext(IChangeSet<T> changes)
