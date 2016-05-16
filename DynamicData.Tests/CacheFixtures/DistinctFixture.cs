@@ -78,5 +78,29 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
             Assert.AreEqual(1, _results.Messages.Skip(1).First().Removes, "Second messsage should be a remove");
         }
+
+        [Test]
+        public void BreakWithLoadsOfUpdates()
+        {
+
+            _source.Edit(updater =>
+            {
+                updater.AddOrUpdate(new Person("Person2", 12));
+                updater.AddOrUpdate(new Person("Person1", 1));
+                updater.AddOrUpdate(new Person("Person1", 1));
+                updater.AddOrUpdate(new Person("Person2", 12));
+     
+
+                updater.AddOrUpdate(new Person("Person3", 13));
+                updater.AddOrUpdate(new Person("Person4", 14));
+            });
+
+            CollectionAssert.AreEquivalent(new[] {1, 12, 13, 14}, _results.Data.Items);
+
+            //This previously threw
+            _source.Remove(new Person("Person3", 13));
+
+            CollectionAssert.AreEquivalent(new[] {1, 12, 14}, _results.Data.Items);
+        }
     }
 }

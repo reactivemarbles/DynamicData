@@ -13,7 +13,7 @@ namespace DynamicData.Internal
         private readonly Func<T, TValue> _valueSelector;
 
         public Distinct([NotNull] IObservable<IChangeSet<T>> source,
-                        [NotNull] Func<T, TValue> valueSelector)
+            [NotNull] Func<T, TValue> valueSelector)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
@@ -27,7 +27,7 @@ namespace DynamicData.Internal
             {
                 var valueCounters = new Dictionary<TValue, int>();
                 var result = new ChangeAwareList<TValue>();
-                
+
                 return _source.Transform(t => new ItemWithValue<T, TValue>(t, _valueSelector(t)))
                     .Select(changes => Process(valueCounters, result, changes))
                     .NotEmpty()
@@ -35,15 +35,16 @@ namespace DynamicData.Internal
             });
         }
 
-        private IChangeSet<TValue> Process(Dictionary<TValue, int> valueCounters, ChangeAwareList<TValue> result, IChangeSet<ItemWithValue<T, TValue>> updates)
+        private IChangeSet<TValue> Process(Dictionary<TValue, int> valueCounters, ChangeAwareList<TValue> result,
+            IChangeSet<ItemWithValue<T, TValue>> changes)
         {
             Action<TValue> addAction = value => valueCounters.Lookup(value)
-                                                              .IfHasValue(count => valueCounters[value] = count + 1)
-                                                              .Else(() =>
-                                                              {
-                                                                  valueCounters[value] = 1;
-                                                                  result.Add(value);
-                                                              });
+                .IfHasValue(count => valueCounters[value] = count + 1)
+                .Else(() =>
+                {
+                    valueCounters[value] = 1;
+                    result.Add(value);
+                });
 
             Action<TValue> removeAction = value =>
             {
@@ -59,7 +60,7 @@ namespace DynamicData.Internal
                 result.Remove(value);
             };
 
-            foreach(var change in updates)
+            foreach (var change in changes)
             {
                 switch (change.Reason)
                 {
@@ -79,7 +80,7 @@ namespace DynamicData.Internal
                     {
                         var value = change.Item.Current.Value;
                         var previous = change.Item.Previous.Value.Value;
-                        if (value.Equals(previous)) return result.CaptureChanges();
+                        if (value.Equals(previous)) continue;
 
                         removeAction(previous);
                         addAction(value);
@@ -98,8 +99,8 @@ namespace DynamicData.Internal
                     }
                     case ListChangeReason.Clear:
                     {
-                            result.Clear();
-                            valueCounters.Clear();
+                        result.Clear();
+                        valueCounters.Clear();
                         break;
                     }
                 }

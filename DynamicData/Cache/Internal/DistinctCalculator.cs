@@ -24,7 +24,7 @@ namespace DynamicData.Internal
             return _source.Select(Calculate).Where(updates => updates.Count != 0);
         }
 
-        public IDistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> updates)
+        public IDistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> changes)
         {
             var result = new List<Change<TValue, TValue>>();
 
@@ -51,7 +51,7 @@ namespace DynamicData.Internal
                 result.Add(new Change<TValue, TValue>(ChangeReason.Remove, value, value));
             };
 
-            foreach(var change in updates)
+            foreach(var change in changes)
             {
                 var key = change.Key;
                 switch (change.Reason)
@@ -68,7 +68,7 @@ namespace DynamicData.Internal
                     {
                         var value = _valueSelector(change.Current);
                         var previous = _itemCache[key];
-                        if (value.Equals(previous)) return new DistinctChangeSet<TValue>(result);
+                        if (value.Equals(previous)) continue;
 
                         removeAction(previous);
                         addAction(value);
