@@ -4,10 +4,8 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-
-
     [TestFixture]
-    public class TransformManyFixture
+    public class RecursiveTransformManyFixture
     {
         private ISourceList<PersonWithRelations> _source;
         private ChangeSetAggregator<PersonWithRelations> _results;
@@ -18,7 +16,7 @@ namespace DynamicData.Tests.ListFixtures
             _source = new SourceList<PersonWithRelations>();
 
             _results = _source.Connect().TransformMany(p => p.Relations.RecursiveSelect(r => r.Relations))
-                              .AsAggregator();
+                .AsAggregator();
         }
 
         [TearDown]
