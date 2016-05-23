@@ -2583,48 +2583,11 @@ namespace DynamicData
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector.</param>
         /// <returns></returns>
-        private static IObservable<IChangeSet<TDestination, TDestinationKey>> FlattenWithSingleParent
-            <TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
+        private static IObservable<IChangeSet<TDestination, TDestinationKey>> FlattenWithSingleParent<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
                                                                  Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector)
         {
-            return Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
-                observer =>
-                {
-                    var cache = new Cache<TDestination, TDestinationKey>();
-                    var updater = new IntermediateUpdater<TDestination, TDestinationKey>(cache);
-
-                    return source.Subscribe(updates =>
-                    {
-                        var children = updates.SelectMany(u =>
-                        {
-                            var many = manyselector(u.Current);
-                            return many.Select(m => new TransformedItem<TDestination>(u.Reason, m));
-                        });
-
-                        foreach (var child in children)
-                        {
-                            var key = keySelector(child.Current);
-                            switch (child.Reason)
-                            {
-                                case ChangeReason.Add:
-                                case ChangeReason.Update:
-                                    updater.AddOrUpdate(child.Current, key);
-                                    break;
-                                case ChangeReason.Remove:
-                                    updater.Remove(key);
-                                    break;
-                                case ChangeReason.Evaluate:
-                                    updater.Evaluate(key);
-                                    break;
-                            }
-                        }
-
-                        var changes = updater.AsChangeSet();
-                        if (changes.Count != 0)
-                            observer.OnNext(changes);
-                    });
-                }
-                );
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector,
+                keySelector).Run();
         }
 
         #endregion

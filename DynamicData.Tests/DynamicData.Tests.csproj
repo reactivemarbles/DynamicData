@@ -91,10 +91,12 @@
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />
+    <Compile Include="CacheFixtures\TransformManySimpleFixture.cs" />
     <Compile Include="CacheFixtures\TransformTreeFixture.cs" />
     <Compile Include="CacheFixtures\XorFixture.cs" />
     <Compile Include="Domain\PersonEmployment.cs" />
     <Compile Include="Domain\PersonSorter.cs" />
+    <Compile Include="Domain\PersonWithChildren.cs" />
     <Compile Include="Domain\PersonWithEmployment.cs" />
     <Compile Include="Domain\PersonWithRelations.cs" />
     <Compile Include="Domain\Pet.cs" />
@@ -185,6 +187,7 @@
     <Compile Include="ListFixtures\PageFixture.cs" />
     <Compile Include="ListFixtures\Performance.cs" />
     <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
+    <Compile Include="ListFixtures\RecursiveTransformManyFixture.cs" />
     <Compile Include="ListFixtures\RefCountFixture.cs" />
     <Compile Include="ListFixtures\RemoveManyFixture.cs" />
     <Compile Include="ListFixtures\ReverseFixture.cs" />

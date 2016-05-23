@@ -3,17 +3,17 @@ using System.Linq;
 
 namespace DynamicData.Tests.Domain
 {
-    public class PersonWithRelations : IKey<string>
+    public class PersonWithChildren : IKey<string>
     {
         private readonly string _key;
         private readonly string _name;
 
-        public PersonWithRelations(string name, int age)
-            : this(name, age, Enumerable.Empty<PersonWithRelations>())
+        public PersonWithChildren(string name, int age)
+            : this(name, age, Enumerable.Empty<Person>())
         {
         }
 
-        public PersonWithRelations(string name, int age, IEnumerable<PersonWithRelations> relations)
+        public PersonWithChildren(string name, int age, IEnumerable<Person> relations)
         {
             _name = name;
             Age = age;
@@ -24,13 +24,12 @@ namespace DynamicData.Tests.Domain
 
         public string Name => _name;
 
-        public int Age { get;  }
+        public int Age { get; set; }
 
         public string KeyValue { get; }
 
-        public IEnumerable<PersonWithRelations> Relations { get; }
+        public IEnumerable<Person> Relations { get; }
 
-        public IEnumerable<Pet> Pet { get; set; }
 
         public override string ToString()
         {

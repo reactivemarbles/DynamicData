@@ -4,6 +4,8 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
+
+
     [TestFixture]
     public class TransformManyFixture
     {
@@ -16,7 +18,6 @@ namespace DynamicData.Tests.ListFixtures
             _source = new SourceList<PersonWithRelations>();
 
             _results = _source.Connect().TransformMany(p => p.Relations.RecursiveSelect(r => r.Relations))
-                //.IgnoreUpdateWhen((current, previous) => current.Name == previous.Name)
                               .AsAggregator();
         }
 

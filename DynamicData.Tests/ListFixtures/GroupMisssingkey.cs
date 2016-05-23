@@ -9,14 +9,14 @@ namespace DynamicData.Tests.ListFixtures
     [TestFixture]
     class GroupMisssingkey
     {
-        private  DataSource dataSource;
+        private  DataSource _dataSource;
 
         [Explicit]
         [Test]
         public void  Test2()
         {
             //This causes a race condition!
-            dataSource = new DataSource();
+            _dataSource = new DataSource();
             var timer1 = new Timer { Interval = 10 };
             timer1.Elapsed += TimerElapsed;
             timer1.Start();
@@ -32,7 +32,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             var r = new Random();
             var item = new MyItem { ID = r.Next(0, 100) };
-            dataSource.Add(item);
+            _dataSource.Add(item);
         }
 
         class DataSource
