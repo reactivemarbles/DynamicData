@@ -19,9 +19,9 @@ namespace DynamicData.Binding
         {
             foreach (var item in this)
             {
-                if (x == null && y == null) return 0;
-                if (x == null) return -1;
-                if (y == null) return 1;
+                if (x == null && y == null) continue;
+                if (x == null) return item.Direction == SortDirection.Ascending ? -1 : 1; 
+                if (y == null) return item.Direction == SortDirection.Ascending ? 1: -1;
 
                 var yValue = item.Expression(y);
 
