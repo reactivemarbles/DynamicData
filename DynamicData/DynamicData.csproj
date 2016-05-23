@@ -68,6 +68,7 @@
     <Compile Include="Binding\SortExpressionComparer.cs" />
     <Compile Include="Cache\Internal\DynamicCombiner.cs" />
     <Compile Include="Cache\Internal\RemoveKeyEnumerator.cs" />
+    <Compile Include="Cache\Internal\TransformMany.cs" />
     <Compile Include="Cache\Node.cs" />
     <Compile Include="Cache\Internal\TreeBuilder.cs" />
     <Compile Include="IChangeSet.cs" />

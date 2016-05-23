@@ -25,6 +25,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void Cleanup()
         {
             _source.Dispose();
+            _results.Dispose();
         }
 
         [Test]

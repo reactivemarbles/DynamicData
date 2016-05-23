@@ -125,9 +125,7 @@ namespace DynamicData.Internal
 
                                     //check whether the previous item was in a different group. If so remove from old group
                                     var previous = _itemCache.Lookup(current.Key)
-                                        .ValueOrThrow(
-                                            () =>
-                                                new MissingKeyException("{0} is missing from previous value on update. Object type {1}, Key type {2}, Group key type {3}"
+                                        .ValueOrThrow(() => new MissingKeyException("{0} is missing from previous value on update. Object type {1}, Key type {2}, Group key type {3}"
                                                     .FormatWith(current.Key, typeof(TObject), typeof(TKey),
                                                         typeof(TGroupKey))));
 
@@ -156,9 +154,7 @@ namespace DynamicData.Internal
                                 {
                                     //this has been removed due to an underlying evaluate resulting in a remove
                                     var previousGroupKey = _itemCache.Lookup(current.Key)
-                                        .ValueOrThrow(
-                                            () =>
-                                                new MissingKeyException("{0} is missing from previous value on remove. Object type {1}, Key type {2}, Group key type {3}"
+                                        .ValueOrThrow(() => new MissingKeyException("{0} is missing from previous value on remove. Object type {1}, Key type {2}, Group key type {3}"
                                                     .FormatWith(current.Key, typeof(TObject), typeof(TKey),
                                                         typeof(TGroupKey))))
                                                                      .GroupKey;
