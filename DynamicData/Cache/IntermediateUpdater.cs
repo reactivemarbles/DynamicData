@@ -29,8 +29,8 @@ namespace DynamicData
 
         public void Load(IEnumerable<TObject> items, Func<TObject, TKey> keySelector)
         {
-            if (items == null) throw new ArgumentNullException("items");
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             Clear();
             AddOrUpdate(items, keySelector);
@@ -43,7 +43,7 @@ namespace DynamicData
 
         public void AddOrUpdate(TObject item, Func<TObject, TKey> keySelector)
         {
-            if (keySelector == null) throw new ArgumentNullException("keySelector");
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             var key = keySelector(item);
             AddOrUpdate(item, key);
@@ -78,24 +78,22 @@ namespace DynamicData
 
         public void Remove(IEnumerable<TObject> items, Func<TObject, TKey> keySelector)
         {
-            if (items == null) throw new ArgumentNullException("items");
+            if (items == null) throw new ArgumentNullException(nameof(items));
             items.ForEach(t => Remove(keySelector(t)));
         }
 
         public void Remove(IEnumerable<TKey> keys)
         {
-            if (keys == null) throw new ArgumentNullException("keys");
+            if (keys == null) throw new ArgumentNullException(nameof(keys));
             keys.ForEach(Remove);
         }
 
         public void Remove(TKey key)
         {
             var existing = _cache.Lookup(key);
-            if (existing.HasValue)
-            {
-                _queue.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
-                _cache.Remove(key);
-            }
+            if (!existing.HasValue) return;
+            _queue.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
+            _cache.Remove(key);
         }
 
         public void Clear()
@@ -107,7 +105,7 @@ namespace DynamicData
 
         public void Update(IChangeSet<TObject, TKey> changes)
         {
-            if (changes == null) throw new ArgumentNullException("changes");
+            if (changes == null) throw new ArgumentNullException(nameof(changes));
             foreach (var item in changes)
             {
                 switch (item.Reason)

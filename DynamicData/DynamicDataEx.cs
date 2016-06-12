@@ -1787,10 +1787,7 @@ namespace DynamicData
             return Observable.Create<ISortedChangeSet<TObject, TKey>>(observer =>
             {
                 var sorter = new Sorter<TObject, TKey>(sortOptimisations, comparer, resetThreshold);
-                var locker = new object();
-
-                return source.Synchronize(locker)
-                             .Select(sorter.Sort)
+                return source.Select(sorter.Sort)
                              .Where(result => result != null)
                              .SubscribeSafe(observer);
             });
@@ -2230,7 +2227,7 @@ namespace DynamicData
             {
                 var connections = source.Connect().Transform(x => x.Connect()).AsObservableList();
                 var subscriber = connections.Combine(type).SubscribeSafe(observer);
-                return new CompositeDisposable(subscriber);
+                return new CompositeDisposable(connections, subscriber);
             });
         }
 
@@ -2240,7 +2237,8 @@ namespace DynamicData
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
                 var connections = source.Connect().Transform(x => x.Connect()).AsObservableList();
-                return connections.Combine(type).SubscribeSafe(observer);
+                var subscriber = connections.Combine(type).SubscribeSafe(observer);
+                return new CompositeDisposable(connections, subscriber);
             });
         }
 
@@ -2290,8 +2288,7 @@ namespace DynamicData
                     });
         }
 
-        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(
-            this IObservable<IChangeSet<TObject, TKey>> source,
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             CombineOperator type,
             params IObservable<IChangeSet<TObject, TKey>>[] combinetarget)
         {
@@ -2541,36 +2538,13 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>s
         /// <returns></returns>
-        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany
-            <TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
+        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
                                                                  Func<TSource, IEnumerable<TDestination>> manyselector)
             where TDestination : IKey<TDestinationKey>
         {
-            return source.FlattenWithSingleParent(manyselector, t => t.Key);
+            return source.TransformMany(manyselector, t => t.Key);
         }
 
-        /// <summary>
-        /// Equivalent to a select many transform. To work, the key must individually identify each child. 
-        /// 
-        /// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
-        /// </summary>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="manyselector">The manyselector.</param>
-        /// <param name="keySelector">The key selector which must be unique across all</param>
-        /// <param name="childHasOneParent">if set to <c>true</c> the child only ever belongs to one parent</param>
-        /// <returns></returns>
-        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany
-            <TDestination, TDestinationKey, TSource, TSourceKey>(
-            this IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector,
-            bool childHasOneParent = true)
-        {
-            return source.FlattenWithSingleParent(manyselector, keySelector);
-        }
 
         /// <summary>
         /// Flattens the with single parent.
@@ -2583,11 +2557,10 @@ namespace DynamicData
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector.</param>
         /// <returns></returns>
-        private static IObservable<IChangeSet<TDestination, TDestinationKey>> FlattenWithSingleParent<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
+        private static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
                                                                  Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector)
         {
-            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector,
-                keySelector).Run();
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector,keySelector).Run();
         }
 
         #endregion
@@ -2763,7 +2736,7 @@ namespace DynamicData
         }
 
         #endregion
-
+         
         #region Distinct values
 
         /// <summary>
