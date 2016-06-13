@@ -138,7 +138,7 @@ namespace DynamicData.Internal
             return new ChangeSet<TDestination, TKey>(transformed);
         }
 
-        protected class TransformedItemContainer
+        protected sealed class TransformedItemContainer
         {
             public TKey Key { get; }
             public TSource Source { get; }
@@ -152,7 +152,7 @@ namespace DynamicData.Internal
             }
         }
 
-        protected class TransformResult
+        protected sealed class TransformResult
         {
             public Change<TSource, TKey> Change { get; }
             public Exception Error { get; }

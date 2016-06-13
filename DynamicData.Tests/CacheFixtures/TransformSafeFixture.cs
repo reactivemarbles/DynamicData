@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
-using DynamicData.Operators;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
@@ -19,7 +18,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             if (p.Age % 3 == 0)
             {
-                throw new Exception(string.Format("Cannot transform {0}", p));
+                throw new Exception($"Cannot transform {p}");
             }
             string gender = p.Age % 2 == 0 ? "M" : "F";
             return new PersonWithGender(p, gender);

@@ -2542,9 +2542,30 @@ namespace DynamicData
                                                                  Func<TSource, IEnumerable<TDestination>> manyselector)
             where TDestination : IKey<TDestinationKey>
         {
-            return source.TransformMany(manyselector, t => t.Key);
+            return source.FlattenWithSingleParent(manyselector, t => t.Key);
         }
 
+        /// <summary>
+        /// Equivalent to a select many transform. To work, the key must individually identify each child. 
+        /// 
+        /// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="keySelector">The key selector which must be unique across all</param>
+        /// <param name="childHasOneParent">if set to <c>true</c> the child only ever belongs to one parent</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
+            this IObservable<IChangeSet<TSource, TSourceKey>> source,
+            Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector,
+            bool childHasOneParent = true)
+        {
+            return source.FlattenWithSingleParent(manyselector, keySelector);
+        }
 
         /// <summary>
         /// Flattens the with single parent.
@@ -2557,13 +2578,14 @@ namespace DynamicData
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector.</param>
         /// <returns></returns>
-        private static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
+        private static IObservable<IChangeSet<TDestination, TDestinationKey>> FlattenWithSingleParent<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
                                                                  Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector)
         {
             return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector,keySelector).Run();
         }
 
         #endregion
+
 
         #region Transform safe
 
