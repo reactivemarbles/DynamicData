@@ -11,8 +11,6 @@ namespace DynamicData.Internal
         private readonly Func<TObject, TGroupKey> _groupSelectorKey;
         private readonly IDictionary<TKey, ChangeWithGroup> _itemCache = new Dictionary<TKey, ChangeWithGroup>();
 
-
-
         public Grouper(Func<TObject, TGroupKey> groupSelectorKey)
         {
             _groupSelectorKey = groupSelectorKey;
@@ -49,7 +47,7 @@ namespace DynamicData.Internal
                 if (groupItem.Item2)
                     result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Add, group.Key, groupCache));
 
-                groupCache.Update(updater =>
+                groupCache.Update(groupUpdater =>
                 {
                     foreach(var current in group)
                     {
@@ -57,13 +55,13 @@ namespace DynamicData.Internal
                         {
                             case ChangeReason.Add:
                             {
-                                updater.AddOrUpdate(current.Item, current.Key);
+                                groupUpdater.AddOrUpdate(current.Item, current.Key);
                                 _itemCache[current.Key] = current;
                                 break;
                             }
                             case ChangeReason.Update:
                             {
-                                updater.AddOrUpdate(current.Item, current.Key);
+                                groupUpdater.AddOrUpdate(current.Item, current.Key);
 
                                     //check whether the previous item was in a different group. If so remove from old group
                                     var previous = _itemCache.Lookup(current.Key)
@@ -87,10 +85,10 @@ namespace DynamicData.Internal
                             }
                             case ChangeReason.Remove:
                             {
-                                var previousInSameGroup = updater.Lookup(current.Key);
+                                var previousInSameGroup = groupUpdater.Lookup(current.Key);
                                 if (previousInSameGroup.HasValue)
                                 {
-                                    updater.Remove(current.Key);
+                                    groupUpdater.Remove(current.Key);
                                 }
                                 else
                                 {
@@ -124,7 +122,7 @@ namespace DynamicData.Internal
                                     if (p.GroupKey.Equals(current.GroupKey))
                                     {
                                         //propagate evaluates up the chain
-                                        if (!isRegrouping) updater.Evaluate(current.Key);
+                                        if (!isRegrouping) groupUpdater.Evaluate(current.Key);
                                         return;
                                     }
 
@@ -137,11 +135,11 @@ namespace DynamicData.Internal
                                                    result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, g));
                                                });
 
-                                    updater.AddOrUpdate(current.Item, current.Key);
+                                    groupUpdater.AddOrUpdate(current.Item, current.Key);
                                 }).Else(() =>
                                 {
                                     //must be created due to addition
-                                    updater.AddOrUpdate(current.Item, current.Key);
+                                    groupUpdater.AddOrUpdate(current.Item, current.Key);
                                 });
 
                                 _itemCache[current.Key] = current;

@@ -35,25 +35,24 @@ namespace DynamicData.Internal
             });
         }
 
-        private IChangeSet<TValue> Process(Dictionary<TValue, int> valueCounters, ChangeAwareList<TValue> result,
-            IChangeSet<ItemWithValue<T, TValue>> changes)
+        private IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result,  IChangeSet<ItemWithValue<T, TValue>> changes)
         {
-            Action<TValue> addAction = value => valueCounters.Lookup(value)
-                .IfHasValue(count => valueCounters[value] = count + 1)
+            Action<TValue> addAction = value => values.Lookup(value)
+                .IfHasValue(count => values[value] = count + 1)
                 .Else(() =>
                 {
-                    valueCounters[value] = 1;
+                    values[value] = 1;
                     result.Add(value);
                 });
 
             Action<TValue> removeAction = value =>
             {
-                var counter = valueCounters.Lookup(value);
+                var counter = values.Lookup(value);
                 if (!counter.HasValue) return;
 
                 //decrement counter
                 var newCount = counter.Value - 1;
-                valueCounters[value] = newCount;
+                values[value] = newCount;
                 if (newCount != 0) return;
 
                 //if there are none, then remove and notify
@@ -100,7 +99,7 @@ namespace DynamicData.Internal
                     case ListChangeReason.Clear:
                     {
                         result.Clear();
-                        valueCounters.Clear();
+                        values.Clear();
                         break;
                     }
                 }

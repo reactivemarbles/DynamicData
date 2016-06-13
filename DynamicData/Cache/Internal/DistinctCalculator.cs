@@ -24,7 +24,7 @@ namespace DynamicData.Internal
             return _source.Select(Calculate).Where(updates => updates.Count != 0);
         }
 
-        public IDistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> changes)
+        private IDistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> changes)
         {
             var result = new List<Change<TValue, TValue>>();
 

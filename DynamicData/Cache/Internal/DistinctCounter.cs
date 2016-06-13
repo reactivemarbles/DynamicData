@@ -60,7 +60,7 @@ namespace DynamicData.Internal
                     {
                         var value = _valueSelector(change.Current);
                         var previous = _itemCache[key];
-                        if (value.Equals(previous)) return new DistinctChangeSet<TValue>(result);
+                        if (value.Equals(previous)) continue;
 
                         removeAction(previous);
                         addAction(value);
