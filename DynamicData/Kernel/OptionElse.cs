@@ -7,7 +7,7 @@ namespace DynamicData.Kernel
     /// </summary>
     public class OptionElse
     {
-        internal readonly static OptionElse NoAction = new OptionElse(false);
+        internal static readonly OptionElse NoAction = new OptionElse(false);
 
         private readonly bool _shouldRunAction;
 
@@ -23,7 +23,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">action</exception>
         public void Else(Action action)
         {
-            if (action == null) throw new ArgumentNullException("action");
+            if (action == null) throw new ArgumentNullException(nameof(action));
             if (_shouldRunAction) action();
         }
     }

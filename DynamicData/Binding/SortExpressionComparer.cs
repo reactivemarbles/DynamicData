@@ -29,7 +29,7 @@ namespace DynamicData.Binding
                 if (xValue == null && yValue == null) continue;
                 if (xValue == null) return -1;
                 if (yValue == null) return 1;
-                
+
                 int result = xValue.CompareTo(yValue);
                 if (result == 0) continue;
 
