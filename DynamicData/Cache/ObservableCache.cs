@@ -21,13 +21,13 @@ namespace DynamicData
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
         private readonly IReaderWriter<TObject, TKey> _readerWriter;
-        private readonly IDisposable _disposer;
+        private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
         #endregion
 
         #region Construction
-
+         
         public ObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
         {
             _readerWriter = new ReaderWriter<TObject, TKey>();
@@ -39,7 +39,7 @@ namespace DynamicData
                                                    .Then(InvokeNext, _changes.OnError)
                 );
 
-            _disposer = Disposable.Create(() =>
+            _cleanUp = Disposable.Create(() =>
             {
                 loader.Dispose();
                 _changes.OnCompleted();
@@ -52,7 +52,7 @@ namespace DynamicData
         {
             _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
 
-            _disposer = Disposable.Create(() =>
+            _cleanUp = Disposable.Create(() =>
             {
                 _changes.OnCompleted();
                 if (_countChanged.IsValueCreated)
@@ -213,7 +213,7 @@ namespace DynamicData
 
         public void Dispose()
         {
-            _disposer.Dispose();
+            _cleanUp.Dispose();
         }
     }
 }

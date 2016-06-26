@@ -5,26 +5,17 @@ namespace DynamicData
 {
     internal sealed class Virtualiser<TObject, TKey>
     {
-        #region Fields
-
         private readonly FilteredIndexCalculator<TObject, TKey> _changedCalculator = new FilteredIndexCalculator<TObject, TKey>();
         private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
         private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
         private IVirtualRequest _parameters;
         private bool _isLoaded;
 
-        #endregion
-
-        #region Construction
 
         public Virtualiser(VirtualRequest request = null)
         {
             _parameters = request ?? new VirtualRequest();
         }
-
-        #endregion
-
-        #region Virtualisation
 
         /// <summary>
         /// Virtualises using specified parameters.  Returns null if there are no changed
@@ -73,6 +64,5 @@ namespace DynamicData
             return new VirtualChangeSet<TObject, TKey>(notifications, _current, response);
         }
 
-        #endregion
     }
 }

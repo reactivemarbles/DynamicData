@@ -109,7 +109,7 @@ namespace DynamicData.Binding
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0} ({1})", Sender, Value);
+            return $"{Sender} ({Value})";
         }
     }
 }

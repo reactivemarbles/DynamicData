@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
 
@@ -25,7 +24,7 @@ namespace DynamicData
         /// <summary>
         /// An empty change set
         /// </summary>
-        public readonly static IChangeSet<TObject, TKey> Empty = new ChangeSet<TObject, TKey>();
+        public static readonly IChangeSet<TObject, TKey> Empty = new ChangeSet<TObject, TKey>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.
@@ -40,31 +39,9 @@ namespace DynamicData
         /// <param name="items">The items.</param>
         public ChangeSet([NotNull] IEnumerable<Change<TObject, TKey>> items)
         {
-            if (items == null) throw new ArgumentNullException("items");
-            Items = items.ToList();
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            Items = items.AsList();
             Items.ForEach(change => Add(change, true));
-        }
-
-        /// <summary>
-        /// Adds the specified items. 
-        /// </summary>
-        /// <param name="items">The items.</param>
-        public void AddRange([NotNull] IEnumerable<Change<TObject, TKey>> items)
-        {
-            if (items == null) throw new ArgumentNullException("items");
-            var enumerable = items as ICollection<Change<TObject, TKey>> ?? items.ToList();
-            Items.AddRange(enumerable);
-
-            Items.ForEach(t => { Add(t, true); });
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.
-        /// </summary>
-        /// <param name="change">The change.</param>
-        public ChangeSet(Change<TObject, TKey> change)
-        {
-            Add(change);
         }
 
         /// <summary>
@@ -85,7 +62,7 @@ namespace DynamicData
         /// <param name="key">The key.</param>
         /// <param name="current">The current.</param>
         /// <param name="previous">The previous.</param>
-        public ChangeSet(ChangeReason reason, TKey key, TObject current, Optional<TObject> previous)
+        private ChangeSet(ChangeReason reason, TKey key, TObject current, Optional<TObject> previous)
             : this()
         {
             Add(new Change<TObject, TKey>(reason, key, current, previous));
@@ -192,7 +169,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("ChangeSet<{0}.{1}>. Count={2}", typeof(TObject).Name, typeof(TKey).Name, Count);
+            return $"ChangeSet<{typeof (TObject).Name}.{typeof (TKey).Name}>. Count={Count}";
         }
     }
 }

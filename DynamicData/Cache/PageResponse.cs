@@ -6,26 +6,21 @@ namespace DynamicData
 {
     internal sealed class PageResponse : IEquatable<IPageResponse>, IPageResponse
     {
-        private readonly int _pageSize;
-        private readonly int _totalSize;
-        private readonly int _page;
-        private readonly int _pages;
-
         public PageResponse(int pageSize, int totalSize, int page, int pages)
         {
-            _pageSize = pageSize;
-            _totalSize = totalSize;
-            _page = page;
-            _pages = pages;
+            PageSize = pageSize;
+            TotalSize = totalSize;
+            Page = page;
+            Pages = pages;
         }
 
-        public int PageSize { get { return _pageSize; } }
+        public int PageSize { get; }
 
-        public int Page { get { return _page; } }
+        public int Page { get; }
 
-        public int Pages { get { return _pages; } }
+        public int Pages { get; }
 
-        public int TotalSize { get { return _totalSize; } }
+        public int TotalSize { get; }
 
         #region Equality members
 
@@ -64,10 +59,10 @@ namespace DynamicData
         {
             unchecked
             {
-                int hashCode = _pages;
-                hashCode = (hashCode * 397) ^ _page;
-                hashCode = (hashCode * 397) ^ _totalSize;
-                hashCode = (hashCode * 397) ^ _pageSize;
+                int hashCode = Pages;
+                hashCode = (hashCode * 397) ^ Page;
+                hashCode = (hashCode * 397) ^ TotalSize;
+                hashCode = (hashCode * 397) ^ PageSize;
                 return hashCode;
             }
         }
@@ -114,7 +109,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("Page: {0}, PageSize: {1}, Pages: {2}, TotalSize: {3}", _page, _pageSize, _pages, _totalSize);
+            return $"Page: {Page}, PageSize: {PageSize}, Pages: {Pages}, TotalSize: {TotalSize}";
         }
     }
 }

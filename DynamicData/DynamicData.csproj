@@ -128,8 +128,8 @@
     <Compile Include="Cache\IVirtualRequest.cs" />
     <Compile Include="Cache\Internal\ObservableWithValue.cs" />
     <Compile Include="Cache\Internal\AbstractFilter.cs" />
-    <Compile Include="Cache\Internal\AnomynousObservableCache.cs" />
-    <Compile Include="Cache\Internal\AnomynousQuery.cs" />
+    <Compile Include="Cache\Internal\AnonymousObservableCache.cs" />
+    <Compile Include="Cache\Internal\AnonymousQuery.cs" />
     <Compile Include="Cache\Internal\Cache.cs" />
     <Compile Include="Cache\Internal\CacheEx.cs" />
     <Compile Include="Cache\Change.cs" />
@@ -163,7 +163,7 @@
     <Compile Include="Cache\SortedChangeSet.cs" />
     <Compile Include="Cache\Internal\SourceUpdater.cs" />
     <Compile Include="Cache\MissingKeyException.cs" />
-    <Compile Include="List\Internal\AnomynousObservableList.cs" />
+    <Compile Include="List\Internal\AnonymousObservableList.cs" />
     <Compile Include="List\ChangeSet.cs" />
     <Compile Include="List\Internal\MergeMany.cs" />
     <Compile Include="List\Internal\MutableFilter.cs" />

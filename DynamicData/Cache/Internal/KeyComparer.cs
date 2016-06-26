@@ -2,7 +2,7 @@
 
 namespace DynamicData.Internal
 {
-    internal class KeyComparer<TObject, TKey> : IEqualityComparer<KeyValuePair<TKey, TObject>>
+    internal sealed class KeyComparer<TObject, TKey> : IEqualityComparer<KeyValuePair<TKey, TObject>>
     {
         public bool Equals(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
         {

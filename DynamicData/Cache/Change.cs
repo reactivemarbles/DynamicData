@@ -9,7 +9,40 @@ namespace DynamicData
     /// </summary>
     public struct Change<TObject, TKey>
     {
-        #region Construction
+
+        /// <summary>
+        /// The unique key of the item which has changed
+        /// </summary>
+        public TKey Key { get; }
+
+        /// <summary>
+        /// The  reason for the change
+        /// </summary>
+        public ChangeReason Reason { get; }
+
+        /// <summary>
+        /// The item which has changed
+        /// </summary>
+        public TObject Current { get; }
+
+        /// <summary>
+        /// The current index
+        /// </summary>
+        public int CurrentIndex { get; }
+
+        /// <summary>
+        /// The previous change.
+        /// 
+        /// This is only when Reason==ChangeReason.Replace.
+        /// </summary>
+        public Optional<TObject> Previous { get; }
+
+        /// <summary>
+        /// The previous change.
+        /// 
+        /// This is only when Reason==ChangeReason.Update or ChangeReason.Move.
+        /// </summary>
+        public int PreviousIndex { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
@@ -87,47 +120,7 @@ namespace DynamicData
             }
         }
 
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// The unique key of the item which has changed
-        /// </summary>
-        public TKey Key { get; }
-
-        /// <summary>
-        /// The  reason for the change
-        /// </summary>
-        public ChangeReason Reason { get; }
-
-        /// <summary>
-        /// The item which has changed
-        /// </summary>
-        public TObject Current { get; }
-
-        /// <summary>
-        /// The current index
-        /// </summary>
-        public int CurrentIndex { get; }
-
-        /// <summary>
-        /// The previous change.
-        /// 
-        /// This is only when Reason==ChangeReason.Replace.
-        /// </summary>
-        public Optional<TObject> Previous { get; }
-
-        /// <summary>
-        /// The previous change.
-        /// 
-        /// This is only when Reason==ChangeReason.Replace or ChangeReason.Move.
-        /// </summary>
-        public int PreviousIndex { get; }
-
-        #endregion
-
-        #region IEquatable<Change<T>> Members
+        #region Equality
 
         /// <summary>
         ///  Determines whether the specified object, is equal to this instance.
@@ -173,8 +166,6 @@ namespace DynamicData
 
         #endregion
 
-        #region Overrides
-
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
         /// </summary>
@@ -183,9 +174,8 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0}, Key: {1}, Current: {2}, Previous: {3}", Reason, Key, Current, Previous);
+            return $"{Reason}, Key: {Key}, Current: {Current}, Previous: {Previous}";
         }
 
-        #endregion
     }
 }

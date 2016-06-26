@@ -1108,7 +1108,7 @@ namespace DynamicData
             return Observable.Create<IQuery<TObject, TKey>>(observer =>
             {
                 var cache = new Cache<TObject, TKey>();
-                var query = new AnomynousQuery<TObject, TKey>(cache);
+                var query = new AnonymousQuery<TObject, TKey>(cache);
 
                 return source.Do(changes => cache.Clone(changes))
                     .Select(changes => query)
@@ -1137,7 +1137,7 @@ namespace DynamicData
             {
                 var locker = new object();
                 var cache = new Cache<TObject, TKey>();
-                var query = new AnomynousQuery<TObject, TKey>(cache);
+                var query = new AnonymousQuery<TObject, TKey>(cache);
 
                 return source.Publish(shared =>
                 {
@@ -1691,8 +1691,8 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <typeparam name="TProperty">The type of the property.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="propertySelector">The property selector.</param>
-        /// <param name="predicate">The predicate.</param>
+        /// <param name="propertySelector">The property selector. When the property changes a the filter specified will be re-evaluated</param>
+        /// <param name="predicate">A predicate based on the object which contains the changed property</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>

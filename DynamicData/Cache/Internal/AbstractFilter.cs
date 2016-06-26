@@ -65,11 +65,14 @@ namespace DynamicData.Internal
 
         protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates);
 
-        private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> result)
+        private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> source)
         {
+
+            var result = source.AsArray();
+
             //alas, have to process one item at a time as an item can be included multiple
             //times in any batch
-            var updates = new List<Change<TObject, TKey>>();
+            var updates = new List<Change<TObject, TKey>>(result.Length);
             foreach (var item in result)
             {
                 var matches = item.IsMatch;
@@ -77,7 +80,7 @@ namespace DynamicData.Internal
                 var exisiting = _cache.Lookup(key);
                 var u = item.Change;
 
-                Optional<Change<TObject, TKey>> change = Optional.None<Change<TObject, TKey>>();
+                var change = Optional.None<Change<TObject, TKey>>();
                 switch (item.Change.Reason)
                 {
                     case ChangeReason.Add:
@@ -146,6 +149,7 @@ namespace DynamicData.Internal
             }
             return new ChangeSet<TObject, TKey>(updates);
         }
+
 
         protected struct UpdateWithFilter
         {

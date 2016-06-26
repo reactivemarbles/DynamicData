@@ -15,7 +15,7 @@ namespace DynamicData.Internal
                                   SortReason sortReason,
                                   SortOptimisations optimisations)
         {
-            if (items == null) throw new ArgumentNullException("items");
+            if (items == null) throw new ArgumentNullException(nameof(items));
             _items = items.ToList();
             Comparer = comparer;
             SortReason = sortReason;

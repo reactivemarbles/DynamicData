@@ -56,7 +56,7 @@ namespace DynamicData.Internal
             _cache.AddOrUpdate(item, key);
         }
 
-        public void AddOrUpdate(TObject item, TKey key)
+        private void AddOrUpdate(TObject item, TKey key)
         {
             var previous = _cache.Lookup(key);
             _queue.Add(previous.HasValue
@@ -142,7 +142,7 @@ namespace DynamicData.Internal
             _cache.Clear();
         }
 
-        public int Count { get { return _cache.Count; } }
+        public int Count => _cache.Count;
 
         public Optional<TObject> Lookup(TObject item)
         {

@@ -4,22 +4,22 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-    internal sealed class AnomynousObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+    internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
         private readonly IObservableCache<TObject, TKey> _cache;
 
-        public AnomynousObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
+        public AnonymousObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             _cache = new ObservableCache<TObject, TKey>(source);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object"/> class.
         /// </summary>
-        public AnomynousObservableCache(IObservableCache<TObject, TKey> cache)
+        public AnonymousObservableCache(IObservableCache<TObject, TKey> cache)
         {
-            if (cache == null) throw new ArgumentNullException("cache");
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
             _cache = new ObservableCache<TObject, TKey>(cache.Connect());
         }
 

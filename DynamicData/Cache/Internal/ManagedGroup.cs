@@ -5,12 +5,11 @@ namespace DynamicData.Internal
 {
     internal sealed class ManagedGroup<TObject, TKey, TGroupKey> : IDisposable, IGroup<TObject, TKey, TGroupKey>
     {
-        private readonly TGroupKey _groupKey;
         private readonly IntermediateCache<TObject, TKey> _cache = new IntermediateCache<TObject, TKey>();
 
         public ManagedGroup(TGroupKey groupKey)
         {
-            _groupKey = groupKey;
+            Key = groupKey;
         }
 
         internal void Update(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
@@ -18,22 +17,22 @@ namespace DynamicData.Internal
             _cache.Edit(updateAction);
         }
 
-        internal int Count { get { return _cache.Count; } }
+        internal int Count => _cache.Count;
 
         internal IChangeSet<TObject, TKey> GetInitialUpdates()
         {
             return _cache.GetInitialUpdates();
         }
 
-        public TGroupKey Key { get { return _groupKey; } }
+        public TGroupKey Key { get; }
 
-        public IObservableCache<TObject, TKey> Cache { get { return _cache; } }
+        public IObservableCache<TObject, TKey> Cache => _cache;
 
         #region Equality members
 
         private bool Equals(ManagedGroup<TObject, TKey, TGroupKey> other)
         {
-            return EqualityComparer<TGroupKey>.Default.Equals(_groupKey, other._groupKey);
+            return EqualityComparer<TGroupKey>.Default.Equals(Key, other.Key);
         }
 
         /// <summary>
@@ -58,7 +57,7 @@ namespace DynamicData.Internal
         /// </returns>
         public override int GetHashCode()
         {
-            return EqualityComparer<TGroupKey>.Default.GetHashCode(_groupKey);
+            return EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
         }
 
         #endregion
@@ -76,7 +75,7 @@ namespace DynamicData.Internal
         /// </returns>
         public override string ToString()
         {
-            return string.Format("Group: {0}", Key);
+            return $"Group: {Key}";
         }
     }
 }

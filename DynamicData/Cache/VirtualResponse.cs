@@ -8,31 +8,27 @@ namespace DynamicData
     /// </summary>
     internal class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualResponse
     {
-        private readonly int _size;
-        private readonly int _startIndex;
-        private readonly int _totalSize;
-
         public VirtualResponse(int size, int startIndex, int totalSize)
         {
-            _size = size;
-            _startIndex = startIndex;
-            _totalSize = totalSize;
+            Size = size;
+            StartIndex = startIndex;
+            TotalSize = totalSize;
         }
 
         /// <summary>
         /// The requested size of the virtualised data
         /// </summary>
-        public int Size { get { return _size; } }
+        public int Size { get; }
 
         /// <summary>
         /// The starting index
         /// </summary>
-        public int StartIndex { get { return _startIndex; } }
+        public int StartIndex { get; }
 
         /// <summary>
         /// Gets the total size of the underlying cache
         /// </summary>
-        public int TotalSize { get { return _totalSize; } }
+        public int TotalSize { get; }
 
         #region Equality members
 
@@ -70,9 +66,9 @@ namespace DynamicData
         {
             unchecked
             {
-                int hashCode = _size;
-                hashCode = (hashCode * 397) ^ _startIndex;
-                hashCode = (hashCode * 397) ^ _totalSize;
+                int hashCode = Size;
+                hashCode = (hashCode * 397) ^ StartIndex;
+                hashCode = (hashCode * 397) ^ TotalSize;
                 return hashCode;
             }
         }
@@ -118,7 +114,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("Size: {0}, StartIndex: {1}, TotalSize: {2}", _size, _startIndex, _totalSize);
+            return $"Size: {Size}, StartIndex: {StartIndex}, TotalSize: {TotalSize}";
         }
     }
 }

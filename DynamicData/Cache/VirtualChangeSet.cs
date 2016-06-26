@@ -1,43 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using DynamicData.Internal;
 
 namespace DynamicData
 {
     internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IVirtualChangeSet<TObject, TKey>, IEquatable<VirtualChangeSet<TObject, TKey>>
     {
-        private readonly IKeyValueCollection<TObject, TKey> _sortedItems;
-        private readonly IVirtualResponse _response;
+        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
+
+        public IVirtualResponse Response { get; }
 
         public VirtualChangeSet(IEnumerable<Change<TObject, TKey>> items, IKeyValueCollection<TObject, TKey> sortedItems, IVirtualResponse response)
             : base(items)
         {
-            _sortedItems = sortedItems;
-            _response = response;
+            SortedItems = sortedItems;
+            Response = response;
         }
-
-        private VirtualChangeSet()
-            : base(ChangeSet<TObject, TKey>.Empty)
-        {
-            _sortedItems = new KeyValueCollection<TObject, TKey>();
-        }
-
-        #region IVirtualChangeSet<TObject,TKey> Members
-
-        public IKeyValueCollection<TObject, TKey> SortedItems { get { return _sortedItems; } }
-
-        public IVirtualResponse Response { get { return _response; } }
-
-        #endregion
-
+        
         #region Equality
 
         public bool Equals(VirtualChangeSet<TObject, TKey> other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return _response.Equals(other._response)
-                   && Equals(_sortedItems, other._sortedItems);
+            return Response.Equals(other.Response)
+                   && Equals(SortedItems, other.SortedItems);
         }
 
         public override bool Equals(object obj)
@@ -52,8 +38,8 @@ namespace DynamicData
         {
             unchecked
             {
-                int hashCode = _response.GetHashCode();
-                hashCode = (hashCode * 397) ^ (_sortedItems?.GetHashCode() ?? 0);
+                int hashCode = Response.GetHashCode();
+                hashCode = (hashCode * 397) ^ (SortedItems?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

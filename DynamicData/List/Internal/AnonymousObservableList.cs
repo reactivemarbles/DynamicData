@@ -4,17 +4,17 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-    internal sealed class AnomynousObservableList<T> : IObservableList<T>
+    internal sealed class AnonymousObservableList<T> : IObservableList<T>
     {
         private readonly ISourceList<T> _sourceList;
 
-        public AnomynousObservableList(IObservable<IChangeSet<T>> source)
+        public AnonymousObservableList(IObservable<IChangeSet<T>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             _sourceList = new SourceList<T>(source);
         }
 
-        public AnomynousObservableList(ISourceList<T> sourceList)
+        public AnonymousObservableList(ISourceList<T> sourceList)
         {
             if (sourceList == null) throw new ArgumentNullException(nameof(sourceList));
             _sourceList = sourceList;

@@ -13,9 +13,6 @@ namespace DynamicData
         /// </summary>
         public static readonly VirtualRequest Default = new VirtualRequest(0, 25);
 
-        private readonly int _size = 25;
-        private readonly int _startIndex;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualRequest"/> class.
         /// </summary>
@@ -23,8 +20,8 @@ namespace DynamicData
         /// <param name="size">The size.</param>
         public VirtualRequest(int startIndex, int size)
         {
-            _size = size;
-            _startIndex = startIndex;
+            Size = size;
+            StartIndex = startIndex;
         }
 
         /// <summary>
@@ -37,12 +34,12 @@ namespace DynamicData
         /// <summary>
         /// The maximumn number of items to return
         /// </summary>
-        public int Size { get { return _size; } }
+        public int Size { get; } = 25;
 
         /// <summary>
         /// The first index in the virualised list
         /// </summary>
-        public int StartIndex { get { return _startIndex; } }
+        public int StartIndex { get; }
 
         #region Equality members
 
@@ -110,7 +107,7 @@ namespace DynamicData
         {
             unchecked
             {
-                return (_startIndex * 397) ^ _size;
+                return (StartIndex * 397) ^ Size;
             }
         }
 
@@ -124,7 +121,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("StartIndex: {0}, Size: {1}", _startIndex, _size);
+            return string.Format("StartIndex: {0}, Size: {1}", StartIndex, Size);
         }
     }
 }

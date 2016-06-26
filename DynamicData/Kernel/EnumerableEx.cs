@@ -23,6 +23,18 @@ namespace DynamicData.Kernel
         }
 
         /// <summary>
+        /// Casts the enumerable to an array if it is already an array.  Otherwise call ToArray
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static List<T> AsList<T>([NotNull] this IEnumerable<T> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return source as List<T> ?? source.ToList();
+        }
+
+        /// <summary>
         /// Returns any duplicated values from the source
         /// </summary>
         /// <typeparam name="T"></typeparam>

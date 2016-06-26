@@ -10,7 +10,7 @@
         /// <summary>
         /// An empty instance of change summary
         /// </summary>
-        public readonly static ChangeSummary Empty = new ChangeSummary();
+        public static readonly ChangeSummary Empty = new ChangeSummary();
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="T:System.Object" /> class.

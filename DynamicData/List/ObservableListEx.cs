@@ -379,7 +379,7 @@ namespace DynamicData
         public static IObservableList<T> AsObservableList<T>([NotNull] this ISourceList<T> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return new AnomynousObservableList<T>(source);
+            return new AnonymousObservableList<T>(source);
         }
 
         /// <summary>
@@ -392,7 +392,7 @@ namespace DynamicData
         public static IObservableList<T> AsObservableList<T>([NotNull] this IObservable<IChangeSet<T>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return new AnomynousObservableList<T>(source);
+            return new AnonymousObservableList<T>(source);
         }
 
         /// <summary>
@@ -480,8 +480,8 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TProperty">The type of the property.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="propertySelector">The property selector.</param>
-        /// <param name="predicate">The predicate.</param>
+        /// <param name="propertySelector">The property selector. When the property changes the filter specified will be re-evaluated</param>
+        /// <param name="predicate">A predicate based on the object which contains the changed property</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>

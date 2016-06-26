@@ -206,7 +206,7 @@ namespace DynamicData
         public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservableCache<TObject, TKey> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return new AnomynousObservableCache<TObject, TKey>(source);
+            return new AnonymousObservableCache<TObject, TKey>(source);
         }
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace DynamicData
         public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return new AnomynousObservableCache<TObject, TKey>(source);
+            return new AnonymousObservableCache<TObject, TKey>(source);
         }
 
         /// <summary>

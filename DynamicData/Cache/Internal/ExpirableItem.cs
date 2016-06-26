@@ -5,26 +5,21 @@ namespace DynamicData.Internal
 {
     internal sealed class ExpirableItem<TObject, TKey> : IEquatable<ExpirableItem<TObject, TKey>>
     {
-        private readonly TKey _key;
-        private readonly TObject _value;
-        private readonly DateTime _expireAt;
-        private readonly long _index;
+        public TObject Value { get; }
+
+        public TKey Key { get; }
+
+        public DateTime ExpireAt { get; }
+
+        public long Index { get; }
 
         public ExpirableItem(TObject value, TKey key, DateTime dateTime, long index = 0)
         {
-            _value = value;
-            _key = key;
-            _expireAt = dateTime;
-            _index = index;
+            Value = value;
+            Key = key;
+            ExpireAt = dateTime;
+            Index = index;
         }
-
-        public TObject Value { get { return _value; } }
-
-        public TKey Key { get { return _key; } }
-
-        public DateTime ExpireAt { get { return _expireAt; } }
-
-        public long Index { get { return _index; } }
 
         #region Equality members
 
@@ -32,7 +27,7 @@ namespace DynamicData.Internal
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return EqualityComparer<TKey>.Default.Equals(_key, other._key) && _expireAt.Equals(other._expireAt);
+            return EqualityComparer<TKey>.Default.Equals(Key, other.Key) && ExpireAt.Equals(other.ExpireAt);
         }
 
         public override bool Equals(object obj)
@@ -47,7 +42,7 @@ namespace DynamicData.Internal
         {
             unchecked
             {
-                return (EqualityComparer<TKey>.Default.GetHashCode(_key) * 397) ^ _expireAt.GetHashCode();
+                return (EqualityComparer<TKey>.Default.GetHashCode(Key) * 397) ^ ExpireAt.GetHashCode();
             }
         }
 
@@ -65,7 +60,7 @@ namespace DynamicData.Internal
 
         public override string ToString()
         {
-            return string.Format("Key: {0}, Expire At: {1}", _key, _expireAt);
+            return $"Key: {Key}, Expire At: {ExpireAt}";
         }
     }
 }
