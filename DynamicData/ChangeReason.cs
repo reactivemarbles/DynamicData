@@ -1,11 +1,5 @@
 ﻿namespace DynamicData
 {
-    internal interface ISupportsCapcity
-    {
-        int Capacity { get; set; }
-        int Count { get; }
-    }
-
     /// <summary>
     ///  The reason for an individual change.  
     /// 

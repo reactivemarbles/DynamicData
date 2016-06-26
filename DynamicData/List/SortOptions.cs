@@ -1,7 +1,7 @@
 ﻿namespace DynamicData
 {
     /// <summary>
-    /// Options for sortinig
+    /// Options for sorting
     /// </summary>
     public enum SortOptions
     {

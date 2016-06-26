@@ -19,7 +19,7 @@ namespace DynamicData
         private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
         private readonly ReaderWriter<T> _readerWriter;
-        private readonly IDisposable _disposer;
+        private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
         /// <summary>
@@ -32,7 +32,7 @@ namespace DynamicData
 
             var loader = source == null ? Disposable.Empty : LoadFromSource(source);
 
-            _disposer = Disposable.Create(() =>
+            _cleanUp = Disposable.Create(() =>
             {
                 loader.Dispose();
                 _changes.OnCompleted();
@@ -151,7 +151,7 @@ namespace DynamicData
         /// </summary>
         public void Dispose()
         {
-            _disposer.Dispose();
+            _cleanUp.Dispose();
         }
     }
 }

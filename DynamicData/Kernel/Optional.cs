@@ -39,13 +39,12 @@ namespace DynamicData.Kernel
 #endif
     public struct Optional<T> : IEquatable<Optional<T>>
     {
-        private readonly bool _hasValue;
         private readonly T _value;
 
         /// <summary>
         /// The default valueless optional
         /// </summary>
-        public readonly static Optional<T> None = default(Optional<T>);
+        public static readonly Optional<T> None = default(Optional<T>);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Optional{T}"/> struct.
@@ -55,13 +54,13 @@ namespace DynamicData.Kernel
         {
             if (ReferenceEquals(value, null))
             {
-                _hasValue = false;
+                HasValue = false;
                 _value = default(T);
             }
             else
             {
                 _value = value;
-                _hasValue = true;
+                HasValue = true;
             }
         }
 
@@ -82,7 +81,7 @@ namespace DynamicData.Kernel
         /// <returns>
         /// true if the current <see cref="T:System.Nullable`1"/> object has a value; false if the current <see cref="T:System.Nullable`1"/> object has no value.
         /// </returns>
-        public bool HasValue => _hasValue;
+        public bool HasValue { get; }
 
         /// <summary>
         /// Gets the value of the current <see cref="T:System.Nullable`1"/> value.
@@ -161,7 +160,7 @@ namespace DynamicData.Kernel
         {
             if (!HasValue) return !other.HasValue;
             if (!other.HasValue) return false;
-            return _hasValue.Equals(other._hasValue) && EqualityComparer<T>.Default.Equals(_value, other._value);
+            return HasValue.Equals(other.HasValue) && EqualityComparer<T>.Default.Equals(_value, other._value);
         }
 
         /// <summary>
@@ -188,7 +187,7 @@ namespace DynamicData.Kernel
         {
             unchecked
             {
-                return (_hasValue.GetHashCode() * 397) ^ EqualityComparer<T>.Default.GetHashCode(_value);
+                return (HasValue.GetHashCode() * 397) ^ EqualityComparer<T>.Default.GetHashCode(_value);
             }
         }
 

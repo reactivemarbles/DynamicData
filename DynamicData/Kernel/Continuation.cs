@@ -5,11 +5,10 @@ namespace DynamicData.Kernel
     internal sealed class Continuation<T>
     {
         private readonly Exception _exception;
-        private readonly T _result;
 
         public Continuation(T result)
         {
-            _result = result;
+            Result = result;
         }
 
         public Continuation(Exception exception)
@@ -21,8 +20,8 @@ namespace DynamicData.Kernel
         {
             if (onComplete == null) throw new ArgumentNullException(nameof(onComplete));
 
-            if (!ReferenceEquals(_result, null))
-                onComplete(_result);
+            if (!ReferenceEquals(Result, null))
+                onComplete(Result);
         }
 
         public void Then(Action<T> onComplete, Action<Exception> onError)
@@ -42,7 +41,7 @@ namespace DynamicData.Kernel
             }
             else
             {
-                onComplete(_result);
+                onComplete(Result);
             }
         }
 
@@ -52,6 +51,6 @@ namespace DynamicData.Kernel
                 action(_exception);
         }
 
-        public T Result { get { return _result; } }
+        public T Result { get; }
     }
 }

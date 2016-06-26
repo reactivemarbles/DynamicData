@@ -72,6 +72,7 @@
     <Compile Include="Cache\Node.cs" />
     <Compile Include="Cache\Internal\TreeBuilder.cs" />
     <Compile Include="IChangeSet.cs" />
+    <Compile Include="ISupportsCapcity.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
     <Compile Include="Kernel\ReadOnlyCollectionLight.cs" />
     <Compile Include="List\Change.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="List\SourceListEditConvenienceEx.cs" />
     <Compile Include="List\Tests\ChangeSetAggregator.cs" />
     <Compile Include="List\Tests\TestEx.cs" />
+    <Compile Include="List\UnspecifiedIndexException.cs" />
     <Compile Include="ObservableCacheEx.cs" />
     <Compile Include="Cache\Internal\AbstractTransformer.cs" />
     <Compile Include="Cache\Internal\CombineOperator.cs" />

@@ -116,7 +116,7 @@ namespace DynamicData.Kernel
         /// </returns>
         public override string ToString()
         {
-            return string.Format("Key: {0}, Value: {1}, Exception: {2}", Key, Value, Exception);
+            return $"Key: {Key}, Value: {Value}, Exception: {Exception}";
         }
     }
 }

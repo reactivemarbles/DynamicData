@@ -6,7 +6,7 @@ namespace DynamicData.Kernel
     /// Very simple, primitive yet light weight lazy loader
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class DoubleCheck<T>
+    public sealed class DoubleCheck<T>
         where T : class
     {
         private readonly Func<T> _factory;
@@ -20,7 +20,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">factory</exception>
         public DoubleCheck(Func<T> factory)
         {
-            if (factory == null) throw new ArgumentNullException("factory");
+            if (factory == null) throw new ArgumentNullException(nameof(factory));
             _factory = factory;
         }
 

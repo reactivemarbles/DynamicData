@@ -159,10 +159,5 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             source.Edit(list => list[index] = item);
         }
-
-        //public static int ElementAt<T>(this ISourceList<T> source, int index)
-        //{
-        //	source.Edit(list => list[index] = item);
-        //}
     }
 }
