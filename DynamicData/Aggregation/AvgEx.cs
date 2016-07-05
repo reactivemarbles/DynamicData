@@ -10,7 +10,7 @@ namespace DynamicData.Aggregation
     /// </Avgmary>
     public static class AvgEx
     {
-        #region From IChangeSet<TObject>
+        #region From IChangeSet<TObject, TKey>
 
         /// <summary>
         /// Continuous calculation of the average of the underlying data source.

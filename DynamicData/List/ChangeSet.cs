@@ -21,7 +21,7 @@ namespace DynamicData
         /// <summary>
         /// An empty change set
         /// </summary>
-        public readonly static IChangeSet<T> Empty = new ChangeSet<T>();
+        public static readonly IChangeSet<T> Empty = new ChangeSet<T>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChangeSet{T}"/> class.

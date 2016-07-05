@@ -21,9 +21,9 @@ namespace DynamicData.Internal
             _requests = requests;
         }
 
-        public IObservable<IChangeSet<T>> Run()
+        public IObservable<IVirtualChangeSet<T>> Run()
         {
-            return Observable.Create<IChangeSet<T>>(observer =>
+            return Observable.Create<IVirtualChangeSet<T>>(observer =>
             {
                 var locker = new object();
                 var all = new List<T>();
@@ -37,8 +37,10 @@ namespace DynamicData.Internal
                     .Synchronize(locker)
                     .Select(changes => Virtualise(all, virtualised, changes));
 
+                //TODO: Remove this shared state stuff ie. _parameters
                 return requestStream.Merge(datachanged)
                     .Where(changes => changes != null && changes.Count != 0)
+                    .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count,_parameters.Size,all.Count)))
                     .SubscribeSafe(observer);
             });
 

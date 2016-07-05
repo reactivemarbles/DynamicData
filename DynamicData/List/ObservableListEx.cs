@@ -1091,7 +1091,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="virtualisingController">The virtualising controller.</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] VirtualisingController virtualisingController)
+        public static IObservable<IVirtualChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] VirtualisingController virtualisingController)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (virtualisingController == null) throw new ArgumentNullException(nameof(virtualisingController));
@@ -1105,7 +1105,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="requests">The requests.</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] IObservable<IVirtualRequest> requests)
+        public static IObservable<IVirtualChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] IObservable<IVirtualRequest> requests)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (requests == null) throw new ArgumentNullException(nameof(requests));

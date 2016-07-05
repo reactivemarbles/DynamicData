@@ -1,4 +1,8 @@
+using System;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
