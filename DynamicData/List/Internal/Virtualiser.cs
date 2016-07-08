@@ -11,7 +11,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<IVirtualRequest> _requests;
-        private IVirtualRequest _parameters = new VirtualRequest(0, 25);
+
 
         public Virtualiser([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IVirtualRequest> requests)
         {
@@ -29,40 +29,45 @@ namespace DynamicData.Internal
                 var all = new List<T>();
                 var virtualised = new ChangeAwareList<T>();
 
+                IVirtualRequest parameters = new VirtualRequest(0, 25);
+
                 var requestStream = _requests
                     .Synchronize(locker)
-                    .Select(request => Virtualise(all, virtualised, request));
+                    .Select(request =>
+                    {
+                        parameters = request;
+                        return CheckParamsAndVirtualise(all, virtualised, request);
+                    });
 
                 var datachanged = _source
                     .Synchronize(locker)
-                    .Select(changes => Virtualise(all, virtualised, changes));
+                    .Select(changes => Virtualise(all, virtualised, parameters, changes));
 
                 //TODO: Remove this shared state stuff ie. _parameters
                 return requestStream.Merge(datachanged)
                     .Where(changes => changes != null && changes.Count != 0)
-                    .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count,_parameters.Size,all.Count)))
+                    .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count, parameters.StartIndex, all.Count)))
                     .SubscribeSafe(observer);
             });
 
         }
 
-        private IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request)
+        private IChangeSet<T> CheckParamsAndVirtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request)
         {
             if (request == null || request.StartIndex < 0 || request.Size < 1)
                 return null;
 
-            _parameters = request;
-            return Virtualise(all, virtualised);
+            return Virtualise(all, virtualised, request);
         }
 
-        private IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IChangeSet<T> changeset = null)
+        private IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request,  IChangeSet<T> changeset = null)
         {
             if (changeset != null) all.Clone(changeset);
 
             var previous = virtualised;
 
-            var current = all.Skip(_parameters.StartIndex)
-                              .Take(_parameters.Size)
+            var current = all.Skip(request.StartIndex)
+                              .Take(request.Size)
                               .ToList();
 
             var adds = current.Except(previous);
@@ -78,13 +83,13 @@ namespace DynamicData.Internal
 
             var moves = changeset.EmptyIfNull()
                                  .Where(change => change.Reason == ListChangeReason.Moved
-                                                  && change.MovedWithinRange(_parameters.StartIndex, _parameters.StartIndex + _parameters.Size));
+                                                  && change.MovedWithinRange(request.StartIndex, request.StartIndex + request.Size));
 
             foreach (var change in moves)
             {
                 //check whether an item has moved within the same page
-                var currentIndex = change.Item.CurrentIndex - _parameters.StartIndex;
-                var previousIndex = change.Item.PreviousIndex - _parameters.StartIndex;
+                var currentIndex = change.Item.CurrentIndex - request.StartIndex;
+                var previousIndex = change.Item.PreviousIndex - request.StartIndex;
                 virtualised.Move(previousIndex, currentIndex);
             }
 

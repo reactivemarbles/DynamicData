@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Controllers;
 using DynamicData.Kernel;
 using DynamicData.Operators;
 
@@ -13,7 +12,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<IPageRequest> _requests;
-        private IPageRequest _parameters = new PageRequest(0, 25);
+
 
         public Pager([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IPageRequest> requests)
         {
@@ -31,13 +30,19 @@ namespace DynamicData.Internal
                 var all = new List<T>();
                 var virtualised = new ChangeAwareList<T>();
 
+                IPageRequest parameters = new PageRequest(0, 25);
+
                 var requestStream = _requests
                     .Synchronize(locker)
-                    .Select(request => Page(all, virtualised, request));
+                    .Select(request =>
+                    {
+                        parameters = request;
+                        return CheckParametersAndPage(all, virtualised, request);
+                    });
 
                 var datachanged = _source
                     .Synchronize(locker)
-                    .Select(changes => Page(all, virtualised, changes));
+                    .Select(changes => Page(all, virtualised, parameters, changes));
 
                 return requestStream.Merge(datachanged)
                     .Where(changes => changes != null && changes.Count != 0)
@@ -45,30 +50,26 @@ namespace DynamicData.Internal
             });
         }
 
-        private IChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request)
+        private IChangeSet<T> CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest request)
         {
             if (request == null || request.Page < 0 || request.Size < 1)
                 return null;
 
-            if (request.Size == _parameters.Size && request.Page == _parameters.Page)
-                return null;
-
-            _parameters = request;
-            return Page(all, paged);
+            return Page(all, paged, request);
         }
 
-        private IChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IChangeSet<T> changeset = null)
+        private IChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T> changeset = null)
         {
             if (changeset != null) all.Clone(changeset);
 
             var previous = paged;
 
-            int pages = CalculatePages(all);
-            int page = _parameters.Page > pages ? pages : _parameters.Page;
-            int skip = _parameters.Size * (page - 1);
+            int pages = CalculatePages(all,request);
+            int page = request.Page > pages ? pages : request.Page;
+            int skip = request.Size * (page - 1);
 
             var current = all.Skip(skip)
-                              .Take(_parameters.Size)
+                              .Take(request.Size)
                               .ToList();
 
             var adds = current.Except(previous);
@@ -86,7 +87,7 @@ namespace DynamicData.Internal
 
             var moves = changeset.EmptyIfNull()
                                  .Where(change => change.Reason == ListChangeReason.Moved
-                                                  && change.MovedWithinRange(startIndex, startIndex + _parameters.Size));
+                                                  && change.MovedWithinRange(startIndex, startIndex + request.Size));
 
             foreach (var change in moves)
             {
@@ -111,15 +112,15 @@ namespace DynamicData.Internal
             return paged.CaptureChanges();
         }
 
-        private int CalculatePages(List<T> all)
+        private int CalculatePages(List<T> all, IPageRequest request)
         {
-            if (_parameters.Size >= all.Count)
+            if (request.Size >= all.Count)
             {
                 return 1;
             }
 
-            int pages = all.Count / _parameters.Size;
-            int overlap = all.Count % _parameters.Size;
+            int pages = all.Count / request.Size;
+            int overlap = all.Count % request.Size;
 
             if (overlap == 0)
             {

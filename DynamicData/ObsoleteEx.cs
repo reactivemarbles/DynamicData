@@ -18,7 +18,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="updateAction">The update action.</param>
         /// <param name="errorHandler">Optionally pass in an error handler</param>
-        [Obsolete("Prfer Edit() as it provides a consistent semantics with ISourceList<T>")]
+        [Obsolete("Prefer Edit() as it provides a consistent semantics with ISourceList<T>")]
         public static void BatchUpdate<TObject, TKey>([NotNull] this ISourceCache<TObject, TKey> source,
                                                       [NotNull] Action<ISourceUpdater<TObject, TKey>> updateAction,
                                                       Action<Exception> errorHandler = null)
@@ -38,7 +38,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="updateAction">The update action.</param>
         /// <param name="errorHandler">Optionally pass in an error handler</param>
-        [Obsolete("Prfer Edit() as it provides a consistent semantics with ISourceList<T>")]
+        [Obsolete("Prefer Edit() as it provides a consistent semantics with ISourceList<T>")]
         public static void BatchUpdate<TObject, TKey>([NotNull] this IIntermediateCache<TObject, TKey> source,
                                                       [NotNull] Action<IIntermediateUpdater<TObject, TKey>> updateAction,
                                                       Action<Exception> errorHandler = null)
