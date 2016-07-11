@@ -179,6 +179,7 @@
     <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\Internal\TransformMany.cs" />
     <Compile Include="List\Internal\UnifiedChange.cs" />
+    <Compile Include="List\IPageChangeSet.cs" />
     <Compile Include="List\IVirtualChangeSet.cs" />
     <Compile Include="List\Linq\ItemChangeEnumerator.cs" />
     <Compile Include="List\Linq\ReverseEnumerator.cs" />
@@ -196,6 +197,7 @@
     <Compile Include="List\ISourceList.cs" />
     <Compile Include="List\ObservableListEx.cs" />
     <Compile Include="List\Internal\Sort.cs" />
+    <Compile Include="List\PageChangeSet.cs" />
     <Compile Include="List\RangeChange.cs" />
     <Compile Include="List\SortException.cs" />
     <Compile Include="List\SortOptions.cs" />

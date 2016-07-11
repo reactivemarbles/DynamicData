@@ -12,8 +12,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<IPageRequest> _requests;
-
-
+        
         public Pager([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IPageRequest> requests)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -22,13 +21,13 @@ namespace DynamicData.Internal
             _requests = requests;
         }
 
-        public IObservable<IChangeSet<T>> Run()
+        public IObservable<IPageChangeSet<T>> Run()
         {
-            return Observable.Create<IChangeSet<T>>(observer =>
+            return Observable.Create<IPageChangeSet<T>>(observer =>
             {
                 var locker = new object();
                 var all = new List<T>();
-                var virtualised = new ChangeAwareList<T>();
+                var paged = new ChangeAwareList<T>();
 
                 IPageRequest parameters = new PageRequest(0, 25);
 
@@ -37,12 +36,12 @@ namespace DynamicData.Internal
                     .Select(request =>
                     {
                         parameters = request;
-                        return CheckParametersAndPage(all, virtualised, request);
+                        return CheckParametersAndPage(all, paged, request);
                     });
 
                 var datachanged = _source
                     .Synchronize(locker)
-                    .Select(changes => Page(all, virtualised, parameters, changes));
+                    .Select(changes => Page(all, paged, parameters, changes));
 
                 return requestStream.Merge(datachanged)
                     .Where(changes => changes != null && changes.Count != 0)
@@ -50,7 +49,7 @@ namespace DynamicData.Internal
             });
         }
 
-        private IChangeSet<T> CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest request)
+        private PageChangeSet<T> CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest request)
         {
             if (request == null || request.Page < 0 || request.Size < 1)
                 return null;
@@ -58,7 +57,7 @@ namespace DynamicData.Internal
             return Page(all, paged, request);
         }
 
-        private IChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T> changeset = null)
+        private PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T> changeset = null)
         {
             if (changeset != null) all.Clone(changeset);
 
@@ -109,7 +108,10 @@ namespace DynamicData.Internal
                 var index = paged.IndexOf(currentItem);
                 paged.Move(i, index);
             }
-            return paged.CaptureChanges();
+
+            var changed = paged.CaptureChanges();
+
+            return new PageChangeSet<T>(changed, new PageResponse(paged.Count, page, all.Count, pages));
         }
 
         private int CalculatePages(List<T> all, IPageRequest request)
