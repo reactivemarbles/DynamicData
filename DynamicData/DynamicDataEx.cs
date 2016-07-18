@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Annotations;
 using DynamicData.Binding;
+using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
@@ -3240,6 +3241,33 @@ namespace DynamicData
             if (adaptor == null) throw new ArgumentNullException(nameof(adaptor));
 
             return source.Do(adaptor.Adapt);
+        }
+
+        #endregion
+
+        #region Joins
+
+        /// <summary>
+        /// Joins the left and right observable data sources, combining the content into a single
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which </typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (left,right) => new CustomObject(left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> JoinOne<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull]  Func<TLeft, Optional<TRight>, TDestination> resultSelector)
+        {
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            return new JoinOne<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
         }
 
         #endregion
