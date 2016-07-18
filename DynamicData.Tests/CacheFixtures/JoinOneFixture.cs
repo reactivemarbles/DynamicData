@@ -18,23 +18,7 @@ namespace DynamicData.Tests.CacheFixtures
             _left = new SourceCache<Device, string>(device => device.Name);
             _right = new SourceCache<DeviceMetaData, string>(device => device.Name);
 
-            IEnumerable<DeviceMetaData> metaData = new List<DeviceMetaData>();
-
-            _right.Edit(innerCache =>
-            {
-                var previous = innerCache.Items.ToArray();
-
-                var adds = metaData.Except(previous);
-                var removes = previous.Except(metaData);
-                var updates = previous.Intersect(metaData);
-
-                innerCache.AddOrUpdate(adds);
-                innerCache.AddOrUpdate(updates);
-                innerCache.Remove(removes);
-
-            });
-
-                _result  = _left.Connect()
+            _result  = _left.Connect()
                             .JoinOne(_right.Connect(), meta => meta.Name, (device, meta) => new DeviceWithMetadata(device,meta))
                             .AsAggregator();
         }
