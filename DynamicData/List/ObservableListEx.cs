@@ -518,7 +518,6 @@ namespace DynamicData
                 return new Sort<T>(source, comparer, options).Run().SubscribeSafe(observer);
             });
 
-
         }
 
         /// <summary>

@@ -87,11 +87,13 @@
     <Compile Include="CacheFixtures\DynamicXorFixture.cs" />
     <Compile Include="CacheFixtures\FilterOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
-    <Compile Include="CacheFixtures\JoinOneFixture.cs" />
+    <Compile Include="CacheFixtures\JoinFixture.cs" />
+    <Compile Include="CacheFixtures\LeftJoinFixture.cs" />
     <Compile Include="CacheFixtures\KeyValueCollectionEx.cs" />
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />
+    <Compile Include="CacheFixtures\RightJoinFixture.cs" />
     <Compile Include="CacheFixtures\TransformManySimpleFixture.cs" />
     <Compile Include="CacheFixtures\TransformTreeFixture.cs" />
     <Compile Include="CacheFixtures\XorFixture.cs" />

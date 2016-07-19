@@ -11,7 +11,7 @@ namespace DynamicData.Internal
     internal sealed class Sort<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
-        private readonly IComparer<T> _comparer;
+        private  IComparer<T> _comparer;
         private readonly SortOptions _sortOptions;
         private readonly ChangeAwareList<T> _innerList = new ChangeAwareList<T>();
 
@@ -95,6 +95,35 @@ namespace DynamicData.Internal
                 }
             }
 
+            return _innerList.CaptureChanges();
+        }
+
+        public IChangeSet<T> Reorder()
+        {
+                int index = -1;
+                var sorted = _innerList.OrderBy(t => t, _comparer).ToList();
+                foreach (var item in sorted)
+                {
+                    index++;
+
+                    var existing = _innerList[index];
+                   //if item is in the same place, 
+                    if (ReferenceEquals(item, existing)) continue;
+
+                    //Cannot use binary search as Resort is implicit of a mutable change
+                    var old = _innerList.IndexOf(item);
+                    _innerList.Move(old, index);
+                }
+
+            return _innerList.CaptureChanges();
+        }
+
+        public IChangeSet<T> ChangeComparer(IComparer<T> comparer)
+        {
+            _comparer = comparer;
+            var sorted = _innerList.OrderBy(t => t, _comparer).ToList();
+            _innerList.Clear();
+            _innerList.AddRange(sorted);
             return _innerList.CaptureChanges();
         }
 

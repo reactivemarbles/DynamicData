@@ -67,8 +67,10 @@
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
     <Compile Include="Cache\Internal\DynamicCombiner.cs" />
-    <Compile Include="Cache\Internal\JoinOne.cs" />
+    <Compile Include="Cache\Internal\Join.cs" />
+    <Compile Include="Cache\Internal\LeftJoin.cs" />
     <Compile Include="Cache\Internal\RemoveKeyEnumerator.cs" />
+    <Compile Include="Cache\Internal\RightJoin.cs" />
     <Compile Include="Cache\Internal\TransformMany.cs" />
     <Compile Include="Cache\Node.cs" />
     <Compile Include="Cache\Internal\TreeBuilder.cs" />

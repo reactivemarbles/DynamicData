@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using DynamicData.Kernel;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
-    public class JoinOneFixture
+    public class JoinFixture
     {
         private SourceCache<Device, string> _left;
         private SourceCache<DeviceMetaData, string> _right;
@@ -18,9 +17,9 @@ namespace DynamicData.Tests.CacheFixtures
             _left = new SourceCache<Device, string>(device => device.Name);
             _right = new SourceCache<DeviceMetaData, string>(device => device.Name);
 
-            _result  = _left.Connect()
-                            .JoinOne(_right.Connect(), meta => meta.Name, (device, meta) => new DeviceWithMetadata(device,meta))
-                            .AsAggregator();
+            _result = _left.Connect()
+                .Join(_right.Connect(), meta => meta.Name, (key, device, meta) => new DeviceWithMetadata(key, device, meta))
+                .AsAggregator();
         }
 
         [Test]
@@ -38,15 +37,14 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.IsTrue(_result.Data.Lookup("Device2").HasValue);
             Assert.IsTrue(_result.Data.Lookup("Device3").HasValue);
 
-            Assert.IsTrue(_result.Data.Items.All(dwm=> dwm.MetaData == Optional<DeviceMetaData>.None));
-            }
+            Assert.IsTrue(_result.Data.Items.All(dwm => dwm.MetaData == Optional<DeviceMetaData>.None));
+            Assert.IsTrue(_result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None));
+        }
 
 
         [Test]
         public void AddRightOnly()
         {
-
-
             _right.Edit(innerCache =>
             {
                 innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
@@ -54,9 +52,14 @@ namespace DynamicData.Tests.CacheFixtures
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
 
-            Assert.That(_result.Data.Count, Is.EqualTo(0));
-       }
-        
+            Assert.That(_result.Data.Count, Is.EqualTo(3));
+            Assert.IsTrue(_result.Data.Lookup("Device1").HasValue);
+            Assert.IsTrue(_result.Data.Lookup("Device2").HasValue);
+            Assert.IsTrue(_result.Data.Lookup("Device3").HasValue);
+            Assert.IsTrue(_result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None));
+            Assert.IsTrue(_result.Data.Items.All(dwm => dwm.Device == Optional<Device>.None));
+        }
+
 
         [Test]
         public void AddLetThenRight()
@@ -96,15 +99,20 @@ namespace DynamicData.Tests.CacheFixtures
                 innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
+            Assert.IsTrue(_result.Data.Lookup("Device1").HasValue);
+            Assert.IsTrue(_result.Data.Lookup("Device2").HasValue);
+            Assert.IsTrue(_result.Data.Lookup("Device3").HasValue);
 
             _right.Remove("Device3");
-            
+
             Assert.That(_result.Data.Count, Is.EqualTo(3));
             Assert.That(_result.Data.Items.Count(dwm => dwm.MetaData != Optional<DeviceMetaData>.None), Is.EqualTo(2));
 
 
             _left.Remove("Device1");
-            Assert.IsFalse(_result.Data.Lookup("Device1").HasValue);
+            Assert.IsTrue(_result.Data.Lookup("Device1").HasValue);
+            Assert.IsTrue(_result.Data.Lookup("Device2").HasValue);
+            Assert.IsTrue(_result.Data.Lookup("Device3").HasValue);
         }
 
 
@@ -167,7 +175,7 @@ namespace DynamicData.Tests.CacheFixtures
 
         public class Device : IEquatable<Device>
         {
-            public string Name { get;  }
+            public string Name { get; }
 
             public Device(string name)
             {
@@ -188,7 +196,7 @@ namespace DynamicData.Tests.CacheFixtures
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
-                return Equals((Device) obj);
+                return Equals((Device)obj);
             }
 
             public override int GetHashCode()
@@ -220,7 +228,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             public bool IsAutoConnect { get; }
 
-            public DeviceMetaData(string name, bool isAutoConnect=false)
+            public DeviceMetaData(string name, bool isAutoConnect = false)
             {
                 Name = name;
                 IsAutoConnect = isAutoConnect;
@@ -240,14 +248,14 @@ namespace DynamicData.Tests.CacheFixtures
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
-                return Equals((DeviceMetaData) obj);
+                return Equals((DeviceMetaData)obj);
             }
 
             public override int GetHashCode()
             {
                 unchecked
                 {
-                    return ((Name != null ? Name.GetHashCode() : 0)*397) ^ IsAutoConnect.GetHashCode();
+                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ IsAutoConnect.GetHashCode();
                 }
             }
 
@@ -272,11 +280,13 @@ namespace DynamicData.Tests.CacheFixtures
 
         public class DeviceWithMetadata : IEquatable<DeviceWithMetadata>
         {
-            public Device Device { get;  }
-            public Optional<DeviceMetaData> MetaData { get;  }
+            public string Key { get;  }
+            public Optional<Device> Device { get; set; }
+            public Optional<DeviceMetaData> MetaData { get; }
 
-            public DeviceWithMetadata(Device device, Optional<DeviceMetaData> metaData)
+            public DeviceWithMetadata(string key, Optional<Device> device, Optional<DeviceMetaData> metaData)
             {
+                Key = key;
                 Device = device;
                 MetaData = metaData;
             }
@@ -287,7 +297,7 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 if (ReferenceEquals(null, other)) return false;
                 if (ReferenceEquals(this, other)) return true;
-                return Equals(Device, other.Device) && MetaData.Equals(other.MetaData);
+                return string.Equals(Key, other.Key);
             }
 
             public override bool Equals(object obj)
@@ -300,10 +310,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             public override int GetHashCode()
             {
-                unchecked
-                {
-                    return ((Device != null ? Device.GetHashCode() : 0)*397) ^ MetaData.GetHashCode();
-                }
+                return (Key != null ? Key.GetHashCode() : 0);
             }
 
             public static bool operator ==(DeviceWithMetadata left, DeviceWithMetadata right)
@@ -320,10 +327,8 @@ namespace DynamicData.Tests.CacheFixtures
 
             public override string ToString()
             {
-                return $"{Device} ({MetaData})";
+                return $"{Key}: {Device} ({MetaData})";
             }
         }
     }
-
-    
 }
