@@ -2,10 +2,28 @@
 
 Dynamic Data is a portable class library which brings the power of Reactive Extensions (Rx) to collections.  
 
-Managing asynchronous collections can be very difficult.  
-Mutable collections frequently experience additions, updates, and removals (among other changes). Dynamic Data provides two collection implementations, `ISourceCache<T,K>` and `ISourceList<T>`, that expose changes to the collection via an observable change set. The resulting observable change sets can be manipulated and transformed using Dynamic Data's robust and powerful array of change set operators. These operators receive change notifications, apply some logic, and subsequently provide their own change notifications. Because of this, operators are fully composable and can be chained together to perform powerful and very complicated operations while maintaining simple, fluent code.
+Rx is extremely powerful but out of the box provides nothing to assist with managing collections.  In most applications there is a need to update the collections dynamically.  Typically a collection is loaded and after the initial load, asynchronous updates are received.  The original collection will need to reflect these changes. In simple scenarios the code is simple. However, typical applications are much more complicated and may apply a filter, transform the original dto and apply a sort. Even with these simple every day operations the complexity of the code is quickly magnified.  Dynamic data has been developed to remove the tedious code of dynamically maintaining collections. It has gown to become functionally very rich with at least 60 collection based operations which amongst other things enable filtering, sorting, grouping,  joining different sources,  transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.  
 
-Using Dynamic Data's collections and change set operators make in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
+The concept behind using dynamic data is you maintain a data source (either ```SourceCache<TObject, TKey>``` or  ```SourceList<TObject>```),  then chain together various combinations of operators to declaratively manipulate and shape the data without the need to directly manage any collection.   
+
+As an example the following code will filter trades to select only live trades, creates a proxy for each live trade, and finally orders the results by most recent first. The resulting trade proxies are bound on the dispatcher thread to an observable collection.  Also since  the proxy is disposable ```DisposeMany()``` will ensure the proxy is disposed when no longer used.
+
+```cs
+ReadOnlyObservableCollection<TradeProxy> list;
+
+var myTradeCache = new SourceCache<Trade, long>(trade => trade.Id);
+var myOperation = myTradeCache.Connect() 
+					.Filter(trade=>trade.Status == TradeStatus.Live) 
+					.Transform(trade => new TradeProxy(trade))
+					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
+					.ObserveOnDispatcher()
+					.Bind(out list) 
+					.DisposeMany()
+					.Subscribe()
+```
+The magic is that as  ```myTradeCache``` is maintained the target observable collection looks after itself.
+
+This is a simple example to show how using Dynamic Data's collections and operators make in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
 
 ###Some links
 
@@ -139,28 +157,6 @@ This method is only recommended for simple queries which act only on the UI thre
 ## Consuming Observable Change Sets
 The examples below illustrate the kind of things you can achieve after creating an observable change set. 
 No you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
-
-#### Bind a Complex Stream to an Observable Collection
-This example first filters a stream of trades to select only live trades, then creates a proxy for each live trade, and finally orders the results by most recent first. The resulting trade proxies are bound on the dispatcher thread to the specified observable collection. 
-```cs
-var list = new ObservableCollectionExtended<TradeProxy>();
-
-var myTradeCache = new SourceCache<Trade, long>(trade => trade.Id);
-
-var myTradeCacheObservable = myTradeCache.Connect();
-
-var myOperation = myTradeCacheObservable 
-					.Filter(trade=>trade.Status == TradeStatus.Live) 
-					.Transform(trade => new TradeProxy(trade))
-					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
-					.ObserveOnDispatcher()
-					.Bind(list) 
-					.DisposeMany()
-					.Subscribe()
-```
-Since the TradeProxy object is disposable, the `DisposeMany` operator ensures that the proxies objects are disposed when they are no longer part of this observable stream.
-
-Note that `ObservableCollectionExtended<T>` is provided by Dynamic Data and is more efficient than the standard `ObservableCollection<T>`.
 
 #### Create a Derived List or Cache
 This example shows how you can create derived collections from an observable change set. It applies a filter to a collection, and then creates a new observable collection that only contains items from the original collection that pass the filter.
