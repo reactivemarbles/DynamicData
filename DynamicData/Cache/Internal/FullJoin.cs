@@ -5,14 +5,14 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class Join<TLeft, TLeftKey, TRight, TRightKey, TDestination>
+    internal class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
     {
         private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left;
         private readonly IObservable<IChangeSet<TRight, TRightKey>> _right;
         private readonly Func<TRight, TLeftKey> _rightKeySelector;
         private readonly Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> _resultSelector;
 
-        public Join(IObservable<IChangeSet<TLeft, TLeftKey>> left,
+        public FullJoin(IObservable<IChangeSet<TLeft, TLeftKey>> left,
             IObservable<IChangeSet<TRight, TRightKey>> right,
             Func<TRight, TLeftKey> rightKeySelector,
             Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)

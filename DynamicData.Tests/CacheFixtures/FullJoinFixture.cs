@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
-    public class JoinFixture
+    public class FullJoinFixture
     {
         private SourceCache<Device, string> _left;
         private SourceCache<DeviceMetaData, string> _right;
@@ -18,7 +18,7 @@ namespace DynamicData.Tests.CacheFixtures
             _right = new SourceCache<DeviceMetaData, string>(device => device.Name);
 
             _result = _left.Connect()
-                .Join(_right.Connect(), meta => meta.Name, (key, device, meta) => new DeviceWithMetadata(key, device, meta))
+                .FullJoin(_right.Connect(), meta => meta.Name, (key, device, meta) => new DeviceWithMetadata(key, device, meta))
                 .AsAggregator();
         }
 

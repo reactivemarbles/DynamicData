@@ -87,7 +87,8 @@
     <Compile Include="CacheFixtures\DynamicXorFixture.cs" />
     <Compile Include="CacheFixtures\FilterOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
-    <Compile Include="CacheFixtures\JoinFixture.cs" />
+    <Compile Include="CacheFixtures\InnerJoinFixture.cs" />
+    <Compile Include="CacheFixtures\FullJoinFixture.cs" />
     <Compile Include="CacheFixtures\LeftJoinFixture.cs" />
     <Compile Include="CacheFixtures\KeyValueCollectionEx.cs" />
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />

@@ -3247,6 +3247,30 @@ namespace DynamicData
         #region Joins
 
         /// <summary>
+        /// Joins the left and right observable data sources, taking values when both left and right values are present
+        /// This is the equivalent of SQL inner join.
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which </typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (key, left, right) => new CustomObject(key, left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull]  Func<TLeftKey, TLeft, TRight, TDestination> resultSelector)
+        {
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            return new InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
+        }
+
+        /// <summary>
         /// Joins the left and right observable data sources, taking any left or right values and matching them, provided that the left or the right has a value.
         /// This is the equivalent of SQL full join.
         /// </summary>
@@ -3261,13 +3285,13 @@ namespace DynamicData
         /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (key, left, right) => new CustomObject(key, left, right)</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public static IObservable<IChangeSet<TDestination, TLeftKey>> Join<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
                [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)
         {
             if (right == null) throw new ArgumentNullException(nameof(right));
-            return new Join<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
+            return new FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
         }
 
         /// <summary>
