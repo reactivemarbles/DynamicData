@@ -20,14 +20,14 @@
   <files>
 
     <!--Net45 files-->
-    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\net45\DynamicData.dll" />
-    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
-    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" target="lib\net45\DynamicData.xml" />
+    <file src="bin\Release\DynamicData.dll" target="lib\net45\DynamicData.dll" />
+    <file src="bin\Release\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
+    <file src="bin\Release\DynamicData.xml" target="lib\net45\DynamicData.xml" />
 
-    <!--Portable files-->
-    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" />
-    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" />
-    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" />
+    <!--Net standard files-->
+    <file src="bin\Release\DynamicData.dll" target="lib\netstandard1.0\DynamicData.dll" />
+    <file src="bin\Release\DynamicData.pdb" target="lib\netstandard1.0\DynamicData.pdb" />
+    <file src="bin\Release\DynamicData.xml" target="lib\netstandard1.0\DynamicData.xml" />
 
     <file src="..\DynamicData\**\*.cs" target="src" />
   </files>
