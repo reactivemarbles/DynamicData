@@ -34,9 +34,6 @@ namespace DynamicData.Kernel
     /// The equivalent of a nullable type which works on value and reference types
     /// </summary>
     /// <typeparam name="T">The underlying value type of the <see cref="T:System.Nullable`1"/> generic type.</typeparam><filterpriority>1</filterpriority>
-#if !SILVERLIGHT && !PORTABLE && !PORTABLE40
-	[Serializable]
-#endif
     public struct Optional<T> : IEquatable<Optional<T>>
     {
         private readonly T _value;
