@@ -33,3 +33,4 @@ _ReSharper*/
 *.DotSettings
 DynamicData.sln.GhostDoc.xml
 UpgradeLog.htm
+/DynamicData.1.2.3.4.nupkg

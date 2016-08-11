@@ -1,3 +1,5 @@
+using System.Reactive;
+
 namespace DynamicData.Tests.Domain
 {
     public struct PersonEmpKey
@@ -50,11 +52,11 @@ namespace DynamicData.Tests.Domain
             _key = new PersonEmpKey(this);
         }
 
-        public string Name { get { return _name; } }
+        public string Name => _name;
 
-        public string Company { get { return _company; } }
+        public string Company => _company;
 
-        public PersonEmpKey Key { get { return _key; } }
+        public PersonEmpKey Key => _key;
 
         protected bool Equals(PersonEmployment other)
         {
