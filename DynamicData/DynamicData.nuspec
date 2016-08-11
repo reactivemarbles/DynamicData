@@ -17,8 +17,12 @@
     </description>
     <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</tags>
   </metadata>
+  
+    <group>
+      <dependency id="System.Reactive.Linq" version="3.0.0" />
+    </group>
+    
   <files>
-
     <!--Net45 files-->
     <file src="bin\Release\DynamicData.dll" target="lib\net45\DynamicData.dll" />
     <file src="bin\Release\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
