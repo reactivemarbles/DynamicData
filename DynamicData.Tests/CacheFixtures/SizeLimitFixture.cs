@@ -86,12 +86,11 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public void ThrowsIfSizeLimitIsZero()
         {
             // Initialise();
-
-            new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0);
+            Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
+           ;
         }
 
         [Test]

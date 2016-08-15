@@ -100,24 +100,24 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void ThrowsForNullParameters()
         {
-            _pageController.Change(null);
+          
+            Assert.Throws<ArgumentNullException>(() => _pageController.Change(null));
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public void ThrowsForNegativeSizeParameters()
         {
-            _pageController.Change(new PageRequest(1, -1));
+       
+            Assert.Throws<ArgumentException>(() => _pageController.Change(new PageRequest(1, -1)));
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public void ThrowsForNegativePage()
         {
-            _pageController.Change(new PageRequest(-1, 1));
+          
+            Assert.Throws<ArgumentException>(() => _pageController.Change(new PageRequest(-1, 1)));
         }
     }
 }

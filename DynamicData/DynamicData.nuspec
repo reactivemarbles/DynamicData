@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>DynamicData</id>
-    <version>$version$</version>
+    <version>1.2.3.7</version>
     <title>Dynamic Data</title>
     <authors>Roland Pheasant</authors>
     <copyright>Roland Pheasant</copyright>
@@ -18,37 +18,25 @@
     <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</tags>
 
     <dependencies>
-
       <group targetFramework="net45">
-        <dependency id="System.Reactive.Linq" version="3.0.0" />
+        <dependency id="System.Reactive" version="3.0.0" />
       </group>
 
-      <group targetFramework="net46">
-        <dependency id="System.Reactive.Linq" version="3.0.0" />
+      <group targetFramework="netstandard1.1">
+        <dependency id="System.Reactive" version="3.0.0" />
       </group>
 
-      <group targetFramework="netstandard1.0">
-        <dependency id="System.Reactive.Linq" version="3.0.0" />
+      <group targetFramework="portable-net45+winrt45+wp8+wpa81">
+        <dependency id="System.Reactive" version="3.0.0" />
       </group>
-
-      <group targetFramework="uap10.0">
-        <dependency id="System.Reactive.Linq" version="3.0.0" />
-      </group>
-
+      
     </dependencies>
-
   </metadata>
 
   <files>
-    <!--Net45 files-->
-    <file src="bin\Release\DynamicData.dll" target="lib\net45\DynamicData.dll" />
-    <file src="bin\Release\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
-    <file src="bin\Release\DynamicData.xml" target="lib\net45\DynamicData.xml" />
-
-    <!--Net standard files-->
-    <file src="bin\Release\DynamicData.dll" target="lib\netstandard1.1\DynamicData.dll" />
-    <file src="bin\Release\DynamicData.pdb" target="lib\netstandard1.1\DynamicData.pdb" />
-    <file src="bin\Release\DynamicData.xml" target="lib\netstandard1.1\DynamicData.xml" />
+    <file src="bin\Release\DynamicData*.*" target="lib\net45" />
+    <file src="bin\Release\DynamicData*.*" target="lib\netstandard1.1" />
+    <file src="bin\Release\DynamicData*.*" target="lib\portable-net45+winrt45+wp8+wpa81" />
 
     <file src="..\DynamicData\**\*.cs" target="src" />
   </files>

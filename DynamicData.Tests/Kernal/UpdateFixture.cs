@@ -47,11 +47,10 @@ namespace DynamicData.Tests.Kernal
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentException))]
         public void UpdateWillThrowIfNoPreviousValueIsSupplied()
         {
             var current = new Person("Person", 10);
-            var update = new Change<Person, string>(ChangeReason.Update, "Person", current);
+            Assert.Throws<ArgumentException>(() => new Change<Person, string>(ChangeReason.Update, "Person", current));
         }
     }
 }

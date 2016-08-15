@@ -138,10 +138,10 @@ namespace DynamicData.Tests.Kernal
         }
 
         [Test]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void NullSelectorWillThrow()
         {
-            new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null));
+
+            Assert.Throws<ArgumentNullException>(() => new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null)));
         }
     }
 }
