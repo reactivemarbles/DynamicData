@@ -14,7 +14,13 @@
       PLinq extensions for dynamic data. This is the recommended Dynamic Data package when targetting net 4.5 or above
     </description>
     <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</tags>
-  </metadata>
+     <dependencies>
+      <group targetFramework="net45">
+        <dependency id="System.Reactive" version="3.0.0" />
+      </group>
+    </dependencies>
+  
+    </metadata>
   <files>
     <!--Net45 files including PLinq-->
     <file src="..\DynamicData.Plinq\bin\Release\net45\DynamicData.Plinq.dll" target="lib\net45\DynamicData.Plinq.dll" />

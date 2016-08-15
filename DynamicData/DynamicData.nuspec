@@ -21,23 +21,16 @@
       <group targetFramework="net45">
         <dependency id="System.Reactive" version="3.0.0" />
       </group>
-
       <group targetFramework="netstandard1.1">
         <dependency id="System.Reactive" version="3.0.0" />
       </group>
-
-      <group targetFramework="portable-net45+winrt45+wp8+wpa81">
-        <dependency id="System.Reactive" version="3.0.0" />
-      </group>
-      
     </dependencies>
   </metadata>
 
   <files>
     <file src="bin\Release\DynamicData*.*" target="lib\net45" />
     <file src="bin\Release\DynamicData*.*" target="lib\netstandard1.1" />
-    <file src="bin\Release\DynamicData*.*" target="lib\portable-net45+winrt45+wp8+wpa81" />
-
+    
     <file src="..\DynamicData\**\*.cs" target="src" />
   </files>
 </package>
