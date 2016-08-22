@@ -22,9 +22,7 @@ namespace DynamicData.Tests.ListFixtures
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
             _sizeLimiter = _source.LimitSizeTo(10, _scheduler).Subscribe();
-            _results = _source.Connect()
-                              .Sort(SortExpressionComparer<Person>.Ascending(p => p.Name))
-                              .AsAggregator();
+            _results = _source.Connect().AsAggregator();
         }
 
         [TearDown]

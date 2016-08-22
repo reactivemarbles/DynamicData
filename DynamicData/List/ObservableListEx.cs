@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -500,24 +501,26 @@ namespace DynamicData
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="comparer">The comparer.</param>
+        /// <param name="comparer">The comparer used for sorting</param>
         /// <param name="options">The options.</param>
+        /// <param name="resetThreshold">Since sorting can be slow for large record sets, the reset threshold is used to force the list re-ordered </param>
+        /// <param name="resort">The resort.</param>
+        /// <param name="comparerObservable">An observable comparer used to change the comparer on which the sorted list i</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// source
+        /// <exception cref="System.ArgumentNullException">source
         /// or
-        /// comparer
-        /// </exception>
-        public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions options = SortOptions.None)
+        /// comparer</exception>
+        public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, 
+            IComparer<T> comparer, 
+            SortOptions options = SortOptions.None,
+            int resetThreshold = 50,
+            IObservable<Unit> resort = null,
+            IObservable<IComparer<T>> comparerObservable = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
 
-            return Observable.Create<IChangeSet<T>>(observer =>
-            {
-                return new Sort<T>(source, comparer, options).Run().SubscribeSafe(observer);
-            });
-
+            return new Sort<T>(source, comparer, options, resort, comparerObservable, resetThreshold).Run();
         }
 
         /// <summary>
