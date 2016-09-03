@@ -14,9 +14,7 @@ namespace DynamicData.Internal
         private readonly CombineOperator _type;
 
         //this is the resulting cache which produces all notifications
-        private readonly Cache<TObject, TKey> _resultCache = new Cache<TObject, TKey>();
-
-        private readonly IntermediateUpdater<TObject, TKey> _updater;
+        private readonly ChangeAwareCache<TObject, TKey> _resultCache = new ChangeAwareCache<TObject, TKey>();
 
         private readonly object _locker = new object();
 
@@ -25,7 +23,6 @@ namespace DynamicData.Internal
             if (source == null) throw new ArgumentNullException(nameof(source));
             _source = source;
             _type = type;
-            _updater = new IntermediateUpdater<TObject, TKey>(_resultCache);
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
@@ -48,7 +45,7 @@ namespace DynamicData.Internal
                                                 //Populate result list and chck for changes
                                                 UpdateResultList(sourceLists.Items.AsArray(), changes);
 
-                                                var notifications = _updater.AsChangeSet();
+                                                var notifications = _resultCache.CaptureChanges();
                                                 if (notifications.Count != 0)
                                                     observer.OnNext(notifications);
                                             });
@@ -67,7 +64,7 @@ namespace DynamicData.Internal
                                                      ProcessChanges(sourceLists.Items.AsArray(), itemsToCheck);
                                                  }
 
-                                                 var notifications = _updater.AsChangeSet();
+                                                 var notifications = _resultCache.CaptureChanges();
                                                  if (notifications.Count != 0)
                                                      observer.OnNext(notifications);
                                              })
@@ -83,7 +80,7 @@ namespace DynamicData.Internal
                                                    if (_type == CombineOperator.And || _type == CombineOperator.Except)
                                                        ProcessChanges(sourceLists.Items.AsArray(), _resultCache.KeyValues.ToArray());
 
-                                                   var notifications = _updater.AsChangeSet();
+                                                   var notifications = _resultCache.CaptureChanges();
                                                    if (notifications.Count != 0)
                                                        observer.OnNext(notifications);
                                                })
@@ -108,24 +105,24 @@ namespace DynamicData.Internal
         {
             //TODO: Check whether individual items should be updated
 
-            var cached = _updater.Lookup(key);
+            var cached = _resultCache.Lookup(key);
             var shouldBeInResult = MatchesConstraint(sourceLists, key);
 
             if (shouldBeInResult)
             {
                 if (!cached.HasValue)
                 {
-                    _updater.AddOrUpdate(item, key);
+                    _resultCache.AddOrUpdate(item, key);
                 }
                 else if (!ReferenceEquals(item, cached.Value))
                 {
-                    _updater.AddOrUpdate(item, key);
+                    _resultCache.AddOrUpdate(item, key);
                 }
             }
             else
             {
                 if (cached.HasValue)
-                    _updater.Remove(key);
+                    _resultCache.Remove(key);
             }
         }
 

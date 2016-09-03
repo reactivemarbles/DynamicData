@@ -12,7 +12,7 @@ namespace DynamicData.Internal
     internal sealed class Combiner<TObject, TKey>
     {
         private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
-        private readonly Cache<TObject, TKey> _combinedCache = new Cache<TObject, TKey>();
+        private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new ChangeAwareCache<TObject, TKey>();
 
         private readonly object _locker = new object();
         private readonly CombineOperator _type;
@@ -62,7 +62,6 @@ namespace DynamicData.Internal
         private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
         {
             //child caches have been updated before we reached this point.
-            var updater = new IntermediateUpdater<TObject, TKey>(_combinedCache);
 
             foreach (var update in updates)
             {
@@ -74,7 +73,7 @@ namespace DynamicData.Internal
                     {
                         // get the current key.
                         //check whether the item should belong to the cache
-                        var cached = updater.Lookup(key);
+                        var cached = _combinedCache.Lookup(key);
                         var contained = cached.HasValue;
                         var match = MatchesConstraint(key);
 
@@ -83,58 +82,58 @@ namespace DynamicData.Internal
                             if (contained)
                             {
                                 if (!ReferenceEquals(update.Current, cached.Value))
-                                    updater.AddOrUpdate(update.Current, key);
+                                    _combinedCache.AddOrUpdate(update.Current, key);
                             }
                             else
                             {
-                                updater.AddOrUpdate(update.Current, key);
+                                _combinedCache.AddOrUpdate(update.Current, key);
                             }
                         }
                         else
                         {
                             if (contained)
-                                updater.Remove(key);
+                                _combinedCache.Remove(key);
                         }
                     }
                         break;
 
                     case ChangeReason.Remove:
                     {
-                        var cached = updater.Lookup(key);
+                        var cached = _combinedCache.Lookup(key);
                         var contained = cached.HasValue;
                         bool shouldBeIncluded = MatchesConstraint(key);
 
                         if (shouldBeIncluded)
                         {
                             var firstOne = _sourceCaches.Select(s => s.Lookup(key))
-                                                        .SelectValues()
-                                                        .First();
+                                .SelectValues()
+                                .First();
 
                             if (!cached.HasValue)
                             {
-                                updater.AddOrUpdate(firstOne, key);
+                                _combinedCache.AddOrUpdate(firstOne, key);
                             }
                             else if (!ReferenceEquals(firstOne, cached.Value))
                             {
-                                updater.AddOrUpdate(firstOne, key);
+                                _combinedCache.AddOrUpdate(firstOne, key);
                             }
                         }
                         else
                         {
                             if (contained)
-                                updater.Remove(key);
+                                _combinedCache.Remove(key);
                         }
                     }
                         break;
 
                     case ChangeReason.Evaluate:
                     {
-                        updater.Evaluate(key);
+                        _combinedCache.Evaluate(key);
                     }
                         break;
                 }
             }
-            return updater.AsChangeSet();
+            return _combinedCache.CaptureChanges();
         }
 
         private bool MatchesConstraint(TKey key)

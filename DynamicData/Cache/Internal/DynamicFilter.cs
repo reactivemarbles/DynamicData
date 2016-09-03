@@ -13,7 +13,7 @@ namespace DynamicData.Internal
     {
         private IFilter<TObject, TKey> _filteredUpdater;
         private readonly Cache<TObject, TKey> _all = new Cache<TObject, TKey>();
-        private readonly Cache<TObject, TKey> _filtered = new Cache<TObject, TKey>();
+        private readonly ChangeAwareCache<TObject, TKey> _filtered = new ChangeAwareCache<TObject, TKey>();
 
         internal DynamicFilter()
         {

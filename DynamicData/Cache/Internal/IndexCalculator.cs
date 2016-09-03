@@ -33,7 +33,7 @@ namespace DynamicData.Internal
         /// </summary>
         /// <param name="cache">The cache.</param>
         /// <returns></returns>
-        public IChangeSet<TObject, TKey> Load(ICache<TObject, TKey> cache)
+        public IChangeSet<TObject, TKey> Load(ChangeAwareCache<TObject, TKey> cache)
         {
             //for the first batch of changes may have arrived before the comparer was set.
             //therefore infer the first batch of changes from the cache
@@ -47,7 +47,7 @@ namespace DynamicData.Internal
         /// </summary>
         /// <param name="cache">The cache.</param>
         /// <returns></returns>
-        public void Reset(ICache<TObject, TKey> cache)
+        public void Reset(ChangeAwareCache<TObject, TKey> cache)
         {
             _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
         }

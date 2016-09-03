@@ -6,6 +6,8 @@ namespace DynamicData.Internal
 {
     internal class Cache<TObject, TKey> : ICache<TObject, TKey>
     {
+        private List<Change<TObject, TKey>> _changes = new List<Change<TObject, TKey>>();
+
         private Dictionary<TKey, TObject> _data;
 
         public int Count => _data.Count;

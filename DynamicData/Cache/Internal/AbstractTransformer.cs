@@ -8,11 +8,10 @@ namespace DynamicData.Internal
     internal abstract class AbstractTransformer<TDestination, TSource, TKey>
     {
         private readonly Action<Error<TSource, TKey>> _exceptionCallback;
-        private readonly IIntermediateUpdater<TransformedItemContainer, TKey> _updater;
+        private readonly ChangeAwareCache<TransformedItemContainer, TKey> _innerCache = new ChangeAwareCache<TransformedItemContainer, TKey>();
 
         public AbstractTransformer(Action<Error<TSource, TKey>> exceptionCallback)
         {
-            _updater = new IntermediateUpdater<TransformedItemContainer, TKey>(new Cache<TransformedItemContainer, TKey>());
             _exceptionCallback = exceptionCallback;
         }
 
@@ -28,7 +27,7 @@ namespace DynamicData.Internal
 
         public IChangeSet<TDestination, TKey> ForceTransform(Func<TSource, bool> shouldForce, Func<TSource, TDestination> transformFactory)
         {
-            var toTransform = _updater.KeyValues
+            var toTransform = _innerCache.KeyValues
                                       .Select(x => new KeyValuePair<TKey, TSource>(x.Key, x.Value.Source))
                                       .Where(kvp => shouldForce(kvp.Value))
                                       .ToArray();
@@ -38,7 +37,7 @@ namespace DynamicData.Internal
 
         public IChangeSet<TDestination, TKey> ForceTransform(Func<TSource, TKey, bool> shouldForce, Func<TSource, TKey, TDestination> transformFactory)
         {
-            var toTransform = _updater.KeyValues
+            var toTransform = _innerCache.KeyValues
                                       .Select(x => new KeyValuePair<TKey, TSource>(x.Key, x.Value.Source))
                                       .Where(kvp => shouldForce(kvp.Value, kvp.Key))
                                       .ToArray();
@@ -56,7 +55,7 @@ namespace DynamicData.Internal
                     return new TransformResult(change, new TransformedItemContainer(change.Key, change.Current, destination));
                 }
 
-                var existing = _updater.Lookup(change.Key);
+                var existing = _innerCache.Lookup(change.Key);
                 if (!existing.HasValue)
                     return Optional.None<TransformResult>();
                 return new TransformResult(change, existing.Value);
@@ -74,7 +73,7 @@ namespace DynamicData.Internal
         private TransformResult Transform(KeyValuePair<TKey, TSource> kvp, Func<KeyValuePair<TKey, TSource>, TDestination> transformFactory)
         {
             //let's assume that there will always be an original when we force a transform!
-            var original = _updater.Lookup(kvp.Key);
+            var original = _innerCache.Lookup(kvp.Key);
             var change = new Change<TSource, TKey>(ChangeReason.Add, kvp.Key, original.Value.Source);
 
             try
@@ -114,20 +113,20 @@ namespace DynamicData.Internal
                 {
                     case ChangeReason.Add:
                     case ChangeReason.Update:
-                        _updater.AddOrUpdate(result.Container, key);
+                        _innerCache.AddOrUpdate(result.Container, key);
                         break;
 
                     case ChangeReason.Remove:
-                        _updater.Remove(key);
+                        _innerCache.Remove(key);
                         break;
 
                     case ChangeReason.Evaluate:
-                        _updater.Evaluate(key);
+                        _innerCache.Evaluate(key);
                         break;
                 }
             }
 
-            var changes = _updater.AsChangeSet();
+            var changes = _innerCache.CaptureChanges();
             var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
                                                                                       change.Key,
                                                                                       change.Current.Destination,

@@ -7,7 +7,7 @@ namespace DynamicData.Internal
 {
     internal class FilteredUpdater<TObject, TKey> : AbstractFilter<TObject, TKey>
     {
-        public FilteredUpdater(ICache<TObject, TKey> cache, Func<TObject, bool> filter)
+        public FilteredUpdater(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool> filter)
             : base(cache, filter)
         {
         }

@@ -7,8 +7,7 @@ namespace DynamicData.Internal
 {
     internal class Sorter<TObject, TKey>
     {
-        private readonly Cache<TObject, TKey> _cache = new Cache<TObject, TKey>();
-        private readonly IntermediateUpdater<TObject, TKey> _updater;
+        private readonly ChangeAwareCache<TObject, TKey> _cache = new ChangeAwareCache<TObject, TKey>();
         private readonly SortOptimisations _optimisations;
         private readonly int _resetThreshold;
         private readonly object _locker = new object();
@@ -25,7 +24,6 @@ namespace DynamicData.Internal
         {
             _optimisations = optimisations;
             _resetThreshold = resetThreshold;
-            _updater = new IntermediateUpdater<TObject, TKey>(_cache);
             _comparer = new KeyValueComparer<TObject, TKey>(comparer);
         }
 
@@ -78,8 +76,8 @@ namespace DynamicData.Internal
         {
             if (changes != null)
             {
-                _updater.Update(changes);
-                changes = _updater.AsChangeSet();
+                _cache.Clone(changes);
+                changes = _cache.CaptureChanges();
                 _haveReceivedData = true;
                 if (_comparer == null)
                     return null;

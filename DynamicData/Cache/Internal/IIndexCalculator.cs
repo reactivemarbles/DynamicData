@@ -9,7 +9,7 @@ namespace DynamicData.Internal
         /// </summary>
         /// <param name="cache">The cache.</param>
         /// <returns></returns>
-        IChangeSet<TObject, TKey> Load(ICache<TObject, TKey> cache);
+        IChangeSet<TObject, TKey> Load(ChangeAwareCache<TObject, TKey> cache);
 
         /// <summary>
         /// Dynamic calculation of changed items which produce a result which can be enumerated through in order

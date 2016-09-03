@@ -13,7 +13,7 @@ namespace DynamicData.Internal
 
         public StaticFilter(Func<TObject, bool> filter)
         {
-            _filter = new FilteredUpdater<TObject, TKey>(new Cache<TObject, TKey>(), filter);
+            _filter = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), filter);
         }
 
         public IChangeSet<TObject, TKey> Filter(IChangeSet<TObject, TKey> updates)

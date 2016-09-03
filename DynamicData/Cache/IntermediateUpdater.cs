@@ -1,25 +1,30 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
 namespace DynamicData
 {
     internal class IntermediateUpdater<TObject, TKey> : IIntermediateUpdater<TObject, TKey>
     {
-        private readonly ICache<TObject, TKey> _cache;
-        private ChangeSet<TObject, TKey> _queue = new ChangeSet<TObject, TKey>();
+        private readonly ChangeAwareCache<TObject, TKey> _cache;
 
         public IEnumerable<TObject> Items => _cache.Items;
         public IEnumerable<TKey> Keys => _cache.Keys;
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
         public int Count => _cache.Count;
 
-        public IntermediateUpdater(ICache<TObject, TKey> cache)
+        public IntermediateUpdater(ChangeAwareCache<TObject, TKey> cache)
         {
             if (cache == null) throw new ArgumentNullException(nameof(cache));
             _cache = cache;
         }
+
+        public IntermediateUpdater()
+        {
+            _cache = new ChangeAwareCache<TObject, TKey>();
+        }
+
 
         public Optional<TObject> Lookup(TKey key)
         {
@@ -51,29 +56,22 @@ namespace DynamicData
 
         public void AddOrUpdate(TObject item, TKey key)
         {
-            var previous = _cache.Lookup(key);
             _cache.AddOrUpdate(item, key);
-            _queue.Add(previous.HasValue
-                ? new Change<TObject, TKey>(ChangeReason.Update, key, item, previous)
-                : new Change<TObject, TKey>(ChangeReason.Add, key, item));
         }
 
         public void Evaluate()
         {
-            var toevaluate = _cache.KeyValues.Select(t => new Change<TObject, TKey>(ChangeReason.Evaluate, t.Key, t.Value));
-            toevaluate.ForEach(_queue.Add);
+            _cache.Evaluate();
         }
 
         public void Evaluate(IEnumerable<TKey> keys)
         {
-            keys.ForEach(Evaluate);
+            _cache.Evaluate(keys);
         }
 
         public void Evaluate(TKey key)
         {
-            var existing = _cache.Lookup(key);
-            if (existing.HasValue)
-                _queue.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, existing.Value));
+            _cache.Evaluate(key);
         }
 
         public void Remove(IEnumerable<TObject> items, Func<TObject, TKey> keySelector)
@@ -90,58 +88,22 @@ namespace DynamicData
 
         public void Remove(TKey key)
         {
-            var existing = _cache.Lookup(key);
-            if (!existing.HasValue) return;
-            _queue.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existing.Value));
             _cache.Remove(key);
         }
 
         public void Clear()
         {
-            var toremove = _cache.KeyValues.Select(t => new Change<TObject, TKey>(ChangeReason.Remove, t.Key, t.Value));
-            toremove.ForEach(_queue.Add);
             _cache.Clear();
         }
 
         public void Update(IChangeSet<TObject, TKey> changes)
         {
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
-            foreach (var item in changes)
-            {
-                switch (item.Reason)
-                {
-                    case ChangeReason.Update:
-                    case ChangeReason.Add:
-                    {
-                        AddOrUpdate(item.Current, item.Key);
-                    }
-                        break;
-                    case ChangeReason.Remove:
-                    {
-                        var existing = _cache.Lookup(item.Key);
-                        if (existing.HasValue)
-                        {
-                            _queue.Add(item);
-                            _cache.Remove(item.Key);
-                        }
-                    }
-                        Remove(item.Key);
-                        break;
-                    case ChangeReason.Evaluate:
-                    {
-                        var existing = _cache.Lookup(item.Key);
-                        if (existing.HasValue) _queue.Add(item);
-                        break;
-                    }
-                }
-            }
+            _cache.Clone(changes);
         }
 
         public IChangeSet<TObject, TKey> AsChangeSet()
         {
-            var copy = _queue;
-            _queue = new ChangeSet<TObject, TKey>();
-            return copy;
+            return _cache.CaptureChanges();
         }
     }
 }

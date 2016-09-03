@@ -232,8 +232,8 @@ namespace DynamicData.Binding
                                             return null;
                                     }
                                 })
-                                                      .Where(updates => updates != null)
-                                                      .Select(updates => (IChangeSet<TObject, TKey>)new ChangeSet<TObject, TKey>(updates));
+                                .Where(updates => updates != null)
+                                .Select(updates => (IChangeSet<TObject, TKey>)new ChangeSet<TObject, TKey>(updates));
 
                         var initialChanges = initialChangeSet();
                         var cacheLoader = Observable.Return(initialChanges).Concat(sourceUpdates).PopulateInto(cloneOfList);

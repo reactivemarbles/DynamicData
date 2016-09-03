@@ -5,20 +5,18 @@ namespace DynamicData.Internal
 {
     internal sealed class SizeLimiter<TObject, TKey>
     {
-        private readonly Cache<ExpirableItem<TObject, TKey>, TKey> _cache = new Cache<ExpirableItem<TObject, TKey>, TKey>();
-        private readonly IIntermediateUpdater<ExpirableItem<TObject, TKey>, TKey> _updater;
+        private readonly ChangeAwareCache<ExpirableItem<TObject, TKey>, TKey> _cache = new ChangeAwareCache<ExpirableItem<TObject, TKey>, TKey>();
 
         private readonly int _sizeLimit;
 
         public SizeLimiter(int size)
         {
             _sizeLimit = size;
-            _updater = new IntermediateUpdater<ExpirableItem<TObject, TKey>, TKey>(_cache);
         }
 
-        public IChangeSet<TObject, TKey> Update(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
+        public IChangeSet<TObject, TKey> Change(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
         {
-            _updater.Update(updates);
+            _cache.Clone(updates);
 
             var itemstoexpire = _cache.KeyValues
                                       .OrderByDescending(exp => exp.Value.ExpireAt)
@@ -28,10 +26,10 @@ namespace DynamicData.Internal
 
             if (itemstoexpire.Count > 0)
             {
-                _updater.Remove(itemstoexpire.Select(exp => exp.Key));
+                _cache.Remove(itemstoexpire.Select(exp => exp.Key));
             }
 
-            var notifications = _updater.AsChangeSet();
+            var notifications = _cache.CaptureChanges();
             var changed = notifications.Select(update => new Change<TObject, TKey>
                                                    (
                                                    update.Reason,
@@ -43,31 +41,15 @@ namespace DynamicData.Internal
             return new ChangeSet<TObject, TKey>(changed);
         }
 
-        public IChangeSet<TObject, TKey> CloneAndReturnExpiredOnly(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
+        public TKey[] CloneAndReturnExpiredOnly(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
         {
             _cache.Clone(updates);
+            _cache.CaptureChanges(); //Clear any changes
 
-            var itemstoexpire = _cache.KeyValues
-                                      .OrderByDescending(exp => exp.Value.Index)
+            return _cache.KeyValues.OrderByDescending(exp => exp.Value.Index)
                                       .Skip(_sizeLimit)
-                                      .Select(exp => new Change<TObject, TKey>(ChangeReason.Remove, exp.Key, exp.Value.Value))
-                                      .ToList();
-
-            if (itemstoexpire.Count > 0)
-            {
-                _updater.Remove(itemstoexpire.Select(exp => exp.Key));
-            }
-
-            var notifications = _updater.AsChangeSet();
-            var changed = notifications.Select(update => new Change<TObject, TKey>
-                                                   (
-                                                   update.Reason,
-                                                   update.Key,
-                                                   update.Current.Value,
-                                                   update.Previous.HasValue ? update.Previous.Value.Value : Optional<TObject>.None
-                                                   ));
-
-            return new ChangeSet<TObject, TKey>(changed);
+                                      .Select(kvp=> kvp.Key)
+                                      .ToArray();
         }
     }
 }

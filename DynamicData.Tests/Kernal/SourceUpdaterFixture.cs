@@ -10,15 +10,17 @@ namespace DynamicData.Tests.Kernal
     [TestFixture]
     internal class SourceUpdaterFixture
     {
+
+        private ChangeAwareCache<Person, string> _cache;
+        private SourceUpdater<Person, string> _updater;
+
         [SetUp]
         public void Initialise()
         {
-            _cache = new Cache<Person, string>();
+            _cache = new ChangeAwareCache<Person, string>();
             _updater = new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(p => p.Name));
         }
 
-        private Cache<Person, string> _cache;
-        private SourceUpdater<Person, string> _updater;
 
         [Test]
         public void Add()

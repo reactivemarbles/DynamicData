@@ -111,7 +111,11 @@ namespace DynamicData
         /// <value>
         /// The capacity.
         /// </value>
-        public int Capacity { get { return Items.Capacity; } set { Items.Capacity = value; } }
+        public int Capacity
+        {
+            get { return Items.Capacity; }
+            set { Items.Capacity = value; }
+        }
 
         /// <summary>
         ///     The total update count

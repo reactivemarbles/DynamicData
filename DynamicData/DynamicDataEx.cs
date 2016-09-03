@@ -9,6 +9,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using DynamicData.Annotations;
 using DynamicData.Binding;
 using DynamicData.Cache.Internal;
@@ -178,7 +179,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> NotEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.Where(updates => updates.Count != 0);
+            return source.Where(changes => changes.Count != 0);
         }
 
         /// <summary>
@@ -1495,7 +1496,6 @@ namespace DynamicData
                                                                .DistinctValues(ei => ei.ExpireAt)
                                                                .SubscribeMany(datetime =>
                                                                {
-                                                                   //  Console.WriteLine("Set expiry for {0}. Now={1}", datetime, DateTime.Now);
                                                                    var expireAt = datetime.Subtract(scheduler.Now.DateTime);
                                                                    return Observable.Timer(expireAt, scheduler)
                                                                                     .Take(1)
@@ -1522,8 +1522,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         /// <exception cref="System.ArgumentException">size cannot be zero</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                        int size)
+        public static IObservable<IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, int size, IScheduler scheduler = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (size <= 0) throw new ArgumentException("Size limit must be greater than zero");
@@ -1531,14 +1530,13 @@ namespace DynamicData
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
                 var sizeLimiter = new SizeLimiter<TObject, TKey>(size);
-
                 var root = new IntermediateCache<TObject, TKey>(source);
 
                 var subscriber = root.Connect()
                                      .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now))
                                      .Select(changes =>
                                      {
-                                         var result = sizeLimiter.Update(changes);
+                                         var result = sizeLimiter.Change(changes);
 
                                          var removes = result.Where(c => c.Reason == ChangeReason.Remove);
                                          root.Edit(updater => removes.ForEach(c => updater.Remove(c.Key)));

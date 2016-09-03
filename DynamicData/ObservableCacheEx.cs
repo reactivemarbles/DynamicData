@@ -215,12 +215,16 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
+        /// <param name="applyLocking">if set to <c>true</c> all methods are synchronised. There is no need to apply locking when the consumer can be sure the the read / write operations are already synchronised</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, bool applyLocking = true)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return new AnonymousObservableCache<TObject, TKey>(source);
+            if (applyLocking)
+                return new AnonymousObservableCache<TObject, TKey>(source);
+       
+            return new LockFreeObservableCache<TObject, TKey>(source);
         }
 
         /// <summary>
@@ -255,8 +259,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         /// <exception cref="System.ArgumentException">Size limit must be greater than zero</exception>
-        public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this ISourceCache<TObject, TKey> source,
-                                                                                                       int sizeLimit, IScheduler scheduler = null)
+        public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this ISourceCache<TObject, TKey> source, int sizeLimit, IScheduler scheduler = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (sizeLimit <= 0) throw new ArgumentException("Size limit must be greater than zero");
@@ -267,15 +270,12 @@ namespace DynamicData
                 var sizeLimiter = new SizeLimiter<TObject, TKey>(sizeLimit);
 
                 return source.Connect()
-                             .FinallySafe(observer.OnCompleted)
+                             .Finally(observer.OnCompleted)   
                              .ObserveOn(scheduler ?? Scheduler.Default)
                              .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded)))
-                             .Subscribe(changes =>
-                             {
-                                 var result = sizeLimiter.CloneAndReturnExpiredOnly(changes);
-                                 if (result.Count == 0) return;
-                                 source.Edit(updater => result.ForEach(c => updater.Remove(c.Key)));
-                             });
+                             .Select(sizeLimiter.CloneAndReturnExpiredOnly)
+                             .Where(expired => expired.Length != 0)
+                             .Subscribe(source.Remove); 
             });
         }
 

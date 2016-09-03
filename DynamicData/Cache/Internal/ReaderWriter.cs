@@ -7,7 +7,7 @@ namespace DynamicData.Internal
 {
     internal sealed class ReaderWriter<TObject, TKey> : IReaderWriter<TObject, TKey>
     {
-        private readonly ICache<TObject, TKey> _cache = new Cache<TObject, TKey>();
+        private readonly ChangeAwareCache<TObject, TKey> _cache = new ChangeAwareCache<TObject, TKey>();
         private readonly object _locker = new object();
         private readonly DoubleCheck<IntermediateUpdater<TObject, TKey>> _intermediateUpdater;
         private readonly DoubleCheck<SourceUpdater<TObject, TKey>> _sourceUpdater;

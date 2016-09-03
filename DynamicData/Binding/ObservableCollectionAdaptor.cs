@@ -1,8 +1,6 @@
 using System;
-using DynamicData.Aggregation;
 using DynamicData.Annotations;
 using DynamicData.Internal;
-using DynamicData.Kernel;
 
 namespace DynamicData.Binding
 {

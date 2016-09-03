@@ -1,6 +1,7 @@
 using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -36,11 +37,11 @@ namespace DynamicData.Cache.Internal
                 var locker = new object();
 
                 //create local backing stores
-                var leftCache = _left.Synchronize(locker).AsObservableCache();
-                var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache();
+                var leftCache = _left.Synchronize(locker).AsObservableCache(false);
+                var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
 
                 //joined is the final cache
-                var joinedCache = new IntermediateCache<TDestination, TLeftKey>();
+                var joinedCache = new LockFreeObservableCache<TDestination, TLeftKey>();
 
                 var leftLoader = leftCache.Connect()
                     .Subscribe(changes =>

@@ -16,12 +16,12 @@ namespace DynamicData.PLinq
         private readonly ParallelisationOptions _parallelisationOptions;
 
         public PLinqFilteredUpdater(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
-            : base(new Cache<TObject, TKey>(), filter)
+            : base(new ChangeAwareCache<TObject, TKey>(), filter)
         {
             _parallelisationOptions = parallelisationOptions;
         }
 
-        public PLinqFilteredUpdater(ICache<TObject, TKey> cache, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
+        public PLinqFilteredUpdater(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
             : base(cache, filter)
         {
             _parallelisationOptions = parallelisationOptions;

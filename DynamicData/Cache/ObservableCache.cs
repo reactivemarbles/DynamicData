@@ -136,28 +136,16 @@ namespace DynamicData
                     {
                         lock (_locker)
                         {
-                            Action<Change<TObject, TKey>> nextAction = c =>
-                            {
-                                try
-                                {
-                                    observer.OnNext(c);
-                                }
-                                catch (Exception ex)
-                                {
-                                    observer.OnError(ex);
-                                }
-                            };
-
                             var initial = _readerWriter.Lookup(key);
                             if (initial.HasValue)
-                                nextAction(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+                                observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
 
                             return _changes.FinallySafe(observer.OnCompleted).Subscribe(changes =>
                             {
                                 var matches = changes.Where(update => update.Key.Equals(key));
                                 foreach (var match in matches)
                                 {
-                                    nextAction(match);
+                                    observer.OnNext(match);
                                 }
                             });
                         }
@@ -191,7 +179,7 @@ namespace DynamicData
                         lock (_locker)
                         {
                             var filterer = new StaticFilter<TObject, TKey>(filter);
-                            var filtered = filterer.Filter(GetInitialUpdates());
+                            var filtered = filterer.Filter(GetInitialUpdates(filter));
                             if (filtered.Count != 0)
                                 observer.OnNext(filtered);
 
