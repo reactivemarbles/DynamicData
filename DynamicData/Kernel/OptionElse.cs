@@ -5,7 +5,7 @@ namespace DynamicData.Kernel
     /// <summary>
     /// Continuation container used for the else optator on an option object.
     /// </summary>
-    public class OptionElse
+    public sealed class OptionElse
     {
         internal static readonly OptionElse NoAction = new OptionElse(false);
 

@@ -139,10 +139,7 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static bool RemoveIfContained<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         {
-            if (source.ContainsKey(key))
-                return source.Remove(key);
-
-            return false;
+            return source.ContainsKey(key) && source.Remove(key);
         }
 
         /// <summary>

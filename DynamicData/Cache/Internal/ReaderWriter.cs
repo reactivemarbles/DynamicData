@@ -9,25 +9,14 @@ namespace DynamicData.Internal
     {
         private readonly ChangeAwareCache<TObject, TKey> _cache = new ChangeAwareCache<TObject, TKey>();
         private readonly object _locker = new object();
-        private readonly DoubleCheck<IntermediateUpdater<TObject, TKey>> _intermediateUpdater;
-        private readonly DoubleCheck<SourceUpdater<TObject, TKey>> _sourceUpdater;
+        private readonly CacheUpdater<TObject, TKey> _updater;
+
 
         public ReaderWriter(Func<TObject, TKey> keySelector = null)
         {
-            if (keySelector == null)
-            {
-                _intermediateUpdater = new DoubleCheck<IntermediateUpdater<TObject, TKey>>
-                    (
-                    () => new IntermediateUpdater<TObject, TKey>(_cache)
-                    );
-            }
-            else
-            {
-                _sourceUpdater = new DoubleCheck<SourceUpdater<TObject, TKey>>
-                    (
-                    () => new SourceUpdater<TObject, TKey>(_cache, new KeySelector<TObject, TKey>(keySelector))
-                    );
-            }
+            _updater = keySelector == null 
+                ? new CacheUpdater<TObject, TKey>(_cache) 
+                : new CacheUpdater<TObject, TKey>(_cache, new KeySelector<TObject, TKey>(keySelector));
         }
 
         #region Writers
@@ -40,8 +29,8 @@ namespace DynamicData.Internal
             {
                 try
                 {
-                    _intermediateUpdater.Value.Update(changes);
-                    result = _intermediateUpdater.Value.AsChangeSet();
+                    _updater.Update(changes);
+                    result = _updater.AsChangeSet();
                 }
                 catch (Exception ex)
                 {
@@ -59,8 +48,8 @@ namespace DynamicData.Internal
             {
                 try
                 {
-                    updateAction(_intermediateUpdater.Value);
-                    result = _intermediateUpdater.Value.AsChangeSet();
+                    updateAction(_updater);
+                    result = _updater.AsChangeSet();
                 }
                 catch (Exception ex)
                 {
@@ -79,8 +68,8 @@ namespace DynamicData.Internal
             {
                 try
                 {
-                    updateAction(_sourceUpdater.Value);
-                    result = _sourceUpdater.Value.AsChangeSet();
+                    updateAction(_updater);
+                    result = _updater.AsChangeSet();
                 }
                 catch (Exception ex)
                 {

@@ -153,7 +153,6 @@
     <Compile Include="Cache\Internal\IKeySelector.cs" />
     <Compile Include="Cache\IKeyValueCollection.cs" />
     <Compile Include="Cache\IntermediateCache.cs" />
-    <Compile Include="Cache\IntermediateUpdater.cs" />
     <Compile Include="Kernel\EnumerableEx.cs" />
     <Compile Include="Kernel\InternalEx.cs" />
     <Compile Include="Cache\Internal\IReaderWriter.cs" />
@@ -169,7 +168,7 @@
     <Compile Include="Kernel\OptionExtensions.cs" />
     <Compile Include="Cache\Internal\ReaderWriter.cs" />
     <Compile Include="Cache\SortedChangeSet.cs" />
-    <Compile Include="Cache\Internal\SourceUpdater.cs" />
+    <Compile Include="Cache\Internal\CacheUpdater.cs" />
     <Compile Include="Cache\MissingKeyException.cs" />
     <Compile Include="List\Internal\AnonymousObservableList.cs" />
     <Compile Include="List\ChangeSet.cs" />

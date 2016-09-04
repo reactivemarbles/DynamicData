@@ -5,7 +5,7 @@ namespace DynamicData
     /// <summary>
     /// Api for updating  an intermediate cache
     /// 
-    /// Use batch update to produce singular changeset.
+    /// Use edit to produce singular changeset.
     /// 
     /// NB:The evaluate method is used to signal to any observing operators
     /// to  reevaluate whether the the object still matches downstream operators.
@@ -43,9 +43,21 @@ namespace DynamicData
         void Remove(IEnumerable<TKey> keys);
 
         /// <summary>
+        /// Overload of remove due to ambiguous method when TObject and TKey are of the same type
+        /// </summary>
+        /// <param name="key">The key.</param>
+        void RemoveKeys(IEnumerable<TKey> key);
+
+        /// <summary>
         ///Remove the specified keys
         /// </summary>
         void Remove(TKey key);
+
+        /// <summary>
+        /// Overload of remove due to ambiguous method when TObject and TKey are of the same type
+        /// </summary>
+        /// <param name="key">The key.</param>
+        void RemoveKey(TKey key);
 
         /// <summary>
         /// Updates using changes using the specified changeset
@@ -56,11 +68,5 @@ namespace DynamicData
         /// Clears all items from the underlying cache.
         /// </summary>
         void Clear();
-
-        /// <summary>
-        /// Acccummulation of updates since last call of this method
-        /// </summary>
-        /// <returns></returns>
-        IChangeSet<TObject, TKey> AsChangeSet();
     }
 }

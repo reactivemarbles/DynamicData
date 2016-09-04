@@ -152,7 +152,7 @@ namespace DynamicData.Internal
 
                 if (groupCache.Count != 0) return;
 
-                _groupCache.RemoveIfContained(@group.Key);
+                _groupCache.RemoveIfContained(group.Key);
                 result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key, groupCache));
             });
             return new GroupChangeSet<TObject, TKey, TGroupKey>(result);

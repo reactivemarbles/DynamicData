@@ -1,20 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-    internal class SourceUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
+    internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     {
         private readonly ChangeAwareCache<TObject, TKey> _cache;
         private readonly IKeySelector<TObject, TKey> _keySelector;
 
-        public SourceUpdater(ChangeAwareCache<TObject, TKey> cache, IKeySelector<TObject, TKey> keySelector)
+        public CacheUpdater(ChangeAwareCache<TObject, TKey> cache, IKeySelector<TObject, TKey> keySelector = null)
         {
             if (cache == null) throw new ArgumentNullException(nameof(cache));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-
             _cache = cache;
             _keySelector = keySelector;
         }
@@ -41,17 +38,19 @@ namespace DynamicData.Internal
         public void AddOrUpdate(IEnumerable<TObject> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
-
             items.ForEach(AddOrUpdate);
         }
 
         public void AddOrUpdate(TObject item)
         {
+            if (_keySelector==null)
+                throw new KeySelectorException("The updater must be constructed with a key selector");
+
             TKey key = _keySelector.GetKey(item);
             _cache.AddOrUpdate(item, key);
         }
 
-        private void AddOrUpdate(TObject item, TKey key)
+        public void AddOrUpdate(TObject item, TKey key)
         {
             _cache.AddOrUpdate(item, key);
         }
@@ -133,7 +132,7 @@ namespace DynamicData.Internal
 
         public void Update(IChangeSet<TObject, TKey> changes)
         {
-           _cache.Clone(changes);
+            _cache.Clone(changes);
         }
 
         public IChangeSet<TObject, TKey> AsChangeSet()

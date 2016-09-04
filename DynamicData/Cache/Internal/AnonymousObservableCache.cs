@@ -20,7 +20,7 @@ namespace DynamicData.Internal
         public AnonymousObservableCache(IObservableCache<TObject, TKey> cache)
         {
             if (cache == null) throw new ArgumentNullException(nameof(cache));
-            _cache = new ObservableCache<TObject, TKey>(cache.Connect());
+            _cache = cache;
         }
 
         #region Delgated Members

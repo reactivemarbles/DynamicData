@@ -8,19 +8,44 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
-
-    internal class LockFreeObservableCache<TObject, TKey>: IObservableCache<TObject, TKey>
+    internal class  LockFreeObservableCache<TObject, TKey>: IObservableCache<TObject, TKey>
     {
         private readonly ChangeAwareCache<TObject, TKey> _innerCache = new ChangeAwareCache<TObject, TKey>();
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
         private readonly ISubject<int> _countChanged = new Subject<int>();
         private readonly IDisposable _cleanUp;
 
+        public LockFreeObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            var loader = source.Select(changes =>
+            {
+                _innerCache.Clone(changes);
+                return _innerCache.CaptureChanges();
+            }).SubscribeSafe(_changes);
+
+            _cleanUp = Disposable.Create(() =>
+            {
+                loader.Dispose();
+                _changes.OnCompleted();
+                _countChanged.OnCompleted();
+            });
+        }
+
+        public LockFreeObservableCache()
+        {
+            _cleanUp = Disposable.Create(() =>
+            {
+                _changes.OnCompleted();
+                _countChanged.OnCompleted();
+            });
+        }
+
+
         #region Observable methods
 
         public IObservable<IChangeSet<TObject, TKey>> Connect()
         {
-            return Observable.Return(_innerCache.AsInitialUpdates()).Concat(_changes);           
+            return Observable.Return(_innerCache.AsInitialUpdates()).Concat(_changes);
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
@@ -30,15 +55,15 @@ namespace DynamicData.Internal
                 (
                     observer =>
                     {
-                            var filterer = new StaticFilter<TObject, TKey>(filter);
-                            var filtered = filterer.Filter(_innerCache.AsInitialUpdates(filter));
-                            if (filtered.Count != 0)
-                                observer.OnNext(filtered);
+                        var filterer = new StaticFilter<TObject, TKey>(filter);
+                        var filtered = filterer.Filter(_innerCache.AsInitialUpdates(filter));
+                        if (filtered.Count != 0)
+                            observer.OnNext(filtered);
 
-                            return _changes
-                                .Select(filterer.Filter)
-                                .NotEmpty()
-                                .SubscribeSafe(observer);
+                        return _changes
+                            .Select(filterer.Filter)
+                            .NotEmpty()
+                            .SubscribeSafe(observer);
                     });
         }
 
@@ -67,30 +92,6 @@ namespace DynamicData.Internal
 
         #endregion
 
-        public LockFreeObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
-        {
-            var loader = source.Select(changes =>
-            {
-                _innerCache.Clone(changes);
-                return _innerCache.CaptureChanges();
-            }).SubscribeSafe(_changes);
-
-            _cleanUp = Disposable.Create(() =>
-            {
-                loader.Dispose();
-                _changes.OnCompleted();
-                _countChanged.OnCompleted();
-            });
-        }
-
-        public LockFreeObservableCache()
-        {
-            _cleanUp = Disposable.Create(() =>
-            {
-                _changes.OnCompleted();
-                _countChanged.OnCompleted();
-            });
-        }
 
         public void Edit(Action<ChangeAwareCache<TObject, TKey>> editAction)
         {
