@@ -38,15 +38,18 @@ namespace DynamicData.Internal
         public void AddOrUpdate(IEnumerable<TObject> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
+            if (_keySelector == null)
+                throw new KeySelectorException("A key selector must be specified");
+
             items.ForEach(AddOrUpdate);
         }
 
         public void AddOrUpdate(TObject item)
         {
-            if (_keySelector==null)
-                throw new KeySelectorException("The updater must be constructed with a key selector");
+            if (_keySelector == null)
+                throw new KeySelectorException("A key selector must be specified");
 
-            TKey key = _keySelector.GetKey(item);
+            var key = _keySelector.GetKey(item);
             _cache.AddOrUpdate(item, key);
         }
 
