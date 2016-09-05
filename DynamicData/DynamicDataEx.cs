@@ -40,36 +40,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (finallyAction == null) throw new ArgumentNullException(nameof(finallyAction));
 
-            return Observable.Create<T>(o =>
-            {
-                var finallyOnce = Disposable.Create(finallyAction);
-
-                var subscription = source.Subscribe(o.OnNext,
-                                                    ex =>
-                                                    {
-                                                        try
-                                                        {
-                                                            o.OnError(ex);
-                                                        }
-                                                        finally
-                                                        {
-                                                            finallyOnce.Dispose();
-                                                        }
-                                                    },
-                                                    () =>
-                                                    {
-                                                        try
-                                                        {
-                                                            o.OnCompleted();
-                                                        }
-                                                        finally
-                                                        {
-                                                            finallyOnce.Dispose();
-                                                        }
-                                                    });
-
-                return new CompositeDisposable(subscription, finallyOnce);
-            });
+            return new FinallySafe<T>(source, finallyAction).Run();
         }
 
         /// <summary>
@@ -82,37 +53,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> RefCount<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-
-            int refCount = 0;
-            var locker = new object();
-            IObservableCache<TObject, TKey> cache = null;
-
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                lock (locker)
-                {
-                    refCount++;
-                    if (refCount == 1)
-                    {
-                        cache = source.AsObservableCache();
-                    }
-
-                    // ReSharper disable once PossibleNullReferenceException (never the case!)
-                    var subscriber = cache.Connect().SubscribeSafe(observer);
-
-                    return Disposable.Create(() =>
-                    {
-                        lock (locker)
-                        {
-                            refCount--;
-                            subscriber.Dispose();
-                            if (refCount != 0) return;
-                            cache.Dispose();
-                            cache = null;
-                        }
-                    });
-                }
-            });
+            return new RefCount<TObject,TKey>(source).Run();
         }
 
         /// <summary>
@@ -124,48 +65,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<ConnectionStatus> MonitorStatus<T>(this IObservable<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            return Observable.Create<ConnectionStatus>(observer =>
-            {
-                var statusSubject = new Subject<ConnectionStatus>();
-                var status = ConnectionStatus.Pending;
-
-                Action<Exception> error = (ex) =>
-                {
-                    status = ConnectionStatus.Errored;
-                    statusSubject.OnNext(status);
-                    observer.OnError(ex);
-                };
-
-                Action completion = () =>
-                {
-                    if (status == ConnectionStatus.Errored) return;
-                    status = ConnectionStatus.Completed;
-                    statusSubject.OnNext(status);
-                };
-
-                Action updated = () =>
-                {
-                    if (status != ConnectionStatus.Pending) return;
-                    status = ConnectionStatus.Loaded;
-                    statusSubject.OnNext(status);
-                };
-
-                var monitor = source.Subscribe(_ => updated(), error, completion);
-
-                var subscriber = statusSubject
-                    .StartWith(status)
-                    .DistinctUntilChanged()
-                    .SubscribeSafe(observer);
-
-                return Disposable.Create(() =>
-                {
-                    statusSubject.OnCompleted();
-                    monitor.Dispose();
-                    subscriber.Dispose();
-                });
-            });
+            return new StatusMonitor<T>(source).Run();
         }
 
         /// <summary>
@@ -256,13 +156,13 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (includeFunction == null) throw new ArgumentNullException(nameof(includeFunction));
 
-            return source.Select(updates =>
+            return source.Select(changes =>
             {
-                var result = updates.Where(u =>
+                var result = changes.Where(change =>
                 {
-                    if (u.Reason != ChangeReason.Update) return true;
+                    if (change.Reason != ChangeReason.Update) return true;
 
-                    return includeFunction(u.Current, u.Previous.Value);
+                    return includeFunction(change.Current, change.Previous.Value);
                 });
                 return new ChangeSet<TObject, TKey>(result);
             }).NotEmpty();
@@ -288,13 +188,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
-            return Observable.Create<ItemWithValue<TObject, TDestination>>
-                (
-                    observer => source.SubscribeMany(t => observableSelector(t)
-                                                         .Select(value => new ItemWithValue<TObject, TDestination>(t, value))
-                                                         .SubscribeSafe(observer))
-                                      .Subscribe()
-                );
+            return new MergeManyItems<TObject, TKey, TDestination>(source, observableSelector).Run();
         }
 
         /// <summary>
@@ -317,13 +211,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
-            return Observable.Create<ItemWithValue<TObject, TDestination>>
-                (
-                    observer => source.SubscribeMany((t, v) => observableSelector(t, v)
-                                                         .Select(z => new ItemWithValue<TObject, TDestination>(t, z))
-                                                         .SubscribeSafe(observer))
-                                      .Subscribe()
-                );
+            return new MergeManyItems<TObject, TKey, TDestination>(source,observableSelector).Run();
         }
 
         /// <summary>
@@ -344,11 +232,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
-            return Observable.Create<TDestination>
-                (
-                    observer => source.SubscribeMany(t => observableSelector(t)
-                                                         .SubscribeSafe(observer))
-                                      .Subscribe());
+            return new MergeMany<TObject,TKey,TDestination>(source, observableSelector).Run();
         }
 
         /// <summary>
@@ -369,10 +253,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
-            return Observable.Create<TDestination>
-                (
-                    observer => source.SubscribeMany((t, v) => observableSelector(t, v).SubscribeSafe(observer))
-                                      .Subscribe());
+            return new MergeMany<TObject, TKey, TDestination>(source, observableSelector).Run();
         }
 
         /// <summary>
@@ -458,21 +339,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
 
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        var published = source.Publish();
-                        var subscriptions = published
-                            .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory))
-                            .DisposeMany()
-                            .Subscribe();
-
-                        var result = published.SubscribeSafe(observer);
-                        var connected = published.Connect();
-
-                        return new CompositeDisposable(subscriptions, connected, result);
-                    });
+            return new SubscribeMany<TObject, TKey>(source, subscriptionFactory).Run();
         }
 
         /// <summary>
@@ -495,26 +362,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
 
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        var published = source.Publish();
-                        var subscriptions = published
-                            .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory))
-                            .DisposeMany()
-                            .Subscribe();
-
-                        var result = published.SubscribeSafe(observer);
-                        var connected = published.Connect();
-
-                        return Disposable.Create(() =>
-                        {
-                            connected.Dispose();
-                            subscriptions.Dispose();
-                            result.Dispose();
-                        });
-                    });
+            return new SubscribeMany<TObject, TKey>(source, subscriptionFactory).Run();
         }
 
         /// <summary>
@@ -534,17 +382,8 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (removeAction == null) throw new ArgumentNullException(nameof(removeAction));
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        var disposer = new OnBeingRemoved<TObject, TKey>(removeAction);
-                        var subscriber = source
-                            .Do(disposer.RegisterForRemoval, observer.OnError)
-                            .SubscribeSafe(observer);
 
-                        return new CompositeDisposable(disposer, subscriber);
-                    });
+            return new OnItemRemoved<TObject,TKey>(source,removeAction).Run();
         }
 
         /// <summary>
@@ -677,12 +516,12 @@ namespace DynamicData
         /// <param name="conversionFactory">The conversion factory.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
+        [Obsolete("This was an experiment that did not work. Use Transform instead")]
         public static IObservable<IChangeSet<TDestination, TKey>> Convert<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source,
                                                                                                        Func<TObject, TDestination> conversionFactory)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
-
             return source.Select(changes =>
             {
                 var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
@@ -691,7 +530,6 @@ namespace DynamicData
                                                                                           change.Previous.Convert(conversionFactory),
                                                                                           change.CurrentIndex,
                                                                                           change.PreviousIndex));
-
                 return new ChangeSet<TDestination, TKey>(transformed);
             });
         }
@@ -814,76 +652,8 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-            ;
-
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        bool paused = intialPauseState;
-                        var locker = new object();
-                        var buffer = new List<Change<TObject, TKey>>();
-                        var timeoutSubscriber = new SerialDisposable();
-                        var timeoutSubject = new Subject<bool>();
-
-                        var schedulertouse = scheduler ?? Scheduler.Default;
-
-                        var bufferSelector = Observable.Return(intialPauseState)
-                                                       .Concat(pauseIfTrueSelector.Merge(timeoutSubject))
-                                                       .ObserveOn(schedulertouse)
-                                                       .Synchronize(locker)
-                                                       .Publish();
-
-                        var pause = bufferSelector.Where(state => state)
-                                                  .Subscribe(_ =>
-                                                  {
-                                                      paused = true;
-                                                      //add pause timeout if required
-                                                      if (timeOut != null && timeOut.Value != TimeSpan.Zero)
-                                                          timeoutSubscriber.Disposable = Observable.Timer(timeOut.Value, schedulertouse)
-                                                                                                   .Select(l => false)
-                                                                                                   .SubscribeSafe(timeoutSubject);
-                                                  });
-
-                        var resume = bufferSelector.Where(state => !state)
-                                                   .Subscribe(_ =>
-                                                   {
-                                                       paused = false;
-                                                       //publish changes and clear buffer
-                                                       if (buffer.Count == 0) return;
-                                                       observer.OnNext(new ChangeSet<TObject, TKey>(buffer));
-                                                       buffer.Clear();
-
-                                                       //kill off timeout if required
-                                                       timeoutSubscriber.Disposable = Disposable.Empty;
-                                                   });
-
-                        var updateSubscriber = source.Synchronize(locker)
-                                                     .Subscribe(updates =>
-                                                     {
-                                                         if (paused)
-                                                         {
-                                                             buffer.AddRange(updates);
-                                                         }
-                                                         else
-                                                         {
-                                                             observer.OnNext(updates);
-                                                         }
-                                                     });
-
-                        var connected = bufferSelector.Connect();
-
-                        return Disposable.Create(() =>
-                        {
-                            connected.Dispose();
-                            pause.Dispose();
-                            resume.Dispose();
-                            updateSubscriber.Dispose();
-                            timeoutSubject.OnCompleted();
-                            timeoutSubscriber.Dispose();
-                        });
-                    }
-                );
+           
+            return new BatchIf<TObject,TKey>(source, pauseIfTrueSelector,intialPauseState,timeOut,scheduler).Run();
         }
 
         /// <summary>
@@ -910,13 +680,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-
-            return source.MonitorStatus()
-                         .Where(status => status == ConnectionStatus.Loaded)
-                         .Take(1)
-                         .Select(_ => new ChangeSet<TObject, TKey>())
-                         .Concat(source)
-                         .NotEmpty();
+            return new DeferUntilLoaded<TObject, TKey>(source).Run();
         }
 
         /// <summary>
@@ -929,12 +693,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservableCache<TObject, TKey> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-
-            return source.CountChanged.Where(count => count != 0)
-                         .Take(1)
-                         .Select(_ => new ChangeSet<TObject, TKey>())
-                         .Concat(source.Connect())
-                         .NotEmpty();
+            return new DeferUntilLoaded<TObject, TKey>(source).Run();
         }
 
         #endregion
@@ -1051,21 +810,7 @@ namespace DynamicData
                                                                         Func<TObject, IObservable<TValue>> observableSelector,
                                                                         Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            return Observable.Create<bool>(observer =>
-            {
-                var transformed = source.Transform(t => new ObservableWithValue<TObject, TValue>(t, observableSelector(t))).Publish();
-                var inlineChanges = transformed.MergeMany(t => t.Observable);
-                var queried = transformed.QueryWhenChanged(q => q.Items);
-
-                //nb: we do not care about the inline change because we are only monitoring it to cause a re-evalutaion of all items
-                var publisher = queried.CombineLatest(inlineChanges, (items, inline) => collectionMatcher(items))
-                                       .DistinctUntilChanged()
-                                       .SubscribeSafe(observer);
-
-                return new CompositeDisposable(publisher, transformed.Connect());
-            });
+           return new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
         }
 
         #endregion
@@ -1394,40 +1139,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
-
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                //  var dateTime = DateTime.Now;
-                scheduler = scheduler ?? Scheduler.Default;
-                var cache = new IntermediateCache<TObject, TKey>(source);
-
-                var published = cache.Connect().Publish();
-                var subscriber = published.SubscribeSafe(observer);
-
-                var autoRemover = published.ForExpiry(timeSelector, pollingInterval, scheduler)
-                                           .FinallySafe(observer.OnCompleted)
-                                           .Subscribe(keys =>
-                                           {
-                                               try
-                                               {
-                                                   cache.Edit(updater => updater.Remove(keys.Select(kv => kv.Key)));
-                                               }
-                                               catch (Exception ex)
-                                               {
-                                                   observer.OnError(ex);
-                                               }
-                                           });
-
-                var connected = published.Connect();
-
-                return Disposable.Create(() =>
-                {
-                    connected.Dispose();
-                    subscriber.Dispose();
-                    autoRemover.Dispose();
-                    cache.Dispose();
-                });
-            });
+            return new TimeExpirer<TObject, TKey>(source, timeSelector, pollingInterval, scheduler).ExpireAfter();
         }
 
         /// <summary>
@@ -1447,68 +1159,11 @@ namespace DynamicData
         /// or
         /// timeSelector</exception>
         internal static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ForExpiry<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                                       Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval, IScheduler scheduler)
+                                                                                                       Func<TObject, TimeSpan?> timeSelector, 
+                                                                                                       TimeSpan? interval, 
+                                                                                                       IScheduler scheduler)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
-
-            return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(observer =>
-            {
-                var dateTime = DateTime.Now;
-                scheduler = scheduler ?? Scheduler.Default;
-
-                var autoRemover = source
-                    .Do(x => dateTime = scheduler.Now.DateTime)
-                    .Transform((t, v) =>
-                    {
-                        var removeAt = timeSelector(t);
-                        var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;
-                        return new ExpirableItem<TObject, TKey>(t, v, expireAt);
-                    })
-                    .AsObservableCache();
-
-                Action removalAction = () =>
-                {
-                    try
-                    {
-                        var toRemove = autoRemover.KeyValues
-                                                  .Where(kv => kv.Value.ExpireAt <= scheduler.Now.DateTime)
-                                                  .ToList();
-
-                        observer.OnNext(toRemove.Select(kv => new KeyValuePair<TKey, TObject>(kv.Key, kv.Value.Value)).ToList());
-                    }
-                    catch (Exception ex)
-                    {
-                        observer.OnError(ex);
-                    }
-                };
-
-                var removalSubscripion = new SingleAssignmentDisposable();
-                if (interval.HasValue)
-                {
-                    // use polling
-                    removalSubscripion.Disposable = scheduler.ScheduleRecurringAction(interval.Value, removalAction);
-                }
-                else
-                {
-                    //create a timer for each distinct time
-                    removalSubscripion.Disposable = autoRemover.Connect()
-                                                               .DistinctValues(ei => ei.ExpireAt)
-                                                               .SubscribeMany(datetime =>
-                                                               {
-                                                                   var expireAt = datetime.Subtract(scheduler.Now.DateTime);
-                                                                   return Observable.Timer(expireAt, scheduler)
-                                                                                    .Take(1)
-                                                                                    .Subscribe(_ => removalAction());
-                                                               })
-                                                               .Subscribe();
-                }
-                return Disposable.Create(() =>
-                {
-                    removalSubscripion.Dispose();
-                    autoRemover.Dispose();
-                });
-            });
+            return new TimeExpirer<TObject, TKey>(source, timeSelector, interval, scheduler).ForExpiry();
         }
 
         /// <summary>
@@ -1522,35 +1177,13 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         /// <exception cref="System.ArgumentException">size cannot be zero</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, int size, IScheduler scheduler = null)
+        public static IObservable<IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(
+            this IObservable<IChangeSet<TObject, TKey>> source, int size)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (size <= 0) throw new ArgumentException("Size limit must be greater than zero");
 
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                var sizeLimiter = new SizeLimiter<TObject, TKey>(size);
-                var root = new IntermediateCache<TObject, TKey>(source);
-
-                var subscriber = root.Connect()
-                                     .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now))
-                                     .Select(changes =>
-                                     {
-                                         var result = sizeLimiter.Change(changes);
-
-                                         var removes = result.Where(c => c.Reason == ChangeReason.Remove);
-                                         root.Edit(updater => removes.ForEach(c => updater.Remove(c.Key)));
-                                         return result;
-                                     })
-                                     .FinallySafe(observer.OnCompleted)
-                                     .SubscribeSafe(observer);
-
-                return Disposable.Create(() =>
-                {
-                    subscriber.Dispose();
-                    root.Dispose();
-                });
-            });
+            return new SizeExpirer<TObject, TKey>(source, size).Run();
         }
 
         #endregion
@@ -2930,7 +2563,8 @@ namespace DynamicData
         /// groupController
         /// </exception>
         public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                                             Func<TObject, TGroupKey> groupSelectorKey, GroupController groupController)
+                                                                                                             Func<TObject, TGroupKey> groupSelectorKey, 
+                                                                                                             GroupController groupController)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));

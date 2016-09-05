@@ -31,7 +31,7 @@ namespace DynamicData.Tests.ListFixtures
             _changeComparer = new Subject<IComparer<Person>>();
             _resort = new Subject<Unit>();
 
-            _results = _source.Connect().Sort(_comparer,resetThreshold:25,resort: _resort, comparerObservable: _changeComparer).AsAggregator();
+            _results = _source.Connect().Sort(_comparer,resetThreshold:25,resort: _resort, comparerChanged: _changeComparer).AsAggregator();
         }
 
         [TearDown]

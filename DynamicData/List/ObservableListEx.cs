@@ -496,32 +496,7 @@ namespace DynamicData
             return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate).Run();
         }
 
-        /// <summary>
-        /// Sorts the sequence using the specified comparer.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="comparer">The comparer used for sorting</param>
-        /// <param name="options">The options.</param>
-        /// <param name="resetThreshold">Since sorting can be slow for large record sets, the reset threshold is used to force the list re-ordered </param>
-        /// <param name="resort">The resort.</param>
-        /// <param name="comparerObservable">An observable comparer used to change the comparer on which the sorted list i</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source
-        /// or
-        /// comparer</exception>
-        public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, 
-            IComparer<T> comparer, 
-            SortOptions options = SortOptions.None,
-            int resetThreshold = 50,
-            IObservable<Unit> resort = null,
-            IObservable<IComparer<T>> comparerObservable = null)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
 
-            return new Sort<T>(source, comparer, options, resort, comparerObservable, resetThreshold).Run();
-        }
 
         /// <summary>
         /// Reverse sort of the changset
@@ -653,6 +628,38 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             return source.Do(target.Clone);
+        }
+
+        #endregion
+
+        #region Sort
+
+
+        /// <summary>
+        /// Sorts the sequence using the specified comparer.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="comparer">The comparer used for sorting</param>
+        /// <param name="options">For improved performance, specify SortOptions.UseBinarySearch. This can only be used when the values which are sorted on are immutable</param>
+        /// <param name="resetThreshold">Since sorting can be slow for large record sets, the reset threshold is used to force the list re-ordered </param>
+        /// <param name="resort">OnNext of this observable causes data to resort. This is required when the value which is sorted on mutable</param>
+        /// <param name="comparerChanged">An observable comparer used to change the comparer on which the sorted list i</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// comparer</exception>
+        public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source,
+            IComparer<T> comparer,
+            SortOptions options = SortOptions.None,
+            IObservable<Unit> resort = null,
+            IObservable<IComparer<T>> comparerChanged = null,
+            int resetThreshold = 50)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+            return new Sort<T>(source, comparer, options, resort, comparerChanged, resetThreshold).Run();
         }
 
         #endregion
