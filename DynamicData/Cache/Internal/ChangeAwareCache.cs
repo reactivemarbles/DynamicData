@@ -4,9 +4,10 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal class  LockFreeObservableCache<TObject, TKey>: IObservableCache<TObject, TKey>
     {
@@ -48,20 +49,21 @@ namespace DynamicData.Internal
             return Observable.Return(_innerCache.AsInitialUpdates()).Concat(_changes);
         }
 
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate)
         {
-            if (filter == null) throw new ArgumentNullException(nameof(filter));
+            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
                     observer =>
                     {
-                        var filterer = new StaticFilter<TObject, TKey>(filter);
-                        var filtered = filterer.Filter(_innerCache.AsInitialUpdates(filter));
+                        var updater = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), predicate);
+                        var filtered = updater.Update(_innerCache.AsInitialUpdates(predicate));
                         if (filtered.Count != 0)
                             observer.OnNext(filtered);
 
                         return _changes
-                            .Select(filterer.Filter)
+                            .Select(updater.Update)
                             .NotEmpty()
                             .SubscribeSafe(observer);
                     });

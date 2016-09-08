@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     /// <summary>
     ///     Staging object for ManyTransform.

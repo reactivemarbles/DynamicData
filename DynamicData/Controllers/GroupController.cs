@@ -9,6 +9,7 @@ namespace DynamicData.Controllers
     /// <summary>
     /// Controller used to inject meta data into a group stream.
     /// </summary>
+    [Obsolete("Use IObservable<Unit> overload as it is more in the spirit of Rx")]
     public sealed class GroupController : IDisposable
     {
         private readonly ISubject<Unit> _regroupSubject = new ReplaySubject<Unit>();

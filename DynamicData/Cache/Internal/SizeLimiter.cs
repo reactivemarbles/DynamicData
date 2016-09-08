@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal sealed class SizeLimiter<TObject, TKey>
     {

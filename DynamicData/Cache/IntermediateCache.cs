@@ -55,11 +55,11 @@ namespace DynamicData
         /// <summary>
         /// Returns a filtered changeset of cache changes preceeded with the initial state
         /// </summary>
-        /// <param name="filter">The filter.</param>
+        /// <param name="predicate">The precdicate.</param>
         /// <returns></returns>
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate)
         {
-            return _innnerCache.Connect(filter);
+            return _innnerCache.Connect(predicate);
         }
 
         /// <summary>

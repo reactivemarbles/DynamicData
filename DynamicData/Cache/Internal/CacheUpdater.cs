@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     {

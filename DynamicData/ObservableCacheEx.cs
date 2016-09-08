@@ -7,6 +7,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
+using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;

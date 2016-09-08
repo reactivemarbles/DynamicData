@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal class KeyValueComparer<TObject, TKey> : IComparer<KeyValuePair<TKey, TObject>>
     {

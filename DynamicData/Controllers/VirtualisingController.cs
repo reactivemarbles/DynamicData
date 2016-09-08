@@ -7,7 +7,8 @@ namespace DynamicData.Controllers
     /// <summary>
     /// Virtualisation controller
     /// </summary>
-    public class VirtualisingController : IDisposable
+   [Obsolete("Use IObservable<IVirtualRequest> overload as it is more in the spirit of Rx")]
+   public class VirtualisingController : IDisposable
     {
         private readonly ISubject<IVirtualRequest> _subject = new ReplaySubject<IVirtualRequest>(1);
         private IVirtualRequest _request;

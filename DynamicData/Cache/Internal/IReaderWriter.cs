@@ -1,7 +1,7 @@
 using System;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal interface IReaderWriter<TObject, TKey> : IQuery<TObject, TKey>
     {

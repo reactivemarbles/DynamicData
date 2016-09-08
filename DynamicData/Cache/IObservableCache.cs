@@ -29,7 +29,7 @@ namespace DynamicData
         /// </summary>
         /// <param name="filter">The filter.</param>
         /// <returns></returns>
-        IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter);
+        IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate);
 
         /// <summary>
         /// A count changed observable starting with the current count

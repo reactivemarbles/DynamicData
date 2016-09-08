@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 
 namespace DynamicData.Internal
 {
     class RefCount<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
+        private int _refCount = 0;
+        IObservableList<T> _list = null;
 
         public RefCount(IObservable<IChangeSet<T>> source)
         {
@@ -15,34 +18,25 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<T>> Run()
         {
-            int refCount = 0;
-            var locker = new object();
-            IObservableList<T> list = null;
-
             return Observable.Create<IChangeSet<T>>(observer =>
             {
-                lock (locker)
+                Interlocked.Increment(ref _refCount);
+                if (Volatile.Read(ref _refCount) == 1)
                 {
-                    refCount++;
-                    if (refCount == 1)
-
-                        list = _source.AsObservableList();
-
-                    // ReSharper disable once PossibleNullReferenceException (never the case!)
-                    var subscriber = list.Connect().SubscribeSafe(observer);
-
-                    return Disposable.Create(() =>
-                    {
-                        lock (locker)
-                        {
-                            refCount--;
-                            subscriber.Dispose();
-                            if (refCount != 0) return;
-                            list.Dispose();
-                            list = null;
-                        }
-                    });
+                    Interlocked.Exchange(ref _list, _source.AsObservableList());
                 }
+
+                // ReSharper disable once PossibleNullReferenceException (never the case!)
+                var subscriber = _list.Connect().SubscribeSafe(observer);
+
+                return Disposable.Create(() =>
+                {
+                    Interlocked.Decrement(ref _refCount);
+                    subscriber.Dispose();
+                    if (Volatile.Read(ref _refCount) != 0) return;
+                    _list.Dispose();
+                    Interlocked.Exchange(ref _list, null);
+                });
             });
         }
     }

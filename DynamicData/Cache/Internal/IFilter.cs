@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal interface IFilter<TObject, TKey>
     {

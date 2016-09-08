@@ -6,7 +6,7 @@ using DynamicData.Annotations;
 using DynamicData.Controllers;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal class TreeBuilder<TObject, TKey>
         where TObject : class

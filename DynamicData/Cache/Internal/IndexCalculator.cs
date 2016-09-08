@@ -1,9 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using DynamicData.Internal;
 using DynamicData.Operators;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     /// <summary>
     /// Calculates a sequential change set.

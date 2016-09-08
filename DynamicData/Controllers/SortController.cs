@@ -10,6 +10,7 @@ namespace DynamicData.Controllers
     /// Enables dynamic inline sorting
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    [Obsolete("Use IObservable<IChangeSet<TObject, TKey>> and IObservable<Unit> as it is more in the spirit of Rx")]
     public sealed class SortController<T> : IDisposable
     {
         private readonly ISubject<IComparer<T>> _sortSubject = new ReplaySubject<IComparer<T>>(1);

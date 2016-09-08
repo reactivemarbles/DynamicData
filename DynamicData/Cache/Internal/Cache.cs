@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal class Cache<TObject, TKey> : ICache<TObject, TKey>
     {

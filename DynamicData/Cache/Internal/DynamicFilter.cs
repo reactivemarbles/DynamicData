@@ -1,48 +1,70 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
+using DynamicData.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
-    /// <summary>
-    ///  Filters and maintains a cache
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    internal sealed class DynamicFilter<TObject, TKey> //: IFilterer<TObject,TKey>
+    internal class DynamicFilter<TObject, TKey>
     {
-        private IFilter<TObject, TKey> _filteredUpdater;
-        private readonly Cache<TObject, TKey> _all = new Cache<TObject, TKey>();
-        private readonly ChangeAwareCache<TObject, TKey> _filtered = new ChangeAwareCache<TObject, TKey>();
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+        private readonly IObservable<Func<TObject, bool>> _predicateChanged;
+        private readonly IObservable<Unit> _refilterObservable;
 
-        internal DynamicFilter()
+        public DynamicFilter(IObservable<IChangeSet<TObject, TKey>> source,
+            IObservable<Func<TObject, bool>> predicateChanged,
+            IObservable<Unit> refilterObservable=null)
         {
-            _filteredUpdater = new FilteredUpdater<TObject, TKey>(_filtered, x => false);
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            _source = source;
+            _predicateChanged = predicateChanged ?? Observable.Never<Func<TObject, bool>>();
+            _refilterObservable = refilterObservable ?? Observable.Never<Unit>();
+        }
+        
+        public IObservable<IChangeSet<TObject, TKey>> Run()
+        {
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                var allData = new Cache<TObject, TKey>();
+                var filteredData = new ChangeAwareCache<TObject, TKey>();
+                var updater = new FilteredUpdater<TObject, TKey>(filteredData, x => false);
+
+                var locker = new object();
+
+                var evaluate = _refilterObservable.
+                    Synchronize(locker)
+                    .Select(_ => Reevaluate(updater, allData.KeyValues));
+
+                var predicateChanged = _predicateChanged
+                    .Synchronize(locker)
+                    .Select(predicate =>
+                    {
+                        updater = new FilteredUpdater<TObject, TKey>(filteredData, predicate);
+                        return Reevaluate(updater, allData.KeyValues);
+                    });
+
+                var dataChanged = _source
+                    .Finally(observer.OnCompleted)
+                    .Synchronize(locker)
+                    .Select(changes =>
+                    {
+                        allData.Clone(changes);
+                        return updater.Update(changes);
+                    });
+
+                return predicateChanged.Merge(evaluate).Merge(dataChanged).NotEmpty().SubscribeSafe(observer);
+            });
         }
 
-        public IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates)
+        private IChangeSet<TObject, TKey> Reevaluate(FilteredUpdater<TObject, TKey> updater,
+            IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
-            //maintain all so filter can be reapplied.
-            _all.Clone(updates);
-            return _filteredUpdater.Update(updates);
-        }
-
-        public IChangeSet<TObject, TKey> ApplyFilter(Func<TObject, bool> filter)
-        {
-            _filteredUpdater = new FilteredUpdater<TObject, TKey>(_filtered, filter);
-            return Reevaluate(_all.KeyValues);
-        }
-
-        public IChangeSet<TObject, TKey> Evaluate(Func<TObject, bool> itemSelector)
-        {
-            return Reevaluate(_all.KeyValues.Where(t => itemSelector(t.Value)));
-        }
-
-        private IChangeSet<TObject, TKey> Reevaluate(IEnumerable<KeyValuePair<TKey, TObject>> items)
-        {
-            var result = _filteredUpdater.Evaluate(items);
+            var result = updater.Evaluate(items);
             var changes = result.Where(u => u.Reason == ChangeReason.Add || u.Reason == ChangeReason.Remove);
             return new ChangeSet<TObject, TKey>(changes);
         }
     }
 }
+

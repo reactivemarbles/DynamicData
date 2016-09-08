@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
@@ -43,6 +44,11 @@ namespace DynamicData.Kernel
             });
 
             return retry(0);
+        }
+
+        internal static IObservable<Unit> ToUnit<T>(this IObservable<T> source)
+        {
+            return source.Select(_ => Unit.Default);
         }
 
         /// <summary>

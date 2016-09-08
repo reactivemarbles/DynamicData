@@ -10,6 +10,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Binding;
+using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;

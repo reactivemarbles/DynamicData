@@ -1,6 +1,6 @@
 using System;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     /// <summary>
     /// 

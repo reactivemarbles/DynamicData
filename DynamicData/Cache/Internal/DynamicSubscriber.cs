@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal sealed class SubscriptionContainer<TObject, TKey> : IDisposable, IEquatable<SubscriptionContainer<TObject, TKey>>
     {

@@ -1,6 +1,7 @@
 using System;
+using DynamicData.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal sealed class KeySelector<TObject, TKey> : IKeySelector<TObject, TKey>
     {

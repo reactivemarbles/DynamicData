@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DynamicData.Annotations;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal class RemoveKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject>>
     {

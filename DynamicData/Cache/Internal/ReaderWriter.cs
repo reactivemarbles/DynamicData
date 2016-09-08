@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal sealed class ReaderWriter<TObject, TKey> : IReaderWriter<TObject, TKey>
     {

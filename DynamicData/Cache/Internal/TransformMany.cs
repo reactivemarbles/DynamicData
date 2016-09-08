@@ -5,8 +5,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
 
-
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
     {

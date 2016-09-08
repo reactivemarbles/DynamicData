@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal sealed class DistinctCounter<TObject, TKey, TValue>
     {

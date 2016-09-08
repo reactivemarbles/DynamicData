@@ -1,6 +1,7 @@
 using System.Collections.Generic;
+using DynamicData.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal interface IIndexCalculator<TObject, TKey>
     {

@@ -1,24 +1,36 @@
 ﻿using System;
+using System.Reactive.Linq;
+using DynamicData.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal class StaticFilter<TObject, TKey>
     {
-        private readonly IFilter<TObject, TKey> _filter;
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+        private Func<TObject, bool> _filter;
 
-        public StaticFilter(IFilter<TObject, TKey> filter)
+
+        public StaticFilter(IObservable<IChangeSet<TObject, TKey>> source, 
+            Func<TObject, bool> filter)
         {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            _source = source;
             _filter = filter;
         }
 
-        public StaticFilter(Func<TObject, bool> filter)
+        public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-            _filter = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), filter);
-        }
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                if (_filter == null)
+                    return _source.SubscribeSafe(observer);
 
-        public IChangeSet<TObject, TKey> Filter(IChangeSet<TObject, TKey> updates)
-        {
-            return _filter.Update(updates);
+                var updater =  new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), _filter);
+                return _source.Select(updater.Update)
+                    .NotEmpty()
+                    .SubscribeSafe(observer);
+            });
         }
     }
 }

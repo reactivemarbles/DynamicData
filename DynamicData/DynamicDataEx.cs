@@ -8,10 +8,9 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
-using System.Threading;
 using DynamicData.Annotations;
 using DynamicData.Binding;
+using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
 using DynamicData.Internal;
@@ -94,7 +93,7 @@ namespace DynamicData
             this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.SelectMany(updates => updates);
+            return source.SelectMany(changes => changes);
         }
 
         /// <summary>
@@ -851,17 +850,7 @@ namespace DynamicData
         public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-
-            return Observable.Create<IQuery<TObject, TKey>>(observer =>
-            {
-                var cache = new Cache<TObject, TKey>();
-                var query = new AnonymousQuery<TObject, TKey>(cache);
-
-                return source.Do(changes => cache.Clone(changes))
-                    .Select(changes => query)
-                    .SubscribeSafe(observer);
-            });
-
+            return new QueryWhenChanged<TObject, TKey, Unit>(source).Run();
         }
 
         /// <summary>
@@ -880,26 +869,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (itemChangedTrigger == null) throw new ArgumentNullException(nameof(itemChangedTrigger));
 
-            return Observable.Create<IQuery<TObject, TKey>>(observer =>
-            {
-                var locker = new object();
-                var cache = new Cache<TObject, TKey>();
-                var query = new AnonymousQuery<TObject, TKey>(cache);
-
-                return source.Publish(shared =>
-                {
-                    var inlineChange = shared.MergeMany(itemChangedTrigger)
-                        .Synchronize(locker)
-                        .Select(_ => query);
-
-                    var sourceChanged = shared
-                        .Synchronize(locker)
-                        .Do(changes => cache.Clone(changes))
-                        .Select(changes => query);
-
-                    return sourceChanged.Merge(inlineChange);
-                }).SubscribeSafe(observer);
-            });
+            return new QueryWhenChanged<TObject, TKey, TValue>(source, itemChangedTrigger).Run();
         }
 
         /// <summary>
@@ -1221,19 +1191,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (pageRequests == null) throw new ArgumentNullException(nameof(pageRequests));
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (pageRequests == null) throw new ArgumentNullException(nameof(pageRequests));
-
-            return Observable.Create<IPagedChangeSet<TObject, TKey>>(observer =>
-            {
-                var locker = new object();
-                var paginator = new Paginator<TObject, TKey>();
-                var request = pageRequests.Synchronize(locker).Select(paginator.Paginate);
-                var datachange = source.Synchronize(locker).Select(paginator.Update);
-
-                return request.Merge(datachange).Where(updates => updates != null).SubscribeSafe(observer);
-            });
-
+            return new Page<TObject, TKey>(source, pageRequests).Run();
         }
 
         #endregion
@@ -1252,16 +1210,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                if (filter == null)
-                    return source.Clone().SubscribeSafe(observer);
-
-                var filterer = new StaticFilter<TObject, TKey>(filter);
-                return source.Select(filterer.Filter)
-                    .NotEmpty()
-                    .SubscribeSafe(observer);
-            });
+            return new StaticFilter<TObject, TKey>(source, filter).Run();
         }
 
         /// <summary>
@@ -1270,21 +1219,50 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="predicate">The predicate.</param>
+        /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] IObservable<Func<TObject, bool>> predicate)
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, 
+            [NotNull] IObservable<Func<TObject, bool>> predicateChanged)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                var filterer = new DynamicFilter<TObject, TKey>();
-                var locker = new object();
-                var filter = predicate.Synchronize(locker).Select(filterer.ApplyFilter);
-                var data = source.Synchronize(locker).Select(filterer.Update);
+            if (predicateChanged == null) throw new ArgumentNullException(nameof(predicateChanged));
+            return new DynamicFilter<TObject, TKey>(source, predicateChanged).Run();
+        }
 
-                return filter.Merge(data).NotEmpty().SubscribeSafe(observer);
-            });
+        /// <summary>
+        /// Creates a filtered stream which can be dynamically filtered
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
+            [NotNull] IObservable<Unit> reapplyFilter)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (reapplyFilter == null) throw new ArgumentNullException(nameof(reapplyFilter));
+            return new DynamicFilter<TObject, TKey>(source, null, reapplyFilter).Run();
+        }
+
+
+        /// <summary>
+        /// Creates a filtered stream which can be dynamically filtered
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values</param>
+        /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
+            [NotNull] IObservable<Func<TObject, bool>> predicateChanged,
+            [NotNull] IObservable<Unit> reapplyFilter)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (predicateChanged == null) throw new ArgumentNullException(nameof(predicateChanged));
+            if (reapplyFilter == null) throw new ArgumentNullException(nameof(reapplyFilter));
+            return new DynamicFilter<TObject, TKey>(source, predicateChanged, reapplyFilter).Run();
         }
 
         /// <summary>
@@ -1302,16 +1280,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (filterController == null) throw new ArgumentNullException(nameof(filterController));
 
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                var filterer = new DynamicFilter<TObject, TKey>();
-                var locker = new object();
-                var filter = filterController.FilterChanged.Synchronize(locker).Select(filterer.ApplyFilter);
-                var evaluate = filterController.EvaluateChanged.Synchronize(locker).Select(filterer.Evaluate);
-                var data = source.Synchronize(locker).Select(filterer.Update);
-
-                return filter.Merge(evaluate).Merge(data).NotEmpty().SubscribeSafe(observer);
-            });
+            return new DynamicFilter<TObject, TKey>(source, filterController.FilterChanged, filterController.EvaluateChanged.ToUnit()).Run();
         }
 
         /// <summary>
@@ -1336,24 +1305,7 @@ namespace DynamicData
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                //share the connection, otherwise the entire observable chain is duplicated 
-                var shared = source.Publish();
-
-                //watch each property and build a new predicate when a property changed
-                //do not filter on initial value otherwise every object loaded will invoke a requery
-                var predicateStream = shared.WhenPropertyChanged(propertySelector, false)
-                                        .Select(_ => predicate)
-                                        .StartWith(predicate);
-
-                //requery when the above filter changes
-                var changedAndMatching = shared.Filter(predicateStream);
-
-                var publisher = changedAndMatching.SubscribeSafe(observer);
-
-                return new CompositeDisposable(publisher, shared.Connect());
-            });
+            return new FilterOnProperty<TObject, TKey, TProperty>(source, propertySelector, predicate).Run();
         }
 
         #endregion
@@ -1415,14 +1367,8 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+            return new Sort<TObject, TKey>(source, comparer, sortOptimisations, resetThreshold: resetThreshold).Run();
 
-            return Observable.Create<ISortedChangeSet<TObject, TKey>>(observer =>
-            {
-                var sorter = new Sorter<TObject, TKey>(sortOptimisations, comparer, resetThreshold);
-                return source.Select(sorter.Sort)
-                             .Where(result => result != null)
-                             .SubscribeSafe(observer);
-            });
         }
 
         /// <summary>
@@ -1445,28 +1391,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (sortController == null) throw new ArgumentNullException(nameof(sortController));
-
-            return Observable.Create<ISortedChangeSet<TObject, TKey>>(observer =>
-            {
-                var sorter = new Sorter<TObject, TKey>(sortOptimisations, resetThreshold: resetThreshold);
-                var locker = new object();
-
-                var comparerChanged = sortController.ComparerChanged
-                    .Synchronize(locker).Select(sorter.Sort);
-
-                var sortAgain = sortController.SortAgain
-                    .Synchronize(locker).Select(_ => sorter.Sort());
-
-                var dataChanged = source.Synchronize(locker)
-                    .Select(sorter.Sort);
-
-                return comparerChanged
-                    .Merge(dataChanged)
-                    .Merge(sortAgain)
-                    .Where(result => result != null)
-                    .SubscribeSafe(observer);
-
-            });
+            return new Sort<TObject, TKey>(source, null, sortOptimisations, sortController.ComparerChanged, sortController.SortAgain,  resetThreshold).Run();
         }
 
         /// <summary>
@@ -1487,18 +1412,55 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparerObservable == null) throw new ArgumentNullException(nameof(comparerObservable));
 
-            return Observable.Create<ISortedChangeSet<TObject, TKey>>(observer =>
-            {
-                var sorter = new Sorter<TObject, TKey>(sortOptimisations, null, resetThreshold);
-                var locker = new object();
-
-                var comparerChanged = comparerObservable.Synchronize(locker).Select(sorter.Sort);
-                var dataChanged = source.Synchronize(locker).Select(sorter.Sort);
-                return comparerChanged.Merge(dataChanged)
-                    .Where(result => result != null)
-                    .SubscribeSafe(observer);
-            });
+           return new Sort<TObject, TKey>(source, null, sortOptimisations, comparerObservable, resetThreshold:resetThreshold).Run();
         }
+
+        /// <summary>
+        /// Sorts a sequence as, using the comparer observable to determine order
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="comparerObservable">The comparer observable.</param>
+        /// <param name="resorter">Signal to instruct the algroirthm to re-sort the entire data set</param>
+        /// <param name="sortOptimisations">The sort optimisations.</param>
+        /// <param name="resetThreshold">The reset threshold.</param>
+        /// <returns></returns>
+        public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            IObservable<IComparer<TObject>> comparerObservable,
+            IObservable<Unit> resorter,
+            SortOptimisations sortOptimisations = SortOptimisations.None,
+            int resetThreshold = -1)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (comparerObservable == null) throw new ArgumentNullException(nameof(comparerObservable));
+
+            return new Sort<TObject, TKey>(source, null, sortOptimisations, comparerObservable, resorter, resetThreshold).Run();
+        }
+
+        /// <summary>
+        /// Sorts a sequence as, using the comparer observable to determine order
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="comparer">The comparer to sort on</param>
+        /// <param name="resorter">Signal to instruct the algroirthm to re-sort the entire data set</param>
+        /// <param name="sortOptimisations">The sort optimisations.</param>
+        /// <param name="resetThreshold">The reset threshold.</param>
+        /// <returns></returns>
+        public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            IComparer<TObject> comparer,
+            IObservable<Unit> resorter,
+            SortOptimisations sortOptimisations = SortOptimisations.None,
+            int resetThreshold = -1)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (resorter == null) throw new ArgumentNullException(nameof(resorter));
+
+            return new Sort<TObject, TKey>(source, comparer, sortOptimisations,null, resorter, resetThreshold).Run();
+        }
+
 
         #endregion
 
@@ -1874,15 +1836,10 @@ namespace DynamicData
             });
         }
 
-        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>([NotNull] this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(            [NotNull] this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                return new DynamicCombiner<TObject, TKey>(source, type).Run().SubscribeSafe(observer);
-            });
-
-
+            return new DynamicCombiner<TObject, TKey>(source, type).Run();
         }
 
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources, CombineOperator type)
@@ -2445,66 +2402,7 @@ namespace DynamicData
             if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
             if (resultGroupSource == null) throw new ArgumentNullException(nameof(resultGroupSource));
 
-            return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
-                (
-                    observer =>
-                    {
-                        var locker = new object();
-
-                        //create source group cache
-                        var sourceGroups = source.Synchronize(locker)
-                                                 .Group(groupSelector)
-                                                 .DisposeMany()
-                                                 .AsObservableCache();
-
-                        //create parent groups
-                        var parentGroups = resultGroupSource.Synchronize(locker)
-                                                            .Transform(x =>
-                                                            {
-                                                                //if child already has data, populate it.
-                                                                var result = new ManagedGroup<TObject, TKey, TGroupKey>(x);
-                                                                var child = sourceGroups.Lookup(x);
-                                                                if (child.HasValue)
-                                                                {
-                                                                    //dodgy cast but fine as a groups is always a ManagedGroup;
-                                                                    var group = (ManagedGroup<TObject, TKey, TGroupKey>)child.Value;
-                                                                    result.Update(updater => updater.Update(group.GetInitialUpdates()));
-                                                                }
-                                                                return result;
-                                                            })
-                                                            .DisposeMany()
-                                                            .AsObservableCache();
-
-                        //connect to each individual item and update the resulting group
-                        var updateFromcChilds = sourceGroups.Connect()
-                                                            .SubscribeMany(x => x.Cache.Connect().Subscribe(updates =>
-                                                            {
-                                                                var groupToUpdate = parentGroups.Lookup(x.Key);
-                                                                if (groupToUpdate.HasValue)
-                                                                {
-                                                                    groupToUpdate.Value.Update(updater => updater.Update(updates));
-                                                                }
-                                                            }))
-                                                            .DisposeMany()
-                                                            .Subscribe();
-
-                        var notifier = parentGroups
-                            .Connect()
-                            .Select(x =>
-                            {
-                                var groups = x.Select(s => new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(s.Reason, s.Key, s.Current));
-                                return new GroupChangeSet<TObject, TKey, TGroupKey>(groups);
-                            })
-                            .SubscribeSafe(observer);
-
-                        return Disposable.Create(() =>
-                        {
-                            notifier.Dispose();
-                            sourceGroups.Dispose();
-                            parentGroups.Dispose();
-                            updateFromcChilds.Dispose();
-                        });
-                    });
+            return new SpecifiedGrouper<TObject, TKey, TGroupKey>(source, groupSelector, resultGroupSource).Run();
         }
 
         /// <summary>
@@ -2522,27 +2420,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
 
-            return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
-                (
-                    observer =>
-                    {
-                        var grouper = new Grouper<TObject, TKey, TGroupKey>(groupSelectorKey);
-
-                        var groups = source.Select(grouper.Update)
-                                           .Where(changes => changes.Count != 0).Publish();
-
-                        var subscriber = groups.SubscribeSafe(observer);
-                        var disposer = groups.DisposeMany().Subscribe();
-
-                        var connected = groups.Connect();
-
-                        return Disposable.Create(() =>
-                        {
-                            connected.Dispose();
-                            disposer.Dispose();
-                            subscriber.Dispose();
-                        });
-                    });
+            return new Group<TObject, TKey, TGroupKey>(source, groupSelectorKey, null).Run();
         }
 
         /// <summary>
@@ -2570,36 +2448,35 @@ namespace DynamicData
             if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
             if (groupController == null) throw new ArgumentNullException(nameof(groupController));
 
-            return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
-                (
-                    observer =>
-                    {
-                        var locker = new object();
-                        var grouper = new Grouper<TObject, TKey, TGroupKey>(groupSelectorKey);
+            return new Group<TObject, TKey, TGroupKey>(source, groupSelectorKey, groupController.Regrouped).Run();
+        }
 
-                        var groups = source
-                            .Synchronize(locker)
-                            .Select(grouper.Update)
-                            .Where(changes => changes.Count != 0);
+        /// <summary>
+        ///  Groups the source on the value returned by group selector factory. 
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="groupSelectorKey">The group selector key.</param>
+        /// <param name="regrouper">Invoke to  the for the grouping to be re-evaluated</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// groupSelectorKey
+        /// or
+        /// groupController
+        /// </exception>
+        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+                                                                                                             Func<TObject, TGroupKey> groupSelectorKey,
+                                                                                                             IObservable<Unit> regrouper)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
+            if (regrouper == null) throw new ArgumentNullException(nameof(regrouper));
 
-                        var regroup = groupController.Regrouped
-                                                     .Synchronize(locker)
-                                                     .Select(_ => grouper.Regroup())
-                                                     .Where(changes => changes.Count != 0);
-
-                        var published = groups.Merge(regroup).Publish();
-                        var subscriber = published.SubscribeSafe(observer);
-                        var disposer = published.DisposeMany().Subscribe();
-
-                        var connected = published.Connect();
-
-                        return Disposable.Create(() =>
-                        {
-                            connected.Dispose();
-                            disposer.Dispose();
-                            subscriber.Dispose();
-                        });
-                    });
+            return new Group<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
         }
 
         #endregion
@@ -2621,15 +2498,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (size <= 0) throw new ArgumentOutOfRangeException(nameof(size), "Size should be greater than zero");
-
-            return Observable.Create<IVirtualChangeSet<TObject, TKey>>(observer =>
-            {
-                var virtualiser = new Virtualiser<TObject, TKey>(new VirtualRequest(0, size));
-                return source.Select(virtualiser.Update)
-                        .Where(changes => changes != null)
-                        .SubscribeSafe(observer);
-            });
-
+            return new Virtualise<TObject, TKey>(source, Observable.Return(new VirtualRequest(0, size))).Run();
         }
 
         /// <summary>
@@ -2687,19 +2556,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (virtualRequests == null) throw new ArgumentNullException(nameof(virtualRequests));
-
-
-            return Observable.Create<IVirtualChangeSet<TObject, TKey>>(observer =>
-            {
-                var virtualiser = new Virtualiser<TObject, TKey>();
-                var locker = new object();
-
-                var request = virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise);
-                var datachange = source.Synchronize(locker).Select(virtualiser.Update);
-                return request.Merge(datachange)
-                    .Where(updates => updates != null)
-                    .SubscribeSafe(observer);
-            });
+            return new Virtualise<TObject, TKey>(source, virtualRequests).Run();
         }
 
         #endregion

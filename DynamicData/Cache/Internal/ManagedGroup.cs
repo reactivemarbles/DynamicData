@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal sealed class ManagedGroup<TObject, TKey, TGroupKey> : IDisposable, IGroup<TObject, TKey, TGroupKey>
     {

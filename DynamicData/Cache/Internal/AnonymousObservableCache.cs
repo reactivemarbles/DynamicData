@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
@@ -52,11 +52,11 @@ namespace DynamicData.Internal
         /// <summary>
         /// Returns a filtered stream of cache updates preceeded with the initital filtered state
         /// </summary>
-        /// <param name="filter">The filter.</param>
+        /// <param name="predicate">The filter.</param>
         /// <returns></returns>
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> filter)
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate)
         {
-            return _cache.Connect(filter);
+            return _cache.Connect(predicate);
         }
 
         /// <summary>

@@ -8,6 +8,7 @@ namespace DynamicData.Controllers
     /// Enables dynamic filtering of the stream
     /// </summary>
     /// <typeparam name="T"></typeparam>
+    [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
     public sealed class FilterController<T> : IDisposable
     {
         private readonly ISubject<Func<T, bool>> _filterSubject = new ReplaySubject<Func<T, bool>>(1);

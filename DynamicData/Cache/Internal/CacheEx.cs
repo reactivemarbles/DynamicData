@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
+using DynamicData.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.Cache.Internal
 {
     internal static class CacheEx
     {

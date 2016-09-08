@@ -72,6 +72,7 @@
     <Compile Include="Cache\Internal\ChangeAwareCache.cs" />
     <Compile Include="Cache\Internal\DeferUntilLoaded.cs" />
     <Compile Include="Cache\Internal\DynamicCombiner.cs" />
+    <Compile Include="Cache\Internal\FilterOnProperty.cs" />
     <Compile Include="Cache\Internal\FinallySafe.cs" />
     <Compile Include="Cache\Internal\InnerJoin.cs" />
     <Compile Include="Cache\Internal\FullJoin.cs" />
@@ -79,10 +80,13 @@
     <Compile Include="Cache\Internal\MergeMany.cs" />
     <Compile Include="Cache\Internal\MergeManyItems.cs" />
     <Compile Include="Cache\Internal\OnItemRemoved.cs" />
+    <Compile Include="Cache\Internal\Page.cs" />
     <Compile Include="Cache\Internal\RefCount.cs" />
     <Compile Include="Cache\Internal\RemoveKeyEnumerator.cs" />
     <Compile Include="Cache\Internal\RightJoin.cs" />
     <Compile Include="Cache\Internal\SizeExpirer.cs" />
+    <Compile Include="Cache\Internal\Sort.cs" />
+    <Compile Include="Cache\Internal\SpecifiedGrouper.cs" />
     <Compile Include="Cache\Internal\StatusMonitor.cs" />
     <Compile Include="Cache\Internal\SubscribeMany.cs" />
     <Compile Include="Cache\Internal\TimeExpirer.cs" />
@@ -247,9 +251,7 @@
     <Compile Include="Cache\PagedChangeSet.cs" />
     <Compile Include="Cache\PageRequest.cs" />
     <Compile Include="Cache\PageResponse.cs" />
-    <Compile Include="Cache\Internal\Paginator.cs" />
     <Compile Include="Cache\Internal\SizeLimiter.cs" />
-    <Compile Include="Cache\Internal\Sorter.cs" />
     <Compile Include="Kernel\SortOptimisations.cs" />
     <Compile Include="Cache\SortReason.cs" />
     <Compile Include="Cache\Internal\StaticFilter.cs" />
