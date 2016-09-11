@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using DynamicData.Annotations;
+using DynamicData.Cache;
+using DynamicData.List.Internal;
 
 namespace DynamicData
 {
@@ -9,6 +11,25 @@ namespace DynamicData
     /// </summary>
     public static class SourceListEditConvenienceEx
     {
+        /// <summary>
+        /// Loads the list with the specified items in an optimised manner i.e. calculates the differences between the old and new items
+        ///  in the list and amends only the differences
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="alltems"></param>
+        /// <param name="equalityComparer">The equality comparer used to determine whether an item has changed</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void EditDiff<T>([NotNull] this ISourceList<T> source,
+            [NotNull] IEnumerable<T> alltems,
+            IEqualityComparer<T> equalityComparer = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (alltems == null) throw new ArgumentNullException(nameof(alltems));
+            var editDiff = new EditDiff<T>(source, equalityComparer);
+            editDiff.Edit(alltems);
+        }
+
         /// <summary>
         /// Clears all items from the specified source list
         /// </summary>

@@ -192,6 +192,7 @@
     <Compile Include="ListFixtures\DynamicExceptFixture.cs" />
     <Compile Include="ListFixtures\DynamicOrFixture.cs" />
     <Compile Include="ListFixtures\DynamicXOrFixture.cs" />
+    <Compile Include="ListFixtures\EditDiffFixture.cs" />
     <Compile Include="ListFixtures\ExceptFixture.cs" />
     <Compile Include="ListFixtures\ExpireAfterFixture.cs" />
     <Compile Include="ListFixtures\FilterControllerFixtureWithDiffSet.cs" />

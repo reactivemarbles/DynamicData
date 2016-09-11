@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Annotations;
-using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache
+namespace DynamicData.Cache.Internal
 {
     internal class EditDiff<TObject, TKey>
     {
@@ -49,4 +48,5 @@ namespace DynamicData.Cache
             });
         }
     }
+
 }

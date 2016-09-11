@@ -79,6 +79,37 @@ namespace DynamicData.Tests.Domain
 
         public static IEqualityComparer<Person> AgeComparer => AgeComparerInstance;
 
+
+        private sealed class NameAgeGenderEqualityComparer : IEqualityComparer<Person>
+        {
+            public bool Equals(Person x, Person y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (ReferenceEquals(x, null)) return false;
+                if (ReferenceEquals(y, null)) return false;
+                if (x.GetType() != y.GetType()) return false;
+                return string.Equals(x._name, y._name) && x._age == y._age && string.Equals(x._gender, y._gender);
+            }
+
+            public int GetHashCode(Person obj)
+            {
+                unchecked
+                {
+                    var hashCode = (obj._name != null ? obj._name.GetHashCode() : 0);
+                    hashCode = (hashCode*397) ^ obj._age;
+                    hashCode = (hashCode*397) ^ (obj._gender != null ? obj._gender.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
+        }
+
+        private static readonly IEqualityComparer<Person> NameAgeGenderComparerInstance = new NameAgeGenderEqualityComparer();
+
+        public static IEqualityComparer<Person> NameAgeGenderComparer
+        {
+            get { return NameAgeGenderComparerInstance; }
+        }
+
         #endregion
 
 

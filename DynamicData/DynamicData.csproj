@@ -68,7 +68,7 @@
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
-    <Compile Include="Cache\EditDiff.cs" />
+    <Compile Include="Cache\Internal\EditDiff.cs" />
     <Compile Include="Cache\Internal\BatchIf.cs" />
     <Compile Include="Cache\Internal\ChangeAwareCache.cs" />
     <Compile Include="Cache\Internal\DeferUntilLoaded.cs" />
@@ -103,6 +103,7 @@
     <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeSetEx.cs" />
     <Compile Include="List\ChangeType.cs" />
+    <Compile Include="List\Internal\EditDiff.cs" />
     <Compile Include="List\FilterPolicy.cs" />
     <Compile Include="List\IChangeSetAdaptor.cs" />
     <Compile Include="List\Internal\BufferIf.cs" />
@@ -119,7 +120,7 @@
     <Compile Include="List\IGroup.cs" />
     <Compile Include="List\Internal\ImmutableFilter.cs" />
     <Compile Include="Kernel\ReferenceEqualityComparer.cs" />
-    <Compile Include="ChangeReason.cs" />
+    <Compile Include="Cache\ChangeReason.cs" />
     <Compile Include="ConnectionStatus.cs" />
     <Compile Include="Controllers\FilterController.cs" />
     <Compile Include="Controllers\GroupController.cs" />
