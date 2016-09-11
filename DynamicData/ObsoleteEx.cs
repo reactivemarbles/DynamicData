@@ -40,7 +40,7 @@ namespace DynamicData
         /// <param name="errorHandler">Optionally pass in an error handler</param>
         [Obsolete("Prefer Edit() as it provides a consistent semantics with ISourceList<T>")]
         public static void BatchUpdate<TObject, TKey>([NotNull] this IIntermediateCache<TObject, TKey> source,
-                                                      [NotNull] Action<IIntermediateUpdater<TObject, TKey>> updateAction,
+                                                      [NotNull] Action<ICacheUpdater<TObject, TKey>> updateAction,
                                                       Action<Exception> errorHandler = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

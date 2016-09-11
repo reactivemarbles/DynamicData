@@ -21,15 +21,9 @@ namespace DynamicData
         /// <summary>
         /// Returns a observable of cache changes preceeded with the initital cache state
         /// </summary>
+        /// <param name="predicate">The result will be filtered using the specfied predicate.</param>
         /// <returns></returns>
-        IObservable<IChangeSet<TObject, TKey>> Connect();
-
-        /// <summary>
-        /// Returns a filtered changeset of cache changes preceeded with the initial state
-        /// </summary>
-        /// <param name="filter">The filter.</param>
-        /// <returns></returns>
-        IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate);
+        IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null);
 
         /// <summary>
         /// A count changed observable starting with the current count

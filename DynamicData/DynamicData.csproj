@@ -77,6 +77,7 @@
     <Compile Include="Cache\Internal\InnerJoin.cs" />
     <Compile Include="Cache\Internal\FullJoin.cs" />
     <Compile Include="Cache\Internal\LeftJoin.cs" />
+    <Compile Include="Cache\Internal\LockFreeObservableCache.cs" />
     <Compile Include="Cache\Internal\MergeMany.cs" />
     <Compile Include="Cache\Internal\MergeManyItems.cs" />
     <Compile Include="Cache\Internal\OnItemRemoved.cs" />
@@ -165,7 +166,7 @@
     <Compile Include="Cache\Internal\FilteredUpdater.cs" />
     <Compile Include="Cache\ICache.cs" />
     <Compile Include="Cache\Internal\IFilter.cs" />
-    <Compile Include="Cache\IIntermediateUpdater.cs" />
+    <Compile Include="Cache\ICacheUpdater.cs" />
     <Compile Include="Cache\Internal\IKeySelector.cs" />
     <Compile Include="Cache\IKeyValueCollection.cs" />
     <Compile Include="Cache\IntermediateCache.cs" />
@@ -230,7 +231,6 @@
     <Compile Include="List\Tests\TestEx.cs" />
     <Compile Include="List\UnspecifiedIndexException.cs" />
     <Compile Include="List\VirtualChangeSet.cs" />
-    <Compile Include="ObservableCacheEx.cs" />
     <Compile Include="Cache\Internal\AbstractTransformer.cs" />
     <Compile Include="Cache\Internal\CombineOperator.cs" />
     <Compile Include="Cache\Internal\Combiner.cs" />

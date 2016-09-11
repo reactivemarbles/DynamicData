@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -78,7 +77,10 @@ namespace DynamicData.Cache.Internal
 
         public void Evaluate(TObject item)
         {
-            TKey key = _keySelector.GetKey(item);
+            if (_keySelector == null)
+                throw new KeySelectorException("A key selector must be specified");
+
+            var key = _keySelector.GetKey(item);
             _cache.Evaluate(key);
         }
 
@@ -107,8 +109,20 @@ namespace DynamicData.Cache.Internal
 
         public void Remove(TObject item)
         {
-            TKey key = _keySelector.GetKey(item);
+            if (_keySelector == null)
+                throw new KeySelectorException("A key selector must be specified");
+
+            var key = _keySelector.GetKey(item);
             _cache.Remove(key);
+        }
+
+        public Optional<TObject> Lookup(TObject item)
+        {
+            if (_keySelector == null)
+                throw new KeySelectorException("A key selector must be specified");
+
+            TKey key = _keySelector.GetKey(item);
+            return Lookup(key);
         }
 
         public void Remove(TKey key)
@@ -128,11 +142,7 @@ namespace DynamicData.Cache.Internal
 
         public int Count => _cache.Count;
 
-        public Optional<TObject> Lookup(TObject item)
-        {
-            TKey key = _keySelector.GetKey(item);
-            return Lookup(key);
-        }
+
 
         public void Update(IChangeSet<TObject, TKey> changes)
         {

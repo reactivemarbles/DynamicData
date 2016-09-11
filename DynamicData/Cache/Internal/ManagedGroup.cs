@@ -12,7 +12,7 @@ namespace DynamicData.Cache.Internal
             Key = groupKey;
         }
 
-        internal void Update(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
+        internal void Update(Action<ICacheUpdater<TObject, TKey>> updateAction)
         {
             _cache.Edit(updateAction);
         }

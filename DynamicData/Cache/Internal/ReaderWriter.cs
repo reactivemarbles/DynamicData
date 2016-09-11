@@ -40,7 +40,7 @@ namespace DynamicData.Cache.Internal
             return new Continuation<IChangeSet<TObject, TKey>>(result);
         }
 
-        public Continuation<IChangeSet<TObject, TKey>> Write(Action<IIntermediateUpdater<TObject, TKey>> updateAction)
+        public Continuation<IChangeSet<TObject, TKey>> Write(Action<ICacheUpdater<TObject, TKey>> updateAction)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             IChangeSet<TObject, TKey> result;

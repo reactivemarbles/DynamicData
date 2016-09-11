@@ -14,7 +14,7 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public interface ISourceUpdater<TObject, TKey> : IIntermediateUpdater<TObject, TKey>
+    public interface ISourceUpdater<TObject, TKey> : ICacheUpdater<TObject, TKey>
     {
         /// <summary>
         /// Clears existing values and loads the sepcified items
