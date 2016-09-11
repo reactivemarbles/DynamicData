@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -51,6 +52,33 @@ namespace DynamicData.Cache.Internal
 
             var key = _keySelector.GetKey(item);
             _cache.AddOrUpdate(item, key);
+        }
+
+        public TKey GetKey(TObject item)
+        {
+            if (_keySelector == null)
+                throw new KeySelectorException("A key selector must be specified");
+
+            return _keySelector.GetKey(item);
+        }
+
+
+        public IEnumerable<KeyValuePair<TKey, TObject>> GetKeyValues(IEnumerable<TObject> items)
+        {
+            if (_keySelector == null)
+                throw new KeySelectorException("A key selector must be specified");
+
+            return items.Select(t => new KeyValuePair<TKey, TObject>(_keySelector.GetKey(t), t));
+        }
+
+        public void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> itemsPairs)
+        {
+            itemsPairs.ForEach(AddOrUpdate);
+        }
+
+        public void AddOrUpdate(KeyValuePair<TKey, TObject> item)
+        {
+            _cache.AddOrUpdate(item.Value, item.Key);
         }
 
         public void AddOrUpdate(TObject item, TKey key)
@@ -135,6 +163,16 @@ namespace DynamicData.Cache.Internal
             Remove(key);
         }
 
+        public void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items)
+        {
+            items.ForEach(Remove);
+        }
+
+        public void Remove(KeyValuePair<TKey, TObject> item)
+        {
+            Remove(item.Key);
+        }
+
         public void Clear()
         {
             _cache.Clear();
@@ -142,8 +180,7 @@ namespace DynamicData.Cache.Internal
 
         public int Count => _cache.Count;
 
-
-
+        
         public void Update(IChangeSet<TObject, TKey> changes)
         {
             _cache.Clone(changes);

@@ -3183,6 +3183,25 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
+        /// <param name="items"></param>
+        /// <param name="hasItemChanged">Item changed func. Example: (current, previous) => current.Version != previous.Version</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void EditDiff<TObject, TKey>([NotNull] this ISourceCache<TObject, TKey> source,
+            [NotNull] IEnumerable<TObject> items,
+            [NotNull]  Func<TObject, TObject, bool> hasItemChanged)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            var editDiff = new EditDiff<TObject, TKey>(source, hasItemChanged);
+            editDiff.Edit(items);
+        }
+
+        /// <summary>
+        /// Adds or updates the cache with the specified item.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
         /// <param name="item">The item.</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)

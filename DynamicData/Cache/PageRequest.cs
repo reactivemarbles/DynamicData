@@ -133,7 +133,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("Page: {0}, Size: {1}", Page, Size);
+            return $"Page: {Page}, Size: {Size}";
         }
     }
 }

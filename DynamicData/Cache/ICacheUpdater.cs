@@ -17,6 +17,16 @@ namespace DynamicData
     public interface ICacheUpdater<TObject, TKey> : IQuery<TObject, TKey> 
     {
         /// <summary>
+        /// Adds or updates the specified  key value pairs 
+        /// </summary>
+        void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> keyValuePairs);
+        
+        /// <summary>
+        /// Adds or updates the specified key value pair
+        /// </summary>
+        void AddOrUpdate(KeyValuePair<TKey, TObject>item);
+
+        /// <summary>
         /// Adds or updates the specified item / key pair
         /// </summary>
         void AddOrUpdate(TObject item, TKey key);
@@ -60,6 +70,16 @@ namespace DynamicData
         void RemoveKey(TKey key);
 
         /// <summary>
+        /// Removes the specified  key value pairs 
+        /// </summary>
+        void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items);
+
+        /// <summary>
+        ///Removes the specified key value pair
+        /// </summary>
+        void Remove(KeyValuePair<TKey, TObject> item);
+
+        /// <summary>
         /// Updates using changes using the specified changeset
         /// </summary>
         void Update(IChangeSet<TObject, TKey> changes);
@@ -68,5 +88,19 @@ namespace DynamicData
         /// Clears all items from the underlying cache.
         /// </summary>
         void Clear();
+
+        /// <summary>
+        /// Gets the key associated with the object
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns></returns>
+        TKey GetKey(TObject item);
+
+        /// <summary>
+        /// Gets the key values for the specified items
+        /// </summary>
+        /// <param name="items">The items.</param>
+        /// <returns></returns>
+        IEnumerable<KeyValuePair<TKey, TObject>> GetKeyValues(IEnumerable<TObject> items);
     }
 }

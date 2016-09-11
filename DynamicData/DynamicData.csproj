@@ -68,6 +68,7 @@
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
+    <Compile Include="Cache\EditDiff.cs" />
     <Compile Include="Cache\Internal\BatchIf.cs" />
     <Compile Include="Cache\Internal\ChangeAwareCache.cs" />
     <Compile Include="Cache\Internal\DeferUntilLoaded.cs" />
