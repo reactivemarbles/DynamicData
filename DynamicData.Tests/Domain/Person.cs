@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain
@@ -21,17 +22,17 @@ namespace DynamicData.Tests.Domain
             _gender = gender;
         }
 
-        public string Name { get { return _name; } }
+        public string Name => _name;
 
-        public string Gender { get { return _gender; } }
+        public string Gender => _gender;
 
         public int Age { get { return _age; } set { SetAndRaise(ref _age, value); } }
 
-        public string Key { get { return _name; } }
+        public string Key => _name;
 
         public override string ToString()
         {
-            return string.Format("{0}. {1}", this.Name, this.Age);
+            return $"{this.Name}. {this.Age}";
         }
 
         #region Equality Members
@@ -53,9 +54,33 @@ namespace DynamicData.Tests.Domain
 
         public override int GetHashCode()
         {
-            return (_name != null ? _name.GetHashCode() : 0);
+            return _name?.GetHashCode() ?? 0;
         }
 
+
+        private sealed class AgeEqualityComparer : IEqualityComparer<Person>
+        {
+            public bool Equals(Person x, Person y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+                if (ReferenceEquals(x, null)) return false;
+                if (ReferenceEquals(y, null)) return false;
+                if (x.GetType() != y.GetType()) return false;
+                return x._age == y._age;
+            }
+
+            public int GetHashCode(Person obj)
+            {
+                return obj._age;
+            }
+        }
+
+        private static readonly IEqualityComparer<Person> AgeComparerInstance = new AgeEqualityComparer();
+
+        public static IEqualityComparer<Person> AgeComparer => AgeComparerInstance;
+
         #endregion
+
+
     }
 }

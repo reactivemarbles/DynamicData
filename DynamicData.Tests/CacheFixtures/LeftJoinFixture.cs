@@ -22,6 +22,14 @@ namespace DynamicData.Tests.CacheFixtures
                             .AsAggregator();
         }
 
+        [TearDown]
+        public void OnTestCompleted()
+        {
+            _left.Dispose();
+            _right.Dispose();
+            _result.Dispose();
+        }
+
         [Test]
         public void AddLeftOnly()
         {
@@ -155,13 +163,7 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.IsTrue(_result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None));
         }
 
-        [TearDown]
-        public void OnTestCompleted()
-        {
-            _left.Dispose();
-            _right.Dispose();
-            _result.Dispose();
-        }
+
 
 
         public class Device : IEquatable<Device>

@@ -3178,22 +3178,23 @@ namespace DynamicData
         #region Convenience update methods
 
         /// <summary>
-        /// Adds or updates the cache with the specified item.
+        /// Loads the cache with the specified items in an optimised manner i.e. calculates the differences between the old and new items
+        ///  in the list and amends only the differences
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="items"></param>
-        /// <param name="hasItemChanged">Item changed func. Example: (current, previous) => current.Version != previous.Version</param>
+        /// <param name="alltems"></param>
+        /// <param name="hasItemChanged">Expression to determine whether an item's value has changed. eg (current, previous) => current.Version != previous.Version</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void EditDiff<TObject, TKey>([NotNull] this ISourceCache<TObject, TKey> source,
-            [NotNull] IEnumerable<TObject> items,
+            [NotNull] IEnumerable<TObject> alltems,
             [NotNull]  Func<TObject, TObject, bool> hasItemChanged)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (alltems == null) throw new ArgumentNullException(nameof(alltems));
             var editDiff = new EditDiff<TObject, TKey>(source, hasItemChanged);
-            editDiff.Edit(items);
+            editDiff.Edit(alltems);
         }
 
         /// <summary>

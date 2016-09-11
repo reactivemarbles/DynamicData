@@ -100,6 +100,7 @@
     <Compile Include="CacheFixtures\DynamicExceptFixture.cs" />
     <Compile Include="CacheFixtures\DynamicOrFixture.cs" />
     <Compile Include="CacheFixtures\DynamicXorFixture.cs" />
+    <Compile Include="CacheFixtures\EditDiffFixture.cs" />
     <Compile Include="CacheFixtures\FilterOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
     <Compile Include="CacheFixtures\InnerJoinFixture.cs" />
