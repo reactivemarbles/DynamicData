@@ -3185,7 +3185,7 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="alltems"></param>
-        /// <param name="equalityComparer">The equality comparer used to determine whether an item has changed</param>
+        /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void EditDiff<TObject, TKey>([NotNull] this ISourceCache<TObject, TKey> source,
             [NotNull] IEnumerable<TObject> alltems,
@@ -3205,16 +3205,16 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="alltems"></param>
-        /// <param name="hasItemChanged">Expression to determine whether an item's value has changed. eg (current, previous) => current.Version != previous.Version</param>
+        /// <param name="areItemsEqual">Expression to determine whether an item's value is equal to the old value (current, previous) => current.Version == previous.Version</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void EditDiff<TObject, TKey>([NotNull] this ISourceCache<TObject, TKey> source,
             [NotNull] IEnumerable<TObject> alltems,
-            [NotNull] Func<TObject, TObject, bool> hasItemChanged)
+            [NotNull] Func<TObject, TObject, bool> areItemsEqual)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (alltems == null) throw new ArgumentNullException(nameof(alltems));
-            if (hasItemChanged == null) throw new ArgumentNullException(nameof(hasItemChanged));
-            var editDiff = new EditDiff<TObject, TKey>(source, hasItemChanged);
+            if (areItemsEqual == null) throw new ArgumentNullException(nameof(areItemsEqual));
+            var editDiff = new EditDiff<TObject, TKey>(source, areItemsEqual);
             editDiff.Edit(alltems);
         }
 
