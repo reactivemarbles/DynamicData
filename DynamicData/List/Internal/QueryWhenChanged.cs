@@ -20,11 +20,11 @@ namespace DynamicData.Internal
         public IObservable<IReadOnlyCollection<T>> Run()
         {
             return _source.Scan(new List<T>(), (list, changes) =>
-            {
-                list.Clone(changes);
-                return list;
-            }
-                ).Select(list => new ReadOnlyCollectionLight<T>(list, list.Count));
+                {
+                    list.Clone(changes);
+                    return list;
+                }
+            ).Select(list => new ReadOnlyCollectionLight<T>(list, list.Count));
         }
     }
 }

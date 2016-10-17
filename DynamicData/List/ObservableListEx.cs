@@ -435,21 +435,19 @@ namespace DynamicData
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
         /// <param name="filterController">The filter controller.</param>
-        /// <param name="filterPolicy">The filter policy.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// filterController</exception>
         public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source,
-                                                           FilterController<T> filterController,
-                                                           FilterPolicy filterPolicy = FilterPolicy.ClearAndReplace)
+                                                           FilterController<T> filterController)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (filterController == null) throw new ArgumentNullException(nameof(filterController));
             var predicates = filterController
                 .EvaluateChanged
                 .Merge(filterController.FilterChanged);
-            return source.Filter(predicates, filterPolicy);
+            return source.Filter(predicates);
         }
 
         /// <summary>
@@ -457,20 +455,18 @@ namespace DynamicData
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="filterPolicy">The filter policy.</param>
         /// <param name="predicate"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// filterController</exception>
         public static IObservable<IChangeSet<T>> Filter<T>([NotNull] this IObservable<IChangeSet<T>> source,
-                                                           [NotNull] IObservable<Func<T, bool>> predicate,
-                                                           FilterPolicy filterPolicy = FilterPolicy.ClearAndReplace)
+                                                           [NotNull] IObservable<Func<T, bool>> predicate)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return new MutableFilter<T>(source, predicate, filterPolicy).Run();
+            return new MutableFilter<T>(source, predicate).Run();
         }
 
 
@@ -535,10 +531,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
-            return Observable.Create<IChangeSet<TDestination>>(observer =>
-            {
-                return new Transformer<TSource, TDestination>(source, transformFactory).Run().SubscribeSafe(observer);
-            });
+            return new Transformer<TSource, TDestination>(source, transformFactory).Run();
         }
 
         /// <summary>
@@ -1133,12 +1126,8 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (numberOfItems <= 0) throw new ArgumentOutOfRangeException(nameof(numberOfItems), "Number of items should be greater than zero");
-            return Observable.Create<IChangeSet<T>>(observer =>
-            {
-                var controller = new VirtualisingController(new VirtualRequest(0, numberOfItems));
-                var subscriber = source.Virtualise(controller).SubscribeSafe(observer);
-                return new CompositeDisposable(subscriber, controller);
-            });
+
+            return source.Virtualise(Observable.Return(new VirtualRequest(0, numberOfItems)));
         }
 
         /// <summary>

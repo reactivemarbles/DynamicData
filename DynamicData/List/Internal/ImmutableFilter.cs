@@ -20,15 +20,14 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<T>> Run()
         {
-            return Observable.Create<IChangeSet<T>>(observer =>
+            return _source.Scan(new ChangeAwareList<T>(),(filtered,changes) =>
             {
-                var filtered = new ChangeAwareList<T>();
-                 return _source.Select(changes =>
-                {
-                    filtered.Filter(changes, _predicate);
-                    return filtered.CaptureChanges();
-                }).NotEmpty().SubscribeSafe(observer);
-            });
+                filtered.Filter(changes, _predicate);
+                return filtered;
+
+            })
+            .Select(list => list.CaptureChanges())
+            .NotEmpty();
         }
     }
 }

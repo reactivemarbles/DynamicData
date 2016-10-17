@@ -104,7 +104,6 @@
     <Compile Include="List\ChangeSetEx.cs" />
     <Compile Include="List\ChangeType.cs" />
     <Compile Include="List\Internal\EditDiff.cs" />
-    <Compile Include="List\FilterPolicy.cs" />
     <Compile Include="List\IChangeSetAdaptor.cs" />
     <Compile Include="List\Internal\BufferIf.cs" />
     <Compile Include="List\Internal\ChangeAwareListWithRefCounts.cs" />

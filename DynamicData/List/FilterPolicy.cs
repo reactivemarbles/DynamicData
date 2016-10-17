@@ -3,6 +3,7 @@ namespace DynamicData
     /// <summary>
     /// The policy which will be applied when a mutable filter changes
     /// </summary>
+    []
     public enum FilterPolicy
     {
         /// <summary>

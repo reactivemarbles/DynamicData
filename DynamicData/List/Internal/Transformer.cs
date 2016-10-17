@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Kernel;
 
 namespace DynamicData.Internal
 {
@@ -11,8 +10,6 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
         private readonly Func<TSource, TDestination> _factory;
-
-        private readonly ChangeAwareList<TransformedItemContainer> _transformed = new ChangeAwareList<TransformedItemContainer>();
         private readonly Func<TSource, TransformedItemContainer> _containerFactory;
 
         public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
@@ -27,16 +24,19 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<TDestination>> Run()
         {
-            return _source.Select(Process);
+            return _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
+                {
+                    Transform(state, changes);
+                    return state;
+                })
+                .Select(transformed =>
+                {
+                    var changed = transformed.CaptureChanges();
+
+                    return changed.Transform(container => container.Destination);
+                });
         }
 
-        private IChangeSet<TDestination> Process(IChangeSet<TSource> changes)
-        {
-            Transform(changes);
-            var changed = _transformed.CaptureChanges();
-
-            return changed.Transform(container => container.Destination);
-        }
 
         private class TransformedItemContainer : IEquatable<TransformedItemContainer>
         {
@@ -84,11 +84,11 @@ namespace DynamicData.Internal
             #endregion
         }
 
-        private void Transform(IChangeSet<TSource> changes)
+        private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
 
-            _transformed.EnsureCapacityFor(changes);
+            transformed.EnsureCapacityFor(changes);
 
             foreach(var item in changes)
             {
@@ -97,19 +97,19 @@ namespace DynamicData.Internal
                     case ListChangeReason.Add:
                     {
                         var change = item.Item;
-                        if (change.CurrentIndex < 0 | change.CurrentIndex >= _transformed.Count)
+                        if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
                         {
-                            _transformed.Add(_containerFactory(change.Current));
+                            transformed.Add(_containerFactory(change.Current));
                         }
                         else
                         {
-                            _transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                            transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
                         }
                         break;
                     }
                     case ListChangeReason.AddRange:
                     {
-                        _transformed.AddOrInsertRange(item.Range.Select(_containerFactory), item.Range.Index);
+                        transformed.AddOrInsertRange(item.Range.Select(_containerFactory), item.Range.Index);
                         break;
                     }
                     case ListChangeReason.Replace:
@@ -117,12 +117,12 @@ namespace DynamicData.Internal
                         var change = item.Item;
                         if (change.CurrentIndex == change.PreviousIndex)
                         {
-                            _transformed[change.CurrentIndex] = _containerFactory(change.Current);
+                            transformed[change.CurrentIndex] = _containerFactory(change.Current);
                         }
                         else
                         {
-                            _transformed.RemoveAt(change.PreviousIndex);
-                            _transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                            transformed.RemoveAt(change.PreviousIndex);
+                            transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
                         }
 
                         break;
@@ -134,14 +134,14 @@ namespace DynamicData.Internal
 
                         if (hasIndex)
                         {
-                            _transformed.RemoveAt(item.Item.CurrentIndex);
+                            transformed.RemoveAt(item.Item.CurrentIndex);
                         }
                         else
                         {
-                            var toremove = _transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
+                            var toremove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
 
                             if (toremove != null)
-                                _transformed.Remove(toremove);
+                                transformed.Remove(toremove);
                         }
 
                         break;
@@ -150,12 +150,12 @@ namespace DynamicData.Internal
                     {
                         if (item.Range.Index >= 0)
                         {
-                            _transformed.RemoveRange(item.Range.Index, item.Range.Count);
+                            transformed.RemoveRange(item.Range.Index, item.Range.Count);
                         }
                         else
                         {
-                            var toremove = _transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
-                            _transformed.RemoveMany(toremove);
+                            var toremove = transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
+                            transformed.RemoveMany(toremove);
                         }
 
                         break;
@@ -163,8 +163,8 @@ namespace DynamicData.Internal
                     case ListChangeReason.Clear:
                     {
                         //i.e. need to store transformed reference so we can correctly clear
-                        var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, _transformed);
-                        _transformed.ClearOrRemoveMany(toClear);
+                        var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, transformed);
+                        transformed.ClearOrRemoveMany(toClear);
 
                         break;
                     }
@@ -175,16 +175,16 @@ namespace DynamicData.Internal
                         if (!hasIndex)
                             throw new UnspecifiedIndexException("Cannot move as an index was not specified");
 
-                        var collection = _transformed as IExtendedList<TransformedItemContainer>;
+                        var collection = transformed as IExtendedList<TransformedItemContainer>;
                         if (collection != null)
                         {
                             collection.Move(change.PreviousIndex, change.CurrentIndex);
                         }
                         else
                         {
-                            var current = _transformed[change.PreviousIndex];
-                            _transformed.RemoveAt(change.PreviousIndex);
-                            _transformed.Insert(change.CurrentIndex, current);
+                            var current = transformed[change.PreviousIndex];
+                            transformed.RemoveAt(change.PreviousIndex);
+                            transformed.Insert(change.CurrentIndex, current);
                         }
                         break;
                     }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq.Expressions;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal
@@ -21,22 +20,17 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<TObject>> Run()
         {
-            return Observable.Create<IChangeSet<TObject>>(observer =>
-            {
-                //share the connection, otherwise the entire observable chain is duplicated 
-                var shared = _source.Publish();
 
+            return _source.Publish(shared =>
+            {
                 //do not filter on initial value otherwise every object loaded will invoke a requery
                 var predicateStream = shared.WhenPropertyChanged(_propertySelector, false)
                                         .Select(_ => _predicate)
                                         .StartWith(_predicate);
 
                 // filter all in source, based on match funcs that update on prop change
-                var changedAndMatching = shared.Filter(predicateStream, FilterPolicy.CalculateDiffSet);
+                return shared.Filter(predicateStream);
 
-                var publisher = changedAndMatching.SubscribeSafe(observer);
-
-                return new CompositeDisposable(publisher, shared.Connect());
             });
         }
     }

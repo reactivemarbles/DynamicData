@@ -10,21 +10,18 @@ namespace DynamicData.Internal
     //TODO: Implement seperate ClearAndReplace and CalculateDiffSet filters??
     internal class MutableFilter<T>
     {
-        private readonly FilterPolicy _filterPolicy;
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<Func<T, bool>> _predicates;
 
         private Func<T, bool> _predicate = t => false;
 
         public MutableFilter([NotNull] IObservable<IChangeSet<T>> source,
-                             [NotNull] IObservable<Func<T, bool>> predicates,
-                             FilterPolicy filterPolicy = FilterPolicy.ClearAndReplace)
+                             [NotNull] IObservable<Func<T, bool>> predicates)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicates == null) throw new ArgumentNullException(nameof(predicates));
             _source = source;
             _predicates = predicates;
-            _filterPolicy = filterPolicy;
         }
 
         public IObservable<IChangeSet<T>> Run()
@@ -48,19 +45,9 @@ namespace DynamicData.Internal
                 var shared = _source.Synchronize(locker).Publish();
 
                 //take current filter state of all items
-                IDisposable updateall;
-
-                if (_filterPolicy == FilterPolicy.ClearAndReplace)
-                {
-                    updateall = shared.Synchronize(locker)
-                                      .Subscribe(all.Clone);
-                }
-                else
-                {
-                    updateall = shared.Synchronize(locker)
+                IDisposable updateall =  shared.Synchronize(locker)
                                       .Transform(t => new ItemWithMatch(t, _predicate(t)))
                                       .Subscribe(allWithMatch.Clone);
-                }
 
                 //filter result list
                 var filter = shared.Synchronize(locker)
@@ -82,14 +69,6 @@ namespace DynamicData.Internal
         private void Requery(Func<T, bool> predicate, List<ItemWithMatch> allWithMatch, List<T> all, ChangeAwareList<T> filtered)
         {
             _predicate = predicate;
-
-            if (_filterPolicy == FilterPolicy.ClearAndReplace)
-            {
-                filtered.Clear();
-                filtered.AddRange(all.Where(_predicate));
-
-                return;
-            }
 
             var newState = allWithMatch.Select(item =>
             {
