@@ -59,7 +59,7 @@ namespace DynamicData.Tests.ListFixtures
                 var changedMatchFunc = changed.Select(_ => predicate).StartWith(predicate);
 
                 // filter all in source, based on match funcs that update on prop change
-                var changedAndMatching = shared.Filter(changedMatchFunc, FilterPolicy.CalculateDiffSet);
+                var changedAndMatching = shared.Filter(changedMatchFunc);
 
                 var publisher = changedAndMatching.SubscribeSafe(observer);
 

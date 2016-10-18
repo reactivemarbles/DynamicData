@@ -17,7 +17,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source = new SourceList<Person>();
             _filter = new FilterController<Person>(p => p.Age > 20);
-            _results = _source.Connect().Filter(_filter, FilterPolicy.CalculateDiffSet).AsAggregator();
+            _results = _source.Connect().Filter(_filter).AsAggregator();
         }
 
         [TearDown]

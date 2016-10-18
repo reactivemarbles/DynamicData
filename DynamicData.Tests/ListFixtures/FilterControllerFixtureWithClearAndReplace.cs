@@ -18,7 +18,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source = new SourceList<Person>();
             _filter = new FilterController<Person>(p => p.Age > 20);
-            _results = _source.Connect().Filter(_filter, FilterPolicy.ClearAndReplace).AsAggregator();
+            _results = _source.Connect().Filter(_filter).AsAggregator();
         }
 
         [TearDown]
@@ -62,8 +62,8 @@ namespace DynamicData.Tests.ListFixtures
 
             Assert.AreEqual(90, _results.Data.Count, "Should be 90 people in the cache");
             Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
-            Assert.AreEqual(80, _results.Messages[1].Removes, "Should be 80 removes in the second message");
-            Assert.AreEqual(90, _results.Messages[1].Adds, "Should be 90 adds in the second message");
+            Assert.AreEqual(0, _results.Messages[1].Removes, "Should be 80 removes in the second message");
+            Assert.AreEqual(10, _results.Messages[1].Adds, "Should be 10 adds in the second message");
 
             foreach (var person in people)
             {
