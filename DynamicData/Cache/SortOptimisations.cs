@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DynamicData.Operators
+namespace DynamicData
 {
     /// <summary>
     /// Flags used to specify one or more sort optimisations

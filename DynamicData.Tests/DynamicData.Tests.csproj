@@ -212,6 +212,7 @@
     <Compile Include="ListFixtures\RefCountFixture.cs" />
     <Compile Include="ListFixtures\RemoveManyFixture.cs" />
     <Compile Include="ListFixtures\ReverseFixture.cs" />
+    <Compile Include="ListFixtures\SelectFixture.cs" />
     <Compile Include="ListFixtures\SizeLimitFixture.cs" />
     <Compile Include="ListFixtures\SortFixture.cs" />
     <Compile Include="ListFixtures\SortMutableFixture.cs" />

@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reactive;
-using DynamicData;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
 
-namespace DynamicData
+namespace DynamicData.Alias
 {
     /// <summary>
-    /// Observable cache alias fields
+    /// Observable cache alias names
     /// </summary>
-    public static class AliasEx
+    public static class ObservableCacheAlias
     {
 
         #region  Filter -> Where
@@ -55,6 +54,8 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values</param>
         /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
         public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
             [NotNull] IObservable<Unit> reapplyFilter)
         {
@@ -399,7 +400,5 @@ namespace DynamicData
         }
 
         #endregion
-
-
     }
 }

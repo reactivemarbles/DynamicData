@@ -8,6 +8,7 @@ namespace DynamicData.Controllers
     /// <summary>
     /// Dynamic page controller
     /// </summary>
+    [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
     public sealed class PageController : IDisposable
     {
         private readonly ISubject<IPageRequest> _subject = new ReplaySubject<IPageRequest>(1);

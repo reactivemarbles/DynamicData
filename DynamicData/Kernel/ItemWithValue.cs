@@ -8,7 +8,7 @@ namespace DynamicData.Kernel
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
-    public class ItemWithValue<TObject, TValue> : IEquatable<ItemWithValue<TObject, TValue>>
+    public sealed class ItemWithValue<TObject, TValue> : IEquatable<ItemWithValue<TObject, TValue>>
     {
         /// <summary>
         /// Gets the item.

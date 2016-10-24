@@ -79,7 +79,7 @@ namespace DynamicData.Experimental
                             }
 
                             //set up subscription
-                            var subscriber = subject.Subscribe(observer);
+                            var subscriber = subject.SubscribeSafe(observer);
 
                             return Disposable.Create(() =>
                             {
@@ -90,7 +90,7 @@ namespace DynamicData.Experimental
                                     subscriber.Dispose();
                                     if (subject.RefCount == 0)
                                     {
-                                        _subscribers.Edit(updater => updater.Remove(key));
+                                        _subscribers.Remove(key);
                                     }
                                 }
                             });

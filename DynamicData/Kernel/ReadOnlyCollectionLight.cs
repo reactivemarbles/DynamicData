@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DynamicData.Kernel
 {
-    class ReadOnlyCollectionLight<T> : IReadOnlyCollection<T>
+    internal sealed class ReadOnlyCollectionLight<T> : IReadOnlyCollection<T>
     {
         private readonly IEnumerable<T> _items;
 

@@ -23,7 +23,7 @@ namespace DynamicData.Kernel
         }
 
         /// <summary>
-        /// Casts the enumerable to an array if it is already an array.  Otherwise call ToArray
+        /// Casts the enumerable to an array if it is already an array.  Otherwise call ToList
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>

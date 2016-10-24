@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
-using DynamicData.Alias;
 using DynamicData.Internal;
 using DynamicData.Operators;
 
@@ -28,7 +27,7 @@ namespace DynamicData.Cache.Internal
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparer == null && comparerChangedObservable == null)
-                    throw new ArgumentException("Must specify comparer or comparerChangedObservable");
+                throw new ArgumentException("Must specify comparer or comparerChangedObservable");
 
             _source = source;
             _comparer = comparer;
@@ -38,7 +37,7 @@ namespace DynamicData.Cache.Internal
             _resetThreshold = resetThreshold;
         }
 
-        public IObservable<ISortedChangeSet<TObject, TKey>>Run()
+        public IObservable<ISortedChangeSet<TObject, TKey>> Run()
         {
             return Observable.Create<ISortedChangeSet<TObject, TKey>>(observer =>
             {
@@ -48,8 +47,9 @@ namespace DynamicData.Cache.Internal
                 //check for nulls so we can prevent a lock when not required
                 if (_comparerChangedObservable == null && _resorter == null)
                 {
-                    return ObservableCacheAliasEx.Where(_source
-                            .Select(sorter.Sort), result => result != null)
+                    return _source
+                        .Select(sorter.Sort)
+                        .Where(result => result != null)
                         .SubscribeSafe(observer);
                 }
 
@@ -62,9 +62,10 @@ namespace DynamicData.Cache.Internal
                 var dataChanged = _source.Synchronize(locker)
                     .Select(sorter.Sort);
 
-                return ObservableCacheAliasEx.Where(comparerChanged
-                        .Merge(dataChanged)
-                        .Merge(sortAgain), result => result != null)
+                return comparerChanged
+                    .Merge(dataChanged)
+                    .Merge(sortAgain)
+                    .Where(result => result != null)
                     .SubscribeSafe(observer);
             });
         }

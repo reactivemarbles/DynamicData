@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 
-namespace DynamicData
+namespace DynamicData.Kernel
 {
     internal class ReferenceEqualityComparer<T> : IEqualityComparer<T>
     {
-        public readonly static IEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
+        public static readonly IEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
 
         public bool Equals(T x, T y)
         {

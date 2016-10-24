@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Internal;
+using DynamicData.Kernel;
 using DynamicData.Operators;
 
 namespace DynamicData.Cache.Internal
@@ -17,7 +18,7 @@ namespace DynamicData.Cache.Internal
                                   SortOptimisations optimisations)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
-            _items = items.ToList();
+            _items = items.AsList();
             Comparer = comparer;
             SortReason = sortReason;
             Optimisations = optimisations;

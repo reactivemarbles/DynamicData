@@ -21,7 +21,7 @@ namespace DynamicData.Cache.Internal
             _itemChangedTrigger = itemChangedTrigger;
         }
 
-        public  IObservable<IQuery<TObject, TKey>> Run()
+        public IObservable<IQuery<TObject, TKey>> Run()
         {
             return Observable.Create<IQuery<TObject, TKey>>(observer =>
             {
@@ -72,7 +72,7 @@ namespace DynamicData.Cache.Internal
             _predicate = predicate;
         }
 
-        public  IObservable<IChangeSet<TObject, TKey>> Run()
+        public IObservable<IChangeSet<TObject, TKey>> Run()
         {
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Reactive.Linq;
-using DynamicData.Alias;
 using DynamicData.Cache.Internal;
 using DynamicData.Internal;
 
@@ -22,7 +21,7 @@ namespace DynamicData.Cache
             _virtualRequests = virtualRequests;
         }
 
-        public  IObservable<IVirtualChangeSet<TObject, TKey>>Run( )
+        public IObservable<IVirtualChangeSet<TObject, TKey>> Run()
         {
             return Observable.Create<IVirtualChangeSet<TObject, TKey>>(observer =>
             {
@@ -31,7 +30,8 @@ namespace DynamicData.Cache
 
                 var request = _virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise);
                 var datachange = _source.Synchronize(locker).Select(virtualiser.Update);
-                return ObservableCacheAliasEx.Where(request.Merge(datachange), updates => updates != null)
+                return request.Merge(datachange)
+                    .Where(updates => updates != null)
                     .SubscribeSafe(observer);
             });
         }
@@ -43,7 +43,7 @@ namespace DynamicData.Cache
             private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
             private IVirtualRequest _parameters;
             private bool _isLoaded;
-            
+
             public Virtualiser(VirtualRequest request = null)
             {
                 _parameters = request ?? new VirtualRequest();

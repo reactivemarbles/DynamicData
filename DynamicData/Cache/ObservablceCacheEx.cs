@@ -22,7 +22,7 @@ namespace DynamicData
     /// <summary>
     /// Extensions for dynamic data
     /// </summary>
-    public static class DynamicDataEx
+    public static class ObservablceCacheEx
     {
         #region General
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Kernel;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures

@@ -1,5 +1,7 @@
 using System;
 using System.Reactive.Linq;
+using DynamicData.Annotations;
+using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
@@ -7,8 +9,9 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _result;
 
-        public DeferUntilLoaded(IObservableCache<TObject, TKey> source)
+        public DeferUntilLoaded([NotNull] IObservableCache<TObject, TKey> source)
         {
+            if (source == null) throw new ArgumentNullException(nameof(source));
             _result = source.CountChanged.Where(count => count != 0)
                 .Take(1)
                 .Select(_ => new ChangeSet<TObject, TKey>())

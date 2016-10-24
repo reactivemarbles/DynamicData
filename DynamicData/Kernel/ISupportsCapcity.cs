@@ -1,4 +1,4 @@
-﻿namespace DynamicData
+﻿namespace DynamicData.Kernel
 {
     internal interface ISupportsCapcity
     {

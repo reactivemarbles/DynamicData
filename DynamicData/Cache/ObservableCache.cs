@@ -148,15 +148,9 @@ namespace DynamicData
                     });
         }
 
-        internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null)
-        {
-            return _readerWriter.AsInitialUpdates(filter);
-        }
+        internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null) => _readerWriter.AsInitialUpdates(filter);
 
-        public Optional<TObject> Lookup(TKey key)
-        {
-            return _readerWriter.Lookup(key);
-        }
+        public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
 
         public IEnumerable<TKey> Keys => _readerWriter.Keys;
 

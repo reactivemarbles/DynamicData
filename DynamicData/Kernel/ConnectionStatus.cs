@@ -1,5 +1,5 @@
 
-namespace DynamicData
+namespace DynamicData.Kernel
 {
     /// <summary>
     /// Connectable cache status
