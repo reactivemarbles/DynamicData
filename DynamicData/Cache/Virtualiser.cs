@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reactive.Linq;
+using DynamicData.Alias;
 using DynamicData.Cache.Internal;
 using DynamicData.Internal;
 
@@ -30,8 +31,7 @@ namespace DynamicData.Cache
 
                 var request = _virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise);
                 var datachange = _source.Synchronize(locker).Select(virtualiser.Update);
-                return request.Merge(datachange)
-                    .Where(updates => updates != null)
+                return ObservableCacheAliasEx.Where(request.Merge(datachange), updates => updates != null)
                     .SubscribeSafe(observer);
             });
         }

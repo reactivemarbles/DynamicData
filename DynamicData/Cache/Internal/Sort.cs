@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
+using DynamicData.Alias;
 using DynamicData.Internal;
 using DynamicData.Operators;
 
@@ -47,9 +48,8 @@ namespace DynamicData.Cache.Internal
                 //check for nulls so we can prevent a lock when not required
                 if (_comparerChangedObservable == null && _resorter == null)
                 {
-                    return _source
-                        .Select(sorter.Sort)
-                        .Where(result => result != null)
+                    return ObservableCacheAliasEx.Where(_source
+                            .Select(sorter.Sort), result => result != null)
                         .SubscribeSafe(observer);
                 }
 
@@ -62,10 +62,9 @@ namespace DynamicData.Cache.Internal
                 var dataChanged = _source.Synchronize(locker)
                     .Select(sorter.Sort);
 
-                return comparerChanged
-                    .Merge(dataChanged)
-                    .Merge(sortAgain)
-                    .Where(result => result != null)
+                return ObservableCacheAliasEx.Where(comparerChanged
+                        .Merge(dataChanged)
+                        .Merge(sortAgain), result => result != null)
                     .SubscribeSafe(observer);
             });
         }

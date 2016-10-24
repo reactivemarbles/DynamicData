@@ -2167,7 +2167,7 @@ namespace DynamicData
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector.</param>
         /// <returns></returns>
-        private static IObservable<IChangeSet<TDestination, TDestinationKey>> FlattenWithSingleParent<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
+        internal static IObservable<IChangeSet<TDestination, TDestinationKey>> FlattenWithSingleParent<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
                                                                  Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector)
         {
             return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector,keySelector).Run();

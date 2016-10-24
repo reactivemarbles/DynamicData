@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reactive.Linq;
+using DynamicData.Alias;
 using DynamicData.Annotations;
 using DynamicData.Internal;
 using DynamicData.Operators;
@@ -29,7 +30,7 @@ namespace DynamicData.Cache.Internal
                 var request = _pageRequests.Synchronize(locker).Select(paginator.Paginate);
                 var datachange = _source.Synchronize(locker).Select(paginator.Update);
 
-                return request.Merge(datachange).Where(updates => updates != null).SubscribeSafe(observer);
+                return ObservableCacheAliasEx.Where(request.Merge(datachange), updates => updates != null).SubscribeSafe(observer);
             });
 
         }
