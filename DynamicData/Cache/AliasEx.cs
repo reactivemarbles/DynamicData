@@ -7,12 +7,12 @@ using DynamicData;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
 
-namespace DynamicData.Alias
+namespace DynamicData
 {
     /// <summary>
     /// Observable cache alias fields
     /// </summary>
-    public static class ObservableCacheAliasEx
+    public static class AliasEx
     {
 
         #region  Filter -> Where
@@ -228,7 +228,7 @@ namespace DynamicData.Alias
 
         #endregion
 
-        #region Transform many -> Select Many
+        #region Transform many -> SelectMany
 
         /// <summary>
         /// Equivalent to a select many transform. To work, the key must individually identify each child. 
@@ -399,5 +399,7 @@ namespace DynamicData.Alias
         }
 
         #endregion
+
+
     }
 }
