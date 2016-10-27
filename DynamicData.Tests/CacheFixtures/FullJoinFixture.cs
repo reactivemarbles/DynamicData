@@ -27,9 +27,6 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
 
-        private SourceCache<Person, int> _person;
-        private SourceCache<Address, int> _address;
-
         private SourceCache<Device, string> _left;
         private SourceCache<DeviceMetaData, string> _right;
         private ChangeSetAggregator<DeviceWithMetadata, string> _result;
@@ -37,12 +34,6 @@ namespace DynamicData.Tests.CacheFixtures
         [SetUp]
         public void Initialise()
         {
-
-            _person.Connect().InnerJoin(_address.Connect(), a => a.PersonId, (personKey, person, address) =>
-            {
-                return new PersonWithAddress(person, address);
-            });
-
             _left = new SourceCache<Device, string>(device => device.Name);
             _right = new SourceCache<DeviceMetaData, string>(device => device.Name);
 
