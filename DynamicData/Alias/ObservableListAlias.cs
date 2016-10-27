@@ -90,7 +90,7 @@ namespace DynamicData.Alias
             return source.FilterOnProperty(propertySelector, predicate);
         }
 
-        #endregion
+        #endregion 
 
         #region Transform -> Select
 

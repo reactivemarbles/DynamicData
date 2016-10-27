@@ -1,4 +1,8 @@
+using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
@@ -45,6 +49,45 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         [Test]
+        public void RepeatedApply()
+        {
+
+            using (var source = new SourceCache<Person, string>(p => p.Key))
+            {
+                source.AddOrUpdate(Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray());
+
+                var subject = new ReplaySubject<Func<Person, bool>>();
+                subject.OnNext(x => true);
+
+                IChangeSet<Person, string> latestChanges = null;
+                using (source.Connect().Filter(subject).Do(changes=> latestChanges= changes).AsObservableCache())
+                {
+                    subject.OnNext(p => false);
+                    Assert.AreEqual(100, latestChanges.Removes);
+                    Assert.AreEqual(0, latestChanges.Adds);
+
+                    subject.OnNext(p => true);
+                    Assert.AreEqual(100, latestChanges.Adds);
+                    Assert.AreEqual(0, latestChanges.Removes);
+
+                    subject.OnNext(p => false);
+                    Assert.AreEqual(100, latestChanges.Removes);
+                    Assert.AreEqual(0, latestChanges.Adds);
+
+                    subject.OnNext(p => true);
+                    Assert.AreEqual(100, latestChanges.Adds);
+                    Assert.AreEqual(0, latestChanges.Removes);
+
+                    subject.OnNext(p => false);
+                    Assert.AreEqual(100, latestChanges.Removes);
+                    Assert.AreEqual(0, latestChanges.Adds);
+
+                }
+
+            }
+        }
+
+        [Test]
         public void ReevaluateFilter()
         {
             //re-evaluate for inline changes
@@ -73,6 +116,8 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(3, _results.Messages.Count, "Should be 3 update messages");
             Assert.AreEqual(10, _results.Messages[2].Removes, "Should be 10 removes in the third message");
         }
+
+
 
         #region Static filter tests
 

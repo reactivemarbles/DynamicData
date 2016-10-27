@@ -28,8 +28,7 @@ namespace DynamicData.Cache.Internal
             _rightKeySelector = rightKeySelector;
             _resultSelector = resultSelector;
         }
-
-
+        
         public IObservable<IChangeSet<TDestination, TLeftKey>> Run()
         {
             return Observable.Create<IChangeSet<TDestination, TLeftKey>>(observer =>

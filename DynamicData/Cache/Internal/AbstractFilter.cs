@@ -53,7 +53,10 @@ namespace DynamicData.Internal
             var result = Evaluate(items, factory);
             var changes = new ChangeSet<TObject, TKey>(result);
             _cache.Clone(changes);
-            return changes;
+
+
+            return _cache.CaptureChanges();
+          // return changes;
         }
 
         protected abstract IEnumerable<Change<TObject, TKey>> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
