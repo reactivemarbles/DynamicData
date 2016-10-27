@@ -51,8 +51,7 @@ namespace DynamicData.Internal
             };
 
             var result = Evaluate(items, factory);
-            var changes = new ChangeSet<TObject, TKey>(result);
-            _cache.Clone(changes);
+            _cache.Clone(new ChangeSet<TObject, TKey>(result));
 
 
             return _cache.CaptureChanges();

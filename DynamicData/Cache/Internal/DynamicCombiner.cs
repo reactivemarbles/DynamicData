@@ -61,7 +61,6 @@ namespace DynamicData.Cache.Internal
 
                                                  if (_type == CombineOperator.And || _type == CombineOperator.Except)
                                                  {
-                                                     // var itemsToCheck = resultCache.KeyValues.ToArray();
                                                      var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Cache.KeyValues).ToArray();
                                                      ProcessChanges(resultCache, sourceLists.Items.AsArray(), itemsToCheck);
                                                  }

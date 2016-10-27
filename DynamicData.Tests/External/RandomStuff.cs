@@ -47,6 +47,11 @@ namespace DynamicData.Tests
             );
         }
 
+        public static IObservable<TSource> DoFirst<TSource>(this IObservable<TSource> source,  Action<TSource> action)
+        {
+            return source.Publish(shared => shared.Take(1).Do(action).Concat(shared));
+        }
+
         //By Dorus on Gitter
         public static IObservable<TSource> Amb<TSource>(this IObservable<IObservable<TSource>> source)
         {

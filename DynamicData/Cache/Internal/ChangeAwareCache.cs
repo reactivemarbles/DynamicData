@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
@@ -107,6 +108,7 @@ namespace DynamicData.Cache.Internal
                 }
             }
         }
+
 
         public ChangeSet<TObject, TKey> CaptureChanges()
         {
