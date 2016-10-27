@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    class SortFixture
+    internal class SortFixture
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private ISourceList<Person> _source;
@@ -143,9 +143,5 @@ namespace DynamicData.Tests.ListFixtures
             var actualResult = _results.Data.Items;
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
         }
-
-
-
-
     }
 }

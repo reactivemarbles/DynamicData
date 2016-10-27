@@ -28,7 +28,6 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run()
         {
-
             return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
                 (
                     observer =>
@@ -288,7 +287,5 @@ namespace DynamicData.Cache.Internal
                 }
             }
         }
-
     }
-
 }

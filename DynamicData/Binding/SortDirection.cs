@@ -1,4 +1,5 @@
-﻿namespace DynamicData.Binding
+﻿
+namespace DynamicData.Binding
 {
     /// <summary>
     /// Sort direction

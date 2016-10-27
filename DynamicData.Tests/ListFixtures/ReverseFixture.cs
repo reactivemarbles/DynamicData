@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    class ReverseFixture
+    internal class ReverseFixture
     {
         private ISourceList<int> _source;
         private ChangeSetAggregator<int> _results;

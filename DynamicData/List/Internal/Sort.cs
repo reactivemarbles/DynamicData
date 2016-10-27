@@ -11,16 +11,16 @@ namespace DynamicData.Internal
     internal sealed class Sort<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
-        private  IComparer<T> _comparer;
+        private IComparer<T> _comparer;
         private readonly SortOptions _sortOptions;
         private readonly int _resetThreshold;
         private readonly IObservable<Unit> _resort;
         private readonly IObservable<IComparer<T>> _comparerObservable;
 
 
-        public Sort([NotNull] IObservable<IChangeSet<T>> source, 
+        public Sort([NotNull] IObservable<IChangeSet<T>> source,
             [NotNull] IComparer<T> comparer, SortOptions sortOptions,
-            IObservable<Unit> resort, 
+            IObservable<Unit> resort,
             IObservable<IComparer<T>> comparerObservable,
             int resetThreshold)
         {
@@ -41,14 +41,13 @@ namespace DynamicData.Internal
                 var locker = new object();
                 var orginal = new ChangeAwareList<T>();
                 var target = new ChangeAwareList<T>();
-                
+
                 var changed = _source.Synchronize(locker).Select(changes =>
                 {
                     if (_resetThreshold > 1)
                         orginal.Clone(changes);
 
                     return changes.TotalChanges > _resetThreshold ? Reset(orginal, target) : Process(target, changes);
-                    
                 });
                 var resort = _resort.Synchronize(locker).Select(changes => Reorder(target));
                 var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
@@ -77,49 +76,49 @@ namespace DynamicData.Internal
                 switch (change.Reason)
                 {
                     case ListChangeReason.Add:
-                    {
-                        var current = change.Item.Current;
-                        Insert(target, current);
-                        break;
-                    }
+                        {
+                            var current = change.Item.Current;
+                            Insert(target, current);
+                            break;
+                        }
                     case ListChangeReason.AddRange:
-                    {
-                        var ordered = change.Range.OrderBy(t => t, _comparer).ToList();
-                        if (target.Count == 0)
                         {
+                            var ordered = change.Range.OrderBy(t => t, _comparer).ToList();
+                            if (target.Count == 0)
+                            {
                                 target.AddRange(ordered);
+                            }
+                            else
+                            {
+                                ordered.ForEach(item => Insert(target, item));
+                            }
+                            break;
                         }
-                        else
-                        {
-                            ordered.ForEach(item => Insert(target, item));
-                        }
-                        break;
-                    }
                     case ListChangeReason.Replace:
-                    {
-                        var current = change.Item.Current;
-                        //TODO: check whether an item should stay in the same position
-                        //i.e. update and move
-                        Remove(target, change.Item.Previous.Value);
-                        Insert(target, current);
-                        break;
-                    }
+                        {
+                            var current = change.Item.Current;
+                            //TODO: check whether an item should stay in the same position
+                            //i.e. update and move
+                            Remove(target, change.Item.Previous.Value);
+                            Insert(target, current);
+                            break;
+                        }
                     case ListChangeReason.Remove:
-                    {
-                        var current = change.Item.Current;
-                        Remove(target, current);
-                        break;
-                    }
+                        {
+                            var current = change.Item.Current;
+                            Remove(target, current);
+                            break;
+                        }
                     case ListChangeReason.RemoveRange:
-                    {
+                        {
                             target.RemoveMany(change.Range);
-                        break;
-                    }
+                            break;
+                        }
                     case ListChangeReason.Clear:
-                    {
+                        {
                             target.Clear();
-                        break;
-                    }
+                            break;
+                        }
                 }
             }
             return target.CaptureChanges();
@@ -127,20 +126,20 @@ namespace DynamicData.Internal
 
         private IChangeSet<T> Reorder(ChangeAwareList<T> target)
         {
-                int index = -1;
-                var sorted = target.OrderBy(t => t, _comparer).ToList();
-                foreach (var item in sorted)
-                {
-                    index++;
+            int index = -1;
+            var sorted = target.OrderBy(t => t, _comparer).ToList();
+            foreach (var item in sorted)
+            {
+                index++;
 
-                    var existing = target[index];
-                   //if item is in the same place, 
-                    if (ReferenceEquals(item, existing)) continue;
+                var existing = target[index];
+                //if item is in the same place, 
+                if (ReferenceEquals(item, existing)) continue;
 
-                    //Cannot use binary search as Resort is implicit of a mutable change
-                    var old = target.IndexOf(item);
-                    target.Move(old, index);
-                }
+                //Cannot use binary search as Resort is implicit of a mutable change
+                var old = target.IndexOf(item);
+                target.Move(old, index);
+            }
 
             return target.CaptureChanges();
         }

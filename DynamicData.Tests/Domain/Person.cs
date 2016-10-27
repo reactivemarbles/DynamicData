@@ -75,9 +75,9 @@ namespace DynamicData.Tests.Domain
             }
         }
 
-        private static readonly IEqualityComparer<Person> AgeComparerInstance = new AgeEqualityComparer();
+        private static readonly IEqualityComparer<Person> s_ageComparerInstance = new AgeEqualityComparer();
 
-        public static IEqualityComparer<Person> AgeComparer => AgeComparerInstance;
+        public static IEqualityComparer<Person> AgeComparer => s_ageComparerInstance;
 
 
         private sealed class NameAgeGenderEqualityComparer : IEqualityComparer<Person>
@@ -96,22 +96,20 @@ namespace DynamicData.Tests.Domain
                 unchecked
                 {
                     var hashCode = (obj._name != null ? obj._name.GetHashCode() : 0);
-                    hashCode = (hashCode*397) ^ obj._age;
-                    hashCode = (hashCode*397) ^ (obj._gender != null ? obj._gender.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ obj._age;
+                    hashCode = (hashCode * 397) ^ (obj._gender != null ? obj._gender.GetHashCode() : 0);
                     return hashCode;
                 }
             }
         }
 
-        private static readonly IEqualityComparer<Person> NameAgeGenderComparerInstance = new NameAgeGenderEqualityComparer();
+        private static readonly IEqualityComparer<Person> s_nameAgeGenderComparerInstance = new NameAgeGenderEqualityComparer();
 
         public static IEqualityComparer<Person> NameAgeGenderComparer
         {
-            get { return NameAgeGenderComparerInstance; }
+            get { return s_nameAgeGenderComparerInstance; }
         }
 
         #endregion
-
-
     }
 }

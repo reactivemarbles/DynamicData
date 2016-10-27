@@ -1,3 +1,4 @@
+ 
 namespace DynamicData.Aggregation
 {
     internal struct Avg<TValue>

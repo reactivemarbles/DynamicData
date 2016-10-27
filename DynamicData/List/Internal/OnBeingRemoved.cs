@@ -11,7 +11,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly Action<T> _callback;
-        
+
         public OnBeingRemoved([NotNull] IObservable<IChangeSet<T>> source, [NotNull] Action<T> callback)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -40,7 +40,7 @@ namespace DynamicData.Internal
 
         private void RegisterForRemoval(IList<T> items, IChangeSet<T> changes)
         {
-            foreach(var change in changes)
+            foreach (var change in changes)
             {
                 switch (change.Reason)
                 {

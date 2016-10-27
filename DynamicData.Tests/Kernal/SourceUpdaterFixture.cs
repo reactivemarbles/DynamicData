@@ -8,7 +8,6 @@ namespace DynamicData.Tests.Kernal
     [TestFixture]
     internal class SourceUpdaterFixture
     {
-
         private ChangeAwareCache<Person, string> _cache;
         private CacheUpdater<Person, string> _updater;
 
@@ -140,8 +139,7 @@ namespace DynamicData.Tests.Kernal
         [Test]
         public void NullSelectorWillThrow()
         {
-
-           // Assert.Throws<ArgumentNullException>(() => new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null)));
+            // Assert.Throws<ArgumentNullException>(() => new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null)));
         }
     }
 }

@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("DynamicData.PLinq")]
-[assembly: AssemblyCopyright("Copyright © Roland Pheasant 2011-2015")]
+[assembly: AssemblyCopyright("Copyright \u00A9 Roland Pheasant 2011-2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

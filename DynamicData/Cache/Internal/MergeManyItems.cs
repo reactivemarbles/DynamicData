@@ -29,7 +29,6 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<ItemWithValue<TObject, TDestination>> Run()
         {
-
             return Observable.Create<ItemWithValue<TObject, TDestination>>
                 (
                     observer => _source.SubscribeMany((t, v) => _observableSelector(t, v)

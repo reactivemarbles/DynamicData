@@ -23,7 +23,6 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
                 var sizeLimiter = new SizeLimiter<TObject, TKey>(_size);
@@ -36,7 +35,7 @@ namespace DynamicData.Cache.Internal
                         var result = sizeLimiter.Change(changes);
 
                         var removes = result.Where(c => c.Reason == ChangeReason.Remove);
-                        root.Edit(updater => removes.ForEach(c => updater.Remove((TKey) c.Key)));
+                        root.Edit(updater => removes.ForEach(c => updater.Remove((TKey)c.Key)));
                         return result;
                     })
                     .FinallySafe(observer.OnCompleted)

@@ -17,7 +17,6 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<ConnectionStatus> Run()
         {
-
             return Observable.Create<ConnectionStatus>(observer =>
             {
                 var statusSubject = new Subject<ConnectionStatus>();

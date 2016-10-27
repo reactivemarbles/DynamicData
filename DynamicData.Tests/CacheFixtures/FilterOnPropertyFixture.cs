@@ -78,7 +78,7 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 Results = new ChangeSetAggregator<Person, string>
                     (
-                        Source.Connect().FilterOnProperty(p=>p.Age, p=> p.Age > 18)
+                        Source.Connect().FilterOnProperty(p => p.Age, p => p.Age > 18)
                     );
             }
 

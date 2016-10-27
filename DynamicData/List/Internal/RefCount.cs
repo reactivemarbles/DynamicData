@@ -5,11 +5,11 @@ using System.Threading;
 
 namespace DynamicData.Internal
 {
-    class RefCount<T>
+    internal class RefCount<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private int _refCount = 0;
-        IObservableList<T> _list = null;
+        private IObservableList<T> _list = null;
 
         public RefCount(IObservable<IChangeSet<T>> source)
         {

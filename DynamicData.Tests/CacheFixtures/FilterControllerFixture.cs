@@ -51,7 +51,6 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void RepeatedApply()
         {
-
             using (var source = new SourceCache<Person, string>(p => p.Key))
             {
                 source.AddOrUpdate(Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray());
@@ -60,7 +59,7 @@ namespace DynamicData.Tests.CacheFixtures
                 subject.OnNext(x => true);
 
                 IChangeSet<Person, string> latestChanges = null;
-                using (source.Connect().Filter(subject).Do(changes=> latestChanges= changes).AsObservableCache())
+                using (source.Connect().Filter(subject).Do(changes => latestChanges = changes).AsObservableCache())
                 {
                     subject.OnNext(p => false);
                     Assert.AreEqual(100, latestChanges.Removes);
@@ -81,9 +80,7 @@ namespace DynamicData.Tests.CacheFixtures
                     subject.OnNext(p => false);
                     Assert.AreEqual(100, latestChanges.Removes);
                     Assert.AreEqual(0, latestChanges.Adds);
-
                 }
-
             }
         }
 

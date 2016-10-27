@@ -35,7 +35,7 @@ namespace DynamicData.Internal
             });
         }
 
-        private IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result,  IChangeSet<ItemWithValue<T, TValue>> changes)
+        private IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithValue<T, TValue>> changes)
         {
             Action<TValue> addAction = value => values.Lookup(value)
                 .IfHasValue(count => values[value] = count + 1)
@@ -64,44 +64,44 @@ namespace DynamicData.Internal
                 switch (change.Reason)
                 {
                     case ListChangeReason.Add:
-                    {
-                        var value = change.Item.Current.Value;
-                        addAction(value);
-                        break;
-                    }
+                        {
+                            var value = change.Item.Current.Value;
+                            addAction(value);
+                            break;
+                        }
                     case ListChangeReason.AddRange:
-                    {
-                        change.Range.Select(item => item.Value).ForEach(addAction);
-                        break;
-                    }
+                        {
+                            change.Range.Select(item => item.Value).ForEach(addAction);
+                            break;
+                        }
                     //	case ListChangeReason.Evaluate:
                     case ListChangeReason.Replace:
-                    {
-                        var value = change.Item.Current.Value;
-                        var previous = change.Item.Previous.Value.Value;
-                        if (value.Equals(previous)) continue;
+                        {
+                            var value = change.Item.Current.Value;
+                            var previous = change.Item.Previous.Value.Value;
+                            if (value.Equals(previous)) continue;
 
-                        removeAction(previous);
-                        addAction(value);
-                        break;
-                    }
+                            removeAction(previous);
+                            addAction(value);
+                            break;
+                        }
                     case ListChangeReason.Remove:
-                    {
-                        var previous = change.Item.Current.Value;
-                        removeAction(previous);
-                        break;
-                    }
+                        {
+                            var previous = change.Item.Current.Value;
+                            removeAction(previous);
+                            break;
+                        }
                     case ListChangeReason.RemoveRange:
-                    {
-                        change.Range.Select(item => item.Value).ForEach(removeAction);
-                        break;
-                    }
+                        {
+                            change.Range.Select(item => item.Value).ForEach(removeAction);
+                            break;
+                        }
                     case ListChangeReason.Clear:
-                    {
-                        result.Clear();
-                        values.Clear();
-                        break;
-                    }
+                        {
+                            result.Clear();
+                            values.Clear();
+                            break;
+                        }
                 }
             }
             return result.CaptureChanges();

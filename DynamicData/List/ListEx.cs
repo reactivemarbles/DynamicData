@@ -40,69 +40,69 @@ namespace DynamicData
 
             //TODO: Check for missing index
 
-            foreach(var item in changes)
+            foreach (var item in changes)
             {
                 switch (item.Reason)
                 {
                     case ListChangeReason.Add:
-                    {
-                        var change = item.Item;
-                        var match = predicate(change.Current);
-                        if (match) source.Add(change.Current);
-                        break;
-                    }
-                    case ListChangeReason.AddRange:
-                    {
-                        var matches = item.Range.Where(predicate).ToList();
-                        source.AddRange(matches);
-                        break;
-                    }
-                    case ListChangeReason.Replace:
-                    {
-                        var change = item.Item;
-                        var match = predicate(change.Current);
-                        var wasMatch = predicate(change.Previous.Value);
-
-                        if (match)
                         {
-                            if (wasMatch)
-                            {
-                                //an update, so get the latest index
-                                var previous = source.FindItemAndIndex(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
-                                                     .ValueOrThrow(() => new InvalidOperationException("Cannot find item. Expected to be in the list"));
+                            var change = item.Item;
+                            var match = predicate(change.Current);
+                            if (match) source.Add(change.Current);
+                            break;
+                        }
+                    case ListChangeReason.AddRange:
+                        {
+                            var matches = item.Range.Where(predicate).ToList();
+                            source.AddRange(matches);
+                            break;
+                        }
+                    case ListChangeReason.Replace:
+                        {
+                            var change = item.Item;
+                            var match = predicate(change.Current);
+                            var wasMatch = predicate(change.Previous.Value);
 
-                                //replace inline
-                                source[previous.Index] = change.Current;
+                            if (match)
+                            {
+                                if (wasMatch)
+                                {
+                                    //an update, so get the latest index
+                                    var previous = source.FindItemAndIndex(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
+                                                         .ValueOrThrow(() => new InvalidOperationException("Cannot find item. Expected to be in the list"));
+
+                                    //replace inline
+                                    source[previous.Index] = change.Current;
+                                }
+                                else
+                                {
+                                    source.Add(change.Current);
+                                }
                             }
                             else
                             {
-                                source.Add(change.Current);
+                                if (wasMatch)
+                                    source.Remove(change.Previous.Value);
                             }
+                            break;
                         }
-                        else
-                        {
-                            if (wasMatch)
-                                source.Remove(change.Previous.Value);
-                        }
-                        break;
-                    }
                     case ListChangeReason.Remove:
-                    {
-                        var change = item.Item;
-                        var wasMatch = predicate(change.Current);
-                        if (wasMatch) source.Remove(change.Current);
-                        break;
-                    }
+                        {
+                            var change = item.Item;
+                            var wasMatch = predicate(change.Current);
+                            if (wasMatch) source.Remove(change.Current);
+                            break;
+                        }
                     case ListChangeReason.RemoveRange:
-                    {
-                        source.RemoveMany(item.Range.Where(predicate));
-                        break;
-                    }
+                        {
+                            source.RemoveMany(item.Range.Where(predicate));
+                            break;
+                        }
                     case ListChangeReason.Clear:
-                    {
-                        source.ClearOrRemoveMany(item);
-                        break;
-                    }
+                        {
+                            source.ClearOrRemoveMany(item);
+                            break;
+                        }
                 }
             }
         }
@@ -123,102 +123,102 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (changes == null) throw new ArgumentNullException(nameof(changes));
 
-            foreach(var item in changes)
+            foreach (var item in changes)
             {
                 switch (item.Reason)
                 {
                     case ListChangeReason.Add:
-                    {
-                        var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
-                        if (hasIndex)
                         {
-                            source.Insert(change.CurrentIndex, change.Current);
+                            var change = item.Item;
+                            bool hasIndex = change.CurrentIndex >= 0;
+                            if (hasIndex)
+                            {
+                                source.Insert(change.CurrentIndex, change.Current);
+                            }
+                            else
+                            {
+                                source.Add(change.Current);
+                            }
+                            break;
                         }
-                        else
-                        {
-                            source.Add(change.Current);
-                        }
-                        break;
-                    }
                     case ListChangeReason.AddRange:
-                    {
-                        source.AddOrInsertRange(item.Range, item.Range.Index);
-                        break;
-                    }
+                        {
+                            source.AddOrInsertRange(item.Range, item.Range.Index);
+                            break;
+                        }
                     case ListChangeReason.Clear:
-                    {
-                        source.ClearOrRemoveMany(item);
-                        break;
-                    }
+                        {
+                            source.ClearOrRemoveMany(item);
+                            break;
+                        }
                     case ListChangeReason.Replace:
-                    {
-                        var change = item.Item;
-                        if (change.CurrentIndex >= 0 && change.CurrentIndex == change.PreviousIndex)
                         {
-                            source[change.CurrentIndex] = change.Current;
-                        }
-                        else
-                        {
-                            //is this best? or replace + move?
-                            source.RemoveAt(change.PreviousIndex);
-                            source.Insert(change.CurrentIndex, change.Current);
-                        }
+                            var change = item.Item;
+                            if (change.CurrentIndex >= 0 && change.CurrentIndex == change.PreviousIndex)
+                            {
+                                source[change.CurrentIndex] = change.Current;
+                            }
+                            else
+                            {
+                                //is this best? or replace + move?
+                                source.RemoveAt(change.PreviousIndex);
+                                source.Insert(change.CurrentIndex, change.Current);
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                     case ListChangeReason.Remove:
-                    {
-                        var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
-                        if (hasIndex)
                         {
-                            source.RemoveAt(change.CurrentIndex);
-                        }
-                        else
-                        {
-                            source.Remove(change.Current);
-                        }
+                            var change = item.Item;
+                            bool hasIndex = change.CurrentIndex >= 0;
+                            if (hasIndex)
+                            {
+                                source.RemoveAt(change.CurrentIndex);
+                            }
+                            else
+                            {
+                                source.Remove(change.Current);
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                     case ListChangeReason.RemoveRange:
-                    {
-                        //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
-                        //if (item.Range.Index < 0)
-                        //    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
-
-                        if (item.Range.Index >= 0 && (source is IExtendedList<T> || source is List<T>))
                         {
-                            source.RemoveRange(item.Range.Index, item.Range.Count);
-                        }
-                        else
-                        {
-                            source.RemoveMany(item.Range);
-                        }
+                            //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
+                            //if (item.Range.Index < 0)
+                            //    throw new UnspecifiedIndexException("ListChangeReason.RemoveRange should not have an index specified index");
 
-                        break;
-                    }
+                            if (item.Range.Index >= 0 && (source is IExtendedList<T> || source is List<T>))
+                            {
+                                source.RemoveRange(item.Range.Index, item.Range.Count);
+                            }
+                            else
+                            {
+                                source.RemoveMany(item.Range);
+                            }
+
+                            break;
+                        }
                     case ListChangeReason.Moved:
-                    {
-                        var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
-                        if (!hasIndex)
-                            throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+                        {
+                            var change = item.Item;
+                            bool hasIndex = change.CurrentIndex >= 0;
+                            if (!hasIndex)
+                                throw new UnspecifiedIndexException("Cannot move as an index was not specified");
 
-                        var collection = source as IExtendedList<T>;
-                        if (collection != null)
-                        {
-                            collection.Move(change.PreviousIndex, change.CurrentIndex);
+                            var collection = source as IExtendedList<T>;
+                            if (collection != null)
+                            {
+                                collection.Move(change.PreviousIndex, change.CurrentIndex);
+                            }
+                            else
+                            {
+                                //check this works whatever the index is 
+                                source.RemoveAt(change.PreviousIndex);
+                                source.Insert(change.CurrentIndex, change.Current);
+                            }
+                            break;
                         }
-                        else
-                        {
-                            //check this works whatever the index is 
-                            source.RemoveAt(change.PreviousIndex);
-                            source.Insert(change.CurrentIndex, change.Current);
-                        }
-                        break;
-                    }
                 }
             }
         }
@@ -597,7 +597,6 @@ namespace DynamicData
                 original.Capacity = original.Count + changes.Count;
             }
         }
-
 
         #endregion
     }

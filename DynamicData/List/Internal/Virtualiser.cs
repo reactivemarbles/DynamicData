@@ -49,7 +49,6 @@ namespace DynamicData.Internal
                     .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count, parameters.StartIndex, all.Count)))
                     .SubscribeSafe(observer);
             });
-
         }
 
         private IChangeSet<T> CheckParamsAndVirtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request)
@@ -60,7 +59,7 @@ namespace DynamicData.Internal
             return Virtualise(all, virtualised, request);
         }
 
-        private IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request,  IChangeSet<T> changeset = null)
+        private IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request, IChangeSet<T> changeset = null)
         {
             if (changeset != null) all.Clone(changeset);
 

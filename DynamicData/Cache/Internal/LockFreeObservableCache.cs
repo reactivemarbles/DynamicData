@@ -9,7 +9,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class  LockFreeObservableCache<TObject, TKey>: IObservableCache<TObject, TKey>
+    internal class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
         private readonly ChangeAwareCache<TObject, TKey> _innerCache = new ChangeAwareCache<TObject, TKey>();
         private readonly ICacheUpdater<TObject, TKey> _updater;
@@ -91,13 +91,13 @@ namespace DynamicData.Cache.Internal
                     });
                 });
         }
-        
+
         public void Edit(Action<ICacheUpdater<TObject, TKey>> editAction)
         {
             editAction(_updater);
             _changes.OnNext(_innerCache.CaptureChanges());
         }
-        
+
         public IObservable<int> CountChanged => _countChanged.StartWith(_innerCache.Count).DistinctUntilChanged();
 
 

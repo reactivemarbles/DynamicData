@@ -21,7 +21,6 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IPagedChangeSet<TObject, TKey>> Run()
         {
-
             return Observable.Create<IPagedChangeSet<TObject, TKey>>(observer =>
             {
                 var locker = new object();
@@ -31,12 +30,10 @@ namespace DynamicData.Cache.Internal
 
                 return request.Merge(datachange).Where(updates => updates != null).SubscribeSafe(observer);
             });
-
         }
 
         internal sealed class Paginator
         {
-
             private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
             private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
             private IPageRequest _request = null;

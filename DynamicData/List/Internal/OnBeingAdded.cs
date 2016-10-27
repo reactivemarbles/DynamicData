@@ -24,7 +24,7 @@ namespace DynamicData.Internal
 
         private void RegisterForAddition(IChangeSet<T> changes)
         {
-            foreach(var change in changes)
+            foreach (var change in changes)
             {
                 switch (change.Reason)
                 {

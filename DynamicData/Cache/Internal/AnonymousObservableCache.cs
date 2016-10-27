@@ -13,7 +13,7 @@ namespace DynamicData.Cache.Internal
             if (source == null) throw new ArgumentNullException(nameof(source));
             _cache = new ObservableCache<TObject, TKey>(source);
         }
-        
+
         public AnonymousObservableCache(IObservableCache<TObject, TKey> cache)
         {
             if (cache == null) throw new ArgumentNullException(nameof(cache));

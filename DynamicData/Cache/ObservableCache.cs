@@ -10,7 +10,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData
 {
-
     internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
@@ -60,7 +59,6 @@ namespace DynamicData
                 _readerWriter.Write(updateAction)
                     .Then(InvokeNext, errorHandler);
             }
-
         }
 
         internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
@@ -92,7 +90,7 @@ namespace DynamicData
                 }
             }
         }
-        
+
         public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
 
         public IObservable<Change<TObject, TKey>> Watch(TKey key)

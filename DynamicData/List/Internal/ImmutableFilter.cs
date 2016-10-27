@@ -20,12 +20,11 @@ namespace DynamicData.Internal
 
         public IObservable<IChangeSet<T>> Run()
         {
-            return _source.Scan(new ChangeAwareList<T>(),(filtered,changes) =>
-            {
-                filtered.Filter(changes, _predicate);
-                return filtered;
-
-            })
+            return _source.Scan(new ChangeAwareList<T>(), (filtered, changes) =>
+             {
+                 filtered.Filter(changes, _predicate);
+                 return filtered;
+             })
             .Select(list => list.CaptureChanges())
             .NotEmpty();
         }

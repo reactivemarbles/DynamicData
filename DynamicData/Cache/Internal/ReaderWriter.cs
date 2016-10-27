@@ -14,8 +14,8 @@ namespace DynamicData.Cache.Internal
 
         public ReaderWriter(Func<TObject, TKey> keySelector = null)
         {
-            _updater = keySelector == null 
-                ? new CacheUpdater<TObject, TKey>(_cache) 
+            _updater = keySelector == null
+                ? new CacheUpdater<TObject, TKey>(_cache)
                 : new CacheUpdater<TObject, TKey>(_cache, new KeySelector<TObject, TKey>(keySelector));
         }
 

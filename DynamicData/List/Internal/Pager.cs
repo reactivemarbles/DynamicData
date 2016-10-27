@@ -12,7 +12,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<IPageRequest> _requests;
-        
+
         public Pager([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IPageRequest> requests)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -63,7 +63,7 @@ namespace DynamicData.Internal
 
             var previous = paged;
 
-            int pages = CalculatePages(all,request);
+            int pages = CalculatePages(all, request);
             int page = request.Page > pages ? pages : request.Page;
             int skip = request.Size * (page - 1);
 

@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    class ExpireAfterFixture
+    internal class ExpireAfterFixture
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;

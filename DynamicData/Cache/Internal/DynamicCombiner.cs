@@ -25,8 +25,8 @@ namespace DynamicData.Cache.Internal
         {
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
-                 var locker = new object();
-               
+                var locker = new object();
+
                 //this is the resulting cache which produces all notifications
                 var resultCache = new ChangeAwareCache<TObject, TKey>();
 
@@ -51,7 +51,7 @@ namespace DynamicData.Cache.Internal
                                                 if (notifications.Count != 0)
                                                     observer.OnNext(notifications);
                                             });
-                
+
                 //when an list is removed, need to 
                 var removedItem = sourceLists.Connect()
                                              .OnItemRemoved(mc =>
@@ -90,7 +90,7 @@ namespace DynamicData.Cache.Internal
                 return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged);
             });
         }
-        
+
         private void UpdateResultList(ChangeAwareCache<TObject, TKey> target, MergeContainer[] sourceLists, IChangeSet<TObject, TKey> changes)
         {
             changes.ForEach(change => { ProcessItem(target, sourceLists, change.Current, change.Key); });
@@ -135,23 +135,23 @@ namespace DynamicData.Cache.Internal
             switch (_type)
             {
                 case CombineOperator.And:
-                {
-                    return sources.All(s => s.Cache.Lookup(key).HasValue);
-                }
+                    {
+                        return sources.All(s => s.Cache.Lookup(key).HasValue);
+                    }
                 case CombineOperator.Or:
-                {
-                    return sources.Any(s => s.Cache.Lookup(key).HasValue);
-                }
+                    {
+                        return sources.Any(s => s.Cache.Lookup(key).HasValue);
+                    }
                 case CombineOperator.Xor:
-                {
-                    return sources.Count(s => s.Cache.Lookup(key).HasValue) == 1;
-                }
+                    {
+                        return sources.Count(s => s.Cache.Lookup(key).HasValue) == 1;
+                    }
                 case CombineOperator.Except:
-                {
-                    bool first = sources.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
-                    bool others = sources.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
-                    return first && !others;
-                }
+                    {
+                        bool first = sources.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
+                        bool others = sources.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
+                        return first && !others;
+                    }
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -33,61 +33,61 @@ namespace DynamicData.Linq
                 switch (change.Reason)
                 {
                     case ListChangeReason.Add:
-                    {
-                        var item = change.Item.Current;
-                        var key = _keySelector(item);
-                        yield return new Change<TObject, TKey>(ChangeReason.Add, key, item);
-
-                        break;
-                    }
-                    case ListChangeReason.AddRange:
-                    {
-                        foreach (var item in change.Range)
                         {
+                            var item = change.Item.Current;
                             var key = _keySelector(item);
                             yield return new Change<TObject, TKey>(ChangeReason.Add, key, item);
+
+                            break;
                         }
-
-                        break;
-                    }
-                    case ListChangeReason.Replace:
-                    {
-                        //replace is a remove and add
-                        var previous = change.Item.Previous.Value;
-                        var previousKey = _keySelector(previous);
-                        yield return new Change<TObject, TKey>(ChangeReason.Remove, previousKey, previous);
-
-                        var current = change.Item.Current;
-                        var currentKey = _keySelector(current);
-                        yield return new Change<TObject, TKey>(ChangeReason.Add, currentKey, current);
-
-                        break;
-                    }
-                    case ListChangeReason.Remove:
-                    {
-                        var item = change.Item.Current;
-                        var key = _keySelector(item);
-                        yield return new Change<TObject, TKey>(ChangeReason.Remove, key, item);
-
-                        break;
-                    }
-                    case ListChangeReason.Clear:
-                    case ListChangeReason.RemoveRange:
-                    {
-                        foreach (var item in change.Range)
+                    case ListChangeReason.AddRange:
                         {
+                            foreach (var item in change.Range)
+                            {
+                                var key = _keySelector(item);
+                                yield return new Change<TObject, TKey>(ChangeReason.Add, key, item);
+                            }
+
+                            break;
+                        }
+                    case ListChangeReason.Replace:
+                        {
+                            //replace is a remove and add
+                            var previous = change.Item.Previous.Value;
+                            var previousKey = _keySelector(previous);
+                            yield return new Change<TObject, TKey>(ChangeReason.Remove, previousKey, previous);
+
+                            var current = change.Item.Current;
+                            var currentKey = _keySelector(current);
+                            yield return new Change<TObject, TKey>(ChangeReason.Add, currentKey, current);
+
+                            break;
+                        }
+                    case ListChangeReason.Remove:
+                        {
+                            var item = change.Item.Current;
                             var key = _keySelector(item);
                             yield return new Change<TObject, TKey>(ChangeReason.Remove, key, item);
-                        }
 
-                        break;
-                    }
+                            break;
+                        }
+                    case ListChangeReason.Clear:
+                    case ListChangeReason.RemoveRange:
+                        {
+                            foreach (var item in change.Range)
+                            {
+                                var key = _keySelector(item);
+                                yield return new Change<TObject, TKey>(ChangeReason.Remove, key, item);
+                            }
+
+                            break;
+                        }
                     case ListChangeReason.Moved:
-                    {
-                        var key = _keySelector(change.Item.Current);
-                        yield return new Change<TObject, TKey>(ChangeReason.Moved, key, change.Item.Current, change.Item.Previous, change.Item.CurrentIndex, change.Item.PreviousIndex);
-                        break;
-                    }
+                        {
+                            var key = _keySelector(change.Item.Current);
+                            yield return new Change<TObject, TKey>(ChangeReason.Moved, key, change.Item.Current, change.Item.Previous, change.Item.CurrentIndex, change.Item.PreviousIndex);
+                            break;
+                        }
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

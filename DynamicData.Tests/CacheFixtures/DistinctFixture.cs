@@ -82,25 +82,24 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void BreakWithLoadsOfUpdates()
         {
-
             _source.Edit(updater =>
             {
                 updater.AddOrUpdate(new Person("Person2", 12));
                 updater.AddOrUpdate(new Person("Person1", 1));
                 updater.AddOrUpdate(new Person("Person1", 1));
                 updater.AddOrUpdate(new Person("Person2", 12));
-     
+
 
                 updater.AddOrUpdate(new Person("Person3", 13));
                 updater.AddOrUpdate(new Person("Person4", 14));
             });
 
-            CollectionAssert.AreEquivalent(new[] {1, 12, 13, 14}, _results.Data.Items);
+            CollectionAssert.AreEquivalent(new[] { 1, 12, 13, 14 }, _results.Data.Items);
 
             //This previously threw
             _source.Remove(new Person("Person3", 13));
 
-            CollectionAssert.AreEquivalent(new[] {1, 12, 14}, _results.Data.Items);
+            CollectionAssert.AreEquivalent(new[] { 1, 12, 14 }, _results.Data.Items);
         }
     }
 }

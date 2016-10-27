@@ -1,4 +1,5 @@
-﻿namespace DynamicData.Aggregation
+﻿
+namespace DynamicData.Aggregation
 {
     /// <summary>
     /// An object representing added and removed itemsin a continous aggregation stream

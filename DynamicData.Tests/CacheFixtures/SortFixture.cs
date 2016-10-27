@@ -43,11 +43,11 @@ namespace DynamicData.Tests.CacheFixtures
 
         public class TestString : IEquatable<TestString>
         {
-            private readonly string name;
+            private readonly string _name;
 
             public TestString(string name)
             {
-                this.name = name;
+                _name = name;
             }
 
             public static implicit operator TestString(string source)
@@ -55,14 +55,14 @@ namespace DynamicData.Tests.CacheFixtures
                 return new TestString(source);
             }
 
-            public static implicit operator string(TestString source)
+            public static implicit operator string (TestString source)
             {
-                return source.name;
+                return source._name;
             }
 
             public bool Equals(TestString other)
             {
-                return StringComparer.InvariantCultureIgnoreCase.Equals(this.name, other.name);
+                return StringComparer.InvariantCultureIgnoreCase.Equals(_name, other._name);
             }
 
             public override bool Equals(object obj)
@@ -72,7 +72,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             public override int GetHashCode()
             {
-                return StringComparer.InvariantCultureIgnoreCase.GetHashCode(this.name);
+                return StringComparer.InvariantCultureIgnoreCase.GetHashCode(_name);
             }
         }
 

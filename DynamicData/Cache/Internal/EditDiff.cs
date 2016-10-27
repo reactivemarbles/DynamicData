@@ -32,8 +32,8 @@ namespace DynamicData.Cache.Internal
 
                 //calculate intersect where the item has changed.
                 var intersect = newItems
-                        .Select(kvp => new { Original= innerCache.Lookup(kvp.Key), NewItem = kvp })
-                        .Where(x=>x.Original.HasValue && !_areEqual(x.Original.Value, x.NewItem.Value))
+                        .Select(kvp => new { Original = innerCache.Lookup(kvp.Key), NewItem = kvp })
+                        .Where(x => x.Original.HasValue && !_areEqual(x.Original.Value, x.NewItem.Value))
                         .Select(x => new KeyValuePair<TKey, TObject>(x.NewItem.Key, x.NewItem.Value))
                         .ToArray();
 
@@ -42,5 +42,4 @@ namespace DynamicData.Cache.Internal
             });
         }
     }
-
 }

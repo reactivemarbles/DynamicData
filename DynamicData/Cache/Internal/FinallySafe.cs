@@ -20,7 +20,6 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<T> Run()
         {
-
             return Observable.Create<T>(o =>
             {
                 var finallyOnce = Disposable.Create(_finallyAction);

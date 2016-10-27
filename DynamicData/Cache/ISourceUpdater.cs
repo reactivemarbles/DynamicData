@@ -59,6 +59,5 @@ namespace DynamicData
         /// </summary>
         /// <param name="item">The item.</param>
         void Remove(TObject item);
-
     }
 }

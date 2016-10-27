@@ -11,7 +11,7 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<TObject>> _source;
         private readonly Func<TObject, TGroupKey> _groupSelector;
-        
+
         public GroupOn([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -26,14 +26,13 @@ namespace DynamicData.Internal
             {
                 var groupings = new ChangeAwareList<IGroup<TObject, TGroupKey>>();
                 var groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
-                
+
                 return _source.Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
                               .Select(changes => Process(groupings, groupCache, changes))
                               .DisposeMany() //dispose removes as the grouping is disposable
                               .NotEmpty()
                               .SubscribeSafe(observer);
             });
-
         }
 
         private IChangeSet<IGroup<TObject, TGroupKey>> Process(ChangeAwareList<IGroup<TObject, TGroupKey>> result, IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection, IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
@@ -61,26 +60,26 @@ namespace DynamicData.Internal
                             switch (change.Reason)
                             {
                                 case ListChangeReason.Add:
-                                {
-                                    list.Add(change.Current.Item);
-                                    break;
-                                }
-                                case ListChangeReason.Replace:
-                                {
-                                    var previousItem = change.Previous.Value.Item;
-                                    var previousGroup = change.Previous.Value.Value;
-
-                                    //check whether an item changing has resulted in a different group
-                                    if (previousGroup.Equals(currentGroup))
                                     {
-                                        //find and replace
-                                        var index = list.IndexOf(previousItem);
-                                        list[index] = change.Current.Item;
-                                    }
-                                    else
-                                    {
-                                        //add to new group
                                         list.Add(change.Current.Item);
+                                        break;
+                                    }
+                                case ListChangeReason.Replace:
+                                    {
+                                        var previousItem = change.Previous.Value.Item;
+                                        var previousGroup = change.Previous.Value.Value;
+
+                                        //check whether an item changing has resulted in a different group
+                                        if (previousGroup.Equals(currentGroup))
+                                        {
+                                            //find and replace
+                                            var index = list.IndexOf(previousItem);
+                                            list[index] = change.Current.Item;
+                                        }
+                                        else
+                                        {
+                                            //add to new group
+                                            list.Add(change.Current.Item);
 
                                             //remove from old group
                                             groupCollection.Lookup(previousGroup)
@@ -91,20 +90,20 @@ namespace DynamicData.Internal
                                                        groupCollection.Remove(g.GroupKey);
                                                        result.Remove(g);
                                                    });
-                                    }
+                                        }
 
-                                    break;
-                                }
+                                        break;
+                                    }
                                 case ListChangeReason.Remove:
-                                {
-                                    list.Remove(change.Current.Item);
-                                    break;
-                                }
+                                    {
+                                        list.Remove(change.Current.Item);
+                                        break;
+                                    }
                                 case ListChangeReason.Clear:
-                                {
-                                    list.Clear();
-                                    break;
-                                }
+                                    {
+                                        list.Clear();
+                                        break;
+                                    }
                             }
                         }
                     });

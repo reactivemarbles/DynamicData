@@ -71,66 +71,66 @@ namespace DynamicData.Cache.Internal
                 {
                     case ChangeReason.Add:
                     case ChangeReason.Update:
-                    {
-                        // get the current key.
-                        //check whether the item should belong to the cache
-                        var cached = _combinedCache.Lookup(key);
-                        var contained = cached.HasValue;
-                        var match = MatchesConstraint(key);
-
-                        if (match)
                         {
-                            if (contained)
+                            // get the current key.
+                            //check whether the item should belong to the cache
+                            var cached = _combinedCache.Lookup(key);
+                            var contained = cached.HasValue;
+                            var match = MatchesConstraint(key);
+
+                            if (match)
                             {
-                                if (!ReferenceEquals(update.Current, cached.Value))
+                                if (contained)
+                                {
+                                    if (!ReferenceEquals(update.Current, cached.Value))
+                                        _combinedCache.AddOrUpdate(update.Current, key);
+                                }
+                                else
+                                {
                                     _combinedCache.AddOrUpdate(update.Current, key);
+                                }
                             }
                             else
                             {
-                                _combinedCache.AddOrUpdate(update.Current, key);
+                                if (contained)
+                                    _combinedCache.Remove(key);
                             }
                         }
-                        else
-                        {
-                            if (contained)
-                                _combinedCache.Remove(key);
-                        }
-                    }
                         break;
 
                     case ChangeReason.Remove:
-                    {
-                        var cached = _combinedCache.Lookup(key);
-                        var contained = cached.HasValue;
-                        bool shouldBeIncluded = MatchesConstraint(key);
-
-                        if (shouldBeIncluded)
                         {
-                            var firstOne = _sourceCaches.Select(s => s.Lookup(key))
-                                .SelectValues()
-                                .First();
+                            var cached = _combinedCache.Lookup(key);
+                            var contained = cached.HasValue;
+                            bool shouldBeIncluded = MatchesConstraint(key);
 
-                            if (!cached.HasValue)
+                            if (shouldBeIncluded)
                             {
-                                _combinedCache.AddOrUpdate(firstOne, key);
+                                var firstOne = _sourceCaches.Select(s => s.Lookup(key))
+                                    .SelectValues()
+                                    .First();
+
+                                if (!cached.HasValue)
+                                {
+                                    _combinedCache.AddOrUpdate(firstOne, key);
+                                }
+                                else if (!ReferenceEquals(firstOne, cached.Value))
+                                {
+                                    _combinedCache.AddOrUpdate(firstOne, key);
+                                }
                             }
-                            else if (!ReferenceEquals(firstOne, cached.Value))
+                            else
                             {
-                                _combinedCache.AddOrUpdate(firstOne, key);
+                                if (contained)
+                                    _combinedCache.Remove(key);
                             }
                         }
-                        else
-                        {
-                            if (contained)
-                                _combinedCache.Remove(key);
-                        }
-                    }
                         break;
 
                     case ChangeReason.Evaluate:
-                    {
-                        _combinedCache.Evaluate(key);
-                    }
+                        {
+                            _combinedCache.Evaluate(key);
+                        }
                         break;
                 }
             }
@@ -142,23 +142,23 @@ namespace DynamicData.Cache.Internal
             switch (_type)
             {
                 case CombineOperator.And:
-                {
-                    return _sourceCaches.All(s => s.Lookup(key).HasValue);
-                }
+                    {
+                        return _sourceCaches.All(s => s.Lookup(key).HasValue);
+                    }
                 case CombineOperator.Or:
-                {
-                    return _sourceCaches.Any(s => s.Lookup(key).HasValue);
-                }
+                    {
+                        return _sourceCaches.Any(s => s.Lookup(key).HasValue);
+                    }
                 case CombineOperator.Xor:
-                {
-                    return _sourceCaches.Count(s => s.Lookup(key).HasValue) == 1;
-                }
+                    {
+                        return _sourceCaches.Count(s => s.Lookup(key).HasValue) == 1;
+                    }
                 case CombineOperator.Except:
-                {
-                    bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
-                    bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
-                    return first && !others;
-                }
+                    {
+                        bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
+                        bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
+                        return first && !others;
+                    }
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -51,7 +51,6 @@ namespace DynamicData.Cache.Internal
                         .Select(changes => query)
                         .SubscribeSafe(observer);
                 }
-
             });
         }
     }

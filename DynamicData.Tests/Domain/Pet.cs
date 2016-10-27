@@ -1,3 +1,4 @@
+
 namespace DynamicData.Tests.Domain
 {
     public class Pet

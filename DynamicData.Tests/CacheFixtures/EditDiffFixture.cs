@@ -5,7 +5,6 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
-
     [TestFixture]
     public class EditDiffFixture
     {
@@ -19,7 +18,7 @@ namespace DynamicData.Tests.CacheFixtures
             _result = _cache.Connect().AsAggregator();
             _cache.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray());
         }
-        
+
         [TearDown]
         public void OnTestCompleted()
         {
@@ -27,7 +26,7 @@ namespace DynamicData.Tests.CacheFixtures
             _result.Dispose();
         }
 
-   
+
 
         [Test]
         public void New()
@@ -90,7 +89,6 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void VariousChanges()
         {
-
             var newList = Enumerable.Range(6, 10).Select(i => new Person("Name" + i, i + 10)).ToArray();
 
             _cache.EditDiff(newList, (current, previous) => Person.AgeComparer.Equals(current, previous));
@@ -167,7 +165,6 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void VariousChanges_WithEqualityComparer()
         {
-
             var newList = Enumerable.Range(6, 10).Select(i => new Person("Name" + i, i + 10)).ToArray();
 
             _cache.EditDiff(newList, Person.AgeComparer);
@@ -181,6 +178,5 @@ namespace DynamicData.Tests.CacheFixtures
 
             CollectionAssert.AreEquivalent(newList, _cache.Items);
         }
-
     }
 }

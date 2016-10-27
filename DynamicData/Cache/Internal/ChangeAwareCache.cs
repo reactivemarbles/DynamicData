@@ -9,7 +9,7 @@ namespace DynamicData.Cache.Internal
     internal class ChangeAwareCache<TObject, TKey>
     {
         private List<Change<TObject, TKey>> _changes = new List<Change<TObject, TKey>>();
-        
+
         private Dictionary<TKey, TObject> _data;
 
         public int Count => _data.Count;
@@ -96,8 +96,8 @@ namespace DynamicData.Cache.Internal
                 switch (change.Reason)
                 {
                     case ChangeReason.Add:
-                     case ChangeReason.Update:
-                       AddOrUpdate(change.Current, change.Key);
+                    case ChangeReason.Update:
+                        AddOrUpdate(change.Current, change.Key);
                         break;
                     case ChangeReason.Remove:
                         Remove(change.Key);

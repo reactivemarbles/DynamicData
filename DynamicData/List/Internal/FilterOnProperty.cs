@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal
 {
-    class FilterOnProperty<TObject, TProperty> where TObject: INotifyPropertyChanged
+    internal class FilterOnProperty<TObject, TProperty> where TObject : INotifyPropertyChanged
     {
         private readonly Func<TObject, bool> _predicate;
         private readonly Expression<Func<TObject, TProperty>> _propertySelector;
@@ -20,7 +20,6 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<TObject>> Run()
         {
-
             return _source.Publish(shared =>
             {
                 //do not filter on initial value otherwise every object loaded will invoke a requery
@@ -30,7 +29,6 @@ namespace DynamicData.List.Internal
 
                 // filter all in source, based on match funcs that update on prop change
                 return shared.Filter(predicateStream);
-
             });
         }
     }

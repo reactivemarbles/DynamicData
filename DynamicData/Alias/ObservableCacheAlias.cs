@@ -13,7 +13,6 @@ namespace DynamicData.Alias
     /// </summary>
     public static class ObservableCacheAlias
     {
-
         #region  Filter -> Where
 
         /// <summary>

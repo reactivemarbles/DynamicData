@@ -40,7 +40,6 @@ namespace DynamicData.Cache.Internal
                     Interlocked.Exchange(ref _cache, null);
                 });
             });
-
         }
     }
 }

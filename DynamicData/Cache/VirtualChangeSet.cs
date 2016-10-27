@@ -15,7 +15,7 @@ namespace DynamicData
             SortedItems = sortedItems;
             Response = response;
         }
-        
+
         #region Equality
 
         public bool Equals(VirtualChangeSet<TObject, TKey> other)

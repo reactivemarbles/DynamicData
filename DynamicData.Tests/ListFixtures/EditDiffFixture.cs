@@ -4,7 +4,6 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-
     [TestFixture]
     public class EditDiffFixture
     {
@@ -85,8 +84,7 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void VariousChanges()
         {
-
-            var newList = Enumerable.Range(6, 10).Select(i => new Person("Name" + i, i )).ToArray();
+            var newList = Enumerable.Range(6, 10).Select(i => new Person("Name" + i, i)).ToArray();
 
             _cache.EditDiff(newList, Person.NameAgeGenderComparer);
 

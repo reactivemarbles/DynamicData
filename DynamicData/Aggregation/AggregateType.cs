@@ -1,4 +1,5 @@
-﻿namespace DynamicData.Aggregation
+﻿
+namespace DynamicData.Aggregation
 {
     /// <summary>
     /// The type of aggregation

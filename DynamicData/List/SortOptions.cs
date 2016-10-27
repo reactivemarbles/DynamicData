@@ -1,4 +1,5 @@
-﻿namespace DynamicData
+﻿
+namespace DynamicData
 {
     /// <summary>
     /// Options for sorting

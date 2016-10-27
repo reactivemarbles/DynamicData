@@ -102,21 +102,18 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void ThrowsForNullParameters()
         {
-          
             Assert.Throws<ArgumentNullException>(() => _pageController.Change(null));
         }
 
         [Test]
         public void ThrowsForNegativeSizeParameters()
         {
-       
             Assert.Throws<ArgumentException>(() => _pageController.Change(new PageRequest(1, -1)));
         }
 
         [Test]
         public void ThrowsForNegativePage()
         {
-          
             Assert.Throws<ArgumentException>(() => _pageController.Change(new PageRequest(-1, 1)));
         }
     }

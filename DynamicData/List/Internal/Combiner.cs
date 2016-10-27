@@ -53,7 +53,7 @@ namespace DynamicData.Internal
 
         private void CloneSourceList(ReferenceCountTracker<T> tracker, IChangeSet<T> changes)
         {
-            foreach(var change in changes)
+            foreach (var change in changes)
             {
                 switch (change.Reason)
                 {
@@ -83,7 +83,7 @@ namespace DynamicData.Internal
         private IChangeSet<T> UpdateResultList(IChangeSet<T> changes, List<ReferenceCountTracker<T>> sourceLists, ChangeAwareListWithRefCounts<T> resultList)
         {
             //child caches have been updated before we reached this point.
-            foreach(var change in changes.Flatten())
+            foreach (var change in changes.Flatten())
             {
                 var item = change.Current;
                 var isInResult = resultList.Contains(item);
@@ -108,23 +108,23 @@ namespace DynamicData.Internal
             switch (_type)
             {
                 case CombineOperator.And:
-                {
-                    return sourceLists.All(s => s.Contains(item));
-                }
+                    {
+                        return sourceLists.All(s => s.Contains(item));
+                    }
                 case CombineOperator.Or:
-                {
-                    return sourceLists.Any(s => s.Contains(item));
-                }
+                    {
+                        return sourceLists.Any(s => s.Contains(item));
+                    }
                 case CombineOperator.Xor:
-                {
-                    return sourceLists.Count(s => s.Contains(item)) == 1;
-                }
+                    {
+                        return sourceLists.Count(s => s.Contains(item)) == 1;
+                    }
                 case CombineOperator.Except:
-                {
-                    var first = sourceLists[0].Contains(item);
-                    var others = sourceLists.Skip(1).Any(s => s.Contains(item));
-                    return first && !others;
-                }
+                    {
+                        var first = sourceLists[0].Contains(item);
+                        var others = sourceLists.Skip(1).Any(s => s.Contains(item));
+                        return first && !others;
+                    }
                 default:
                     throw new ArgumentOutOfRangeException();
             }

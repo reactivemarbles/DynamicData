@@ -6,7 +6,7 @@ namespace DynamicData.Tests.Domain
 {
     public class RandomPersonGenerator
     {
-        readonly IEnumerable<string> _boys = new List<string>()
+        private readonly IEnumerable<string> _boys = new List<string>()
         {
             "Sergio", "Daniel", "Carolina", "David", "Reina", "Saul", "Bernard", "Danny",
             "Dimas", "Yuri", "Ivan", "Laura", "John", "Bob", "Charles", "Rupert", "William",

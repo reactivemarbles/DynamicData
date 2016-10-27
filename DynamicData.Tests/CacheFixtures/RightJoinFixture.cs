@@ -108,7 +108,6 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddRightThenLeft()
         {
-
             _right.Edit(innerCache =>
             {
                 innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
@@ -132,7 +131,6 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void UpdateRight()
         {
-
             _right.Edit(innerCache =>
             {
                 innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
@@ -269,9 +267,9 @@ namespace DynamicData.Tests.CacheFixtures
 
         public class DeviceWithMetadata : IEquatable<DeviceWithMetadata>
         {
-            public string Key { get;  }
-            public Optional<Device> Device { get;  }
-            public DeviceMetaData MetaData { get;  }
+            public string Key { get; }
+            public Optional<Device> Device { get; }
+            public DeviceMetaData MetaData { get; }
 
 
 
@@ -280,7 +278,6 @@ namespace DynamicData.Tests.CacheFixtures
                 Key = key;
                 Device = device;
                 MetaData = metaData;
-
             }
 
             #region Equality members
@@ -297,7 +294,7 @@ namespace DynamicData.Tests.CacheFixtures
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
-                return Equals((DeviceWithMetadata) obj);
+                return Equals((DeviceWithMetadata)obj);
             }
 
             public override int GetHashCode()

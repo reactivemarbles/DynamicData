@@ -7,13 +7,13 @@ using Timer = System.Timers.Timer;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    class GroupMisssingkey
+    internal class GroupMisssingkey
     {
-        private  DataSource _dataSource;
+        private DataSource _dataSource;
 
         [Explicit]
         [Test]
-        public void  Test2()
+        public void Test2()
         {
             //This causes a race condition!
             _dataSource = new DataSource();
@@ -28,16 +28,16 @@ namespace DynamicData.Tests.ListFixtures
             Thread.Sleep(TimeSpan.FromSeconds(120));
         }
 
-        void TimerElapsed(object sender, ElapsedEventArgs e)
+        private void TimerElapsed(object sender, ElapsedEventArgs e)
         {
             var r = new Random();
             var item = new MyItem { ID = r.Next(0, 100) };
             _dataSource.Add(item);
         }
 
-        class DataSource
+        private class DataSource
         {
-            private readonly object locker = new object();
+            private readonly object _locker = new object();
             private readonly SourceCache<MyItem, int> _sourceCache;
             public DataSource()
             {
@@ -59,7 +59,7 @@ namespace DynamicData.Tests.ListFixtures
             }
         }
 
-        class MyItem : IEquatable<MyItem>
+        private class MyItem : IEquatable<MyItem>
         {
             public int ID { get; set; }
             public int TypeID { get; set; }

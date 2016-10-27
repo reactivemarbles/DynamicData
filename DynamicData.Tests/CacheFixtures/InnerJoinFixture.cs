@@ -46,7 +46,6 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.IsFalse(_result.Data.Lookup("Device1").HasValue);
             Assert.IsFalse(_result.Data.Lookup("Device2").HasValue);
             Assert.IsFalse(_result.Data.Lookup("Device3").HasValue);
-
         }
 
 
@@ -126,7 +125,6 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddRightThenLeft()
         {
-
             _right.Edit(innerCache =>
             {
                 innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
@@ -148,7 +146,6 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void UpdateRight()
         {
-
             _right.Edit(innerCache =>
             {
                 innerCache.AddOrUpdate(new DeviceMetaData("Device1"));

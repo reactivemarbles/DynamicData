@@ -51,6 +51,5 @@ namespace DynamicData
         {
             return GetEnumerator();
         }
-
     }
 }

@@ -24,7 +24,7 @@ namespace DynamicData.Tests.Domain
 
         public string Name => _name;
 
-        public int Age { get;  }
+        public int Age { get; }
 
         public string KeyValue { get; }
 

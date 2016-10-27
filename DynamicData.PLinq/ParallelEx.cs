@@ -56,24 +56,24 @@ namespace DynamicData.PLinq
             switch (option.Type)
             {
                 case ParallelType.Parallelise:
-                {
-                    var parallelise = source as T[] ?? source.ToArray();
-                    if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)
                     {
-                        return parallelise.AsParallel();
+                        var parallelise = source as T[] ?? source.ToArray();
+                        if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)
+                        {
+                            return parallelise.AsParallel();
+                        }
+                        return parallelise;
                     }
-                    return parallelise;
-                }
 
                 case ParallelType.Ordered:
-                {
-                    var parallelise = source as T[] ?? source.ToArray();
-                    if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)
                     {
-                        return parallelise.AsParallel().AsOrdered();
+                        var parallelise = source as T[] ?? source.ToArray();
+                        if (option.Threshold >= 0 && parallelise.Length >= option.Threshold)
+                        {
+                            return parallelise.AsParallel().AsOrdered();
+                        }
+                        return parallelise;
                     }
-                    return parallelise;
-                }
                 default:
                     return source;
             }

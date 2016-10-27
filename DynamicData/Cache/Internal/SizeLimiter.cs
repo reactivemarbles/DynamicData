@@ -48,7 +48,7 @@ namespace DynamicData.Cache.Internal
 
             return _cache.KeyValues.OrderByDescending(exp => exp.Value.Index)
                                       .Skip(_sizeLimit)
-                                      .Select(kvp=> kvp.Key)
+                                      .Select(kvp => kvp.Key)
                                       .ToArray();
         }
     }

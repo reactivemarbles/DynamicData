@@ -1,4 +1,5 @@
-﻿namespace DynamicData
+﻿
+namespace DynamicData
 {
     /// <summary>
     /// Base interface represeting a set of changed

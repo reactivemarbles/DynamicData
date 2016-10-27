@@ -1,4 +1,5 @@
-﻿namespace DynamicData.Binding
+﻿
+namespace DynamicData.Binding
 {
     /// <summary>
     /// Implement on an object and use in conjunction with UpdateIndex operator

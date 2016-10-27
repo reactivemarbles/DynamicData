@@ -86,9 +86,9 @@ namespace DynamicData.Tests.Domain
             }
         }
 
-        private static readonly IEqualityComparer<PersonNoKey> NameAgeComparerInstance = new NameAgeEqualityComparer();
+        private static readonly IEqualityComparer<PersonNoKey> s_nameAgeComparerInstance = new NameAgeEqualityComparer();
 
-        public static IEqualityComparer<PersonNoKey> NameAgeComparer { get { return NameAgeComparerInstance; } }
+        public static IEqualityComparer<PersonNoKey> NameAgeComparer { get { return s_nameAgeComparerInstance; } }
 
         #endregion
     }

@@ -1,7 +1,6 @@
 using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -57,17 +56,17 @@ namespace DynamicData.Cache.Internal
                                 {
                                     case ChangeReason.Add:
                                     case ChangeReason.Update:
-                                    {
-                                        if (right.HasValue)
                                         {
-                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left, right.Value), change.Key);
+                                            if (right.HasValue)
+                                            {
+                                                innerCache.AddOrUpdate(_resultSelector(change.Key, left, right.Value), change.Key);
+                                            }
+                                            else
+                                            {
+                                                innerCache.Remove(change.Key);
+                                            }
+                                            break;
                                         }
-                                        else
-                                        {
-                                            innerCache.Remove(change.Key);
-                                        }
-                                        break;
-                                    }
 
                                     case ChangeReason.Remove:
                                         innerCache.Remove(change.Key);
@@ -95,22 +94,21 @@ namespace DynamicData.Cache.Internal
                                 {
                                     case ChangeReason.Add:
                                     case ChangeReason.Update:
-                                    {
-                                        if (left.HasValue)
                                         {
-                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left.Value, right), change.Key);
+                                            if (left.HasValue)
+                                            {
+                                                innerCache.AddOrUpdate(_resultSelector(change.Key, left.Value, right), change.Key);
+                                            }
+                                            else
+                                            {
+                                                innerCache.Remove(change.Key);
+                                            }
                                         }
-                                        else
-                                        {
-                                            innerCache.Remove(change.Key);
-                                        }
-
-                                    }
                                         break;
                                     case ChangeReason.Remove:
-                                    {
-                                        innerCache.Remove(change.Key);;
-                                    }
+                                        {
+                                            innerCache.Remove(change.Key); ;
+                                        }
                                         break;
                                     case ChangeReason.Evaluate:
                                         //propagate upstream

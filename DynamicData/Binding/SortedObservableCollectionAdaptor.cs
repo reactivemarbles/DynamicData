@@ -73,7 +73,7 @@ namespace DynamicData.Binding
 
         private void DoUpdate(ISortedChangeSet<TObject, TKey> updates, IObservableCollection<TObject> list)
         {
-            foreach(var update in updates)
+            foreach (var update in updates)
             {
                 switch (update.Reason)
                 {

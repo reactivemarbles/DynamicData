@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    class SizeLimitFixture
+    internal class SizeLimitFixture
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;
@@ -90,7 +90,7 @@ namespace DynamicData.Tests.ListFixtures
         public void ForceError()
         {
             var person = _generator.Take(1).First();
-           Assert.Throws<ArgumentOutOfRangeException>(()=> _source.RemoveAt(1)) ;
+            Assert.Throws<ArgumentOutOfRangeException>(() => _source.RemoveAt(1));
         }
 
         [Test]
@@ -106,7 +106,6 @@ namespace DynamicData.Tests.ListFixtures
         {
             // Initialise();
             Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
-          
         }
 
         //[Test]

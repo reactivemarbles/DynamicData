@@ -12,8 +12,8 @@ namespace DynamicData.Cache.Internal
         private readonly Func<TObject, IObservable<TValue>> _observableSelector;
         private readonly Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> _collectionMatcher;
 
-        public TrueFor(IObservable<IChangeSet<TObject, TKey>> source, 
-            Func<TObject, IObservable<TValue>> observableSelector,                                                            
+        public TrueFor(IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, IObservable<TValue>> observableSelector,
             Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -22,7 +22,6 @@ namespace DynamicData.Cache.Internal
             _source = source;
             _observableSelector = observableSelector;
             _collectionMatcher = collectionMatcher;
-
         }
 
         public IObservable<bool> Run()

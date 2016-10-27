@@ -90,104 +90,104 @@ namespace DynamicData.Internal
 
             transformed.EnsureCapacityFor(changes);
 
-            foreach(var item in changes)
+            foreach (var item in changes)
             {
                 switch (item.Reason)
                 {
                     case ListChangeReason.Add:
-                    {
-                        var change = item.Item;
-                        if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
                         {
-                            transformed.Add(_containerFactory(change.Current));
+                            var change = item.Item;
+                            if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
+                            {
+                                transformed.Add(_containerFactory(change.Current));
+                            }
+                            else
+                            {
+                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                            }
+                            break;
                         }
-                        else
-                        {
-                            transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
-                        }
-                        break;
-                    }
                     case ListChangeReason.AddRange:
-                    {
-                        transformed.AddOrInsertRange(item.Range.Select(_containerFactory), item.Range.Index);
-                        break;
-                    }
+                        {
+                            transformed.AddOrInsertRange(item.Range.Select(_containerFactory), item.Range.Index);
+                            break;
+                        }
                     case ListChangeReason.Replace:
-                    {
-                        var change = item.Item;
-                        if (change.CurrentIndex == change.PreviousIndex)
                         {
-                            transformed[change.CurrentIndex] = _containerFactory(change.Current);
-                        }
-                        else
-                        {
-                            transformed.RemoveAt(change.PreviousIndex);
-                            transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
-                        }
+                            var change = item.Item;
+                            if (change.CurrentIndex == change.PreviousIndex)
+                            {
+                                transformed[change.CurrentIndex] = _containerFactory(change.Current);
+                            }
+                            else
+                            {
+                                transformed.RemoveAt(change.PreviousIndex);
+                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                     case ListChangeReason.Remove:
-                    {
-                        var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
-
-                        if (hasIndex)
                         {
-                            transformed.RemoveAt(item.Item.CurrentIndex);
-                        }
-                        else
-                        {
-                            var toremove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
+                            var change = item.Item;
+                            bool hasIndex = change.CurrentIndex >= 0;
 
-                            if (toremove != null)
-                                transformed.Remove(toremove);
-                        }
+                            if (hasIndex)
+                            {
+                                transformed.RemoveAt(item.Item.CurrentIndex);
+                            }
+                            else
+                            {
+                                var toremove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
 
-                        break;
-                    }
+                                if (toremove != null)
+                                    transformed.Remove(toremove);
+                            }
+
+                            break;
+                        }
                     case ListChangeReason.RemoveRange:
-                    {
-                        if (item.Range.Index >= 0)
                         {
-                            transformed.RemoveRange(item.Range.Index, item.Range.Count);
-                        }
-                        else
-                        {
-                            var toremove = transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
-                            transformed.RemoveMany(toremove);
-                        }
+                            if (item.Range.Index >= 0)
+                            {
+                                transformed.RemoveRange(item.Range.Index, item.Range.Count);
+                            }
+                            else
+                            {
+                                var toremove = transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
+                                transformed.RemoveMany(toremove);
+                            }
 
-                        break;
-                    }
+                            break;
+                        }
                     case ListChangeReason.Clear:
-                    {
-                        //i.e. need to store transformed reference so we can correctly clear
-                        var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, transformed);
-                        transformed.ClearOrRemoveMany(toClear);
+                        {
+                            //i.e. need to store transformed reference so we can correctly clear
+                            var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, transformed);
+                            transformed.ClearOrRemoveMany(toClear);
 
-                        break;
-                    }
+                            break;
+                        }
                     case ListChangeReason.Moved:
-                    {
-                        var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
-                        if (!hasIndex)
-                            throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+                        {
+                            var change = item.Item;
+                            bool hasIndex = change.CurrentIndex >= 0;
+                            if (!hasIndex)
+                                throw new UnspecifiedIndexException("Cannot move as an index was not specified");
 
-                        var collection = transformed as IExtendedList<TransformedItemContainer>;
-                        if (collection != null)
-                        {
-                            collection.Move(change.PreviousIndex, change.CurrentIndex);
+                            var collection = transformed as IExtendedList<TransformedItemContainer>;
+                            if (collection != null)
+                            {
+                                collection.Move(change.PreviousIndex, change.CurrentIndex);
+                            }
+                            else
+                            {
+                                var current = transformed[change.PreviousIndex];
+                                transformed.RemoveAt(change.PreviousIndex);
+                                transformed.Insert(change.CurrentIndex, current);
+                            }
+                            break;
                         }
-                        else
-                        {
-                            var current = transformed[change.PreviousIndex];
-                            transformed.RemoveAt(change.PreviousIndex);
-                            transformed.Insert(change.CurrentIndex, current);
-                        }
-                        break;
-                    }
                 }
             }
         }

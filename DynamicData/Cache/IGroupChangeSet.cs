@@ -1,4 +1,5 @@
-﻿namespace DynamicData
+﻿
+namespace DynamicData
 {
     /// <summary>
     ///  A grouped update collection

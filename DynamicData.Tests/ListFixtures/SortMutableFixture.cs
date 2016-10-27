@@ -11,14 +11,14 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    class SortMutableFixture
+    internal class SortMutableFixture
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private ISourceList<Person> _source;
         private ISubject<IComparer<Person>> _changeComparer;
         private ISubject<Unit> _resort;
         private ChangeSetAggregator<Person> _results;
-  
+
 
         private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>
             .Ascending(p => p.Age)
@@ -31,7 +31,7 @@ namespace DynamicData.Tests.ListFixtures
             _changeComparer = new Subject<IComparer<Person>>();
             _resort = new Subject<Unit>();
 
-            _results = _source.Connect().Sort(_comparer,resetThreshold:25,resort: _resort, comparerChanged: _changeComparer).AsAggregator();
+            _results = _source.Connect().Sort(_comparer, resetThreshold: 25, resort: _resort, comparerChanged: _changeComparer).AsAggregator();
         }
 
         [TearDown]
@@ -86,8 +86,6 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void Remove()
         {
-
-
             var people = _generator.Take(100).ToList();
             _source.AddRange(people);
 
@@ -169,7 +167,7 @@ namespace DynamicData.Tests.ListFixtures
             });
 
             _resort.OnNext(Unit.Default);
-            
+
             Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
 
             var expectedResult = people.OrderBy(p => p, _comparer);
@@ -189,7 +187,7 @@ namespace DynamicData.Tests.ListFixtures
                         .ThenByAscending(p => p.Age);
 
             _changeComparer.OnNext(newComparer);
-            
+
             Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
 
             var expectedResult = people.OrderBy(p => p, newComparer);

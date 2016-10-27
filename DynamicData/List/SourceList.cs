@@ -62,9 +62,7 @@ namespace DynamicData
             {
                 _readerWriter.Write(updateAction)
                     .Then(InvokeNext, errorHandler);
-
             }
-
         }
 
         private void InvokeNext(IChangeSet<T> changes)

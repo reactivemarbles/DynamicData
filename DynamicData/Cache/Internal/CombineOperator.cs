@@ -1,4 +1,5 @@
-﻿namespace DynamicData.Cache.Internal
+﻿
+namespace DynamicData.Cache.Internal
 {
     /// <summary>
     /// How the multiple streams are combinedL

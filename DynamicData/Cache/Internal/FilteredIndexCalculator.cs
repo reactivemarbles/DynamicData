@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -85,7 +84,7 @@ namespace DynamicData.Cache.Internal
 
                     //this should never be the case, but check anyway
                     if (previousindex == insertIndex) continue;
-                   
+
 
                     if (insertIndex < 0)
                         throw new SortException("Cannot determine current index");

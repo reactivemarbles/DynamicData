@@ -14,7 +14,7 @@ namespace DynamicData.Cache.Internal
         private readonly Func<TDestination, TDestinationKey> _keySelector;
 
         public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
-                                                         Func<TSource, IEnumerable<TDestination>> manyselector, 
+                                                         Func<TSource, IEnumerable<TDestination>> manyselector,
                                                          Func<TDestination, TDestinationKey> keySelector)
         {
             _source = source;
@@ -22,7 +22,7 @@ namespace DynamicData.Cache.Internal
             _keySelector = keySelector;
         }
 
-        public  IObservable<IChangeSet<TDestination, TDestinationKey>> Run()
+        public IObservable<IChangeSet<TDestination, TDestinationKey>> Run()
         {
             return _source.Transform((source, key) =>
                 {
@@ -39,7 +39,7 @@ namespace DynamicData.Cache.Internal
                 });
         }
 
-        private class DestinationEnumerator: IEnumerable<Change<TDestination, TDestinationKey>>
+        private class DestinationEnumerator : IEnumerable<Change<TDestination, TDestinationKey>>
         {
             private readonly IChangeSet<ManyContainer, TSourceKey> _changes;
 
@@ -52,43 +52,40 @@ namespace DynamicData.Cache.Internal
             {
                 foreach (var change in _changes)
                 {
-
                     switch (change.Reason)
                     {
                         case ChangeReason.Add:
                         case ChangeReason.Remove:
                         case ChangeReason.Evaluate:
-                        {
-                            foreach (var destination in change.Current.Destination)
-                                yield return new Change<TDestination, TDestinationKey>(change.Reason, destination.Key, destination.Item);
-                        }
+                            {
+                                foreach (var destination in change.Current.Destination)
+                                    yield return new Change<TDestination, TDestinationKey>(change.Reason, destination.Key, destination.Item);
+                            }
                             break;
                         case ChangeReason.Update:
-                        {
-                            var previousItems = change.Previous.Value.Destination.AsArray();
-                            var currentItems = change.Current.Destination.AsArray();
-                                
-                            var removes = previousItems.Except(currentItems, DestinationContainer.KeyComparer);
-                            var adds = currentItems.Except(previousItems, DestinationContainer.KeyComparer);
-                            var updates = currentItems.Intersect(previousItems, DestinationContainer.KeyComparer);
-
-                            foreach (var destination in removes)
-                                yield return new Change<TDestination, TDestinationKey>(ChangeReason.Remove, destination.Key, destination.Item);
-
-                            foreach (var destination in adds)
-                                yield return new Change<TDestination, TDestinationKey>(ChangeReason.Add, destination.Key, destination.Item);
-
-                            foreach (var destination in updates)
                             {
-                                var current = currentItems.First(d => d.Key.Equals(destination.Key));
-                                var previous = previousItems.First(d => d.Key.Equals(destination.Key));
-                                       
-                                //Do not update is items are the same reference
-                                if (!ReferenceEquals(current.Item, previous.Item))
-                                    yield return new Change<TDestination, TDestinationKey>(ChangeReason.Update, destination.Key, current.Item, previous.Item);
-                            }
+                                var previousItems = change.Previous.Value.Destination.AsArray();
+                                var currentItems = change.Current.Destination.AsArray();
 
+                                var removes = previousItems.Except(currentItems, DestinationContainer.KeyComparer);
+                                var adds = currentItems.Except(previousItems, DestinationContainer.KeyComparer);
+                                var updates = currentItems.Intersect(previousItems, DestinationContainer.KeyComparer);
 
+                                foreach (var destination in removes)
+                                    yield return new Change<TDestination, TDestinationKey>(ChangeReason.Remove, destination.Key, destination.Item);
+
+                                foreach (var destination in adds)
+                                    yield return new Change<TDestination, TDestinationKey>(ChangeReason.Add, destination.Key, destination.Item);
+
+                                foreach (var destination in updates)
+                                {
+                                    var current = currentItems.First(d => d.Key.Equals(destination.Key));
+                                    var previous = previousItems.First(d => d.Key.Equals(destination.Key));
+
+                                    //Do not update is items are the same reference
+                                    if (!ReferenceEquals(current.Item, previous.Item))
+                                        yield return new Change<TDestination, TDestinationKey>(ChangeReason.Update, destination.Key, current.Item, previous.Item);
+                                }
                             }
                             break;
                     }
@@ -143,11 +140,11 @@ namespace DynamicData.Cache.Internal
                 }
             }
 
-            private static readonly IEqualityComparer<DestinationContainer> KeyComparerInstance = new KeyEqualityComparer();
+            private static readonly IEqualityComparer<DestinationContainer> s_keyComparerInstance = new KeyEqualityComparer();
 
             public static IEqualityComparer<DestinationContainer> KeyComparer
             {
-                get { return KeyComparerInstance; }
+                get { return s_keyComparerInstance; }
             }
 
             #endregion

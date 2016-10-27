@@ -45,7 +45,7 @@ namespace DynamicData.Internal
                 var shared = _source.Synchronize(locker).Publish();
 
                 //take current filter state of all items
-                IDisposable updateall =  shared.Synchronize(locker)
+                var updateall = shared.Synchronize(locker)
                                       .Transform(t => new ItemWithMatch(t, _predicate(t)))
                                       .Subscribe(allWithMatch.Clone);
 

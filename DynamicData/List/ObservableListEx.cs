@@ -729,7 +729,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<TValue> WhenValueChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
-                                                                            [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, 
+                                                                            [NotNull] Expression<Func<TObject, TValue>> propertyAccessor,
                                                                             bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
@@ -754,7 +754,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>([NotNull] this IObservable<IChangeSet<TObject>> source,
-                                                                                                       [NotNull] Expression<Func<TObject, TValue>> propertyAccessor, 
+                                                                                                       [NotNull] Expression<Func<TObject, TValue>> propertyAccessor,
                                                                                                        bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
@@ -1080,7 +1080,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return  source.Connect().DeferUntilLoaded();
+            return source.Connect().DeferUntilLoaded();
         }
 
         #endregion

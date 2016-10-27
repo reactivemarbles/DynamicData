@@ -15,7 +15,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var subject = new Subject<Person>();
 
-            var results = subject.ToObservableChangeSet(p=>p.Key).AsAggregator();
+            var results = subject.ToObservableChangeSet(p => p.Key).AsAggregator();
             var person = new Person("A", 1);
             subject.OnNext(person);
 
@@ -61,7 +61,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var subject = new Subject<Person>();
             var scheduler = new TestScheduler();
-            var results = subject.ToObservableChangeSet(p => p.Key,limitSizeTo: 100, scheduler: scheduler).AsAggregator();
+            var results = subject.ToObservableChangeSet(p => p.Key, limitSizeTo: 100, scheduler: scheduler).AsAggregator();
 
             var items = Enumerable.Range(1, 200).Select(i => new Person("p" + i.ToString("000"), i)).ToArray();
             foreach (var person in items)

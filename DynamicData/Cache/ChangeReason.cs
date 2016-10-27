@@ -1,4 +1,5 @@
-﻿namespace DynamicData
+﻿
+namespace DynamicData
 {
     /// <summary>
     ///  The reason for an individual change.  

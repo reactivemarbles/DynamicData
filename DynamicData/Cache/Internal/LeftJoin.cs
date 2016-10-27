@@ -87,35 +87,35 @@ namespace DynamicData.Cache.Internal
                                 {
                                     case ChangeReason.Add:
                                     case ChangeReason.Update:
-                                    {
-                                        if (left.HasValue)
                                         {
-                                            //Update with left and right value
-                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left.Value, right),
-                                                change.Key);
+                                            if (left.HasValue)
+                                            {
+                                                //Update with left and right value
+                                                innerCache.AddOrUpdate(_resultSelector(change.Key, left.Value, right),
+                                                    change.Key);
+                                            }
+                                            else
+                                            {
+                                                //remove if it is already in the cache
+                                                innerCache.Remove(change.Key);
+                                            }
                                         }
-                                        else
-                                        {
-                                            //remove if it is already in the cache
-                                            innerCache.Remove(change.Key);
-                                        }
-                                    }
                                         break;
                                     case ChangeReason.Remove:
-                                    {
-                                        if (left.HasValue)
                                         {
-                                            //Update with no right value
-                                            innerCache.AddOrUpdate(
-                                                _resultSelector(change.Key, left.Value, Optional<TRight>.None),
-                                                change.Key);
+                                            if (left.HasValue)
+                                            {
+                                                //Update with no right value
+                                                innerCache.AddOrUpdate(
+                                                    _resultSelector(change.Key, left.Value, Optional<TRight>.None),
+                                                    change.Key);
+                                            }
+                                            else
+                                            {
+                                                //remove if it is already in the cache
+                                                innerCache.Remove(change.Key);
+                                            }
                                         }
-                                        else
-                                        {
-                                            //remove if it is already in the cache
-                                            innerCache.Remove(change.Key);
-                                        }
-                                    }
                                         break;
                                     case ChangeReason.Evaluate:
                                         //propagate upstream

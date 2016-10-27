@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-    class ExpireAfterFixture
+    internal class ExpireAfterFixture
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;

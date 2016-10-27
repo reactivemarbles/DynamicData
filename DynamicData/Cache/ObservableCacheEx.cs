@@ -52,7 +52,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> RefCount<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return new RefCount<TObject,TKey>(source).Run();
+            return new RefCount<TObject, TKey>(source).Run();
         }
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
-            return new MergeManyItems<TObject, TKey, TDestination>(source,observableSelector).Run();
+            return new MergeManyItems<TObject, TKey, TDestination>(source, observableSelector).Run();
         }
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
-            return new MergeMany<TObject,TKey,TDestination>(source, observableSelector).Run();
+            return new MergeMany<TObject, TKey, TDestination>(source, observableSelector).Run();
         }
 
         /// <summary>
@@ -382,7 +382,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (removeAction == null) throw new ArgumentNullException(nameof(removeAction));
 
-            return new OnItemRemoved<TObject,TKey>(source,removeAction).Run();
+            return new OnItemRemoved<TObject, TKey>(source, removeAction).Run();
         }
 
         /// <summary>
@@ -651,8 +651,8 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-           
-            return new BatchIf<TObject,TKey>(source, pauseIfTrueSelector,intialPauseState,timeOut,scheduler).Run();
+
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, intialPauseState, timeOut, scheduler).Run();
         }
 
         /// <summary>
@@ -809,7 +809,7 @@ namespace DynamicData
                                                                         Func<TObject, IObservable<TValue>> observableSelector,
                                                                         Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
         {
-           return new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
+            return new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
         }
 
         #endregion
@@ -1000,16 +1000,16 @@ namespace DynamicData
                     switch (item.Reason)
                     {
                         case ChangeReason.Add:
-                        {
-                            target.Add(item.Current);
-                        }
+                            {
+                                target.Add(item.Current);
+                            }
                             break;
 
                         case ChangeReason.Update:
-                        {
-                            target.Remove(item.Previous.Value);
-                            target.Add(item.Current);
-                        }
+                            {
+                                target.Remove(item.Previous.Value);
+                                target.Add(item.Current);
+                            }
                             break;
                         case ChangeReason.Remove:
                             target.Remove(item.Current);
@@ -1129,8 +1129,8 @@ namespace DynamicData
         /// or
         /// timeSelector</exception>
         internal static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ForExpiry<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                                       Func<TObject, TimeSpan?> timeSelector, 
-                                                                                                       TimeSpan? interval, 
+                                                                                                       Func<TObject, TimeSpan?> timeSelector,
+                                                                                                       TimeSpan? interval,
                                                                                                        IScheduler scheduler)
         {
             return new TimeExpirer<TObject, TKey>(source, timeSelector, interval, scheduler).ForExpiry();
@@ -1221,7 +1221,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, 
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
             [NotNull] IObservable<Func<TObject, bool>> predicateChanged)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -1368,7 +1368,6 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
             return new Sort<TObject, TKey>(source, comparer, sortOptimisations, resetThreshold: resetThreshold).Run();
-
         }
 
         /// <summary>
@@ -1391,7 +1390,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (sortController == null) throw new ArgumentNullException(nameof(sortController));
-            return new Sort<TObject, TKey>(source, null, sortOptimisations, sortController.ComparerChanged, sortController.SortAgain,  resetThreshold).Run();
+            return new Sort<TObject, TKey>(source, null, sortOptimisations, sortController.ComparerChanged, sortController.SortAgain, resetThreshold).Run();
         }
 
         /// <summary>
@@ -1412,7 +1411,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparerObservable == null) throw new ArgumentNullException(nameof(comparerObservable));
 
-           return new Sort<TObject, TKey>(source, null, sortOptimisations, comparerObservable, resetThreshold:resetThreshold).Run();
+            return new Sort<TObject, TKey>(source, null, sortOptimisations, comparerObservable, resetThreshold: resetThreshold).Run();
         }
 
         /// <summary>
@@ -1458,7 +1457,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (resorter == null) throw new ArgumentNullException(nameof(resorter));
 
-            return new Sort<TObject, TKey>(source, comparer, sortOptimisations,null, resorter, resetThreshold).Run();
+            return new Sort<TObject, TKey>(source, comparer, sortOptimisations, null, resorter, resetThreshold).Run();
         }
 
 
@@ -1836,7 +1835,7 @@ namespace DynamicData
             });
         }
 
-        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(            [NotNull] this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>([NotNull] this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             return new DynamicCombiner<TObject, TKey>(source, type).Run();
@@ -2022,7 +2021,6 @@ namespace DynamicData
                 }
 
                 return transformed.NotEmpty().SubscribeSafe(observer);
-
             });
         }
 
@@ -2071,7 +2069,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-            
+
             return Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
             {
                 var transformer = new Transformer<TDestination, TSource, TKey>(null);
@@ -2090,7 +2088,6 @@ namespace DynamicData
                 }
 
                 return transformed.NotEmpty().SubscribeSafe(observer);
-
             });
         }
 
@@ -2170,11 +2167,11 @@ namespace DynamicData
         internal static IObservable<IChangeSet<TDestination, TDestinationKey>> FlattenWithSingleParent<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
                                                                  Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector)
         {
-            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector,keySelector).Run();
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
         }
 
         #endregion
-        
+
         #region Transform safe
 
         /// <summary>
@@ -2346,7 +2343,7 @@ namespace DynamicData
         }
 
         #endregion
-         
+
         #region Distinct values
 
         /// <summary>
@@ -2441,7 +2438,7 @@ namespace DynamicData
         /// groupController
         /// </exception>
         public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                                             Func<TObject, TGroupKey> groupSelectorKey, 
+                                                                                                             Func<TObject, TGroupKey> groupSelectorKey,
                                                                                                              GroupController groupController)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2924,7 +2921,7 @@ namespace DynamicData
             return new RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
         }
         #endregion
-        
+
         #region Populate into an observable cache
 
         /// <summary>
@@ -3060,7 +3057,7 @@ namespace DynamicData
         #endregion
 
         #region Populate changetset from observables
-        
+
         /// <summary>
         /// Converts the observable to an observable changeset
         /// </summary>
@@ -3523,7 +3520,6 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             source.Edit(updater => updater.Clear());
         }
-
 
         #endregion
     }

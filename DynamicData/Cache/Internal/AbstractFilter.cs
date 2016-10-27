@@ -55,7 +55,7 @@ namespace DynamicData.Internal
 
 
             return _cache.CaptureChanges();
-          // return changes;
+            // return changes;
         }
 
         protected abstract IEnumerable<Change<TObject, TKey>> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
@@ -74,7 +74,7 @@ namespace DynamicData.Internal
 
             //Have to process one item at a time as an item can be included multiple
             //times in any batch
-          
+
             foreach (var item in result)
             {
                 var matches = item.IsMatch;
@@ -84,46 +84,46 @@ namespace DynamicData.Internal
                 switch (item.Change.Reason)
                 {
                     case ChangeReason.Add:
-                    {
-                        if (matches)
-                            _cache.AddOrUpdate(u.Current, u.Key);
-                    }
+                        {
+                            if (matches)
+                                _cache.AddOrUpdate(u.Current, u.Key);
+                        }
                         break;
                     case ChangeReason.Update:
-                    {
-                        if (matches)
                         {
-                            _cache.AddOrUpdate(u.Current, u.Key);
-                        }
-                        else
-                        {
-                            _cache.Remove(u.Key);
-                        }
-                    }
-                        break;
-                    case ChangeReason.Remove:
-                        _cache.Remove(u.Key);
-                        break;
-                    case ChangeReason.Evaluate:
-                    {
-                        var exisiting = _cache.Lookup(key);
-                        if (matches)
-                        {
-                            if (!exisiting.HasValue)
+                            if (matches)
                             {
                                 _cache.AddOrUpdate(u.Current, u.Key);
                             }
                             else
                             {
-                                _cache.Evaluate();
+                                _cache.Remove(u.Key);
                             }
                         }
-                        else
+                        break;
+                    case ChangeReason.Remove:
+                        _cache.Remove(u.Key);
+                        break;
+                    case ChangeReason.Evaluate:
                         {
-                            if (exisiting.HasValue)
-                                _cache.Remove(u.Key);
+                            var exisiting = _cache.Lookup(key);
+                            if (matches)
+                            {
+                                if (!exisiting.HasValue)
+                                {
+                                    _cache.AddOrUpdate(u.Current, u.Key);
+                                }
+                                else
+                                {
+                                    _cache.Evaluate();
+                                }
+                            }
+                            else
+                            {
+                                if (exisiting.HasValue)
+                                    _cache.Remove(u.Key);
+                            }
                         }
-                    }
                         break;
                 }
             }

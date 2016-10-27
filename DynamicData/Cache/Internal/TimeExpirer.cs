@@ -27,12 +27,11 @@ namespace DynamicData.Cache.Internal
             _source = source;
             _timeSelector = timeSelector;
             _interval = interval;
-            _scheduler = scheduler ?? Scheduler.Default; 
+            _scheduler = scheduler ?? Scheduler.Default;
         }
 
         public IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ForExpiry()
         {
-
             return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(observer =>
             {
                 var dateTime = DateTime.Now;

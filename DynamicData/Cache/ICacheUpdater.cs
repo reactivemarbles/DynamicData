@@ -14,17 +14,17 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public interface ICacheUpdater<TObject, TKey> : IQuery<TObject, TKey> 
+    public interface ICacheUpdater<TObject, TKey> : IQuery<TObject, TKey>
     {
         /// <summary>
         /// Adds or updates the specified  key value pairs 
         /// </summary>
         void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> keyValuePairs);
-        
+
         /// <summary>
         /// Adds or updates the specified key value pair
         /// </summary>
-        void AddOrUpdate(KeyValuePair<TKey, TObject>item);
+        void AddOrUpdate(KeyValuePair<TKey, TObject> item);
 
         /// <summary>
         /// Adds or updates the specified item / key pair

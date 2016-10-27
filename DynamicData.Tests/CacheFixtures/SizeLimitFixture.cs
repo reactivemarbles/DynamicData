@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-    class SizeLimitFixture
+    internal class SizeLimitFixture
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;
@@ -90,7 +90,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             // Initialise();
             Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
-           ;
+            ;
         }
 
         [Test]

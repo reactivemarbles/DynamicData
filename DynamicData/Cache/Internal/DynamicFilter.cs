@@ -15,14 +15,14 @@ namespace DynamicData.Cache.Internal
 
         public DynamicFilter(IObservable<IChangeSet<TObject, TKey>> source,
             IObservable<Func<TObject, bool>> predicateChanged,
-            IObservable<Unit> refilterObservable=null)
+            IObservable<Unit> refilterObservable = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             _source = source;
             _predicateChanged = predicateChanged ?? Observable.Never<Func<TObject, bool>>();
             _refilterObservable = refilterObservable ?? Observable.Never<Unit>();
         }
-        
+
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>

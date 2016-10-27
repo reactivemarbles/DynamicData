@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    class RemoveManyFixture
+    internal class RemoveManyFixture
     {
         private List<int> _list;
 

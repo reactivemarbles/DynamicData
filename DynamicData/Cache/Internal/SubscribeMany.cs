@@ -8,9 +8,9 @@ namespace DynamicData.Cache.Internal
     internal class SubscribeMany<TObject, TKey>
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-        private readonly Func<TObject,TKey, IDisposable> _subscriptionFactory;
+        private readonly Func<TObject, TKey, IDisposable> _subscriptionFactory;
 
-        public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source,  Func<TObject, IDisposable> subscriptionFactory)
+        public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
@@ -30,7 +30,6 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
                     observer =>

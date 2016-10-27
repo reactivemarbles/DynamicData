@@ -4,8 +4,6 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
 {
-
-
     [TestFixture]
     public class TransformManyFixture
     {

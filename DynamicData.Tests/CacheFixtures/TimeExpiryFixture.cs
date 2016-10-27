@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture()]
-    class TimeExpiryFixture
+    internal class TimeExpiryFixture
     {
         private ISourceCache<Person, string> _cache;
         private IDisposable _remover;

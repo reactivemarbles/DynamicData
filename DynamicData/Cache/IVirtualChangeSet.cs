@@ -1,4 +1,5 @@
-﻿namespace DynamicData
+﻿
+namespace DynamicData
 {
     /// <summary>
     /// Represents a subset of data reduced by a defined set of parameters
@@ -12,5 +13,4 @@
         /// </summary>
         IVirtualResponse Response { get; }
     }
-
 }

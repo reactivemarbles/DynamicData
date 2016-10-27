@@ -12,7 +12,6 @@ namespace DynamicData.Alias
     /// </summary>
     public static class ObservableListAlias
     {
-
         #region Filter -> Where
 
 
@@ -136,7 +135,7 @@ namespace DynamicData.Alias
             if (manyselector == null) throw new ArgumentNullException(nameof(manyselector));
             return source.TransformMany(manyselector);
         }
-        
+
         #endregion
     }
 }

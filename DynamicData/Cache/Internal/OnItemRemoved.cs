@@ -26,7 +26,7 @@ namespace DynamicData.Cache.Internal
             {
                 var cache = new Cache<TObject, TKey>();
                 var subscriber = _source
-                    .Do(changes=> RegisterForRemoval(changes, cache), observer.OnError)
+                    .Do(changes => RegisterForRemoval(changes, cache), observer.OnError)
                     .SubscribeSafe(observer);
 
                 return Disposable.Create(() =>

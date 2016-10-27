@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
-    class ChangeAwareListFixture
+    internal class ChangeAwareListFixture
     {
         private ChangeAwareList<int> _list;
 

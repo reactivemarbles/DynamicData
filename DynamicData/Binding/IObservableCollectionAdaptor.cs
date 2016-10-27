@@ -1,3 +1,4 @@
+
 namespace DynamicData.Binding
 {
     /// <summary>

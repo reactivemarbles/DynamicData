@@ -31,7 +31,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var parent = new PersonWithChildren("parent", 50, new Person[]
             {
-                new Person("Child1", 1), 
+                new Person("Child1", 1),
                 new Person("Child2", 2),
                 new Person("Child3", 3)
             });

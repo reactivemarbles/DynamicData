@@ -1,4 +1,5 @@
-﻿namespace DynamicData.Diagnostics
+﻿
+namespace DynamicData.Diagnostics
 {
     /// <summary>
     /// Accumulates change statics

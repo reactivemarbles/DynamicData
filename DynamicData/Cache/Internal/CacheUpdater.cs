@@ -180,7 +180,7 @@ namespace DynamicData.Cache.Internal
 
         public int Count => _cache.Count;
 
-        
+
         public void Update(IChangeSet<TObject, TKey> changes)
         {
             _cache.Clone(changes);

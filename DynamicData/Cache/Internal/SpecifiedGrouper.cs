@@ -25,9 +25,8 @@ namespace DynamicData.Cache.Internal
             _resultGroupSource = resultGroupSource;
         }
 
-        public  IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run()
+        public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run()
         {
-
             return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>
                 (
                     observer =>

@@ -63,7 +63,7 @@ namespace DynamicData
             }
         }
 
-        private static readonly IEqualityComparer<IVirtualRequest> StartIndexSizeComparerInstance = new StartIndexSizeEqualityComparer();
+        private static readonly IEqualityComparer<IVirtualRequest> s_startIndexSizeComparerInstance = new StartIndexSizeEqualityComparer();
 
         /// <summary>
         /// Gets the start index size comparer.
@@ -71,7 +71,7 @@ namespace DynamicData
         /// <value>
         /// The start index size comparer.
         /// </value>
-        public static IEqualityComparer<IVirtualRequest> StartIndexSizeComparer { get { return StartIndexSizeComparerInstance; } }
+        public static IEqualityComparer<IVirtualRequest> StartIndexSizeComparer { get { return s_startIndexSizeComparerInstance; } }
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object of the same type.
@@ -82,7 +82,7 @@ namespace DynamicData
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(IVirtualRequest other)
         {
-            return StartIndexSizeComparerInstance.Equals(this, other);
+            return s_startIndexSizeComparerInstance.Equals(this, other);
         }
 
         /// <summary>
