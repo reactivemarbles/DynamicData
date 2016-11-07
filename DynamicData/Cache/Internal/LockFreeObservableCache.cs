@@ -9,7 +9,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+    public class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
         private readonly ChangeAwareCache<TObject, TKey> _innerCache = new ChangeAwareCache<TObject, TKey>();
         private readonly ICacheUpdater<TObject, TKey> _updater;

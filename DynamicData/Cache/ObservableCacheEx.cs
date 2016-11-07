@@ -3521,6 +3521,77 @@ namespace DynamicData
             source.Edit(updater => updater.Clear());
         }
 
+
+        /// <summary>
+        /// Clears all data
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void Clear<TObject, TKey>(this LockFreeObservableCache<TObject, TKey> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(updater => updater.Clear());
+        }
+
+
+        /// <summary>
+        /// Populates a source into the specified cache.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="detination">The detination.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// detination
+        /// </exception>
+        public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, LockFreeObservableCache<TObject, TKey> detination)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (detination == null) throw new ArgumentNullException(nameof(detination));
+
+            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+        }
+
+        #endregion
+
+        #region Switch
+
+        public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservableCache<TObject, TKey>> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return source.Select(cache=>cache.Connect()).Switch();
+        }
+        
+
+        public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                var locker = new object();
+
+                var destination = new LockFreeObservableCache<TObject, TKey>();
+
+                var populator = Observable.Switch(source
+                    .Do(_ =>
+                    {
+                        lock (locker)
+                            destination.Clear();
+                    }))
+                    .Synchronize(locker)
+                    .PopulateInto(destination);
+                ;
+
+                var publisher = destination.Connect().SubscribeSafe(observer);
+                return new CompositeDisposable(destination, populator, publisher);
+            });
+        }
+        
         #endregion
     }
 }
