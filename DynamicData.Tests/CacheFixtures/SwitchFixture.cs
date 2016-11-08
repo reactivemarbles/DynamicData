@@ -55,7 +55,7 @@ namespace DynamicData.Tests.CacheFixtures
             newSource.AddOrUpdate(inital);
             Assert.AreEqual(100, _results.Data.Count);
 
-            var nextUpdates = _generator.Take(200).Skip(100).ToArray();
+            var nextUpdates = _generator.Take(300).Skip(200).ToArray();
             newSource.AddOrUpdate(nextUpdates);
             Assert.AreEqual(200, _results.Data.Count);
 

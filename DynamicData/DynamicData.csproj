@@ -78,7 +78,6 @@
     <Compile Include="Cache\Internal\FinallySafe.cs" />
     <Compile Include="Cache\Internal\InnerJoin.cs" />
     <Compile Include="Cache\Internal\FullJoin.cs" />
-    <Compile Include="Cache\Internal\JoinMany.cs" />
     <Compile Include="Cache\Internal\LeftJoin.cs" />
     <Compile Include="Cache\Internal\LockFreeObservableCache.cs" />
     <Compile Include="Cache\Internal\MergeMany.cs" />
