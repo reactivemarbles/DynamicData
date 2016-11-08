@@ -218,6 +218,7 @@
     <Compile Include="ListFixtures\SortFixture.cs" />
     <Compile Include="ListFixtures\SortMutableFixture.cs" />
     <Compile Include="ListFixtures\SubscribeManyFixture.cs" />
+    <Compile Include="ListFixtures\SwitchFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="ListFixtures\TransformManyFixture.cs" />
     <Compile Include="ListFixtures\VirtualisationFixture.cs" />

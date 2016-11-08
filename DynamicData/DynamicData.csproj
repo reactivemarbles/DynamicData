@@ -93,6 +93,7 @@
     <Compile Include="Cache\Internal\SpecifiedGrouper.cs" />
     <Compile Include="Cache\Internal\StatusMonitor.cs" />
     <Compile Include="Cache\Internal\SubscribeMany.cs" />
+    <Compile Include="Cache\Internal\Switch.cs" />
     <Compile Include="Cache\Internal\TimeExpirer.cs" />
     <Compile Include="Cache\Internal\TransformMany.cs" />
     <Compile Include="Cache\Internal\TrueFor.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="List\Internal\ReferenceCountTracker.cs" />
     <Compile Include="List\Internal\SizeLimiter.cs" />
     <Compile Include="List\Internal\SubscribeMany.cs" />
+    <Compile Include="List\Internal\Switch.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\Internal\TransformMany.cs" />
     <Compile Include="List\Internal\UnifiedChange.cs" />

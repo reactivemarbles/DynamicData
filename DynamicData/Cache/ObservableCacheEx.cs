@@ -3561,35 +3561,45 @@ namespace DynamicData
 
         #region Switch
 
-        public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservableCache<TObject, TKey>> source)
+        /// <summary>
+        /// Transforms an observable sequence of observablecaches into a single sequence
+        /// producing values only from the most recent observable sequence.
+        /// Each time a new inner observable sequence is received, unsubscribe from the
+        /// previous inner observable sequence and clear the existing result set
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns>
+        /// The observable sequence that at any point in time produces the elements of the most recent inner observable sequence that has been received.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        /// <exception cref="T:System.ArgumentNullException"><paramref name="sources" /> is null.</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservableCache<TObject, TKey>> sources)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.Select(cache=>cache.Connect()).Switch();
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+            return sources.Select(cache=>cache.Connect()).Switch();
         }
-        
+        /// <summary>
+        /// Transforms an observable sequence of observable changes sets into an observable sequence
+        /// producing values only from the most recent observable sequence.
+        /// Each time a new inner observable sequence is received, unsubscribe from the
+        /// previous inner observable sequence and clear the existing resukt set
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns>
+        /// The observable sequence that at any point in time produces the elements of the most recent inner observable sequence that has been received.
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        /// <exception cref="T:System.ArgumentNullException"><paramref name="sources" /> is null.</exception>
 
-        public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source)
+        public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> sources)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                var locker = new object();
+            if (sources == null) throw new ArgumentNullException(nameof(sources));
+            return new Switch<TObject, TKey>(sources).Run();
 
-                var destination = new LockFreeObservableCache<TObject, TKey>();
-
-                var populator = Observable.Switch(source
-                    .Do(_ =>
-                    {
-                        lock (locker)
-                            destination.Clear();
-                    }))
-                    .Synchronize(locker)
-                    .PopulateInto(destination);
-                ;
-
-                var publisher = destination.Connect().SubscribeSafe(observer);
-                return new CompositeDisposable(destination, populator, publisher);
-            });
         }
         
         #endregion

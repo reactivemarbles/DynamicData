@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
 using System.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading.Tasks;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
@@ -58,8 +55,10 @@ namespace DynamicData.Tests.CacheFixtures
             newSource.AddOrUpdate(inital);
             Assert.AreEqual(100, _results.Data.Count);
 
-            newSource.AddOrUpdate(_generator.Take(200).Skip(100).ToArray());
+            var nextUpdates = _generator.Take(200).Skip(100).ToArray();
+            newSource.AddOrUpdate(nextUpdates);
             Assert.AreEqual(200, _results.Data.Count);
+
         }
 
     }
