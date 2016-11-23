@@ -18,7 +18,7 @@ namespace DynamicData.Kernel
         /// <summary>
         /// Gets the Value.
         /// </summary>
-        public TValue Value { get; }
+        public TValue Value { get; internal set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ItemWithIndex{T}"/> class.

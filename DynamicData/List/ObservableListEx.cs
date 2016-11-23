@@ -590,12 +590,37 @@ namespace DynamicData
         /// or
         /// groupSelector
         /// </exception>
-        public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOn<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroup> groupSelector)
+        public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOn<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroup> groupSelector, IObservable<Unit> regrouper = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
-            return new GroupOn<TObject, TGroup>(source, groupSelector).Run();
+            return new GroupOn<TObject, TGroup>(source, groupSelector, regrouper).Run();
         }
+
+        /// <summary>
+        /// Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.
+        /// When there are likely to be a large number of group property changes specify a throttle to improve performance
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TGroup">The type of the group.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertySelector">The property selector used to group the items</param>
+        /// <param name="propertyChangedThrottle">The property changed throttle.</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOnProperty<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, 
+            Expression<Func<TObject, TGroup>> propertySelector, 
+            TimeSpan? propertyChangedThrottle = null,
+            IScheduler scheduler = null)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
+            return new GroupOnProperty<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
+        }
+
 
         /// <summary>
         /// Prevents an empty notification

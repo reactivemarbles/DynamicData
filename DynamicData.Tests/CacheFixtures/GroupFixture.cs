@@ -16,7 +16,7 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         [TearDown]
-        public void CleeanUp()
+        public void CleanUp()
         {
             _source.Dispose();
         }

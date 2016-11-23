@@ -2476,6 +2476,33 @@ namespace DynamicData
             return new Group<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
         }
 
+        /// <summary>
+        /// Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.
+        /// 
+        /// When there are likely to be a large number of group property changes specify a throttle to improve performance
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertySelector">The property selector used to group the items</param>
+        /// <param name="propertyChangedThrottle"></param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnProperty<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+                                                                                                     Expression<Func<TObject, TGroupKey>> propertySelector,
+                                                                                                     TimeSpan? propertyChangedThrottle = null,
+                                                                                                     IScheduler scheduler = null)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
+
+            return new GroupOnProperty<TObject, TKey, TGroupKey>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
+        }
+
         #endregion
 
         #region Virtualisation

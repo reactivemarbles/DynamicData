@@ -76,6 +76,7 @@
     <Compile Include="Cache\Internal\DynamicCombiner.cs" />
     <Compile Include="Cache\Internal\FilterOnProperty.cs" />
     <Compile Include="Cache\Internal\FinallySafe.cs" />
+    <Compile Include="Cache\Internal\GroupOnProperty.cs" />
     <Compile Include="Cache\Internal\InnerJoin.cs" />
     <Compile Include="Cache\Internal\FullJoin.cs" />
     <Compile Include="Cache\Internal\LeftJoin.cs" />
@@ -119,6 +120,7 @@
     <Compile Include="List\Internal\Group.cs" />
     <Compile Include="List\Internal\GroupOn.cs" />
     <Compile Include="List\IGroup.cs" />
+    <Compile Include="List\Internal\GroupOnProperty.cs" />
     <Compile Include="List\Internal\ImmutableFilter.cs" />
     <Compile Include="Kernel\ReferenceEqualityComparer.cs" />
     <Compile Include="Cache\ChangeReason.cs" />

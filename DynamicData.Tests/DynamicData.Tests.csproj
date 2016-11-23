@@ -203,6 +203,7 @@
     <Compile Include="ListFixtures\ForEachChangeFixture.cs" />
     <Compile Include="ListFixtures\GroupMisssingkey.cs" />
     <Compile Include="ListFixtures\GroupOnFixture.cs" />
+    <Compile Include="ListFixtures\GroupOnPropertyFixture.cs" />
     <Compile Include="ListFixtures\MergeManyChangeSetsFixture.cs" />
     <Compile Include="ListFixtures\MergeManyFixture.cs" />
     <Compile Include="ListFixtures\OrFixture.cs" />

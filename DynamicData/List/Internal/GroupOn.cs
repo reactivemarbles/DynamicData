@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
@@ -11,13 +13,16 @@ namespace DynamicData.Internal
     {
         private readonly IObservable<IChangeSet<TObject>> _source;
         private readonly Func<TObject, TGroupKey> _groupSelector;
+        private readonly IObservable<Unit> _regrouper;
 
-        public GroupOn([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector)
+        public GroupOn([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector, IObservable<Unit> regrouper)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
+
             _source = source;
             _groupSelector = groupSelector;
+            _regrouper = regrouper ;
         }
 
         public IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> Run()
@@ -27,12 +32,75 @@ namespace DynamicData.Internal
                 var groupings = new ChangeAwareList<IGroup<TObject, TGroupKey>>();
                 var groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
 
-                return _source.Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
-                              .Select(changes => Process(groupings, groupCache, changes))
+                var itemsWithGroup = _source
+                    .Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
+                    .AsObservableList();
+                
+                var locker = new object();
+                var shared = itemsWithGroup.Connect().Synchronize(locker).Publish();
+
+                var grouper = shared
+                    .Select(changes => Process(groupings, groupCache, changes));
+
+                IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> regrouper;
+                if (_regrouper == null)
+                {
+                    regrouper = Observable.Never<IChangeSet<IGroup<TObject, TGroupKey>>>();
+                }
+                else
+                {
+                   regrouper = _regrouper.Synchronize(locker)
+                    .CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
+                }
+
+                var publisher = grouper.Merge(regrouper)
                               .DisposeMany() //dispose removes as the grouping is disposable
                               .NotEmpty()
                               .SubscribeSafe(observer);
+
+                return new CompositeDisposable(itemsWithGroup, publisher, shared.Connect());
             });
+        }
+
+        private IChangeSet<IGroup<TObject, TGroupKey>> Regroup(ChangeAwareList<IGroup<TObject, TGroupKey>> result,
+            IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection,
+            IReadOnlyCollection<ItemWithValue<TObject, TGroupKey>> currentItems)
+        {
+            //TODO: We need to update ItemWithValue>
+
+            foreach (var itemWithValue in currentItems)
+            {
+                var currentGroupKey = itemWithValue.Value;
+                var newGroupKey = _groupSelector(itemWithValue.Item);
+                if (newGroupKey.Equals(currentGroupKey)) continue;
+                
+
+                //remove from the old group
+                var currentGroupLookup = GetCache(groupCollection, currentGroupKey);
+                var currentGroupCache = currentGroupLookup.Group;
+                currentGroupCache.Edit(innerList=> innerList.Remove(itemWithValue.Item));
+
+                if (currentGroupCache.List.Count == 0)
+                {
+                    groupCollection.Remove(currentGroupKey);
+                    result.Remove(currentGroupCache);
+                }
+
+                //Mark the old item with the new cache group
+                itemWithValue.Value = newGroupKey;
+
+                //add to the new group
+                var newGroupLookup = GetCache(groupCollection, newGroupKey);
+                var newGroupCache = newGroupLookup.Group;
+                newGroupCache.Edit(innerList => innerList.Add(itemWithValue.Item));
+
+                if (newGroupLookup.WasCreated)
+                    result.Add(newGroupCache);
+
+               
+            }
+
+            return result.CaptureChanges();
         }
 
         private IChangeSet<IGroup<TObject, TGroupKey>> Process(ChangeAwareList<IGroup<TObject, TGroupKey>> result, IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection, IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
