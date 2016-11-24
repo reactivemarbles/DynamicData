@@ -533,6 +533,26 @@ namespace DynamicData
             });
         }
 
+
+        /// <summary>
+        /// Cast the object to the specified type. 
+        /// Alas, I had to add the converter due to type inference issues 
+        /// </summary>
+        /// <typeparam name="TSource">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="converter">The conversion factory.</param>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Cast<TSource, TKey, TDestination>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> converter)
+
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return new Cast<TSource, TKey, TDestination>(source, converter).Run();
+        }
+
+
         #endregion
 
         #region Delayed Stream

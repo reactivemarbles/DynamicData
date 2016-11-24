@@ -103,6 +103,7 @@
     <Compile Include="CacheFixtures\EditDiffFixture.cs" />
     <Compile Include="CacheFixtures\FilterOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
+    <Compile Include="CacheFixtures\GroupOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\InnerJoinFixture.cs" />
     <Compile Include="CacheFixtures\FullJoinFixture.cs" />
     <Compile Include="CacheFixtures\LeftJoinFixture.cs" />
@@ -180,6 +181,7 @@
     <Compile Include="CacheFixtures\TransformFixture.cs" />
     <Compile Include="ListFixtures\AndFixture.cs" />
     <Compile Include="ListFixtures\BatchFixture.cs" />
+    <Compile Include="ListFixtures\CastFixture.cs" />
     <Compile Include="ListFixtures\CloneFixture.cs" />
     <Compile Include="ListFixtures\BufferFixture.cs" />
     <Compile Include="ListFixtures\BatchIfFixture.cs" />

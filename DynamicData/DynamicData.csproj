@@ -69,6 +69,7 @@
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
+    <Compile Include="Cache\Internal\Cast.cs" />
     <Compile Include="Cache\Internal\EditDiff.cs" />
     <Compile Include="Cache\Internal\BatchIf.cs" />
     <Compile Include="Cache\Internal\ChangeAwareCache.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="Cache\Internal\TrueFor.cs" />
     <Compile Include="Cache\Node.cs" />
     <Compile Include="Cache\Internal\TreeBuilder.cs" />
+    <Compile Include="Cache\SourceCacheEx.cs" />
     <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ISupportsCapcity.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
@@ -233,6 +235,7 @@
     <Compile Include="List\SourceList.cs" />
     <Compile Include="List\Internal\ReaderWriter.cs" />
     <Compile Include="List\SourceListEditConvenienceEx.cs" />
+    <Compile Include="List\SourceListEx.cs" />
     <Compile Include="List\Tests\ChangeSetAggregator.cs" />
     <Compile Include="List\Tests\TestEx.cs" />
     <Compile Include="List\UnspecifiedIndexException.cs" />

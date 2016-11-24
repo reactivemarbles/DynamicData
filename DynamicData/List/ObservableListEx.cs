@@ -268,8 +268,29 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
+        [Obsolete("Prefer Cast as it is des the same thing but is semantically correct")]
         public static IObservable<IChangeSet<TDestination>> Convert<TObject, TDestination>([NotNull] this IObservable<IChangeSet<TObject>> source,
                                                                                            [NotNull] Func<TObject, TDestination> conversionFactory)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
+            return source.Select(changes => changes.Transform(conversionFactory));
+        }
+
+        /// <summary>
+        /// Convert the changes to another form
+        /// 
+        /// Alas, I had to add the converter due to type inference issues 
+        /// </summary>
+        /// <typeparam name="TSource">The type of the object.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="conversionFactory">The conversion factory.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>([NotNull] this IObservable<IChangeSet<TSource>> source,
+                                                                                           [NotNull] Func<TSource, TDestination> conversionFactory)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
