@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Internal;
 using DynamicData.Operators;
 
 namespace DynamicData.Cache.Internal
@@ -32,7 +31,7 @@ namespace DynamicData.Cache.Internal
             });
         }
 
-        internal sealed class Paginator
+        private sealed class Paginator
         {
             private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
             private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();

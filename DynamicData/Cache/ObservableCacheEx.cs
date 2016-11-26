@@ -1305,8 +1305,8 @@ namespace DynamicData
 
         /// <summary>
         /// Filters source on the specified property using the specified predicate.
-        /// 
-        /// The filter will automatically reapply when a property changes 
+        /// The filter will automatically reapply when a property changes.
+        /// When there are likely to be a large number of property changes specify a throttle to improve performance
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1314,18 +1314,23 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="propertySelector">The property selector. When the property changes a the filter specified will be re-evaluated</param>
         /// <param name="predicate">A predicate based on the object which contains the changed property</param>
+        /// <param name="propertyChangedThrottle">The property changed throttle.</param>
+        /// <param name="scheduler">The scheduler used when throttling</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static IObservable<IChangeSet<TObject, TKey>> FilterOnProperty<TObject, TKey, TProperty>(this IObservable<IChangeSet<TObject, TKey>> source,
-                Expression<Func<TObject, TProperty>> propertySelector,
-                Func<TObject, bool> predicate) where TObject : INotifyPropertyChanged
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TObject, TKey>> FilterOnProperty<TObject, TKey, TProperty>(
+            this IObservable<IChangeSet<TObject, TKey>> source,
+            Expression<Func<TObject, TProperty>> propertySelector,
+            Func<TObject, bool> predicate,
+            TimeSpan? propertyChangedThrottle = null,
+            IScheduler scheduler = null) 
+            where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return new FilterOnProperty<TObject, TKey, TProperty>(source, propertySelector, predicate).Run();
+            return new FilterOnProperty<TObject, TKey, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
         }
 
         #endregion

@@ -86,6 +86,7 @@
     <Compile Include="Cache\Internal\MergeManyItems.cs" />
     <Compile Include="Cache\Internal\OnItemRemoved.cs" />
     <Compile Include="Cache\Internal\Page.cs" />
+    <Compile Include="Cache\Internal\QueryWhenChanged.cs" />
     <Compile Include="Cache\Internal\RefCount.cs" />
     <Compile Include="Cache\Internal\RemoveKeyEnumerator.cs" />
     <Compile Include="Cache\Internal\RightJoin.cs" />
@@ -264,7 +265,6 @@
     <Compile Include="Cache\SortOptimisations.cs" />
     <Compile Include="Cache\SortReason.cs" />
     <Compile Include="Cache\Internal\StaticFilter.cs" />
-    <Compile Include="Cache\Internal\TransformedItem.cs" />
     <Compile Include="Cache\Internal\Transformer.cs" />
     <Compile Include="Cache\VirtualChangeSet.cs" />
     <Compile Include="Cache\Virtualiser.cs" />

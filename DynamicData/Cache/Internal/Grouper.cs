@@ -60,7 +60,7 @@ namespace DynamicData.Cache.Internal
                     });
         }
 
-        internal sealed class Grouper<TObject, TKey, TGroupKey>
+        private sealed class Grouper<TObject, TKey, TGroupKey>
         {
             private readonly IDictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>> _groupCache = new Dictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>>();
             private readonly Func<TObject, TGroupKey> _groupSelectorKey;

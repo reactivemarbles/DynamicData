@@ -501,17 +501,21 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="propertySelector">The property selector. When the property changes the filter specified will be re-evaluated</param>
         /// <param name="predicate">A predicate based on the object which contains the changed property</param>
+        /// <param name="propertyChangedThrottle">The property changed throttle.</param>
+        /// <param name="scheduler">The scheduler used when throttling</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source,
              Expression<Func<TObject, TProperty>> propertySelector,
-             Func<TObject, bool> predicate) where TObject : INotifyPropertyChanged
+             Func<TObject, bool> predicate,
+             TimeSpan? propertyChangedThrottle = null,
+            IScheduler scheduler = null) where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate).Run();
+            return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
         }
 
 
