@@ -25,7 +25,7 @@ namespace DynamicData.Internal
             int resetThreshold)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+            //if (comparer == null) throw new ArgumentNullException(nameof(comparer));
             _source = source;
             _comparer = comparer;
             _sortOptions = sortOptions;
@@ -47,12 +47,14 @@ namespace DynamicData.Internal
                     if (_resetThreshold > 1)
                         orginal.Clone(changes);
 
-                    return changes.TotalChanges > _resetThreshold ? Reset(orginal, target) : Process(target, changes);
+                    return changes.TotalChanges > _resetThreshold && _comparer!=null ? Reset(orginal, target) : Process(target, changes);
                 });
                 var resort = _resort.Synchronize(locker).Select(changes => Reorder(target));
                 var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
 
-                return changed.Merge(resort).Merge(changeComparer).SubscribeSafe(observer);
+                return changed.Merge(resort).Merge(changeComparer)
+                .Where(changes=>changes.Count!=0)
+                .SubscribeSafe(observer);
             });
         }
 
@@ -71,6 +73,12 @@ namespace DynamicData.Internal
 
         private IChangeSet<T> ProcessImpl(ChangeAwareList<T> target, IChangeSet<T> changes)
         {
+            if (_comparer == null)
+            {
+                target.Clone(changes);
+                return target.CaptureChanges();
+            }
+
             foreach (var change in changes)
             {
                 switch (change.Reason)
