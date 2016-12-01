@@ -53,6 +53,7 @@
     <Compile Include="Aggregation\SumEx.cs" />
     <Compile Include="Alias\ObservableListAlias.cs" />
     <Compile Include="Binding\AbstractNotifyPropertyChanged.cs" />
+    <Compile Include="Binding\ExpressionBuilder.cs" />
     <Compile Include="Binding\NotifyPropertyChangedEx.cs" />
     <Compile Include="Binding\PropertyValue.cs" />
     <Compile Include="Aggregation\AggregateEnumerator.cs" />
@@ -86,6 +87,7 @@
     <Compile Include="Cache\Internal\MergeManyItems.cs" />
     <Compile Include="Cache\Internal\OnItemRemoved.cs" />
     <Compile Include="Cache\Internal\Page.cs" />
+    <Compile Include="Cache\Internal\QueryWhenChanged.cs" />
     <Compile Include="Cache\Internal\RefCount.cs" />
     <Compile Include="Cache\Internal\RemoveKeyEnumerator.cs" />
     <Compile Include="Cache\Internal\RightJoin.cs" />
