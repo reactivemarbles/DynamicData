@@ -13,7 +13,7 @@ namespace DynamicData
         /// <summary>
         /// An empty change
         /// </summary>
-        public readonly static ItemChange<T> Empty = new ItemChange<T>();
+        public static readonly ItemChange<T> Empty = new ItemChange<T>();
 
         /// <summary>
         /// The reason for the change
@@ -151,7 +151,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("Current: {0}, Previous: {1}", Current, Previous);
+            return $"Current: {Current}, Previous: {Previous}";
         }
     }
 }

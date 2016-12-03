@@ -28,10 +28,10 @@ namespace DynamicData.Tests.ListFixtures
         public void SetUp()
         {
             _source = new SourceList<Person>();
-            _changeComparer = new Subject<IComparer<Person>>();
+            _changeComparer = new BehaviorSubject<IComparer<Person>>(_comparer);
             _resort = new Subject<Unit>();
 
-            _results = _source.Connect().Sort(_comparer, resetThreshold: 25, resort: _resort, comparerChanged: _changeComparer).AsAggregator();
+            _results = _source.Connect().Sort(_changeComparer, resetThreshold: 25, resort: _resort).AsAggregator();
         }
 
         [TearDown]

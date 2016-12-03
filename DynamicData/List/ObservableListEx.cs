@@ -14,8 +14,8 @@ using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
-using DynamicData.Linq;
 using DynamicData.List.Internal;
+using DynamicData.List.Linq;
 using DynamicData.Operators;
 
 namespace DynamicData
@@ -704,6 +704,31 @@ namespace DynamicData
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
 
             return new Sort<T>(source, comparer, options, resort, comparerChanged, resetThreshold).Run();
+        }
+
+        /// <summary>
+        /// Sorts the sequence using the specified observable comparer.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="options">For improved performance, specify SortOptions.UseBinarySearch. This can only be used when the values which are sorted on are immutable</param>
+        /// <param name="resetThreshold">Since sorting can be slow for large record sets, the reset threshold is used to force the list re-ordered </param>
+        /// <param name="resort">OnNext of this observable causes data to resort. This is required when the value which is sorted on mutable</param>
+        /// <param name="comparerChanged">An observable comparer used to change the comparer on which the sorted list i</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// comparer</exception>
+        public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source,
+            IObservable<IComparer<T>> comparerChanged,
+            SortOptions options = SortOptions.None,
+            IObservable<Unit> resort = null,
+            int resetThreshold = 50)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (comparerChanged == null) throw new ArgumentNullException(nameof(comparerChanged));
+
+            return new Sort<T>(source, null, options, resort, comparerChanged, resetThreshold).Run();
         }
 
         #endregion

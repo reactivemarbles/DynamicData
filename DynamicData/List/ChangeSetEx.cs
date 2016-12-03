@@ -4,7 +4,7 @@ using System.Linq;
 using DynamicData.Annotations;
 using DynamicData.Internal;
 using DynamicData.Kernel;
-using DynamicData.Linq;
+using DynamicData.List.Linq;
 
 namespace DynamicData
 {

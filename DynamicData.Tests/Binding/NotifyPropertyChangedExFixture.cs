@@ -3,7 +3,7 @@ using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
-namespace DynamicData.Tests.Utilities
+namespace DynamicData.Tests.Binding
 {
     public class NotifyPropertyChangedExFixture
     {

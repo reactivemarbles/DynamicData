@@ -53,6 +53,7 @@
     <Compile Include="Aggregation\SumEx.cs" />
     <Compile Include="Alias\ObservableListAlias.cs" />
     <Compile Include="Binding\AbstractNotifyPropertyChanged.cs" />
+    <Compile Include="Binding\ExpressionBuilder.cs" />
     <Compile Include="Binding\NotifyPropertyChangedEx.cs" />
     <Compile Include="Binding\PropertyValue.cs" />
     <Compile Include="Aggregation\AggregateEnumerator.cs" />
