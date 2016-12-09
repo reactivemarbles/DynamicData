@@ -18,14 +18,17 @@ namespace DynamicData.Tests.Binding
             var instance =new ClassA();
             
             var members1 = ExpressionBuilder.GetMembers<ClassA, string>(a => a.Name).ToArray();
-
             var members2 = ExpressionBuilder.GetMembers<ClassA, int>(a => a.Child.Age).ToArray();
 
             var xxxx = members2
                 .Select(m => m.GetProperty())
                 .ToArray();
 
-            
+            //require the following
+            //1) Lambda to get value.
+            //2) Check property changes for each parent object i.e. is a.Child INPC
+
+           // xxxx.Select(p => p.MemberType)
 
         }
 

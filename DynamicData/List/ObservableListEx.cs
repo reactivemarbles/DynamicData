@@ -460,14 +460,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// filterController</exception>
-        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source,
-                                                           FilterController<T> filterController)
+        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, FilterController<T> filterController)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-            var predicates = filterController
-                .EvaluateChanged
-                .Merge(filterController.FilterChanged);
+            var predicates = filterController.EvaluateChanged.Merge(filterController.FilterChanged);
             return source.Filter(predicates);
         }
 

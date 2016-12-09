@@ -2698,16 +2698,19 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
         /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection</param>
+        /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
-                                                                                 out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25)
+                                                                                 out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, 
+                                                                                 int resetThreshold = 25,
+                                                                                 ISortedObservableCollectionAdaptor<TObject, TKey> adaptor = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
             var target = new ObservableCollectionExtended<TObject>();
             var result = new ReadOnlyObservableCollection<TObject>(target);
-            var updater = new SortedObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
+            var updater = adaptor ?? new SortedObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
             readOnlyObservableCollection = result;
             return source.Bind(target, updater);
         }
@@ -2720,16 +2723,19 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
         /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection</param>
+        /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                 out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25)
+                                                                                 out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, 
+                                                                                 int resetThreshold = 25,
+                                                                                 IObservableCollectionAdaptor<TObject, TKey> adaptor = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
             var target = new ObservableCollectionExtended<TObject>();
             var result = new ReadOnlyObservableCollection<TObject>(target);
-            var updater = new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
+            var updater = adaptor ?? new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
             readOnlyObservableCollection = result;
             return source.Bind(target, updater);
         }
