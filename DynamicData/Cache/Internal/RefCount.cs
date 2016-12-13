@@ -22,22 +22,24 @@ namespace DynamicData.Cache.Internal
         {
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
-                Interlocked.Increment(ref _refCount);
-                if (Volatile.Read(ref _refCount) == 1)
+                if (Interlocked.Increment(ref _refCount) == 1)
                 {
                     Interlocked.Exchange(ref _cache, _source.AsObservableCache());
                 }
 
-                // ReSharper disable once PossibleNullReferenceException (never the case!)
+                SpinWait.SpinUntil(() => _cache != null);
+
                 var subscriber = _cache.Connect().SubscribeSafe(observer);
 
                 return Disposable.Create(() =>
                 {
-                    Interlocked.Decrement(ref _refCount);
                     subscriber.Dispose();
-                    if (Volatile.Read(ref _refCount) != 0) return;
-                    _cache.Dispose();
-                    Interlocked.Exchange(ref _cache, null);
+                    var localCache = _cache;
+                    if (Interlocked.Decrement(ref _refCount) == 0)
+                    {
+                        localCache.Dispose();
+                        Interlocked.CompareExchange(ref _cache, null, localCache);
+                    }
                 });
             });
         }

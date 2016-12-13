@@ -20,22 +20,24 @@ namespace DynamicData.Internal
         {
             return Observable.Create<IChangeSet<T>>(observer =>
             {
-                Interlocked.Increment(ref _refCount);
-                if (Volatile.Read(ref _refCount) == 1)
+                if (Interlocked.Increment(ref _refCount) == 1)
                 {
                     Interlocked.Exchange(ref _list, _source.AsObservableList());
                 }
 
-                // ReSharper disable once PossibleNullReferenceException (never the case!)
+                SpinWait.SpinUntil(() => _list != null);
+
                 var subscriber = _list.Connect().SubscribeSafe(observer);
 
                 return Disposable.Create(() =>
                 {
-                    Interlocked.Decrement(ref _refCount);
                     subscriber.Dispose();
-                    if (Volatile.Read(ref _refCount) != 0) return;
-                    _list.Dispose();
-                    Interlocked.Exchange(ref _list, null);
+                    var localList = _list;
+                    if (Interlocked.Decrement(ref _refCount) == 0)
+                    {
+                        localList.Dispose();
+                        Interlocked.CompareExchange(ref _list, null, localList);
+                    }
                 });
             });
         }
