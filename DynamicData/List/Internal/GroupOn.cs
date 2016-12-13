@@ -33,11 +33,10 @@ namespace DynamicData.Internal
                 var groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
 
                 var itemsWithGroup = _source
-                    .Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)))
-                    .AsObservableList();
+                    .Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)));
                 
                 var locker = new object();
-                var shared = itemsWithGroup.Connect().Synchronize(locker).Publish();
+                var shared = itemsWithGroup.Synchronize(locker).Publish();
 
                 var grouper = shared
                     .Select(changes => Process(groupings, groupCache, changes));
@@ -58,7 +57,7 @@ namespace DynamicData.Internal
                               .NotEmpty()
                               .SubscribeSafe(observer);
 
-                return new CompositeDisposable(itemsWithGroup, publisher, shared.Connect());
+                return new CompositeDisposable( publisher, shared.Connect());
             });
         }
 

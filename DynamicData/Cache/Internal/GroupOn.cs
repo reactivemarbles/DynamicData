@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal sealed class Group<TObject, TKey, TGroupKey>
+    internal sealed class GroupOn<TObject, TKey, TGroupKey>
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TGroupKey> _groupSelectorKey;
         private readonly IObservable<Unit> _regrouper;
 
-        public Group(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit> regrouper)
+        public GroupOn(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit> regrouper)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));

@@ -13,9 +13,16 @@ namespace DynamicData.Cache.Internal
         public IEnumerable<TObject> Items => _data.Values;
         public IEnumerable<TKey> Keys => _data.Keys;
 
-        public Cache()
+        public Cache(int capacity = -1)
         {
-            _data = new Dictionary<TKey, TObject>();
+            if (capacity > 1)
+            {
+                _data = new Dictionary<TKey, TObject>(capacity);
+            }
+            else
+            {
+                _data = new Dictionary<TKey, TObject>();
+            }
         }
 
         public void Clone(IChangeSet<TObject, TKey> changes)

@@ -70,6 +70,8 @@
     <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
+    <Compile Include="Cache\IImmutableGroupChangeSet.cs" />
+    <Compile Include="Cache\ImmutableGroupChangeSet.cs" />
     <Compile Include="Cache\Internal\Cast.cs" />
     <Compile Include="Cache\Internal\EditDiff.cs" />
     <Compile Include="Cache\Internal\BatchIf.cs" />
@@ -78,7 +80,10 @@
     <Compile Include="Cache\Internal\DynamicCombiner.cs" />
     <Compile Include="Cache\Internal\FilterOnProperty.cs" />
     <Compile Include="Cache\Internal\FinallySafe.cs" />
+    <Compile Include="Cache\Internal\GroupImmutable.cs" />
     <Compile Include="Cache\Internal\GroupOnProperty.cs" />
+    <Compile Include="Cache\IGrouping.cs" />
+    <Compile Include="Cache\Internal\ImmutableGroup.cs" />
     <Compile Include="Cache\Internal\InnerJoin.cs" />
     <Compile Include="Cache\Internal\FullJoin.cs" />
     <Compile Include="Cache\Internal\LeftJoin.cs" />
@@ -252,7 +257,7 @@
     <Compile Include="Kernel\Error.cs" />
     <Compile Include="Cache\Internal\ExpirableItem.cs" />
     <Compile Include="Cache\GroupChangeSet.cs" />
-    <Compile Include="Cache\Internal\Grouper.cs" />
+    <Compile Include="Cache\Internal\GroupOn.cs" />
     <Compile Include="Cache\Internal\IIndexCalculator.cs" />
     <Compile Include="Cache\Internal\IndexCalculator.cs" />
     <Compile Include="Cache\IndexedItem.cs" />
