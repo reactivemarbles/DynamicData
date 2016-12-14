@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -48,14 +47,7 @@ namespace DynamicData.Cache.Internal
                     var subscriber = published.SubscribeSafe(observer);
                     var disposer = published.DisposeMany().Subscribe();
 
-                    var connected = published.Connect();
-
-                    return Disposable.Create(() =>
-                    {
-                        connected.Dispose();
-                        disposer.Dispose();
-                        subscriber.Dispose();
-                    });
+                    return new CompositeDisposable(published.Connect(), disposer, subscriber);
                 });
         }
 
@@ -79,11 +71,10 @@ namespace DynamicData.Cache.Internal
             {
                 //re-evaluate all items in the group
                 var items = _itemCache.Select(item => new Change<TObject, TKey>(ChangeReason.Evaluate, item.Key, item.Value.Item));
-                return HandleUpdates(new ChangeSet<TObject, TKey>(items), true);
+                return HandleUpdates(new ChangeSet<TObject, TKey>(items));
             }
 
-            private IImmutableGroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(
-                IEnumerable<Change<TObject, TKey>> changes, bool isRegrouping = false)
+            private IImmutableGroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IEnumerable<Change<TObject, TKey>> changes)
             {
                 //need to keep track of effected groups to calculate correct notifications 
                 var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>>();
@@ -131,8 +122,8 @@ namespace DynamicData.Cache.Internal
                             }
                             case ChangeReason.Remove:
                             {
-                                var previousInSameGroup = cacheToModify.Lookup(current.Key);
-                                if (previousInSameGroup.HasValue)
+                                var existing = cacheToModify.Lookup(current.Key);
+                                if (existing.HasValue)
                                 {
                                     cacheToModify.Remove(current.Key);
                                 }

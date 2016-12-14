@@ -3551,6 +3551,20 @@ namespace DynamicData
             source.Edit(updater => updater.Evaluate(items));
         }
 
+
+        /// <summary>
+        /// Signal observers to re-evaluate the all items.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(updater => updater.Evaluate());
+        }
+
         /// <summary>
         /// Removes the specified key from the cache.
         /// If the item is not contained in the cache then the operation does nothing.

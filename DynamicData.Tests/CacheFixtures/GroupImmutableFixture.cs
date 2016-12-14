@@ -118,13 +118,13 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void ChanegMultipleGroups()
         {
-            var intialPeople = Enumerable.Range(1, 100)
+            var initialPeople = Enumerable.Range(1, 100)
                 .Select(i => new Person("Person" + i, i % 10))
                 .ToArray();
 
-            _source.AddOrUpdate(intialPeople);
+            _source.AddOrUpdate(initialPeople);
 
-            intialPeople.GroupBy(p => p.Age)
+            initialPeople.GroupBy(p => p.Age)
                 .ForEach(group =>
                 {
                     var cache = _results.Data.Lookup(group.Key).Value;
@@ -152,16 +152,23 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         [Test]
-        public void LargeGroup()
+        public void Reevaluate()
         {
-            var intialPeople = Enumerable.Range(1, 10000)
-                .Select(i => new Person("Person" + i, i % 10))
+            var initialPeople = Enumerable.Range(1, 10)
+                .Select(i => new Person("Person" + i, i % 2))
                 .ToArray();
 
-            _source.AddOrUpdate(intialPeople);
-            Assert.AreEqual(2, _results.Messages.Count);
+            _source.AddOrUpdate(initialPeople); 
+            Assert.AreEqual(1, _results.Messages.Count);
 
-            intialPeople.GroupBy(p => p.Age)
+            //do an inline update
+            foreach (var person in initialPeople)
+                person.Age = person.Age + 1;
+
+            //signal operators to evaluate again
+            _source.Evaluate();
+
+            initialPeople.GroupBy(p => p.Age)
                 .ForEach(group =>
                 {
                     var cache = _results.Data.Lookup(group.Key).Value;
@@ -169,24 +176,13 @@ namespace DynamicData.Tests.CacheFixtures
 
                 });
 
-            var changedPeople = Enumerable.Range(1, 100)
-                 .Select(i => new Person("Person" + i, i % 10))
-                 .ToArray();
-
-            _source.AddOrUpdate(changedPeople);
-
-            changedPeople.GroupBy(p => p.Age)
-                .ForEach(group =>
-                {
-                    var cache = _results.Data.Lookup(group.Key).Value;
-                    CollectionAssert.AreEquivalent(group, cache.Items);
-
-                });
-
+            Assert.AreEqual(2, _results.Data.Count);
             Assert.AreEqual(2, _results.Messages.Count);
-            Assert.AreEqual(10, _results.Messages.First().Adds);
-            Assert.AreEqual(5, _results.Messages.Skip(1).First().Removes);
-            Assert.AreEqual(5, _results.Messages.Skip(1).First().Updates);
+
+            var secondMessage = _results.Messages.Skip(1).First();
+            Assert.AreEqual(1, secondMessage.Removes);
+            Assert.AreEqual(1, secondMessage.Updates);
+            Assert.AreEqual(1, secondMessage.Adds);
         }
     }
 }
