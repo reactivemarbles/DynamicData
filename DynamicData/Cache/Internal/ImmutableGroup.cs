@@ -63,7 +63,7 @@ namespace DynamicData.Cache.Internal
 
         public override string ToString()
         {
-            return $"Grouping for: {Key} ({Count} itemss)";
+            return $"Grouping for: {Key} ({Count} items)";
         }
     }
 }

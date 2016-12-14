@@ -82,31 +82,26 @@ namespace DynamicData.Cache.Internal
                 return HandleUpdates(new ChangeSet<TObject, TKey>(items), true);
             }
 
-            private IImmutableGroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IEnumerable<Change<TObject, TKey>> changes, bool isRegrouping = false)
+            private IImmutableGroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(
+                IEnumerable<Change<TObject, TKey>> changes, bool isRegrouping = false)
             {
-                var result = new List<Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>>();
+                //need to keep track of effected groups to calculate correct notifications 
+                var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>>();
 
-                
-
-
-                //Group all items
+                //1. Group all items
                 var grouped = changes
                     .Select(u => new ChangeWithGroup(u, _groupSelectorKey))
-                    .GroupBy(c => c.GroupKey)
-                    .ToArray();
+                    .GroupBy(c => c.GroupKey);
 
-                ////need to keep track of effected groups since 
-                //var addedGroups = new HashSet<TGroupKey>();
-
-                //1. iterate and maintain child caches (_groupCache)
+                //2. iterate and maintain child caches
                 grouped.ForEach(group =>
                 {
                     var groupItem = GetCache(group.Key);
-                    bool wasAdded = groupItem.Item2;
-                    GroupCache grouping = groupItem.Item1;
-                    Cache<TObject, TKey> groupCache = grouping.Cache;
+                    var groupCache = groupItem.Item1;
+                    var cacheToModify = groupCache.Cache;
 
-                    var previousState =  new ImmutableGroup<TObject, TKey, TGroupKey>(group.Key, groupCache);
+                    if (!initialStateOfGroups.ContainsKey(group.Key))
+                        initialStateOfGroups[group.Key] = GetGroupState(groupCache);
 
                     //1. Iterate through group changes and maintain the current group
                     foreach (var current in group)
@@ -115,84 +110,41 @@ namespace DynamicData.Cache.Internal
                         {
                             case ChangeReason.Add:
                             {
-                                groupCache.AddOrUpdate(current.Item, current.Key);
+                                cacheToModify.AddOrUpdate(current.Item, current.Key);
                                 _itemCache[current.Key] = current;
                                 break;
                             }
                             case ChangeReason.Update:
                             {
-                                groupCache.AddOrUpdate(current.Item, current.Key);
+                                cacheToModify.AddOrUpdate(current.Item, current.Key);
 
                                 //check whether the previous item was in a different group. If so remove from old group
                                 var previous = _itemCache.Lookup(current.Key)
-                                    .ValueOrThrow(() => new MissingKeyException("{0} is missing from previous value on update. Object type {1}, Key type {2}, Group key type {3}"
-                                        .FormatWith(current.Key, typeof(TObject), typeof(TKey),typeof(TGroupKey))));
+                                    .ValueOrThrow(() => CreateMissingKeyException(ChangeReason.Remove, current.Key));
 
-                                if (previous.GroupKey.Equals(current.GroupKey)) return;
-
-                                _allGroupings.Lookup(previous.GroupKey)
-                                    .IfHasValue(g =>
-                                    {
-                                        var previousGroupState = new ImmutableGroup<TObject, TKey, TGroupKey>(group.Key, groupCache);
-                                        if (g.Cache.Count == 1)
-                                        {
-                                            //capture state so we can notify
-                                            g.Cache.Remove(current.Key);
-                                            _allGroupings.Remove(g.Key);
-                                            result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, previousGroupState));
-
-                                        }
-                                        else
-                                        {
-                                            //TODO: This is flawed because if many items may have moved grouping and this will result in many updates 
-                                            //remove and generate an update
-                                            g.Cache.Remove(current.Key);
-                                            var updatedState = new ImmutableGroup<TObject, TKey, TGroupKey>(group.Key, groupCache);
-                                            result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Update, @group.Key, updatedState, previousState));
-                                        }
-                                    });
-
+                                if (!previous.GroupKey.Equals(current.GroupKey))
+                                {
+                                    RemoveFromOldGroup(initialStateOfGroups, previous.GroupKey, current.Key);
+                                }
                                 _itemCache[current.Key] = current;
                                 break;
                             }
                             case ChangeReason.Remove:
                             {
-                                var previousInSameGroup = groupCache.Lookup(current.Key);
+                                var previousInSameGroup = cacheToModify.Lookup(current.Key);
                                 if (previousInSameGroup.HasValue)
                                 {
-                                    groupCache.Remove(current.Key);
+                                    cacheToModify.Remove(current.Key);
                                 }
                                 else
                                 {
                                     //this has been removed due to an underlying evaluate resulting in a remove
                                     var previousGroupKey = _itemCache.Lookup(current.Key)
-                                        .ValueOrThrow(() => new MissingKeyException("{0} is missing from previous value on remove. Object type {1}, Key type {2}, Group key type {3}"
-                                            .FormatWith(current.Key, typeof(TObject), typeof(TKey), typeof(TGroupKey)))).GroupKey;
+                                        .ValueOrThrow(() => CreateMissingKeyException(ChangeReason.Remove, current.Key))
+                                        .GroupKey;
 
-                                    _allGroupings.Lookup(previousGroupKey)
-                                        .IfHasValue(g =>
-                                        {
-                                            var previousGroupState = new ImmutableGroup<TObject, TKey, TGroupKey>(group.Key, groupCache);
-                                            if (g.Cache.Count == 1)
-                                            {
-                                                //capture state so we can notify
-                                                g.Cache.Remove(current.Key);
-                                                _allGroupings.Remove(g.Key);
-                                                result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, previousGroupState));
-
-                                            }
-                                            else
-                                            {
-                                                //TODO: This is flawed because if many items may have moved grouping and this will result in many updates 
-                                                //remove and generate an update
-                                                g.Cache.Remove(current.Key);
-                                                var updatedState = new ImmutableGroup<TObject, TKey, TGroupKey>(group.Key, groupCache);
-                                                result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Update, @group.Key, updatedState, previousState));
-                                            }
-                                        });
+                                    RemoveFromOldGroup(initialStateOfGroups, previousGroupKey, current.Key);
                                 }
-
-                                //finally, remove the current item from the item cache
                                 _itemCache.Remove(current.Key);
 
                                 break;
@@ -204,67 +156,84 @@ namespace DynamicData.Cache.Internal
 
                                 previous.IfHasValue(p =>
                                 {
-                                    _allGroupings.Lookup(p.GroupKey)
-                                        .IfHasValue(g =>
-                                        {
-                                            var previousGroupState = new ImmutableGroup<TObject, TKey, TGroupKey>(group.Key, groupCache);
-                                            if (g.Cache.Count == 1)
-                                            {
-                                                //capture state so we can notify
-                                                g.Cache.Remove(current.Key);
-                                                _allGroupings.Remove(g.Key);
-                                                result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, previousGroupState));
-
-                                            }
-                                            else
-                                            {
-                                                //TODO: This is flawed because if many items may have moved grouping and this will result in many updates 
-                                                //remove and generate an update
-                                                g.Cache.Remove(current.Key);
-                                                var updatedState = new ImmutableGroup<TObject, TKey, TGroupKey>(group.Key, groupCache);
-                                                result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Update, @group.Key, updatedState, previousState));
-                                            }
-                                        });
-
-                                    groupCache.AddOrUpdate(current.Item, current.Key);
+                                    if (p.GroupKey.Equals(current.GroupKey)) return;
+                                    RemoveFromOldGroup(initialStateOfGroups, p.GroupKey, current.Key);
+                                    //add to new group because the group value has changed
+                                    cacheToModify.AddOrUpdate(current.Item, current.Key);
                                 }).Else(() =>
                                 {
                                     //must be created due to addition
-                                    groupCache.AddOrUpdate(current.Item, current.Key);
+                                    cacheToModify.AddOrUpdate(current.Item, current.Key);
                                 });
 
                                 _itemCache[current.Key] = current;
-
                                 break;
                             }
                         }
                     }
+                });
 
-                    //2. Produce and fire notifications [compare current and previous state]
-                    var currentState = new ImmutableGroup<TObject, TKey, TGroupKey>(group.Key, groupCache);
-                    if (wasAdded)
+                //2. Produce and fire notifications [compare current and previous state]
+                return CreateChangeSet(initialStateOfGroups);
+            }
+
+            private Exception CreateMissingKeyException(ChangeReason reason,  TKey key)
+            {
+                var message = $"{key} is missing from previous group on {reason}." +
+                              $"{Environment.NewLine}Object type {typeof(TObject)}, Key type {typeof(TKey)}, Group key type {typeof(TGroupKey)}";
+                return new MissingKeyException(message);
+            }
+
+            private void RemoveFromOldGroup(IDictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>> groupState, TGroupKey groupKey, TKey currentKey)
+            {
+                _allGroupings.Lookup(groupKey)
+                    .IfHasValue(g =>
                     {
-                        result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Add, group.Key, currentState));
+                        if (!groupState.ContainsKey(g.Key))
+                            groupState[g.Key] = GetGroupState(g.Key, g.Cache);
+
+                        g.Cache.Remove(currentKey);
+                    });
+            }
+
+            private IImmutableGroupChangeSet<TObject, TKey, TGroupKey> CreateChangeSet(IDictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>> initialGroupState)
+            {
+                var result = new List<Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>>();
+                foreach (var intialGroup in initialGroupState)
+                {
+                    var key = intialGroup.Key;
+                    var current = _allGroupings[intialGroup.Key];
+
+                    if (current.Cache.Count == 0)
+                    {
+                        _allGroupings.Remove(key);
+                        result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, key, intialGroup.Value));
                     }
                     else
                     {
-
-                        if (groupCache.Count == 0)
+                        var currentState = GetGroupState(current);
+                        if (intialGroup.Value.Count == 0)
                         {
-                            //this implies a remove
-                            _allGroupings.RemoveIfContained(group.Key);
-                            result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key, currentState));
-
+                            result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Add, key, currentState));
                         }
                         else
                         {
-                            //this implies an inline change
-                            result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Update, @group.Key, currentState, previousState));
+                            var previousState = Optional.Some(intialGroup.Value);
+                            result.Add(new Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Update, key, currentState, previousState));
                         }
                     }
-
-                });
+                }
                 return new ImmutableGroupChangeSet<TObject, TKey, TGroupKey>(result);
+            }
+
+            private IGrouping<TObject, TKey, TGroupKey> GetGroupState(GroupCache grouping)
+            {
+                return new ImmutableGroup<TObject, TKey, TGroupKey>(grouping.Key, grouping.Cache);
+            }
+
+            private IGrouping<TObject, TKey, TGroupKey> GetGroupState(TGroupKey key, ICache<TObject,TKey> cache)
+            {
+                return new ImmutableGroup<TObject, TKey, TGroupKey>(key, cache);
             }
 
             private class GroupCache
@@ -304,11 +273,8 @@ namespace DynamicData.Cache.Internal
                 }
 
                 public TObject Item { get; }
-
                 public TKey Key { get; }
-
                 public TGroupKey GroupKey { get; }
-
                 public ChangeReason Reason { get; }
 
                 #region Equality members
