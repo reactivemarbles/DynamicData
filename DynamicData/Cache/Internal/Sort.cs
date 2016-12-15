@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
-using DynamicData.Internal;
-using DynamicData.Operators;
 
 namespace DynamicData.Cache.Internal
 {
@@ -56,7 +54,7 @@ namespace DynamicData.Cache.Internal
                 var comparerChanged = _comparerChangedObservable
                     .Synchronize(locker).Select(sorter.Sort);
 
-                var sortAgain = _resorter
+                var sortAgain = (_resorter ?? Observable.Never<Unit>())
                     .Synchronize(locker).Select(_ => sorter.Sort());
 
                 var dataChanged = _source.Synchronize(locker)

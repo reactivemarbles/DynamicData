@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
@@ -9,27 +10,31 @@ using NUnit.Framework;
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-    public class SortControllerFixture
+    public class SortObservableFixtureFixture
     {
         private ISourceCache<Person, string> _cache;
-        private SortController<Person> _sortController;
         private SortedChangeSetAggregator<Person, string> _results;
 
+         
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private IComparer<Person> _comparer;
+
+        private BehaviorSubject<IComparer<Person>> _comparerObservable;
+        private SortExpressionComparer<Person> _comparer;
+
+        //  private IComparer<Person> _comparer;
 
         [SetUp]
         public void Initialise()
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
-
+            _comparerObservable = new BehaviorSubject<IComparer<Person>>(_comparer);
             _cache = new SourceCache<Person, string>(p => p.Name);
-            _sortController = new SortController<Person>(_comparer);
+          //  _sortController = new SortController<Person>(_comparer);
 
             _results = new SortedChangeSetAggregator<Person, string>
-                (
-                _cache.Connect().Sort(_sortController)
-                );
+            (
+                _cache.Connect().Sort(_comparerObservable)
+            );
         }
 
         [TearDown]
@@ -37,6 +42,7 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _cache.Dispose();
             _results.Dispose();
+            _comparerObservable.OnCompleted();
         }
 
         [Test]
@@ -61,7 +67,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             var desc = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
 
-            _sortController.Change(desc);
+            _comparerObservable.OnNext(desc);
             var expectedResult = people.OrderBy(p => p, desc).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
@@ -102,8 +108,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).OrderBy(x => Guid.NewGuid()).ToArray();
             _cache.AddOrUpdate(people);
-            _sortController.Change(SortExpressionComparer<Person>.Descending(p => p.Age));
-            _sortController.Reset();
+            _comparerObservable.OnNext(SortExpressionComparer<Person>.Descending(p => p.Age));
+            _comparerObservable.OnNext(_comparer);
 
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[2].SortedItems.ToList();

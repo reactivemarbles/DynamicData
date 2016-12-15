@@ -114,6 +114,7 @@
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />
     <Compile Include="CacheFixtures\RightJoinFixture.cs" />
+    <Compile Include="CacheFixtures\SortObservableFixtureFixture.cs" />
     <Compile Include="CacheFixtures\SwitchFixture.cs" />
     <Compile Include="CacheFixtures\ToObservableChangeSetFixture.cs" />
     <Compile Include="CacheFixtures\TransformManySimpleFixture.cs" />
