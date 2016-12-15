@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
 using DynamicData.Annotations;
 
 namespace DynamicData.Cache.Internal
@@ -9,6 +8,7 @@ namespace DynamicData.Cache.Internal
     internal class RefCount<TObject, TKey>
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+        private readonly object _locker = new object();
         private int _refCount = 0;
         private IObservableCache<TObject, TKey> _cache = null;
 
@@ -22,24 +22,24 @@ namespace DynamicData.Cache.Internal
         {
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
-                if (Interlocked.Increment(ref _refCount) == 1)
-                {
-                    Interlocked.Exchange(ref _cache, _source.AsObservableCache());
-                }
-
-                SpinWait.SpinUntil(() => _cache != null);
+                lock (_locker)
+                    if (++_refCount == 1)
+                        _cache = _source.AsObservableCache();
 
                 var subscriber = _cache.Connect().SubscribeSafe(observer);
 
                 return Disposable.Create(() =>
                 {
                     subscriber.Dispose();
-                    var localCache = _cache;
-                    if (Interlocked.Decrement(ref _refCount) == 0)
-                    {
-                        localCache.Dispose();
-                        Interlocked.CompareExchange(ref _cache, null, localCache);
-                    }
+                    IDisposable cacheToDispose = null;
+                    lock (_locker)
+                        if (--_refCount == 0)
+                        {
+                            cacheToDispose = _cache;
+                            _cache = null;
+                        }
+                    if (cacheToDispose != null)
+                        cacheToDispose.Dispose();
                 });
             });
         }

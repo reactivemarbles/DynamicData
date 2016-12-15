@@ -85,16 +85,14 @@ namespace DynamicData.Tests.CacheFixtures
             var refCount = _source.Connect().RefCount();
 
             await Task.WhenAll(Enumerable.Range(0, 100).Select(_ =>
-            {
-                return Task.Run(() =>
+                Task.Run(() =>
                 {
                     for (int i = 0; i < 1000; ++i)
                     {
                         var subscription = refCount.Subscribe();
                         subscription.Dispose();
                     }
-                });
-            }));
+                })));
         }
     }
 }
