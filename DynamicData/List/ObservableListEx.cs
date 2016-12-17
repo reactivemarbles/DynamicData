@@ -106,18 +106,27 @@ namespace DynamicData
 
             return Observable.Create<IChangeSet<T>>(observer =>
             {
+                var locker = new object();
+
+
+
                 var list = new SourceList<T>();
+                var notifier = list.Connect().Synchronize(locker).SubscribeSafe(observer);
+
+
                 var sourceSubscriber = source.Subscribe(list.Add);
 
+                scheduler = scheduler ?? Scheduler.Default;
+
                 var expirer = expireAfter != null
-                    ? list.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
+                    ? list.ExpireAfter(expireAfter, scheduler).Synchronize(locker).Subscribe()
                     : Disposable.Empty;
 
                 var sizeLimiter = limitSizeTo > 0
-                    ? list.LimitSizeTo(limitSizeTo, scheduler).Subscribe()
+                    ? list.LimitSizeTo(limitSizeTo, scheduler).Synchronize(locker).Subscribe()
                     : Disposable.Empty;
 
-                var notifier = list.Connect().SubscribeSafe(observer);
+    
 
                 return new CompositeDisposable(list, sourceSubscriber, notifier, expirer, sizeLimiter);
             });

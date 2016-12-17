@@ -134,7 +134,8 @@
     <Compile Include="CacheFixtures\ExpireAfterFixture.cs" />
     <Compile Include="CacheFixtures\BatchIfWithTimeOutFixture.cs" />
     <Compile Include="CacheFixtures\DeferUntilLoadedFixture.cs" />
-    <Compile Include="External\OrExperiment.cs" />
+    <Compile Include="External\StudentExample.cs" />
+    <Compile Include="External\_TestSubmittedExternally.cs" />
     <Compile Include="Kernal\EnumerableEx.cs" />
     <Compile Include="CacheFixtures\EnumerableObservableToObservableChangeSetFixture.cs" />
     <Compile Include="CacheFixtures\GroupControllerFixture.cs" />
