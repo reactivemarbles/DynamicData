@@ -2442,7 +2442,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
 
-            return new Group<TObject, TKey, TGroupKey>(source, groupSelectorKey, null).Run();
+            return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, null).Run();
         }
 
         /// <summary>
@@ -2470,7 +2470,7 @@ namespace DynamicData
             if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
             if (groupController == null) throw new ArgumentNullException(nameof(groupController));
 
-            return new Group<TObject, TKey, TGroupKey>(source, groupSelectorKey, groupController.Regrouped).Run();
+            return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, groupController.Regrouped).Run();
         }
 
         /// <summary>
@@ -2498,7 +2498,7 @@ namespace DynamicData
             if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
             if (regrouper == null) throw new ArgumentNullException(nameof(regrouper));
 
-            return new Group<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
+            return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
         }
 
         /// <summary>
@@ -2526,6 +2526,33 @@ namespace DynamicData
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
 
             return new GroupOnProperty<TObject, TKey, TGroupKey>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
+        }
+
+        /// <summary>
+        ///  Groups the source on the value returned by group selector factory. 
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="groupSelectorKey">The group selector key.</param>
+        /// <param name="regrouper">Invoke to  the for the grouping to be re-evaluated</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// groupSelectorKey
+        /// or
+        /// groupController
+        /// </exception>
+        public static IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnImmutable<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+                                                                                                             Func<TObject, TGroupKey> groupSelectorKey,
+                                                                                                             IObservable<Unit> regrouper = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
+
+            return new GroupOnImmutable<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
         }
 
         #endregion
@@ -3533,6 +3560,20 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             source.Edit(updater => updater.Evaluate(items));
+        }
+
+
+        /// <summary>
+        /// Signal observers to re-evaluate the all items.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(updater => updater.Evaluate());
         }
 
         /// <summary>

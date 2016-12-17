@@ -1,6 +1,4 @@
-﻿using DynamicData.Cache.Internal;
-
-namespace DynamicData
+﻿namespace DynamicData.Cache
 {
     /// <summary>
     ///  A grouped update collection
@@ -8,8 +6,7 @@ namespace DynamicData
     /// <typeparam name="TObject">The source object type</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>s
     /// <typeparam name="TGroupKey">The value on which the stream has been grouped</typeparam>
-    public interface IGroupChangeSet<TObject, TKey, TGroupKey> :
-        IChangeSet<IGroup<TObject, TKey, TGroupKey>, TGroupKey>
+    public interface IImmutableGroupChangeSet<TObject, TKey, TGroupKey> : IChangeSet<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>
     {
     }
 }

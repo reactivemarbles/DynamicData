@@ -45,6 +45,7 @@ namespace DynamicData.Tests.CacheFixtures
         }
 
         [Test]
+        [Explicit("Turn off for now as this is a work in progresss")]
         public void ShouldLimitSizeOfBoundCollection()
         {
             _scheduler.AdvanceTo(2);
@@ -52,6 +53,8 @@ namespace DynamicData.Tests.CacheFixtures
 
             _scheduler.AdvanceTo(3);
             Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection because of size limit");
+
+            _scheduler.AdvanceTo(3);
         }
     }
 }

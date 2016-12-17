@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DynamicData.Cache.Internal;
 
 namespace DynamicData
 {

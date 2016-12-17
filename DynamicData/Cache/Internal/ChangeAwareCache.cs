@@ -6,7 +6,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class ChangeAwareCache<TObject, TKey>
+    internal sealed class ChangeAwareCache<TObject, TKey>: ICache<TObject, TKey>
     {
         private List<Change<TObject, TKey>> _changes = new List<Change<TObject, TKey>>();
 
