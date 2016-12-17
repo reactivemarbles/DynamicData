@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DynamicData.Alias;
 using DynamicData.Kernel;
-using NUnit.Framework.Internal;
 using NUnit.Framework;
-using DynamicData.PLinq;
 
 namespace DynamicData.Tests.External
 {
