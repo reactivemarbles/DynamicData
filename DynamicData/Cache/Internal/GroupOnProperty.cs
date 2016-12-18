@@ -7,7 +7,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class GroupOnProperty<TObject, TKey, TGroup>
+    internal class  GroupOnProperty<TObject, TKey, TGroup>
         where TObject: INotifyPropertyChanged
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;

@@ -129,6 +129,7 @@
     <Compile Include="List\Internal\Group.cs" />
     <Compile Include="List\Internal\GroupOn.cs" />
     <Compile Include="List\IGroup.cs" />
+    <Compile Include="List\Internal\GroupOnImmutable.cs" />
     <Compile Include="List\Internal\GroupOnProperty.cs" />
     <Compile Include="List\Internal\ImmutableFilter.cs" />
     <Compile Include="Kernel\ReferenceEqualityComparer.cs" />

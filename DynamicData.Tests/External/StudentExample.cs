@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DynamicData.Cache;
 using DynamicData.Kernel;
 using NUnit.Framework;
 
@@ -46,34 +47,17 @@ namespace DynamicData.Tests.External
         }
     }
 
+
     class StudentSummary
     {
-        public int Id { get; private set; }
-        public string Name { get; private set; }
-        public string[] Classes { get; private set; }
+        public Class[] Classes { get;  }
+        public Student Student { get;  }
         public int[] Grades { get; private set; }
 
-        public StudentSummary(int id, string name, string[] classes, int[] grades)
+        public StudentSummary(Student student, IEnumerable<Class> classes, int[] grades)
         {
-            Id = id;
-            Name = name;
-            Classes = classes;
-            Grades = grades;
-        }
-    }
-
-    class StudentSummaryMutable
-    {
-        public int Id { get; private set; }
-        public string Name { get; private set; }
-        public IObservableCache<StudentWithClass, int> Classes { get; private set; }
-        public int[] Grades { get; private set; }
-
-        public StudentSummaryMutable(int id, string name, IObservableCache<StudentWithClass, int> classes, int[] grades)
-        {
-            Id = id;
-            Name = name;
-            Classes = classes;
+            Student = student;
+            Classes = classes.AsArray();
             Grades = grades;
         }
     }
@@ -97,18 +81,15 @@ namespace DynamicData.Tests.External
     class StudentWithClass
     {
         public Student Student { get; }
-        public string ClassName { get; }
-        public int ClassId { get; }
+        public Class Class { get; }
 
-        public Tuple<int, Student> Key { get; }
-
-
-        public StudentWithClass(Student student, string className, int classId)
+        public Tuple<Class, Student> Key { get; }
+        
+        public StudentWithClass(Student student, Class @class)
         {
             Student = student;
-            ClassName = className;
-            ClassId = classId;
-            Key = Tuple.Create(classId, student);
+            Class = @class;
+            Key = Tuple.Create(@class, student);
         }
     }
 
@@ -138,48 +119,46 @@ namespace DynamicData.Tests.External
             grades.Add(new Grade(bob.Id, biology.Id, 4));
             grades.Add(new Grade(bob.Id, algorithms.Id, 2));
 
-
-
+            
             var studentsByClass = classes.Connect()
                 .TransformMany(@class => @class.StudentIds.Select(studentId => new StudentIdWithClass(studentId, @class)), x => x.Key);
             
             var studentsSummary = students.Connect()
-                        .InnerJoin(studentsByClass, x => x.StudentId,(studentId, student, studentClass) => new StudentWithClass(student, student.Name, student.Id))
-                        .Group(x => x.Student)
-                        .Transform(group => new StudentSummaryMutable(group.Key.Id,group.Key.Name,group.Cache,new int[0]));
+                        .InnerJoin(studentsByClass, x => x.StudentId,(studentId, student, studentClass) => new StudentWithClass(student, studentClass.Class))
+                        .GroupOnImmutable(x => x.Student)
+                        .Transform(group => new StudentSummary(group.Key, group.Items.Select(x=>x.Class),new int[0]))
+                        .AsObservableCache();
+            
+           //  //   .Group(x => x.StudentId)
+           //  ////   .Or();
 
+           //var studentsClasses =
+           //     classes.Connect()
+           //         .TransformMany(
+           //             @class => @class.StudentIds.Select(studentId => new {Class = @class, StudentId = studentId}),
+           //             x => Tuple.Create(x.StudentId, x.Class.Id))
+           //         // .RemoveKey()
+           //         .Group(x => x.StudentId)
+           //         .Transform(@group =>
+           //             new
+           //             {
+           //                 StudentId = @group.Key,
+           //                 ClassNames = @group.Cache.Items.Select(x => x.Class.Name).ToArray(),
+           //             });
+           //        // .AddKey(x => x.StudentId);
 
-             //   .Group(x => x.StudentId)
-             //   .Transform(x => x.Cache);
-             ////   .Or();
+           // IObservableCache<StudentSummary, int> studentSummaries = students.Connect().LeftJoin(studentsClasses, x => x.StudentId, (studentId, student, classNames) =>
+           //             new StudentSummary(
+           //                 studentId,
+           //                 student.Name,
+           //                 classNames.ConvertOr(x => x.ClassNames, () => new string[0]),
+           //                 new int[0]))
+           //         .AsObservableCache();
 
-           var studentsClasses =
-                classes.Connect()
-                    .TransformMany(
-                        @class => @class.StudentIds.Select(studentId => new {Class = @class, StudentId = studentId}),
-                        x => Tuple.Create(x.StudentId, x.Class.Id))
-                    // .RemoveKey()
-                    .Group(x => x.StudentId)
-                    .Transform(@group =>
-                        new
-                        {
-                            StudentId = @group.Key,
-                            ClassNames = @group.Cache.Items.Select(x => x.Class.Name).ToArray(),
-                        });
-                   // .AddKey(x => x.StudentId);
-
-            IObservableCache<StudentSummary, int> studentSummaries = students.Connect().LeftJoin(studentsClasses, x => x.StudentId, (studentId, student, classNames) =>
-                        new StudentSummary(
-                            studentId,
-                            student.Name,
-                            classNames.ConvertOr(x => x.ClassNames, () => new string[0]),
-                            new int[0]))
-                    .AsObservableCache();
-
-            Console.WriteLine(String.Join(", ", studentSummaries.Lookup(alice.Id).Value.Classes));
+        //    Console.WriteLine(String.Join(", ", studentsSummary.Lookup(alice.Id).Value.Classes));
             algorithms.StudentIds.Add(alice.Id);
             classes.AddOrUpdate(algorithms);
-            Console.WriteLine(String.Join(", ", studentSummaries.Lookup(alice.Id).Value.Classes));
+        //    Console.WriteLine(String.Join(", ", studentsSummary.Lookup(alice.Id).Value.Classes));
         }
 
 
