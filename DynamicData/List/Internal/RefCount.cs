@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
 
 namespace DynamicData.Internal
 {
     internal class RefCount<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
+        private readonly object _locker = new object();
         private int _refCount = 0;
         private IObservableList<T> _list = null;
 
@@ -20,22 +20,24 @@ namespace DynamicData.Internal
         {
             return Observable.Create<IChangeSet<T>>(observer =>
             {
-                Interlocked.Increment(ref _refCount);
-                if (Volatile.Read(ref _refCount) == 1)
-                {
-                    Interlocked.Exchange(ref _list, _source.AsObservableList());
-                }
+                lock (_locker)
+                    if (++_refCount == 1)
+                        _list = _source.AsObservableList();
 
-                // ReSharper disable once PossibleNullReferenceException (never the case!)
                 var subscriber = _list.Connect().SubscribeSafe(observer);
 
                 return Disposable.Create(() =>
                 {
-                    Interlocked.Decrement(ref _refCount);
                     subscriber.Dispose();
-                    if (Volatile.Read(ref _refCount) != 0) return;
-                    _list.Dispose();
-                    Interlocked.Exchange(ref _list, null);
+                    IDisposable listToDispose = null;
+                    lock (_locker)
+                        if (--_refCount == 0)
+                        {
+                            listToDispose = _list;
+                            _list = null;
+                        }
+                    if (listToDispose != null)
+                        listToDispose.Dispose();
                 });
             });
         }

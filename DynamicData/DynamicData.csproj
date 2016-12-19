@@ -129,6 +129,7 @@
     <Compile Include="List\Internal\Group.cs" />
     <Compile Include="List\Internal\GroupOn.cs" />
     <Compile Include="List\IGroup.cs" />
+    <Compile Include="List\Internal\GroupOnImmutable.cs" />
     <Compile Include="List\Internal\GroupOnProperty.cs" />
     <Compile Include="List\Internal\ImmutableFilter.cs" />
     <Compile Include="Kernel\ReferenceEqualityComparer.cs" />
@@ -271,7 +272,6 @@
     <Compile Include="Cache\SortOptimisations.cs" />
     <Compile Include="Cache\SortReason.cs" />
     <Compile Include="Cache\Internal\StaticFilter.cs" />
-    <Compile Include="Cache\Internal\TransformedItem.cs" />
     <Compile Include="Cache\Internal\Transformer.cs" />
     <Compile Include="Cache\VirtualChangeSet.cs" />
     <Compile Include="Cache\Virtualiser.cs" />

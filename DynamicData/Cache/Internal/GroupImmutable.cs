@@ -114,9 +114,8 @@ namespace DynamicData.Cache.Internal
                                     .ValueOrThrow(() => CreateMissingKeyException(ChangeReason.Remove, current.Key));
 
                                 if (!previous.GroupKey.Equals(current.GroupKey))
-                                {
                                     RemoveFromOldGroup(initialStateOfGroups, previous.GroupKey, current.Key);
-                                }
+                          
                                 _itemCache[current.Key] = current;
                                 break;
                             }
@@ -252,9 +251,6 @@ namespace DynamicData.Cache.Internal
 
             private struct ChangeWithGroup : IEquatable<ChangeWithGroup>
             {
-                /// <summary>
-                ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
-                /// </summary>
                 public ChangeWithGroup(Change<TObject, TKey> change, Func<TObject, TGroupKey> keySelector)
                 {
                     GroupKey = keySelector(change.Current);
@@ -298,12 +294,6 @@ namespace DynamicData.Cache.Internal
 
                 #endregion
 
-                /// <summary>
-                ///     Returns the fully qualified type name of this instance.
-                /// </summary>
-                /// <returns>
-                ///     A <see cref="T:System.String" /> containing a fully qualified type name.
-                /// </returns>
                 public override string ToString()
                 {
                     return $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";

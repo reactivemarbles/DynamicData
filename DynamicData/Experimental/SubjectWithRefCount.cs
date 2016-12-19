@@ -62,8 +62,8 @@ namespace DynamicData.Experimental
 
             return Disposable.Create(() =>
             {
-                subscriber.Dispose();
                 Interlocked.Decrement(ref _refCount);
+                subscriber.Dispose();
             });
         }
 

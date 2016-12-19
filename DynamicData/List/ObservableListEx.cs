@@ -14,8 +14,8 @@ using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
 using DynamicData.Internal;
 using DynamicData.Kernel;
-using DynamicData.Linq;
 using DynamicData.List.Internal;
+using DynamicData.List.Linq;
 using DynamicData.Operators;
 
 namespace DynamicData
@@ -106,18 +106,27 @@ namespace DynamicData
 
             return Observable.Create<IChangeSet<T>>(observer =>
             {
+                var locker = new object();
+
+
+
                 var list = new SourceList<T>();
+                var notifier = list.Connect().Synchronize(locker).SubscribeSafe(observer);
+
+
                 var sourceSubscriber = source.Subscribe(list.Add);
 
+                scheduler = scheduler ?? Scheduler.Default;
+
                 var expirer = expireAfter != null
-                    ? list.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
+                    ? list.ExpireAfter(expireAfter, scheduler).Synchronize(locker).Subscribe()
                     : Disposable.Empty;
 
                 var sizeLimiter = limitSizeTo > 0
-                    ? list.LimitSizeTo(limitSizeTo, scheduler).Subscribe()
+                    ? list.LimitSizeTo(limitSizeTo, scheduler).Synchronize(locker).Subscribe()
                     : Disposable.Empty;
 
-                var notifier = list.Connect().SubscribeSafe(observer);
+    
 
                 return new CompositeDisposable(list, sourceSubscriber, notifier, expirer, sizeLimiter);
             });
@@ -196,7 +205,7 @@ namespace DynamicData
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var list = new SourceList<T>();
-                var sourceSubscriber = source.Subscribe(list.AddRange, ex=> observer.OnError(ex),()=> observer.OnCompleted());
+                var sourceSubscriber = source.Subscribe(items => list.AddRange(items), ex=> observer.OnError(ex));
 
                 var expirer = expireAfter != null
                     ? list.ExpireAfter(expireAfter, scheduler).Subscribe()
@@ -459,14 +468,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// filterController</exception>
-        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source,
-                                                           FilterController<T> filterController)
+        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, FilterController<T> filterController)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-            var predicates = filterController
-                .EvaluateChanged
-                .Merge(filterController.FilterChanged);
+            var predicates = filterController.EvaluateChanged.Merge(filterController.FilterChanged);
             return source.Filter(predicates);
         }
 
@@ -500,17 +506,21 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="propertySelector">The property selector. When the property changes the filter specified will be re-evaluated</param>
         /// <param name="predicate">A predicate based on the object which contains the changed property</param>
+        /// <param name="propertyChangedThrottle">The property changed throttle.</param>
+        /// <param name="scheduler">The scheduler used when throttling</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
         public static IObservable<IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source,
              Expression<Func<TObject, TProperty>> propertySelector,
-             Func<TObject, bool> predicate) where TObject : INotifyPropertyChanged
+             Func<TObject, bool> predicate,
+             TimeSpan? propertyChangedThrottle = null,
+            IScheduler scheduler = null) where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate).Run();
+            return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
         }
 
 

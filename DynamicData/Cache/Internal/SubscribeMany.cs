@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal
 {
@@ -40,10 +39,10 @@ namespace DynamicData.Cache.Internal
                             .DisposeMany()
                             .Subscribe();
 
-                        var result = published.SubscribeSafe(observer);
-                        var connected = published.Connect();
-
-                        return new CompositeDisposable(subscriptions, connected, result);
+                        return new CompositeDisposable(
+                            subscriptions, 
+                            published.SubscribeSafe(observer),
+                            published.Connect());
                     });
         }
     }

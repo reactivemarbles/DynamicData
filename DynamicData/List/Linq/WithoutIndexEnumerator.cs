@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DynamicData.Linq
+namespace DynamicData.List.Linq
 {
     /// <summary>
     /// Index to remove the index. This is necessary for WhereReasonAre* operators. 

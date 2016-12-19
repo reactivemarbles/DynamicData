@@ -1305,8 +1305,8 @@ namespace DynamicData
 
         /// <summary>
         /// Filters source on the specified property using the specified predicate.
-        /// 
-        /// The filter will automatically reapply when a property changes 
+        /// The filter will automatically reapply when a property changes.
+        /// When there are likely to be a large number of property changes specify a throttle to improve performance
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1314,18 +1314,23 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="propertySelector">The property selector. When the property changes a the filter specified will be re-evaluated</param>
         /// <param name="predicate">A predicate based on the object which contains the changed property</param>
+        /// <param name="propertyChangedThrottle">The property changed throttle.</param>
+        /// <param name="scheduler">The scheduler used when throttling</param>
         /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static IObservable<IChangeSet<TObject, TKey>> FilterOnProperty<TObject, TKey, TProperty>(this IObservable<IChangeSet<TObject, TKey>> source,
-                Expression<Func<TObject, TProperty>> propertySelector,
-                Func<TObject, bool> predicate) where TObject : INotifyPropertyChanged
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TObject, TKey>> FilterOnProperty<TObject, TKey, TProperty>(
+            this IObservable<IChangeSet<TObject, TKey>> source,
+            Expression<Func<TObject, TProperty>> propertySelector,
+            Func<TObject, bool> predicate,
+            TimeSpan? propertyChangedThrottle = null,
+            IScheduler scheduler = null) 
+            where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return new FilterOnProperty<TObject, TKey, TProperty>(source, propertySelector, predicate).Run();
+            return new FilterOnProperty<TObject, TKey, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
         }
 
         #endregion
@@ -2720,16 +2725,19 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
         /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection</param>
+        /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
-                                                                                 out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25)
+                                                                                 out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, 
+                                                                                 int resetThreshold = 25,
+                                                                                 ISortedObservableCollectionAdaptor<TObject, TKey> adaptor = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
             var target = new ObservableCollectionExtended<TObject>();
             var result = new ReadOnlyObservableCollection<TObject>(target);
-            var updater = new SortedObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
+            var updater = adaptor ?? new SortedObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
             readOnlyObservableCollection = result;
             return source.Bind(target, updater);
         }
@@ -2742,16 +2750,19 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
         /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection</param>
+        /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                 out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25)
+                                                                                 out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, 
+                                                                                 int resetThreshold = 25,
+                                                                                 IObservableCollectionAdaptor<TObject, TKey> adaptor = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
             var target = new ObservableCollectionExtended<TObject>();
             var result = new ReadOnlyObservableCollection<TObject>(target);
-            var updater = new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
+            var updater = adaptor ?? new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
             readOnlyObservableCollection = result;
             return source.Bind(target, updater);
         }
@@ -3159,7 +3170,7 @@ namespace DynamicData
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
-                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
+                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate, observer.OnError);
 
                 var expirer = expireAfter != null
                     ? cache.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
@@ -3201,7 +3212,7 @@ namespace DynamicData
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
-                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate);
+                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate,observer.OnError);
 
                 var expirer = expireAfter != null
                     ? cache.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe((kvp) => { }, observer.OnError)

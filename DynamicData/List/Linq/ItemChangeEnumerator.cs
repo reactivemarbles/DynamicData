@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace DynamicData.Linq
+namespace DynamicData.List.Linq
 {
     internal class ItemChangeEnumerator<T> : IEnumerable<ItemChange<T>>
     {

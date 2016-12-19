@@ -30,6 +30,7 @@ namespace DynamicData.List.Internal
                     }))
                     .Synchronize(locker)
                     .PopulateInto(destination);
+                
 
                 var publisher = destination.Connect().SubscribeSafe(observer);
                 return new CompositeDisposable(destination, populator, publisher);

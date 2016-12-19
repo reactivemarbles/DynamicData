@@ -2,6 +2,8 @@
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 using System;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace DynamicData.Tests.CacheFixtures
 {
@@ -72,6 +74,25 @@ namespace DynamicData.Tests.CacheFixtures
 
             Assert.AreEqual(2, created);
             Assert.AreEqual(2, disposals);
+        }
+
+        // This test is probabilistic, it could be cool to be able to prove RefCount's thread-safety
+        // more accurately but I don't think that there is an easy way to do this.
+        // At least this test can catch some bugs in the old implementation.
+        [Test]
+        public async Task IsHopefullyThreadSafe()
+        {
+            var refCount = _source.Connect().RefCount();
+
+            await Task.WhenAll(Enumerable.Range(0, 100).Select(_ =>
+                Task.Run(() =>
+                {
+                    for (int i = 0; i < 1000; ++i)
+                    {
+                        var subscription = refCount.Subscribe();
+                        subscription.Dispose();
+                    }
+                })));
         }
     }
 }

@@ -28,7 +28,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
-            return source.Connect().Select(changes => changes.Transform(conversionFactory));
+            return source.Connect().Cast(conversionFactory);
         }
     }
 }

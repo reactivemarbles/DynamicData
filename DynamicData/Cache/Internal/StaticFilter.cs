@@ -7,11 +7,10 @@ namespace DynamicData.Cache.Internal
     internal class StaticFilter<TObject, TKey>
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-        private Func<TObject, bool> _filter;
+        private readonly Func<TObject, bool> _filter;
 
 
-        public StaticFilter(IObservable<IChangeSet<TObject, TKey>> source,
-            Func<TObject, bool> filter)
+        public StaticFilter(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -21,11 +20,10 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
+            if (_filter == null) return _source;
+
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
-                if (_filter == null)
-                    return _source.SubscribeSafe(observer);
-
                 var updater = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), _filter);
                 return _source.Select(updater.Update)
                     .NotEmpty()

@@ -3,24 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
-using DynamicData.Binding;
 using DynamicData.Tests.Domain;
+using Microsoft.Reactive.Testing;
 using NUnit.Framework;
-
 
 namespace DynamicData.Tests.Experiments
 {
     [TestFixture]
     public class FromAsyncFixture
     {
+        private TestScheduler _scheduler;
+
+        [SetUp]
+        public void SetUp()
+        {
+            this._scheduler = new TestScheduler();
+        }
 
         [Test]
         public void CanLoadFromTask()
         {
             Func<Task<IEnumerable<Person>>> loader = () =>
             {
-                Task.Delay(100);
-
                 var items = Enumerable.Range(1, 100)
                     .Select(i => new Person("Person" + i, 1))
                     .ToArray()
