@@ -44,8 +44,9 @@ namespace DynamicData
         private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source)
         {
             return source
-                .Subscribe(changes => _readerWriter.Write(changes)
-                                                   .Then(InvokeNext, _changes.OnError), () => _changes.OnCompleted());
+                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, _changes.OnError),
+                              _changes.OnError,
+                               () => _changes.OnCompleted());
         }
 
         /// <summary>

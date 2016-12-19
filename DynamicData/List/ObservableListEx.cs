@@ -133,8 +133,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// keySelector</exception>
-        public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source,
-                                                                                       IScheduler scheduler = null)
+        public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, IScheduler scheduler = null)
         {
             return ToObservableChangeSet<T>(source, null, -1, scheduler);
         }
@@ -197,7 +196,7 @@ namespace DynamicData
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var list = new SourceList<T>();
-                var sourceSubscriber = source.Subscribe(list.AddRange);
+                var sourceSubscriber = source.Subscribe(list.AddRange, ex=> observer.OnError(ex),()=> observer.OnCompleted());
 
                 var expirer = expireAfter != null
                     ? list.ExpireAfter(expireAfter, scheduler).Subscribe()
