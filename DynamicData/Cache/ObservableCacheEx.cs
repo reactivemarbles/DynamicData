@@ -2836,7 +2836,10 @@ namespace DynamicData
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<TLeft, TRight, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return left.InnerJoin(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
@@ -2860,12 +2863,42 @@ namespace DynamicData
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<TLeftKey, TLeft, TRight, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return new InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
         }
 
         /// <summary>
-        /// Joins the left and right observable data sources, taking values when both left and right values are present
+        /// Groups the right data source and joins the to the sources, taking values when both left and right values are present
+        /// This is the equivalent of SQL inner join.
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which </typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (left, right) => new CustomObject(key, left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> InnerJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull]  Func<TLeft, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            return left.InnerJoinMany(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+        }
+
+        /// <summary>
+        /// Groups the right data source and joins the to the sources, taking values when both left and right values are present
         /// This is the equivalent of SQL inner join.
         /// </summary>
         /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
@@ -2884,7 +2917,10 @@ namespace DynamicData
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<TLeftKey, TLeft, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return new InnerJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
         }
 
@@ -2909,7 +2945,10 @@ namespace DynamicData
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return left.FullJoin(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
@@ -2933,8 +2972,66 @@ namespace DynamicData
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return new FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
+        }
+
+
+        /// <summary>
+        /// Groups the right data source and joins the two sources matching them using the specified key selector, taking any left or right values and matching them, provided that the left or the right has a value.
+        /// This is the equivalent of SQL full join.
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which </typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (left, right) => new CustomObject(key, left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull] Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull] Func<Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            return left.FullJoinMany(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+        }
+
+        /// <summary>
+        /// Groups the right data source and joins the two sources matching them using the specified key selector, taking any left or right values and matching them, provided that the left or the right has a value.
+        /// This is the equivalent of SQL full join.
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which </typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (key, left, right) => new CustomObject(key, left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull] Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull] Func<TLeftKey, Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            return new FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
         }
 
         /// <summary>
@@ -2948,15 +3045,18 @@ namespace DynamicData
         /// <param name="left">The left data source</param>
         /// <param name="right">The right data source.</param>
         /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
-        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (key, left, right) => new CustomObject(key, left, right)</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (left, right) => new CustomObject(key, left, right)</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
         public static IObservable<IChangeSet<TDestination, TLeftKey>> LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
                [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
-               [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
-               [NotNull]  Func<TLeft, Optional<TRight>, TDestination> resultSelector)
+               [NotNull] Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull] Func<TLeft, Optional<TRight>, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return left.LeftJoin(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
@@ -2979,8 +3079,65 @@ namespace DynamicData
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<TLeftKey, TLeft, Optional<TRight>, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return new LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
+        }
+
+        /// <summary>
+        /// Groups the right data source and joins the two sources matching them using the specified key selector, taking all left values and combining any matching right values.
+        /// This is the equivalent of SQL left join.
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which </typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (left, right) => new CustomObject(key, left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> LeftJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull] Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull] Func<TLeft, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            return left.LeftJoinMany(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+        }
+
+        /// <summary>
+        /// Groups the right data source and joins the two sources matching them using the specified key selector, taking all left values and combining any matching right values.
+        /// This is the equivalent of SQL left join.
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which </typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (key, left, right) => new CustomObject(key, left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> LeftJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull] Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull] Func<TLeftKey, TLeft, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            return new LeftJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
         }
 
         /// <summary>
@@ -3002,7 +3159,10 @@ namespace DynamicData
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<Optional<TLeft>, TRight, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return left.RightJoin(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
@@ -3025,9 +3185,69 @@ namespace DynamicData
                [NotNull]  Func<TRight, TLeftKey> rightKeySelector,
                [NotNull]  Func<TLeftKey, Optional<TLeft>, TRight, TDestination> resultSelector)
         {
+            if (left == null) throw new ArgumentNullException(nameof(left));
             if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
             return new RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
         }
+
+        /// <summary>
+        /// Groups the right data source and joins the two sources matching them using the specified key selector, , taking all right values and combining any matching left values.
+        /// This is the equivalent of SQL left join.
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which</typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (left, right) =&gt; new CustomObject(key, left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull] Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull] Func<Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            return left.RightJoinMany(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+        }
+
+        /// <summary>
+        /// Groups the right data source and joins the two sources matching them using the specified key selector,, taking all right values and combining any matching left values.
+        /// This is the equivalent of SQL left join.
+        /// </summary>
+        /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
+        /// <typeparam name="TLeftKey">The key type of the left datasource</typeparam>
+        /// <typeparam name="TRight">The object type of the right datasource</typeparam>
+        /// <typeparam name="TRightKey">The key type of the right datasource</typeparam>
+        /// <typeparam name="TDestination">The resulting object which </typeparam>
+        /// <param name="left">The left data source</param>
+        /// <param name="right">The right data source.</param>
+        /// <param name="rightKeySelector">Specify the foreign key on the right datasource</param>
+        /// <param name="resultSelector">The result selector.used to transform the combined data into. Example (key, left, right) => new CustomObject(key, left, right)</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<IChangeSet<TDestination, TLeftKey>> RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(this IObservable<IChangeSet<TLeft, TLeftKey>> left,
+               [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
+               [NotNull] Func<TRight, TLeftKey> rightKeySelector,
+               [NotNull] Func<TLeftKey, Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        {
+            if (left == null) throw new ArgumentNullException(nameof(left));
+            if (right == null) throw new ArgumentNullException(nameof(right));
+            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
+            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            return new RightJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
+        }
+
+
         #endregion
 
         #region Populate into an observable cache

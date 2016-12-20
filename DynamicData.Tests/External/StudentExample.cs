@@ -9,8 +9,8 @@ namespace DynamicData.Tests.External
 {
     class Student
     {
-        public int Id { get; private set; }
-        public string Name { get; private set; }
+        public int Id { get; }
+        public string Name { get;}
 
         public Student(int id, string name)
         {
@@ -35,9 +35,9 @@ namespace DynamicData.Tests.External
 
     class Grade
     {
-        public int StudentId { get; private set; }
-        public int ClassId { get; private set; }
-        public int Value { get; private set; }
+        public int StudentId { get;  }
+        public int ClassId { get;  }
+        public int Value { get;}
 
         public Grade(int studentId, int classId, int value)
         {
@@ -54,10 +54,10 @@ namespace DynamicData.Tests.External
         public Student Student { get;  }
         public int[] Grades { get; private set; }
 
-        public StudentSummary(Student student, IEnumerable<Class> classes, int[] grades)
+        public StudentSummary(Student student, IGrouping<StudentIdWithClass, Tuple<int, Class>, int> classes, int[] grades)
         {
             Student = student;
-            Classes = classes.AsArray();
+            Classes = classes.Items.Select(x=>x.Class).AsArray();
             Grades = grades;
         }
     }
@@ -74,22 +74,6 @@ namespace DynamicData.Tests.External
             Key = Tuple.Create(studentId, @class);
             StudentId = studentId;
             Class = @class;
-        }
-    }
-
-
-    class StudentWithClass
-    {
-        public Student Student { get; }
-        public Class Class { get; }
-
-        public Tuple<Class, Student> Key { get; }
-        
-        public StudentWithClass(Student student, Class @class)
-        {
-            Student = student;
-            Class = @class;
-            Key = Tuple.Create(@class, student);
         }
     }
 
@@ -124,34 +108,8 @@ namespace DynamicData.Tests.External
                 .TransformMany(@class => @class.StudentIds.Select(studentId => new StudentIdWithClass(studentId, @class)), x => x.Key);
 
             var studentsSummary = students.Connect()
-                .InnerJoinMany(studentsByClass, x => x.StudentId, (studentId, student, grouping) => new StudentSummary(student, grouping.Items.Select(x=>x.Class),new int[0]))
+                .InnerJoinMany(studentsByClass, swc => swc.StudentId, (studentId, student, grouping) => new StudentSummary(student, grouping,new int[0]))
                 .AsObservableCache();
-
-            //  //   .Group(x => x.StudentId)
-            //  ////   .Or();
-
-            //var studentsClasses =
-            //     classes.Connect()
-            //         .TransformMany(
-            //             @class => @class.StudentIds.Select(studentId => new {Class = @class, StudentId = studentId}),
-            //             x => Tuple.Create(x.StudentId, x.Class.Id))
-            //         // .RemoveKey()
-            //         .Group(x => x.StudentId)
-            //         .Transform(@group =>
-            //             new
-            //             {
-            //                 StudentId = @group.Key,
-            //                 ClassNames = @group.Cache.Items.Select(x => x.Class.Name).ToArray(),
-            //             });
-            //        // .AddKey(x => x.StudentId);
-
-            // IObservableCache<StudentSummary, int> studentSummaries = students.Connect().LeftJoin(studentsClasses, x => x.StudentId, (studentId, student, classNames) =>
-            //             new StudentSummary(
-            //                 studentId,
-            //                 student.Name,
-            //                 classNames.ConvertOr(x => x.ClassNames, () => new string[0]),
-            //                 new int[0]))
-            //         .AsObservableCache();
 
             //    Console.WriteLine(String.Join(", ", studentsSummary.Lookup(alice.Id).Value.Classes));
             algorithms.StudentIds.Add(alice.Id);

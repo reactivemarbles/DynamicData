@@ -138,7 +138,6 @@
     <Compile Include="CacheFixtures\DeferUntilLoadedFixture.cs" />
     <Compile Include="Experiments\FromAsyncFixture.cs" />
     <Compile Include="External\StudentExample.cs" />
-    <Compile Include="External\_TestSubmittedExternally.cs" />
     <Compile Include="Kernal\EnumerableEx.cs" />
     <Compile Include="CacheFixtures\EnumerableObservableToObservableChangeSetFixture.cs" />
     <Compile Include="CacheFixtures\GroupControllerFixture.cs" />
