@@ -6,20 +6,23 @@ namespace DynamicData.Tests.Domain
 {
     public class Person : AbstractNotifyPropertyChanged, IKey<string>, IEquatable<Person>
     {
+        public string ParentName { get; set; }
         private readonly string _name;
         private int _age;
         private readonly string _gender;
 
-        public Person(string firstname, string lastname, int age, string gender = "F")
-            : this(firstname + " " + lastname, age, gender)
+        public Person(string firstname, string lastname, int age, string gender = "F", string parentName = null)
+            : this(firstname + " " + lastname, age, gender, parentName)
         {
+       
         }
 
-        public Person(string name, int age, string gender = "F")
+        public Person(string name, int age, string gender = "F", string parentName = null)
         {
             _name = name;
             _age = age;
             _gender = gender;
+            ParentName = parentName ?? String.Empty;
         }
 
         public string Name => _name;

@@ -111,7 +111,7 @@ namespace DynamicData.Cache.Internal
 
                                 //check whether the previous item was in a different group. If so remove from old group
                                 var previous = _itemCache.Lookup(current.Key)
-                                    .ValueOrThrow(() => CreateMissingKeyException(ChangeReason.Remove, current.Key));
+                                    .ValueOrThrow(() => CreateMissingKeyException(ChangeReason.Update, current.Key));
 
                                 if (!previous.GroupKey.Equals(current.GroupKey))
                                     RemoveFromOldGroup(initialStateOfGroups, previous.GroupKey, current.Key);

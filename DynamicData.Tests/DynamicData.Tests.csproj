@@ -108,6 +108,7 @@
     <Compile Include="CacheFixtures\GroupOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\InnerJoinFixture.cs" />
     <Compile Include="CacheFixtures\FullJoinFixture.cs" />
+    <Compile Include="CacheFixtures\LeftJoinManyFixture.cs" />
     <Compile Include="CacheFixtures\LeftJoinFixture.cs" />
     <Compile Include="CacheFixtures\KeyValueCollectionEx.cs" />
     <Compile Include="CacheFixtures\PageAndSortFixture.cs" />
@@ -120,8 +121,9 @@
     <Compile Include="CacheFixtures\TransformManySimpleFixture.cs" />
     <Compile Include="CacheFixtures\TransformTreeFixture.cs" />
     <Compile Include="CacheFixtures\XorFixture.cs" />
+    <Compile Include="Domain\ParentAndChildren.cs" />
+    <Compile Include="Domain\ParentChild.cs" />
     <Compile Include="Domain\PersonEmployment.cs" />
-    <Compile Include="Domain\PersonSorter.cs" />
     <Compile Include="Domain\PersonWithChildren.cs" />
     <Compile Include="Domain\PersonWithEmployment.cs" />
     <Compile Include="Domain\PersonWithRelations.cs" />
@@ -181,7 +183,6 @@
     <Compile Include="CacheFixtures\DistinctFixture.cs" />
     <Compile Include="CacheFixtures\GroupFixture.cs" />
     <Compile Include="Domain\Person.cs" />
-    <Compile Include="Domain\PersonNoKey.cs" />
     <Compile Include="Domain\PersonWithGender.cs" />
     <Compile Include="CacheFixtures\MonitorStatusFixture.cs" />
     <Compile Include="CacheFixtures\TransformFixture.cs" />

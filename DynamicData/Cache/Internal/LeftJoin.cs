@@ -127,7 +127,7 @@ namespace DynamicData.Cache.Internal
 
 
                 return new CompositeDisposable(
-                    joinedCache.Connect().SubscribeSafe(observer),
+                    joinedCache.Connect().NotEmpty().SubscribeSafe(observer),
                     leftCache,
                     rightCache,
                     leftLoader,

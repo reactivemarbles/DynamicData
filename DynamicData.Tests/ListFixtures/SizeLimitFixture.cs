@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
@@ -107,19 +106,5 @@ namespace DynamicData.Tests.ListFixtures
             // Initialise();
             Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
         }
-
-        //[Test]
-        //public void OnCompleteIsInvokedWhenSourceisDisposed()
-        //{
-        //    bool completed = false;
-
-        //    var subscriber = _source.LimitSizeTo(10)
-        //        .FinallySafe(() => completed = true)
-        //        .Subscribe();
-
-        //    _source.Dispose();
-        //    _scheduler.Start();
-        //    Assert.IsTrue(completed, "Completed has not been called");
-        //}
     }
 }
