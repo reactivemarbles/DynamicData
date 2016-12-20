@@ -131,6 +131,7 @@
     <Compile Include="List\IGroup.cs" />
     <Compile Include="List\Internal\GroupOnImmutable.cs" />
     <Compile Include="List\Internal\GroupOnProperty.cs" />
+    <Compile Include="List\IGrouping.cs" />
     <Compile Include="List\Internal\ImmutableFilter.cs" />
     <Compile Include="Kernel\ReferenceEqualityComparer.cs" />
     <Compile Include="Cache\ChangeReason.cs" />
@@ -204,6 +205,7 @@
     <Compile Include="Cache\MissingKeyException.cs" />
     <Compile Include="List\Internal\AnonymousObservableList.cs" />
     <Compile Include="List\ChangeSet.cs" />
+    <Compile Include="List\Internal\ImmutableGroup.cs" />
     <Compile Include="List\Internal\MergeMany.cs" />
     <Compile Include="List\Internal\MutableFilter.cs" />
     <Compile Include="List\Internal\OnBeingAdded.cs" />

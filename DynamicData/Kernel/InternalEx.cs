@@ -2,6 +2,7 @@
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Annotations;
 
 namespace DynamicData.Kernel
@@ -50,6 +51,12 @@ namespace DynamicData.Kernel
         {
             return source.Select(_ => Unit.Default);
         }
+
+        internal static void OnNext(this ISubject<Unit> source)
+        {
+            source.OnNext(Unit.Default);
+        }
+
 
         /// <summary>
         /// Schedules a recurring action.

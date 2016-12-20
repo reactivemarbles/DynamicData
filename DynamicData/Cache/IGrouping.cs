@@ -4,7 +4,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache
 {
     /// <summary>
-    /// Represents 
+    /// Represents a group which provides an update after any value within the group changes
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>

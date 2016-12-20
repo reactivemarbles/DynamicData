@@ -567,7 +567,37 @@ namespace DynamicData
             if (replacewith == null) throw new ArgumentNullException(nameof(replacewith));
 
             var index = source.IndexOf(original);
+            if (index==-1)
+                throw new ArgumentException("Cannot find index of origina item. Either it does not exist in the list or the hashcode has mutated");
             source[index] = replacewith;
+        }
+
+
+        /// <summary>
+        /// Replaces the item if found, otherwise the item is added to the list
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="original">The original.</param>
+        /// <param name="replacewith">The replacewith.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static void ReplaceOrAdd<T>(this IList<T> source, [NotNull] T original, [NotNull] T replacewith)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (original == null) throw new ArgumentNullException(nameof(original));
+            if (replacewith == null) throw new ArgumentNullException(nameof(replacewith));
+
+            var index = source.IndexOf(original);
+            if (index == -1)
+            {
+                source.Add(replacewith);
+            }
+            else
+            {
+                source[index] = replacewith;
+            }
+
         }
 
         /// <summary>

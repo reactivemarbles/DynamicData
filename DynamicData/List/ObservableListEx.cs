@@ -205,7 +205,7 @@ namespace DynamicData
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var list = new SourceList<T>();
-                var sourceSubscriber = source.Subscribe(items => list.AddRange(items), ex=> observer.OnError(ex));
+                var sourceSubscriber = source.Subscribe(items => list.AddRange(items), observer.OnError);
 
                 var expirer = expireAfter != null
                     ? list.ExpireAfter(expireAfter, scheduler).Subscribe()
@@ -626,6 +626,32 @@ namespace DynamicData
             if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
             return new GroupOn<TObject, TGroup>(source, groupSelector, regrouper).Run();
         }
+
+        /// <summary>
+        ///  Groups the source on the value returned by group selector factory. 
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="groupSelectorKey">The group selector key.</param>
+        /// <param name="regrouper">Invoke to  the for the grouping to be re-evaluated</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// groupSelectorKey
+        /// </exception>
+        public static IObservable<IChangeSet<List.IGrouping<TObject, TGroupKey>>> GroupOnImmutable<TObject,  TGroupKey>(this IObservable<IChangeSet<TObject>> source,
+                                                                                                             Func<TObject, TGroupKey> groupSelectorKey,
+                                                                                                             IObservable<Unit> regrouper = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
+
+            return new GroupOnImmutable<TObject, TGroupKey>(source, groupSelectorKey, regrouper).Run();
+        }
+
 
         /// <summary>
         /// Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.
