@@ -122,40 +122,38 @@ namespace DynamicData.Tests.External
             
             var studentsByClass = classes.Connect()
                 .TransformMany(@class => @class.StudentIds.Select(studentId => new StudentIdWithClass(studentId, @class)), x => x.Key);
-            
+
             var studentsSummary = students.Connect()
-                        .InnerJoin(studentsByClass, x => x.StudentId,(studentId, student, studentClass) => new StudentWithClass(student, studentClass.Class))
-                        .GroupOnImmutable(x => x.Student)
-                        .Transform(group => new StudentSummary(group.Key, group.Items.Select(x=>x.Class),new int[0]))
-                        .AsObservableCache();
-            
-           //  //   .Group(x => x.StudentId)
-           //  ////   .Or();
+                .InnerJoinMany(studentsByClass, x => x.StudentId, (studentId, student, grouping) => new StudentSummary(student, grouping.Items.Select(x=>x.Class),new int[0]))
+                .AsObservableCache();
 
-           //var studentsClasses =
-           //     classes.Connect()
-           //         .TransformMany(
-           //             @class => @class.StudentIds.Select(studentId => new {Class = @class, StudentId = studentId}),
-           //             x => Tuple.Create(x.StudentId, x.Class.Id))
-           //         // .RemoveKey()
-           //         .Group(x => x.StudentId)
-           //         .Transform(@group =>
-           //             new
-           //             {
-           //                 StudentId = @group.Key,
-           //                 ClassNames = @group.Cache.Items.Select(x => x.Class.Name).ToArray(),
-           //             });
-           //        // .AddKey(x => x.StudentId);
+            //  //   .Group(x => x.StudentId)
+            //  ////   .Or();
 
-           // IObservableCache<StudentSummary, int> studentSummaries = students.Connect().LeftJoin(studentsClasses, x => x.StudentId, (studentId, student, classNames) =>
-           //             new StudentSummary(
-           //                 studentId,
-           //                 student.Name,
-           //                 classNames.ConvertOr(x => x.ClassNames, () => new string[0]),
-           //                 new int[0]))
-           //         .AsObservableCache();
+            //var studentsClasses =
+            //     classes.Connect()
+            //         .TransformMany(
+            //             @class => @class.StudentIds.Select(studentId => new {Class = @class, StudentId = studentId}),
+            //             x => Tuple.Create(x.StudentId, x.Class.Id))
+            //         // .RemoveKey()
+            //         .Group(x => x.StudentId)
+            //         .Transform(@group =>
+            //             new
+            //             {
+            //                 StudentId = @group.Key,
+            //                 ClassNames = @group.Cache.Items.Select(x => x.Class.Name).ToArray(),
+            //             });
+            //        // .AddKey(x => x.StudentId);
 
-        //    Console.WriteLine(String.Join(", ", studentsSummary.Lookup(alice.Id).Value.Classes));
+            // IObservableCache<StudentSummary, int> studentSummaries = students.Connect().LeftJoin(studentsClasses, x => x.StudentId, (studentId, student, classNames) =>
+            //             new StudentSummary(
+            //                 studentId,
+            //                 student.Name,
+            //                 classNames.ConvertOr(x => x.ClassNames, () => new string[0]),
+            //                 new int[0]))
+            //         .AsObservableCache();
+
+            //    Console.WriteLine(String.Join(", ", studentsSummary.Lookup(alice.Id).Value.Classes));
             algorithms.StudentIds.Add(alice.Id);
             classes.AddOrUpdate(algorithms);
         //    Console.WriteLine(String.Join(", ", studentsSummary.Lookup(alice.Id).Value.Classes));

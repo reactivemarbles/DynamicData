@@ -86,6 +86,7 @@
     <Compile Include="Cache\Internal\ImmutableGroup.cs" />
     <Compile Include="Cache\Internal\InnerJoin.cs" />
     <Compile Include="Cache\Internal\FullJoin.cs" />
+    <Compile Include="Cache\Internal\InnerJoinMany.cs" />
     <Compile Include="Cache\Internal\LeftJoin.cs" />
     <Compile Include="Cache\Internal\LockFreeObservableCache.cs" />
     <Compile Include="Cache\Internal\MergeMany.cs" />
