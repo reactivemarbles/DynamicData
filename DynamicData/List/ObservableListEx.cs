@@ -608,7 +608,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Groups the source on the value returned by group selector factory. 
+        ///  Groups the source on the value returned by group selector factory.  The groupings contains an inner obserable list.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TGroup">The type of the group.</typeparam>
@@ -628,10 +628,9 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Groups the source on the value returned by group selector factory. 
+        ///  Groups the source on the value returned by group selector factory. Each update produces immuatable grouping.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="groupSelectorKey">The group selector key.</param>
@@ -642,7 +641,7 @@ namespace DynamicData
         /// or
         /// groupSelectorKey
         /// </exception>
-        public static IObservable<IChangeSet<List.IGrouping<TObject, TGroupKey>>> GroupOnImmutable<TObject,  TGroupKey>(this IObservable<IChangeSet<TObject>> source,
+        public static IObservable<IChangeSet<List.IGrouping<TObject, TGroupKey>>> GroupWithImmutableState<TObject,  TGroupKey>(this IObservable<IChangeSet<TObject>> source,
                                                                                                              Func<TObject, TGroupKey> groupSelectorKey,
                                                                                                              IObservable<Unit> regrouper = null)
         {
@@ -654,7 +653,8 @@ namespace DynamicData
 
 
         /// <summary>
-        /// Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.
+        /// Groups the source using the property specified by the property selector.  The resulting groupings contains an inner obserable list.
+        /// Groups are re-applied when the property value changed.
         /// When there are likely to be a large number of group property changes specify a throttle to improve performance
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -677,6 +677,30 @@ namespace DynamicData
             return new GroupOnProperty<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
         }
 
+        /// <summary>
+        /// Groups the source using the property specified by the property selector.  The resulting groupings are immutable.
+        /// Groups are re-applied when the property value changed.
+        /// When there are likely to be a large number of group property changes specify a throttle to improve performance
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TGroup">The type of the group.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertySelector">The property selector used to group the items</param>
+        /// <param name="propertyChangedThrottle">The property changed throttle.</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<List.IGrouping<TObject, TGroup>>> GroupOnPropertyWithImmutableState<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source,
+            Expression<Func<TObject, TGroup>> propertySelector,
+            TimeSpan? propertyChangedThrottle = null,
+            IScheduler scheduler = null)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
+            return new GroupOnPropertyWithImmutableState<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
+        }
 
         /// <summary>
         /// Prevents an empty notification

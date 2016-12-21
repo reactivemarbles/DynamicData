@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache
+// ReSharper disable once CheckNamespace
+namespace DynamicData
 {
     /// <summary>
     /// Represents a group which provides an update after any value within the group changes

@@ -19,7 +19,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source = new SourceList<Person>();
             _regrouper = new Subject<Unit>();
-            _results = _source.Connect().GroupOnImmutable(p => p.Age, _regrouper).AsAggregator();
+            _results = _source.Connect().GroupWithImmutableState(p => p.Age, _regrouper).AsAggregator();
         }
 
         [TearDown]

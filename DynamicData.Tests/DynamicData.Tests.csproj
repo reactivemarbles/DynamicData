@@ -107,6 +107,7 @@
     <Compile Include="CacheFixtures\FullJoinManyFixture.cs" />
     <Compile Include="CacheFixtures\GroupImmutableFixture.cs" />
     <Compile Include="CacheFixtures\GroupOnPropertyFixture.cs" />
+    <Compile Include="CacheFixtures\GroupOnPropertyWithImmutableStateFixture.cs" />
     <Compile Include="CacheFixtures\InnerJoinFixture.cs" />
     <Compile Include="CacheFixtures\FullJoinFixture.cs" />
     <Compile Include="CacheFixtures\InnerJoinManyFixture.cs" />
@@ -217,6 +218,7 @@
     <Compile Include="ListFixtures\GroupMisssingkey.cs" />
     <Compile Include="ListFixtures\GroupOnFixture.cs" />
     <Compile Include="ListFixtures\GroupOnPropertyFixture.cs" />
+    <Compile Include="ListFixtures\GroupOnPropertyWithImmutableStateFixture.cs" />
     <Compile Include="ListFixtures\MergeManyChangeSetsFixture.cs" />
     <Compile Include="ListFixtures\MergeManyFixture.cs" />
     <Compile Include="ListFixtures\OrFixture.cs" />

@@ -31,7 +31,7 @@ namespace DynamicData.Cache.Internal
         {
             var emptyCache = Cache<TRight, TRightKey>.Empty;
 
-            var rightGrouped = _right.GroupOnImmutable(_rightKeySelector);
+            var rightGrouped = _right.GroupWithImmutableState(_rightKeySelector);
             return _left.FullJoin(rightGrouped, grouping => grouping.Key,
                 (leftKey, left, grouping) => _resultSelector(leftKey, left, grouping.ValueOr(() =>
                 {

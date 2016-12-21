@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using DynamicData;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
@@ -6,16 +7,16 @@ using NUnit.Framework;
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-    public class GroupOnPropertyFixture
+    public class GroupOnPropertyWithImmutableStateFixture
     {
         private SourceCache<Person, string> _source;
-        private ChangeSetAggregator<IGroup<Person, string, int>, int> _results;
+        private ChangeSetAggregator<IGrouping<Person, string, int>, int> _results;
 
         [SetUp]
         public void Initialise()
         {
-            _source = new SourceCache<Person,string>(p=>p.Key);
-            _results = _source.Connect().GroupOnProperty(p => p.Age).AsAggregator();
+            _source = new SourceCache<Person, string>(p => p.Key);
+            _results = _source.Connect().GroupOnPropertyWithImmutableState(p => p.Age).AsAggregator();
         }
 
         [TearDown]
@@ -34,7 +35,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             var firstGroup = _results.Data.Items.First();
 
-            Assert.AreEqual(1, firstGroup.Cache.Count);
+            Assert.AreEqual(1, firstGroup.Count);
             Assert.AreEqual(10, firstGroup.Key);
         }
 
@@ -58,7 +59,7 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Data.Count);
             var firstGroup = _results.Data.Items.First();
 
-            Assert.AreEqual(1, firstGroup.Cache.Count);
+            Assert.AreEqual(1, firstGroup.Count);
             Assert.AreEqual(20, firstGroup.Key);
         }
 
@@ -86,7 +87,7 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(initialCount, _results.Data.Count);
 
             people.Take(25)
-                    .ForEach(p => p.Age = 200);
+                .ForEach(p => p.Age = 200);
 
 
             var changedCount = people.Select(p => p.Age).Distinct().Count();
@@ -94,7 +95,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             //check that each item is only in one cache
             var peopleInCache = _results.Data.Items
-                .SelectMany(g => g.Cache.Items)
+                .SelectMany(g => g.Items)
                 .ToArray();
 
             Assert.AreEqual(100, peopleInCache.Length);

@@ -18,7 +18,7 @@ namespace DynamicData.Tests.CacheFixtures
         public void Initialise()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
-            _results = _source.Connect().GroupOnImmutable(p => p.Age).AsAggregator();
+            _results = _source.Connect().GroupWithImmutableState(p => p.Age).AsAggregator();
         }
 
         [TearDown]

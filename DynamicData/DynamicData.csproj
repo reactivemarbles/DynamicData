@@ -84,6 +84,7 @@
     <Compile Include="Cache\Internal\GroupImmutable.cs" />
     <Compile Include="Cache\Internal\GroupOnProperty.cs" />
     <Compile Include="Cache\IGrouping.cs" />
+    <Compile Include="Cache\Internal\GroupOnPropertyyWithImmutableState.cs" />
     <Compile Include="Cache\Internal\ImmutableGroup.cs" />
     <Compile Include="Cache\Internal\InnerJoin.cs" />
     <Compile Include="Cache\Internal\FullJoin.cs" />
@@ -136,6 +137,7 @@
     <Compile Include="List\Internal\GroupOnImmutable.cs" />
     <Compile Include="List\Internal\GroupOnProperty.cs" />
     <Compile Include="List\IGrouping.cs" />
+    <Compile Include="List\Internal\GroupOnPropertyWithImmutableState.cs" />
     <Compile Include="List\Internal\ImmutableFilter.cs" />
     <Compile Include="Kernel\ReferenceEqualityComparer.cs" />
     <Compile Include="Cache\ChangeReason.cs" />

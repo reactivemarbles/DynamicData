@@ -15,7 +15,6 @@ namespace DynamicData.Tests.CacheFixtures
         public void Initialise()
         {
             _people = new SourceCache<Person, string>(p => p.Name);
-            //All children will be included whether there is a parent or not
             _result = _people.Connect()
                 .FullJoinMany(_people.Connect(), pac => pac.ParentName, (personid, person, grouping) => new ParentAndChildren(personid, person, grouping.Items.Select(p => p).ToArray()))
                 .AsAggregator();
@@ -33,14 +32,11 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddLeftOnly()
         {
-            var people = Enumerable.Range(1, 10)
+            var people = Enumerable.Range(1, 10000)
                 .Select(i => new Person("Person" + i, i))
                 .ToArray();
 
             _people.AddOrUpdate(people);
-
-            Assert.AreEqual(11, _result.Data.Count);
-
             AssertDataIsCorrectlyFormed(people);
         }
 
@@ -57,7 +53,6 @@ namespace DynamicData.Tests.CacheFixtures
                 .ToArray();
 
             _people.AddOrUpdate(people);
-
             AssertDataIsCorrectlyFormed(people);
         }
 
@@ -145,11 +140,11 @@ namespace DynamicData.Tests.CacheFixtures
 
             var updatedPeople = people.Where(p => p.Name != last.Name).ToArray();
 
-            AssertDataIsCorrectlyFormed(updatedPeople, last.Name);
+            AssertDataIsCorrectlyFormed(updatedPeople);
         }
 
 
-        private void AssertDataIsCorrectlyFormed(Person[] allPeople, params string[] missingParents)
+        private void AssertDataIsCorrectlyFormed(Person[] allPeople)
         {
             var people = allPeople.ToDictionary(p => p.Name);
             var parentNames = allPeople.Select(p => p.ParentName).Distinct();

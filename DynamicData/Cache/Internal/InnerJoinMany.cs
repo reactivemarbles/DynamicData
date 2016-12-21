@@ -27,7 +27,7 @@ namespace DynamicData.Cache.Internal
         
         public IObservable<IChangeSet<TDestination, TLeftKey>> Run()
         {
-            var rightGrouped = _right.GroupOnImmutable(_rightKeySelector);
+            var rightGrouped = _right.GroupWithImmutableState(_rightKeySelector);
             return _left.InnerJoin(rightGrouped, grouping => grouping.Key, _resultSelector);
         }
     }

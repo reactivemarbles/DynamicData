@@ -8,8 +8,6 @@ namespace DynamicData.Tests.CacheFixtures
     [TestFixture]
     public class SwitchFixture
     {
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-
         private ISubject<ISourceCache<Person, string>> _switchable;
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;
@@ -32,7 +30,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void PoulatesFirstSource()
         {
-            var inital = _generator.Take(100).ToArray();
+            var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
             _source.AddOrUpdate(inital);
 
             Assert.AreEqual(100, _results.Data.Count);
@@ -41,7 +39,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void ClearsForNewSource()
         {
-            var inital = _generator.Take(100).ToArray();
+            var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
             _source.AddOrUpdate(inital);
 
             Assert.AreEqual(100, _results.Data.Count);
@@ -54,7 +52,7 @@ namespace DynamicData.Tests.CacheFixtures
             newSource.AddOrUpdate(inital);
             Assert.AreEqual(100, _results.Data.Count);
 
-            var nextUpdates = _generator.Take(300).Skip(200).ToArray();
+            var nextUpdates = Enumerable.Range(101, 100).Select(i => new Person("Person" + i, i)).ToArray();
             newSource.AddOrUpdate(nextUpdates);
             Assert.AreEqual(200, _results.Data.Count);
 

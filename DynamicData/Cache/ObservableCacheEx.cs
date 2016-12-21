@@ -2501,6 +2501,35 @@ namespace DynamicData
             return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
         }
 
+
+
+        /// <summary>
+        ///  Groups the source on the value returned by group selector factory. Each update produces immuatable grouping.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="groupSelectorKey">The group selector key.</param>
+        /// <param name="regrouper">Invoke to  the for the grouping to be re-evaluated</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// groupSelectorKey
+        /// or
+        /// groupController
+        /// </exception>
+        public static IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupWithImmutableState<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+                                                                                                             Func<TObject, TGroupKey> groupSelectorKey,
+                                                                                                             IObservable<Unit> regrouper = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
+
+            return new GroupOnImmutable<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
+        }
+
         /// <summary>
         /// Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.
         /// 
@@ -2529,30 +2558,30 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Groups the source on the value returned by group selector factory. 
+        /// Groups the source using the property specified by the property selector. Each update produces immuatable grouping. Groups are re-applied when the property value changed.
+        /// 
+        /// When there are likely to be a large number of group property changes specify a throttle to improve performance
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="groupSelectorKey">The group selector key.</param>
-        /// <param name="regrouper">Invoke to  the for the grouping to be re-evaluated</param>
+        /// <param name="propertySelector">The property selector used to group the items</param>
+        /// <param name="propertyChangedThrottle"></param>
+        /// <param name="scheduler">The scheduler.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
-        /// source
-        /// or
-        /// groupSelectorKey
-        /// or
-        /// groupController
         /// </exception>
-        public static IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnImmutable<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                                             Func<TObject, TGroupKey> groupSelectorKey,
-                                                                                                             IObservable<Unit> regrouper = null)
+        public static IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> GroupOnPropertyWithImmutableState<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+                                                                                                     Expression<Func<TObject, TGroupKey>> propertySelector,
+                                                                                                     TimeSpan? propertyChangedThrottle = null,
+                                                                                                     IScheduler scheduler = null)
+            where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
+            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
 
-            return new GroupOnImmutable<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
+            return new GroupOnPropertyWithImmutableState<TObject, TKey, TGroupKey>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
         }
 
         #endregion
@@ -2871,7 +2900,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Groups the right data source and joins the to the left and the right sources, taking values when both left and right values are present
+        /// Groups the right data source and joins the resulting group to the left data source, matching these using the specified key selector. Results are included when the left and right have matching values.
         /// This is the equivalent of SQL inner join.
         /// </summary>
         /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
@@ -2898,7 +2927,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Groups the right data source and joins the to the sources, taking values when both left and right values are present
+        /// Groups the right data source and joins the resulting group to the left data source, matching these using the specified key selector. Results are included when the left and right have matching values.
         /// This is the equivalent of SQL inner join.
         /// </summary>
         /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
@@ -2981,7 +3010,7 @@ namespace DynamicData
 
 
         /// <summary>
-        /// Groups the right data source and joins the two sources matching them using the specified key selector, taking any left or right values and matching them, provided that the left or the right has a value.
+        /// Groups the right data source and joins the resulting group to the left data source, matching these using the specified key selector. Results are included when the left or the right has a value.
         /// This is the equivalent of SQL full join.
         /// </summary>
         /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
@@ -3008,7 +3037,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Groups the right data source and joins the two sources matching them using the specified key selector, taking any left or right values and matching them, provided that the left or the right has a value.
+        /// Groups the right data source and joins the resulting group to the left data source, matching these using the specified key selector. Results are included when the left or the right has a value.
         /// This is the equivalent of SQL full join.
         /// </summary>
         /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
