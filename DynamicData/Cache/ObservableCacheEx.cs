@@ -2844,7 +2844,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Joins the left and right observable data sources, taking values when both left and right values are present
+        ///  Groups the right data source and joins the to the left and the right sources, taking values when both left and right values are present
         /// This is the equivalent of SQL inner join.
         /// </summary>
         /// <typeparam name="TLeft">The object type of the left datasource</typeparam>
@@ -2871,7 +2871,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Groups the right data source and joins the to the sources, taking values when both left and right values are present
+        /// Groups the right data source and joins the to the left and the right sources, taking values when both left and right values are present
         /// This is the equivalent of SQL inner join.
         /// </summary>
         /// <typeparam name="TLeft">The object type of the left datasource</typeparam>

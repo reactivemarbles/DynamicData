@@ -108,6 +108,7 @@
     <Compile Include="CacheFixtures\GroupOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\InnerJoinFixture.cs" />
     <Compile Include="CacheFixtures\FullJoinFixture.cs" />
+    <Compile Include="CacheFixtures\InnerJoinManyFixture.cs" />
     <Compile Include="CacheFixtures\LeftJoinManyFixture.cs" />
     <Compile Include="CacheFixtures\LeftJoinFixture.cs" />
     <Compile Include="CacheFixtures\KeyValueCollectionEx.cs" />
@@ -115,6 +116,7 @@
     <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />
     <Compile Include="CacheFixtures\RightJoinFixture.cs" />
+    <Compile Include="CacheFixtures\RightJoinManyFixture.cs" />
     <Compile Include="CacheFixtures\SortObservableFixtureFixture.cs" />
     <Compile Include="CacheFixtures\SwitchFixture.cs" />
     <Compile Include="CacheFixtures\ToObservableChangeSetFixture.cs" />

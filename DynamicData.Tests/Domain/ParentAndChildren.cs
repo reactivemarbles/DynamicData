@@ -1,10 +1,12 @@
 ﻿using System;
+using DynamicData.Kernel;
 
 namespace DynamicData.Tests.Domain
 {
     public class ParentAndChildren : IEquatable<ParentAndChildren>
     {
         public Person Parent { get; }
+        public string ParentId { get;  }
         public Person[] Children { get; }
 
         public int Count => Children.Length;
@@ -15,13 +17,20 @@ namespace DynamicData.Tests.Domain
             Children = children;
         }
 
+        public ParentAndChildren(string parentId, Optional<Person> parent, Person[] children)
+        {
+            Parent = parent.ValueOr(()=>null);
+            ParentId = parentId;
+            Children = children;
+        }
+
         #region Equality
 
         public bool Equals(ParentAndChildren other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(Parent, other.Parent);
+            return string.Equals(ParentId, other.ParentId);
         }
 
         public override bool Equals(object obj)
@@ -34,7 +43,7 @@ namespace DynamicData.Tests.Domain
 
         public override int GetHashCode()
         {
-            return (Parent != null ? Parent.GetHashCode() : 0);
+            return (ParentId != null ? ParentId.GetHashCode() : 0);
         }
 
         public static bool operator ==(ParentAndChildren left, ParentAndChildren right)

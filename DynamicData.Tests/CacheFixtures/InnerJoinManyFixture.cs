@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
-    public class LeftJoinManyFixture
+    public class InnerJoinManyFixture
     {
         private SourceCache<Person, string> _people;
         private ChangeSetAggregator<ParentAndChildren, string> _result;
@@ -15,9 +15,9 @@ namespace DynamicData.Tests.CacheFixtures
         public void Initialise()
         {
             _people = new SourceCache<Person, string>(p => p.Name);
-
+            //Only parent which have children will be included
             _result = _people.Connect()
-                .LeftJoinMany(_people.Connect(), pac => pac.ParentName, (person, grouping) => new ParentAndChildren(person, grouping.Items.Select(p => p).ToArray()))
+                .InnerJoinMany( _people.Connect(), pac => pac.ParentName, (person, grouping) => new ParentAndChildren(person, grouping.Items.Select(p => p).ToArray()))
                 .AsAggregator();
         }
 
@@ -39,13 +39,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             _people.AddOrUpdate(people);
 
-            Assert.AreEqual(10, _result.Data.Count);
-            CollectionAssert.AreEquivalent(people, _result.Data.Items.Select(pac=>pac.Parent));
-
-            _result.Data.Items.ForEach(pac =>
-            {
-                Assert.AreEqual(0, pac.Count);
-            });
+            Assert.AreEqual(0, _result.Data.Count);
         }
 
 
@@ -55,7 +49,7 @@ namespace DynamicData.Tests.CacheFixtures
             var people = Enumerable.Range(1, 10)
                 .Select(i =>
                 {
-                    string parent = "Person" + CalculateParent(i,10);
+                    string parent = "Person" + CalculateParent(i, 10);
                     return new Person("Person" + i, i, parentName: parent);
                 })
                 .ToArray();
@@ -79,10 +73,10 @@ namespace DynamicData.Tests.CacheFixtures
             _people.AddOrUpdate(people);
 
             var current10 = people.Last();
-            var person10 = new Person("Person10",100,parentName: current10.ParentName);
+            var person10 = new Person("Person10", 100, parentName: current10.ParentName);
             _people.AddOrUpdate(person10);
 
-            var updatedPeople = people.Take(9).Union(new[] {person10}).ToArray();
+            var updatedPeople = people.Take(9).Union(new[] { person10 }).ToArray();
 
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
@@ -104,7 +98,7 @@ namespace DynamicData.Tests.CacheFixtures
             var person6 = new Person("Person6", 100, parentName: current6.ParentName);
             _people.AddOrUpdate(person6);
 
-            var updatedPeople = people.Where(p=>p.Name != "person6").Union(new[] { person6 }).ToArray();
+            var updatedPeople = people.Where(p => p.Name != "person6").Union(new[] { person6 }).ToArray();
 
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
@@ -126,7 +120,7 @@ namespace DynamicData.Tests.CacheFixtures
             _people.AddOrUpdate(person11);
 
             var updatedPeople = people.Union(new[] { person11 }).ToArray();
-            
+
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
 
@@ -147,29 +141,34 @@ namespace DynamicData.Tests.CacheFixtures
             var last = people.Last();
             _people.Remove(last);
 
-            var updatedPeople = people.Where(p=>p.Name!=last.Name).ToArray();
+            var updatedPeople = people.Where(p => p.Name != last.Name).ToArray();
 
             AssertDataIsCorrectlyFormed(updatedPeople, last.Name);
         }
 
 
-        private void AssertDataIsCorrectlyFormed(Person[] expected, params string[] missingParents)
+        private void AssertDataIsCorrectlyFormed(Person[] allPeople, params string[] missingParents)
         {
-            Assert.AreEqual(expected.Length, _result.Data.Count);
-            CollectionAssert.AreEquivalent(expected, _result.Data.Items.Select(pac => pac.Parent));
+            var grouped = allPeople.GroupBy(p => p.ParentName )
+                .Where(p => p.Any() && !missingParents.Contains(p.Key))
+                .AsArray();
+                            
 
-            expected.GroupBy(p => p.ParentName)
-                .ForEach(grouping =>
-                {
-                    if (missingParents.Length > 0 && missingParents.Contains(grouping.Key)) return;
+            Assert.AreEqual(grouped.Length, _result.Data.Count);
 
-                    var result = _result.Data.Lookup(grouping.Key)
-                        .ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
+            grouped.ForEach(grouping =>
+            {
+                if (missingParents.Length > 0 && missingParents.Contains(grouping.Key)) return;
 
-                    var children = result.Children;
-                    CollectionAssert.AreEquivalent(grouping, children);
-                });
+                var result = _result.Data.Lookup(grouping.Key)
+                    .ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
+
+                var children = result.Children;
+                CollectionAssert.AreEquivalent(grouping, children);
+            });
         }
+
+
 
         private int CalculateParent(int index, int totalPeople)
         {
