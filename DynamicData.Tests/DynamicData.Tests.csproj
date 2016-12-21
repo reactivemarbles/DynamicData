@@ -104,6 +104,7 @@
     <Compile Include="CacheFixtures\EditDiffFixture.cs" />
     <Compile Include="CacheFixtures\FilterOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
+    <Compile Include="CacheFixtures\FullJoinManyFixture.cs" />
     <Compile Include="CacheFixtures\GroupImmutableFixture.cs" />
     <Compile Include="CacheFixtures\GroupOnPropertyFixture.cs" />
     <Compile Include="CacheFixtures\InnerJoinFixture.cs" />

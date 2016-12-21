@@ -202,6 +202,8 @@ or to dynamically change sorting
 IObservable<IComparer<Person>> observableComparer=...;
 var mySortedObservable = myPeopleObservable.Sort(observableComparer);
 ```
+For more information on sorting see [wiki](https://github.com/RolandPheasant/DynamicData/wiki/Sorting)
+
 #### Grouping
 The `GroupOn` operator pre-caches the specified groups according to the group selector.
 ```cs
@@ -276,6 +278,7 @@ var inAny = combined.Or();
 var inOnlyOne= combined.Xor();
 var inFirstAndNotAnyOther = combined.Except();
 ```
+For more information on grouping see [wiki](https://github.com/RolandPheasant/DynamicData/wiki/Composite-Collections)
  
 
 #### Disposal
