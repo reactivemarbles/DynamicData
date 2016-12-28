@@ -5,9 +5,10 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal sealed class GroupOn<TObject, TGroupKey>
     {

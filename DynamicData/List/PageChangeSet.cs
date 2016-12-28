@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using DynamicData.Operators;
 
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
-    internal class PageChangeSet<T> : IPageChangeSet<T>
+    internal sealed class PageChangeSet<T> : IPageChangeSet<T>
     {
         private readonly IChangeSet<T> _virtualChangeSet;
 

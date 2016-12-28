@@ -4,8 +4,9 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     //TODO: Implement seperate ClearAndReplace and CalculateDiffSet filters??
     internal class MutableFilter<T>

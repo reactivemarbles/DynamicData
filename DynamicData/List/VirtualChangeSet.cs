@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     internal class VirtualChangeSet<T> : IVirtualChangeSet<T>

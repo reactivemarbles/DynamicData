@@ -3,7 +3,7 @@ using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class DeferUntilLoaded<T>
     {

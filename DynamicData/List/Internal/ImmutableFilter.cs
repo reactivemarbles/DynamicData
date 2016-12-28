@@ -1,8 +1,9 @@
 using System;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class ImmutableFilter<T>
     {

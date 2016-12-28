@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using DynamicData.Annotations;
-using DynamicData.Cache;
 using DynamicData.List.Internal;
 
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>

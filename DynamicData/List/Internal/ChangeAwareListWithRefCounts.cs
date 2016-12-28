@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using DynamicData.Kernel;
+using DynamicData.List.Internal;
 
 namespace DynamicData.Internal
 {

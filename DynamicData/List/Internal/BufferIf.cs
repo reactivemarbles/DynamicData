@@ -6,7 +6,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Annotations;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class BufferIf<T>
     {

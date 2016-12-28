@@ -2,7 +2,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class RefCount<T>
     {

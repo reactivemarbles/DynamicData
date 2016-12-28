@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal sealed class ExpirableItem<TObject> : IEquatable<ExpirableItem<TObject>>
     {

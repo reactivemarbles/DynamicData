@@ -5,8 +5,9 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 using DynamicData.Annotations;
+using DynamicData.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal sealed class LimitSizeTo<T>
     {

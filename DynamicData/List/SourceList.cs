@@ -5,9 +5,10 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Annotations;
-using DynamicData.Internal;
 using DynamicData.Kernel;
+using DynamicData.List.Internal;
 
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>

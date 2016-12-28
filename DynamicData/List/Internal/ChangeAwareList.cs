@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class ChangeAwareList<T> : ISupportsCapcity, IExtendedList<T>
     {

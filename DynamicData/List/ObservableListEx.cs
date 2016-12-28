@@ -18,6 +18,7 @@ using DynamicData.List.Internal;
 using DynamicData.List.Linq;
 using DynamicData.Operators;
 
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>

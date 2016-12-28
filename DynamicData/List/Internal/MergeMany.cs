@@ -2,7 +2,7 @@ using System;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class MergeMany<T, TDestination>
     {

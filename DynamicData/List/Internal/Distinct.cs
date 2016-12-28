@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal sealed class Distinct<T, TValue>
     {

@@ -2,7 +2,7 @@ using System;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal sealed class OnBeingAdded<T>
     {

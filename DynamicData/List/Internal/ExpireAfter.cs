@@ -6,9 +6,10 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using DynamicData.Annotations;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal sealed class ExpireAfter<T>
     {

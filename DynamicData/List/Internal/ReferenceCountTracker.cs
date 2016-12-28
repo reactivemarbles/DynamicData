@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     /// <summary>
     /// Ripped and adapted from https://clinq.codeplex.com/

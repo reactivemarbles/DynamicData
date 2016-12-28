@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.Operators;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class Pager<T>
     {

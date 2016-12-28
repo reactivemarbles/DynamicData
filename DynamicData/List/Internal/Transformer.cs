@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.List.Internal;
 
 namespace DynamicData.Internal
 {
