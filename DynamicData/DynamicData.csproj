@@ -71,7 +71,7 @@
     <Compile Include="Binding\SortExpression.cs" />
     <Compile Include="Binding\SortExpressionComparer.cs" />
     <Compile Include="Cache\IImmutableGroupChangeSet.cs" />
-    <Compile Include="Cache\ImmutableGroupChangeSet.cs" />
+    <Compile Include="Cache\Internal\ImmutableGroupChangeSet.cs" />
     <Compile Include="Cache\Internal\Cast.cs" />
     <Compile Include="Cache\Internal\EditDiff.cs" />
     <Compile Include="Cache\Internal\BatchIf.cs" />

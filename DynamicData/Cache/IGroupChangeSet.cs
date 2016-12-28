@@ -1,5 +1,4 @@
-﻿using DynamicData.Cache.Internal;
-
+﻿// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>

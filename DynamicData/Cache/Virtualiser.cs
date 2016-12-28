@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Cache.Internal;
-using DynamicData.Internal;
 
+// ReSharper disable once CheckNamespace
 namespace DynamicData.Cache
 {
     internal sealed class Virtualise<TObject, TKey>

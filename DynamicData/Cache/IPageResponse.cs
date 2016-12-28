@@ -1,4 +1,4 @@
-
+// ReSharper disable once CheckNamespace
 namespace DynamicData.Operators
 {
     /// <summary>

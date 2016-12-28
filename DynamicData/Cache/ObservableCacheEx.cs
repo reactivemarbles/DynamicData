@@ -15,8 +15,7 @@ using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
 using DynamicData.Kernel;
-using DynamicData.Operators;
-
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>

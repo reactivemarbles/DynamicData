@@ -1,5 +1,5 @@
-
-namespace DynamicData.Operators
+// ReSharper disable once CheckNamespace
+namespace DynamicData
 {
     /// <summary>
     /// Represents a new page request

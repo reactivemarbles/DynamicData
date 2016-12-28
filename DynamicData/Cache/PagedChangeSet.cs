@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Operators;
-
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>

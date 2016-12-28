@@ -5,9 +5,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Cache.Internal;
-using DynamicData.Internal;
 using DynamicData.Kernel;
-
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>

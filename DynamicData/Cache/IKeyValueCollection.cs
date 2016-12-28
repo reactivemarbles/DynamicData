@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using DynamicData.Operators;
-
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>

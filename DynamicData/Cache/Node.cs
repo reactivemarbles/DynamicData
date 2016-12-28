@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reactive.Disposables;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
-
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>

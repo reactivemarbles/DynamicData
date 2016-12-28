@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     internal class SortedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, ISortedChangeSet<TObject, TKey>
