@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using DynamicData.Aggregation;
 using NUnit.Framework;
 
@@ -71,11 +72,10 @@ namespace DynamicData.Tests.AggregationTests
                                 .Subscribe(result => calculated = result);
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
-            for (int i = 1; i < n; i++)
-                list.Add(i);
+
 
             //2. very fast doing this (whole range is 1 update and 1 calculation):
-            //list.AddRange(Enumerable.Range(0, n));
+            list.AddRange(Enumerable.Range(0, n));
             sw.Stop();
 
             summation.Dispose();

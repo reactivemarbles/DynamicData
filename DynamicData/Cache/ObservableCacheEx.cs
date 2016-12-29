@@ -385,6 +385,28 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Callback when an item has been updated eg. (current, previous)=>{} 
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="updateAction">The update action.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> OnItemUpdated<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TObject> updateAction)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+
+            return source.Do(changes => changes.Where(c => c.Reason == ChangeReason.Update)
+                .ForEach(c =>
+                {
+                    updateAction(c.Current, c.Previous.Value);
+                }));
+        }
+
+        /// <summary>
         /// Disposes each item when no longer required.
         /// 
         /// Individual items are disposed when removed or replaced. All items
@@ -425,8 +447,7 @@ namespace DynamicData
 
             return source.Select(updates =>
             {
-                var filtered = updates.Where(u => hashed.Contains(u.Reason));
-                return new ChangeSet<TObject, TKey>(filtered);
+                return new ChangeSet<TObject, TKey>(updates.Where(u => hashed.Contains(u.Reason)));
             }).NotEmpty();
         }
 
@@ -450,8 +471,7 @@ namespace DynamicData
 
             return source.Select(updates =>
             {
-                var filtered = updates.Where(u => !hashed.Contains(u.Reason));
-                return new ChangeSet<TObject, TKey>(filtered);
+                return new ChangeSet<TObject, TKey>(updates.Where(u => !hashed.Contains(u.Reason)));
             }).NotEmpty();
         }
 
@@ -488,7 +508,7 @@ namespace DynamicData
         /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
         /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="keySelector">The key selector.</param>
+        /// <param name="keySelector">The key selector eg. (item) => newKey;</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey, TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source, Func<TObject, TDestinationKey> keySelector)
@@ -499,6 +519,28 @@ namespace DynamicData
             return source.Select(updates =>
             {
                 var changed = updates.Select(u => new Change<TObject, TDestinationKey>(u.Reason, keySelector(u.Current), u.Current, u.Previous));
+                return new ChangeSet<TObject, TDestinationKey>(changed);
+            });
+        }
+
+        /// <summary>
+        /// Changes the primary key.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="keySelector">The key selector eg. (key, item) => newKey;</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey, TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source, Func<TSourceKey, TObject, TDestinationKey> keySelector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+            return source.Select(updates =>
+            {
+                var changed = updates.Select(u => new Change<TObject, TDestinationKey>(u.Reason, keySelector(u.Key, u.Current), u.Current, u.Previous));
                 return new ChangeSet<TObject, TDestinationKey>(changed);
             });
         }
@@ -3377,7 +3419,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the source to an read only observable cache
+        /// Converts the source to a readonly observable cache
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -3483,7 +3525,7 @@ namespace DynamicData
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
-                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate,observer.OnError);
+                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate, observer.OnError);
 
                 var expirer = expireAfter != null
                     ? cache.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe((kvp) => { }, observer.OnError)
@@ -3932,7 +3974,7 @@ namespace DynamicData
         #region Switch
 
         /// <summary>
-        /// Transforms an observable sequence of observablecaches into a single sequence
+        /// Transforms an observable sequence of observable caches into a single sequence
         /// producing values only from the most recent observable sequence.
         /// Each time a new inner observable sequence is received, unsubscribe from the
         /// previous inner observable sequence and clear the existing result set

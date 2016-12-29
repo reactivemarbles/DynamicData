@@ -101,10 +101,7 @@ namespace DynamicData
         /// </remarks>
         /// <param name="key">The key.</param>
         /// <returns></returns>
-        public Optional<TObject> Lookup(TKey key)
-        {
-            return _innnerCache.Lookup(key);
-        }
+        public Optional<TObject> Lookup(TKey key) => _innnerCache.Lookup(key);
 
         /// <summary>
         /// Releases unmanaged and - optionally - managed resources.

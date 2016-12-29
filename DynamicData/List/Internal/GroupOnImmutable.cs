@@ -55,7 +55,6 @@ namespace DynamicData.List.Internal
                 }
 
                 var publisher = grouper.Merge(regrouper)
-                    .DisposeMany() //dispose removes as the grouping is disposable
                     .NotEmpty()
                     .SubscribeSafe(observer);
 

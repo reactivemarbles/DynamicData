@@ -7,7 +7,7 @@ using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 
-namespace DynamicData.Tests.Experiments
+namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
     public class FromAsyncFixture
@@ -34,8 +34,8 @@ namespace DynamicData.Tests.Experiments
             };
 
             var data = Observable.FromAsync(loader)
-                .ToObservableChangeSet()
-                .AsObservableList();
+                .ToObservableChangeSet(p=>p.Key)
+                .AsObservableCache();
 
             Assert.AreEqual(100, data.Count);
         }
@@ -53,7 +53,7 @@ namespace DynamicData.Tests.Experiments
             Exception error = null;
 
             var data = Observable.FromAsync(loader)
-                .ToObservableChangeSet()
+               .ToObservableChangeSet(p => p.Key)
                 .Subscribe((changes) => { }, ex => error = ex);;
 
             Assert.IsNotNull(error);
@@ -65,17 +65,16 @@ namespace DynamicData.Tests.Experiments
 
             Func<Task<IEnumerable<Person>>> loader = () =>
             {
-                Task.Delay(100);
                 throw new Exception("Broken");
             };
 
             Exception error = null;
 
             var data = Observable.FromAsync(loader)
-                .ToObservableChangeSet()
-                .AsObservableList();
+                .ToObservableChangeSet(p => p.Key)
+                .AsObservableCache();
 
-            var xxx = data.Connect()
+            var subscribed = data.Connect()
                         .Subscribe(changes=> {}, ex =>  error = ex);
 
 

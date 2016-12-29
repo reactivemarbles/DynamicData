@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
 
@@ -34,7 +33,6 @@ namespace DynamicData.Cache.Internal
                     var grouper = new Grouper(_groupSelectorKey);
 
                     var groups = _source
-                        .Finally(observer.OnCompleted)
                         .Synchronize(locker)
                         .Select(grouper.Update)
                         .Where(changes => changes.Count != 0);
@@ -43,11 +41,7 @@ namespace DynamicData.Cache.Internal
                         .Select(_ => grouper.Regroup())
                         .Where(changes => changes.Count != 0);
 
-                    var published = groups.Merge(regroup).Publish();
-                    var subscriber = published.SubscribeSafe(observer);
-                    var disposer = published.DisposeMany().Subscribe();
-
-                    return new CompositeDisposable(published.Connect(), disposer, subscriber);
+                    return  groups.Merge(regroup).SubscribeSafe(observer);
                 });
         }
 

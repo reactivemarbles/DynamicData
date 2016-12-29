@@ -26,9 +26,7 @@ namespace DynamicData.Tests.CacheFixtures
                 );
             _target = new ObservableCollectionExtended<Person>();            
             _disposable = _observable                
-                .ToObservableChangeSet(2)                                
-                //.AsObservableList()                
-               // .Connect()                                                
+                .ToObservableChangeSet(2)                                                                          
                 .Bind(_target)
                 .Subscribe();            
         }
@@ -47,7 +45,7 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection");
 
             _scheduler.AdvanceTo(3);
-         //   Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection because of size limit");
+            Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection because of size limit");
 
             _scheduler.AdvanceTo(3);
         }

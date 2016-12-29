@@ -10,6 +10,7 @@ namespace DynamicData.Cache.Internal
         public Transformer(Action<Error<TSource, TKey>> exceptionCallback)
             : base(exceptionCallback)
         {
+
         }
 
         protected override IChangeSet<TDestination, TKey> DoTransform(IChangeSet<TSource, TKey> updates, Func<Change<TSource, TKey>, Optional<TransformResult>> factory)

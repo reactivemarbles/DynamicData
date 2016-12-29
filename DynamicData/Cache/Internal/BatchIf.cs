@@ -51,7 +51,7 @@ namespace DynamicData.Cache.Internal
                             .Synchronize(locker)
                             .Publish();
 
-                        var pause = bufferSelector.Where(state => state)
+                        var pause = bufferSelector.Where(shouldPause => shouldPause)
                             .Subscribe(_ =>
                             {
                                 paused = true;
@@ -62,7 +62,7 @@ namespace DynamicData.Cache.Internal
                                         .SubscribeSafe(timeoutSubject);
                             });
 
-                        var resume = bufferSelector.Where(state => !state)
+                        var resume = bufferSelector.Where(shouldPause => !shouldPause)
                             .Subscribe(_ =>
                             {
                                 paused = false;

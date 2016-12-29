@@ -24,10 +24,10 @@ namespace DynamicData
 
             var loader = source
                 .Synchronize(_locker)
-                .FinallySafe(_changes.OnCompleted)
-                .Subscribe(changes => _readerWriter.Write(changes)
-                                                   .Then(InvokeNext, _changes.OnError)
-                );
+                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, _changes.OnError),
+                              _changes.OnError,
+                               () => _changes.OnCompleted());
+
 
             _cleanUp = Disposable.Create(() =>
             {
