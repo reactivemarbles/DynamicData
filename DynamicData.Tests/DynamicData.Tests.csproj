@@ -144,7 +144,6 @@
     <Compile Include="CacheFixtures\BatchIfWithTimeOutFixture.cs" />
     <Compile Include="CacheFixtures\DeferUntilLoadedFixture.cs" />
     <Compile Include="ListFixtures\FromAsyncFixture.cs" />
-    <Compile Include="External\StudentExample.cs" />
     <Compile Include="Kernal\EnumerableEx.cs" />
     <Compile Include="CacheFixtures\EnumerableObservableToObservableChangeSetFixture.cs" />
     <Compile Include="CacheFixtures\GroupControllerFixture.cs" />
@@ -216,7 +215,6 @@
     <Compile Include="ListFixtures\FilterOnPropertyFixture.cs" />
     <Compile Include="ListFixtures\ForEachChangeFixture.cs" />
     <Compile Include="ListFixtures\GroupImmutableFixture.cs" />
-    <Compile Include="ListFixtures\GroupMisssingkey.cs" />
     <Compile Include="ListFixtures\GroupOnFixture.cs" />
     <Compile Include="ListFixtures\GroupOnPropertyFixture.cs" />
     <Compile Include="ListFixtures\GroupOnPropertyWithImmutableStateFixture.cs" />
@@ -236,6 +234,7 @@
     <Compile Include="ListFixtures\SortMutableFixture.cs" />
     <Compile Include="ListFixtures\SubscribeManyFixture.cs" />
     <Compile Include="ListFixtures\SwitchFixture.cs" />
+    <Compile Include="ListFixtures\ToObservableChangeSetFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="ListFixtures\TransformManyFixture.cs" />
     <Compile Include="ListFixtures\VirtualisationFixture.cs" />

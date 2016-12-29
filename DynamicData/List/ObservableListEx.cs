@@ -109,13 +109,10 @@ namespace DynamicData
             {
                 var locker = new object();
 
-
-
                 var list = new SourceList<T>();
                 var notifier = list.Connect().Synchronize(locker).SubscribeSafe(observer);
-
-
-                var sourceSubscriber = source.Subscribe(list.Add);
+                
+                var sourceSubscriber = source.Subscribe(list.Add, observer.OnError);
 
                 scheduler = scheduler ?? Scheduler.Default;
 
@@ -126,9 +123,7 @@ namespace DynamicData
                 var sizeLimiter = limitSizeTo > 0
                     ? list.LimitSizeTo(limitSizeTo, scheduler).Synchronize(locker).Subscribe()
                     : Disposable.Empty;
-
-    
-
+                
                 return new CompositeDisposable(list, sourceSubscriber, notifier, expirer, sizeLimiter);
             });
         }

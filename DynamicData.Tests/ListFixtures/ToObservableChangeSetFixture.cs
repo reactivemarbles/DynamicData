@@ -4,7 +4,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.ListFixtures
 {
     [TestFixture]
     internal class ToObservableChangeSetFixture : ReactiveTest
@@ -21,8 +21,8 @@ namespace DynamicData.Tests.CacheFixtures
             _observable = _scheduler.CreateColdObservable(
                 OnNext(1, new Person("One", 1)),
                 OnNext(2, new Person("Two", 2)),
-                OnNext(3, new Person("Three", 3))
-                );
+                OnNext(3, new Person("Three", 3)));
+
             _target = new List<Person>();
 
             _disposable = _observable                
@@ -43,10 +43,13 @@ namespace DynamicData.Tests.CacheFixtures
             _scheduler.AdvanceTo(2);
             Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection");
 
-           _scheduler.AdvanceTo(3);
+            _scheduler.AdvanceTo(3);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks); //push time forward as size limit is checked for after the event 
-
             Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection because of size limit");
+            
+            var expected = new[] {new Person("Two", 2), new Person("Three", 3)};
+
+            CollectionAssert.AreEquivalent(expected, _target);
         }
     }
 }
