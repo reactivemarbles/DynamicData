@@ -3480,23 +3480,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                var cache = new SourceCache<TObject, TKey>(keySelector);
-                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate, observer.OnError);
-
-                var expirer = expireAfter != null
-                    ? cache.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe()
-                    : Disposable.Empty;
-
-                var sizeLimiter = limitSizeTo > 0
-                    ? cache.LimitSizeTo(limitSizeTo, scheduler).Subscribe()
-                    : Disposable.Empty;
-
-                var notifier = cache.Connect().SubscribeSafe(observer);
-
-                return new CompositeDisposable(cache, sourceSubscriber, notifier, expirer, sizeLimiter);
-            });
+            return new ToObservableChangeSet<TObject, TKey>(source, keySelector, expireAfter, limitSizeTo, scheduler).Run();
         }
 
 
@@ -3522,23 +3506,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                var cache = new SourceCache<TObject, TKey>(keySelector);
-                var sourceSubscriber = source.Subscribe(cache.AddOrUpdate, observer.OnError);
-
-                var expirer = expireAfter != null
-                    ? cache.ExpireAfter(expireAfter, scheduler ?? Scheduler.Default).Subscribe((kvp) => { }, observer.OnError)
-                    : Disposable.Empty;
-
-                var sizeLimiter = limitSizeTo > 0
-                    ? cache.LimitSizeTo(limitSizeTo, scheduler).Subscribe((kvp) => { }, observer.OnError)
-                    : Disposable.Empty;
-
-                var notifier = cache.Connect().SubscribeSafe(observer);
-
-                return new CompositeDisposable(cache, sourceSubscriber, notifier, expirer, sizeLimiter);
-            });
+            return new ToObservableChangeSet<TObject, TKey>(source, keySelector, expireAfter, limitSizeTo, scheduler).Run();
         }
 
         #endregion

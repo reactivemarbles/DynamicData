@@ -44,7 +44,7 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection");
 
             _scheduler.AdvanceTo(3);
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks); //push time forward as size limit is checked for after the event 
+         //   _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks); //push time forward as size limit is checked for after the event 
             Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection because of size limit");
             
             var expected = new[] {new Person("Two", 2), new Person("Three", 3)};

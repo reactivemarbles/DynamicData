@@ -5,7 +5,6 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 using DynamicData.Annotations;
-using DynamicData.Internal;
 
 namespace DynamicData.List.Internal
 {
@@ -34,7 +33,7 @@ namespace DynamicData.List.Internal
             return _sourceList.Connect()
                               .ObserveOn(_scheduler)
                               .Synchronize(_locker)
-                              .Transform(t => new ExpirableItem<T>(t, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded)))
+                              .Transform(t => new ExpirableItem<T>(t, _scheduler.Now.DateTime, Interlocked.Increment(ref orderItemWasAdded)))
                               .ToCollection()
                               .Select(list =>
                               {

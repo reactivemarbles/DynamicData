@@ -19,7 +19,7 @@ namespace DynamicData.List.Internal
         private readonly IScheduler _scheduler;
         private readonly object _locker;
 
-        public ExpireAfter([NotNull] ISourceList<T> sourceList, [NotNull] Func<T, TimeSpan?> expireAfter, TimeSpan? pollingInterval, [NotNull] IScheduler scheduler, object locker)
+        public   ExpireAfter([NotNull] ISourceList<T> sourceList, [NotNull] Func<T, TimeSpan?> expireAfter, TimeSpan? pollingInterval, [NotNull] IScheduler scheduler, object locker)
         {
             if (sourceList == null) throw new ArgumentNullException(nameof(sourceList));
             if (expireAfter == null) throw new ArgumentNullException(nameof(expireAfter));
@@ -42,7 +42,7 @@ namespace DynamicData.List.Internal
                 var autoRemover = _sourceList.Connect()
                                              .Synchronize(_locker)
                                              .Do(x => dateTime = _scheduler.Now.DateTime)
-                                             .Convert(t =>
+                                             .Cast(t =>
                                              {
                                                  var removeAt = _expireAfter(t);
                                                  var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;

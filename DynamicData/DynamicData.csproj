@@ -108,6 +108,7 @@
     <Compile Include="Cache\Internal\SubscribeMany.cs" />
     <Compile Include="Cache\Internal\Switch.cs" />
     <Compile Include="Cache\Internal\TimeExpirer.cs" />
+    <Compile Include="Cache\Internal\ToObservableChangeSet.cs" />
     <Compile Include="Cache\Internal\TransformMany.cs" />
     <Compile Include="Cache\Internal\TrueFor.cs" />
     <Compile Include="Cache\Node.cs" />
@@ -223,6 +224,7 @@
     <Compile Include="List\Internal\SizeLimiter.cs" />
     <Compile Include="List\Internal\SubscribeMany.cs" />
     <Compile Include="List\Internal\Switch.cs" />
+    <Compile Include="List\Internal\ToObservableChangeSet.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\Internal\TransformMany.cs" />
     <Compile Include="List\Internal\UnifiedChange.cs" />

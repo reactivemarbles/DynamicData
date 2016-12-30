@@ -71,10 +71,9 @@ namespace DynamicData.Tests.CacheFixtures
 
             scheduler.AdvanceBy(100000);
 
-            Assert.AreEqual(300, results.Messages.Count, "Should be 300 messages");
             Assert.AreEqual(200, results.Messages.Sum(x => x.Adds), "Should be 200 adds");
             Assert.AreEqual(100, results.Messages.Sum(x => x.Removes), "Should be 100 removes");
-            Assert.AreEqual(100, results.Data.Count, "Should be 1 item in the cache");
+            Assert.AreEqual(100, results.Data.Count);
 
             var expected = items.Skip(100).ToArray().OrderBy(p => p.Name).ToArray();
             var actual = results.Data.Items.OrderBy(p => p.Name).ToArray();
