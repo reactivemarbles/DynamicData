@@ -1,8 +1,10 @@
-﻿using DynamicData.Tests.Domain;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Subjects;
+using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 
 namespace DynamicData.Tests.CacheFixtures
 {
@@ -21,12 +23,12 @@ namespace DynamicData.Tests.CacheFixtures
             _observable = _scheduler.CreateColdObservable(
                 OnNext(1, new Person("One", 1)),
                 OnNext(2, new Person("Two", 2)),
-                OnNext(3, new Person("Three", 3))
-                );
+                OnNext(3, new Person("Three", 3)));
+
             _target = new List<Person>();
 
             _disposable = _observable                
-                .ToObservableChangeSet(2, _scheduler)                                                                          
+                .ToObservableChangeSet(p=>p.Key,limitSizeTo: 2, scheduler: _scheduler)                                                                          
                 .Clone(_target)
                 .Subscribe();            
         }
