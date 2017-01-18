@@ -81,6 +81,27 @@ namespace DynamicData.Tests.ListFixtures
             // Assert.AreEqual(10, _results.Messages[2].Removes, "Should be 10 removes in the third message");
         }
 
+        [Test]
+        public void ChainFilters()
+        {
+            var filter2 = new BehaviorSubject<Func<Person, bool>>(person1 => person1.Age > 20);
+
+            var stream = _source.Connect()
+                                .Filter(_filter)
+                                .Filter(filter2);
+
+            var captureList = new List<int>();
+            stream.Count().Subscribe(count => captureList.Add(count));
+
+            var person = new Person("P", 30);
+            _source.Add(person);
+
+            person.Age = 10;
+            _filter.OnNext(_filter.Value);
+
+            Assert.AreEqual(new[] { 1, 0 }, captureList);
+        }
+
         #region Static filter tests
 
         /* Should be the same as standard lambda filter */
