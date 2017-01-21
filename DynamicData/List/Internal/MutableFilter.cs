@@ -1,20 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Internal;
+using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    //TODO: Implement seperate ClearAndReplace and CalculateDiffSet filters??
     internal class MutableFilter<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<Func<T, bool>> _predicates;
-
-        private Func<T, bool> _predicate = t => false;
 
         public MutableFilter([NotNull] IObservable<IChangeSet<T>> source,
                              [NotNull] IObservable<Func<T, bool>> predicates)
@@ -29,55 +25,56 @@ namespace DynamicData.List.Internal
         {
             return Observable.Create<IChangeSet<T>>(observer =>
             {
-                var allWithMatch = new List<ItemWithMatch>();
-                var all = new List<T>();
-                var filtered = new ChangeAwareList<T>();
                 var locker = new object();
+                
+                Func<T, bool> predicate = t => false;
 
-                //requery wehn controller either fires changed or requery event
-                var refresher = _predicates.Synchronize(locker)
-                                           .Select(predicate =>
-                                           {
-                                               Requery(predicate, allWithMatch, all, filtered);
-                                               var changed = filtered.CaptureChanges();
-                                               return changed;
-                                           });
+                var all = new List<ItemWithMatch>();
+                var filtered = new ChangeAwareList<ItemWithMatch>();
 
-                var shared = _source.Synchronize(locker).Publish();
 
-                //take current filter state of all items
-                var updateall = shared.Synchronize(locker)
-                                      .Transform(t => new ItemWithMatch(t, _predicate(t)))
-                                      .Subscribe(allWithMatch.Clone);
-
-                //filter result list
-                var filter = shared.Synchronize(locker)
-                                   .Select(changes =>
-                                   {
-                                       filtered.Filter(changes, _predicate);
-                                       var changed = filtered.CaptureChanges();
-                                       return changed;
-                                   });
-
-                var subscriber = refresher.Merge(filter).NotEmpty().SubscribeSafe(observer);
-
-                return new CompositeDisposable(updateall, subscriber, shared.Connect());
+                //requery when predicate changes
+                var predicateChanged = _predicates.Synchronize(locker)
+                    .Select(newPredicate =>
+                    {
+                        predicate = newPredicate;
+                        Requery(predicate, all, filtered);
+                        return filtered.CaptureChanges();
+                    });
+                
+                /*
+                 * Apply the transform operator so 'IsMatch' state can be evalutated and captured one time only
+                 * This is to eliminate the need to re-apply the predicate when determining whether an item was previously matched
+                 */
+                var filteredResult = _source.Synchronize(locker)
+                    .Transform(t => new ItemWithMatch(t, predicate(t)))
+                    .Select(changes =>
+                    {
+                        all.Clone(changes); //keep track of all changes
+                        filtered.Filter(changes, iwm => iwm.IsMatch);  //maintain filtered result
+                        return filtered.CaptureChanges();
+                    });
+                
+                return predicateChanged.Merge(filteredResult)
+                            .NotEmpty()
+                            .Select(changes => changes.Transform(iwm => iwm.Item))
+                            .SubscribeSafe(observer);
             });
         }
 
-        //TODO: Need to account for re-evaluate (as it is not mutually excluse to clear and replace)
-
-        private void Requery(Func<T, bool> predicate, List<ItemWithMatch> allWithMatch, List<T> all, ChangeAwareList<T> filtered)
+        private void Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
         {
-            _predicate = predicate;
+            var mutatedMatches = new List<Action>(all.Count);
 
-            var newState = allWithMatch.Select(item =>
+            var newState = all.Select(item =>
             {
-                var match = _predicate(item.Item);
+                var match = predicate(item.Item);
                 var wasMatch = item.IsMatch;
 
-                //reflect filtered state
-                if (item.IsMatch != match) item.IsMatch = match;
+                //Mutate match - defer until filtered list has been modified
+                //[to prevent potential IndexOf failures]
+                if (item.IsMatch != match)
+                    mutatedMatches.Add(()=> item.IsMatch = match);
 
                 return new
                 {
@@ -88,12 +85,15 @@ namespace DynamicData.List.Internal
             }).ToList();
 
             //reflect items which are no longer matched
-            var noLongerMatched = newState.Where(state => !state.IsMatch && state.WasMatch).Select(state => state.Item.Item);
+            var noLongerMatched = newState.Where(state => !state.IsMatch && state.WasMatch).Select(state => state.Item);
             filtered.RemoveMany(noLongerMatched);
 
             //reflect new matches in the list
-            var newMatched = newState.Where(state => state.IsMatch && !state.WasMatch).Select(state => state.Item.Item);
+            var newMatched = newState.Where(state => state.IsMatch && !state.WasMatch).Select(state => state.Item);
             filtered.AddRange(newMatched);
+
+            //finally apply mutations
+            mutatedMatches.ForEach(m => m());
         }
 
         private class ItemWithMatch

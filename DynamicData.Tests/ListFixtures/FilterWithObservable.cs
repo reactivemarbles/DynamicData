@@ -1,9 +1,6 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Subjects;
-using DynamicData.Controllers;
-using DynamicData.Internal;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;

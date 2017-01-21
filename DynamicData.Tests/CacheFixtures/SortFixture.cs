@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Kernel;
@@ -30,7 +32,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new SortedChangeSetAggregator<Person, string>
                 (
-                _source.Connect().Sort(_comparer)
+                _source.Connect().Sort(_comparer)  
                 );
         }
 
@@ -39,6 +41,41 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.Dispose();
             _results.Dispose();
+        }
+
+
+        [Test]
+        public void DoesNotThrow1()
+        {
+            var cache = new SourceCache<Data, int>(d => d.Id);
+            var sortPump = new Subject<Unit>();
+            var disposable = cache.Connect()
+                .Sort(SortExpressionComparer<Data>.Ascending(d => d.Id), sortPump)
+                .Subscribe();
+
+            disposable.Dispose();
+        }
+
+        [Test]
+        public void DoesNotThrow2()
+        {
+            var cache = new SourceCache<Data, int>(d => d.Id);
+            var disposable = cache.Connect()
+                .Sort(new BehaviorSubject<IComparer<Data>>(SortExpressionComparer<Data>.Ascending(d => d.Id)))
+                .Subscribe();
+
+            disposable.Dispose();
+        }
+        public class Data
+        {
+            public Data(int id, string value)
+            {
+                Id = id;
+                Value = value;
+            }
+
+            public int Id { get; }
+            public string Value { get; }
         }
 
         public class TestString : IEquatable<TestString>
