@@ -41,7 +41,7 @@ namespace DynamicData.List.Internal
                         Requery(predicate, all, filtered);
                         return filtered.CaptureChanges();
                     });
-                
+                 
                 /*
                  * Apply the transform operator so 'IsMatch' state can be evalutated and captured one time only
                  * This is to eliminate the need to re-apply the predicate when determining whether an item was previously matched

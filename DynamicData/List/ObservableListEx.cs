@@ -237,7 +237,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        [Obsolete("Prefer Cast as it is des the same thing but is semantically correct")]
+        [Obsolete("Prefer Cast as it is does the same thing but is semantically correct")]
         public static IObservable<IChangeSet<TDestination>> Convert<TObject, TDestination>(
             [NotNull] this IObservable<IChangeSet<TObject>> source,
             [NotNull] Func<TObject, TDestination> conversionFactory)

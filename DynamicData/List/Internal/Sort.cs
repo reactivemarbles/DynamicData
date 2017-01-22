@@ -26,7 +26,6 @@ namespace DynamicData.List.Internal
             int resetThreshold)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            //if (comparer == null) throw new ArgumentNullException(nameof(comparer));
             _source = source;
             _comparer = comparer;
             _sortOptions = sortOptions;
