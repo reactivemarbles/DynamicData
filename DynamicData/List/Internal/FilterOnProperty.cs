@@ -35,8 +35,7 @@ namespace DynamicData.List.Internal
                 //add a throttle if specified
                 if (_throttle != null)
                     predicateChanged = predicateChanged.Throttle(_throttle.Value, _scheduler ?? Scheduler.Default);
-
-
+                
                 // filter all in source, based on match funcs that update on prop change
                 return shared.Filter(predicateChanged);
             });
