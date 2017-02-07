@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using DynamicData.Kernel;
@@ -12,15 +10,17 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservable<IChangeSet<TSource, TKey>> _source;
         private readonly Action<Error<TSource, TKey>> _exceptionCallback;
-        private readonly Func<TKey, TSource,  Task<TDestination>> _transformFactory;
+        private readonly Func<TSource, TKey, Task<TDestination>> _transformFactory;
         private readonly int _maximumConcurrency;
+        private readonly IObservable<Func<TSource, TKey, bool>> _forceTransform;
 
-        public TransformAsync(IObservable<IChangeSet<TSource, TKey>> source, Action<Error<TSource, TKey>> exceptionCallback, Func<TKey, TSource, Task<TDestination>> transformFactory, int maximumConcurrency = 1)
+        public TransformAsync(IObservable<IChangeSet<TSource, TKey>> source, Action<Error<TSource, TKey>> exceptionCallback, Func<TSource, TKey, Task<TDestination>> transformFactory, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>> forceTransform = null)
         {
             _source = source;
             _exceptionCallback = exceptionCallback;
             _transformFactory = transformFactory;
             _maximumConcurrency = maximumConcurrency;
+            _forceTransform = forceTransform;
         }
         
         public IObservable<IChangeSet<TDestination, TKey>> Run()
@@ -29,16 +29,31 @@ namespace DynamicData.Cache.Internal
             {
                 var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
 
-                var transformer = _source.Select( changes =>
+                var transformer = _source.SelectTask(changes => DoTransform(cache, changes));
+
+                if (_forceTransform != null)
                 {
-                    return Observable.FromAsync(() => DoTransform(cache, changes)).Wait();
-                });
+                    var locker = new object();
+                    var forced = _forceTransform
+                        .Synchronize(locker)
+                        .SelectTask(shouldTransform => DoTransform(cache, shouldTransform));
 
-                var notifier = transformer.SubscribeSafe(observer);
-                
-                return new CompositeDisposable(notifier);
+                    transformer = transformer.Synchronize(locker).Merge(forced);
+                }
+
+                return transformer.SubscribeSafe(observer);
             });
+        }
 
+        private async Task<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform)
+        {
+            var toTransform = cache.KeyValues
+                          .Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key))
+                          .Select(kvp => new Change<TSource,TKey>(ChangeReason.Update,  kvp.Key, kvp.Value.Source, kvp.Value.Source))
+                          .ToArray();
+
+            var transformed = await toTransform.SelectParallel(c => Transform(cache, c), _maximumConcurrency);
+            return ProcessUpdates(cache, transformed.ToArray());
         }
 
         private async Task<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey>  cache, IChangeSet<TSource, TKey> changes )
@@ -53,7 +68,7 @@ namespace DynamicData.Cache.Internal
             {
                 if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
                 {
-                    var destination = await _transformFactory(change.Key, change.Current);
+                    var destination = await _transformFactory(change.Current, change.Key);
                     return new TransformResult(change, new TransformedItemContainer(change.Key, change.Current, destination));
                 }
 

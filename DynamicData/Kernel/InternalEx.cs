@@ -3,6 +3,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading.Tasks;
 using DynamicData.Annotations;
 
 namespace DynamicData.Kernel
@@ -56,6 +57,16 @@ namespace DynamicData.Kernel
         {
             source.OnNext(Unit.Default);
         }
+
+        internal static IObservable<TResult> SelectTask<T, TResult>(this IObservable<T> source, Func<T, Task<TResult>> factory )
+        {
+            return source.Select(t =>
+            {
+                return Observable.FromAsync(() => factory(t)).Wait();
+            });
+        }
+
+
 
 
         /// <summary>
