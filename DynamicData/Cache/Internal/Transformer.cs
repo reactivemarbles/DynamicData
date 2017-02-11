@@ -5,6 +5,8 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
+
+
     internal class Transformer<TDestination, TSource, TKey> : AbstractTransformer<TDestination, TSource, TKey>
     {
         public Transformer(Action<Error<TSource, TKey>> exceptionCallback)

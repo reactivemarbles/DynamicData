@@ -9,12 +9,12 @@ namespace DynamicData.Cache.Internal
     internal class TransformAsync<TDestination, TSource, TKey>
     {
         private readonly IObservable<IChangeSet<TSource, TKey>> _source;
-        private readonly Action<Error<TSource, TKey>> _exceptionCallback;
-        private readonly Func<TSource, TKey, Task<TDestination>> _transformFactory;
-        private readonly int _maximumConcurrency;
+        private readonly Func<TSource, Optional<TSource>, TKey, Task<TDestination>> _transformFactory;
         private readonly IObservable<Func<TSource, TKey, bool>> _forceTransform;
+        private readonly Action<Error<TSource, TKey>> _exceptionCallback;
+        private readonly int _maximumConcurrency;
 
-        public TransformAsync(IObservable<IChangeSet<TSource, TKey>> source, Action<Error<TSource, TKey>> exceptionCallback, Func<TSource, TKey, Task<TDestination>> transformFactory, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>> forceTransform = null)
+        public TransformAsync(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> exceptionCallback, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>> forceTransform = null)
         {
             _source = source;
             _exceptionCallback = exceptionCallback;
@@ -29,14 +29,14 @@ namespace DynamicData.Cache.Internal
             {
                 var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
 
-                var transformer = _source.SelectTask(changes => DoTransform(cache, changes));
+                var transformer = _source.SelectMany(changes => DoTransform(cache, changes));
 
                 if (_forceTransform != null)
                 {
                     var locker = new object();
                     var forced = _forceTransform
                         .Synchronize(locker)
-                        .SelectTask(shouldTransform => DoTransform(cache, shouldTransform));
+                        .SelectMany(shouldTransform => DoTransform(cache, shouldTransform));
 
                     transformer = transformer.Synchronize(locker).Merge(forced);
                 }
@@ -68,7 +68,7 @@ namespace DynamicData.Cache.Internal
             {
                 if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
                 {
-                    var destination = await _transformFactory(change.Current, change.Key);
+                    var destination = await _transformFactory(change.Current, change.Previous, change.Key);
                     return new TransformResult(change, new TransformedItemContainer(change.Key, change.Current, destination));
                 }
 
@@ -82,7 +82,6 @@ namespace DynamicData.Cache.Internal
                 //only handle errors if a handler has been specified
                 if (_exceptionCallback != null)
                     return new TransformResult(change, ex);
-
                 throw;
             }
         }
@@ -140,7 +139,6 @@ namespace DynamicData.Cache.Internal
             public Change<TSource, TKey> Change { get; }
             public Exception Error { get; }
             public bool Success { get; }
-
             public TransformedItemContainer Container { get; }
 
             public TransformResult(Change<TSource, TKey> change, TransformedItemContainer container)
@@ -157,6 +155,7 @@ namespace DynamicData.Cache.Internal
                 Success = false;
             }
         }
+
         protected sealed class TransformedItemContainer
         {
             public TKey Key { get; }
@@ -170,7 +169,5 @@ namespace DynamicData.Cache.Internal
                 Destination = destination;
             }
         }
-
-
     }
 }

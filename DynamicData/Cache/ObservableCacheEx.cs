@@ -2042,11 +2042,7 @@ namespace DynamicData
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
             if (forceTransform == null) throw new ArgumentNullException(nameof(forceTransform));
 
-            return source.Transform(transformFactory, forceTransform.Select(x =>
-            {
-                Func<TSource, TKey, bool> shouldForceItem = (t, k) => true;
-                return shouldForceItem;
-            }));
+            return new Transform<TDestination, TSource, TKey>(source,(current,previous,key) => transformFactory(current,key)).Run();
         }
 
         /// <summary>
@@ -2175,14 +2171,14 @@ namespace DynamicData
         /// or
         /// transformFactory</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
-                                                                                                         Func<TSource, TKey, Task<TDestination>> transformFactory,
+                                                                                                         Func<TSource, Task<TDestination>> transformFactory,
                                                                                                          IObservable<Func<TSource, TKey, bool>> forceTransform = null,
                                                                                                          int maximumConcurrency = 1)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
-            return new TransformAsync<TDestination, TSource, TKey>(source, null, transformFactory, maximumConcurrency, forceTransform).Run();
+            return source.TransformAsync((current, previous, key) => transformFactory(current),  maximumConcurrency, forceTransform);
         }
 
         /// <summary>
@@ -2202,15 +2198,42 @@ namespace DynamicData
         /// or
         /// transformFactory</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
-                                                                                                         Func<TSource,  Task<TDestination>> transformFactory,
-                                                                                                         IObservable<Func<TSource, TKey, bool>> forceTransform = null, 
-                                                                                                         int maximumConcurrency = 1)
+                                                                                                         Func<TSource, TKey, Task<TDestination>> transformFactory,
+                                                                                                         int maximumConcurrency = 1,
+                                                                                                         IObservable<Func<TSource, TKey, bool>> forceTransform = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
+            return source.TransformAsync((current, previous, key) => transformFactory(current, key), maximumConcurrency, forceTransform);
+        }
 
-            return source.TransformAsync((t, k) => transformFactory(t), forceTransform, maximumConcurrency);
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
+        /// <param name="maximumConcurrency">The maximum concurrent tasks used to perform transforms.</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+                                                                                                         Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+                                                                                                         int maximumConcurrency = 1,
+                                                                                                         IObservable<Func<TSource, TKey, bool>> forceTransform = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+
+            return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, null, maximumConcurrency, forceTransform).Run();
         }
 
         /// <summary>
@@ -2233,13 +2256,14 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
                                                                                                          Func<TSource,  Task<TDestination>> transformFactory,
                                                                                                          Action<Error<TSource, TKey>> errorHandler,
-                                                                                                         int maximumConcurrency = 1,
-                                                                                                         IObservable<Func<TSource, TKey, bool>> forceTransform = null)
+                                                                                                         IObservable<Func<TSource, TKey, bool>> forceTransform = null,
+                                                                                                         int maximumConcurrency = 1)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
 
-            return source.TransformSafeAsync((t, k) => transformFactory(t), errorHandler, maximumConcurrency, forceTransform);
+            return source.TransformSafeAsync((current, previous, key) => transformFactory(current), errorHandler, maximumConcurrency, forceTransform);
         }
 
         /// <summary>
@@ -2267,9 +2291,43 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
 
-            return new TransformAsync<TDestination, TSource, TKey>(source, errorHandler, transformFactory, maximumConcurrency, forceTransform).Run();
+            return source.TransformSafeAsync((current, previous, key) => transformFactory(current,key), errorHandler, maximumConcurrency, forceTransform);
         }
+
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="errorHandler">The error handler.</param>
+        /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
+        /// <param name="maximumConcurrency">The maximum concurrent tasks used to perform transforms.</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+                                                                                                         Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory,
+                                                                                                         Action<Error<TSource, TKey>> errorHandler,
+                                                                                                         int maximumConcurrency = 1,
+                                                                                                         IObservable<Func<TSource, TKey, bool>> forceTransform = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
+
+            return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, errorHandler, maximumConcurrency, forceTransform).Run();
+        }
+
+        
 
         /// <summary>
         /// Transforms the object to a fully recursive tree, create a hiearchy based on the pivot function
