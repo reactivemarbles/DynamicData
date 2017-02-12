@@ -109,6 +109,7 @@
     <Compile Include="Cache\Internal\Switch.cs" />
     <Compile Include="Cache\Internal\TimeExpirer.cs" />
     <Compile Include="Cache\Internal\ToObservableChangeSet.cs" />
+    <Compile Include="Cache\Internal\Transform.cs" />
     <Compile Include="Cache\Internal\TransformAsync.cs" />
     <Compile Include="Cache\Internal\TransformMany.cs" />
     <Compile Include="Cache\Internal\TrueFor.cs" />
