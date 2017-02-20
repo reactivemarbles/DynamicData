@@ -29,18 +29,17 @@ namespace DynamicData.Cache.Internal
             {
                 var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
 
-                var transformer = _source.SelectMany(changes => DoTransform(cache, changes));
+                var transformer = _source.SelectTask(changes => DoTransform(cache, changes));
 
                 if (_forceTransform != null)
                 {
                     var locker = new object();
                     var forced = _forceTransform
                         .Synchronize(locker)
-                        .SelectMany(shouldTransform => DoTransform(cache, shouldTransform));
+                        .SelectTask(shouldTransform => DoTransform(cache, shouldTransform));
 
                     transformer = transformer.Synchronize(locker).Merge(forced);
                 }
-
                 return transformer.SubscribeSafe(observer);
             });
         }
@@ -156,7 +155,7 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-        protected sealed class TransformedItemContainer
+        private sealed class TransformedItemContainer
         {
             public TKey Key { get; }
             public TSource Source { get; }

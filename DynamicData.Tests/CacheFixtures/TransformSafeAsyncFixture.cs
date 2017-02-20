@@ -1,16 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
 {
     [TestFixture]
-    public class TransformAsyncFixture
+    public class TransformSafeAsyncFixture
     {
         [Test]
         public void ReTransformAll()
@@ -176,21 +178,26 @@ namespace DynamicData.Tests.CacheFixtures
         {
             using (var stub = new TransformStub(p =>
             {
+                if (p.Age <= 50)
+                    return new PersonWithGender(p, p.Age % 2 == 0 ? "M" : "F");
+
                 throw new Exception("Broken");
             }))
             {
                 var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
                 stub.Source.AddOrUpdate(people);
 
-                Assert.IsNotNull(stub.Results.Error);
+                Assert.IsNull(stub.Results.Error);
 
                 Exception error = null;
                 stub.Source.Connect()
                     .Subscribe(changes => { }, ex => error = ex);
 
 
-                Assert.IsNotNull(error);
+                Assert.IsNull(error);
 
+                Assert.AreEqual(50, stub.HandledErrors.Count);
+                Assert.AreEqual(50, stub.Results.Data.Count);
             }
         }
 
@@ -199,7 +206,9 @@ namespace DynamicData.Tests.CacheFixtures
             public ISourceCache<Person, string> Source { get; } = new SourceCache<Person, string>(p => p.Name);
             public ChangeSetAggregator<PersonWithGender, string> Results { get; }
 
-            public Func<Person, Task<PersonWithGender>> TransformFactory { get; }
+            public Func< Person, Task<PersonWithGender>> TransformFactory { get; }
+
+            public IList<Error<Person, string>> HandledErrors { get; } = new List<Error<Person, string>>(); 
 
             public TransformStub()
             {
@@ -210,10 +219,12 @@ namespace DynamicData.Tests.CacheFixtures
                 };
 
                 Results = new ChangeSetAggregator<PersonWithGender, string>
-                (
-                    Source.Connect().TransformAsync(TransformFactory)
+                (   
+                    Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler)
                 );
             }
+
+
             public TransformStub(Func<Person, PersonWithGender> factory)
             {
                 TransformFactory = (p) =>
@@ -224,7 +235,7 @@ namespace DynamicData.Tests.CacheFixtures
 
                 Results = new ChangeSetAggregator<PersonWithGender, string>
                 (
-                    Source.Connect().TransformAsync(TransformFactory)
+                    Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler)
                 );
             }
 
@@ -238,7 +249,7 @@ namespace DynamicData.Tests.CacheFixtures
 
                 Results = new ChangeSetAggregator<PersonWithGender, string>
                 (
-                    Source.Connect().TransformAsync(TransformFactory, retransformer.Select(x =>
+                    Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler, retransformer.Select(x =>
                     {
                         Func<Person, string, bool> transformer = (p, key) => true;
                         return transformer;
@@ -256,12 +267,17 @@ namespace DynamicData.Tests.CacheFixtures
 
                 Results = new ChangeSetAggregator<PersonWithGender, string>
                 (
-                    Source.Connect().TransformAsync(TransformFactory, retransformer.Select(selector =>
+                    Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler, retransformer.Select(selector =>
                     {
                         Func<Person, string, bool> transformed = (p, key) => selector(p);
                         return transformed;
                     }))
                 );
+            }
+
+            private void ErrorHandler(Error<Person, string> error)
+            {
+                HandledErrors.Add(error);
             }
 
             public void Dispose()

@@ -60,7 +60,7 @@ namespace DynamicData.Kernel
 
         internal static IObservable<TResult> SelectTask<T, TResult>(this IObservable<T> source, Func<T, Task<TResult>> factory )
         {
-            return source.SelectMany(factory);
+           // return source.SelectMany(factory);
             return source.Select(t =>
             {
                 return Observable.FromAsync(() => factory(t)).Wait();

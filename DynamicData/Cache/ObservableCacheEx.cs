@@ -2157,7 +2157,7 @@ namespace DynamicData
 
         private static IObservable<Func<TSource, TKey, bool>> ForForced<TSource, TKey>(this IObservable<Unit> source)
         {
-            return source.Select(_ =>
+            return source?.Select(_ =>
             {
                 Func<TSource, TKey, bool> transformer = (item, key) => true;
                 return transformer;
@@ -2166,7 +2166,7 @@ namespace DynamicData
 
         private static IObservable<Func<TSource, TKey, bool>> ForForced<TSource, TKey>(this IObservable<Func<TSource, bool>> source)
         {
-            return source.Select(condition =>
+            return source?.Select(condition =>
             {
                 Func<TSource, TKey, bool> transformer = (item, key) => condition(item);
                 return transformer;
