@@ -228,6 +228,7 @@
     <Compile Include="List\Internal\SubscribeMany.cs" />
     <Compile Include="List\Internal\Switch.cs" />
     <Compile Include="List\Internal\ToObservableChangeSet.cs" />
+    <Compile Include="List\Internal\TransformAsync.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\Internal\TransformMany.cs" />
     <Compile Include="List\Internal\UnifiedChange.cs" />
