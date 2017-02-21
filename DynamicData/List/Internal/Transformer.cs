@@ -2,15 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using DynamicData.Annotations;
-using DynamicData.List.Internal;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class Transformer<TSource, TDestination>
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
-        private readonly Func<TSource, TDestination> _factory;
         private readonly Func<TSource, TransformedItemContainer> _containerFactory;
 
         public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
@@ -19,8 +18,14 @@ namespace DynamicData.Internal
             if (factory == null) throw new ArgumentNullException(nameof(factory));
 
             _source = source;
-            _factory = factory;
-            _containerFactory = item => new TransformedItemContainer(item, _factory(item));
+            _containerFactory = item => new TransformedItemContainer(item, factory(item));
+        }
+
+
+        private async Task<TransformedItemContainer> Convert(TSource item, Func<TSource, Task<TDestination>> factory)
+        {
+            var transformed = await factory(item);
+            return new TransformedItemContainer(item, transformed);
         }
 
         public IObservable<IChangeSet<TDestination>> Run()
@@ -33,7 +38,6 @@ namespace DynamicData.Internal
                 .Select(transformed =>
                 {
                     var changed = transformed.CaptureChanges();
-
                     return changed.Transform(container => container.Destination);
                 });
         }

@@ -51,7 +51,7 @@ namespace DynamicData.Cache.Internal
                         .SubscribeSafe(observer);
                 }
 
-                var comparerChanged = _comparerChangedObservable
+                var comparerChanged = (_comparerChangedObservable ?? Observable.Never<IComparer<TObject>>())
                     .Synchronize(locker).Select(sorter.Sort);
 
                 var sortAgain = (_resorter ?? Observable.Never<Unit>())

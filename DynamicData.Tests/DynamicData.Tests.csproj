@@ -123,7 +123,9 @@
     <Compile Include="CacheFixtures\SortObservableFixtureFixture.cs" />
     <Compile Include="CacheFixtures\SwitchFixture.cs" />
     <Compile Include="CacheFixtures\ToObservableChangeSetFixture.cs" />
+    <Compile Include="CacheFixtures\TransformAsyncFixture.cs" />
     <Compile Include="CacheFixtures\TransformManySimpleFixture.cs" />
+    <Compile Include="CacheFixtures\TransformSafeAsyncFixture.cs" />
     <Compile Include="CacheFixtures\TransformTreeFixture.cs" />
     <Compile Include="CacheFixtures\XorFixture.cs" />
     <Compile Include="Domain\ParentAndChildren.cs" />
@@ -143,6 +145,7 @@
     <Compile Include="CacheFixtures\ExpireAfterFixture.cs" />
     <Compile Include="CacheFixtures\BatchIfWithTimeOutFixture.cs" />
     <Compile Include="CacheFixtures\DeferUntilLoadedFixture.cs" />
+    <Compile Include="ListFixtures\FilterWithObservable.cs" />
     <Compile Include="ListFixtures\FromAsyncFixture.cs" />
     <Compile Include="Kernal\EnumerableEx.cs" />
     <Compile Include="CacheFixtures\EnumerableObservableToObservableChangeSetFixture.cs" />
@@ -235,6 +238,7 @@
     <Compile Include="ListFixtures\SubscribeManyFixture.cs" />
     <Compile Include="ListFixtures\SwitchFixture.cs" />
     <Compile Include="ListFixtures\ToObservableChangeSetFixture.cs" />
+    <Compile Include="ListFixtures\TransformAsyncFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="ListFixtures\TransformManyFixture.cs" />
     <Compile Include="ListFixtures\VirtualisationFixture.cs" />
