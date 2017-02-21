@@ -1,5 +1,6 @@
 using System.Linq;
 using DynamicData.Cache.Internal;
+using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 

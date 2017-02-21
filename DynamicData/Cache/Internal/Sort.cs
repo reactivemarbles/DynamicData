@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
+using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {

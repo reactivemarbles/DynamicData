@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache.Internal
+
+// ReSharper disable once CheckNamespace
+namespace DynamicData
 {
     /// <summary>
     /// A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal
 {

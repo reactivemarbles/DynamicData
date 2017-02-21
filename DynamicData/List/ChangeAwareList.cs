@@ -5,7 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using DynamicData.Kernel;
 
-namespace DynamicData.List.Internal
+// ReSharper disable once CheckNamespace
+namespace DynamicData
 {
     /// <summary>
     /// A list which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.

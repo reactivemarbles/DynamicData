@@ -2,7 +2,8 @@
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
 
-namespace DynamicData.Internal
+// ReSharper disable once CheckNamespace
+namespace DynamicData
 {
     internal class ChangeAwareListWithRefCounts<T> : ChangeAwareList<T>
     {
