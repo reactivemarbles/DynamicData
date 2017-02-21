@@ -29,6 +29,7 @@ namespace DynamicData
         /// </summary>
         public ChangeSet()
         {
+            Items = new List<Change<T>>();
         }
 
         /// <summary>
@@ -101,7 +102,7 @@ namespace DynamicData
         /// </value>
         public int Capacity { get { return Items.Capacity; } set { Items.Capacity = value; } }
 
-        private List<Change<T>> Items { get; } = new List<Change<T>>();
+        private List<Change<T>> Items { get; } 
 
         /// <summary>
         ///     Gets the number of additions

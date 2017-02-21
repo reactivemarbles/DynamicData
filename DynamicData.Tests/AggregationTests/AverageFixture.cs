@@ -47,7 +47,7 @@ namespace DynamicData.Tests.AggregationTests
             double avg = 0;
 
             var accumulator = _source.Connect()
-                                     .Avg(p => p.Age)
+                                     .Avg(p => p.Age) 
                                      .Subscribe(x => avg = x);
 
             _source.AddOrUpdate(new Person("A", 10));
@@ -97,7 +97,7 @@ namespace DynamicData.Tests.AggregationTests
                 1) use cache.AddRange(Enumerable.Range(0, n))
                 instead of  for (int i = 0; i < n; i++) cache.AddOrUpdate(i);
 
-                2)  Uncomment Buffer(n/10).FlattenBufferResult()
+                2)  Uncomment Buffer(n/10).FlattenBufferResult )
                 or just use buffer by time functions
 
                 With both of these the speed can be almost negligable

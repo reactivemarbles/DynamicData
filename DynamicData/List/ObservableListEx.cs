@@ -8,6 +8,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using DynamicData.Annotations;
 using DynamicData.Binding;
 using DynamicData.Cache.Internal;
@@ -247,10 +248,41 @@ namespace DynamicData
             return source.Select(changes => changes.Transform(conversionFactory));
         }
 
+
+
+        /// <summary>
+        /// Cast the underlying type of an object. Use before a Cast function
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<object>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
+        {
+            return source.Select(changes =>
+            {
+                var items = changes.Transform(t => (object)t);
+                return new ChangeSet<object>(items);
+            });
+        }
+
+        /// <summary>
+        /// Cast the changes to another form
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// </exception>
+        public static IObservable<IChangeSet<TDestination>> Cast<TDestination>([NotNull] this IObservable<IChangeSet<object>> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return source.Select(changes => changes.Transform(t=>(TDestination)t));
+        }
+
         /// <summary>
         /// Cast the changes to another form
         /// 
-        /// Alas, I had to add the converter due to type inference issues 
+        /// Alas, I had to add the converter due to type inference issues. The converter can be avoided by CastToObject() first
         /// </summary>
         /// <typeparam name="TSource">The type of the object.</typeparam>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -259,8 +291,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>(
-            [NotNull] this IObservable<IChangeSet<TSource>> source,
+        public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>([NotNull] this IObservable<IChangeSet<TSource>> source,
             [NotNull] Func<TSource, TDestination> conversionFactory)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -532,6 +563,28 @@ namespace DynamicData
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
             return new Transformer<TSource, TDestination>(source, transformFactory).Run();
+        }
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// valueSelector
+        /// </exception>
+        public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
+            this IObservable<IChangeSet<TSource>> source, Func<TSource, Task<TDestination>> transformFactory)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+
+            return new TransformAsync<TSource, TDestination>(source, transformFactory).Run();
         }
 
         /// <summary>

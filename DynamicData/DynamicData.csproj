@@ -109,6 +109,8 @@
     <Compile Include="Cache\Internal\Switch.cs" />
     <Compile Include="Cache\Internal\TimeExpirer.cs" />
     <Compile Include="Cache\Internal\ToObservableChangeSet.cs" />
+    <Compile Include="Cache\Internal\Transform.cs" />
+    <Compile Include="Cache\Internal\TransformAsync.cs" />
     <Compile Include="Cache\Internal\TransformMany.cs" />
     <Compile Include="Cache\Internal\TrueFor.cs" />
     <Compile Include="Cache\Node.cs" />
@@ -117,6 +119,7 @@
     <Compile Include="IChangeSet.cs" />
     <Compile Include="Kernel\ISupportsCapcity.cs" />
     <Compile Include="Kernel\ItemWithIndex.cs" />
+    <Compile Include="Kernel\ParallelEx.cs" />
     <Compile Include="Kernel\ReadOnlyCollectionLight.cs" />
     <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeSetEx.cs" />
@@ -225,6 +228,7 @@
     <Compile Include="List\Internal\SubscribeMany.cs" />
     <Compile Include="List\Internal\Switch.cs" />
     <Compile Include="List\Internal\ToObservableChangeSet.cs" />
+    <Compile Include="List\Internal\TransformAsync.cs" />
     <Compile Include="List\Internal\Transformer.cs" />
     <Compile Include="List\Internal\TransformMany.cs" />
     <Compile Include="List\Internal\UnifiedChange.cs" />
