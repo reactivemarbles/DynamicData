@@ -5,28 +5,64 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal sealed class ChangeAwareCache<TObject, TKey>: ICache<TObject, TKey>
+    /// <summary>
+    /// A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.
+    /// 
+    /// Used for creating custom operators
+    /// </summary>
+    /// <seealso cref="DynamicData.ICache{TObject, TKey}" />
+    public sealed class ChangeAwareCache<TObject, TKey>: ICache<TObject, TKey>
     {
         private List<Change<TObject, TKey>> _changes = new List<Change<TObject, TKey>>();
 
         private Dictionary<TKey, TObject> _data;
 
+        /// <summary>
+        /// Gets the count.
+        /// </summary>
         public int Count => _data.Count;
+        
+        /// <summary>
+        /// Gets the items together with their keys
+        /// </summary>
+        /// <value>
+        /// The key values.
+        /// </value>
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
+      
+        /// <summary>
+        /// Gets the items.
+        /// </summary>
         public IEnumerable<TObject> Items => _data.Values;
+
+
+        /// <summary>
+        /// Gets the keys.
+        /// </summary>
         public IEnumerable<TKey> Keys => _data.Keys;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChangeAwareCache{TObject, TKey}"/> class.
+        /// </summary>
         public ChangeAwareCache()
         {
             _data = new Dictionary<TKey, TObject>();
         }
 
+        /// <summary>
+        /// Lookup a single item using the specified key.
+        /// </summary>
+        /// <remarks>
+        /// Fast indexed lookup
+        /// </remarks>
+        /// <param name="key">The key.</param>
+        public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
-        public Optional<TObject> Lookup(TKey key)
-        {
-            return _data.Lookup(key);
-        }
-
+        /// <summary>
+        /// Adds or updates the item using the specified key
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <param name="key">The key.</param>
         public void AddOrUpdate(TObject item, TKey key)
         {
             TObject existingItem;
@@ -38,11 +74,19 @@ namespace DynamicData.Cache.Internal
             _data[key] = item;
         }
 
+        /// <summary>
+        /// Removes the item matching the specified keys.
+        /// </summary>
+        /// <param name="keys">The keys.</param>
         public void Remove(IEnumerable<TKey> keys)
         {
             keys.ForEach(Remove);
         }
 
+        /// <summary>
+        /// Removes the item matching the specified key.
+        /// </summary>
+        /// <param name="key">The key.</param>
         public void Remove(TKey key)
         {
             TObject existingItem;
@@ -53,17 +97,29 @@ namespace DynamicData.Cache.Internal
             }
         }
 
+
+        /// <summary>
+        /// Raises an evaluate change for the specified keys
+        /// </summary>
+        public void Evaluate(IEnumerable<TKey> keys)
+        {
+            keys.ForEach(Evaluate);
+        }
+
+        /// <summary>
+        /// Raises an evaluate change for all items in the cache
+        /// </summary>
         public void Evaluate()
         {
             _changes.Capacity = _data.Count + _changes.Count;
             _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Evaluate, t.Key, t.Value)));
         }
 
-        public void Evaluate(IEnumerable<TKey> keys)
-        {
-            keys.ForEach(Evaluate);
-        }
 
+        /// <summary>
+        /// Raises an evaluate change for the specified key
+        /// </summary>
+        /// <param name="key">The key.</param>
         public void Evaluate(TKey key)
         {
             TObject existingItem;
@@ -73,6 +129,10 @@ namespace DynamicData.Cache.Internal
             }
         }
 
+
+        /// <summary>
+        /// Clears all items
+        /// </summary>
         public void Clear()
         {
             var toremove = _data.Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value)).ToArray();
@@ -80,6 +140,10 @@ namespace DynamicData.Cache.Internal
             _data.Clear();
         }
 
+        /// <summary>
+        /// Clones the cache from the specified changes
+        /// </summary>
+        /// <param name="changes">The changes.</param>
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
@@ -108,7 +172,9 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-
+        /// <summary>
+        /// Create a changeset from recorded changes and clears known changes.
+        /// </summary>
         public ChangeSet<TObject, TKey> CaptureChanges()
         {
             var copy = new ChangeSet<TObject, TKey>(_changes);

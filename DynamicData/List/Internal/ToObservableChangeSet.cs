@@ -71,7 +71,7 @@ namespace DynamicData.List.Internal
                     .Select(state => state.CaptureChanges())
                     .Publish();
 
-                var timeLimited = (_expireAfter == null ? Observable.Never<ChangeSet<ExpirableItem<T>>>() : sizeLimited)
+                var timeLimited = (_expireAfter == null ? Observable.Never<IChangeSet<ExpirableItem<T>>>() : sizeLimited)
                     .Filter(ei => ei.ExpireAt != DateTime.MaxValue)
                     .GroupWithImmutableState(ei => ei.ExpireAt)
                     .MergeMany(grouping => 
