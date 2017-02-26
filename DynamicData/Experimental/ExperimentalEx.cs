@@ -19,7 +19,7 @@ namespace DynamicData.Experimental
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IWatcher<TObject, TKey> AsWatcher<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             return new Watcher<TObject, TKey>(source, scheduler ?? Scheduler.Default);
         }
     }

@@ -14,8 +14,7 @@ namespace DynamicData.Cache.Internal
         {
             Key = key;
             _cache = new Cache<TObject, TKey>(cache.Count);
-            cache.KeyValues.ForEach(kvp => _cache.AddOrUpdate(kvp.Value,kvp.Key));
-
+            cache.KeyValues.ForEach(kvp => _cache.AddOrUpdate(kvp.Value, kvp.Key));
         }
 
         public int Count => _cache.Count;

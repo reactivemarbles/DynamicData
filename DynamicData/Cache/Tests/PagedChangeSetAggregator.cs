@@ -4,6 +4,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Diagnostics;
 
+// ReSharper disable once CheckNamespace
 namespace DynamicData.Tests
 {
     /// <summary>

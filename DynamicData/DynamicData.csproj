@@ -273,7 +273,6 @@
     <Compile Include="Cache\Internal\ExpirableItem.cs" />
     <Compile Include="Cache\GroupChangeSet.cs" />
     <Compile Include="Cache\Internal\GroupOn.cs" />
-    <Compile Include="Cache\Internal\IIndexCalculator.cs" />
     <Compile Include="Cache\Internal\IndexCalculator.cs" />
     <Compile Include="Cache\IndexedItem.cs" />
     <Compile Include="Cache\IPageRequest.cs" />

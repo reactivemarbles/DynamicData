@@ -95,9 +95,7 @@ namespace DynamicData
             }
         }
 
-        private static readonly IEqualityComparer<IPageResponse> s_pageResponseComparerInstance = new PageResponseEqualityComparer();
-
-        public static IEqualityComparer<IPageResponse> DefaultComparer { get { return s_pageResponseComparerInstance; } }
+        public static IEqualityComparer<IPageResponse> DefaultComparer { get; } = new PageResponseEqualityComparer();
 
         #endregion
 

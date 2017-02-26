@@ -29,7 +29,7 @@ namespace DynamicData.Cache.Internal
             {
                 var transformed = _source.Transform(t => new ObservableWithValue<TObject, TValue>(t, _observableSelector(t))).Publish();
                 var inlineChanges = transformed.MergeMany(t => t.Observable);
-                var queried = transformed.QueryWhenChanged(q => q.Items);
+                var queried = transformed.ToCollection();
 
                 //nb: we do not care about the inline change because we are only monitoring it to cause a re-evalutaion of all items
                 var publisher = queried.CombineLatest(inlineChanges, (items, inline) => _collectionMatcher(items))

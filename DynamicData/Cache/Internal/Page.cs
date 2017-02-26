@@ -2,8 +2,6 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Operators;
-
 namespace DynamicData.Cache.Internal
 {
     internal class Page<TObject, TKey>

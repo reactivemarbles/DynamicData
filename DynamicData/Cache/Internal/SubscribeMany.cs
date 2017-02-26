@@ -29,6 +29,7 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
+
             return Observable.Create<IChangeSet<TObject, TKey>>
                 (
                     observer =>

@@ -105,8 +105,7 @@ namespace DynamicData.Diagnostics
         /// </returns>
         public override string ToString()
         {
-            return string.Format("CurrentIndex: {0}, Latest Count: {1}, Overall Count: {2}", _index, Latest.Count,
-                                 Overall.Count);
+            return $"CurrentIndex: {_index}, Latest Count: {Latest.Count}, Overall Count: {Overall.Count}";
         }
     }
 }

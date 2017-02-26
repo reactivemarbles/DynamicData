@@ -6,26 +6,23 @@ namespace DynamicData.PLinq
     /// </summary>
     public class ParallelisationOptions
     {
-        private readonly ParallelType _type;
-        private readonly int _threshold = 0;
-
         /// <summary>
         /// The default parallelisation options
         /// </summary>
-        public readonly static ParallelisationOptions Default = new ParallelisationOptions(ParallelType.Ordered, 0);
+        public static readonly ParallelisationOptions Default = new ParallelisationOptions(ParallelType.Ordered, 0);
 
         /// <summary>
         /// Value to be used when no parallelisation should take place
         /// </summary>
-        public readonly static ParallelisationOptions None = new ParallelisationOptions(ParallelType.None, 0);
+        public static readonly ParallelisationOptions None = new ParallelisationOptions(ParallelType.None, 0);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object"/> class.
         /// </summary>
         public ParallelisationOptions(ParallelType type = ParallelType.None, int threshold = 0, int maxDegreeOfParallisation = 0)
         {
-            _type = type;
-            _threshold = threshold;
+            Type = type;
+            Threshold = threshold;
         }
 
         /// <summary>
@@ -34,7 +31,7 @@ namespace DynamicData.PLinq
         /// <value>
         /// The type.
         /// </value>
-        public ParallelType Type { get { return _type; } }
+        public ParallelType Type { get; }
 
         /// <summary>
         /// Gets the threshold.
@@ -42,6 +39,6 @@ namespace DynamicData.PLinq
         /// <value>
         /// The threshold.
         /// </value>
-        public int Threshold { get { return _threshold; } }
+        public int Threshold { get; } = 0;
     }
 }

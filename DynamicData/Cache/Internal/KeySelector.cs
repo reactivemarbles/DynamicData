@@ -1,5 +1,4 @@
 using System;
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal
 {

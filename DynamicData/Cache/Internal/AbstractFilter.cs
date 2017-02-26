@@ -7,7 +7,6 @@ namespace DynamicData.Cache.Internal
     internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
     {
         private readonly ChangeAwareCache<TObject, TKey> _cache;
-        private readonly Func<TObject, bool> _filter;
 
         protected AbstractFilter(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool> filter)
         {
@@ -16,15 +15,15 @@ namespace DynamicData.Cache.Internal
 
             if (filter == null)
             {
-                _filter = t => true;
+                Filter = t => true;
             }
             else
             {
-                _filter = filter;
+                Filter = filter;
             }
         }
 
-        public Func<TObject, bool> Filter => _filter;
+        public Func<TObject, bool> Filter { get; }
 
         public IChangeSet<TObject, TKey> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
@@ -33,7 +32,7 @@ namespace DynamicData.Cache.Internal
             Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory = kv =>
             {
                 var exisiting = _cache.Lookup(kv.Key);
-                var matches = _filter(kv.Value);
+                var matches = Filter(kv.Value);
 
                 if (matches)
                 {
@@ -54,7 +53,6 @@ namespace DynamicData.Cache.Internal
 
 
             return _cache.CaptureChanges();
-            // return changes;
         }
 
         protected abstract IEnumerable<Change<TObject, TKey>> Evaluate(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);

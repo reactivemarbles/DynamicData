@@ -998,50 +998,6 @@ namespace DynamicData
 
         #region Clone
 
-        internal static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ICache<TObject, TKey> cache)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (cache == null) throw new ArgumentNullException(nameof(cache));
-
-            return source.Do(cache.Clone);
-        }
-
-        internal static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            var cache = new Cache<TObject, TKey>();
-            return source.Do(cache.Clone);
-        }
-
-        /// <summary>
-        /// Clones the list items to the specified collection
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="target">The target.</param>
-        /// <returns></returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] IDictionary<TKey, TObject> target)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (target == null) throw new ArgumentNullException(nameof(target));
-            return source.Do(changes =>
-            {
-                foreach (var item in changes)
-                {
-                    switch (item.Reason)
-                    {
-                        case ChangeReason.Update:
-                        case ChangeReason.Add:
-                            target[item.Key] = item.Current;
-                            break;
-                        case ChangeReason.Remove:
-                            target.Remove(item.Key);
-                            break;
-                    }
-                }
-            });
-        }
 
         /// <summary>
         /// Clones the changes  into the specified collection
@@ -1066,7 +1022,6 @@ namespace DynamicData
                                 target.Add(item.Current);
                             }
                             break;
-
                         case ChangeReason.Update:
                             {
                                 target.Remove(item.Previous.Value);
@@ -1389,8 +1344,7 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> UpdateIndex<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
             where TObject : IIndexAware
         {
-            return source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index })
-                                        .ForEach(u => u.update.Value.Index = u.index));
+            return source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index }).ForEach(u => u.update.Value.Index = u.index));
         }
 
         /// <summary>

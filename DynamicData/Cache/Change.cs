@@ -8,7 +8,7 @@ namespace DynamicData
     /// <summary>
     ///   Container to describe a single change to a cache
     /// </summary>
-    public struct Change<TObject, TKey>
+    public struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     {
         /// <summary>
         /// The unique key of the item which has changed
@@ -122,6 +122,16 @@ namespace DynamicData
 
         #region Equality
 
+        public static bool operator ==(Change<TObject, TKey> left, Change<TObject, TKey> right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Change<TObject, TKey> left, Change<TObject, TKey> right)
+        {
+            return !left.Equals(right);
+        }
+
         /// <summary>
         ///  Determines whether the specified object, is equal to this instance.
         /// </summary>
@@ -129,8 +139,10 @@ namespace DynamicData
         /// <returns></returns>
         public bool Equals(Change<TObject, TKey> other)
         {
-            return Reason.Equals(other.Reason) && EqualityComparer<TKey>.Default.Equals(Key, other.Key) &&
-                   EqualityComparer<TObject>.Default.Equals(Current, other.Current);
+            return EqualityComparer<TKey>.Default.Equals(Key, other.Key) 
+                && Reason == other.Reason && EqualityComparer<TObject>.Default.Equals(Current, other.Current)
+                && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) 
+                && PreviousIndex == other.PreviousIndex;
         }
 
         /// <summary>
@@ -143,8 +155,7 @@ namespace DynamicData
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((Change<TObject, TKey>)obj);
+            return obj is Change<TObject, TKey> && Equals((Change<TObject, TKey>) obj);
         }
 
         /// <summary>
@@ -157,9 +168,12 @@ namespace DynamicData
         {
             unchecked
             {
-                int hashCode = Reason.GetHashCode();
-                hashCode = (hashCode * 397) ^ EqualityComparer<TKey>.Default.GetHashCode(Key);
+                var hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
+                hashCode = (hashCode * 397) ^ (int) Reason;
                 hashCode = (hashCode * 397) ^ EqualityComparer<TObject>.Default.GetHashCode(Current);
+                hashCode = (hashCode * 397) ^ CurrentIndex;
+                hashCode = (hashCode * 397) ^ Previous.GetHashCode();
+                hashCode = (hashCode * 397) ^ PreviousIndex;
                 return hashCode;
             }
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DynamicData.Cache.Internal
 {
-    internal sealed class ManagedGroup<TObject, TKey, TGroupKey> : IDisposable, IGroup<TObject, TKey, TGroupKey>
+    internal sealed class ManagedGroup<TObject, TKey, TGroupKey> : IGroup<TObject, TKey, TGroupKey>
     {
         private readonly IntermediateCache<TObject, TKey> _cache = new IntermediateCache<TObject, TKey>();
 
