@@ -54,9 +54,6 @@ namespace DynamicData
             return _innnerCache.Connect(predicate);
         }
 
-        /// <summary>
-        /// Returns a observable of cache changes preceeded with the initital cache state
-        /// </summary>
         /// <returns></returns>
         public IObservable<IChangeSet<TObject, TKey>> Connect()
         {

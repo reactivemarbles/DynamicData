@@ -157,12 +157,7 @@ namespace DynamicData
 
             return source.Select(changes =>
             {
-                var result = changes.Where(change =>
-                {
-                    if (change.Reason != ChangeReason.Update) return true;
-
-                    return includeFunction(change.Current, change.Previous.Value);
-                });
+                var result = changes.Where(change => change.Reason != ChangeReason.Update || includeFunction(change.Current, change.Previous.Value));
                 return new ChangeSet<TObject, TKey>(result);
             }).NotEmpty();
         }
