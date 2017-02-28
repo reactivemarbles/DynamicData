@@ -121,7 +121,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("StartIndex: {0}, Size: {1}", StartIndex, Size);
+            return $"StartIndex: {StartIndex}, Size: {Size}";
         }
     }
 }

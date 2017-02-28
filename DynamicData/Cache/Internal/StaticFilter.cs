@@ -7,8 +7,7 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, bool> _filter;
-
-
+        
         public StaticFilter(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

@@ -2,11 +2,9 @@ using System;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Internal;
 
 namespace DynamicData.Cache.Internal
 {
-
     internal class SpecifiedGrouper<TObject, TKey, TGroupKey>
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
