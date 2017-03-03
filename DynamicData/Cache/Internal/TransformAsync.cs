@@ -51,17 +51,17 @@ namespace DynamicData.Cache.Internal
                           .Select(kvp => new Change<TSource,TKey>(ChangeReason.Update,  kvp.Key, kvp.Value.Source, kvp.Value.Source))
                           .ToArray();
 
-            var transformed = await toTransform.SelectParallel(c => Transform(cache, c), _maximumConcurrency);
+            var transformed = await toTransform.SelectParallel(Transform, _maximumConcurrency);
             return ProcessUpdates(cache, transformed.ToArray());
         }
 
         private async Task<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey>  cache, IChangeSet<TSource, TKey> changes )
         {
-            var transformed = await changes.SelectParallel(c => Transform(cache, c), _maximumConcurrency);
+            var transformed = await changes.SelectParallel(Transform, _maximumConcurrency);
             return ProcessUpdates(cache, transformed.ToArray());
         }
 
-        private async Task<TransformResult> Transform(ChangeAwareCache<TransformedItemContainer, TKey> target, Change<TSource, TKey> change)
+        private async Task<TransformResult> Transform(Change<TSource, TKey> change)
         {
             try
             {
@@ -70,11 +70,7 @@ namespace DynamicData.Cache.Internal
                     var destination = await _transformFactory(change.Current, change.Previous, change.Key);
                     return new TransformResult(change, new TransformedItemContainer(change.Key, change.Current, destination));
                 }
-
-                var existing = target.Lookup(change.Key)
-                    .ValueOrThrow(()=> CreateMissingKeyException(change.Reason, change.Key));
-
-                return new TransformResult(change, existing);
+                return new TransformResult(change);
             }
             catch (Exception ex)
             {
@@ -85,13 +81,6 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-        private Exception CreateMissingKeyException(ChangeReason reason, TKey key)
-        {
-            var message = $"{key} is missing. The change reason is '{reason}'." +
-                          $"{Environment.NewLine}Object type {typeof(TSource)}, Key type {typeof(TKey)}, Destination type is {typeof(TDestination)}";
-            return new MissingKeyException(message);
-        }
-
         private IChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TransformedItemContainer, TKey> cache, TransformResult[] transformedItems)
             {
                 //check for errors and callback if a handler has been specified
@@ -99,30 +88,27 @@ namespace DynamicData.Cache.Internal
                 if (errors.Any())
                     errors.ForEach(t => _exceptionCallback(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
 
-                foreach (var result in transformedItems)
+            foreach (var result in transformedItems.Where(t => t.Success))
+            {
+                TKey key = result.Key;
+                switch (result.Change.Reason)
                 {
-                    if (!result.Success)
-                        continue;
+                    case ChangeReason.Add:
+                    case ChangeReason.Update:
+                        cache.AddOrUpdate(result.Container.Value, key);
+                        break;
 
-                    TKey key = result.Container.Key;
-                    switch (result.Change.Reason)
-                    {
-                        case ChangeReason.Add:
-                        case ChangeReason.Update:
-                        cache.AddOrUpdate(result.Container, key);
-                            break;
-
-                        case ChangeReason.Remove:
+                    case ChangeReason.Remove:
                         cache.Remove(key);
-                            break;
+                        break;
 
-                        case ChangeReason.Evaluate:
+                    case ChangeReason.Evaluate:
                         cache.Evaluate(key);
-                            break;
-                    }
+                        break;
                 }
+            }
 
-                var changes = cache.CaptureChanges();
+            var changes = cache.CaptureChanges();
                 var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
                                                                                           change.Key,
                                                                                           change.Current.Destination,
@@ -138,13 +124,24 @@ namespace DynamicData.Cache.Internal
             public Change<TSource, TKey> Change { get; }
             public Exception Error { get; }
             public bool Success { get; }
-            public TransformedItemContainer Container { get; }
+            public Optional<TransformedItemContainer> Container { get; }
+            public TKey Key { get; }
 
             public TransformResult(Change<TSource, TKey> change, TransformedItemContainer container)
             {
                 Change = change;
                 Container = container;
                 Success = true;
+                Key = change.Key;
+            }
+
+
+            public TransformResult(Change<TSource, TKey> change)
+            {
+                Change = change;
+                Container = Optional<TransformedItemContainer>.None;
+                Success = true;
+                Key = change.Key;
             }
 
             public TransformResult(Change<TSource, TKey> change, Exception error)
@@ -152,6 +149,7 @@ namespace DynamicData.Cache.Internal
                 Change = change;
                 Error = error;
                 Success = false;
+                Key = change.Key;
             }
         }
 

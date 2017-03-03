@@ -262,7 +262,6 @@
     <Compile Include="List\Tests\TestEx.cs" />
     <Compile Include="List\UnspecifiedIndexException.cs" />
     <Compile Include="List\VirtualChangeSet.cs" />
-    <Compile Include="Cache\Internal\AbstractTransformer.cs" />
     <Compile Include="Cache\Internal\CombineOperator.cs" />
     <Compile Include="Cache\Internal\Combiner.cs" />
     <Compile Include="Cache\Internal\DistinctCalculator.cs" />
@@ -285,7 +284,6 @@
     <Compile Include="Cache\SortOptimisations.cs" />
     <Compile Include="Cache\SortReason.cs" />
     <Compile Include="Cache\Internal\StaticFilter.cs" />
-    <Compile Include="Cache\Internal\Transformer.cs" />
     <Compile Include="Cache\VirtualChangeSet.cs" />
     <Compile Include="Cache\Virtualiser.cs" />
     <Compile Include="Cache\VirtualRequest.cs" />

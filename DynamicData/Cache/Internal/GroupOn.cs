@@ -43,7 +43,8 @@ namespace DynamicData.Cache.Internal
                             .Select(_ => grouper.Regroup())
                             .Where(changes => changes.Count != 0);
 
-                        var published = groups.Merge(regroup).Publish();
+                        var published = groups.Merge(regroup)
+                        .Where(changes => changes.Count != 0).Publish();
                         var subscriber = published.SubscribeSafe(observer);
                         var disposer = published.DisposeMany().Subscribe();
 
@@ -210,6 +211,14 @@ namespace DynamicData.Cache.Internal
                 });
                 return new GroupChangeSet<TObject, TKey, TGroupKey>(result);
             }
+
+            //private Exception CreateMissingKeyException(ChangeReason reason, TKey key)
+            //{
+            //    var message = $"{key} is missing. The change reason is '{reason}'." +
+            //                  $"{Environment.NewLine}Object type {typeof(TObject)}, Key type {typeof(TKey)}";
+            //    return new MissingKeyException(message);
+            //}
+
 
             private Tuple<ManagedGroup<TObject, TKey, TGroupKey>, bool> GetCache(TGroupKey key)
             {

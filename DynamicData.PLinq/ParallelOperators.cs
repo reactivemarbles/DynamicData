@@ -2,6 +2,7 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Cache.Internal;
+using DynamicData.Internal;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -269,7 +270,8 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (filter == null) return source;
+            if (filter == null)
+                return source;
 
             return Observable.Create<IChangeSet<TObject, TKey>>(
                 observer =>
