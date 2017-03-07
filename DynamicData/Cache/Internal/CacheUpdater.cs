@@ -54,6 +54,23 @@ namespace DynamicData.Cache.Internal
             _cache.AddOrUpdate(item, key);
         }
 
+        public void AddOrUpdate(TObject item, IEqualityComparer<TObject> comparer)
+        {
+            if (_keySelector == null)
+                throw new KeySelectorException("A key selector must be specified");
+
+            var key = _keySelector.GetKey(item);
+            var oldItem = _cache.Lookup(key);
+            if (oldItem.HasValue)
+            {
+                if (comparer.Equals(oldItem.Value, item))
+                    return;
+                _cache.AddOrUpdate(item, key);
+                return;
+            }
+            _cache.AddOrUpdate(item, key);
+        }
+
         public TKey GetKey(TObject item)
         {
             if (_keySelector == null)
