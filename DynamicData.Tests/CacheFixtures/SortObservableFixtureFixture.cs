@@ -33,7 +33,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             _results = new SortedChangeSetAggregator<Person, string>
             (
-                _cache.Connect().Sort(_comparerObservable)
+                _cache.Connect().Sort(_comparerObservable, resetThreshold:25)
             );
         }
 
@@ -72,6 +72,40 @@ namespace DynamicData.Tests.CacheFixtures
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
+        }
+
+        [Test]
+        public void ChangeSortWithinThreshold()
+        {
+            var people = _generator.Take(20).ToArray();
+            _cache.AddOrUpdate(people);
+
+            var desc = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
+
+            _comparerObservable.OnNext(desc);
+            var expectedResult = people.OrderBy(p => p, desc).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
+            var items = _results.Messages.Last().SortedItems;
+            var actualResult = items.ToList();
+            var sortReason = items.SortReason;
+            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            Assert.AreEqual(SortReason.Reorder, sortReason);
+        }
+
+        [Test]
+        public void ChangeSortAboveThreshold()
+        {
+            var people = _generator.Take(30).ToArray();
+            _cache.AddOrUpdate(people);
+
+            var desc = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
+
+            _comparerObservable.OnNext(desc);
+            var expectedResult = people.OrderBy(p => p, desc).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
+            var items = _results.Messages.Last().SortedItems;
+            var actualResult = items.ToList();
+            var sortReason = items.SortReason;
+            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            Assert.AreEqual(SortReason.Reset, sortReason);
         }
 
         [Test]
