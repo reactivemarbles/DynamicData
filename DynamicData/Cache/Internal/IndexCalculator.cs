@@ -53,7 +53,6 @@ namespace DynamicData.Cache.Internal
         public IChangeSet<TObject, TKey> ChangeComparer(KeyValueComparer<TObject, TKey> comparer)
         {
             _comparer = comparer;
-            _list = _list.OrderBy(kv => kv, _comparer).ToList();
             return ChangeSet<TObject, TKey>.Empty;
         }
 

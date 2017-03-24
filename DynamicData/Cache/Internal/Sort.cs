@@ -179,8 +179,17 @@ namespace DynamicData.Cache.Internal
 
                     case SortReason.ComparerChanged:
                         {
-                            sortReason = SortReason.ComparerChanged;
                             changeSet = _calculator.ChangeComparer(_comparer);
+                            if (_resetThreshold > 0 && _cache.Count >= _resetThreshold)
+                            {
+                                sortReason = SortReason.Reset;
+                                _calculator.Reset(_cache);
+                            }
+                            else
+                            {
+                                sortReason = SortReason.Reorder;
+                                changeSet =_calculator.Reorder();
+                            }
                         }
                         break;
 
