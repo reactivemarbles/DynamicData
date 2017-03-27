@@ -49,8 +49,7 @@ namespace DynamicData.Internal
                         transformed.Add(child.Current);
                         break;
                     case ListChangeReason.Replace:
-                        transformed.Remove(child.Previous.Value);
-                        transformed.Add(child.Current);
+                        transformed.Replace(child.Previous.Value, child.Current);
                         break;
                     case ListChangeReason.Remove:
                         transformed.Remove(child.Current);
