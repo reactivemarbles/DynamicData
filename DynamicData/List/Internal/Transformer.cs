@@ -22,13 +22,6 @@ namespace DynamicData.List.Internal
             _containerFactory = item => new TransformedItemContainer(item, factory(item));
         }
 
-
-        private async Task<TransformedItemContainer> Convert(TSource item, Func<TSource, Task<TDestination>> factory)
-        {
-            var transformed = await factory(item);
-            return new TransformedItemContainer(item, transformed);
-        }
-
         public IObservable<IChangeSet<TDestination>> Run()
         {
             return _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>

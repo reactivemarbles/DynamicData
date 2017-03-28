@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\DynamicData",
+    "\\DynamicData\\Cache",
+    "\\DynamicData\\Cache\\Internal",
+    "\\DynamicData\\List",
+    "\\DynamicData\\List\\Internal"
+  ],
+  "SelectedNode": "\\DynamicData\\Cache\\Internal\\Sort.cs",
+  "PreviewInSolutionExplorer": false
+}

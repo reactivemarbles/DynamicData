@@ -39,7 +39,7 @@ namespace DynamicData.Cache.Internal
                 });
         }
 
-        private class DestinationEnumerator : IEnumerable<Change<TDestination, TDestinationKey>>
+        private sealed class DestinationEnumerator : IEnumerable<Change<TDestination, TDestinationKey>>
         {
             private readonly IChangeSet<ManyContainer, TSourceKey> _changes;
 
@@ -96,6 +96,7 @@ namespace DynamicData.Cache.Internal
                 return GetEnumerator();
             }
         }
+
         private sealed class ManyContainer
         {
             public TSource Source { get; }

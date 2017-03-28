@@ -595,6 +595,7 @@ namespace DynamicData
         /// <typeparam name="TSource">The type of the source.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
+        /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
@@ -603,11 +604,12 @@ namespace DynamicData
         /// </exception>
         public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(
             [NotNull] this IObservable<IChangeSet<TSource>> source,
-            [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector)
+            [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (manyselector == null) throw new ArgumentNullException(nameof(manyselector));
-            return new TransformMany<TSource, TDestination>(source, manyselector).Run();
+            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer).Run();
         }
 
         /// <summary>
@@ -639,6 +641,8 @@ namespace DynamicData
         /// <typeparam name="TGroup">The type of the group.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="groupSelector">The group selector.</param>
+        /// <param name="regrouper">Force the grouping function to recalculate the group value.
+        /// For example if you have a time based grouping with values like `Last Minute', 'Last Hour', 'Today' etc regrouper is used to refresh these groupings</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
@@ -661,7 +665,9 @@ namespace DynamicData
         /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="groupSelectorKey">The group selector key.</param>
-        /// <param name="regrouper">Invoke to  the for the grouping to be re-evaluated</param>
+        /// <param name="regrouper">Force the grouping function to recalculate the group value.
+        /// For example if you have a time based grouping with values like `Last Minute', 'Last Hour', 'Today' etc regrouper is used to refresh these groupings</param>
+        /// <returns></returns>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
