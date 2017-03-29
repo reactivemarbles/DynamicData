@@ -5,11 +5,8 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
-using DynamicData.List.Internal;
 
-
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal sealed class Combiner<T>
     {

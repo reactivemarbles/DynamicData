@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Annotations;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
 using DynamicData.List.Linq;

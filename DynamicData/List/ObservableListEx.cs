@@ -13,11 +13,9 @@ using DynamicData.Annotations;
 using DynamicData.Binding;
 using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
 using DynamicData.List.Linq;
-using DynamicData.Operators;
 
 // ReSharper disable once CheckNamespace
 
@@ -219,11 +217,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-            return source.Select(changes =>
-            {
-                var enumerator = new AddKeyEnumerator<TObject, TKey>(changes, keySelector);
-                return new ChangeSet<TObject, TKey>(enumerator);
-            });
+            return source.Select(changes => new ChangeSet<TObject, TKey>(new AddKeyEnumerator<TObject, TKey>(changes, keySelector)));
         }
 
         /// <summary>

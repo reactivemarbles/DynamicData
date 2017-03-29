@@ -5,7 +5,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Cache.Internal;
-using DynamicData.Internal;
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal

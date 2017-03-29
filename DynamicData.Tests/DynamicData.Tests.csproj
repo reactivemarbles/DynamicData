@@ -103,8 +103,9 @@
     <Compile Include="Binding\BindFromObservableListFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />
     <Compile Include="Binding\ExpressionBuilderFixture.cs" />
-    <Compile Include="Binding\ObservableCollectionTestFixture.cs" />
-    <Compile Include="Binding\ObservableCollectionToListFixture.cs" />
+    <Compile Include="Binding\ObservableCollectionExtendedToChangeSetFixture.cs" />
+    <Compile Include="Binding\ObservableCollectionToChangeSetFixture.cs" />
+    <Compile Include="Binding\ReadOnlyObservableCollectionToChangeSetFixture.cs" />
     <Compile Include="CacheFixtures\DynamicAndFixture.cs" />
     <Compile Include="CacheFixtures\DynamicExceptFixture.cs" />
     <Compile Include="CacheFixtures\DynamicOrFixture.cs" />

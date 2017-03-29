@@ -1,7 +1,6 @@
 using System;
 using DynamicData.Annotations;
 using DynamicData.Cache.Internal;
-using DynamicData.Internal;
 
 namespace DynamicData.Binding
 {

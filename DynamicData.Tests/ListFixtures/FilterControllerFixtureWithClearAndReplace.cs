@@ -1,6 +1,5 @@
 using System.Linq;
 using DynamicData.Controllers;
-using DynamicData.Internal;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 

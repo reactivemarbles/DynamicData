@@ -154,7 +154,7 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void Move()
         {
-            //Move should have no effect as 
+            //Move should have no effect 
 
             var child4 = new PersonWithRelations("Child4", 1);
             var child5 = new PersonWithRelations("Child5", 2);

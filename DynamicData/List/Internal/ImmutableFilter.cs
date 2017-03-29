@@ -1,7 +1,6 @@
 using System;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {

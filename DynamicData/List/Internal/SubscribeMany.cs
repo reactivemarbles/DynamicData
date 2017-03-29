@@ -3,7 +3,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 
-namespace DynamicData.Internal
+namespace DynamicData.List.Internal
 {
     internal class SubscribeMany<T>
     {
