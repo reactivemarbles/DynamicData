@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
+using System.Collections.ObjectModel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
@@ -207,14 +208,19 @@ namespace DynamicData
                             if (!hasIndex)
                                 throw new UnspecifiedIndexException("Cannot move as an index was not specified");
 
-                            var collection = source as IExtendedList<T>;
-                            if (collection != null)
+                            var extendedList = source as IExtendedList<T>;
+                            var observableCollection = source as ObservableCollection<T>;
+                            if (extendedList != null)
                             {
-                                collection.Move(change.PreviousIndex, change.CurrentIndex);
+                                extendedList.Move(change.PreviousIndex, change.CurrentIndex);
+                            }
+                            else if (observableCollection != null)
+                            {
+                                observableCollection.Move(change.PreviousIndex, change.CurrentIndex);
                             }
                             else
                             {
-                                //check this works whatever the index is 
+                                //check this works whatever the index is
                                 source.RemoveAt(change.PreviousIndex);
                                 source.Insert(change.CurrentIndex, change.Current);
                             }
@@ -226,7 +232,7 @@ namespace DynamicData
 
         /// <summary>
         /// Clears the collection if the number of items in the range is the same as the source collection. Otherwise a  remove many operation is applied.
-        /// 
+        ///
         /// NB: This is because an observable change set may be a composite of multiple change sets in which case if one of them has clear operation applied it should not clear the entire result.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -276,7 +282,7 @@ namespace DynamicData
 
         /// <summary>
         /// Performs a binary search on the specified collection.
-        /// 
+        ///
         /// Thanks to http://stackoverflow.com/questions/967047/how-to-perform-a-binary-search-on-ilistt
         /// </summary>
         /// <typeparam name="TItem">The type of the item.</typeparam>
@@ -476,7 +482,7 @@ namespace DynamicData
             /*
                 This may seem OTT but for large sets of data where there are many removes scattered
                 across the source collection IndexOf lookups can result in very slow updates
-                (especially for subsequent operators) 
+                (especially for subsequent operators)
             */
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (itemsToRemove == null) throw new ArgumentNullException(nameof(itemsToRemove));
@@ -489,7 +495,7 @@ namespace DynamicData
                                  .ToArray();
 
             //if there are duplicates, it could be that an item exists in the
-            //source collection more than once - in that case the fast remove 
+            //source collection more than once - in that case the fast remove
             //would remove each instance
             var hasDuplicates = toRemove.Duplicates(t => t.Item).Any();
 
