@@ -11,7 +11,7 @@ namespace DynamicData.Binding
     /// An override of observable collection which allows the suspension of notifications
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObservableCollection<T>
+    public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObservableCollection<T>, IExtendedList<T>
     {
         #region Construction
 
@@ -118,5 +118,25 @@ namespace DynamicData.Binding
             foreach (var item in items)
                 Add(item);
         }
+
+        #region Implementation of IExtendedList
+        public void AddRange(IEnumerable<T> collection)
+        {
+            foreach (var item in collection)
+                Add(item);
+        }
+
+        public void InsertRange(IEnumerable<T> collection, int index)
+        {
+            foreach (var item in collection)
+                InsertItem(index++, item);
+        }
+
+        public void RemoveRange(int index, int count)
+        {
+            for (var i = 0; i < count; i++)
+                RemoveAt(index);
+        }
+        #endregion
     }
 }

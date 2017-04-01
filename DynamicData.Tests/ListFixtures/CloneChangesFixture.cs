@@ -3,6 +3,7 @@ using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
 using NUnit.Framework;
+using System.Collections.ObjectModel;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -162,6 +163,27 @@ namespace DynamicData.Tests.ListFixtures
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
             CollectionAssert.AreEqual(_source, _clone);
+        }
+
+        [Test]
+        public void MovedItemInObservableCollectionIsMoved()
+        {
+            _source.AddRange(Enumerable.Range(1, 10));
+            _source.Move(1, 2);
+
+            var clone = new ObservableCollection<int>();
+            var changes = _source.CaptureChanges();
+            var itemMoved = false;
+
+            clone.CollectionChanged += (s, e) =>
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Move)
+                    itemMoved = true;
+            };
+
+            clone.Clone(changes);
+
+            Assert.True(itemMoved);
         }
     }
 }
