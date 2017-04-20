@@ -15,12 +15,9 @@ namespace DynamicData.Cache.Internal
             Func<TObject, IObservable<TValue>> observableSelector,
             Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
-            if (collectionMatcher == null) throw new ArgumentNullException(nameof(collectionMatcher));
-            _source = source;
-            _observableSelector = observableSelector;
-            _collectionMatcher = collectionMatcher;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _observableSelector = observableSelector ?? throw new ArgumentNullException(nameof(observableSelector));
+            _collectionMatcher = collectionMatcher ?? throw new ArgumentNullException(nameof(collectionMatcher));
         }
 
         public IObservable<bool> Run()

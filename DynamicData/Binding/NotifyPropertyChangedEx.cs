@@ -54,7 +54,7 @@ namespace DynamicData.Binding
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            Func<PropertyValue<TObject, TValue>> factory = () => new PropertyValue<TObject, TValue>(source, propertyAccessor(source));
+            PropertyValue<TObject, TValue> Factory() => new PropertyValue<TObject, TValue>(source, propertyAccessor(source));
 
             var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
                 (
@@ -62,12 +62,12 @@ namespace DynamicData.Binding
                     handler => source.PropertyChanged -= handler
                 )
                 .Where(args => args.EventArgs.PropertyName == propertyName)
-                .Select(x => factory());
+                .Select(x => Factory());
             
             if (!notifyOnInitialValue)
                 return propertyChanged;
 
-            var initial = Observable.Defer(() => Observable.Return(factory()));
+            var initial = Observable.Defer(() => Observable.Return(Factory()));
             return initial.Concat(propertyChanged);
         }
 

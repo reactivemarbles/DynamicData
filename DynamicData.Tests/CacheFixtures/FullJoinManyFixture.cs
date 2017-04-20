@@ -32,7 +32,7 @@ namespace DynamicData.Tests.CacheFixtures
         [Test]
         public void AddLeftOnly()
         {
-            var people = Enumerable.Range(1, 10000)
+            var people = Enumerable.Range(1, 1000)
                 .Select(i => new Person("Person" + i, i))
                 .ToArray();
 
