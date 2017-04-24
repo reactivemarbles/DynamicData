@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
 using System.Reflection;
@@ -140,9 +143,10 @@ namespace DynamicData.Binding
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
+        /// <param name="propertiesToMonitor">specify properties to Monitor, or omit to monitor all property changes</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
-        public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this TObject source)
+        public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this TObject source, params string[] propertiesToMonitor)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -151,7 +155,7 @@ namespace DynamicData.Binding
                     handler => source.PropertyChanged += handler,
                     handler => source.PropertyChanged -= handler
                 )
-                .Where(x => x.EventArgs.PropertyName != "IsSelected")
+                .Where(x => propertiesToMonitor==null || propertiesToMonitor.Length==0 || propertiesToMonitor.Contains(x.EventArgs.PropertyName))
                 .Select(x => source);
         }
 

@@ -939,16 +939,16 @@ namespace DynamicData
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
+        /// <param name="propertiesToMonitor">specify properties to Monitor, or omit to monitor all property changes</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<TObject> WhenAnyPropertyChanged<TObject>(
-            [NotNull] this IObservable<IChangeSet<TObject>> source)
+        public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this IObservable<IChangeSet<TObject>> source, params string[] propertiesToMonitor)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            return source.MergeMany(t => t.WhenAnyPropertyChanged());
+            return source.MergeMany(t => t.WhenAnyPropertyChanged(propertiesToMonitor));
         }
 
         /// <summary>

@@ -10,29 +10,24 @@ namespace DynamicData.Cache.Internal
 
         public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
-
-            _source = source;
-            _observableSelector = observableSelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _observableSelector = observableSelector ?? throw new ArgumentNullException(nameof(observableSelector));
         }
 
         public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
             if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _observableSelector = (t, key) => observableSelector(t);
         }
 
         public IObservable<TDestination> Run()
         {
             return Observable.Create<TDestination>
-                (
-                    observer => _source.SubscribeMany((t, key) => _observableSelector(t, key)
-                        .SubscribeSafe(observer))
-                        .Subscribe());
+            (
+                observer => _source.SubscribeMany((t, key) => _observableSelector(t, key).Subscribe(observer))
+                    .Subscribe(t => { }, observer.OnError));
         }
     }
 }
