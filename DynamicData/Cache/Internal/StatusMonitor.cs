@@ -22,28 +22,28 @@ namespace DynamicData.Cache.Internal
                 var statusSubject = new Subject<ConnectionStatus>();
                 var status = ConnectionStatus.Pending;
 
-                Action<Exception> error = (ex) =>
+                void Error(Exception ex)
                 {
                     status = ConnectionStatus.Errored;
                     statusSubject.OnNext(status);
                     observer.OnError(ex);
-                };
+                }
 
-                Action completion = () =>
+                void Completion()
                 {
                     if (status == ConnectionStatus.Errored) return;
                     status = ConnectionStatus.Completed;
                     statusSubject.OnNext(status);
-                };
+                }
 
-                Action updated = () =>
+                void Updated()
                 {
                     if (status != ConnectionStatus.Pending) return;
                     status = ConnectionStatus.Loaded;
                     statusSubject.OnNext(status);
-                };
+                }
 
-                var monitor = _source.Subscribe(_ => updated(), error, completion);
+                var monitor = _source.Subscribe(_ => Updated(), Error, (Action) Completion);
 
                 var subscriber = statusSubject
                     .StartWith(status)

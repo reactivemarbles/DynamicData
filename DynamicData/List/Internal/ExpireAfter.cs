@@ -20,14 +20,10 @@ namespace DynamicData.List.Internal
 
         public   ExpireAfter([NotNull] ISourceList<T> sourceList, [NotNull] Func<T, TimeSpan?> expireAfter, TimeSpan? pollingInterval, [NotNull] IScheduler scheduler, object locker)
         {
-            if (sourceList == null) throw new ArgumentNullException(nameof(sourceList));
-            if (expireAfter == null) throw new ArgumentNullException(nameof(expireAfter));
-            if (scheduler == null) throw new ArgumentNullException(nameof(scheduler));
-
-            _sourceList = sourceList;
-            _expireAfter = expireAfter;
+            _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
+            _expireAfter = expireAfter ?? throw new ArgumentNullException(nameof(expireAfter));
             _pollingInterval = pollingInterval;
-            _scheduler = scheduler;
+            _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
             _locker = locker;
         }
 

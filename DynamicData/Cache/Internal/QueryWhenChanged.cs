@@ -11,8 +11,7 @@ namespace DynamicData.Cache.Internal
 
         public QueryWhenChanged([NotNull] IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> itemChangedTrigger = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _itemChangedTrigger = itemChangedTrigger;
         }
 

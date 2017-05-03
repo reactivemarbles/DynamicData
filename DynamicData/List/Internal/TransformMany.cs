@@ -8,7 +8,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    internal class TransformMany<TSource, TDestination>
+    internal sealed class TransformMany<TSource, TDestination>
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
         private readonly Func<TSource, IEnumerable<TDestination>> _manyselector;

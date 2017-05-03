@@ -14,10 +14,8 @@ namespace DynamicData.Cache.Internal
 
         public EditDiff([NotNull] ISourceCache<TObject, TKey> source, [NotNull] Func<TObject, TObject, bool> areEqual)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (areEqual == null) throw new ArgumentNullException(nameof(areEqual));
-            _source = source;
-            _areEqual = areEqual;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _areEqual = areEqual ?? throw new ArgumentNullException(nameof(areEqual));
         }
 
         public void Edit(IEnumerable<TObject> items)

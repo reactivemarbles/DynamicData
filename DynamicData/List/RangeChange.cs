@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
@@ -9,7 +10,7 @@ namespace DynamicData
     /// Multipe change container
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class RangeChange<T> : IEnumerable<T>
+    public sealed class RangeChange<T> : IEnumerable<T>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
@@ -19,7 +20,7 @@ namespace DynamicData
         public RangeChange(IEnumerable<T> items, int index = -1)
         {
             Index = index;
-            _items = items as List<T> ?? items.ToList();
+            _items = items.AsList();
         }
 
         /// <summary>

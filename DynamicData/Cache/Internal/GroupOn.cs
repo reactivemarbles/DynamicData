@@ -89,8 +89,7 @@ namespace DynamicData.Cache.Internal
                 //Group all items
                 var grouped = changes
                     .Select(u => new ChangeWithGroup(u, _groupSelectorKey))
-                    .GroupBy(c => c.GroupKey)
-                    .ToArray();
+                    .GroupBy(c => c.GroupKey);
 
                 //1. iterate and maintain child caches (_groupCache)
                 //2. maintain which group each item belongs to (_itemCache) 

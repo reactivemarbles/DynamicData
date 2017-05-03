@@ -15,11 +15,8 @@ namespace DynamicData.Cache.Internal
 
         public GroupOnImmutable(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit> regrouper)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
-
-            _source = source;
-            _groupSelectorKey = groupSelectorKey;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _groupSelectorKey = groupSelectorKey ?? throw new ArgumentNullException(nameof(groupSelectorKey));
             _regrouper = regrouper ?? Observable.Never<Unit>();
         }
 

@@ -17,8 +17,7 @@ namespace DynamicData.Cache.Internal
             IObservable<Func<TObject, bool>> predicateChanged,
             IObservable<Unit> refilterObservable = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _predicateChanged = predicateChanged ?? Observable.Never<Func<TObject, bool>>();
             _refilterObservable = refilterObservable ?? Observable.Never<Unit>();
         }

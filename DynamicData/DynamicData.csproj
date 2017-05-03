@@ -84,7 +84,7 @@
     <Compile Include="Cache\Internal\GroupImmutable.cs" />
     <Compile Include="Cache\Internal\GroupOnProperty.cs" />
     <Compile Include="Cache\IGrouping.cs" />
-    <Compile Include="Cache\Internal\GroupOnPropertyyWithImmutableState.cs" />
+    <Compile Include="Cache\Internal\GroupOnPropertyWithImmutableState.cs" />
     <Compile Include="Cache\Internal\ImmutableGroup.cs" />
     <Compile Include="Cache\Internal\InnerJoin.cs" />
     <Compile Include="Cache\Internal\FullJoin.cs" />

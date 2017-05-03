@@ -34,18 +34,16 @@ namespace DynamicData.Kernel
         public static IObservable<TSource> RetryWithBackOff<TSource, TException>(this IObservable<TSource> source, Func<TException, int, TimeSpan?> backOffStrategy)
             where TException : Exception
         {
-            Func<int, IObservable<TSource>> retry = null;
-
-            retry = (failureCount) => source.Catch<TSource, TException>(error =>
+            IObservable<TSource> Retry(int failureCount) => source.Catch<TSource, TException>(error =>
             {
                 TimeSpan? delay = backOffStrategy(error, failureCount);
                 if (!delay.HasValue)
                     return Observable.Throw<TSource>(error);
 
-                return Observable.Timer(delay.Value).SelectMany(retry(failureCount + 1));
+                return Observable.Timer(delay.Value).SelectMany(Retry(failureCount + 1));
             });
 
-            return retry(0);
+            return Retry(0);
         }
 
         internal static IObservable<Unit> ToUnit<T>(this IObservable<T> source)

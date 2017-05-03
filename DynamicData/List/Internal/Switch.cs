@@ -10,8 +10,7 @@ namespace DynamicData.List.Internal
 
         public Switch(IObservable<IObservable<IChangeSet<T>>> sources)
         {
-            if (sources == null) throw new ArgumentNullException(nameof(sources));
-            _sources = sources;
+            _sources = sources ?? throw new ArgumentNullException(nameof(sources));
         }
 
         public IObservable<IChangeSet<T>> Run()

@@ -64,7 +64,7 @@ namespace DynamicData.Cache.Internal
 
         public override string ToString()
         {
-            return string.Format("Key: {0}, Item: {1}", _key, _item);
+            return $"Key: {_key}, Item: {_item}";
         }
     }
 }

@@ -13,7 +13,7 @@ namespace DynamicData.Cache.Internal
         public IEnumerable<TObject> Items => _data.Values;
         public IEnumerable<TKey> Keys => _data.Keys;
 
-        public static Cache<TObject, TKey> Empty = new Cache<TObject, TKey>();
+        public static readonly Cache<TObject, TKey> Empty = new Cache<TObject, TKey>();
 
         public Cache(int capacity = -1)
         {

@@ -21,11 +21,8 @@ namespace DynamicData.Cache.Internal
             TimeSpan? timeOut = null,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-
-            _source = source;
-            _pauseIfTrueSelector = pauseIfTrueSelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
             _intialPauseState = intialPauseState;
             _timeOut = timeOut;
             _scheduler = scheduler;

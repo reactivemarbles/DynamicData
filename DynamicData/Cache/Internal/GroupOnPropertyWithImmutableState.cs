@@ -18,11 +18,8 @@ namespace DynamicData.Cache.Internal
 
         public GroupOnPropertyWithImmutableState(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
-
-            _source = source;
-            _groupSelector = groupSelectorKey.Compile();
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _groupSelector = groupSelectorKey?.Compile() ?? throw new ArgumentNullException(nameof(groupSelectorKey));
             _propertySelector = groupSelectorKey;
             _throttle = throttle;
             _scheduler = scheduler;

@@ -15,8 +15,7 @@ namespace DynamicData.Cache.Internal
 
         public DynamicCombiner([NotNull] IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _type = type;
         }
 

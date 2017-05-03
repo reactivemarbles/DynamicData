@@ -12,10 +12,8 @@ namespace DynamicData.Cache.Internal
 
         public FinallySafe([NotNull] IObservable<T> source, [NotNull] Action finallyAction)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (finallyAction == null) throw new ArgumentNullException(nameof(finallyAction));
-            _source = source;
-            _finallyAction = finallyAction;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _finallyAction = finallyAction ?? throw new ArgumentNullException(nameof(finallyAction));
         }
 
         public IObservable<T> Run()

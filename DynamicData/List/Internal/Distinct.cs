@@ -15,10 +15,8 @@ namespace DynamicData.List.Internal
         public Distinct([NotNull] IObservable<IChangeSet<T>> source,
             [NotNull] Func<T, TValue> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
-            _source = source;
-            _valueSelector = valueSelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
         }
 
         public IObservable<IChangeSet<TValue>> Run()
@@ -37,7 +35,7 @@ namespace DynamicData.List.Internal
 
         private IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithValue<T, TValue>> changes)
         {
-            Action<TValue> addAction = value => values.Lookup(value)
+            void AddAction(TValue value) => values.Lookup(value)
                 .IfHasValue(count => values[value] = count + 1)
                 .Else(() =>
                 {
@@ -45,7 +43,7 @@ namespace DynamicData.List.Internal
                     result.Add(value);
                 });
 
-            Action<TValue> removeAction = value =>
+            void RemoveAction(TValue value)
             {
                 var counter = values.Lookup(value);
                 if (!counter.HasValue) return;
@@ -57,7 +55,7 @@ namespace DynamicData.List.Internal
 
                 //if there are none, then remove and notify
                 result.Remove(value);
-            };
+            }
 
             foreach (var change in changes)
             {
@@ -66,12 +64,12 @@ namespace DynamicData.List.Internal
                     case ListChangeReason.Add:
                         {
                             var value = change.Item.Current.Value;
-                            addAction(value);
+                            AddAction(value);
                             break;
                         }
                     case ListChangeReason.AddRange:
                         {
-                            change.Range.Select(item => item.Value).ForEach(addAction);
+                            change.Range.Select(item => item.Value).ForEach((Action<TValue>) AddAction);
                             break;
                         }
                     //	case ListChangeReason.Evaluate:
@@ -81,19 +79,19 @@ namespace DynamicData.List.Internal
                             var previous = change.Item.Previous.Value.Value;
                             if (value.Equals(previous)) continue;
 
-                            removeAction(previous);
-                            addAction(value);
+                            RemoveAction(previous);
+                            AddAction(value);
                             break;
                         }
                     case ListChangeReason.Remove:
                         {
                             var previous = change.Item.Current.Value;
-                            removeAction(previous);
+                            RemoveAction(previous);
                             break;
                         }
                     case ListChangeReason.RemoveRange:
                         {
-                            change.Range.Select(item => item.Value).ForEach(removeAction);
+                            change.Range.Select(item => item.Value).ForEach(RemoveAction);
                             break;
                         }
                     case ListChangeReason.Clear:

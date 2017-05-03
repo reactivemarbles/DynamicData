@@ -15,13 +15,9 @@ namespace DynamicData.Cache.Internal
             Func<TObject, TGroupKey> groupSelector,
             IObservable<IDistinctChangeSet<TGroupKey>> resultGroupSource)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
-            if (resultGroupSource == null) throw new ArgumentNullException(nameof(resultGroupSource));
-
-            _source = source;
-            _groupSelector = groupSelector;
-            _resultGroupSource = resultGroupSource;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
+            _resultGroupSource = resultGroupSource ?? throw new ArgumentNullException(nameof(resultGroupSource));
         }
 
         public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run()

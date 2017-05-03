@@ -36,8 +36,7 @@ namespace DynamicData.List.Internal
                             listToDispose = _list;
                             _list = null;
                         }
-                    if (listToDispose != null)
-                        listToDispose.Dispose();
+                    listToDispose?.Dispose();
                 });
             });
         }

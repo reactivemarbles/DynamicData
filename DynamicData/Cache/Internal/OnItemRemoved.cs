@@ -13,10 +13,8 @@ namespace DynamicData.Cache.Internal
 
         public OnItemRemoved([NotNull] IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (removeAction == null) throw new ArgumentNullException(nameof(removeAction));
-            _source = source;
-            _removeAction = removeAction;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _removeAction = removeAction ?? throw new ArgumentNullException(nameof(removeAction));
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()

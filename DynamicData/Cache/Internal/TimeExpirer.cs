@@ -20,11 +20,8 @@ namespace DynamicData.Cache.Internal
             TimeSpan? interval,
             IScheduler scheduler)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
-
-            _source = source;
-            _timeSelector = timeSelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _timeSelector = timeSelector ?? throw new ArgumentNullException(nameof(timeSelector));
             _interval = interval;
             _scheduler = scheduler ?? Scheduler.Default;
         }
@@ -45,12 +42,11 @@ namespace DynamicData.Cache.Internal
                     })
                     .AsObservableCache();
 
-                Action removalAction = () =>
+                void RemovalAction()
                 {
                     try
                     {
-                        var toRemove = autoRemover.KeyValues
-                            .Where(kv => kv.Value.ExpireAt <= _scheduler.Now.DateTime)
+                        var toRemove = autoRemover.KeyValues.Where(kv => kv.Value.ExpireAt <= _scheduler.Now.DateTime)
                             .ToList();
 
                         observer.OnNext(toRemove.Select(kv => new KeyValuePair<TKey, TObject>(kv.Key, kv.Value.Value)).ToList());
@@ -59,13 +55,13 @@ namespace DynamicData.Cache.Internal
                     {
                         observer.OnError(ex);
                     }
-                };
+                }
 
                 var removalSubscripion = new SingleAssignmentDisposable();
                 if (_interval.HasValue)
                 {
                     // use polling
-                    removalSubscripion.Disposable = _scheduler.ScheduleRecurringAction(_interval.Value, removalAction);
+                    removalSubscripion.Disposable = _scheduler.ScheduleRecurringAction(_interval.Value, RemovalAction);
                 }
                 else
                 {
@@ -77,7 +73,7 @@ namespace DynamicData.Cache.Internal
                             var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
                             return Observable.Timer(expireAt, _scheduler)
                                 .Take(1)
-                                .Subscribe(_ => removalAction());
+                                .Subscribe(_ => RemovalAction());
                         })
                         .Subscribe();
                 }

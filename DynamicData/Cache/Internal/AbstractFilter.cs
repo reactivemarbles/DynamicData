@@ -10,8 +10,7 @@ namespace DynamicData.Cache.Internal
 
         protected AbstractFilter(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool> filter)
         {
-            if (cache == null) throw new ArgumentNullException(nameof(cache));
-            _cache = cache;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
             if (filter == null)
             {
@@ -29,7 +28,7 @@ namespace DynamicData.Cache.Internal
         {
             //this is an internal method only so we can be sure there are no duplicate keys in the result
             //(therefore safe to parallelise)
-            Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory = kv =>
+            Optional<Change<TObject, TKey>> Factory(KeyValuePair<TKey, TObject> kv)
             {
                 var exisiting = _cache.Lookup(kv.Key);
                 var matches = Filter(kv.Value);
@@ -46,9 +45,9 @@ namespace DynamicData.Cache.Internal
                 }
 
                 return Optional.None<Change<TObject, TKey>>();
-            };
+            }
 
-            var result = Evaluate(items, factory);
+            var result = Evaluate(items, Factory);
             _cache.Clone(new ChangeSet<TObject, TKey>(result));
 
 

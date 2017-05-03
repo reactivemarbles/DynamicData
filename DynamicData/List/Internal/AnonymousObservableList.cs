@@ -15,8 +15,7 @@ namespace DynamicData.List.Internal
 
         public AnonymousObservableList(ISourceList<T> sourceList)
         {
-            if (sourceList == null) throw new ArgumentNullException(nameof(sourceList));
-            _sourceList = sourceList;
+            _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
         }
 
         public IObservable<int> CountChanged => _sourceList.CountChanged;

@@ -19,7 +19,7 @@ namespace DynamicData.Cache.Internal
 
         protected override IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates)
         {
-            return updates.Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
+            return updates.Select(u => new UpdateWithFilter(Filter(u.Current), u));
         }
     }
 }

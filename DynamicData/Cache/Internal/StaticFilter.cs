@@ -10,9 +10,7 @@ namespace DynamicData.Cache.Internal
         
         public StaticFilter(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _filter = filter;
         }
 

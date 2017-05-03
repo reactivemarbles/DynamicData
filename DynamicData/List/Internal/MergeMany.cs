@@ -4,7 +4,7 @@ using DynamicData.Annotations;
 
 namespace DynamicData.List.Internal
 {
-    internal class MergeMany<T, TDestination>
+    internal sealed class MergeMany<T, TDestination>
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly Func<T, IObservable<TDestination>> _observableSelector;

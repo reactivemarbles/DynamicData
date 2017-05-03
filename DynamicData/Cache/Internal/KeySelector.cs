@@ -8,8 +8,7 @@ namespace DynamicData.Cache.Internal
 
         public KeySelector(Func<TObject, TKey> keySelector)
         {
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-            _keySelector = keySelector;
+            _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         }
 
         public Type Type => typeof(TObject);

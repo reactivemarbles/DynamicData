@@ -15,10 +15,8 @@ namespace DynamicData.List.Internal
 
         public Pager([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IPageRequest> requests)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (requests == null) throw new ArgumentNullException(nameof(requests));
-            _source = source;
-            _requests = requests;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _requests = requests ?? throw new ArgumentNullException(nameof(requests));
         }
 
         public IObservable<IPageChangeSet<T>> Run()

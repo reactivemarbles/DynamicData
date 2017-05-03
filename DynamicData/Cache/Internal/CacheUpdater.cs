@@ -12,8 +12,7 @@ namespace DynamicData.Cache.Internal
 
         public CacheUpdater(ChangeAwareCache<TObject, TKey> cache, IKeySelector<TObject, TKey> keySelector = null)
         {
-            if (cache == null) throw new ArgumentNullException(nameof(cache));
-            _cache = cache;
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _keySelector = keySelector;
         }
 

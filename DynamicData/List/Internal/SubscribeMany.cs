@@ -5,7 +5,7 @@ using DynamicData.Annotations;
 
 namespace DynamicData.List.Internal
 {
-    internal class SubscribeMany<T>
+    internal sealed class SubscribeMany<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly Func<T, IDisposable> _subscriptionFactory;

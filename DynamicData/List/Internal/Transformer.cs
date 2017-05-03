@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using DynamicData.Annotations;
-using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    internal class Transformer<TSource, TDestination>
+    internal sealed class Transformer<TSource, TDestination>
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
         private readonly Func<TSource, TransformedItemContainer> _containerFactory;

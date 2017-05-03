@@ -14,9 +14,8 @@ namespace DynamicData.Cache.Internal
 
         public DistinctCalculator(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
         {
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
             _source = source;
-            _valueSelector = valueSelector;
+            _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
         }
 
         public IObservable<IDistinctChangeSet<TValue>> Run()

@@ -11,19 +11,15 @@ namespace DynamicData.Cache.Internal
 
         public MergeManyItems(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
-
-            _source = source;
-            _observableSelector = observableSelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _observableSelector = observableSelector ?? throw new ArgumentNullException(nameof(observableSelector));
         }
 
         public MergeManyItems(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
             if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
 
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _observableSelector = (t, key) => observableSelector(t);
         }
 

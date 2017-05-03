@@ -17,15 +17,10 @@ namespace DynamicData.Cache.Internal
             Func<TRight, TLeftKey> rightKeySelector,
             Func<TLeftKey, Optional<TLeft>, Optional<TRight>, TDestination> resultSelector)
         {
-            if (left == null) throw new ArgumentNullException(nameof(left));
-            if (right == null) throw new ArgumentNullException(nameof(right));
-            if (rightKeySelector == null) throw new ArgumentNullException(nameof(rightKeySelector));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
-
-            _left = left;
-            _right = right;
-            _rightKeySelector = rightKeySelector;
-            _resultSelector = resultSelector;
+            _left = left ?? throw new ArgumentNullException(nameof(left));
+            _right = right ?? throw new ArgumentNullException(nameof(right));
+            _rightKeySelector = rightKeySelector ?? throw new ArgumentNullException(nameof(rightKeySelector));
+            _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
         }
 
         public IObservable<IChangeSet<TDestination, TLeftKey>> Run()

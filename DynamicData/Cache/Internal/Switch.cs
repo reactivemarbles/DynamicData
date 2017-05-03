@@ -10,8 +10,7 @@ namespace DynamicData.Cache.Internal
 
         public Switch(IObservable<IObservable<IChangeSet<TObject, TKey>>> sources)
         {
-            if (sources == null) throw new ArgumentNullException(nameof(sources));
-            _sources = sources;
+            _sources = sources ?? throw new ArgumentNullException(nameof(sources));
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()

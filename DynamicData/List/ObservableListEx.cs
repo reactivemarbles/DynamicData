@@ -504,8 +504,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(
-            this IObservable<IChangeSet<TObject>> source,
+        public static IObservable<IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source,
             Expression<Func<TObject, TProperty>> propertySelector,
             Func<TObject, bool> predicate,
             TimeSpan? propertyChangedThrottle = null,

@@ -22,8 +22,7 @@ namespace DynamicData.Binding
         /// <exception cref="System.ArgumentNullException">collection</exception>
         public ObservableCollectionAdaptor([NotNull] IObservableCollection<T> collection, int refreshThreshold = 25)
         {
-            if (collection == null) throw new ArgumentNullException(nameof(collection));
-            _collection = collection;
+            _collection = collection ?? throw new ArgumentNullException(nameof(collection));
             _refreshThreshold = refreshThreshold;
         }
 

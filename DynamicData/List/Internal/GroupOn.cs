@@ -17,11 +17,8 @@ namespace DynamicData.List.Internal
 
         public GroupOn([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector, IObservable<Unit> regrouper)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
-
-            _source = source;
-            _groupSelector = groupSelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
             _regrouper = regrouper ;
         }
 

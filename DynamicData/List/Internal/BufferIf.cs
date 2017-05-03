@@ -8,7 +8,7 @@ using DynamicData.Annotations;
 
 namespace DynamicData.List.Internal
 {
-    internal class BufferIf<T>
+    internal sealed  class BufferIf<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<bool> _pauseIfTrueSelector;
@@ -19,11 +19,8 @@ namespace DynamicData.List.Internal
         public BufferIf([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<bool> pauseIfTrueSelector,
                         bool intialPauseState = false, TimeSpan? timeOut = null, IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-
-            _source = source;
-            _pauseIfTrueSelector = pauseIfTrueSelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
             _intialPauseState = intialPauseState;
             _timeOut = timeOut ?? TimeSpan.Zero;
             _scheduler = scheduler ?? Scheduler.Default;

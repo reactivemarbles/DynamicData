@@ -13,10 +13,8 @@ namespace DynamicData.List.Linq
         public AddKeyEnumerator([NotNull] IChangeSet<TObject> source,
                                 [NotNull] Func<TObject, TKey> keySelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-            _source = source;
-            _keySelector = keySelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         }
 
         /// <summary>

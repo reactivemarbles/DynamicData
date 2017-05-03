@@ -12,11 +12,9 @@ namespace DynamicData
 
         public PageChangeSet(IChangeSet<T> virtualChangeSet, IPageResponse response)
         {
-            if (virtualChangeSet == null) throw new ArgumentNullException(nameof(virtualChangeSet));
-            if (response == null) throw new ArgumentNullException(nameof(response));
-            _virtualChangeSet = virtualChangeSet;
+            _virtualChangeSet = virtualChangeSet ?? throw new ArgumentNullException(nameof(virtualChangeSet));
 
-            Response = response;
+            Response = response ?? throw new ArgumentNullException(nameof(response));
         }
 
         public IPageResponse Response { get; }

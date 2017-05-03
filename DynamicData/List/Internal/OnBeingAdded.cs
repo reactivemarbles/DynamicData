@@ -11,10 +11,8 @@ namespace DynamicData.List.Internal
 
         public OnBeingAdded(IObservable<IChangeSet<T>> source, Action<T> callback)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (callback == null) throw new ArgumentNullException(nameof(callback));
-            _source = source;
-            _callback = callback;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _callback = callback ?? throw new ArgumentNullException(nameof(callback));
         }
 
         public IObservable<IChangeSet<T>> Run()

@@ -31,12 +31,12 @@ namespace DynamicData.Kernel
         {
             get
             {
-                if (_value == null)
-                    lock (_locker)
-                        if (_value == null)
-                        {
-                            _value = _factory();
-                        }
+                if (_value != null) return _value;
+                lock (_locker)
+                    if (_value == null)
+                    {
+                        _value = _factory();
+                    }
                 return _value;
             }
         }

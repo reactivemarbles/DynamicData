@@ -13,10 +13,8 @@ namespace DynamicData.Cache.Internal
 
         public Cast(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> converter)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (converter == null) throw new ArgumentNullException(nameof(converter));
-            _source = source;
-            _converter = converter;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _converter = converter ?? throw new ArgumentNullException(nameof(converter));
         }
 
         public IObservable<IChangeSet<TDestination, TKey>> Run()

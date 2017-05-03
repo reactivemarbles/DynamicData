@@ -7,7 +7,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    internal class GroupOnPropertyWithImmutableState<TObject, TGroup>
+    internal sealed class GroupOnPropertyWithImmutableState<TObject, TGroup>
         where TObject : INotifyPropertyChanged
     {
         private readonly IObservable<IChangeSet<TObject>> _source;
@@ -18,11 +18,8 @@ namespace DynamicData.List.Internal
 
         public GroupOnPropertyWithImmutableState(IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
-
-            _source = source;
-            _groupSelector = groupSelectorKey.Compile();
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _groupSelector = groupSelectorKey?.Compile() ?? throw new ArgumentNullException(nameof(groupSelectorKey));
             _propertySelector = groupSelectorKey;
             _throttle = throttle;
             _scheduler = scheduler;
@@ -33,7 +30,7 @@ namespace DynamicData.List.Internal
             return _source.Publish(shared =>
             {
                 // Monitor explicit property changes
-                var regrouper = ObservableListEx.WhenValueChanged(shared, _propertySelector, false).ToUnit();
+                var regrouper = shared.WhenValueChanged(_propertySelector, false).ToUnit();
 
                 //add a throttle if specified
                 if (_throttle != null)

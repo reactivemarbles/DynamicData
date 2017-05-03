@@ -13,10 +13,9 @@ namespace DynamicData.Cache.Internal
 
         public SizeExpirer(IObservable<IChangeSet<TObject, TKey>> source, int size)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
             if (size <= 0) throw new ArgumentException("Size limit must be greater than zero");
 
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _size = size;
         }
 

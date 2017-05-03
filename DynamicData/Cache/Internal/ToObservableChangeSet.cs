@@ -33,10 +33,8 @@ namespace DynamicData.Cache.Internal
             int limitSizeTo,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
-            _source = source;
-            _keySelector = keySelector;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
             _expireAfter = expireAfter;
             _limitSizeTo = limitSizeTo;
             _scheduler = scheduler ?? Scheduler.Default;

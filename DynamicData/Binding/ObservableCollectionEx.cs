@@ -96,11 +96,11 @@ namespace DynamicData.Binding
                 (
                     observer =>
                     {
-                        Func<ChangeSet<T>> initialChangeSet = () =>
+                        ChangeSet<T> InitialChangeSet()
                         {
                             var initial = new Change<T>(ListChangeReason.AddRange, source.ToList());
-                            return new ChangeSet<T>() { initial };
-                        };
+                            return new ChangeSet<T>() {initial};
+                        }
 
                         //populate local cache, otherwise there is no way to deal with a reset
                         var cloneOfList = new SourceList<T>();
@@ -136,7 +136,7 @@ namespace DynamicData.Binding
                                         case NotifyCollectionChangedAction.Reset:
                                             var cleared = new Change<T>(ListChangeReason.Clear, cloneOfList.Items.ToList(), 0);
                                             var clearedChangeSet = new ChangeSet<T>() { cleared };
-                                            return clearedChangeSet.Concat(initialChangeSet());
+                                            return clearedChangeSet.Concat(InitialChangeSet());
 
                                         case NotifyCollectionChangedAction.Move:
                                             var item = changes.NewItems.OfType<T>().First();
@@ -150,7 +150,7 @@ namespace DynamicData.Binding
                             .Where(updates => updates != null)
                             .Select(updates => (IChangeSet<T>)new ChangeSet<T>(updates));
 
-                        var cacheLoader = Observable.Defer(()=>Observable.Return(initialChangeSet()))
+                        var cacheLoader = Observable.Defer(()=>Observable.Return(InitialChangeSet()))
                                                 .Concat(sourceUpdates)
                                                 .PopulateInto(cloneOfList);
 

@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Threading.Tasks;
 using DynamicData.Annotations;
-using DynamicData.Kernel;
+
 
 namespace DynamicData.List.Internal
 {
@@ -16,10 +16,9 @@ namespace DynamicData.List.Internal
 
         public TransformAsync([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, Task<TDestination>> factory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
             if (factory == null) throw new ArgumentNullException(nameof(factory));
 
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _containerFactory = async item =>
             {
                 var destination = await factory(item);

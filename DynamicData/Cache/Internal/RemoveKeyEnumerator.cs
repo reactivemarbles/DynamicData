@@ -11,8 +11,7 @@ namespace DynamicData.Cache.Internal
 
         public RemoveKeyEnumerator([NotNull] IChangeSet<TObject, TKey> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
         }
 
         /// <summary>

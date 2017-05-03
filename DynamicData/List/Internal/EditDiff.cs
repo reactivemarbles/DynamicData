@@ -13,8 +13,7 @@ namespace DynamicData.List.Internal
 
         public EditDiff([NotNull] ISourceList<T> source, IEqualityComparer<T> equalityComparer)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _equalityComparer = equalityComparer ?? EqualityComparer<T>.Default;
         }
 

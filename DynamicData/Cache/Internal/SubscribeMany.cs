@@ -11,20 +11,16 @@ namespace DynamicData.Cache.Internal
 
         public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
             if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
 
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _subscriptionFactory = (t, key) => subscriptionFactory(t);
         }
 
         public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
-
-            _source = source;
-            _subscriptionFactory = subscriptionFactory;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _subscriptionFactory = subscriptionFactory ?? throw new ArgumentNullException(nameof(subscriptionFactory));
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
