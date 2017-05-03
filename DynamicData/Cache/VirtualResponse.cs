@@ -7,7 +7,7 @@ namespace DynamicData
     /// <summary>
     /// Defines values used to virtualise the result set
     /// </summary>
-    internal class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualResponse
+    internal sealed class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualResponse
     {
         public VirtualResponse(int size, int startIndex, int totalSize)
         {
@@ -42,7 +42,7 @@ namespace DynamicData
         /// <param name="other">An object to compare with this object.</param>
         public bool Equals(IVirtualResponse other)
         {
-            return s_totalSizeStartIndexSizeComparerInstance.Equals(this, other);
+            return STotalSizeStartIndexSizeComparerInstance.Equals(this, other);
         }
 
         /// <summary>
@@ -101,9 +101,9 @@ namespace DynamicData
             }
         }
 
-        private static readonly IEqualityComparer<IVirtualResponse> s_totalSizeStartIndexSizeComparerInstance = new TotalSizeStartIndexSizeEqualityComparer();
+        private static readonly IEqualityComparer<IVirtualResponse> STotalSizeStartIndexSizeComparerInstance = new TotalSizeStartIndexSizeEqualityComparer();
 
-        public static IEqualityComparer<IVirtualResponse> DefaultComparer { get { return s_totalSizeStartIndexSizeComparerInstance; } }
+        public static IEqualityComparer<IVirtualResponse> DefaultComparer => STotalSizeStartIndexSizeComparerInstance;
 
         #endregion
 

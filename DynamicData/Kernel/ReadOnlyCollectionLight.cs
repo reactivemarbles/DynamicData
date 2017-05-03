@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DynamicData.Kernel
 {
@@ -7,10 +8,17 @@ namespace DynamicData.Kernel
     {
         private readonly IEnumerable<T> _items;
 
+        public static readonly IReadOnlyCollection<T> Empty = new ReadOnlyCollectionLight<T>();
+
         public ReadOnlyCollectionLight(IEnumerable<T> items, int count)
         {
             _items = items;
             Count = count;
+        }
+
+        private ReadOnlyCollectionLight()
+        {
+            _items = Enumerable.Empty<T>();
         }
 
         public IEnumerator<T> GetEnumerator()

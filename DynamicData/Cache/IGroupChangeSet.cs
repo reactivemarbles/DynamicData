@@ -2,7 +2,7 @@
 namespace DynamicData
 {
     /// <summary>
-    ///  A grouped update collection
+    ///  A grouped change set
     /// </summary>
     /// <typeparam name="TObject">The source object type</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>s

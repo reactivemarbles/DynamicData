@@ -1,11 +1,19 @@
 using System.Collections.Generic;
 using System.Linq;
+using DynamicData.Cache.Internal;
 using DynamicData.Operators;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>
     {
+        public new static readonly IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();
+
+
+        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
+        public IPageResponse Response { get; }
+
+
         public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
             : base(updates)
         {
@@ -13,8 +21,11 @@ namespace DynamicData
             SortedItems = sortedItems;
         }
 
-        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
-        public IPageResponse Response { get; }
+        private PagedChangeSet()
+        {
+            SortedItems = new KeyValueCollection<TObject, TKey>();
+            Response = new PageResponse(0, 0, 0, 0);
+        }
 
         #region Equality Members
 
@@ -53,7 +64,7 @@ namespace DynamicData
         /// </returns>
         public override string ToString()
         {
-            return string.Format("{0}, Response: {1}, SortedItems: {2}", base.ToString(), Response, SortedItems);
+            return $"{base.ToString()}, Response: {Response}, SortedItems: {SortedItems}";
         }
     }
 }

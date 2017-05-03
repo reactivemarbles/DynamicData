@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using DynamicData.Annotations;
 using DynamicData.Binding;
+using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 using DynamicData.Controllers;
 using DynamicData.Kernel;
@@ -721,8 +722,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// </exception>
-        public static IObservable<IChangeSet<List.IGrouping<TObject, TGroup>>> GroupOnPropertyWithImmutableState
-            <TObject, TGroup>(this IObservable<IChangeSet<TObject>> source,
+        public static IObservable<IChangeSet<List.IGrouping<TObject, TGroup>>> GroupOnPropertyWithImmutableState<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source,
                 Expression<Func<TObject, TGroup>> propertySelector,
                 TimeSpan? propertyChangedThrottle = null,
                 IScheduler scheduler = null)
@@ -1204,8 +1204,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IReadOnlyCollection<T>> QueryWhenChanged<T>(
-            [NotNull] this IObservable<IChangeSet<T>> source)
+        public static IObservable<IReadOnlyCollection<T>> QueryWhenChanged<T>([NotNull] this IObservable<IChangeSet<T>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             return new QueryWhenChanged<T>(source).Run();
@@ -1217,8 +1216,7 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
         /// <returns></returns>
-        public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject>(
-            this IObservable<IChangeSet<TObject>> source)
+        public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
         {
             return source.QueryWhenChanged(items => items);
         }
@@ -1759,6 +1757,21 @@ namespace DynamicData
             if (sources == null) throw new ArgumentNullException(nameof(sources));
             return new Switch<T>(sources).Run();
         }
+
+        #endregion
+
+
+        #region Start with
+
+        /// <summary>
+        /// Prepends an empty changeset to the source
+        /// </summary>
+        public static IObservable<IChangeSet<T>> StartWithEmpty<T>(this IObservable<IChangeSet<T>> source)
+        {
+            return source.StartWith(ChangeSet<T>.Empty);
+        }
+
+
 
         #endregion
     }

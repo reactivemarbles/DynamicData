@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using DynamicData.Cache.Internal;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IVirtualChangeSet<TObject, TKey>, IEquatable<VirtualChangeSet<TObject, TKey>>
     {
-        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
+        public new static readonly IVirtualChangeSet<TObject, TKey> Empty = new VirtualChangeSet<TObject, TKey>();
 
+
+        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
         public IVirtualResponse Response { get; }
 
         public VirtualChangeSet(IEnumerable<Change<TObject, TKey>> items, IKeyValueCollection<TObject, TKey> sortedItems, IVirtualResponse response)
@@ -15,6 +19,13 @@ namespace DynamicData
             SortedItems = sortedItems;
             Response = response;
         }
+
+        private VirtualChangeSet()
+        {
+            SortedItems = new KeyValueCollection<TObject, TKey>();
+            Response = new VirtualResponse(0,0,0);
+        }
+
 
         #region Equality
 

@@ -100,7 +100,11 @@ namespace DynamicData
         /// <value>
         /// The capacity.
         /// </value>
-        public int Capacity { get { return Items.Capacity; } set { Items.Capacity = value; } }
+        public int Capacity
+        {
+            get => Items.Capacity;
+            set => Items.Capacity = value;
+        }
 
         private List<Change<T>> Items { get; } 
 

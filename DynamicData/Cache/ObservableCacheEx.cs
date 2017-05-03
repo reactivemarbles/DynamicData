@@ -459,8 +459,7 @@ namespace DynamicData
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">reasons</exception>
         /// <exception cref="System.ArgumentException">Must select at least on reason</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> WhereReasonsAreNot<TObject, TKey>(
-            this IObservable<IChangeSet<TObject, TKey>> source, params ChangeReason[] reasons)
+        public static IObservable<IChangeSet<TObject, TKey>> WhereReasonsAreNot<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params ChangeReason[] reasons)
         {
             if (reasons == null) throw new ArgumentNullException(nameof(reasons));
             if (!reasons.Any()) throw new ArgumentException("Must select at least one reason");
@@ -471,6 +470,71 @@ namespace DynamicData
             {
                 return new ChangeSet<TObject, TKey>(updates.Where(u => !hashed.Contains(u.Reason)));
             }).NotEmpty();
+        }
+        
+        #endregion
+
+        #region Start with
+        
+        /// <summary>
+        /// Prepends an empty changeset to the source
+        /// </summary>
+        public static IObservable<IChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            return source.StartWith(ChangeSet<TObject, TKey>.Empty);
+        }
+
+        /// <summary>
+        /// Prepends an empty changeset to the source
+        /// </summary>
+        /// <returns></returns>
+        public static IObservable<ISortedChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
+        {
+            return source.StartWith(SortedChangeSet<TObject, TKey>.Empty);
+        }
+
+        /// <summary>
+        /// Prepends an empty changeset to the source
+        /// </summary>
+        /// <returns></returns>
+        public static IObservable<IVirtualChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<IVirtualChangeSet<TObject, TKey>> source)
+        {
+            return source.StartWith(VirtualChangeSet<TObject, TKey>.Empty);
+        }
+
+        /// <summary>
+        /// Prepends an empty changeset to the source
+        /// </summary>
+        /// <returns></returns>
+        public static IObservable<IPagedChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<IPagedChangeSet<TObject, TKey>> source)
+        {
+            return source.StartWith(PagedChangeSet<TObject, TKey>.Empty);
+        }
+
+        /// <summary>
+        /// Prepends an empty changeset to the source
+        /// </summary>
+        /// <returns></returns>
+        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> StartWithEmpty<TObject, TKey, TGroupKey>(this IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> source)
+        {
+            return source.StartWith(GroupChangeSet<TObject, TKey, TGroupKey>.Empty);
+        }
+
+        /// <summary>
+        /// Prepends an empty changeset to the source
+        /// </summary>
+        /// <returns></returns>
+        public static IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> StartWithEmpty<TObject, TKey, TGroupKey>(this IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> source)
+        {
+            return source.StartWith(ImmutableGroupChangeSet<TObject, TKey, TGroupKey>.Empty);
+        }
+
+        /// <summary>
+        /// Prepends an empty changeset to the source
+        /// </summary>
+        public static IObservable<IReadOnlyCollection<T>> StartWithEmpty<T>(this IObservable<IReadOnlyCollection<T>> source)
+        {
+            return source.StartWith(ReadOnlyCollectionLight<T>.Empty);
         }
 
         #endregion
