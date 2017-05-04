@@ -1004,7 +1004,7 @@ namespace DynamicData
         /// <returns></returns>
         public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            return source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items, query.Count));
+            return source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items.ToArray(), query.Count));
         }
 
         #endregion
