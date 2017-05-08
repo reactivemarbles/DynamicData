@@ -69,8 +69,10 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void RemovingAnItemRemovesTheDistinct()
         {
-            _source.Add(new Person("Person1", 20));
-            _source.Remove(new Person("Person1", 20));
+            var person = new Person("Person1", 20);
+
+            _source.Add(person);
+            _source.Remove(person);
             Assert.AreEqual(2, _results.Messages.Count, "Should be 1 update message");
             Assert.AreEqual(0, _results.Data.Count, "Should be 1 items in the cache");
 

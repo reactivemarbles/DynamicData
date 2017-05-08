@@ -59,7 +59,7 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
 
             var firstGroup = _results.Data.Items.First().List.Items.ToArray();
-            Assert.AreEqual(person, firstGroup[0], "Should be same person");
+            Assert.AreEqual(amended, firstGroup[0], "Should be same person");
         }
 
         [Test]

@@ -339,6 +339,25 @@ namespace DynamicData
             return !Equals(result, null) ? result : Optional.None<ItemWithIndex<T>>();
         }
 
+        /// <summary>
+        /// Finds the index of the current item using the specified equality comparer
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="equalityComparer">Use to determine object equality</param>
+        /// <returns></returns>
+        public static int IndexOf<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer)
+        {
+            int i = 0;
+            foreach (var candidate in source)
+            {
+                if (equalityComparer.Equals(item, candidate))
+                    return i;
+
+                i++;
+            }
+            return -1;
+        }
+
         #endregion
 
         #region Amendment

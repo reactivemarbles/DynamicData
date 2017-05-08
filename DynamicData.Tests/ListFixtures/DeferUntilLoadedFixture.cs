@@ -23,12 +23,14 @@ namespace DynamicData.Tests.ListFixtures
                                        result = changes;
                                    });
 
+            var person = new Person("Test", 1);
+
             Assert.IsFalse(updateReceived, "No update should be received");
-            cache.Add(new Person("Test", 1));
+            cache.Add(person);
 
             Assert.IsTrue(updateReceived, "Replace should be received");
             Assert.AreEqual(1, result.Adds);
-            Assert.AreEqual(new Person("Test", 1), result.First().Item.Current);
+            Assert.AreEqual(person, result.First().Item.Current);
             deferStream.Dispose();
         }
 

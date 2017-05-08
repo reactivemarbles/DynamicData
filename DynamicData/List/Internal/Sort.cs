@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -16,6 +17,7 @@ namespace DynamicData.List.Internal
         private readonly int _resetThreshold;
         private readonly IObservable<Unit> _resort;
         private readonly IObservable<IComparer<T>> _comparerObservable;
+        private readonly IEqualityComparer<T> _referencEqualityComparer = ReferenceEqualityComparer<T>.Instance;
 
 
         public Sort([NotNull] IObservable<IChangeSet<T>> source,
@@ -24,8 +26,7 @@ namespace DynamicData.List.Internal
             IObservable<IComparer<T>> comparerObservable,
             int resetThreshold)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _comparer = comparer;
             _sortOptions = sortOptions;
             _resetThreshold = resetThreshold;
@@ -144,7 +145,7 @@ namespace DynamicData.List.Internal
                 if (ReferenceEquals(item, existing)) continue;
 
                 //Cannot use binary search as Resort is implicit of a mutable change
-                var old = target.IndexOf(item);
+                var old = target.IndexOf(item, _referencEqualityComparer);
                 target.Move(old, index);
             }
 
@@ -153,7 +154,14 @@ namespace DynamicData.List.Internal
 
         private IChangeSet<T> ChangeComparer(ChangeAwareList<T> target, IComparer<T> comparer)
         {
+
             _comparer = comparer;
+            if (_resetThreshold > 0 && target.Count <= _resetThreshold)
+            {
+                return  Reorder(target);
+            }
+
+
             var sorted = target.OrderBy(t => t, _comparer).ToList();
             target.Clear();
             target.AddRange(sorted);
@@ -162,6 +170,7 @@ namespace DynamicData.List.Internal
 
         private IChangeSet<T> Reset(ChangeAwareList<T> original, ChangeAwareList<T> target)
         {
+
             var sorted = original.OrderBy(t => t, _comparer).ToList();
             target.Clear();
             target.AddRange(sorted);
@@ -210,9 +219,18 @@ namespace DynamicData.List.Internal
 
         private int GetCurrentPosition(ChangeAwareList<T> target, T item)
         {
-            int index = _sortOptions == SortOptions.UseBinarySearch
-                ? target.BinarySearch(item, _comparer)
-                : target.IndexOf(item);
+            int index;
+            if (_sortOptions == SortOptions.UseBinarySearch)
+            {
+                index = target.BinarySearch(item, _comparer);
+            }
+            else
+            {
+                var index1 = target.IndexOf(item);
+                index = target.IndexOf(item, _referencEqualityComparer);
+
+                Debug.Assert(index== index1);
+            }
 
             if (index < 0)
                 throw new SortException("Current item cannot be found");

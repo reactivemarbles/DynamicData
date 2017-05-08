@@ -6,7 +6,9 @@ using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+
 using NUnit.Framework;
+using FluentAssertions;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -47,7 +49,7 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100);
 
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
@@ -64,7 +66,8 @@ namespace DynamicData.Tests.ListFixtures
             var shouldbeLast = new Person("__A", 10000);
             _source.Add(shouldbeLast);
 
-            Assert.AreEqual(101, _results.Data.Count, "Should be 100 people in the cache");
+
+            _results.Data.Count.Should().Be(101);
 
             Assert.AreEqual(shouldbeLast, _results.Data.Items.Last());
         }
@@ -135,6 +138,39 @@ namespace DynamicData.Tests.ListFixtures
             var actualResult = _results.Data.Items;
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
         }
+
+        [Test]
+        public void ResortOnInlineChanges()
+        {
+            var people = _generator.Take(10).ToList();
+            _source.AddRange(people);
+
+
+            people[0].Age = -1;
+            people[1].Age = -10;
+            people[2].Age = -12;
+            people[3].Age = -5;
+            people[4].Age = -7;
+            people[5].Age = -6;
+
+
+            var comparer = SortExpressionComparer<Person>
+                .Descending(p => p.Age)
+                .ThenByAscending(p => p.Name);
+
+            _changeComparer.OnNext(comparer);
+
+            //Assert.AreEqual(10, _results.Data.Count, "Should be 99 people in the cache");
+            //Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            ////Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
+
+            var expectedResult = people.OrderBy(p => p, comparer).ToArray();
+            var actualResult = _results.Data.Items.ToArray();
+
+            //actualResult.(expectedResult);
+            CollectionAssert.AreEqual(expectedResult, actualResult);
+        }
+
 
         [Test]
         public void RemoveManyOdds()

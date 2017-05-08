@@ -14,14 +14,18 @@ namespace DynamicData.Tests.ListFixtures
         private IDisposable _disposable;
         private List<Person> _target;
 
+        private Person person1 = new Person("One", 1);
+        private Person person2 = new Person("Two", 2);
+        private Person person3 = new Person("Three", 3);
+
         [SetUp]
         public void Initialise()
         {
             _scheduler = new TestScheduler();
             _observable = _scheduler.CreateColdObservable(
-                OnNext(1, new Person("One", 1)),
-                OnNext(2, new Person("Two", 2)),
-                OnNext(3, new Person("Three", 3)));
+                OnNext(1, person1),
+                OnNext(2, person2),
+                OnNext(3, person3));
 
             _target = new List<Person>();
 
@@ -46,7 +50,7 @@ namespace DynamicData.Tests.ListFixtures
             _scheduler.AdvanceTo(3);
             Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection because of size limit");
             
-            var expected = new[] {new Person("Two", 2), new Person("Three", 3)};
+            var expected = new[] { person2, person3 };
 
             CollectionAssert.AreEquivalent(expected, _target);
         }

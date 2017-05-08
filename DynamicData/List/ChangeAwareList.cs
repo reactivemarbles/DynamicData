@@ -96,6 +96,9 @@ namespace DynamicData
             OnRemoveItems(index, args.Range);
         }
 
+        /// <summary>
+        /// Removes all elements from the list
+        /// </summary>
         public virtual void Clear()
         {
             if (_innerList.Count == 0) return;
@@ -307,6 +310,11 @@ namespace DynamicData
         public int IndexOf(T item)
         {
             return _innerList.IndexOf(item);
+        }
+
+        public int IndexOf(T item, IEqualityComparer<T> equalityComparer)
+        {
+            return _innerList.IndexOf(item, equalityComparer);
         }
 
         public void Insert(int index, T item)

@@ -7,7 +7,8 @@ namespace DynamicData.Cache.Internal
     internal class FilteredIndexCalculator<TObject, TKey>
     {
         public IList<Change<TObject, TKey>> Calculate(IKeyValueCollection<TObject, TKey> currentItems,
-                                                      IKeyValueCollection<TObject, TKey> previousItems, IChangeSet<TObject, TKey> sourceUpdates)
+                                                      IKeyValueCollection<TObject, TKey> previousItems, 
+                                                      IChangeSet<TObject, TKey> sourceUpdates)
         {
             if (currentItems.SortReason == SortReason.ComparerChanged)
             {

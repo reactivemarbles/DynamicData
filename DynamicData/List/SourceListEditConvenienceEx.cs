@@ -97,10 +97,12 @@ namespace DynamicData
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
         /// <param name="item">The item.</param>
-        public static void Remove<T>([NotNull] this ISourceList<T> source, T item)
+        public static bool Remove<T>([NotNull] this ISourceList<T> source, T item)
         {
+            bool removed = false;
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.Edit(list => list.Remove(item));
+            source.Edit(list => removed = list.Remove(item));
+            return removed;
         }
 
         /// <summary>
