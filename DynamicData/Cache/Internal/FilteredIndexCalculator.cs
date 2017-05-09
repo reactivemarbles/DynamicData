@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 using System.Linq;
 using DynamicData.Kernel;
 
@@ -10,7 +11,7 @@ namespace DynamicData.Cache.Internal
                                                       IKeyValueCollection<TObject, TKey> previousItems, 
                                                       IChangeSet<TObject, TKey> sourceUpdates)
         {
-            if (currentItems.SortReason == SortReason.ComparerChanged)
+            if (currentItems.SortReason == SortReason.ComparerChanged || currentItems.SortReason== SortReason.InitialLoad)
             {
                 //clear collection and rebuild
                 var removed = previousItems.Select((item, index) => new Change<TObject, TKey>(ChangeReason.Remove, item.Key, item.Value, index));
@@ -45,7 +46,7 @@ namespace DynamicData.Cache.Internal
                 result.Add(new Change<TObject, TKey>(ChangeReason.Add, add.Key, add.Value, insertIndex));
             }
 
-            //Adds and removes ahave been accounted for 
+            //Adds and removes have been accounted for 
             //so check whether anything in the remaining change set have been moved ot updated
             var remainingItems = sourceUpdates
                 .EmptyIfNull()
@@ -80,19 +81,16 @@ namespace DynamicData.Cache.Internal
                     var current = new KeyValuePair<TKey, TObject>(change.Key, change.Current);
 
                     var previousindex = previousList.IndexOf(current);
-                    int desiredIndex = previousList.BinarySearch(current, currentItems.Comparer);
-                    int insertIndex = ~desiredIndex;
+                    int desiredIndex = currentItems.IndexOf(current);
 
-                    //this should never be the case, but check anyway
-                    if (previousindex == insertIndex) continue;
-
-
-                    if (insertIndex < 0)
+                    if (previousindex == desiredIndex) continue;
+                    
+                    if (desiredIndex < 0)
                         throw new SortException("Cannot determine current index");
 
                     previousList.RemoveAt(previousindex);
-                    previousList.Insert(insertIndex, current);
-                    result.Add(new Change<TObject, TKey>(current.Key, current.Value, insertIndex, previousindex));
+                    previousList.Insert(desiredIndex, current);
+                    result.Add(new Change<TObject, TKey>(current.Key, current.Value, desiredIndex, previousindex));
                 }
                 else
                 {

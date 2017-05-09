@@ -343,7 +343,21 @@ namespace DynamicData
         /// Finds the index of the current item using the specified equality comparer
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <param name="item"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static int IndexOf<T>(this IEnumerable<T> source, T item)
+        {
+            return IndexOf<T>(source, item, EqualityComparer<T>.Default);
+        }
+
+        /// <summary>
+        /// Finds the index of the current item using the specified equality comparer
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="item"></param>
         /// <param name="equalityComparer">Use to determine object equality</param>
+        /// <param name="source"></param>
         /// <returns></returns>
         public static int IndexOf<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer)
         {
@@ -357,6 +371,7 @@ namespace DynamicData
             }
             return -1;
         }
+
 
         #endregion
 

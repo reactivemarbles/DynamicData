@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -17,18 +19,19 @@ namespace DynamicData.Tests.CacheFixtures
         private PageController _pageController;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private IComparer<Person> _comparer;
+        private ISubject<IComparer<Person>> _sort;
 
         [SetUp]
         public void Initialise()
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
-
+            _sort = new BehaviorSubject<IComparer<Person>>(_comparer);
             _source = new SourceCache<Person, string>(p => p.Key);
             _pageController = new PageController(new PageRequest(1, 25));
             _aggregators = new PagedChangeSetAggregator<Person, string>
                 (
                 _source.Connect()
-                       .Sort(_comparer)
+                       .Sort(_sort, resetThreshold: 200)
                        .Page(_pageController)
                 );
         }
@@ -38,6 +41,26 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.Dispose();
             _aggregators.Dispose();
+        }
+
+        [Test]
+        public void ReorderBelowThreshold()
+        {
+            var people = _generator.Take(50).ToArray();
+            _source.AddOrUpdate(people);
+
+            var changed = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
+            _sort.OnNext(changed);
+
+
+            //Assert.AreEqual(25, _aggregators.Data.Count, "Should be 25 people in the cache");
+            //Assert.AreEqual(25, _aggregators.Messages[0].Response.PageSize, "Page size should be 25");
+            //Assert.AreEqual(1, _aggregators.Messages[0].Response.Page, "Should be page 1");
+            //Assert.AreEqual(4, _aggregators.Messages[0].Response.Pages, "Should be page 4 pages");
+
+            var expectedResult = people.OrderBy(p => p, changed).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
+            var actualResult = _aggregators.Messages.Last().SortedItems.ToList();
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
