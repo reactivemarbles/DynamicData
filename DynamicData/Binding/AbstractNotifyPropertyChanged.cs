@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using DynamicData.Annotations;
-using DynamicData.Kernel;
 
 namespace DynamicData.Binding
 {
@@ -14,8 +12,6 @@ namespace DynamicData.Binding
     /// </summary>
     public abstract class AbstractNotifyPropertyChanged : INotifyPropertyChanged
     {
-        private HashSet<string> _suspendedNotifications;
-
         /// <summary>
         /// Occurs when a property value has changed.
         /// </summary>
@@ -28,14 +24,7 @@ namespace DynamicData.Binding
         [NotifyPropertyChangedInvocator]
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            if (_suspendedNotifications != null)
-            {
-                _suspendedNotifications.Add(propertyName);
-            }
-            else
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
+           PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         /// <summary>
@@ -71,23 +60,13 @@ namespace DynamicData.Binding
         /// Suspends notifications. When disposed, a reset notification is fired
         /// </summary>
         /// <returns></returns>
+        /// 
+        [Obsolete("This never worked properly in the first place")]
         public IDisposable SuspendNotifications(bool invokePropertyChangeEventWhenDisposed = true)
         {
-            Interlocked.Exchange(ref _suspendedNotifications, new HashSet<string>());
 
-            return Disposable.Create(() =>
-            {
-                var notifications = _suspendedNotifications;
-                Interlocked.Exchange(ref _suspendedNotifications, null);
-
-                if (invokePropertyChangeEventWhenDisposed)
-                {
-                    notifications.ForEach(property =>
-                    {
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
-                    });
-                }
-            });
+            //Removed code because it adds weight to the object
+            return Disposable.Empty;
         }
     }
 }

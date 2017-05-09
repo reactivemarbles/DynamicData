@@ -23,6 +23,7 @@ namespace DynamicData
     /// <summary>
     /// Extensions for dynamic data
     /// </summary>
+    [PublicAPI]
     public static class ObservableCacheEx
     {
         #region General
@@ -1004,7 +1005,7 @@ namespace DynamicData
         /// <returns></returns>
         public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            return source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items.ToArray(), query.Count));
+            return source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items));
         }
 
         #endregion
@@ -2953,7 +2954,18 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (updater == null) throw new ArgumentNullException(nameof(updater));
-            return source.Do(changes => updater.Adapt(changes, destination));
+
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                var locker = new object();
+                return source
+                    .Synchronize(locker)
+                    .Select(changes =>
+                    {
+                        updater.Adapt(changes, destination);
+                        return changes;
+                    }).SubscribeSafe(observer);
+            });
         }
 
         /// <summary>
@@ -2993,7 +3005,17 @@ namespace DynamicData
             if (destination == null) throw new ArgumentNullException(nameof(destination));
             if (updater == null) throw new ArgumentNullException(nameof(updater));
 
-            return source.Do(changes => updater.Adapt(changes, destination));
+            return Observable.Create<ISortedChangeSet<TObject, TKey>>(observer =>
+            {
+                var locker = new object();
+                return source
+                    .Synchronize(locker)
+                    .Select(changes =>
+                    {
+                        updater.Adapt(changes, destination);
+                        return changes;
+                    }).SubscribeSafe(observer);
+            });
         }
 
         /// <summary>

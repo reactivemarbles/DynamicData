@@ -5,11 +5,11 @@ namespace DynamicData.Cache.Internal
 {
     internal class AnonymousQuery<TObject, TKey> : IQuery<TObject, TKey>
     {
-        private readonly ICache<TObject, TKey> _cache;
+        private readonly Cache<TObject, TKey> _cache;
 
         public AnonymousQuery(Cache<TObject, TKey> cache)
         {
-            _cache = cache;
+            _cache = cache.Clone();
         }
 
         public int Count => _cache.Count;

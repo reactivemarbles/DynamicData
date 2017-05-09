@@ -6,19 +6,19 @@ namespace DynamicData.Kernel
 {
     internal sealed class ReadOnlyCollectionLight<T> : IReadOnlyCollection<T>
     {
-        private readonly IEnumerable<T> _items;
+        private readonly IList<T> _items;
 
         public static readonly IReadOnlyCollection<T> Empty = new ReadOnlyCollectionLight<T>();
 
-        public ReadOnlyCollectionLight(IEnumerable<T> items, int count)
+        public ReadOnlyCollectionLight(IEnumerable<T> items)
         {
-            _items = items;
-            Count = count;
+            _items = items.ToList();
+            Count = _items.Count;
         }
 
         private ReadOnlyCollectionLight()
         {
-            _items = Enumerable.Empty<T>();
+            _items = new List<T>();
         }
 
         public IEnumerator<T> GetEnumerator()

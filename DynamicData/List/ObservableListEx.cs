@@ -360,7 +360,19 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (adaptor == null) throw new ArgumentNullException(nameof(adaptor));
-            return source.Do(adaptor.Adapt);
+
+
+            return Observable.Create<IChangeSet<T>>(observer =>
+            {
+                var locker = new object();
+                return source
+                    .Synchronize(locker)
+                    .Select(changes =>
+                    {
+                        adaptor.Adapt(changes);
+                        return changes;
+                    }).SubscribeSafe(observer);
+            });
         }
 
         #endregion

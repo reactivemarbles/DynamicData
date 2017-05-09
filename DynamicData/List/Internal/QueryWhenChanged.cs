@@ -22,7 +22,7 @@ namespace DynamicData.List.Internal
                     list.Clone(changes);
                     return list;
                 }
-            ).Select(list => new ReadOnlyCollectionLight<T>(list.ToArray(), list.Count));
+            ).Select(list => new ReadOnlyCollectionLight<T>(list));
         }
     }
 }

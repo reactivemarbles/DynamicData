@@ -27,6 +27,16 @@ namespace DynamicData.Cache.Internal
             }
         }
 
+        public Cache(IDictionary<TKey, TObject> dictionary)
+        {
+            _data = new Dictionary<TKey, TObject>(dictionary);
+        }
+
+        public Cache<TObject, TKey> Clone()
+        {
+            return _data== null ? new Cache<TObject, TKey>() : new Cache<TObject, TKey>(_data);
+        }
+
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));

@@ -96,6 +96,8 @@ namespace DynamicData.Binding
                 (
                     observer =>
                     {
+                        var locker = new object();
+
                         ChangeSet<T> InitialChangeSet()
                         {
                             var initial = new Change<T>(ListChangeReason.AddRange, source.ToList());

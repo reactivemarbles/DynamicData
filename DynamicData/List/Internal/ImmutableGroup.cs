@@ -13,9 +13,7 @@ namespace DynamicData.List.Internal
         internal ImmutableGroup(TGroupKey key, IList<TObject> items)
         {
             Key = key;
-
-            var temp = new List<TObject>(items);
-            _items = new ReadOnlyCollectionLight<TObject>(temp, temp.Count);
+            _items = new ReadOnlyCollectionLight<TObject>(items);
         }
 
         public int Count => _items.Count;
