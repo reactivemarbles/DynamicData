@@ -25,7 +25,7 @@ The magic is that as  ```myTradeCache``` is maintained the target observable col
 
 This is a simple example to show how using Dynamic Data's collections and operators make in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
 
-###Some links
+### Some links
 
 - [![Join the chat at https://gitter.im/RolandPheasant/DynamicData](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RolandPheasant/DynamicData?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 - [![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)](http://www.nuget.org/packages/DynamicData/)	
