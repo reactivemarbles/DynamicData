@@ -44,5 +44,16 @@ namespace DynamicData.Aggregation
                                     (current, increment) => current + increment,
                                     (current, increment) => current - increment);
         }
+
+        /// <summary>
+        /// Counts the total number of items in the underlying data source
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        public static IObservable<int> Count<TObject>(this IObservable<IDistinctChangeSet<TObject>> source)
+        {
+            return source.ForAggregation().Count();
+        }
     }
 }
