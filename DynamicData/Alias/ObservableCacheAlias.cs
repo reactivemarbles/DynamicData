@@ -230,29 +230,9 @@ namespace DynamicData.Alias
 
         #region Transform many -> SelectMany
 
-        /// <summary>
-        /// Equivalent to a select many transform. To work, the key must individually identify each child. 
-        /// 
-        /// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
-        /// </summary>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="manyselector">The manyselector.</param>s
-        /// <returns></returns>
-        public static IObservable<IChangeSet<TDestination, TDestinationKey>> SelectMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
-                                                                 Func<TSource, IEnumerable<TDestination>> manyselector)
-            where TDestination : IKey<TDestinationKey>
-        {
-            return source.FlattenWithSingleParent(manyselector, t => t.Key);
-        }
 
         /// <summary>
         /// Equivalent to a select many transform. To work, the key must individually identify each child. 
-        /// 
-        /// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
         /// </summary>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
@@ -261,14 +241,12 @@ namespace DynamicData.Alias
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector which must be unique across all</param>
-        /// <param name="childHasOneParent">if set to <c>true</c> the child only ever belongs to one parent</param>
         /// <returns></returns>
         public static IObservable<IChangeSet<TDestination, TDestinationKey>> SelectMany<TDestination, TDestinationKey, TSource, TSourceKey>(
             this IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector,
-            bool childHasOneParent = true)
+            Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector)
         {
-            return source.FlattenWithSingleParent(manyselector, keySelector);
+            return source.TransformMany(manyselector, keySelector);
         }
 
 

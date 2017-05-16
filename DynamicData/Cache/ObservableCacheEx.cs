@@ -472,11 +472,63 @@ namespace DynamicData
                 return new ChangeSet<TObject, TKey>(updates.Where(u => !hashed.Contains(u.Reason)));
             }).NotEmpty();
         }
-        
+
+        #endregion
+
+
+        #region Auto Refresh
+
+        /// <summary>
+        /// Automatically refresh downstream operators when properties change.
+        /// </summary>
+        /// <param name="source">The source observable</param>
+        /// <param name="properties">Properties to observe. Specify one or more properties to monitor, otherwise leave blank </param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
+        /// <param name="scheduler">The scheduler</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            IEnumerable<string> properties = null,
+            TimeSpan? changeSetBuffer = null,
+            TimeSpan? propertyChangeThrottle = null,
+            IScheduler scheduler = null)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return source.AutoRefresh((t, v) =>
+            {
+                if (propertyChangeThrottle == null)
+                    return t.WhenAnyPropertyChanged(properties?.ToArray() ?? new string[0]);
+
+                return t.WhenAnyPropertyChanged(properties?.ToArray() ?? new string[0])
+                        .Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
+            }, changeSetBuffer, scheduler);
+        }
+
+        public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, IObservable<TAny>> reevaluator,
+            TimeSpan? changeSetBuffer = null,
+            IScheduler scheduler = null)
+        {
+            return source.AutoRefresh((t, v) => reevaluator(t), changeSetBuffer, scheduler);
+        }
+
+        public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, TKey, IObservable<TAny>> reevaluator,
+            TimeSpan? changeSetBuffer = null,
+            IScheduler scheduler = null)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (reevaluator == null) throw new ArgumentNullException(nameof(reevaluator));
+            return new AutoRefresh<TObject, TKey, TAny>(source, reevaluator, changeSetBuffer,  scheduler).Run();
+        }
+
+
         #endregion
 
         #region Start with
-        
+
         /// <summary>
         /// Prepends an empty changeset to the source
         /// </summary>
@@ -1410,7 +1462,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Invokes Evaluate method for an object which implements IEvaluateAware
+        /// Invokes Refresh method for an object which implements IEvaluateAware
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1419,7 +1471,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> InvokeEvaluate<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TObject : IEvaluateAware
         {
-            return source.Do(changes => changes.Where(u => u.Reason == ChangeReason.Evaluate).ForEach(u => u.Current.Evaluate()));
+            return source.Do(changes => changes.Where(u => u.Reason == ChangeReason.Refresh).ForEach(u => u.Current.Evaluate()));
         }
 
         #endregion
@@ -2175,8 +2227,8 @@ namespace DynamicData
         {
             return source?.Select(_ =>
             {
-                Func<TSource, TKey, bool> transformer = (item, key) => true;
-                return transformer;
+                bool Transformer(TSource item, TKey key) => true;
+                return (Func<TSource, TKey, bool>) Transformer;
             });
         }
 
@@ -2184,8 +2236,8 @@ namespace DynamicData
         {
             return source?.Select(condition =>
             {
-                Func<TSource, TKey, bool> transformer = (item, key) => condition(item);
-                return transformer;
+                bool Transformer(TSource item, TKey key) => condition(item);
+                return (Func<TSource, TKey, bool>) Transformer;
             });
         }
 
@@ -2279,29 +2331,9 @@ namespace DynamicData
 
         #region Transform many
 
-        /// <summary>
-        /// Equivalent to a select many transform. To work, the key must individually identify each child. 
-        /// 
-        /// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
-        /// </summary>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="manyselector">The manyselector.</param>s
-        /// <returns></returns>
-        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
-                                                                 Func<TSource, IEnumerable<TDestination>> manyselector)
-            where TDestination : IKey<TDestinationKey>
-        {
-            return source.FlattenWithSingleParent(manyselector, t => t.Key);
-        }
 
         /// <summary>
         /// Equivalent to a select many transform. To work, the key must individually identify each child. 
-        /// 
-        /// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
         /// </summary>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
@@ -2310,32 +2342,15 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector which must be unique across all</param>
-        /// <param name="childHasOneParent">if set to <c>true</c> the child only ever belongs to one parent</param>
         /// <returns></returns>
         public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
             this IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector,
-            bool childHasOneParent = true)
-        {
-            return source.FlattenWithSingleParent(manyselector, keySelector);
-        }
-
-        /// <summary>
-        /// Flattens the with single parent.
-        /// </summary>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="manyselector">The manyselector.</param>
-        /// <param name="keySelector">The key selector.</param>
-        /// <returns></returns>
-        internal static IObservable<IChangeSet<TDestination, TDestinationKey>> FlattenWithSingleParent<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
-                                                                 Func<TSource, IEnumerable<TDestination>> manyselector, Func<TDestination, TDestinationKey> keySelector)
+            Func<TSource, IEnumerable<TDestination>> manyselector, 
+            Func<TDestination, TDestinationKey> keySelector)
         {
             return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
         }
+
 
         #endregion
 

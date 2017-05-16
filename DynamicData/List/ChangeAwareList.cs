@@ -271,12 +271,22 @@ namespace DynamicData
             OnSetItem(index, item, previous);
         }
 
+        /// <summary>
+        /// Moves the item to the specified destination index
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="destination"></param>
         public virtual void Move(T item, int destination)
         {
             var index = _innerList.IndexOf(item);
             Move(index, destination);
         }
 
+        /// <summary>
+        /// Moves an item from the original to the destination index
+        /// </summary>
+        /// <param name="original">The original.</param>
+        /// <param name="destination">The destination.</param>
         public virtual void Move(int original, int destination)
         {
             var item = _innerList[original];
@@ -340,7 +350,11 @@ namespace DynamicData
             return true;
         }
 
-        public T this[int index] { get { return _innerList[index]; } set { SetItem(index, value); } }
+        public T this[int index]
+        {
+            get => _innerList[index];
+            set => SetItem(index, value);
+        }
 
         public IEnumerator<T> GetEnumerator()
         {
@@ -352,7 +366,7 @@ namespace DynamicData
             return GetEnumerator();
         }
 
-        public bool IsReadOnly => false;
+        public bool IsReadOnly { get; } = false;
 
         #endregion
     }

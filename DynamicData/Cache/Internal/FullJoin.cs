@@ -65,7 +65,7 @@ namespace DynamicData.Cache.Internal
                                             innerCache.AddOrUpdate(_resultSelector(change.Key, Optional<TLeft>.None, right), change.Key);
                                         }
                                         break;
-                                    case ChangeReason.Evaluate:
+                                    case ChangeReason.Refresh:
                                         //propagate upstream
                                         innerCache.Evaluate(change.Key);
                                         break;
@@ -106,7 +106,7 @@ namespace DynamicData.Cache.Internal
                                             }
                                         }
                                         break;
-                                    case ChangeReason.Evaluate:
+                                    case ChangeReason.Refresh:
                                         //propagate upstream
                                         innerCache.Evaluate(change.Key);
                                         break;

@@ -54,7 +54,7 @@ namespace DynamicData.Cache.Internal
                             _itemCache[key] = value;
                             break;
                         }
-                    case ChangeReason.Evaluate:
+                    case ChangeReason.Refresh:
                     case ChangeReason.Update:
                         {
                             var value = _valueSelector(change.Current);

@@ -100,7 +100,7 @@ namespace DynamicData.Cache.Internal
                     case ChangeReason.Remove:
                         _cache.Remove(u.Key);
                         break;
-                    case ChangeReason.Evaluate:
+                    case ChangeReason.Refresh:
                         {
                             var exisiting = _cache.Lookup(key);
                             if (matches)

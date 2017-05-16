@@ -17,7 +17,7 @@ namespace DynamicData.Tests.Kernal
 
         private class Entity
         {
-            public int Key { get { return 10; } }
+            public int Key => 10;
         }
 
         private class TransformEntityWithError
@@ -30,12 +30,12 @@ namespace DynamicData.Tests.Kernal
                 throw new Exception("Error transforming entity");
             }
 
-            public int Key { get { return 10; } }
+            public int Key { get; } = 10;
         }
 
         private class ErrorInKey
         {
-            public int Key { get { throw new Exception("Calling Key"); } }
+            public static int Key => throw new Exception("Calling Key");
         }
 
         [Test]
@@ -86,7 +86,7 @@ namespace DynamicData.Tests.Kernal
             bool completed = false;
             bool error = false;
 
-            var cache = new SourceCache<ErrorInKey, int>(p => p.Key);
+            var cache = new SourceCache<ErrorInKey, int>(p => ErrorInKey.Key);
 
             var subscriber = cache.Connect().Finally(() => completed = true)
                                   .Subscribe(updates => { Console.WriteLine(); });

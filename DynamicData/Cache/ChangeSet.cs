@@ -96,7 +96,7 @@ namespace DynamicData
                 case ChangeReason.Remove:
                     _removes++;
                     break;
-                case ChangeReason.Evaluate:
+                case ChangeReason.Refresh:
                     _evaluates++;
                     break;
                 case ChangeReason.Moved:

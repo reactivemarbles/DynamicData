@@ -31,6 +31,6 @@
     <file src="bin\Release\DynamicData*.*" target="lib\net45" />
     <file src="bin\Release\DynamicData*.*" target="lib\netstandard1.1" />
     
-    <file src="..\DynamicData\**\*.cs" target="src" />
+    <file src="..\**\*.cs" target="src" />
   </files>
 </package>

@@ -100,7 +100,7 @@ namespace DynamicData.Cache.Internal
         {
             var result = new List<Change<TObject, TKey>>();
 
-            //  var notEvaluates = changes.Where(c => c.Reason != ChangeReason.Evaluate).ToList();
+            //  var notEvaluates = changes.Where(c => c.Reason != ChangeReason.Refresh).ToList();
 
             foreach (var u in changes)
             {
@@ -140,7 +140,7 @@ namespace DynamicData.Cache.Internal
                         }
                         break;
 
-                    case ChangeReason.Evaluate:
+                    case ChangeReason.Refresh:
                         {
                             result.Add(u);
                         }
@@ -151,7 +151,7 @@ namespace DynamicData.Cache.Internal
             }
 
             //for evaluates, check whether the change forces a new position
-            var evaluates = changes.Where(c => c.Reason == ChangeReason.Evaluate)
+            var evaluates = changes.Where(c => c.Reason == ChangeReason.Refresh)
                                    .OrderByDescending(x => new KeyValuePair<TKey, TObject>(x.Key, x.Current), _comparer)
                                    .ToList();
 

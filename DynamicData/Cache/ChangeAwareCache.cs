@@ -114,7 +114,7 @@ namespace DynamicData
         public void Evaluate()
         {
             _changes.Capacity = _data.Count + _changes.Count;
-            _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Evaluate, t.Key, t.Value)));
+            _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
         }
 
 
@@ -127,7 +127,7 @@ namespace DynamicData
             TObject existingItem;
             if (_data.TryGetValue(key, out existingItem))
             {
-                _changes.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, existingItem));
+                _changes.Add(new Change<TObject, TKey>(ChangeReason.Refresh, key, existingItem));
             }
         }
 
@@ -167,7 +167,7 @@ namespace DynamicData
                     case ChangeReason.Remove:
                         Remove(change.Key);
                         break;
-                    case ChangeReason.Evaluate:
+                    case ChangeReason.Refresh:
                         Evaluate(change.Key);
                         break;
                 }

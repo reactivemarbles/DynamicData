@@ -126,7 +126,7 @@ namespace DynamicData.Cache.Internal
                         }
                         break;
 
-                    case ChangeReason.Evaluate:
+                    case ChangeReason.Refresh:
                         {
                             _combinedCache.Evaluate(key);
                         }

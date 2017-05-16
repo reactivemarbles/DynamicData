@@ -72,7 +72,7 @@ namespace DynamicData.List.Internal
                             change.Range.Select(item => item.Value).ForEach((Action<TValue>) AddAction);
                             break;
                         }
-                    //	case ListChangeReason.Evaluate:
+                    //	case ListChangeReason.Refresh:
                     case ListChangeReason.Replace:
                         {
                             var value = change.Item.Current.Value;
