@@ -63,7 +63,7 @@ namespace DynamicData.Controllers
         }
 
         /// <summary>
-        ///     Evaluates the filter for items specified by the item selector.
+        ///     Refreshes the filter for items specified by the item selector.
         /// </summary>
         /// <param name="itemSelector">The item selector.</param>
         public void Reevaluate(Func<T, bool> itemSelector)

@@ -108,7 +108,7 @@ namespace DynamicData.Cache.Internal
                         break;
 
                     case ChangeReason.Refresh:
-                        cache.Evaluate(key);
+                        cache.Refresh(key);
                         break;
                 }
             }

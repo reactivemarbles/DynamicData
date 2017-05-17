@@ -474,9 +474,30 @@ namespace DynamicData
         }
 
         #endregion
-
-
+        
         #region Auto Refresh
+
+        /// <summary>
+        /// Automatically refresh downstream operators when properties change.
+        /// </summary>
+        /// <param name="source">The source observable</param>
+        /// <param name="properties">Specify a property to observe changes. When it changes a Refresh is invoked</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
+        /// <param name="scheduler">The scheduler</param>
+        /// <returns>An observable change set with additional refresh changes</returns>
+        public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            string properties,
+            TimeSpan? changeSetBuffer = null,
+            TimeSpan? propertyChangeThrottle = null,
+            IScheduler scheduler = null)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (properties == null) throw new ArgumentNullException(nameof(properties));
+
+            return source.AutoRefresh(new[] {properties}, changeSetBuffer, propertyChangeThrottle, scheduler);
+        }
 
         /// <summary>
         /// Automatically refresh downstream operators when properties change.
@@ -486,7 +507,7 @@ namespace DynamicData
         /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
         /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
         /// <param name="scheduler">The scheduler</param>
-        /// <returns></returns>
+        /// <returns>An observable change set with additional refresh changes</returns>
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             IEnumerable<string> properties = null,
             TimeSpan? changeSetBuffer = null,
@@ -506,6 +527,14 @@ namespace DynamicData
             }, changeSetBuffer, scheduler);
         }
 
+        /// <summary>
+        /// Automatically refresh downstream operators when properties change.
+        /// </summary>
+        /// <param name="source">The source observable change set</param>
+        /// <param name="reevaluator">An observable which acts on items within the collection and produces a value when the item should be refreshed</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements require a refresh</param>
+        /// <param name="scheduler">The scheduler</param>
+        /// <returns>An observable change set with additional refresh changes</returns>
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, IObservable<TAny>> reevaluator,
             TimeSpan? changeSetBuffer = null,
@@ -514,6 +543,14 @@ namespace DynamicData
             return source.AutoRefresh((t, v) => reevaluator(t), changeSetBuffer, scheduler);
         }
 
+        /// <summary>
+        /// Automatically refresh downstream operators when properties change.
+        /// </summary>
+        /// <param name="source">The source observable change set</param>
+        /// <param name="reevaluator">An observable which acts on items within the collection and produces a value when the item should be refreshed</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements require a refresh</param>
+        /// <param name="scheduler">The scheduler</param>
+        /// <returns>An observable change set with additional refresh changes</returns>
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TKey, IObservable<TAny>> reevaluator,
             TimeSpan? changeSetBuffer = null,
@@ -4069,10 +4106,10 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="item">The item.</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
+        public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.Edit(updater => updater.Evaluate(item));
+            source.Edit(updater => updater.Refresh(item));
         }
 
         /// <summary>
@@ -4083,12 +4120,11 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="items">The items.</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
+        public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.Edit(updater => updater.Evaluate(items));
+            source.Edit(updater => updater.Refresh(items));
         }
-
 
         /// <summary>
         /// Signal observers to re-evaluate the all items.
@@ -4097,10 +4133,55 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(updater => updater.Refresh());
+        }
+
+
+        /// <summary>
+        /// Signal observers to re-evaluate the specified item.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="item">The item.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete(Constants.EvaluateIsDead)]
+        public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(updater => updater.Refresh(item));
+        }
+
+        /// <summary>
+        /// Signal observers to re-evaluate the specified items.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="items">The items.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete(Constants.EvaluateIsDead)]
+        public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(updater => updater.Refresh(items));
+        }
+
+        /// <summary>
+        /// Signal observers to re-evaluate the all items.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete(Constants.EvaluateIsDead)]
         public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            source.Edit(updater => updater.Evaluate());
+            source.Edit(updater => updater.Refresh());
         }
 
         /// <summary>

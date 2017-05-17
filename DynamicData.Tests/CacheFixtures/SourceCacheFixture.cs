@@ -35,9 +35,9 @@ namespace DynamicData.Tests.CacheFixtures
                 updater.AddOrUpdate(new Person("Adult1", 41));
                 updater.AddOrUpdate(new Person("Adult1", 42));
                 updater.AddOrUpdate(new Person("Adult1", 43));
-                updater.Evaluate(torequery);
+                updater.Refresh(torequery);
                 updater.Remove(torequery);
-                updater.Evaluate(torequery);
+                updater.Refresh(torequery);
             });
 
             Assert.AreEqual(6, _results.Summary.Overall.Count, "Should be  6 up`dates");
@@ -45,7 +45,7 @@ namespace DynamicData.Tests.CacheFixtures
             Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 update");
             Assert.AreEqual(3, _results.Messages[0].Updates, "Should be 3 updates");
             Assert.AreEqual(1, _results.Messages[0].Removes, "Should be  1 remove");
-            Assert.AreEqual(1, _results.Messages[0].Evaluates, "Should be 1 evaluate");
+            Assert.AreEqual(1, _results.Messages[0].Refreshes, "Should be 1 evaluate");
 
             Assert.AreEqual(0, _results.Data.Count, "Should be 1 item in` the cache");
         }

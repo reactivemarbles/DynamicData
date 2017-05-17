@@ -175,7 +175,7 @@ namespace DynamicData.Cache.Internal
                                             if (p.GroupKey.Equals(current.GroupKey))
                                             {
                                                 //propagate evaluates up the chain
-                                                if (!isRegrouping) groupUpdater.Evaluate(current.Key);
+                                                if (!isRegrouping) groupUpdater.Refresh(current.Key);
                                                 return;
                                             }
 

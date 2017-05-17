@@ -3,6 +3,7 @@
 
 using System;
 
+// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
@@ -35,7 +36,7 @@ namespace DynamicData
         /// <summary>
         ///   Command to operators to re-evaluate.
         /// </summary>
-        [Obsolete("Use ChangeReason.Refresh: The name has changed owning to better semantics")]
+        [Obsolete(Constants.EvaluateIsDead)]
         Evaluate = 3,
 
         /// <summary>

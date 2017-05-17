@@ -140,8 +140,8 @@ namespace DynamicData.PLinq
                         _innerCache.Remove(key);
                         break;
 
-                    case ChangeReason.Evaluate:
-                        _innerCache.Evaluate(key);
+                    case ChangeReason.Refresh:
+                        _innerCache.Refresh(key);
                         break;
                 }
             }

@@ -68,7 +68,7 @@ namespace DynamicData.Cache.Internal
                                         break;
                                     case ChangeReason.Refresh:
                                         //propagate upstream
-                                        innerCache.Evaluate(change.Key);
+                                        innerCache.Refresh(change.Key);
                                         break;
                                 }
                             });
@@ -107,7 +107,7 @@ namespace DynamicData.Cache.Internal
                                         break;
                                     case ChangeReason.Refresh:
                                         //propagate upstream
-                                        innerCache.Evaluate(change.Key);
+                                        innerCache.Refresh(change.Key);
                                         break;
                                 }
                             });
