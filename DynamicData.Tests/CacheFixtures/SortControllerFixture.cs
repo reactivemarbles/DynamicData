@@ -82,7 +82,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             // _sortController.Resort();
 
-            _cache.Evaluate(tochange);
+            _cache.Refresh(tochange);
 
             var expected = people.OrderBy(t => t, _comparer).ToList();
             var actual = _results.Messages.Last().SortedItems.Select(kv => kv.Value).ToList();

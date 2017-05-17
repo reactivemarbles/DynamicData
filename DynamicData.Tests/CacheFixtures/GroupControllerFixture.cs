@@ -91,7 +91,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             // _controller.RefreshGroup();
 
-            _source.Evaluate(new[] { p1, p2, p3, p4 });
+            _source.Refresh(new[] { p1, p2, p3, p4 });
 
             Assert.IsTrue(IsContainedIn("P1", AgeBracket.Adult));
             Assert.IsTrue(IsContainedIn("P2", AgeBracket.Pensioner));
