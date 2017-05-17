@@ -112,16 +112,59 @@ namespace DynamicData
 
         #region Subclass overrides
 
+
+        /// <summary>
+        /// Override for custom Set
+        /// </summary>
         protected virtual void OnSetItem(int index, T newItem, T oldItem)
         {
         }
 
+        /// <summary>
+        /// Override for custom Insert
+        /// </summary>
         protected virtual void OnInsertItems(int startIndex, IEnumerable<T> items)
         {
         }
 
+        /// <summary>
+        /// Override for custom remove
+        /// </summary>
         protected virtual void OnRemoveItems(int startIndex, IEnumerable<T> items)
         {
+        }
+
+        #endregion
+
+        #region Refresh
+
+        /// <summary>
+        /// Add a Refresh change of the item at the specified index to the list of changes.
+        /// 
+        /// This is to notify downstream operators to refresh
+        /// </summary>
+        /// <returns>Ifthe item is in the list, returns true</returns>
+        public void RefreshAt(int index)
+        {
+            if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
+            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, _innerList[index]));
+        }
+
+        /// <summary>
+        /// Add a Refresh change for specified index to the list of changes.
+        ///  This is to notify downstream operators to refresh.
+        /// </summary>
+        /// <returns>Ifthe item is in the list, returns true</returns>
+        public bool Refresh(T item)
+        {
+            var index = IndexOf(item);
+            if (index < 0) return false;
+
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, item));
+
+            return true;
         }
 
         #endregion
@@ -133,8 +176,16 @@ namespace DynamicData
         /// </summary>
         private Optional<Change<T>> Last => _changes.Count == 0 ? Optional.None<Change<T>>() : _changes[_changes.Count - 1];
 
+        /// <summary>
+        /// Inserts an item at the specified index
+        /// </summary>
+        /// <param name="index">the index where the item should be inserted</param>
+        /// <param name="item"></param>
         protected virtual void InsertItem(int index, T item)
         {
+            if (index < 0 ) throw new ArgumentException($"{nameof(index)} cannot be negative");
+            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+
             //attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
             var last = Last;
 
@@ -198,6 +249,7 @@ namespace DynamicData
             _innerList.Insert(index, item);
         }
 
+
         protected void RemoveItem(int index)
         {
             var item = _innerList[index];
@@ -206,6 +258,9 @@ namespace DynamicData
 
         protected virtual void RemoveItem(int index, T item)
         {
+            if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
+            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+
             //attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
             var last = Last;
             if (last.HasValue && last.Value.Reason == ListChangeReason.Remove)
@@ -263,6 +318,9 @@ namespace DynamicData
 
         protected virtual void SetItem(int index, T item)
         {
+            if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
+            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+
             var previous = _innerList[index];
             _changes.Add(new Change<T>(ListChangeReason.Replace, item, previous, index, index));
             _innerList[index] = item;
@@ -276,6 +334,9 @@ namespace DynamicData
         /// <param name="destination"></param>
         public virtual void Move(T item, int destination)
         {
+            if (destination < 0) throw new ArgumentException($"{nameof(destination)} cannot be negative");
+            if (destination > _innerList.Count) throw new ArgumentException($"{nameof(destination)} cannot be greater than the size of the collection");
+
             var index = _innerList.IndexOf(item);
             Move(index, destination);
         }
@@ -287,6 +348,12 @@ namespace DynamicData
         /// <param name="destination">The destination.</param>
         public virtual void Move(int original, int destination)
         {
+            if (original < 0) throw new ArgumentException($"{nameof(original)} cannot be negative");
+            if (original > _innerList.Count) throw new ArgumentException($"{nameof(original)} cannot be greater than the size of the collection");
+
+            if (destination < 0) throw new ArgumentException($"{nameof(destination)} cannot be negative");
+            if (destination > _innerList.Count) throw new ArgumentException($"{nameof(destination)} cannot be greater than the size of the collection");
+
             var item = _innerList[original];
             _innerList.RemoveAt(original);
             _innerList.Insert(destination, item);
@@ -297,7 +364,11 @@ namespace DynamicData
 
         #region ISupportsCapcity
 
-        public int Capacity { get { return _innerList.Capacity; } set { _innerList.Capacity = value; } }
+        public int Capacity
+        {
+            get => _innerList.Capacity;
+            set => _innerList.Capacity = value;
+        }
 
         public int Count => _innerList.Count;
 
@@ -327,11 +398,17 @@ namespace DynamicData
 
         public void Insert(int index, T item)
         {
+            if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
+            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+
             InsertItem(index, item);
         }
 
         public void RemoveAt(int index)
         {
+            if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
+            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+
             RemoveItem(index);
         }
 
@@ -354,7 +431,9 @@ namespace DynamicData
             set => SetItem(index, value);
         }
 
+
         public IEnumerator<T> GetEnumerator()
+
         {
             return _innerList.GetEnumerator();
         }

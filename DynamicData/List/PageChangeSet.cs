@@ -32,13 +32,16 @@ namespace DynamicData
 
         int IChangeSet.Capacity
         {
-            get { return _virtualChangeSet.Capacity; }
-            set { _virtualChangeSet.Capacity = value; }
+            get => _virtualChangeSet.Capacity;
+            set => _virtualChangeSet.Capacity = value;
         }
 
         int IChangeSet<T>.Replaced => _virtualChangeSet.Replaced;
 
         int IChangeSet<T>.TotalChanges => _virtualChangeSet.TotalChanges;
+
+
+        public int Refreshes => _virtualChangeSet.Refreshes;
 
         #endregion
 

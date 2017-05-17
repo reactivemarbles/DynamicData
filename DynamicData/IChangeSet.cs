@@ -17,6 +17,11 @@ namespace DynamicData
         int Removes { get; }
 
         /// <summary>
+        /// The number of refreshes
+        /// </summary>
+        int Refreshes { get; }
+
+        /// <summary>
         ///     Gets the number of moves
         /// </summary>
         int Moves { get; }

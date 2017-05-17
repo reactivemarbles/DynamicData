@@ -2,6 +2,7 @@
 using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -206,6 +207,20 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert collection
             Assert.AreEqual(0, _list.Count);
+        }
+
+
+        [Test]
+        public void Refresh()
+        {
+            _list.AddRange(Enumerable.Range(1, 10));
+            _list.ClearChanges();
+            _list.RefreshAt(1);
+
+            //assert changes (should batch)
+            var changes = _list.CaptureChanges();
+
+            changes.Count.Should().Be(1);
         }
 
         [Test]
