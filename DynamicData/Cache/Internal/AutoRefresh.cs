@@ -9,7 +9,6 @@ namespace DynamicData.Cache.Internal
 {
     internal class AutoRefresh<TObject, TKey, TAny>
     {
-
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TKey, IObservable<TAny>> _reevaluator;
         private readonly TimeSpan? _buffer;

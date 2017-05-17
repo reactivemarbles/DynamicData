@@ -23,7 +23,7 @@ namespace DynamicData.Tests.ListFixtures
         [Test]
         public void CanLoadFromTask()
         {
-            Func<Task<IEnumerable<Person>>> loader = () =>
+            Task<IEnumerable<Person>> Loader()
             {
                 var items = Enumerable.Range(1, 100)
                     .Select(i => new Person("Person" + i, 1))
@@ -31,9 +31,9 @@ namespace DynamicData.Tests.ListFixtures
                     .AsEnumerable();
 
                 return Task.FromResult(items);
-            };
+            }
 
-            var data = Observable.FromAsync(loader)
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
                 .ToObservableChangeSet()
                 .AsObservableList();
 
