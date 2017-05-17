@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using DynamicData.Kernel;
 
@@ -26,14 +25,16 @@ namespace DynamicData
         public IChangeSet<T> CaptureChanges()
         {
             var copy = new ChangeSet<T>(_changes);
-            _changes = new List<Change<T>>();
-
+           
             //we can infer this is a Clear
             if (_innerList.Count == 0 && copy.Removes == copy.TotalChanges && copy.TotalChanges > 1)
             {
+                _changes = new List<Change<T>>();
                 var removed = copy.Unified().Select(u => u.Current);
                 return new ChangeSet<T> { new Change<T>(ListChangeReason.Clear, removed) };
             }
+
+            _changes = new List<Change<T>>();
             return copy;
         }
 
@@ -182,9 +183,6 @@ namespace DynamicData
                         insertPosition = range.Count;
                     }
                     range.Insert(insertPosition, item);
-
-                    if (range.Index == 4 && range.Count == 4)
-                        Debug.WriteLine("");
 
                     if (index < range.Index)
                         range.SetStartingIndex(index);
