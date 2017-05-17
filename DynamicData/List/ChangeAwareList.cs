@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using DynamicData.Kernel;
 
@@ -26,14 +25,16 @@ namespace DynamicData
         public IChangeSet<T> CaptureChanges()
         {
             var copy = new ChangeSet<T>(_changes);
-            _changes = new List<Change<T>>();
-
+           
             //we can infer this is a Clear
             if (_innerList.Count == 0 && copy.Removes == copy.TotalChanges && copy.TotalChanges > 1)
             {
+                _changes = new List<Change<T>>();
                 var removed = copy.Unified().Select(u => u.Current);
                 return new ChangeSet<T> { new Change<T>(ListChangeReason.Clear, removed) };
             }
+
+            _changes = new List<Change<T>>();
             return copy;
         }
 
@@ -183,9 +184,6 @@ namespace DynamicData
                     }
                     range.Insert(insertPosition, item);
 
-                    if (range.Index == 4 && range.Count == 4)
-                        Debug.WriteLine("");
-
                     if (index < range.Index)
                         range.SetStartingIndex(index);
                 }
@@ -271,12 +269,22 @@ namespace DynamicData
             OnSetItem(index, item, previous);
         }
 
+        /// <summary>
+        /// Moves the item to the specified destination index
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="destination"></param>
         public virtual void Move(T item, int destination)
         {
             var index = _innerList.IndexOf(item);
             Move(index, destination);
         }
 
+        /// <summary>
+        /// Moves an item from the original to the destination index
+        /// </summary>
+        /// <param name="original">The original.</param>
+        /// <param name="destination">The destination.</param>
         public virtual void Move(int original, int destination)
         {
             var item = _innerList[original];
@@ -340,7 +348,11 @@ namespace DynamicData
             return true;
         }
 
-        public T this[int index] { get { return _innerList[index]; } set { SetItem(index, value); } }
+        public T this[int index]
+        {
+            get => _innerList[index];
+            set => SetItem(index, value);
+        }
 
         public IEnumerator<T> GetEnumerator()
         {
@@ -352,7 +364,7 @@ namespace DynamicData
             return GetEnumerator();
         }
 
-        public bool IsReadOnly => false;
+        public bool IsReadOnly { get; } = false;
 
         #endregion
     }

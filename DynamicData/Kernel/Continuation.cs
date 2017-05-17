@@ -16,17 +16,17 @@ namespace DynamicData.Kernel
             _exception = exception;
         }
 
-        public void Then(Action<T> onComplete)
+        public void Then(Action<T> onChangeComplete)
         {
-            if (onComplete == null) throw new ArgumentNullException(nameof(onComplete));
+            if (onChangeComplete == null) throw new ArgumentNullException(nameof(onChangeComplete));
 
             if (!ReferenceEquals(Result, null))
-                onComplete(Result);
+                onChangeComplete(Result);
         }
 
-        public void Then(Action<T> onComplete, Action<Exception> onError)
+        public void Then(Action<T> onChangeComplete, Action<Exception> onError)
         {
-            if (onComplete == null) throw new ArgumentNullException(nameof(onComplete));
+            if (onChangeComplete == null) throw new ArgumentNullException(nameof(onChangeComplete));
 
             if (_exception != null)
             {
@@ -41,7 +41,7 @@ namespace DynamicData.Kernel
             }
             else
             {
-                onComplete(Result);
+                onChangeComplete(Result);
             }
         }
 

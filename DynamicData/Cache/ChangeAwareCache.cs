@@ -103,18 +103,18 @@ namespace DynamicData
         /// <summary>
         /// Raises an evaluate change for the specified keys
         /// </summary>
-        public void Evaluate(IEnumerable<TKey> keys)
+        public void Refresh(IEnumerable<TKey> keys)
         {
-            keys.ForEach(Evaluate);
+            keys.ForEach(Refresh);
         }
 
         /// <summary>
         /// Raises an evaluate change for all items in the cache
         /// </summary>
-        public void Evaluate()
+        public void Refresh()
         {
             _changes.Capacity = _data.Count + _changes.Count;
-            _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Evaluate, t.Key, t.Value)));
+            _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
         }
 
 
@@ -122,12 +122,12 @@ namespace DynamicData
         /// Raises an evaluate change for the specified key
         /// </summary>
         /// <param name="key">The key.</param>
-        public void Evaluate(TKey key)
+        public void Refresh(TKey key)
         {
             TObject existingItem;
             if (_data.TryGetValue(key, out existingItem))
             {
-                _changes.Add(new Change<TObject, TKey>(ChangeReason.Evaluate, key, existingItem));
+                _changes.Add(new Change<TObject, TKey>(ChangeReason.Refresh, key, existingItem));
             }
         }
 
@@ -167,8 +167,8 @@ namespace DynamicData
                     case ChangeReason.Remove:
                         Remove(change.Key);
                         break;
-                    case ChangeReason.Evaluate:
-                        Evaluate(change.Key);
+                    case ChangeReason.Refresh:
+                        Refresh(change.Key);
                         break;
                 }
             }

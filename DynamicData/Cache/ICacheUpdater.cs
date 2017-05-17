@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
@@ -34,17 +35,36 @@ namespace DynamicData
         /// <summary>
         /// Sends a signal for operators to recalculate it's state 
         /// </summary>
+        void Refresh();
+
+        /// <summary>
+        /// Refreshes the items matching the specified keys
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        void Refresh(IEnumerable<TKey> keys);
+
+        /// <summary>
+        /// Refreshes the item matching the specified key
+        /// </summary>
+        void Refresh(TKey key);
+
+        /// <summary>
+        /// Sends a signal for operators to recalculate it's state 
+        /// </summary>
+        [Obsolete(Constants.EvaluateIsDead)]
         void Evaluate();
 
         /// <summary>
-        /// Evaluates the items matching the specified keys
+        /// Refreshes the items matching the specified keys
         /// </summary>
         /// <param name="keys">The keys.</param>
+        [Obsolete(Constants.EvaluateIsDead)]
         void Evaluate(IEnumerable<TKey> keys);
 
         /// <summary>
-        /// Evaluates the item matching the specified key
+        /// Refreshes the item matching the specified key
         /// </summary>
+        [Obsolete(Constants.EvaluateIsDead)]
         void Evaluate(TKey key);
 
         /// <summary>

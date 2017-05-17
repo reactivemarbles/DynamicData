@@ -8,7 +8,7 @@ namespace DynamicData.Binding
     public interface IEvaluateAware
     {
         /// <summary>
-        /// Evaluate method
+        /// Refresh method
         /// </summary>
         void Evaluate();
     }

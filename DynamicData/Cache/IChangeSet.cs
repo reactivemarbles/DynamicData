@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
@@ -12,12 +13,18 @@ namespace DynamicData
     public interface IChangeSet<TObject, TKey> : IChangeSet, IEnumerable<Change<TObject, TKey>>
     {
         /// <summary>
-        /// Gets the number of evaluates
+        /// The number of refreshes
         /// </summary>
-        int Evaluates { get; }
+        int Refreshes { get; }
 
         /// <summary>
-        ///     Gets the number of updates
+        /// The number of evaluates
+        /// </summary>
+        [Obsolete(Constants.EvaluateIsDead)]
+        int Evaluates { get; }
+        
+        /// <summary>
+        /// The number of updates
         /// </summary>
         int Updates { get; }
     }

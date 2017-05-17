@@ -56,7 +56,7 @@ namespace DynamicData.Cache.Internal
                     {
                         case ChangeReason.Add:
                         case ChangeReason.Remove:
-                        case ChangeReason.Evaluate:
+                        case ChangeReason.Refresh:
                             {
                                 foreach (var destination in change.Current.Destination)
                                     yield return new Change<TDestination, TDestinationKey>(change.Reason, destination.Key, destination.Item);

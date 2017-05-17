@@ -66,9 +66,9 @@ namespace DynamicData.Cache.Internal
                                     case ChangeReason.Remove:
                                         innerCache.Remove(change.Key);
                                         break;
-                                    case ChangeReason.Evaluate:
+                                    case ChangeReason.Refresh:
                                         //propagate upstream
-                                        innerCache.Evaluate(change.Key);
+                                        innerCache.Refresh(change.Key);
                                         break;
                                 }
                             });
@@ -105,9 +105,9 @@ namespace DynamicData.Cache.Internal
                                             innerCache.Remove(change.Key); ;
                                         }
                                         break;
-                                    case ChangeReason.Evaluate:
+                                    case ChangeReason.Refresh:
                                         //propagate upstream
-                                        innerCache.Evaluate(change.Key);
+                                        innerCache.Refresh(change.Key);
                                         break;
                                 }
                             });

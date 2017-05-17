@@ -53,7 +53,7 @@ namespace DynamicData.Cache.Internal
                 .Where(u => inbothKeys.Contains(u.Key)
                             && (u.Reason == ChangeReason.Update
                                 || u.Reason == ChangeReason.Moved
-                                || u.Reason == ChangeReason.Evaluate))
+                                || u.Reason == ChangeReason.Refresh))
                 .ToList();
 
             foreach (var change in remainingItems)
@@ -100,7 +100,7 @@ namespace DynamicData.Cache.Internal
             }
 
             //Alternative to evaluate is to check order
-            var evaluates = remainingItems.Where(c => c.Reason == ChangeReason.Evaluate)
+            var evaluates = remainingItems.Where(c => c.Reason == ChangeReason.Refresh)
                                           .OrderByDescending(x => new KeyValuePair<TKey, TObject>(x.Key, x.Current), currentItems.Comparer)
                                           .ToList();
 

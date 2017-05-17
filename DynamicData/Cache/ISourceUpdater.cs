@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
@@ -42,15 +43,29 @@ namespace DynamicData
         void AddOrUpdate(TObject item, IEqualityComparer<TObject> comparer);
 
         /// <summary>
-        /// Evaluates the specified items.
+        /// Refreshes the specified items.
         /// </summary>
         /// <param name="items">The items.</param>
+        void Refresh(IEnumerable<TObject> items);
+
+        /// <summary>
+        ///Refreshes the specified item
+        /// </summary>
+        /// <param name="item">The item.</param>
+        void Refresh(TObject item);
+
+        /// <summary>
+        /// Refreshes the specified items.
+        /// </summary>
+        /// <param name="items">The items.</param>
+        [Obsolete(Constants.EvaluateIsDead)]
         void Evaluate(IEnumerable<TObject> items);
 
         /// <summary>
-        ///Evaluates the specified item
+        ///Refreshes the specified item
         /// </summary>
         /// <param name="item">The item.</param>
+        [Obsolete(Constants.EvaluateIsDead)]
         void Evaluate(TObject item);
 
 

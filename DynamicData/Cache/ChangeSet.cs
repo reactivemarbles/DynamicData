@@ -18,7 +18,7 @@ namespace DynamicData
 
         private int _adds;
         private int _removes;
-        private int _evaluates;
+        private int _refreshes;
         private int _updates;
         private int _moves;
 
@@ -40,8 +40,7 @@ namespace DynamicData
         /// <param name="items">The items.</param>
         public ChangeSet([NotNull] IEnumerable<Change<TObject, TKey>> items)
         {
-            if (items == null) throw new ArgumentNullException(nameof(items));
-            Items = items.AsList();
+            Items = items?.AsList() ?? throw new ArgumentNullException(nameof(items));
             Items.ForEach(change => Add(change, true));
         }
 
@@ -96,8 +95,8 @@ namespace DynamicData
                 case ChangeReason.Remove:
                     _removes++;
                     break;
-                case ChangeReason.Evaluate:
-                    _evaluates++;
+                case ChangeReason.Refresh:
+                    _refreshes++;
                     break;
                 case ChangeReason.Moved:
                     _moves++;
@@ -139,9 +138,14 @@ namespace DynamicData
         public int Removes => _removes;
 
         /// <summary>
+        ///     The number of refreshes
+        /// </summary>
+        public int Refreshes => _refreshes;
+
+        /// <summary>
         ///     The number of requeries
         /// </summary>
-        public int Evaluates => _evaluates;
+        public int Evaluates => _refreshes;
 
         /// <summary>
         ///     Gets the number of moves

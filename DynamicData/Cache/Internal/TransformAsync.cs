@@ -102,8 +102,8 @@ namespace DynamicData.Cache.Internal
                         cache.Remove(key);
                         break;
 
-                    case ChangeReason.Evaluate:
-                        cache.Evaluate(key);
+                    case ChangeReason.Refresh:
+                        cache.Refresh(key);
                         break;
                 }
             }

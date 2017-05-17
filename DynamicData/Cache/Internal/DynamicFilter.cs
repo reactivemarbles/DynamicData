@@ -60,7 +60,7 @@ namespace DynamicData.Cache.Internal
         private IChangeSet<TObject, TKey> Reevaluate(FilteredUpdater<TObject, TKey> updater,
             IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
-            var result = updater.Evaluate(items);
+            var result = updater.Refresh(items);
             var changes = result.Where(u => u.Reason == ChangeReason.Add || u.Reason == ChangeReason.Remove);
             return new ChangeSet<TObject, TKey>(changes);
         }

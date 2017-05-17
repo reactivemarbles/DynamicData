@@ -18,13 +18,13 @@ namespace DynamicData.Diagnostics
         /// <summary>
         ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
         /// </summary>
-        public ChangeStatistics(int index, int adds, int updates, int removes, int evaluates, int moves, int count)
+        public ChangeStatistics(int index, int adds, int updates, int removes, int refreshes, int moves, int count)
         {
             Index = index;
             Adds = adds;
             Updates = updates;
             Removes = removes;
-            Evaluates = evaluates;
+            Refreshes = refreshes;
             Moves = moves;
             Count = count;
         }
@@ -54,12 +54,12 @@ namespace DynamicData.Diagnostics
         public int Removes { get; }
 
         /// <summary>
-        ///     Gets the evaluates.
+        ///     Gets the refreshes.
         /// </summary>
         /// <value>
-        ///     The evaluates.
+        ///     The refreshes.
         /// </value>
-        public int Evaluates { get; }
+        public int Refreshes { get; }
 
         /// <summary>
         ///     Gets the count.
@@ -104,7 +104,7 @@ namespace DynamicData.Diagnostics
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Adds == other.Adds && Updates == other.Updates && Removes == other.Removes && Evaluates == other.Evaluates && Moves == other.Moves && Count == other.Count && Index == other.Index && LastUpdated.Equals(other.LastUpdated);
+            return Adds == other.Adds && Updates == other.Updates && Removes == other.Removes && Refreshes == other.Refreshes && Moves == other.Moves && Count == other.Count && Index == other.Index && LastUpdated.Equals(other.LastUpdated);
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace DynamicData.Diagnostics
                 var hashCode = Adds;
                 hashCode = (hashCode * 397) ^ Updates;
                 hashCode = (hashCode * 397) ^ Removes;
-                hashCode = (hashCode * 397) ^ Evaluates;
+                hashCode = (hashCode * 397) ^ Refreshes;
                 hashCode = (hashCode * 397) ^ Moves;
                 hashCode = (hashCode * 397) ^ Count;
                 hashCode = (hashCode * 397) ^ Index;
@@ -184,8 +184,8 @@ namespace DynamicData.Diagnostics
         {
             return
                 string.Format(
-                    "CurrentIndex: {0}, Adds: {1}, Updates: {2}, Removes: {3}, Evaluates: {4}, Count: {5}, Timestamp: {6}",
-                    Index, Adds, Updates, Removes, Evaluates, Count, LastUpdated);
+                    "CurrentIndex: {0}, Adds: {1}, Updates: {2}, Removes: {3}, Refreshes: {4}, Count: {5}, Timestamp: {6}",
+                    Index, Adds, Updates, Removes, Refreshes, Count, LastUpdated);
         }
 
         #endregion

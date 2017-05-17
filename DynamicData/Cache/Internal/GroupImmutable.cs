@@ -61,7 +61,7 @@ namespace DynamicData.Cache.Internal
             public IImmutableGroupChangeSet<TObject, TKey, TGroupKey> Regroup()
             {
                 //re-evaluate all items in the group
-                var items = _itemCache.Select(item => new Change<TObject, TKey>(ChangeReason.Evaluate, item.Key, item.Value.Item));
+                var items = _itemCache.Select(item => new Change<TObject, TKey>(ChangeReason.Refresh, item.Key, item.Value.Item));
                 return HandleUpdates(new ChangeSet<TObject, TKey>(items));
             }
 
@@ -130,7 +130,7 @@ namespace DynamicData.Cache.Internal
 
                                 break;
                             }
-                            case ChangeReason.Evaluate:
+                            case ChangeReason.Refresh:
                             {
                                 //check whether the previous item was in a different group. If so remove from old group
                                 var previous = _itemCache.Lookup(current.Key);
