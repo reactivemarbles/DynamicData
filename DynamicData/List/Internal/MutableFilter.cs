@@ -7,7 +7,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-
     internal class MutableFilter<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
@@ -51,13 +50,13 @@ namespace DynamicData.List.Internal
                     .Synchronize(locker)
                     .Transform((t, idx) =>
                     {
-                        var wasMatch = filtered[idx].IsMatch;
+                        //was match if previously existed, or when data has not yet loaded, false
+                        var wasMatch = idx < filtered.Count && filtered[idx].IsMatch;
                         return new ItemWithMatch(t, idx, predicate(t), wasMatch);
                     })
                     .Select(changes =>
                     {
-                        all.Clone(changes); //keep track of all changes
-                        Filter(filtered, changes);
+                        Filter(all, filtered, changes, predicate);
                         return filtered.CaptureChanges();
                     });
                 
@@ -68,10 +67,16 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private void Filter(ChangeAwareList<ItemWithMatch> target, IChangeSet<ItemWithMatch> changes)
+        private void Filter(List<ItemWithMatch> allItems, ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes, Func<T, bool> predicate)
         {
+            allItems.Capacity = allItems.Count + changes.Adds;
+           
+
+            //Maintain all items as well as filtered list. This enables us to a) requery when the predicate changes b) check the previous state when Refresh is called
             foreach (var item in changes)
             {
+                //clone the current change into allItems []
+                allItems.Clone(item);
 
                 switch (item.Reason)
                 {
@@ -79,13 +84,13 @@ namespace DynamicData.List.Internal
                     {
                         var change = item.Item;
                         if (change.Current.IsMatch)
-                            target.Add(change.Current);
+                            filtered.Add(change.Current);
                         break;
                     }
                     case ListChangeReason.AddRange:
                     {
                         var matches = item.Range.Where(t => t.IsMatch).ToList();
-                        target.AddRange(matches);
+                        filtered.AddRange(matches);
                         break;
                     }
                     case ListChangeReason.Replace:
@@ -99,28 +104,37 @@ namespace DynamicData.List.Internal
                             if (wasMatch)
                             {
                                 //an update, so get the latest index
-                                var previous = target
+                                var previous = filtered
                                     .IndexOfOptional(change.Previous.Value, ReferenceEqualityComparer<ItemWithMatch>.Instance)
                                     .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
 
                                     //replace inline
-                                    target[previous.Index] = change.Current;
+                                    filtered[previous.Index] = change.Current;
                             }
                             else
                             {
-                                target.Add(change.Current);
+                                filtered.Add(change.Current);
                             }
                         }
                         else
                         {
                             if (wasMatch)
-                                target.Remove(change.Previous.Value);
+                                filtered.Remove(change.Previous.Value);
                         }
                         break;
                     }
                     case ListChangeReason.Refresh:
                     {
                         var change = item.Item;
+
+                        //TODO: 1. Transform should re-transform on Refresh
+                        //TODO: 2. Batch refreshes and using IndexOfMany to calculate whether the item matches the filter?
+
+                        //manually set match because Transform does not re-transform on Refresh [maybe it should]
+                        var refreshedItem = allItems[change.CurrentIndex];
+                        refreshedItem.WasMatch = refreshedItem.IsMatch;
+                        refreshedItem.IsMatch = predicate(change.Current.Item);
+
                         var match = change.Current.IsMatch;
                         var wasMatch = change.Current.WasMatch;
 
@@ -129,40 +143,40 @@ namespace DynamicData.List.Internal
                             if (wasMatch)
                             {
                                 //an update, so get the latest index and pass the index up the chain
-                                var previous = target
-                                    .IndexOfOptional(change.Previous.Value,ReferenceEqualityComparer<ItemWithMatch>.Instance)
+                                var previous = filtered
+                                    .IndexOfOptional(change.Current,ReferenceEqualityComparer<ItemWithMatch>.Instance)
                                     .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
 
-                                target.RefreshAt(previous.Index);
+                                filtered.RefreshAt(previous.Index);
                             }
                             else
                             {
-                                target.Add(change.Current);
+                                filtered.Add(change.Current);
                             }
 
                         }
                         else
                         {
                             if (wasMatch)
-                                target.Remove(change.Previous.Value);
+                                filtered.Remove(change.Previous.Value);
                         }
                         break;
                     }
                     case ListChangeReason.Remove:
                     {
                         var change = item.Item;
-                        if (change.Current.WasMatch)
-                            target.Remove(change.Current);
+                        if (change.Current.IsMatch)
+                            filtered.Remove(change.Current);
                         break;
                     }
                     case ListChangeReason.RemoveRange:
                     {
-                        target.RemoveMany(item.Range.Where(t => t.IsMatch));
+                        filtered.RemoveMany(item.Range.Where(t => t.IsMatch));
                         break;
                     }
                     case ListChangeReason.Clear:
                     {
-                        target.ClearOrRemoveMany(item);
+                        filtered.ClearOrRemoveMany(item);
                         break;
                     }
                 }
@@ -208,7 +222,7 @@ namespace DynamicData.List.Internal
             public T Item { get; }
             public int Index { get; }
             public bool IsMatch { get; set; }
-            public bool WasMatch { get; }
+            public bool WasMatch { get; set; }
 
             public ItemWithMatch(T item,int index, bool isMatch, bool wasMatch)
             {

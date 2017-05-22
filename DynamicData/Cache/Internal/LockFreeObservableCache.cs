@@ -165,9 +165,6 @@ namespace DynamicData.Cache.Internal
         /// </summary>
         public int Count => _innerCache.Count;
 
-        public void Dispose()
-        {
-            _cleanUp.Dispose();
-        }
+        public void Dispose() => _cleanUp.Dispose();
     }
 }

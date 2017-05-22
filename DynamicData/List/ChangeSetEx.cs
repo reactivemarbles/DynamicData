@@ -62,17 +62,14 @@ namespace DynamicData
             switch (source)
             {
                 case ListChangeReason.Add:
-                    return ChangeType.Item;
-                case ListChangeReason.AddRange:
-                    return ChangeType.Range;
+                case ListChangeReason.Refresh:
                 case ListChangeReason.Replace:
-                    return ChangeType.Item;
+                case ListChangeReason.Moved:
                 case ListChangeReason.Remove:
                     return ChangeType.Item;
+
+                case ListChangeReason.AddRange:
                 case ListChangeReason.RemoveRange:
-                    return ChangeType.Range;
-                case ListChangeReason.Moved:
-                    return ChangeType.Item;
                 case ListChangeReason.Clear:
                     return ChangeType.Range;
                 default:

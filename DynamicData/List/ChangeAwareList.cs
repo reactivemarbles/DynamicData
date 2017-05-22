@@ -149,7 +149,7 @@ namespace DynamicData
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
             if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
 
-            _changes.Add(new Change<T>(ListChangeReason.Refresh, _innerList[index]));
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, _innerList[index], index));
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace DynamicData
             var index = IndexOf(item);
             if (index < 0) return false;
 
-            _changes.Add(new Change<T>(ListChangeReason.Refresh, item));
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, item, index));
 
             return true;
         }
@@ -407,7 +407,7 @@ namespace DynamicData
         public void RemoveAt(int index)
         {
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
-            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+            if (index > _innerList.Count) throw new ArgumentOutOfRangeException($"{nameof(index)} cannot be greater than the size of the collection");
 
             RemoveItem(index);
         }

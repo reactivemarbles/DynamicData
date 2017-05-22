@@ -37,8 +37,7 @@ namespace DynamicData.List.Internal
                     return changed.Transform(container => container.Destination);
                 });
         }
-
-
+        
         private class TransformedItemContainer : IEquatable<TransformedItemContainer>
         {
             public TSource Source { get; }
@@ -123,6 +122,7 @@ namespace DynamicData.List.Internal
                         }
                     case ListChangeReason.Refresh:
                     {
+                        //TODO: Consider transform when index is specified in transform function?
                         transformed.RefreshAt(item.Item.CurrentIndex);
                         break;
                     }

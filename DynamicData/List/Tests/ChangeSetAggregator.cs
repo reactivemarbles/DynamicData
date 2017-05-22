@@ -32,6 +32,7 @@ namespace DynamicData.Tests
             var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
             var connected = published.Connect();
 
+
             _disposer = Disposable.Create(() =>
             {
                 Data.Dispose();
