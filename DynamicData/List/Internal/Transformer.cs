@@ -9,15 +9,19 @@ namespace DynamicData.List.Internal
     internal sealed class Transformer<TSource, TDestination>
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
-        private readonly Func<TSource, TransformedItemContainer> _containerFactory;
+        private readonly Func<TSource, int,  TransformedItemContainer> _containerFactory;
 
         public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
+            :this(source,(item,index) => factory(item))
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+        }
+
+        public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, int, TDestination> factory)
+        {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
 
-            _source = source;
-            _containerFactory = item => new TransformedItemContainer(item, factory(item));
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _containerFactory = (item, index) => new TransformedItemContainer(item, factory(item, index));
         }
 
         public IObservable<IChangeSet<TDestination>> Run()
@@ -96,30 +100,43 @@ namespace DynamicData.List.Internal
                             var change = item.Item;
                             if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
                             {
-                                transformed.Add(_containerFactory(change.Current));
+                                transformed.Add(_containerFactory(change.Current, transformed.Count));
                             }
                             else
                             {
-                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, change.CurrentIndex));
                             }
                             break;
                         }
                     case ListChangeReason.AddRange:
                         {
-                            transformed.AddOrInsertRange(item.Range.Select(_containerFactory), item.Range.Index);
+                            var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
+
+                            transformed.AddOrInsertRange(item.Range
+                                    .Select((t, idx) =>
+                                    {
+                                        return _containerFactory(t, idx + startIndex);
+                                    }),
+                                item.Range.Index);
+
                             break;
                         }
+                    case ListChangeReason.Refresh:
+                    {
+                        transformed.RefreshAt(item.Item.CurrentIndex);
+                        break;
+                    }
                     case ListChangeReason.Replace:
                         {
                             var change = item.Item;
                             if (change.CurrentIndex == change.PreviousIndex)
                             {
-                                transformed[change.CurrentIndex] = _containerFactory(change.Current);
+                                transformed[change.CurrentIndex] = _containerFactory(change.Current, change.CurrentIndex);
                             }
                             else
                             {
                                 transformed.RemoveAt(change.PreviousIndex);
-                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, change.CurrentIndex));
                             }
 
                             break;

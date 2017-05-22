@@ -5,6 +5,11 @@ using DynamicData.Kernel;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
+    //public static class ChangeEx
+    //{
+    //    public int GetStart
+    //}
+
     /// <summary>
     ///   Container to describe a single change to a cache
     /// </summary>

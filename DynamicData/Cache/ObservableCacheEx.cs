@@ -560,8 +560,7 @@ namespace DynamicData
             if (reevaluator == null) throw new ArgumentNullException(nameof(reevaluator));
             return new AutoRefresh<TObject, TKey, TAny>(source, reevaluator, changeSetBuffer,  scheduler).Run();
         }
-
-
+        
         #endregion
 
         #region Start with

@@ -12,10 +12,8 @@ namespace DynamicData.List.Internal
 
         public SubscribeMany([NotNull] IObservable<IChangeSet<T>> source, [NotNull] Func<T, IDisposable> subscriptionFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
-            _source = source;
-            _subscriptionFactory = subscriptionFactory;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _subscriptionFactory = subscriptionFactory ?? throw new ArgumentNullException(nameof(subscriptionFactory));
         }
 
         public IObservable<IChangeSet<T>> Run()

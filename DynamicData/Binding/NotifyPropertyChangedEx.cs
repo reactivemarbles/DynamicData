@@ -1,11 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
-using System.Reflection;
 using DynamicData.Annotations;
 
 namespace DynamicData.Binding
@@ -158,8 +155,5 @@ namespace DynamicData.Binding
                 .Where(x => propertiesToMonitor==null || propertiesToMonitor.Length==0 || propertiesToMonitor.Contains(x.EventArgs.PropertyName))
                 .Select(x => source);
         }
-
-
-
     }
 }

@@ -106,6 +106,7 @@
     <Compile Include="Binding\ObservableCollectionExtendedToChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionToChangeSetFixture.cs" />
     <Compile Include="Binding\ReadOnlyObservableCollectionToChangeSetFixture.cs" />
+    <Compile Include="CacheFixtures\AutoRefreshFixture.cs" />
     <Compile Include="CacheFixtures\DynamicAndFixture.cs" />
     <Compile Include="CacheFixtures\DynamicExceptFixture.cs" />
     <Compile Include="CacheFixtures\DynamicOrFixture.cs" />

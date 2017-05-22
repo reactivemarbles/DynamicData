@@ -187,7 +187,6 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(10, changes.Removes);
             CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
             //assert collection
-
             Assert.AreEqual(0, _list.Count);
         }
 
@@ -211,9 +210,9 @@ namespace DynamicData.Tests.ListFixtures
 
 
         [Test]
-        public void Refresh()
+        public void RefreshAt()
         {
-            _list.AddRange(Enumerable.Range(1, 10));
+            _list.AddRange(Enumerable.Range(0, 9));
             _list.ClearChanges();
             _list.RefreshAt(1);
 
@@ -221,7 +220,36 @@ namespace DynamicData.Tests.ListFixtures
             var changes = _list.CaptureChanges();
 
             changes.Count.Should().Be(1);
+            changes.Refreshes.Should().Be(1);
+            changes.First().Reason.Should().Be(ListChangeReason.Refresh);
+            changes.First().Item.Current.Should().Be(1);
+
+
+            Assert.Throws<ArgumentException>(() => _list.RefreshAt(-1));
+            Assert.Throws<ArgumentException>(() => _list.RefreshAt(1000));
         }
+
+        [Test]
+        public void Refresh()
+        {
+            _list.AddRange(Enumerable.Range(0, 9));
+            _list.ClearChanges();
+            _list.Refresh(1);
+
+            //assert changes (should batch)
+            var changes = _list.CaptureChanges();
+
+            changes.Count.Should().Be(1);
+            changes.Refreshes.Should().Be(1);
+            changes.First().Reason.Should().Be(ListChangeReason.Refresh);
+            changes.First().Item.Current.Should().Be(1);
+
+            _list.Refresh(5).Should().Be(true);
+            _list.Refresh(-1).Should().Be(false);
+            _list.Refresh(1000).Should().Be(false);
+        }
+
+
 
         [Test]
         public void ThrowWhenRemovingItemOutsideOfBoundaries()

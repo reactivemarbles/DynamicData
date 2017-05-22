@@ -7,6 +7,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
+
     internal class MutableFilter<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
@@ -26,38 +27,146 @@ namespace DynamicData.List.Internal
                 var locker = new object();
                 
                 Func<T, bool> predicate = t => false;
-
                 var all = new List<ItemWithMatch>();
                 var filtered = new ChangeAwareList<ItemWithMatch>();
-
-
+                
                 //requery when predicate changes
-                var predicateChanged = _predicates.Synchronize(locker)
+                var predicateChanged = _predicates
+                    .Synchronize(locker)
                     .Select(newPredicate =>
                     {
                         predicate = newPredicate;
                         Requery(predicate, all, filtered);
                         return filtered.CaptureChanges();
                     });
-                 
+
                 /*
                  * Apply the transform operator so 'IsMatch' state can be evalutated and captured one time only
-                 * This is to eliminate the need to re-apply the predicate when determining whether an item was previously matched
+                 * This is to eliminate the need to re-apply the predicate when determining whether an item was previously matched,
+                 * which is essential when we have mutable state
                  */
-                var filteredResult = _source.Synchronize(locker)
-                    .Transform(t => new ItemWithMatch(t, predicate(t)))
+
+                //Need to get item by index and store it in the transform
+                var filteredResult = _source
+                    .Synchronize(locker)
+                    .Transform((t, idx) =>
+                    {
+                        var wasMatch = filtered[idx].IsMatch;
+                        return new ItemWithMatch(t, idx, predicate(t), wasMatch);
+                    })
                     .Select(changes =>
                     {
                         all.Clone(changes); //keep track of all changes
-                        filtered.Filter(changes, iwm => iwm.IsMatch);  //maintain filtered result
+                        Filter(filtered, changes);
                         return filtered.CaptureChanges();
                     });
                 
                 return predicateChanged.Merge(filteredResult)
                             .NotEmpty()
-                            .Select(changes => changes.Transform(iwm => iwm.Item))
+                            .Select(changes => changes.Transform(iwm => iwm.Item)) // use convert, not transform
                             .SubscribeSafe(observer);
             });
+        }
+
+        private void Filter(ChangeAwareList<ItemWithMatch> target, IChangeSet<ItemWithMatch> changes)
+        {
+            foreach (var item in changes)
+            {
+
+                switch (item.Reason)
+                {
+                    case ListChangeReason.Add:
+                    {
+                        var change = item.Item;
+                        if (change.Current.IsMatch)
+                            target.Add(change.Current);
+                        break;
+                    }
+                    case ListChangeReason.AddRange:
+                    {
+                        var matches = item.Range.Where(t => t.IsMatch).ToList();
+                        target.AddRange(matches);
+                        break;
+                    }
+                    case ListChangeReason.Replace:
+                    {
+                        var change = item.Item;
+                        var match = change.Current.IsMatch;
+                        var wasMatch = change.Current.WasMatch;
+
+                        if (match)
+                        {
+                            if (wasMatch)
+                            {
+                                //an update, so get the latest index
+                                var previous = target
+                                    .IndexOfOptional(change.Previous.Value, ReferenceEqualityComparer<ItemWithMatch>.Instance)
+                                    .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
+
+                                    //replace inline
+                                    target[previous.Index] = change.Current;
+                            }
+                            else
+                            {
+                                target.Add(change.Current);
+                            }
+                        }
+                        else
+                        {
+                            if (wasMatch)
+                                target.Remove(change.Previous.Value);
+                        }
+                        break;
+                    }
+                    case ListChangeReason.Refresh:
+                    {
+                        var change = item.Item;
+                        var match = change.Current.IsMatch;
+                        var wasMatch = change.Current.WasMatch;
+
+                        if (match)
+                        {
+                            if (wasMatch)
+                            {
+                                //an update, so get the latest index and pass the index up the chain
+                                var previous = target
+                                    .IndexOfOptional(change.Previous.Value,ReferenceEqualityComparer<ItemWithMatch>.Instance)
+                                    .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
+
+                                target.RefreshAt(previous.Index);
+                            }
+                            else
+                            {
+                                target.Add(change.Current);
+                            }
+
+                        }
+                        else
+                        {
+                            if (wasMatch)
+                                target.Remove(change.Previous.Value);
+                        }
+                        break;
+                    }
+                    case ListChangeReason.Remove:
+                    {
+                        var change = item.Item;
+                        if (change.Current.WasMatch)
+                            target.Remove(change.Current);
+                        break;
+                    }
+                    case ListChangeReason.RemoveRange:
+                    {
+                        target.RemoveMany(item.Range.Where(t => t.IsMatch));
+                        break;
+                    }
+                    case ListChangeReason.Clear:
+                    {
+                        target.ClearOrRemoveMany(item);
+                        break;
+                    }
+                }
+            }
         }
 
         private void Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
@@ -97,12 +206,16 @@ namespace DynamicData.List.Internal
         private class ItemWithMatch
         {
             public T Item { get; }
+            public int Index { get; }
             public bool IsMatch { get; set; }
+            public bool WasMatch { get; }
 
-            public ItemWithMatch(T item, bool isMatch)
+            public ItemWithMatch(T item,int index, bool isMatch, bool wasMatch)
             {
                 Item = item;
+                Index = index;
                 IsMatch = isMatch;
+                WasMatch = wasMatch;
             }
         }
     }

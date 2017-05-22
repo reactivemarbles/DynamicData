@@ -28,88 +28,6 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Filters the source from the changes, using the specified predicate
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="changes">The changes.</param>
-        /// <param name="predicate">The predicate.</param>
-        public static void Filter<T>(this IList<T> source, IChangeSet<T> changes, Func<T, bool> predicate)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-
-            //TODO: Check for missing index
-
-            foreach (var item in changes)
-            {
-                switch (item.Reason)
-                {
-                    case ListChangeReason.Add:
-                        {
-                            var change = item.Item;
-                            var match = predicate(change.Current);
-                            if (match) source.Add(change.Current);
-                            break;
-                        }
-                    case ListChangeReason.AddRange:
-                        {
-                            var matches = item.Range.Where(predicate).ToList();
-                            source.AddRange(matches);
-                            break;
-                        }
-                    case ListChangeReason.Replace:
-                        {
-                            var change = item.Item;
-                            var match = predicate(change.Current);
-                            var wasMatch = predicate(change.Previous.Value);
-
-                            if (match)
-                            {
-                                if (wasMatch)
-                                {
-                                    //an update, so get the latest index
-                                    var previous = source.FindItemAndIndex(change.Previous.Value, ReferenceEqualityComparer<T>.Instance)
-                                                         .ValueOrThrow(() => new InvalidOperationException("Cannot find item. Expected to be in the list"));
-
-                                    //replace inline
-                                    source[previous.Index] = change.Current;
-                                }
-                                else
-                                {
-                                    source.Add(change.Current);
-                                }
-                            }
-                            else
-                            {
-                                if (wasMatch)
-                                    source.Remove(change.Previous.Value);
-                            }
-                            break;
-                        }
-                    case ListChangeReason.Remove:
-                        {
-                            var change = item.Item;
-                            var wasMatch = predicate(change.Current);
-                            if (wasMatch) source.Remove(change.Current);
-                            break;
-                        }
-                    case ListChangeReason.RemoveRange:
-                        {
-                            source.RemoveMany(item.Range.Where(predicate));
-                            break;
-                        }
-                    case ListChangeReason.Clear:
-                        {
-                            source.ClearOrRemoveMany(item);
-                            break;
-                        }
-                }
-            }
-        }
-
-        /// <summary>
         /// Clones the list from the specified change set
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -124,6 +42,8 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (changes == null) throw new ArgumentNullException(nameof(changes));
+
+            var changeAware = source as ChangeAwareList<T>;
 
             foreach (var item in changes)
             {
@@ -167,6 +87,11 @@ namespace DynamicData
                                 source.Insert(change.CurrentIndex, change.Current);
                             }
 
+                            break;
+                        }
+                    case ListChangeReason.Refresh:
+                        {
+                            changeAware?.RefreshAt(item.Item.CurrentIndex);
                             break;
                         }
                     case ListChangeReason.Remove:
@@ -331,12 +256,11 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         /// <param name="equalityComparer">The equality comparer.</param>
         /// <returns></returns>
-        public static Optional<ItemWithIndex<T>> FindItemAndIndex<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer = null)
+        public static Optional<ItemWithIndex<T>> IndexOfOptional<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer = null)
         {
             var comparer = equalityComparer ?? EqualityComparer<T>.Default;
-
-            var result = source.WithIndex().FirstOrDefault(x => comparer.Equals(x.Item, item));
-            return !Equals(result, null) ? result : Optional.None<ItemWithIndex<T>>();
+            var index = source.IndexOf(item, comparer);
+            return index<0 ? Optional<ItemWithIndex<T>>.None : new ItemWithIndex<T>(item,index);
         }
 
         /// <summary>
@@ -494,6 +418,7 @@ namespace DynamicData
             {
                 if (index >= 0)
                 {
+                    //TODO: Why the hell reverse? Surely there must be as reason otherwise I would not have done it.
                     items.Reverse().ForEach(t => source.Insert(index, t));
                 }
                 else

@@ -125,6 +125,7 @@
     <Compile Include="List\Change.cs" />
     <Compile Include="List\ChangeSetEx.cs" />
     <Compile Include="List\ChangeType.cs" />
+    <Compile Include="List\Internal\AutoRefresh.cs" />
     <Compile Include="List\Internal\EditDiff.cs" />
     <Compile Include="List\IChangeSetAdaptor.cs" />
     <Compile Include="List\Internal\BufferIf.cs" />
@@ -143,7 +144,6 @@
     <Compile Include="List\Internal\GroupOnProperty.cs" />
     <Compile Include="List\IGrouping.cs" />
     <Compile Include="List\Internal\GroupOnPropertyWithImmutableState.cs" />
-    <Compile Include="List\Internal\ImmutableFilter.cs" />
     <Compile Include="Kernel\ReferenceEqualityComparer.cs" />
     <Compile Include="Cache\ChangeReason.cs" />
     <Compile Include="Kernel\ConnectionStatus.cs" />

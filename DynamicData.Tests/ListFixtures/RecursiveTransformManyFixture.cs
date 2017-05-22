@@ -38,10 +38,10 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(mother);
 
             Assert.AreEqual(4, _results.Data.Count, "Should be 4 in the cache");
-            Assert.IsTrue(_results.Data.Items.FindItemAndIndex(child1).HasValue, "Child 1 should be in the cache");
-            Assert.IsTrue(_results.Data.Items.FindItemAndIndex(child2).HasValue, "Child 2 should be in the cache");
-            Assert.IsTrue(_results.Data.Items.FindItemAndIndex(child3).HasValue, "Child 3 should be in the cache");
-            Assert.IsTrue(_results.Data.Items.FindItemAndIndex(frientofchild1).HasValue, "Friend 1 should be in the cache");
+            Assert.IsTrue(_results.Data.Items.IndexOfOptional(child1).HasValue, "Child 1 should be in the cache");
+            Assert.IsTrue(_results.Data.Items.IndexOfOptional(child2).HasValue, "Child 2 should be in the cache");
+            Assert.IsTrue(_results.Data.Items.IndexOfOptional(child3).HasValue, "Child 3 should be in the cache");
+            Assert.IsTrue(_results.Data.Items.IndexOfOptional(frientofchild1).HasValue, "Friend 1 should be in the cache");
         }
 
         [Test]
