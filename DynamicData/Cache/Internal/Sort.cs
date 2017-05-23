@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reactive;
 using System.Reactive.Linq;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
@@ -152,7 +151,6 @@ namespace DynamicData.Cache.Internal
                     sortReason = SortReason.Reset;
                 }
 
-                //TODO: Create a sorted cache (could create an sorted observable list perhaps?)
                 IChangeSet<TObject, TKey> changeSet;
                 switch (sortReason)
                 {

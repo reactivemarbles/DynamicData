@@ -116,10 +116,7 @@ namespace DynamicData.List.Internal
                             var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
 
                             transformed.AddOrInsertRange(item.Range
-                                    .Select((t, idx) =>
-                                    {
-                                        return _containerFactory(t, idx + startIndex);
-                                    }),
+                                    .Select((t, idx) => _containerFactory(t, idx + startIndex)),
                                 item.Range.Index);
 
                             break;

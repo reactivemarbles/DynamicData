@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -158,6 +159,62 @@ namespace DynamicData.Tests.ListFixtures
                 results.Messages.Last().Refreshes.Should().Be(1);
                 results.Messages.Last().First().Item.Reason.Should().Be(ListChangeReason.Refresh);
                 results.Messages.Last().First().Item.Current.Index.Should().Be(60);
+            }
+        }
+
+        [Test]
+        public void AutoRefreshSort()
+        {
+            var items = Enumerable.Range(1, 100)
+                .Select(i => new Person("Person" + i, i))
+                .OrderByDescending(p=>p.Age)
+                .ToArray();
+
+            var comparer = SortExpressionComparer<Person>.Ascending(p => p.Age);
+
+            //result should only be true when all items are set to true
+            using (var cache = new SourceList<Person>())
+            using (var results = cache.Connect()
+                .AutoRefresh(nameof(Person.Age))
+                .Sort(SortExpressionComparer<Person>.Ascending(p=>p.Age))
+                .AsAggregator())
+            {
+
+                void CheckOrder()
+                {
+                    var sorted = items.OrderBy(p => p, comparer).ToArray();
+                    results.Data.Items.ShouldAllBeEquivalentTo(sorted);
+                }
+
+                cache.AddRange(items);
+
+                results.Data.Count.Should().Be(100);
+                results.Messages.Count.Should().Be(1);
+                CheckOrder();
+
+                items[0].Age = 60;
+                CheckOrder();
+                results.Messages.Count.Should().Be(2);
+                results.Messages.Last().Refreshes.Should().Be(1);
+                results.Messages.Last().Moves.Should().Be(1);
+
+                items[90].Age = -1; //move to begining
+                CheckOrder();
+                results.Messages.Count.Should().Be(3);
+                results.Messages.Last().Refreshes.Should().Be(1);
+                results.Messages.Last().Moves.Should().Be(1);
+
+                items[50].Age = 49;  //same positon so no move
+                CheckOrder();
+                results.Messages.Count.Should().Be(4);
+                results.Messages.Last().Refreshes.Should().Be(1);
+                results.Messages.Last().Moves.Should().Be(0);
+
+                items[50].Age = 51;  //same positon so no move
+                CheckOrder();
+                results.Messages.Count.Should().Be(5);
+                results.Messages.Last().Refreshes.Should().Be(1);
+                results.Messages.Last().Moves.Should().Be(1);
             }
         }
 

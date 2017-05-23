@@ -7,12 +7,12 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    internal class MutableFilter<T>
+    internal class Filter<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<Func<T, bool>> _predicates;
 
-        public MutableFilter([NotNull] IObservable<IChangeSet<T>> source,
+        public Filter([NotNull] IObservable<IChangeSet<T>> source,
                              [NotNull] IObservable<Func<T, bool>> predicates)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
@@ -78,7 +78,7 @@ namespace DynamicData.List.Internal
                     wasMatch = previous.IsMatch;
                 }
 
-                //clone the current change into allItems []
+                //clone the current change into allItems.
                 allItems.Clone(item);
 
                 switch (item.Reason)
@@ -128,11 +128,9 @@ namespace DynamicData.List.Internal
                     }
                     case ListChangeReason.Refresh:
                     {
-                        var change = item.Item;
+                        //TODO: Consider batching all refreshes and using IndexOfMany to calculate whether the item matches the filter.
 
-                        //TODO: 1. Transform should re-transform on Refresh
-                        //TODO: 2. Batch refreshes and using IndexOfMany to calculate whether the item matches the filter?
-
+                            var change = item.Item;
                         ////manually set match because Transform does not re-transform on Refresh [maybe it should]
                         var match = change.Current.IsMatch;
                         if (match)
@@ -150,7 +148,6 @@ namespace DynamicData.List.Internal
                             {
                                 filtered.Add(change.Current);
                             }
-
                         }
                         else
                         {
@@ -251,7 +248,7 @@ namespace DynamicData.List.Internal
                 return EqualityComparer<T>.Default.GetHashCode(Item);
             }
 
-            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.List.Internal.MutableFilter`1.ItemWithMatch" /> objects are equal.</summary>
+            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.List.Internal.Filter`1.ItemWithMatch" /> objects are equal.</summary>
             /// <param name="left">The first value to compare.</param>
             /// <param name="right">The second value to compare.</param>
             /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
@@ -260,7 +257,7 @@ namespace DynamicData.List.Internal
                 return Equals(left, right);
             }
 
-            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.List.Internal.MutableFilter`1.ItemWithMatch" /> objects have different values.</summary>
+            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.List.Internal.Filter`1.ItemWithMatch" /> objects have different values.</summary>
             /// <param name="left">The first value to compare.</param>
             /// <param name="right">The second value to compare.</param>
             /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>

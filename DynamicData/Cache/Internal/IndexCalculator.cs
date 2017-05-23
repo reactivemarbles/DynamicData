@@ -98,9 +98,8 @@ namespace DynamicData.Cache.Internal
         /// <returns></returns>
         public IChangeSet<TObject, TKey> Calculate(IChangeSet<TObject, TKey> changes)
         {
-            var result = new List<Change<TObject, TKey>>();
-
-            //  var notEvaluates = changes.Where(c => c.Reason != ChangeReason.Refresh).ToList();
+            var result = new List<Change<TObject, TKey>>(changes.Count);
+            var refreshes = new List<Change<TObject, TKey>>(changes.Refreshes);
 
             foreach (var u in changes)
             {
@@ -142,17 +141,15 @@ namespace DynamicData.Cache.Internal
 
                     case ChangeReason.Refresh:
                         {
+                            refreshes.Add(u);
                             result.Add(u);
                         }
-                        break;
-                    default:
                         break;
                 }
             }
 
             //for evaluates, check whether the change forces a new position
-            var evaluates = changes.Where(c => c.Reason == ChangeReason.Refresh)
-                                   .OrderByDescending(x => new KeyValuePair<TKey, TObject>(x.Key, x.Current), _comparer)
+            var evaluates = refreshes.OrderByDescending(x => new KeyValuePair<TKey, TObject>(x.Key, x.Current), _comparer)
                                    .ToList();
 
             if (evaluates.Count != 0 && _optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
@@ -173,14 +170,10 @@ namespace DynamicData.Cache.Internal
                     int newposition = GetInsertPositionLinear(_list, current);
 
                     if (old < newposition)
-                    {
                         newposition--;
-                    }
 
                     if (old == newposition)
-                    {
                         continue;
-                    }
 
                     _list.RemoveAt(old);
                     _list.Insert(newposition, current);

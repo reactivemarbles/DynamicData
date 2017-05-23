@@ -218,7 +218,7 @@
     <Compile Include="List\ChangeSet.cs" />
     <Compile Include="List\Internal\ImmutableGroup.cs" />
     <Compile Include="List\Internal\MergeMany.cs" />
-    <Compile Include="List\Internal\MutableFilter.cs" />
+    <Compile Include="List\Internal\Filter.cs" />
     <Compile Include="List\Internal\OnBeingAdded.cs" />
     <Compile Include="List\Internal\OnBeingRemoved.cs" />
     <Compile Include="List\Internal\Pager.cs" />

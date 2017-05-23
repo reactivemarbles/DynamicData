@@ -283,6 +283,18 @@ namespace DynamicData
             return new AutoRefresh<TObject, TAny>(source, reevaluator, changeSetBuffer, scheduler).Run();
         }
 
+
+        /// <summary>
+        /// Supress auto refresh notifications
+        /// </summary>
+        /// <param name="source">The source observable change set</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> SupressAutoRefresh<T>(this IObservable<IChangeSet<T>> source)
+        {
+            return source.WhereReasonsAreNot(ListChangeReason.Refresh);
+        }
+
+
         #endregion
 
         #region Conversion
@@ -561,7 +573,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            return new MutableFilter<T>(source, new BehaviorSubject<Func<T, bool>>(predicate)).Run();
+            return new Filter<T>(source, new BehaviorSubject<Func<T, bool>>(predicate)).Run();
         }
 
         /// <summary>
@@ -599,7 +611,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-            return new MutableFilter<T>(source, predicate).Run();
+            return new Filter<T>(source, predicate).Run();
         }
 
 

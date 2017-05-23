@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -12,13 +11,12 @@ namespace DynamicData.List.Internal
     internal sealed class Sort<T>
     {
         private readonly IObservable<IChangeSet<T>> _source;
-        private IComparer<T> _comparer;
         private readonly SortOptions _sortOptions;
         private readonly int _resetThreshold;
         private readonly IObservable<Unit> _resort;
         private readonly IObservable<IComparer<T>> _comparerObservable;
         private readonly IEqualityComparer<T> _referencEqualityComparer = ReferenceEqualityComparer<T>.Instance;
-
+        private IComparer<T> _comparer;
 
         public Sort([NotNull] IObservable<IChangeSet<T>> source,
             [NotNull] IComparer<T> comparer, SortOptions sortOptions,
@@ -27,11 +25,11 @@ namespace DynamicData.List.Internal
             int resetThreshold)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
+            _resort = resort ?? Observable.Never<Unit>();
+            _comparerObservable = comparerObservable ?? Observable.Never<IComparer<T>>();
             _comparer = comparer;
             _sortOptions = sortOptions;
             _resetThreshold = resetThreshold;
-            _resort = resort ?? Observable.Never<Unit>();
-            _comparerObservable = comparerObservable ?? Observable.Never<IComparer<T>>();
         }
 
         public IObservable<IChangeSet<T>> Run()
@@ -53,8 +51,8 @@ namespace DynamicData.List.Internal
                 var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
 
                 return changed.Merge(resort).Merge(changeComparer)
-                .Where(changes=>changes.Count!=0)
-                .SubscribeSafe(observer);
+                    .Where(changes => changes.Count != 0)
+                    .SubscribeSafe(observer);
             });
         }
 
@@ -79,6 +77,8 @@ namespace DynamicData.List.Internal
                 return target.CaptureChanges();
             }
 
+            var refreshes = new List<T>(changes.Refreshes);
+
             foreach (var change in changes)
             {
                 switch (change.Reason)
@@ -102,6 +102,26 @@ namespace DynamicData.List.Internal
                             }
                             break;
                         }
+                    case ListChangeReason.Remove:
+                    {
+                        var current = change.Item.Current;
+                        Remove(target, current);
+                        break;
+                    }
+                    case ListChangeReason.Refresh:
+                    {
+                        //add to refresh list so position can be calculated
+                        refreshes.Add(change.Item.Current);
+
+                        //add to current list so downstream operators can receive a refresh
+                        //notification, so get the latest index and pass the index up the chain
+                        var indexed = target
+                            .IndexOfOptional(change.Item.Current, ReferenceEqualityComparer<T>.Instance)
+                            .ValueOrThrow(() => new SortException($"Cannot find index of {typeof(T).Name} -> {change.Item.Current}. Expected to be in the list"));
+
+                        target.Refresh(indexed.Item, indexed.Index);
+                        break;
+                    }
                     case ListChangeReason.Replace:
                         {
                             var current = change.Item.Current;
@@ -111,12 +131,7 @@ namespace DynamicData.List.Internal
                             Insert(target, current);
                             break;
                         }
-                    case ListChangeReason.Remove:
-                        {
-                            var current = change.Item.Current;
-                            Remove(target, current);
-                            break;
-                        }
+
                     case ListChangeReason.RemoveRange:
                         {
                             target.RemoveMany(change.Range);
@@ -128,6 +143,22 @@ namespace DynamicData.List.Internal
                             break;
                         }
                 }
+            }
+
+            //Now deal with refreshes [can be expensive]
+            foreach (var item in refreshes)
+            {
+                var old = target.IndexOf(item);
+                if (old == -1) continue;
+
+                int newposition = GetInsertPositionLinear(target, item);
+                if (old < newposition)
+                    newposition--; 
+
+                if (old == newposition)
+                    continue;
+
+                target.Move(old, newposition);
             }
             return target.CaptureChanges();
         }
@@ -154,13 +185,9 @@ namespace DynamicData.List.Internal
 
         private IChangeSet<T> ChangeComparer(ChangeAwareList<T> target, IComparer<T> comparer)
         {
-
             _comparer = comparer;
             if (_resetThreshold > 0 && target.Count <= _resetThreshold)
-            {
                 return  Reorder(target);
-            }
-
 
             var sorted = target.OrderBy(t => t, _comparer).ToList();
             target.Clear();
@@ -170,7 +197,6 @@ namespace DynamicData.List.Internal
 
         private IChangeSet<T> Reset(ChangeAwareList<T> original, ChangeAwareList<T> target)
         {
-
             var sorted = original.OrderBy(t => t, _comparer).ToList();
             target.Clear();
             target.AddRange(sorted);
@@ -220,20 +246,12 @@ namespace DynamicData.List.Internal
         private int GetCurrentPosition(ChangeAwareList<T> target, T item)
         {
             int index;
-            if (_sortOptions == SortOptions.UseBinarySearch)
-            {
-                index = target.BinarySearch(item, _comparer);
-            }
-            else
-            {
-                var index1 = target.IndexOf(item);
-                index = target.IndexOf(item, _referencEqualityComparer);
-
-                Debug.Assert(index== index1);
-            }
+            index = _sortOptions == SortOptions.UseBinarySearch 
+                ? target.BinarySearch(item, _comparer) 
+                : target.IndexOf(item, _referencEqualityComparer);
 
             if (index < 0)
-                throw new SortException("Current item cannot be found");
+                throw new SortException($"Cannot find item: {typeof(T).Name} -> {item}");
 
             return index;
         }

@@ -42,7 +42,9 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (changes == null) throw new ArgumentNullException(nameof(changes));
-            
+
+            source.EnsureCapacityFor(changes);
+
             foreach (var item in changes)
             {
                 Clone(source,  item);
