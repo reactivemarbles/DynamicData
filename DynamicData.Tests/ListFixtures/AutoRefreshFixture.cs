@@ -22,8 +22,6 @@ namespace DynamicData.Tests.ListFixtures
             using (var cache = new SourceList<Person>())
             using (var results = cache.Connect().AutoRefresh(nameof(Person.Age)).AsAggregator())
             {
-                var xxx = cache.Connect().Subscribe();
-
                 cache.AddRange(items);
 
                 results.Data.Count.Should().Be(100);
@@ -127,9 +125,53 @@ namespace DynamicData.Tests.ListFixtures
 
                 results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
             }
+        }
+        
+        [Test]
+        public void AutoRefreshTransform()
+        {
+            var items = Enumerable.Range(1, 100)
+                .Select(i => new Person("Person" + i, i))
+                .ToArray();
 
+            //result should only be true when all items are set to true
+            using (var cache = new SourceList<Person>())
+            using (var results = cache.Connect()
+                .AutoRefresh(nameof(Person.Age))
+                .Transform((p,idx) => new TransformedPerson(p,idx))
+                .AsAggregator())
+            {
+                cache.AddRange(items);
 
+                results.Data.Count.Should().Be(100);
+                results.Messages.Count.Should().Be(1);
 
+                //update an item which did not match the filter and does so after change
+                items[0].Age = 60;
+                results.Messages.Count.Should().Be(2);
+                results.Messages.Last().Refreshes.Should().Be(1);
+                results.Messages.Last().First().Item.Reason.Should().Be(ListChangeReason.Refresh);
+                results.Messages.Last().First().Item.Current.Index.Should().Be(0);
+
+                items[60].Age = 160;
+                results.Messages.Count.Should().Be(3);
+                results.Messages.Last().Refreshes.Should().Be(1);
+                results.Messages.Last().First().Item.Reason.Should().Be(ListChangeReason.Refresh);
+                results.Messages.Last().First().Item.Current.Index.Should().Be(60);
+            }
+        }
+
+        private class TransformedPerson
+        {
+            public Person Person { get; }
+            public int Index { get; }
+            public DateTime TimeStamp { get; } = DateTime.Now;
+
+            public TransformedPerson(Person person, int index)
+            {
+                Person = person;
+                Index = index;
+            }
         }
     }
 }

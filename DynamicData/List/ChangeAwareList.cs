@@ -153,6 +153,22 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Add a Refresh change of the item at the specified index to the list of changes.
+        /// 
+        /// This is to notify downstream operators to refresh
+        /// </summary>
+        /// <returns>Ifthe item is in the list, returns true</returns>
+        public void Refresh(T item, int index)
+        {
+            if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
+            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+
+            _innerList[index] = item;
+
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, item, index));
+        }
+
+        /// <summary>
         /// Add a Refresh change for specified index to the list of changes.
         ///  This is to notify downstream operators to refresh.
         /// </summary>

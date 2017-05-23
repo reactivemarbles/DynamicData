@@ -48,15 +48,10 @@ namespace DynamicData.List.Internal
                 //Need to get item by index and store it in the transform
                 var filteredResult = _source
                     .Synchronize(locker)
-                    .Transform((t, idx) =>
-                    {
-                        //was match if previously existed, or when data has not yet loaded, false
-                        var wasMatch = idx < filtered.Count && filtered[idx].IsMatch;
-                        return new ItemWithMatch(t, idx, predicate(t), wasMatch);
-                    })
+                    .Transform((t, idx) => new ItemWithMatch(t, idx, predicate(t)))
                     .Select(changes =>
                     {
-                        Filter(all, filtered, changes, predicate);
+                        Process(all, filtered, changes, predicate);
                         return filtered.CaptureChanges();
                     });
                 
@@ -67,14 +62,22 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private void Filter(List<ItemWithMatch> allItems, ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes, Func<T, bool> predicate)
+        private void Process(List<ItemWithMatch> allItems, ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes, Func<T, bool> predicate)
         {
             allItems.Capacity = allItems.Count + changes.Adds;
            
-
             //Maintain all items as well as filtered list. This enables us to a) requery when the predicate changes b) check the previous state when Refresh is called
             foreach (var item in changes)
             {
+                bool wasMatch = false;
+
+                if (item.Reason == ListChangeReason.Refresh || item.Reason == ListChangeReason.Replace)
+                {
+                    //calculate wasMatch before the new match is replaced in the 
+                    var previous = allItems[item.Item.CurrentIndex];
+                    wasMatch = previous.IsMatch;
+                }
+
                 //clone the current change into allItems []
                 allItems.Clone(item);
 
@@ -97,15 +100,15 @@ namespace DynamicData.List.Internal
                     {
                         var change = item.Item;
                         var match = change.Current.IsMatch;
-                        var wasMatch = change.Current.WasMatch;
+                       // var wasMatch = change.Current.WasMatch;
 
                         if (match)
                         {
                             if (wasMatch)
                             {
-                                //an update, so get the latest index
-                                var previous = filtered
-                                    .IndexOfOptional(change.Previous.Value, ReferenceEqualityComparer<ItemWithMatch>.Instance)
+                                //an update, so get the latest index and pass the index up the chain
+                                var previous = filtered.Select(x => x.Item)
+                                    .IndexOfOptional(change.Previous.Value.Item, ReferenceEqualityComparer<T>.Instance)
                                     .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
 
                                     //replace inline
@@ -130,21 +133,15 @@ namespace DynamicData.List.Internal
                         //TODO: 1. Transform should re-transform on Refresh
                         //TODO: 2. Batch refreshes and using IndexOfMany to calculate whether the item matches the filter?
 
-                        //manually set match because Transform does not re-transform on Refresh [maybe it should]
-                        var refreshedItem = allItems[change.CurrentIndex];
-                        refreshedItem.WasMatch = refreshedItem.IsMatch;
-                        refreshedItem.IsMatch = predicate(change.Current.Item);
-
+                        ////manually set match because Transform does not re-transform on Refresh [maybe it should]
                         var match = change.Current.IsMatch;
-                        var wasMatch = change.Current.WasMatch;
-
                         if (match)
                         {
                             if (wasMatch)
                             {
                                 //an update, so get the latest index and pass the index up the chain
-                                var previous = filtered
-                                    .IndexOfOptional(change.Current,ReferenceEqualityComparer<ItemWithMatch>.Instance)
+                                var previous = filtered.Select(x=>x.Item)
+                                    .IndexOfOptional(change.Current.Item, ReferenceEqualityComparer<T>.Instance)
                                     .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
 
                                 filtered.RefreshAt(previous.Index);
@@ -217,19 +214,66 @@ namespace DynamicData.List.Internal
             mutatedMatches.ForEach(m => m());
         }
 
-        private class ItemWithMatch
+        private class ItemWithMatch : IEquatable<ItemWithMatch>
         {
             public T Item { get; }
             public int Index { get; }
             public bool IsMatch { get; set; }
             public bool WasMatch { get; set; }
 
-            public ItemWithMatch(T item,int index, bool isMatch, bool wasMatch)
+            public ItemWithMatch(T item,int index, bool isMatch, bool wasMatch = false)
             {
                 Item = item;
                 Index = index;
                 IsMatch = isMatch;
                 WasMatch = wasMatch;
+            }
+
+            #region Equality
+
+            public bool Equals(ItemWithMatch other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return EqualityComparer<T>.Default.Equals(Item, other.Item);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((ItemWithMatch) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return EqualityComparer<T>.Default.GetHashCode(Item);
+            }
+
+            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.List.Internal.MutableFilter`1.ItemWithMatch" /> objects are equal.</summary>
+            /// <param name="left">The first value to compare.</param>
+            /// <param name="right">The second value to compare.</param>
+            /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
+            public static bool operator ==(ItemWithMatch left, ItemWithMatch right)
+            {
+                return Equals(left, right);
+            }
+
+            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.List.Internal.MutableFilter`1.ItemWithMatch" /> objects have different values.</summary>
+            /// <param name="left">The first value to compare.</param>
+            /// <param name="right">The second value to compare.</param>
+            /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
+            public static bool operator !=(ItemWithMatch left, ItemWithMatch right)
+            {
+                return !Equals(left, right);
+            }
+
+            #endregion
+
+            public override string ToString()
+            {
+                return $"{Item} @ {Index}, (was {IsMatch} is {WasMatch}";
             }
         }
     }

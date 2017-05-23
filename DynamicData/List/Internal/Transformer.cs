@@ -10,17 +10,21 @@ namespace DynamicData.List.Internal
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
         private readonly Func<TSource, int,  TransformedItemContainer> _containerFactory;
+        private readonly bool _transformOnRefresh;
 
         public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
             :this(source,(item,index) => factory(item))
         {
+            _transformOnRefresh = false;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _containerFactory = (item, index) => new TransformedItemContainer(item, factory(item));
         }
 
         public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, int, TDestination> factory)
         {
             if (factory == null) throw new ArgumentNullException(nameof(factory));
-
             _source = source ?? throw new ArgumentNullException(nameof(source));
+            _transformOnRefresh = true;
             _containerFactory = (item, index) => new TransformedItemContainer(item, factory(item, index));
         }
 
@@ -122,8 +126,16 @@ namespace DynamicData.List.Internal
                         }
                     case ListChangeReason.Refresh:
                     {
-                        //TODO: Consider transform when index is specified in transform function?
-                        transformed.RefreshAt(item.Item.CurrentIndex);
+                        if (_transformOnRefresh)
+                        {
+                            var change = item.Item;
+                            var refreshed = _containerFactory(change.Current, change.CurrentIndex);
+                            transformed.Refresh(refreshed, item.Item.CurrentIndex);
+                        }
+                        else
+                        {
+                            transformed.RefreshAt(item.Item.CurrentIndex);
+                        }
                         break;
                     }
                     case ListChangeReason.Replace:

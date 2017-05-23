@@ -5,43 +5,31 @@ using DynamicData.Binding;
 namespace DynamicData.Tests.Domain
 {
     public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
-//, IEquatable<Person>
     {
-        public string ParentName { get; set; }
-        private readonly string _name;
+        public string ParentName { get; }
+        public string Name { get; }
+        public string Gender { get; }
+        public string Key => Name;
         private int _age;
-        private readonly string _gender;
 
         public Person(string firstname, string lastname, int age, string gender = "F", string parentName = null)
             : this(firstname + " " + lastname, age, gender, parentName)
         {
-
         }
 
         public Person(string name, int age, string gender = "F", string parentName = null)
         {
-            _name = name;
+            Name = name;
             _age = age;
-            _gender = gender;
-            ParentName = parentName ?? String.Empty;
+            Gender = gender;
+            ParentName = parentName ?? string.Empty;
         }
-
-        public string Name => _name;
-
-        public string Gender => _gender;
 
         public int Age
         {
             get => _age;
-            set { SetAndRaise(ref _age, value); }
+            set => SetAndRaise(ref _age, value);
         }
-
-        public string Key => _name;
-
-        //public override string ToString()
-        //{
-        //    return $"{this.Name}. {this.Age}";
-        //}
 
         #region Equality Members
 
@@ -49,7 +37,7 @@ namespace DynamicData.Tests.Domain
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(_name, other._name);
+            return string.Equals(Name, other.Name);
         }
 
         public override bool Equals(object obj)
@@ -62,7 +50,7 @@ namespace DynamicData.Tests.Domain
 
         public override int GetHashCode()
         {
-            return (_name != null ? _name.GetHashCode() : 0);
+            return (Name != null ? Name.GetHashCode() : 0);
         }
 
         public static bool operator ==(Person left, Person right)
@@ -103,16 +91,16 @@ namespace DynamicData.Tests.Domain
                 if (ReferenceEquals(x, null)) return false;
                 if (ReferenceEquals(y, null)) return false;
                 if (x.GetType() != y.GetType()) return false;
-                return string.Equals(x._name, y._name) && x._age == y._age && string.Equals(x._gender, y._gender);
+                return string.Equals(x.Name, y.Name) && x._age == y._age && string.Equals(x.Gender, y.Gender);
             }
 
             public int GetHashCode(Person obj)
             {
                 unchecked
                 {
-                    var hashCode = (obj._name != null ? obj._name.GetHashCode() : 0);
+                    var hashCode = (obj.Name != null ? obj.Name.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ obj._age;
-                    hashCode = (hashCode * 397) ^ (obj._gender != null ? obj._gender.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (obj.Gender != null ? obj.Gender.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -121,5 +109,10 @@ namespace DynamicData.Tests.Domain
         public static IEqualityComparer<Person> NameAgeGenderComparer { get; } = new NameAgeGenderEqualityComparer();
 
         #endregion
+
+        public override string ToString()
+        {
+            return $"{Name}. {Age}";
+        }
     }
 }
