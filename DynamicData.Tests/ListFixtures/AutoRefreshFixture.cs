@@ -20,10 +20,10 @@ namespace DynamicData.Tests.ListFixtures
                 .ToArray();
 
             //result should only be true when all items are set to true
-            using (var cache = new SourceList<Person>())
-            using (var results = cache.Connect().AutoRefresh(nameof(Person.Age)).AsAggregator())
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect().AutoRefresh(nameof(Person.Age)).AsAggregator())
             {
-                cache.AddRange(items);
+                list.AddRange(items);
 
                 results.Data.Count.Should().Be(100);
                 results.Messages.Count.Should().Be(1);
@@ -36,14 +36,14 @@ namespace DynamicData.Tests.ListFixtures
 
                 //remove an item and check no change is fired
                 var toRemove = items[1];
-                cache.Remove(toRemove);
+                list.Remove(toRemove);
                 results.Data.Count.Should().Be(99);
                 results.Messages.Count.Should().Be(3);
                 toRemove.Age = 100;
                 results.Messages.Count.Should().Be(3);
 
                 //add it back in and check it updates
-                cache.Add(toRemove);
+                list.Add(toRemove);
                 results.Messages.Count.Should().Be(4);
                 toRemove.Age = 101;
                 results.Messages.Count.Should().Be(5);
@@ -62,10 +62,10 @@ namespace DynamicData.Tests.ListFixtures
                 .ToArray();
 
             //result should only be true when all items are set to true
-            using (var cache = new SourceList<Person>())
-            using (var results = cache.Connect().AutoRefresh(nameof(Person.Age), TimeSpan.FromSeconds(1), scheduler).AsAggregator())
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect().AutoRefresh(nameof(Person.Age), TimeSpan.FromSeconds(1), scheduler).AsAggregator())
             {
-                cache.AddRange(items);
+                list.AddRange(items);
 
                 results.Data.Count.Should().Be(100);
                 results.Messages.Count.Should().Be(1);
@@ -90,10 +90,10 @@ namespace DynamicData.Tests.ListFixtures
                 .ToArray();
 
             //result should only be true when all items are set to true
-            using (var cache = new SourceList<Person>())
-            using (var results = cache.Connect().AutoRefresh(nameof(Person.Age)).Filter(p=>p.Age>50).AsAggregator())
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect().AutoRefresh(nameof(Person.Age)).Filter(p=>p.Age>50).AsAggregator())
             {
-                cache.AddRange(items);
+                list.AddRange(items);
 
                 results.Data.Count.Should().Be(50);
                 results.Messages.Count.Should().Be(1);
@@ -112,14 +112,14 @@ namespace DynamicData.Tests.ListFixtures
 
                 //remove an item and check no change is fired
                 var toRemove = items[65];
-                cache.Remove(toRemove);
+                list.Remove(toRemove);
                 results.Data.Count.Should().Be(50);
                 results.Messages.Count.Should().Be(4);
                 toRemove.Age = 100;
                 results.Messages.Count.Should().Be(4);
 
                 //add it back in and check it updates
-                cache.Add(toRemove);
+                list.Add(toRemove);
                 results.Messages.Count.Should().Be(5);
                 toRemove.Age = 101;
                 results.Messages.Count.Should().Be(6);
@@ -136,13 +136,13 @@ namespace DynamicData.Tests.ListFixtures
                 .ToArray();
 
             //result should only be true when all items are set to true
-            using (var cache = new SourceList<Person>())
-            using (var results = cache.Connect()
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect()
                 .AutoRefresh(nameof(Person.Age))
                 .Transform((p,idx) => new TransformedPerson(p,idx))
                 .AsAggregator())
             {
-                cache.AddRange(items);
+                list.AddRange(items);
 
                 results.Data.Count.Should().Be(100);
                 results.Messages.Count.Should().Be(1);
@@ -173,8 +173,8 @@ namespace DynamicData.Tests.ListFixtures
             var comparer = SortExpressionComparer<Person>.Ascending(p => p.Age);
 
             //result should only be true when all items are set to true
-            using (var cache = new SourceList<Person>())
-            using (var results = cache.Connect()
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect()
                 .AutoRefresh(nameof(Person.Age))
                 .Sort(SortExpressionComparer<Person>.Ascending(p=>p.Age))
                 .AsAggregator())
@@ -186,7 +186,7 @@ namespace DynamicData.Tests.ListFixtures
                     results.Data.Items.ShouldAllBeEquivalentTo(sorted);
                 }
 
-                cache.AddRange(items);
+                list.AddRange(items);
 
                 results.Data.Count.Should().Be(100);
                 results.Messages.Count.Should().Be(1);
@@ -215,6 +215,68 @@ namespace DynamicData.Tests.ListFixtures
                 results.Messages.Count.Should().Be(5);
                 results.Messages.Last().Refreshes.Should().Be(1);
                 results.Messages.Last().Moves.Should().Be(1);
+            }
+        }
+
+        [Test]
+        public void AutoRefreshGroup()
+        {
+            var items = Enumerable.Range(1, 100)
+                .Select(i => new Person("Person" + i, i))
+                .ToArray();
+
+            //result should only be true when all items are set to true
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect()
+                .AutoRefresh(nameof(Person.Age))
+                .GroupOn(p=>p.Age % 10)
+                .AsAggregator())
+            {          
+                void CheckContent()
+                {
+                    foreach (var grouping in items.GroupBy(p => p.Age % 10))
+                    {
+                        var childGroup = results.Data.Items.Single(g => g.GroupKey == grouping.Key);
+                        var expected = grouping.OrderBy(p => p.Name);
+                        var actual = childGroup.List.Items.OrderBy(p => p.Name);
+                        actual.ShouldAllBeEquivalentTo(expected);
+                    }
+                }
+
+                list.AddRange(items);
+                results.Data.Count.Should().Be(10);
+                results.Messages.Count.Should().Be(1);
+                CheckContent();
+
+                //move person from group 1 to 2
+                items[0].Age = items[0].Age + 1;
+                CheckContent();
+
+                //change the value and move to a grouping which does not yet exist
+                items[1].Age = -1;
+                results.Data.Count.Should().Be(11);
+                results.Data.Items.Last().GroupKey.Should().Be(-1);
+                results.Data.Items.Last().List.Count.Should().Be(1);
+                results.Data.Items.First().List.Count.Should().Be(9);
+                CheckContent();
+
+                //put the value back where it was and check the group was removed
+                items[1].Age = 1;
+                results.Data.Count.Should().Be(10);
+                CheckContent();
+
+
+                var groupOf3 = results.Data.Items.ElementAt(2);
+
+                IChangeSet<Person> changes = null;
+                groupOf3.List.Connect().Subscribe(c => changes = c);
+
+                //refresh an item which makes it belong to the same group - should then propagate a refresh
+                items[2].Age = 13;
+                changes.Should().NotBeNull();
+                changes.Count.Should().Be(1);
+                changes.First().Reason.Should().Be(ListChangeReason.Refresh);
+                changes.First().Item.Current.Should().BeSameAs(items[2]);
             }
         }
 

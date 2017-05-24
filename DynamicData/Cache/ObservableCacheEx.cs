@@ -2020,7 +2020,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        Action<IChangeSet<TObject, TKey>> updateAction = updates =>
+                        void UpdateAction(IChangeSet<TObject, TKey> updates)
                         {
                             try
                             {
@@ -2030,11 +2030,12 @@ namespace DynamicData
                             {
                                 observer.OnError(ex);
                             }
-                        };
+                        }
+
                         IDisposable subscriber = Disposable.Empty;
                         try
                         {
-                            var combiner = new Combiner<TObject, TKey>(type, updateAction);
+                            var combiner = new Combiner<TObject, TKey>(type, UpdateAction);
                             subscriber = combiner.Subscribe(sources.ToArray());
                         }
                         catch (Exception ex)
@@ -2057,7 +2058,7 @@ namespace DynamicData
                 (
                     observer =>
                     {
-                        Action<IChangeSet<TObject, TKey>> updateAction = updates =>
+                        void UpdateAction(IChangeSet<TObject, TKey> updates)
                         {
                             try
                             {
@@ -2068,14 +2069,15 @@ namespace DynamicData
                                 observer.OnError(ex);
                                 observer.OnCompleted();
                             }
-                        };
+                        }
+
                         IDisposable subscriber = Disposable.Empty;
                         try
                         {
                             var list = combinetarget.ToList();
                             list.Insert(0, source);
 
-                            var combiner = new Combiner<TObject, TKey>(type, updateAction);
+                            var combiner = new Combiner<TObject, TKey>(type, UpdateAction);
                             subscriber = combiner.Subscribe(list.ToArray());
                         }
                         catch (Exception ex)

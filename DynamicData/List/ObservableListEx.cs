@@ -670,19 +670,20 @@ namespace DynamicData
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
         /// or
         /// valueSelector
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(
-            this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory)
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, 
+            Func<TSource, TDestination> transformFactory,
+            bool transformOnRefresh = false)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-
-            return new Transformer<TSource, TDestination>(source, transformFactory).Run();
+            return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t), transformOnRefresh);
         }
 
         /// <summary>
@@ -691,21 +692,75 @@ namespace DynamicData
         /// <typeparam name="TSource">The type of the source.</typeparam>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="transformFactory">The transform factory.</param>
-        /// <returns></returns>
+        /// <param name="transformFactory">The transform fuunction</param>
+        /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
+        /// <returns>A an observable changeset of the transformed object</returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
         /// or
         /// valueSelector
         /// </exception>
-        internal static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(
-            this IObservable<IChangeSet<TSource>> source, Func<TSource, int, TDestination> transformFactory)
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, 
+            Func<TSource, int, TDestination> transformFactory,
+            bool transformOnRefresh = false)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
-            return new Transformer<TSource, TDestination>(source, transformFactory).Run();
+            return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t,idx),transformOnRefresh);
         }
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function.
+        /// 
+        /// *** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform fuunction</param>
+        /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
+        /// <returns>A an observable changeset of the transformed object</returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// valueSelector
+        /// </exception>
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source,
+            Func<TSource, Optional<TDestination>, TDestination> transformFactory,
+            bool transformOnRefresh = false)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+
+            return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t, previous), transformOnRefresh);
+        }
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// 
+        /// *** Annoyingly when using this overload you will have to explicy specify the generic type arguments as type inference fails
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
+        /// <returns>A an observable changeset of the transformed object</returns>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// valueSelector
+        /// </exception>
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source,
+            Func<TSource, Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+
+            return new Transformer<TSource, TDestination>(source, transformFactory, transformOnRefresh).Run();
+        }
+
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
@@ -714,7 +769,7 @@ namespace DynamicData
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
-        /// <returns></returns>
+        /// <returns>A an observable changeset of the transformed object</returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
         /// or
@@ -731,7 +786,6 @@ namespace DynamicData
 
         /// <summary>
         /// Equivalent to a select many transform. To work, the key must individually identify each child.
-        /// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
         /// </summary>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <typeparam name="TSource">The type of the source.</typeparam>

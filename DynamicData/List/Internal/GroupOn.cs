@@ -29,8 +29,12 @@ namespace DynamicData.List.Internal
                 var groupings = new ChangeAwareList<IGroup<TObject, TGroupKey>>();
                 var groupCache = new Dictionary<TGroupKey, Group<TObject, TGroupKey>>();
 
+                //capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source
-                    .Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)));
+                    .Transform<TObject, ItemWithGroupKey>((t, previous, idx) =>
+                    {
+                        return new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p=>p.Group), idx);
+                    },true);
                 
                 var locker = new object();
                 var shared = itemsWithGroup.Synchronize(locker).Publish();
@@ -60,17 +64,16 @@ namespace DynamicData.List.Internal
 
         private IChangeSet<IGroup<TObject, TGroupKey>> Regroup(ChangeAwareList<IGroup<TObject, TGroupKey>> result,
             IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection,
-            IReadOnlyCollection<ItemWithValue<TObject, TGroupKey>> currentItems)
+            IReadOnlyCollection<ItemWithGroupKey> currentItems)
         {
             //TODO: We need to update ItemWithValue>
 
             foreach (var itemWithValue in currentItems)
             {
-                var currentGroupKey = itemWithValue.Value;
+                var currentGroupKey = itemWithValue.Group;
                 var newGroupKey = _groupSelector(itemWithValue.Item);
                 if (newGroupKey.Equals(currentGroupKey)) continue;
                 
-
                 //remove from the old group
                 var currentGroupLookup = GetCache(groupCollection, currentGroupKey);
                 var currentGroupCache = currentGroupLookup.Group;
@@ -83,7 +86,7 @@ namespace DynamicData.List.Internal
                 }
 
                 //Mark the old item with the new cache group
-                itemWithValue.Value = newGroupKey;
+                itemWithValue.Group = newGroupKey;
 
                 //add to the new group
                 var newGroupLookup = GetCache(groupCollection, newGroupKey);
@@ -92,19 +95,14 @@ namespace DynamicData.List.Internal
 
                 if (newGroupLookup.WasCreated)
                     result.Add(newGroupCache);
-
-               
             }
 
             return result.CaptureChanges();
         }
 
-        private IChangeSet<IGroup<TObject, TGroupKey>> Process(ChangeAwareList<IGroup<TObject, TGroupKey>> result, IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection, IChangeSet<ItemWithValue<TObject, TGroupKey>> changes)
+        private IChangeSet<IGroup<TObject, TGroupKey>> Process(ChangeAwareList<IGroup<TObject, TGroupKey>> result, IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection, IChangeSet<ItemWithGroupKey> changes)
         {
-            //TODO.This flattened enumerator is inefficient as range operations are lost.
-            //maybe can infer within each grouping whether we can regroup i.e. Another enumerator!!!
-
-            foreach (var grouping in changes.Unified().GroupBy(change => change.Current.Value))
+            foreach (var grouping in changes.Unified().GroupBy(change => change.Current.Group))
             {
                 //lookup group and if created, add to result set
                 var currentGroup = grouping.Key;
@@ -131,7 +129,7 @@ namespace DynamicData.List.Internal
                                 case ListChangeReason.Replace:
                                     {
                                         var previousItem = change.Previous.Value.Item;
-                                        var previousGroup = change.Previous.Value.Value;
+                                        var previousGroup = change.Previous.Value.Group;
 
                                         //check whether an item changing has resulted in a different group
                                         if (previousGroup.Equals(currentGroup))
@@ -158,6 +156,38 @@ namespace DynamicData.List.Internal
 
                                         break;
                                     }
+                                case ListChangeReason.Refresh:
+                                {
+                                    //1. Check whether item was in the group and should not be now (or vice versa)
+                                    var currentItem = change.Current.Item;
+                                    var previousGroup = change.Current.PrevousGroup.Value;
+
+                                    //check whether an item changing has resulted in a different group
+                                    if (previousGroup.Equals(currentGroup))
+                                    {
+                                        // Propagate refresh event
+                                        //TODO:  Add refresh to source list
+                                        var cal = (ChangeAwareList<TObject>) list;
+                                        cal.Refresh(currentItem);
+                                    }
+                                    else
+                                    {
+                                        //add to new group
+                                        list.Add(currentItem);
+
+                                        //remove from old group if empty
+                                        groupCollection.Lookup(previousGroup)
+                                            .IfHasValue(g =>
+                                            {
+                                                g.Edit(oldList => oldList.Remove(currentItem));
+                                                if (g.List.Count != 0) return;
+                                                groupCollection.Remove(g.GroupKey);
+                                                result.Remove(g);
+                                            });
+                                    }
+                                    break;
+                                }
+
                                 case ListChangeReason.Remove:
                                     {
                                         list.Remove(change.Current.Item);
@@ -201,6 +231,74 @@ namespace DynamicData.List.Internal
             {
                 Group = @group;
                 WasCreated = wasCreated;
+            }
+        }
+
+        private sealed class ItemWithGroupKey : IEquatable<ItemWithGroupKey>
+        {
+            public TObject Item { get; }
+            public TGroupKey Group { get; set; }
+            public Optional<TGroupKey> PrevousGroup { get; }
+            public int Index { get; }
+
+            public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> prevousGroup, int index)
+            {
+                Item = item;
+                Group = group;
+                PrevousGroup = prevousGroup;
+                Index = index;
+            }
+
+            #region Equality 
+
+            public bool Equals(ItemWithGroupKey other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                return obj is ItemWithGroupKey && Equals((ItemWithGroupKey) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return EqualityComparer<TObject>.Default.GetHashCode(Item);
+            }
+
+            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.List.Internal.GroupOn`2.ItemWithGroupKey" /> objects are equal.</summary>
+            /// <param name="left">The first value to compare.</param>
+            /// <param name="right">The second value to compare.</param>
+            /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
+            public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right)
+            {
+                return Equals(left, right);
+            }
+
+            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.List.Internal.GroupOn`2.ItemWithGroupKey" /> objects have different values.</summary>
+            /// <param name="left">The first value to compare.</param>
+            /// <param name="right">The second value to compare.</param>
+            /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
+            public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right)
+            {
+                return !Equals(left, right);
+            }
+
+            #endregion
+
+            /// <summary>
+            /// Returns a <see cref="System.String" /> that represents this instance.
+            /// </summary>
+            /// <returns>
+            /// A <see cref="System.String" /> that represents this instance.
+            /// </returns>
+            public override string ToString()
+            {
+                return $"{Item} ({Group})";
             }
         }
     }

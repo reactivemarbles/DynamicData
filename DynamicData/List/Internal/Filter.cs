@@ -48,10 +48,15 @@ namespace DynamicData.List.Internal
                 //Need to get item by index and store it in the transform
                 var filteredResult = _source
                     .Synchronize(locker)
-                    .Transform((t, idx) => new ItemWithMatch(t, idx, predicate(t)))
+                    .Transform<T, ItemWithMatch>((t, previous, idx) =>
+                    {
+                        var wasMatch = previous.ConvertOr(p => p.IsMatch, () => false);
+                        return new ItemWithMatch(t, idx, predicate(t), wasMatch);
+                    },true)
                     .Select(changes =>
                     {
-                        Process(all, filtered, changes, predicate);
+                        all.Clone(changes); //keep track of all changes
+                        Process( filtered, changes);
                         return filtered.CaptureChanges();
                     });
                 
@@ -62,25 +67,11 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private void Process(List<ItemWithMatch> allItems, ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes, Func<T, bool> predicate)
+        private void Process( ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
         {
-            allItems.Capacity = allItems.Count + changes.Adds;
-           
             //Maintain all items as well as filtered list. This enables us to a) requery when the predicate changes b) check the previous state when Refresh is called
             foreach (var item in changes)
             {
-                bool wasMatch = false;
-
-                if (item.Reason == ListChangeReason.Refresh || item.Reason == ListChangeReason.Replace)
-                {
-                    //calculate wasMatch before the new match is replaced in the 
-                    var previous = allItems[item.Item.CurrentIndex];
-                    wasMatch = previous.IsMatch;
-                }
-
-                //clone the current change into allItems.
-                allItems.Clone(item);
-
                 switch (item.Reason)
                 {
                     case ListChangeReason.Add:
@@ -100,8 +91,7 @@ namespace DynamicData.List.Internal
                     {
                         var change = item.Item;
                         var match = change.Current.IsMatch;
-                       // var wasMatch = change.Current.WasMatch;
-
+                        var wasMatch = item.Item.Current.WasMatch;
                         if (match)
                         {
                             if (wasMatch)
@@ -128,17 +118,15 @@ namespace DynamicData.List.Internal
                     }
                     case ListChangeReason.Refresh:
                     {
-                        //TODO: Consider batching all refreshes and using IndexOfMany to calculate whether the item matches the filter.
-
-                            var change = item.Item;
-                        ////manually set match because Transform does not re-transform on Refresh [maybe it should]
+                        var change = item.Item;
                         var match = change.Current.IsMatch;
+                        var wasMatch = item.Item.Current.WasMatch;
                         if (match)
                         {
                             if (wasMatch)
                             {
                                 //an update, so get the latest index and pass the index up the chain
-                                var previous = filtered.Select(x=>x.Item)
+                                var previous = filtered.Select(x => x.Item)
                                     .IndexOfOptional(change.Current.Item, ReferenceEqualityComparer<T>.Instance)
                                     .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
 
