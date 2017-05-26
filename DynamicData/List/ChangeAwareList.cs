@@ -380,6 +380,7 @@ namespace DynamicData
 
         #region ISupportsCapcity
 
+
         public int Capacity
         {
             get => _innerList.Capacity;

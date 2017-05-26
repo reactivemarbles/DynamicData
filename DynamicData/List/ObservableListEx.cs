@@ -285,11 +285,11 @@ namespace DynamicData
 
 
         /// <summary>
-        /// Supress auto refresh notifications
+        /// Supress  refresh notifications
         /// </summary>
         /// <param name="source">The source observable change set</param>
         /// <returns></returns>
-        public static IObservable<IChangeSet<T>> SupressAutoRefresh<T>(this IObservable<IChangeSet<T>> source)
+        public static IObservable<IChangeSet<T>> SupressRefresh<T>(this IObservable<IChangeSet<T>> source)
         {
             return source.WhereReasonsAreNot(ListChangeReason.Refresh);
         }

@@ -548,7 +548,7 @@ namespace DynamicData
         /// </summary>
         /// <param name="source">The source observable change set</param>
         /// <param name="reevaluator">An observable which acts on items within the collection and produces a value when the item should be refreshed</param>
-        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements require a refresh</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This g  reatly increases performance when many elements require a refresh</param>
         /// <param name="scheduler">The scheduler</param>
         /// <returns>An observable change set with additional refresh changes</returns>
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
@@ -560,7 +560,17 @@ namespace DynamicData
             if (reevaluator == null) throw new ArgumentNullException(nameof(reevaluator));
             return new AutoRefresh<TObject, TKey, TAny>(source, reevaluator, changeSetBuffer,  scheduler).Run();
         }
-        
+
+        /// <summary>
+        /// Supress  refresh notifications
+        /// </summary>
+        /// <param name="source">The source observable change set</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> SupressRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            return source.WhereReasonsAreNot(ChangeReason.Refresh);
+        }
+
         #endregion
 
         #region Start with
