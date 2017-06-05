@@ -110,6 +110,31 @@ namespace DynamicData.Tests.Binding
             result.Should().Be(30);
         }
 
+        [Test]
+        public void NullChildWithInitialValue()
+        {
+            var instance = new ClassA();
+
+            var chain = instance.ObserveChain(a => a.Child.Age, true);
+            int? result = null;
+
+            var subscription = chain.Subscribe(notification => result = notification?.Value);
+
+            result.Should().Be(null);
+
+            instance.Child = new ClassB { Age = 21 };
+            result.Should().Be(21);
+
+            instance.Child.Age = 22;
+            result.Should().Be(22);
+
+            instance.Child = new ClassB { Age = 25 };
+            result.Should().Be(25);
+
+            instance.Child.Age = 30;
+            result.Should().Be(30);
+        }
+
         public class ClassA: AbstractNotifyPropertyChanged, IEquatable<ClassA>
         {
             private string _name;

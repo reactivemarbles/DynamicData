@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive;
@@ -16,21 +15,44 @@ namespace DynamicData.Binding
         internal static IObservable<PropertyValue<TObject, TProperty>> ObserveChain<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true)
             where TObject : INotifyPropertyChanged
         {
-            var chain = source.CreatePropertyChain(expression, notifyInitial);
-            return chain.CreateObservable();
-        }
+            var chain = expression.GetMemberChain().Select(m => new PropertyChainPart(m)).ToArray();
+            var accessor = expression?.Compile() ?? throw new ArgumentNullException(nameof(expression));
 
-        private static PropertyChain<TObject, TProperty> CreatePropertyChain<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true)
-            where TObject : INotifyPropertyChanged
-        {
-            MemberExpression outer = expression.Body as MemberExpression; 
-            MemberExpression[] members = GetMembers(expression).ToArray();
+            //walk the tree and break at a null, or return the value
+            PropertyValue<TObject, TProperty> ValueOrNull()
+            {
+                object value = source;
+                foreach (var metadata in chain.Reverse())
+                {
+                    value = metadata.Accessor(value);
+                    if (value == null) return null;
+                }
+                return new PropertyValue<TObject, TProperty>(source, accessor(source));
+            }
 
-            var chain = expression.GetMemberChain().ToArray();
+            //create notifier for all parts of the property path 
+            IEnumerable<IObservable<Unit>> GetNotifiers()
+            {
+                object value = source;
+                foreach (var metadata in chain.Reverse())
+                {
+                    var obs = metadata.Factory(value).Publish().RefCount();
+                    value = metadata.Accessor(value);
+                    yield return obs;
 
+                    if (value == null) yield break;
+                }
+            }
 
-            var propertyChangedMonitor = chain.Select(m => new PropertyChainPart(m)).ToArray();
-            return new PropertyChain<TObject, TProperty>(source, expression, propertyChangedMonitor, notifyInitial);
+            //1) notify when values have changed 2) resubscribe because it may be a new child inpc object
+            var valueHasChanged = GetNotifiers().Merge().Take(1).Repeat();
+            if (notifyInitial)
+            {
+                valueHasChanged = Observable.Defer(() => Observable.Return(Unit.Default))
+                    .Concat(valueHasChanged);
+            }
+
+            return valueHasChanged.Select(_ => ValueOrNull()).Where(pv => pv != null);
         }
 
         private static IEnumerable<MemberExpression> GetMemberChain<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
@@ -50,7 +72,6 @@ namespace DynamicData.Binding
                 memberExpression = memberExpression.Expression as MemberExpression;
             }
         }
-        //Require: Need a value accessor to get the value from the parent
 
         internal static Func<object, object> CreateValueAccessor(this MemberExpression source)
         {
@@ -102,9 +123,6 @@ namespace DynamicData.Binding
             return t =>
             {   
                 if (t == null) return Observable.Never<PropertyValue<object, object>>();
-
-
-
                 if (!inpc) return Observable.Return(new PropertyValue<object, object>(t, valueAccessor(t)));
 
                 return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
