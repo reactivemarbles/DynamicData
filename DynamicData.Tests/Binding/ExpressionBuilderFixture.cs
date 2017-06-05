@@ -135,6 +135,29 @@ namespace DynamicData.Tests.Binding
             result.Should().Be(30);
         }
 
+        [Test]
+        public void DepthOfOne()
+        {
+            var instance = new ClassA {Name="Someone"};
+
+            var chain = instance.ObserveChain(a => a.Name, true);
+            string result = null;
+
+            var subscription = chain.Subscribe(notification => result = notification?.Value);
+
+            result.Should().Be("Someone");
+
+            instance.Name = "Else";
+            result.Should().Be("Else");
+
+            instance.Name = null;
+            result.Should().Be(null);
+
+            instance.Name = "NotNull";
+            result.Should().Be("NotNull");
+
+        }
+
         public class ClassA: AbstractNotifyPropertyChanged, IEquatable<ClassA>
         {
             private string _name;

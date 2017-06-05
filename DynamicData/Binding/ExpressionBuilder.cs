@@ -7,55 +7,37 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection;
 
-
 namespace DynamicData.Binding
 {
     internal static class ExpressionBuilder
     {
-        internal static IObservable<PropertyValue<TObject, TProperty>> ObserveChain<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true)
-            where TObject : INotifyPropertyChanged
+        internal static string ToCacheKey<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+            where TObject:INotifyPropertyChanged
         {
-            var chain = expression.GetMemberChain().Select(m => new PropertyChainPart(m)).ToArray();
-            var accessor = expression?.Compile() ?? throw new ArgumentNullException(nameof(expression));
+            var members = expression.GetMembers();
 
-            //walk the tree and break at a null, or return the value
-            PropertyValue<TObject, TProperty> ValueOrNull()
+            IEnumerable<string> GetNames()
             {
-                object value = source;
-                foreach (var metadata in chain.Reverse())
-                {
-                    value = metadata.Accessor(value);
-                    if (value == null) return null;
-                }
-                return new PropertyValue<TObject, TProperty>(source, accessor(source));
+                yield return typeof(TObject).FullName;
+                foreach (var member in members.Reverse())
+                    yield return member.Member.Name;
             }
+            return string.Join(".",GetNames());
+        }     
 
-            //create notifier for all parts of the property path 
-            IEnumerable<IObservable<Unit>> GetNotifiers()
+
+
+        public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(this Expression<Func<TObject, TProperty>> source)
+        {
+            var memberExpression = source.Body as MemberExpression;
+            while (memberExpression != null)
             {
-                object value = source;
-                foreach (var metadata in chain.Reverse())
-                {
-                    var obs = metadata.Factory(value).Publish().RefCount();
-                    value = metadata.Accessor(value);
-                    yield return obs;
-
-                    if (value == null) yield break;
-                }
+                yield return memberExpression;
+                memberExpression = memberExpression.Expression as MemberExpression;
             }
-
-            //1) notify when values have changed 2) resubscribe because it may be a new child inpc object
-            var valueHasChanged = GetNotifiers().Merge().Take(1).Repeat();
-            if (notifyInitial)
-            {
-                valueHasChanged = Observable.Defer(() => Observable.Return(Unit.Default))
-                    .Concat(valueHasChanged);
-            }
-
-            return valueHasChanged.Select(_ => ValueOrNull()).Where(pv => pv != null);
         }
 
-        private static IEnumerable<MemberExpression> GetMemberChain<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+        internal static IEnumerable<MemberExpression> GetMemberChain<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
             var memberExpression = expression.Body as MemberExpression;
             while (memberExpression != null)
@@ -135,17 +117,9 @@ namespace DynamicData.Binding
             };
         }
 
-        public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(Expression<Func<TObject, TProperty>> expression)
-        {
-            var memberExpression = expression.Body as MemberExpression;
-            while (memberExpression != null)
-            {
-                yield return memberExpression;
-                memberExpression = memberExpression.Expression as MemberExpression;
-            }
-        }
 
-        public static IEnumerable<MemberExpression> GetProperties<TObject, TProperty>(Expression<Func<TObject, TProperty>> expression)
+
+        public static IEnumerable<MemberExpression> GetProperties<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
             var memberExpression = expression.Body as MemberExpression;
             while (memberExpression != null)
@@ -207,3 +181,4 @@ namespace DynamicData.Binding
         }
     }
 }
+
