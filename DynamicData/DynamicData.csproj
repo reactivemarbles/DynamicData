@@ -55,6 +55,7 @@
     <Compile Include="Binding\AbstractNotifyPropertyChanged.cs" />
     <Compile Include="Binding\ExpressionBuilder.cs" />
     <Compile Include="Binding\NotifyPropertyChangedEx.cs" />
+    <Compile Include="Binding\PropertyChain.cs" />
     <Compile Include="Binding\PropertyValue.cs" />
     <Compile Include="Aggregation\AggregateEnumerator.cs" />
     <Compile Include="Aggregation\AggregationEx.cs" />
