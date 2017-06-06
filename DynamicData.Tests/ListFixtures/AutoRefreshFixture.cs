@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using NUnit.Framework;
@@ -14,6 +15,8 @@ namespace DynamicData.Tests.ListFixtures
             var items = Enumerable.Range(1, 100)
                 .Select(i => new Person("Person" + i, 1))
                 .ToArray();
+
+           
 
             //result should only be true when all items are set to true
             using (var cache = new SourceCache<Person, string>(m => m.Name))

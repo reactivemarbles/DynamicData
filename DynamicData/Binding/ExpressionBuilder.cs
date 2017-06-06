@@ -1,16 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Reflection;
 
 namespace DynamicData.Binding
 {
+
     internal static class ExpressionBuilder
     {
-
-        public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(Expression<Func<TObject, TProperty>> expression)
+        internal static string ToCacheKey<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+            where TObject:INotifyPropertyChanged
         {
-            var memberExpression = expression.Body as MemberExpression;
+            var members = expression.GetMembers();
+
+            IEnumerable<string> GetNames()
+            {
+                yield return typeof(TObject).FullName;
+                foreach (var member in members.Reverse())
+                    yield return member.Member.Name;
+            }
+            return string.Join(".",GetNames());
+        }     
+
+
+
+        public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(this Expression<Func<TObject, TProperty>> source)
+        {
+            var memberExpression = source.Body as MemberExpression;
             while (memberExpression != null)
             {
                 yield return memberExpression;
@@ -18,7 +38,89 @@ namespace DynamicData.Binding
             }
         }
 
-        public static IEnumerable<MemberExpression> GetProperties<TObject, TProperty>(Expression<Func<TObject, TProperty>> expression)
+        internal static IEnumerable<MemberExpression> GetMemberChain<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+        {
+            var memberExpression = expression.Body as MemberExpression;
+            while (memberExpression != null)
+            {
+                if (memberExpression.Expression.NodeType != ExpressionType.Parameter)
+                {
+                    var parent = memberExpression.Expression;
+                    yield return memberExpression.Update(Expression.Parameter(parent.Type));
+                }
+                else
+                {
+                    yield return memberExpression;
+                }
+                memberExpression = memberExpression.Expression as MemberExpression;
+            }
+        }
+
+        internal static Func<object, object> CreateValueAccessor(this MemberExpression source)
+        {
+            //create an expression which accepts the parent and returns the child
+            var property = source.GetProperty();
+            var method = property.GetMethod;
+           
+            //convert the parameter i.e. the declaring class to an object
+            var parameter = Expression.Parameter(typeof(object));
+            var converted = Expression.Convert(parameter, source.Expression.Type);
+
+            //call the get value of the property and box it
+            var propertyCall = Expression.Call(converted, method);
+            var boxed = Expression.Convert(propertyCall, typeof(object));
+            var accessorExpr = Expression.Lambda<Func<object, object>>(boxed, parameter);
+
+            var accessor = accessorExpr.Compile();
+            return accessor;
+        }
+
+        internal static Func<object, IObservable<Unit>> CreatePropertyChangedFactory(this MemberExpression source)
+        {
+           
+            var property = source.GetProperty();
+            var inpc = typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(property.DeclaringType.GetTypeInfo());
+
+            return t =>
+            {
+                if (t == null) return Observable<Unit>.Never;
+                if (!inpc) return Observable.Return(Unit.Default);
+
+                return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+                    (
+                        handler => ((INotifyPropertyChanged) t).PropertyChanged += handler,
+                        handler => ((INotifyPropertyChanged) t).PropertyChanged -= handler
+                    )
+                    .Where(args => args.EventArgs.PropertyName == property.Name)
+                    .Select(args => Unit.Default);
+            };
+        }
+
+        internal static Func<object, IObservable<PropertyValue<object,object>>> CreatePropertyValueChangedFactory(this MemberExpression source)
+        {
+            var property = source.GetProperty();
+          
+            var inpc = typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(property.DeclaringType.GetTypeInfo());
+            var valueAccessor = CreateValueAccessor(source);
+           
+            return t =>
+            {   
+                if (t == null) return Observable.Never<PropertyValue<object, object>>();
+                if (!inpc) return Observable.Return(new PropertyValue<object, object>(t, valueAccessor(t)));
+
+                return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+                    (
+                        handler => ((INotifyPropertyChanged)t).PropertyChanged += handler,
+                        handler => ((INotifyPropertyChanged)t).PropertyChanged -= handler
+                    )
+                    .Where(args => args.EventArgs.PropertyName == property.Name)
+                    .Select(args => new PropertyValue<object, object>(args.Sender, valueAccessor(args.Sender)));
+            };
+        }
+
+
+
+        public static IEnumerable<MemberExpression> GetProperties<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
             var memberExpression = expression.Body as MemberExpression;
             while (memberExpression != null)
@@ -80,3 +182,4 @@ namespace DynamicData.Binding
         }
     }
 }
+
