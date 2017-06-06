@@ -9,6 +9,7 @@ using System.Reflection;
 
 namespace DynamicData.Binding
 {
+
     internal static class ExpressionBuilder
     {
         internal static string ToCacheKey<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
@@ -82,7 +83,7 @@ namespace DynamicData.Binding
 
             return t =>
             {
-                if (t == null) return Observable.Never<Unit>();
+                if (t == null) return Observable<Unit>.Never;
                 if (!inpc) return Observable.Return(Unit.Default);
 
                 return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>

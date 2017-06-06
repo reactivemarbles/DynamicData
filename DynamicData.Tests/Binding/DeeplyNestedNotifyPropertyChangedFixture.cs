@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Linq;
 using DynamicData.Binding;
 using FluentAssertions;
 using NUnit.Framework;
@@ -8,17 +8,19 @@ namespace DynamicData.Tests.Binding
 {              
 
     [TestFixture]
-    public class ExpressionBuilderFixture
+    public class DeeplyNestedNotifyPropertyChangedFixture
     {
         [Test]
-        public void NotifiesInitialValue()
+        public void NotifiesInitialValue_WithFallback()
         {
             var instance = new ClassA {Child = new ClassB {Age = 10}};
 
-            var chain =  instance.ObserveChain(a => a.Child.Age, true);
+            //provide a fallback so a value can always be obtained
+            var chain = instance.WhenChanged(a => a.Child.Age, (sender, a) => a, () => -1);
+
             int? result = null;
 
-            var subscription = chain.Subscribe(notification => result = notification?.Value);
+            var subscription = chain.Subscribe(age => result = age);
 
             result.Should().Be(10);
 
@@ -31,7 +33,7 @@ namespace DynamicData.Tests.Binding
             instance.Child.Age = 26;
             result.Should().Be(26);
             instance.Child = null;
-            result.Should().Be(null);
+            result.Should().Be(-1);
 
             instance.Child = new ClassB { Age = 21 };
             result.Should().Be(21);
@@ -42,7 +44,7 @@ namespace DynamicData.Tests.Binding
         {
             var instance = new ClassA();
 
-            var chain = instance.ObserveChain(a => a.Child.Age, true);
+            var chain = instance.WhenPropertyChanged(a => a.Child.Age, true);
             int? result = null;
 
             var subscription = chain.Subscribe(notification => result = notification?.Value);
@@ -68,7 +70,7 @@ namespace DynamicData.Tests.Binding
         {
             var instance = new ClassA {Name="TestClass", Child = new ClassB {Age = 10}};
 
-            var chain = instance.ObserveChain(a => a.Child.Age, false);
+            var chain = instance.WhenPropertyChanged(a => a.Child.Age, false);
             int? result = null;
 
             var subscription = chain.Subscribe(notification => result = notification.Value);
@@ -80,7 +82,6 @@ namespace DynamicData.Tests.Binding
 
             instance.Child = new ClassB {Age = 25};
             result.Should().Be(25);
-
             instance.Child.Age = 30;
             result.Should().Be(30);
         }
@@ -90,7 +91,7 @@ namespace DynamicData.Tests.Binding
         {
             var instance = new ClassA();
 
-            var chain = instance.ObserveChain(a => a.Child.Age, false);
+            var chain = instance.WhenPropertyChanged(a => a.Child.Age, false);
             int? result = null;
 
             var subscription = chain.Subscribe(notification => result = notification.Value);
@@ -115,7 +116,7 @@ namespace DynamicData.Tests.Binding
         {
             var instance = new ClassA();
 
-            var chain = instance.ObserveChain(a => a.Child.Age, true);
+            var chain = instance.WhenPropertyChanged(a => a.Child.Age, true);
             int? result = null;
 
             var subscription = chain.Subscribe(notification => result = notification?.Value);
@@ -140,7 +141,7 @@ namespace DynamicData.Tests.Binding
         {
             var instance = new ClassA {Name="Someone"};
 
-            var chain = instance.ObserveChain(a => a.Name, true);
+            var chain = instance.WhenPropertyChanged(a => a.Name, true);
             string result = null;
 
             var subscription = chain.Subscribe(notification => result = notification?.Value);
@@ -155,6 +156,28 @@ namespace DynamicData.Tests.Binding
 
             instance.Name = "NotNull";
             result.Should().Be("NotNull");
+
+        }
+
+        [Test]
+        [Ignore("Manual run for benchmarking")]
+        public void StressIt()
+        {
+            var list = new SourceList<ClassA>();
+            var items = Enumerable.Range(1, 10000)
+                .Select(i => new ClassA { Name = i.ToString(), Child = new ClassB { Age = i } })
+                .ToArray();
+
+            list.AddRange(items);
+
+            var myObservable = list.Connect()
+                .MergeMany(outer => outer.WhenValueChanged(a => a.Child.Age, false))
+                .Subscribe(z =>
+                {
+
+                });
+
+            items[1].Child.Age=-1;
 
         }
 
@@ -201,7 +224,7 @@ namespace DynamicData.Tests.Binding
                 }
             }
 
-            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.Tests.Binding.ExpressionBuilderFixture.ClassA" /> objects are equal.</summary>
+            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.Tests.Binding.DeeplyNestedNotifyPropertyChangedFixture.ClassA" /> objects are equal.</summary>
             /// <param name="left">The first value to compare.</param>
             /// <param name="right">The second value to compare.</param>
             /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
@@ -210,7 +233,7 @@ namespace DynamicData.Tests.Binding
                 return Equals(left, right);
             }
 
-            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.Tests.Binding.ExpressionBuilderFixture.ClassA" /> objects have different values.</summary>
+            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.Tests.Binding.DeeplyNestedNotifyPropertyChangedFixture.ClassA" /> objects have different values.</summary>
             /// <param name="left">The first value to compare.</param>
             /// <param name="right">The second value to compare.</param>
             /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
@@ -260,7 +283,7 @@ namespace DynamicData.Tests.Binding
                 return _age;
             }
 
-            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.Tests.Binding.ExpressionBuilderFixture.ClassB" /> objects are equal.</summary>
+            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.Tests.Binding.DeeplyNestedNotifyPropertyChangedFixture.ClassB" /> objects are equal.</summary>
             /// <param name="left">The first value to compare.</param>
             /// <param name="right">The second value to compare.</param>
             /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
@@ -269,7 +292,7 @@ namespace DynamicData.Tests.Binding
                 return Equals(left, right);
             }
 
-            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.Tests.Binding.ExpressionBuilderFixture.ClassB" /> objects have different values.</summary>
+            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.Tests.Binding.DeeplyNestedNotifyPropertyChangedFixture.ClassB" /> objects have different values.</summary>
             /// <param name="left">The first value to compare.</param>
             /// <param name="right">The second value to compare.</param>
             /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>

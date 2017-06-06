@@ -21,6 +21,13 @@ namespace DynamicData.Binding
             Value = value;
         }
 
+        internal PropertyValue(TObject sender)
+        {
+            Sender = sender;
+            UnobtainableValue = true;
+            Value = default(TValue);
+        }
+
         /// <summary>
         /// The Sender
         /// </summary>
@@ -30,6 +37,11 @@ namespace DynamicData.Binding
         /// Lastest observed value
         /// </summary>
         public TValue Value { get; }
+         
+        /// <summary>
+        /// Flag to indicated that the value was unobtainable when observing a deeply nested struct
+        /// </summary>
+        internal bool UnobtainableValue { get; }
 
         #region Equality
 

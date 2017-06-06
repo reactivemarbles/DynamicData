@@ -8,6 +8,14 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Binding
 {
+
+    internal static class Observable<T>
+    {
+        public static readonly IObservable<T> Empty = Observable.Empty<T>();
+        public static readonly IObservable<T> Never = Observable.Never<T>();
+        public static readonly IObservable<T> Default = Observable.Return(default(T));
+    }
+
     internal class ObservablePropertyFactory<TObject, TProperty> 
         where TObject: INotifyPropertyChanged
     {
@@ -24,7 +32,7 @@ namespace DynamicData.Binding
                     valueHasChanged = Observable.Defer(() => Observable.Return(Unit.Default))
                         .Concat(valueHasChanged);
                 }
-                return valueHasChanged.Select(_ => ValueOrNull(t,chain, valueAccessor)); //.Where(pv => pv != null);
+                return valueHasChanged.Select(_ => GetPropertyValue(t,chain, valueAccessor)); //.Where(pv => pv != null);
             };
         }
 
@@ -75,13 +83,13 @@ namespace DynamicData.Binding
         }
 
         //walk the tree and break at a null, or return the value
-        PropertyValue<TObject, TProperty> ValueOrNull(TObject source, ObservablePropertyPart[] chain, Func<TObject, TProperty> valueAccessor)
+        PropertyValue<TObject, TProperty> GetPropertyValue(TObject source, ObservablePropertyPart[] chain, Func<TObject, TProperty> valueAccessor)
         {
             object value = source;
             foreach (var metadata in chain.Reverse())
             {
                 value = metadata.Accessor(value);
-                if (value == null) return null;
+                if (value == null) return new PropertyValue<TObject, TProperty>(source);
             }
             return new PropertyValue<TObject, TProperty>(source, valueAccessor(source));
         }
