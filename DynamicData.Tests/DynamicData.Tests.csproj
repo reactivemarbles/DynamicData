@@ -133,6 +133,7 @@
     <Compile Include="CacheFixtures\SwitchFixture.cs" />
     <Compile Include="CacheFixtures\ToObservableChangeSetFixture.cs" />
     <Compile Include="CacheFixtures\TransformAsyncFixture.cs" />
+    <Compile Include="CacheFixtures\TransformManyObservableCacheFixture.cs" />
     <Compile Include="CacheFixtures\TransformManySimpleFixture.cs" />
     <Compile Include="CacheFixtures\TransformSafeAsyncFixture.cs" />
     <Compile Include="CacheFixtures\TransformTreeFixture.cs" />

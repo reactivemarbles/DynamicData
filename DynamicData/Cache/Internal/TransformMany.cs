@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Binding;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -10,40 +13,85 @@ namespace DynamicData.Cache.Internal
     internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
     {
         private readonly IObservable<IChangeSet<TSource, TSourceKey>> _source;
-        private readonly Func<TSource, IEnumerable<TDestination>> _manyselector;
         private readonly Func<TDestination, TDestinationKey> _keySelector;
 
+        private readonly IObservable<IChangeSet<TDestination, TDestinationKey>> _run;
+
         public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
-                                                         Func<TSource, IEnumerable<TDestination>> manyselector,
-                                                         Func<TDestination, TDestinationKey> keySelector)
+            Func<TSource, IEnumerable<TDestination>> manyselector,
+            Func<TDestination, TDestinationKey> keySelector)
         {
             _source = source;
-            _manyselector = manyselector;
             _keySelector = keySelector;
+            _run = CreateObservable(manyselector);
         }
 
+        public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
+            Func<TSource, ObservableCollection<TDestination>> manyselector,
+            Func<TDestination, TDestinationKey> keySelector)
+        {
+            _source = source;
+            _keySelector = keySelector;
+            _run = CreateObservable(manyselector);
+        }
+           
         public IObservable<IChangeSet<TDestination, TDestinationKey>> Run()
         {
-            return _source.Transform((source, key) =>
-                {
-                    var many = _manyselector(source)
-                        .Select(m => new DestinationContainer(m, _keySelector(m)))
-                        .ToArray();
+            return _run;
+        }
 
-                    return new ManyContainer(source, key, many);
-                })
-                .Select(changes =>
+        private IObservable<IChangeSet<TDestination, TDestinationKey>> CreateObservable(Func<TSource, IEnumerable<TDestination>> manyselector)
+        {
+            return _source.Transform((t, key) =>
                 {
-                    var items = new DestinationEnumerator(changes);
-                    return new ChangeSet<TDestination, TDestinationKey>(items);
-                });
+                    var many = manyselector(t)
+                        .Select(m => new DestinationContainer(m, _keySelector(m)))
+                        .ToArray();                              
+
+                    return (IManyContainer) new ManyContainer(t, key, many);
+                })
+                .Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
+        }
+
+        private IObservable<IChangeSet<TDestination, TDestinationKey>> CreateObservable(Func<TSource, ObservableCollection<TDestination>> manyselector)
+        {
+            return Observable.Create<IChangeSet<TDestination, TDestinationKey>>(observer =>
+            {
+                var result = new ChangeAwareCache<TDestination, TDestinationKey>();
+
+                  var transformed = _source.Transform((t, key) =>
+                {
+                    //load the observable collection and any subsequent changes
+                    var collection = manyselector(t);
+
+                    var changes = collection.ToObservableChangeSet(_keySelector).Skip(1);     //maybe should not skip 1
+                    return (IManyContainer) new ObservableContainer(t, key, () => collection.Select(m => new DestinationContainer(m, _keySelector(m))), changes);
+                }).Publish();
+
+                var intial = transformed
+                    .Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)))
+                    .Select(changes => Process(result, changes, true));
+
+                var subsequent = transformed.MergeMany(x => ((ObservableContainer) x).Changes);
+                var allChanges = intial.Merge(subsequent);   //Add Defer()???
+
+                var publisher = allChanges.SubscribeSafe(observer);
+
+                return new CompositeDisposable(publisher, transformed.Connect());
+            });
+        }
+
+        private IChangeSet<TDestination, TDestinationKey> Process(ChangeAwareCache<TDestination, TDestinationKey> target, IChangeSet<TDestination, TDestinationKey> changes, bool initial)
+        {
+            target.Clone(changes);
+            return target.CaptureChanges();
         }
 
         private sealed class DestinationEnumerator : IEnumerable<Change<TDestination, TDestinationKey>>
         {
-            private readonly IChangeSet<ManyContainer, TSourceKey> _changes;
+            private readonly IChangeSet<IManyContainer, TSourceKey> _changes;
 
-            public DestinationEnumerator(IChangeSet<ManyContainer, TSourceKey> changes)
+            public DestinationEnumerator(IChangeSet<IManyContainer, TSourceKey> changes)
             {
                 _changes = changes;
             }
@@ -97,7 +145,14 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-        private sealed class ManyContainer
+        private interface IManyContainer
+        {
+            TSource Source { get; }
+            TSourceKey SourceKey { get; }
+            IEnumerable<DestinationContainer> Destination { get; }
+        }
+
+        private sealed class ManyContainer : IManyContainer
         {
             public TSource Source { get; }
             public TSourceKey SourceKey { get; }
@@ -110,6 +165,27 @@ namespace DynamicData.Cache.Internal
                 Destination = destination;
             }
         }
+
+        private sealed class ObservableContainer: IManyContainer
+        {
+            public TSource Source { get; }
+            public TSourceKey SourceKey { get; }
+            public IEnumerable<DestinationContainer> Destination => Initial();
+
+            public Func<IEnumerable<DestinationContainer>> Initial { get; }
+            public IObservable<IChangeSet<TDestination, TDestinationKey>> Changes { get; }
+
+            public ObservableContainer(TSource source, TSourceKey sourceKey, 
+                Func<IEnumerable<DestinationContainer>> initial, 
+                IObservable<IChangeSet<TDestination, TDestinationKey>> changes)
+            {
+                Source = source;
+                SourceKey = sourceKey;
+                Initial = initial;
+                Changes = changes;
+            }
+        }
+
 
         private sealed class DestinationContainer
         {
@@ -141,12 +217,7 @@ namespace DynamicData.Cache.Internal
                 }
             }
 
-            private static readonly IEqualityComparer<DestinationContainer> s_keyComparerInstance = new KeyEqualityComparer();
-
-            public static IEqualityComparer<DestinationContainer> KeyComparer
-            {
-                get { return s_keyComparerInstance; }
-            }
+            public static IEqualityComparer<DestinationContainer> KeyComparer { get; } = new KeyEqualityComparer();
 
             #endregion
         }
