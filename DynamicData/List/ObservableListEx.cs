@@ -1103,10 +1103,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            var member = propertyAccessor.GetProperty();
-            var accessor = propertyAccessor.Compile();
-
-            return source.MergeMany(t => t.WhenValueChanged(accessor, member.Name, notifyOnInitialValue));
+            return source.MergeMany(t => t.WhenValueChanged(propertyAccessor, notifyOnInitialValue));
         }
 
         /// <summary>
@@ -1129,10 +1126,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            var member = propertyAccessor.GetProperty();
-            var accessor = propertyAccessor.Compile();
-
-            return source.MergeMany(t => t.WhenPropertyChanged(accessor, member.Name, notifyOnInitialValue));
+            return source.MergeMany(t => t.WhenPropertyChanged(propertyAccessor, notifyOnInitialValue));
         }
 
         /// <summary>

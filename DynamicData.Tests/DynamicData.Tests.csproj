@@ -102,7 +102,7 @@
     <Compile Include="Binding\BindChangeSetFixture.cs" />
     <Compile Include="Binding\BindFromObservableListFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />
-    <Compile Include="Binding\ExpressionBuilderFixture.cs" />
+    <Compile Include="Binding\DeeplyNestedNotifyPropertyChangedFixture.cs" />
     <Compile Include="Binding\ObservableCollectionExtendedToChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionToChangeSetFixture.cs" />
     <Compile Include="Binding\ReadOnlyObservableCollectionToChangeSetFixture.cs" />
