@@ -17,17 +17,8 @@ namespace DynamicData.Cache.Internal
 
         public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
             Func<TSource, IEnumerable<TDestination>> manyselector,
-            Func<TDestination, TDestinationKey> keySelector)
-        {
-            _source = source;
-            _manyselector = manyselector;
-            _keySelector = keySelector;
-        }
-
-        public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, IEnumerable<TDestination>> manyselector,
             Func<TDestination, TDestinationKey> keySelector,
-            Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>> childChanges)
+            Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>> childChanges = null)
         {
             _source = source;
             _manyselector = manyselector;
