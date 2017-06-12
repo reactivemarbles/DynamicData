@@ -102,8 +102,6 @@ namespace DynamicData.Cache.Internal
 
         private void ProcessItem(ChangeAwareCache<TObject, TKey> target, MergeContainer[] sourceLists, TObject item, TKey key)
         {
-            //TODO: Check whether individual items should be updated
-
             var cached = target.Lookup(key);
             var shouldBeInResult = MatchesConstraint(sourceLists, key);
 

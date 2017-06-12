@@ -608,8 +608,7 @@ namespace DynamicData
         /// or
         /// manyselector
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(
-            [NotNull] this IObservable<IChangeSet<TSource>> source,
+        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>( [NotNull] this IObservable<IChangeSet<TSource>> source,
             [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
         {
@@ -617,6 +616,39 @@ namespace DynamicData
             if (manyselector == null) throw new ArgumentNullException(nameof(manyselector));
             return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer).Run();
         }
+
+         /// <summary>
+        /// Flatten the nested observable collection, and  observe subsequentl observable collection changes
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
+        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>( this IObservable<IChangeSet<TSource>> source,
+            Func<TSource, ObservableCollection<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+        {
+            return new TransformMany<TSource, TDestination>(source,manyselector, equalityComparer,t => manyselector(t).ToObservableChangeSet()).Run();
+        }
+
+        /// <summary>
+        /// Flatten the nested observable collection, and  observe subsequentl observable collection changes
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
+        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source,
+            Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+        {
+            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer, t => manyselector(t).ToObservableChangeSet()).Run();
+        }
+
+
+
 
         /// <summary>
         /// Selects distinct values from the source, using the specified value selector
@@ -913,7 +945,8 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            return source.MergeMany(t => t.WhenValueChanged(propertyAccessor, notifyOnInitialValue));
+            var factory = propertyAccessor.GetFactory();
+            return source.MergeMany(t => factory(t, notifyOnInitialValue).Select(pv=>pv.Value));
         }
 
         /// <summary>
@@ -936,7 +969,8 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            return source.MergeMany(t => t.WhenPropertyChanged(propertyAccessor, notifyOnInitialValue));
+            var factory = propertyAccessor.GetFactory();
+            return source.MergeMany(t => factory(t, notifyOnInitialValue));
         }
 
         /// <summary>
@@ -952,7 +986,6 @@ namespace DynamicData
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-
             return source.MergeMany(t => t.WhenAnyPropertyChanged(propertiesToMonitor));
         }
 

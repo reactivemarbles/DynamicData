@@ -117,6 +117,19 @@ namespace DynamicData
             return source.Do(changes => changes.ForEach(action));
         }
 
+
+        /// <summary>
+        /// Ignores updates when the update is the same reference
+        /// </summary>
+        /// <typeparam name="TObject"></typeparam>
+        /// <typeparam name="TKey"></typeparam>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> IgnoreSameReferenceUpdate<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        {
+            return source.IgnoreUpdateWhen((c, p) => ReferenceEquals(c,p));
+        }
+
         /// <summary>
         /// Ignores the update when the condition is met.
         /// The first parameter in the ignore function is the current value and the second parameter is the previous value
@@ -2379,13 +2392,53 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector which must be unique across all</param>
-        /// <returns></returns>
         public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
             this IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, IEnumerable<TDestination>> manyselector, 
+            Func<TSource, IEnumerable<TDestination>> manyselector,
             Func<TDestination, TDestinationKey> keySelector)
         {
             return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
+        }
+
+        /// <summary>
+        /// Flatten the nested observable collection, and subsequently observe observable collection changes
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="keySelector">The key selector which must be unique across all</param>
+        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
+            this IObservable<IChangeSet<TSource, TSourceKey>> source,
+            Func<TSource, ObservableCollection<TDestination>> manyselector,
+            Func<TDestination, TDestinationKey> keySelector)
+        {
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey> (source, 
+                manyselector, 
+                keySelector,
+                t => manyselector(t).ToObservableChangeSet(keySelector)).Run();
+        }
+
+        /// <summary>
+        /// Flatten the nested observable collection, and subsequently observe observable collection changes
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="keySelector">The key selector which must be unique across all</param>
+        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>( this IObservable<IChangeSet<TSource, TSourceKey>> source,
+            Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
+            Func<TDestination, TDestinationKey> keySelector)
+        {
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source,
+                manyselector,
+                keySelector,
+                t => manyselector(t).ToObservableChangeSet(keySelector)).Run();
         }
 
 

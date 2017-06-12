@@ -31,7 +31,8 @@ namespace DynamicData.PLinq
         /// Subscribes to each item when it is added or updates and unsubcribes when it is removed
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                          Func<TObject, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
+                                                                                          Func<TObject, IDisposable> subscriptionFactory, 
+                                                                                          ParallelisationOptions parallelisationOptions)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
@@ -42,7 +43,7 @@ namespace DynamicData.PLinq
                 {
                     var published = source.Publish();
                     var subscriptions = published
-                        .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory), parallelisationOptions)
+                        .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k,(a,b)=> subscriptionFactory(a)), parallelisationOptions)
                         .DisposeMany()
                         .Subscribe();
 

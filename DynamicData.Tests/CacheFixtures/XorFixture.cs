@@ -15,7 +15,7 @@ namespace DynamicData.Tests.CacheFixtures
     }
 
     [TestFixture]
-    public class XOrCollectionFixture : XOrFixtureBase
+    public class  XOrCollectionFixture : XOrFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
         {
