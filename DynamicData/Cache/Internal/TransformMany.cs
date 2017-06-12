@@ -37,7 +37,7 @@ namespace DynamicData.Cache.Internal
         {
             return _source.Transform((t, key) =>
                 {
-                    return new ManyContainer(t, key, ()=> _manyselector(t).Select(m => new DestinationContainer(m, _keySelector(m))));
+                    return new ManyContainer(()=> _manyselector(t).Select(m => new DestinationContainer(m, _keySelector(m))));
                 })
                 .Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
         }
@@ -54,7 +54,7 @@ namespace DynamicData.Cache.Internal
                     var locker = new object();
                     var collection = _manyselector(t);
                     var changes = _childChanges(t).Synchronize(locker).Skip(1);
-                    return new ManyContainer(t, key, () =>
+                    return new ManyContainer(() =>
                     {
                         lock (locker)
                             return collection.Select(m => new DestinationContainer(m, _keySelector(m)));
@@ -143,16 +143,12 @@ namespace DynamicData.Cache.Internal
         {
             private readonly Func<IEnumerable<DestinationContainer>> _initial;
 
-            public TSource Source { get; }
-            public TSourceKey SourceKey { get; }
             public IObservable<IChangeSet<TDestination, TDestinationKey>> Changes { get; }
             public IEnumerable<DestinationContainer> Destination => _initial();
 
-            public ManyContainer(TSource source, TSourceKey sourceKey, Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>> changes = null)
+            public ManyContainer(Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>> changes = null)
             {
                 _initial = initial;
-                Source = source;
-                SourceKey = sourceKey;
                 Changes = changes;
             }
         }

@@ -289,7 +289,7 @@
     <Compile Include="Cache\SortReason.cs" />
     <Compile Include="Cache\Internal\StaticFilter.cs" />
     <Compile Include="Cache\VirtualChangeSet.cs" />
-    <Compile Include="Cache\Virtualiser.cs" />
+    <Compile Include="Cache\Internal\Virtualiser.cs" />
     <Compile Include="Cache\VirtualRequest.cs" />
     <Compile Include="Cache\VirtualResponse.cs" />
     <Compile Include="Alias\ObservableCacheAlias.cs" />

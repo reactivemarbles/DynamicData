@@ -26,8 +26,6 @@ namespace DynamicData.Binding
             return string.Join(".",GetNames());
         }     
 
-
-
         public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(this Expression<Func<TObject, TProperty>> source)
         {
             var memberExpression = source.Body as MemberExpression;
@@ -77,7 +75,6 @@ namespace DynamicData.Binding
 
         internal static Func<object, IObservable<Unit>> CreatePropertyChangedFactory(this MemberExpression source)
         {
-           
             var property = source.GetProperty();
             var inpc = typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(property.DeclaringType.GetTypeInfo());
 
@@ -96,39 +93,6 @@ namespace DynamicData.Binding
             };
         }
 
-        internal static Func<object, IObservable<PropertyValue<object,object>>> CreatePropertyValueChangedFactory(this MemberExpression source)
-        {
-            var property = source.GetProperty();
-          
-            var inpc = typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(property.DeclaringType.GetTypeInfo());
-            var valueAccessor = CreateValueAccessor(source);
-           
-            return t =>
-            {   
-                if (t == null) return Observable.Never<PropertyValue<object, object>>();
-                if (!inpc) return Observable.Return(new PropertyValue<object, object>(t, valueAccessor(t)));
-
-                return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
-                    (
-                        handler => ((INotifyPropertyChanged)t).PropertyChanged += handler,
-                        handler => ((INotifyPropertyChanged)t).PropertyChanged -= handler
-                    )
-                    .Where(args => args.EventArgs.PropertyName == property.Name)
-                    .Select(args => new PropertyValue<object, object>(args.Sender, valueAccessor(args.Sender)));
-            };
-        }
-
-
-
-        public static IEnumerable<MemberExpression> GetProperties<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
-        {
-            var memberExpression = expression.Body as MemberExpression;
-            while (memberExpression != null)
-            {
-                yield return memberExpression;
-                memberExpression = memberExpression.Expression as MemberExpression;
-            }
-        }
 
         internal static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {

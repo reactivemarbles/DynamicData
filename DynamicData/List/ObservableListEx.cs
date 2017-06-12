@@ -647,26 +647,7 @@ namespace DynamicData
             return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer, t => manyselector(t).ToObservableChangeSet()).Run();
         }
 
-        /// <summary>
-        /// Flatten the nested observable collection, and subsequently observe observable collection changes
-        /// </summary>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="manyselector">The manyselector.</param>
-        /// <param name="keySelector">The key selector which must be unique across all</param>
-        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
-            this IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
-            Func<TDestination, TDestinationKey> keySelector)
-        {
-            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source,
-                manyselector,
-                keySelector,
-                t => manyselector(t).ToObservableChangeSet(keySelector)).Run();
-        }
+
 
 
         /// <summary>
@@ -964,7 +945,8 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            return source.MergeMany(t => t.WhenValueChanged(propertyAccessor, notifyOnInitialValue));
+            var factory = propertyAccessor.GetFactory();
+            return source.MergeMany(t => factory(t, notifyOnInitialValue).Select(pv=>pv.Value));
         }
 
         /// <summary>
@@ -987,7 +969,8 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            return source.MergeMany(t => t.WhenPropertyChanged(propertyAccessor, notifyOnInitialValue));
+            var factory = propertyAccessor.GetFactory();
+            return source.MergeMany(t => factory(t, notifyOnInitialValue));
         }
 
         /// <summary>
@@ -1003,7 +986,6 @@ namespace DynamicData
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-
             return source.MergeMany(t => t.WhenAnyPropertyChanged(propertiesToMonitor));
         }
 

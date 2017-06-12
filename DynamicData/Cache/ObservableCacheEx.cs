@@ -2394,7 +2394,7 @@ namespace DynamicData
         /// <param name="keySelector">The key selector which must be unique across all</param>
         public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
             this IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, IEnumerable<TDestination>> manyselector, 
+            Func<TSource, IEnumerable<TDestination>> manyselector,
             Func<TDestination, TDestinationKey> keySelector)
         {
             return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
@@ -2431,8 +2431,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector which must be unique across all</param>
-        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
-            this IObservable<IChangeSet<TSource, TSourceKey>> source,
+        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>( this IObservable<IChangeSet<TSource, TSourceKey>> source,
             Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
             Func<TDestination, TDestinationKey> keySelector)
         {

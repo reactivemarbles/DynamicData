@@ -252,6 +252,7 @@
     <Compile Include="ListFixtures\TransformAsyncFixture.cs" />
     <Compile Include="ListFixtures\TransformFixture.cs" />
     <Compile Include="ListFixtures\TransformManyFixture.cs" />
+    <Compile Include="ListFixtures\TransformManyObservableCollectionFixture.cs" />
     <Compile Include="ListFixtures\VirtualisationFixture.cs" />
     <Compile Include="ListFixtures\XOrFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

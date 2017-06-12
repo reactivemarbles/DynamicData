@@ -25,14 +25,15 @@ namespace DynamicData.Binding
         {
             _factory = (t, notifyInitial) =>
             {
-                //1) notify when values have changed 2) resubscribe when changed because it may be a child object which has changed
+                //1) notify when values have changed 
+                //2) resubscribe when changed because it may be a child object which has changed
                 var valueHasChanged = GetNotifiers(t,chain).Merge().Take(1).Repeat();
                 if (notifyInitial)
                 {
                     valueHasChanged = Observable.Defer(() => Observable.Return(Unit.Default))
                         .Concat(valueHasChanged);
                 }
-                return valueHasChanged.Select(_ => GetPropertyValue(t,chain, valueAccessor)); //.Where(pv => pv != null);
+                return valueHasChanged.Select(_ => GetPropertyValue(t,chain, valueAccessor));
             };
         }
 
@@ -64,12 +65,11 @@ namespace DynamicData.Binding
 
         public IObservable<PropertyValue<TObject, TProperty>> Create(TObject source, bool notifyInitial)
         {
-            //overload for deep property observations, where a child may be INPC and therefore a new value must be resubscribed to
             return _factory(source, notifyInitial);
         }
 
         //create notifier for all parts of the property path 
-        private IEnumerable<IObservable<Unit>> GetNotifiers(TObject source, ObservablePropertyPart[] chain)
+        private static IEnumerable<IObservable<Unit>> GetNotifiers(TObject source, ObservablePropertyPart[] chain)
         {
             object value = source;
             foreach (var metadata in chain.Reverse())
@@ -82,8 +82,8 @@ namespace DynamicData.Binding
             }
         }
 
-        //walk the tree and break at a null, or return the value
-        PropertyValue<TObject, TProperty> GetPropertyValue(TObject source, ObservablePropertyPart[] chain, Func<TObject, TProperty> valueAccessor)
+        //walk the tree and break at a null, or return the value [should reduce this to a null an expression]
+        private static PropertyValue<TObject, TProperty> GetPropertyValue(TObject source, ObservablePropertyPart[] chain, Func<TObject, TProperty> valueAccessor)
         {
             object value = source;
             foreach (var metadata in chain.Reverse())

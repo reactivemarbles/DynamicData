@@ -36,9 +36,7 @@ namespace DynamicData.List.Internal
             return _source.Transform(item => new ManyContainer(item, _manyselector(item)))
                 .Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer))).NotEmpty();
         }
-
-
-
+          
         private IObservable<IChangeSet<TDestination>> CreateWithChangeset()
         {
             return Observable.Create<IChangeSet<TDestination>>(observer =>
