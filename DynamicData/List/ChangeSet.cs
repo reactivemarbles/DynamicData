@@ -18,6 +18,7 @@ namespace DynamicData
         private int _removes;
         private int _replaced;
         private int _moves;
+        private int _refreshes;
 
         /// <summary>
         /// An empty change set
@@ -78,9 +79,11 @@ namespace DynamicData
                 case ListChangeReason.Remove:
                     _removes++;
                     break;
-                    ;
                 case ListChangeReason.RemoveRange:
                     _removes = _removes + item.Range.Count;
+                    break;
+                case ListChangeReason.Refresh:
+                    _removes = _refreshes++;
                     break;
                 case ListChangeReason.Moved:
                     _moves++;
@@ -122,6 +125,11 @@ namespace DynamicData
         ///     Gets the number of removes
         /// </summary>
         public int Removes => _removes;
+
+        /// <summary>
+        ///     Gets the number of removes
+        /// </summary>
+        public int Refreshes => _refreshes;
 
         /// <summary>
         ///     Gets the number of requeries

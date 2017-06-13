@@ -3,21 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
     internal sealed class Transformer<TSource, TDestination>
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
-        private readonly Func<TSource, TransformedItemContainer> _containerFactory;
+        private readonly Func<TSource, Optional<TDestination>, int,  TransformedItemContainer> _containerFactory;
+        private readonly bool _transformOnRefresh;
 
-        public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, TDestination> factory)
+        public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
             if (factory == null) throw new ArgumentNullException(nameof(factory));
-
-            _source = source;
-            _containerFactory = item => new TransformedItemContainer(item, factory(item));
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _transformOnRefresh = transformOnRefresh;
+            _containerFactory = (item, prev, index) => new TransformedItemContainer(item, factory(item, prev, index));
         }
 
         public IObservable<IChangeSet<TDestination>> Run()
@@ -33,8 +34,7 @@ namespace DynamicData.List.Internal
                     return changed.Transform(container => container.Destination);
                 });
         }
-
-
+        
         private class TransformedItemContainer : IEquatable<TransformedItemContainer>
         {
             public TSource Source { get; }
@@ -96,30 +96,54 @@ namespace DynamicData.List.Internal
                             var change = item.Item;
                             if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
                             {
-                                transformed.Add(_containerFactory(change.Current));
+                                transformed.Add(_containerFactory(change.Current,Optional<TDestination>.None, transformed.Count));
                             }
                             else
                             {
-                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                                var converted = _containerFactory(change.Current, Optional<TDestination>.None,  change.CurrentIndex);
+                                transformed.Insert(change.CurrentIndex, converted);
                             }
                             break;
                         }
                     case ListChangeReason.AddRange:
                         {
-                            transformed.AddOrInsertRange(item.Range.Select(_containerFactory), item.Range.Index);
+                            var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
+
+                            transformed.AddOrInsertRange(item.Range
+                                    .Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex)),
+                                item.Range.Index);
+
                             break;
                         }
+                    case ListChangeReason.Refresh:
+                    {
+                        if (_transformOnRefresh)
+                        {
+
+                           var change = item.Item;
+                           Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                           var refreshed = _containerFactory(change.Current, previous, change.CurrentIndex);
+                           transformed.Refresh(refreshed, item.Item.CurrentIndex);
+                        }
+                        else
+                        {
+                            transformed.RefreshAt(item.Item.CurrentIndex);
+                        }
+                        break;
+                    }
                     case ListChangeReason.Replace:
                         {
                             var change = item.Item;
+                            Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                             if (change.CurrentIndex == change.PreviousIndex)
                             {
-                                transformed[change.CurrentIndex] = _containerFactory(change.Current);
+                               
+                                transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
                             }
                             else
                             {
                                 transformed.RemoveAt(change.PreviousIndex);
-                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current));
+                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
                             }
 
                             break;

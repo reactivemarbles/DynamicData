@@ -25,7 +25,8 @@ namespace DynamicData.Kernel
         /// </summary>
         /// <param name="item">The item.</param>
         /// <param name="value">The Value.</param>
-        public ItemWithValue(TObject item, TValue value)
+        /// <param name="idx"></param>
+        public ItemWithValue(TObject item, TValue value, int idx = -1)
         {
             Item = item;
             Value = value;

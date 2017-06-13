@@ -13,11 +13,6 @@ namespace DynamicData
     public interface IChangeSet<TObject, TKey> : IChangeSet, IEnumerable<Change<TObject, TKey>>
     {
         /// <summary>
-        /// The number of refreshes
-        /// </summary>
-        int Refreshes { get; }
-
-        /// <summary>
         /// The number of evaluates
         /// </summary>
         [Obsolete(Constants.EvaluateIsDead)]

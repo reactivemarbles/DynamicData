@@ -5,6 +5,11 @@ using DynamicData.Kernel;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
+    //public static class ChangeEx
+    //{
+    //    public int GetStart
+    //}
+
     /// <summary>
     ///   Container to describe a single change to a cache
     /// </summary>
@@ -108,13 +113,14 @@ namespace DynamicData
         public Change(ListChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
         {
             if (reason == ListChangeReason.Add && previous.HasValue)
-            {
                 throw new ArgumentException("For ChangeReason.Add, a previous value cannot be specified");
-            }
             if (reason == ListChangeReason.Replace && !previous.HasValue)
-            {
                 throw new ArgumentException("For ChangeReason.Change, must supply previous value");
-            }
+
+            if (reason == ListChangeReason.Refresh && currentIndex < 0)
+                throw new ArgumentException("For ChangeReason.Refresh, must supply and index");
+
+
             Reason = reason;
             Item = new ItemChange<T>(Reason, current, previous, currentIndex, previousIndex);
         }

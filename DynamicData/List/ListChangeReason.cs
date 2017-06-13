@@ -36,7 +36,7 @@ namespace DynamicData
         ///// <summary>
         /////   Command to operators to re-evaluate.
         ///// </summary>
-        //Refresh,
+        Refresh,
 
         /// <summary>
         /// An item has been moved in a sorted collection
