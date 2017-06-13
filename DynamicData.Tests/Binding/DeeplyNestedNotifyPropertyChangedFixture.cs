@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Binding;
 using FluentAssertions;
 using NUnit.Framework;
@@ -16,7 +18,7 @@ namespace DynamicData.Tests.Binding
             var instance = new ClassA {Child = new ClassB {Age = 10}};
 
             //provide a fallback so a value can always be obtained
-            var chain = instance.WhenChanged(a => a.Child.Age, (sender, a) => a, () => -1);
+            var chain = instance.ObserveProperty(a => a.Child.Age, (sender, a) => a, () => -1);
 
             int? result = null;
 
@@ -170,15 +172,19 @@ namespace DynamicData.Tests.Binding
 
             list.AddRange(items);
 
-            var myObservable = list.Connect()
-                .MergeMany(outer => outer.WhenValueChanged(a => a.Child.Age, false))
-                .Subscribe(z =>
-                {
+            var sw = new Stopwatch();
 
-                });
+          //  var factory = 
+
+            var myObservable = list.Connect()
+                .Do(_ => sw.Start())
+                .WhenPropertyChanged(a => a.Child.Age, false)
+                .Do(_ => sw.Stop())
+                .Subscribe();
+
 
             items[1].Child.Age=-1;
-
+            Console.WriteLine($"{sw.ElapsedMilliseconds}");
         }
 
         public class ClassA: AbstractNotifyPropertyChanged, IEquatable<ClassA>

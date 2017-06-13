@@ -21,36 +21,33 @@ namespace DynamicData.Binding
         public ObservablePropertyFactory<TObject, TProperty> GetFactory<TObject, TProperty>(Expression<Func<TObject, TProperty>> expression)
             where TObject : INotifyPropertyChanged
         {
-            var cacheKey = expression.ToCacheKey();
+            var key = expression.ToCacheKey();
 
-          
-          
             // ReSharper disable once InconsistentlySynchronizedField
-            var exiting = _factories.Lookup(cacheKey);
+            var exiting = _factories.Lookup(key);
             if (exiting.HasValue)
                 return (ObservablePropertyFactory<TObject, TProperty>)exiting.Value;
 
             lock (_locker)
             {
-                if (_factories.ContainsKey(cacheKey))
-                    return (ObservablePropertyFactory<TObject, TProperty>)_factories[cacheKey];
-
+                if (_factories.ContainsKey(key))
+                    return (ObservablePropertyFactory<TObject, TProperty>) _factories[key];
 
                 ObservablePropertyFactory<TObject, TProperty> factory;
 
-               var depth = expression.GetMembers().Count();
-                if (depth == 1)
+                var memberChain = expression.GetMemberChain().ToArray();
+                if (memberChain.Length == 1)
                 {
                     factory = new ObservablePropertyFactory<TObject, TProperty>(expression);
                 }
                 else
                 {
-                    var chain = expression.GetMemberChain().Select(m => new ObservablePropertyPart(m)).ToArray();
+                    var chain = memberChain.Select(m => new ObservablePropertyPart(m)).ToArray();
                     var accessor = expression?.Compile() ?? throw new ArgumentNullException(nameof(expression));
                     factory = new ObservablePropertyFactory<TObject, TProperty>(accessor, chain);
                 }
 
-                _factories[cacheKey] = factory;
+                _factories[key] = factory;
                 return factory;
             }
         }

@@ -37,19 +37,21 @@ namespace DynamicData.Binding
         /// Observes property changes for the specified property, starting with the current value
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TValue">The type of the value.</typeparam>
+        /// <typeparam name="TProperty">The type of the value.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="propertyAccessor">The property accessor.</param>
         /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
-        public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>([NotNull] this TObject source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
+        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>([NotNull] this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty> fallbackValue = null)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            return source.ObserveChain(propertyAccessor, notifyOnInitialValue);
+            var cache = ObservablePropertyFactoryCache.Instance.GetFactory(propertyAccessor);
+            return cache.Create(source, notifyOnInitialValue)
+                .Where(pv => !pv.UnobtainableValue || (pv.UnobtainableValue && fallbackValue != null));
         }
 
         /// <summary>
@@ -75,7 +77,7 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1>([NotNull] this TObject source,
+        public static IObservable<TResult> ObserveProperty<TObject, TResult, TProperty1>([NotNull] this TObject source,
             Expression<Func<TObject, TProperty1>> p1,
             Func<TObject, TProperty1,  TResult> resultSelector,
             Func<TProperty1> p1Fallback = null)
@@ -85,7 +87,7 @@ namespace DynamicData.Binding
             if (p1 == null) throw new ArgumentNullException(nameof(p1));
             if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
 
-            return source.WhenValueChanged(p1, true, p1Fallback).Select(v => resultSelector(source, v));
+            return source.ObserveValue(p1, true, p1Fallback).Select(v => resultSelector(source, v));
         }
 
         /// <summary>
@@ -95,7 +97,7 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2>([NotNull] this TObject source, 
+        public static IObservable<TResult> ObserveProperty<TObject, TResult, TProperty1, TProperty2>([NotNull] this TObject source, 
             Expression<Func<TObject, TProperty1>> p1,
             Expression<Func<TObject, TProperty2>> p2, 
             Func<TObject, TProperty1, TProperty2, TResult> resultSelector,
@@ -123,7 +125,7 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3>([NotNull] this TObject source,
+        public static IObservable<TResult> ObserveProperty<TObject, TResult, TProperty1, TProperty2, TProperty3>([NotNull] this TObject source,
             Expression<Func<TObject, TProperty1>> p1,
             Expression<Func<TObject, TProperty2>> p2,
             Expression<Func<TObject, TProperty3>> p3,
@@ -155,7 +157,7 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4>([NotNull] this TObject source,
+        public static IObservable<TResult> ObserveProperty<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4>([NotNull] this TObject source,
             Expression<Func<TObject, TProperty1>> p1,
             Expression<Func<TObject, TProperty2>> p2,
             Expression<Func<TObject, TProperty3>> p3,
@@ -191,7 +193,7 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5>([NotNull] this TObject source,
+        public static IObservable<TResult> ObserveProperty<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5>([NotNull] this TObject source,
             Expression<Func<TObject, TProperty1>> p1,
             Expression<Func<TObject, TProperty2>> p2,
             Expression<Func<TObject, TProperty3>> p3,
@@ -231,7 +233,7 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5, TProperty6>([NotNull] this TObject source,
+        public static IObservable<TResult> ObserveProperty<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5, TProperty6>([NotNull] this TObject source,
             Expression<Func<TObject, TProperty1>> p1,
             Expression<Func<TObject, TProperty2>> p2,
             Expression<Func<TObject, TProperty3>> p3,
@@ -268,11 +270,19 @@ namespace DynamicData.Binding
             );
         }
 
+
+        internal static Func<TObject, bool, IObservable<PropertyValue<TObject, TProperty>>> GetFactory<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
+            where TObject : INotifyPropertyChanged
+        {
+            var factory = ObservablePropertyFactoryCache.Instance.GetFactory(expression);
+            return (t, initial) => factory.Create(t, initial);
+        }
+
         internal static IObservable<TProperty> ObserveValue<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true, Func<TProperty> fallbackValue=null)
             where TObject : INotifyPropertyChanged
         {
-            var cache = ObservablePropertyFactoryCache.Instance.GetFactory(expression);
-            return cache.Create(source, notifyInitial)
+            var factory = ObservablePropertyFactoryCache.Instance.GetFactory(expression);
+            return factory.Create(source, notifyInitial)
                 .Where(pv => !pv.UnobtainableValue || pv.UnobtainableValue && fallbackValue != null)
                 .Select(pv =>
                 {
@@ -281,15 +291,6 @@ namespace DynamicData.Binding
 
                     return pv.Value;
                 });
-        }
-
-
-        private static IObservable<PropertyValue<TObject, TProperty>> ObserveChain<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true, Func<TProperty> fallbackValue = null)
-            where TObject : INotifyPropertyChanged
-        {
-            var cache = ObservablePropertyFactoryCache.Instance.GetFactory(expression);
-            return cache.Create(source, notifyInitial)
-                    .Where(pv => !pv.UnobtainableValue || (pv.UnobtainableValue && fallbackValue != null));
         }
     }
 }

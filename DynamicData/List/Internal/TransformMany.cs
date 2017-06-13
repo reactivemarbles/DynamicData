@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
@@ -12,34 +13,79 @@ namespace DynamicData.List.Internal
     {
         private readonly IObservable<IChangeSet<TSource>> _source;
         private readonly Func<TSource, IEnumerable<TDestination>> _manyselector;
+        private readonly Func<TSource, IObservable<IChangeSet<TDestination>>> _childChanges;
         private readonly IEqualityComparer<TDestination> _equalityComparer;
 
 
         public TransformMany([NotNull] IObservable<IChangeSet<TSource>> source,
-                             [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector,
-                             IEqualityComparer<TDestination> equalityComparer = null )
+            [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null,
+            Func<TSource, IObservable<IChangeSet<TDestination>>> childChanges = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _manyselector = manyselector;
+            _childChanges = childChanges;
             _equalityComparer = equalityComparer ?? EqualityComparer<TDestination>.Default;
         }
 
         public IObservable<IChangeSet<TDestination>> Run()
         {
+            if (_childChanges != null)
+                return CreateWithChangeset();
 
-            return _source.Transform(item =>
+            return _source.Transform(item => new ManyContainer(item, _manyselector(item)))
+                .Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer))).NotEmpty();
+        }
+          
+        private IObservable<IChangeSet<TDestination>> CreateWithChangeset()
+        {
+            return Observable.Create<IChangeSet<TDestination>>(observer =>
+            {
+                var result = new ChangeAwareList<TDestination>();
+
+                var transformed = _source.Transform(t =>
                 {
-                    //create a container which is used to store state of an item together with it's children
-                    var many = _manyselector(item).ToArray();
-                    return new ManyContainer(item, many);
+                    var locker = new object();
+                    var collection = _manyselector(t);
+                    var changes = _childChanges(t).Synchronize(locker).Skip(1);
+                    return new ManyContainer(t, collection, changes);
                 })
-                .Select(changes =>
+                .Publish();
+
+                var outerLock = new object();
+                var intial = transformed
+                    .Synchronize(outerLock)
+                    .Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer)));
+
+                var subsequent = transformed
+                    .MergeMany(x => x.Changes)
+                    .Synchronize(outerLock);
+
+                var allChanges = intial.Merge(subsequent).Select(changes =>
                 {
-                    var items = new DestinationEnumerator(changes, _equalityComparer);
-                    return new ChangeSet<TDestination>(items);
-                }).NotEmpty();
+                    result.Clone(changes);
+                    return result.CaptureChanges();
+                });
+
+                return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect());
+            });
+
         }
 
+        private sealed class ManyContainer
+        {
+            public TSource Source { get; }
+            public IEnumerable<TDestination> Destination { get; }
+            public IObservable<IChangeSet<TDestination>> Changes { get; }
+
+            public ManyContainer(TSource source, IEnumerable<TDestination> destination, IObservable<IChangeSet<TDestination>> changes = null)
+            {
+                Source = source;
+                Destination = destination;
+                Changes = changes;
+            }
+        }
+        //make this an instance
         private sealed class DestinationEnumerator : IEnumerable<Change<TDestination>>
         {
             private readonly IChangeSet<ManyContainer> _changes;
@@ -117,19 +163,5 @@ namespace DynamicData.List.Internal
                 return GetEnumerator();
             }
         }
-
-        
-        private sealed class ManyContainer
-        {
-            public TSource Source { get; }
-            public IEnumerable<TDestination> Destination { get; }
-
-            public ManyContainer(TSource source,  IEnumerable<TDestination> destination)
-            {
-                Source = source;
-                Destination = destination;
-            }
-        }
-
     }
 }
