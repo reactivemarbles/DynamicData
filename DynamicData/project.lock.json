@@ -3063,10 +3063,10 @@
   },
   "project": {
     "restore": {
-      "projectUniqueName": "U:\\Work\\2014\\DynamicData\\DynamicData\\DynamicData.csproj",
+      "projectUniqueName": "U:\\Work\\DynamicData\\DynamicData\\DynamicData.csproj",
       "projectName": "DynamicData",
-      "projectPath": "U:\\Work\\2014\\DynamicData\\DynamicData\\DynamicData.csproj",
-      "projectJsonPath": "U:\\Work\\2014\\DynamicData\\DynamicData\\project.json",
+      "projectPath": "U:\\Work\\DynamicData\\DynamicData\\DynamicData.csproj",
+      "projectJsonPath": "U:\\Work\\DynamicData\\DynamicData\\project.json",
       "projectStyle": "ProjectJson"
     },
     "dependencies": {

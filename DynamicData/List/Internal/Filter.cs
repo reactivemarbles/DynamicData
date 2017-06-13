@@ -199,7 +199,7 @@ namespace DynamicData.List.Internal
             mutatedMatches.ForEach(m => m());
         }
 
-        private class ItemWithMatch : IEquatable<ItemWithMatch>
+        private sealed class ItemWithMatch : IEquatable<ItemWithMatch>
         {
             public T Item { get; }
             public int Index { get; }

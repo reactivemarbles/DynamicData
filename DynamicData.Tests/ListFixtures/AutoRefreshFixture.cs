@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
@@ -21,7 +22,7 @@ namespace DynamicData.Tests.ListFixtures
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(nameof(Person.Age)).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p=>p.Age).AsAggregator())
             {
                 list.AddRange(items);
 
@@ -63,7 +64,7 @@ namespace DynamicData.Tests.ListFixtures
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(nameof(Person.Age), TimeSpan.FromSeconds(1), scheduler).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p=>p.Age, TimeSpan.FromSeconds(1),scheduler: scheduler).AsAggregator())
             {
                 list.AddRange(items);
 
@@ -91,7 +92,7 @@ namespace DynamicData.Tests.ListFixtures
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(nameof(Person.Age)).Filter(p=>p.Age>50).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p=>p.Age).Filter(p=>p.Age>50).AsAggregator())
             {
                 list.AddRange(items);
 
@@ -138,7 +139,7 @@ namespace DynamicData.Tests.ListFixtures
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(nameof(Person.Age))
+                .AutoRefresh(p=>p.Age)
                 .Transform((p,idx) => new TransformedPerson(p,idx))
                 .AsAggregator())
             {
@@ -175,7 +176,7 @@ namespace DynamicData.Tests.ListFixtures
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(nameof(Person.Age))
+                .AutoRefresh(p => p.Age)
                 .Sort(SortExpressionComparer<Person>.Ascending(p=>p.Age))
                 .AsAggregator())
             {
@@ -228,7 +229,7 @@ namespace DynamicData.Tests.ListFixtures
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(nameof(Person.Age))
+                .AutoRefresh(p => p.Age)
                 .GroupOn(p=>p.Age % 10)
                 .AsAggregator())
             {          
@@ -277,6 +278,91 @@ namespace DynamicData.Tests.ListFixtures
                 changes.Count.Should().Be(1);
                 changes.First().Reason.Should().Be(ListChangeReason.Refresh);
                 changes.First().Item.Current.Should().BeSameAs(items[2]);
+            }
+        }
+
+        [Test]
+        public void AutoRefreshGroupImmutable()
+        {
+            var items = Enumerable.Range(1, 100)
+                .Select(i => new Person("Person" + i, i))
+                .ToArray();
+
+            //result should only be true when all items are set to true
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect()
+                .AutoRefresh(p => p.Age)
+                .GroupWithImmutableState(p => p.Age % 10)
+                .AsAggregator())
+            {
+                void CheckContent()
+                {
+                    foreach (var grouping in items.GroupBy(p => p.Age % 10))
+                    {
+                        var childGroup = results.Data.Items.Single(g => g.Key == grouping.Key);
+                        var expected = grouping.OrderBy(p => p.Name);
+                        var actual = childGroup.Items.OrderBy(p => p.Name);
+                        actual.ShouldAllBeEquivalentTo(expected);
+                    }
+                }
+
+                list.AddRange(items);
+                results.Data.Count.Should().Be(10);
+                results.Messages.Count.Should().Be(1);
+                CheckContent();
+
+                //move person from group 1 to 2
+                items[0].Age = items[0].Age + 1;
+                CheckContent();
+
+                //change the value and move to a grouping which does not yet exist
+                items[1].Age = -1;
+                results.Data.Count.Should().Be(11);
+                results.Data.Items.Last().Key.Should().Be(-1);
+                results.Data.Items.Last().Count.Should().Be(1);
+                results.Data.Items.First().Count.Should().Be(9);
+                CheckContent();
+
+                //put the value back where it was and check the group was removed
+                items[1].Age = 1;
+                results.Data.Count.Should().Be(10);
+                results.Messages.Count.Should().Be(4);
+                CheckContent();
+
+                //refresh an item which makes it belong to the same group - should then propagate a refresh
+                items[2].Age = 13;
+                CheckContent();
+
+                results.Messages.Count.Should().Be(4); 
+            }
+        }
+
+
+        [Test]
+        public void AutoRefreshDistinct()
+        {
+            var items = Enumerable.Range(1, 100)
+                .Select(i => new Person("Person" + i, i))
+                .ToArray();
+
+            //result should only be true when all items are set to true
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect()
+                .AutoRefresh(p => p.Age)
+                .DistinctValues(p => p.Age / 10)
+                .AsAggregator())
+            {
+                list.AddRange(items);
+
+                results.Data.Count.Should().Be(11);
+                results.Messages.Count.Should().Be(1);
+
+                //update an item which did not match the filter and does so after change
+                items[50].Age = 500;
+                results.Data.Count.Should().Be(12);
+
+                results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Add);
+                results.Messages.Last().First().Item.Current.Should().Be(50);
             }
         }
 

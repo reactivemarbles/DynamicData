@@ -41,9 +41,13 @@ namespace DynamicData.Binding
         /// <param name="source">The source.</param>
         /// <param name="propertyAccessor">The property accessor.</param>
         /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+        /// <param name="fallbackValue"></param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
-        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>([NotNull] this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty> fallbackValue = null)
+        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>([NotNull] this TObject source, 
+            Expression<Func<TObject, TProperty>> propertyAccessor, 
+            bool notifyOnInitialValue = true, 
+            Func<TProperty> fallbackValue = null)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

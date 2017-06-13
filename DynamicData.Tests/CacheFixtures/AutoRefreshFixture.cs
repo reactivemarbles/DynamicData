@@ -17,7 +17,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             //result should only be true when all items are set to true
             using (var cache = new SourceCache<Person, string>(m => m.Name))
-            using (var results = cache.Connect().AutoRefresh(nameof(Person.Age)).AsAggregator())
+            using (var results = cache.Connect().AutoRefresh(p=>p.Age).AsAggregator())
             {
                 cache.AddOrUpdate(items);
 

@@ -165,8 +165,7 @@ namespace DynamicData.List.Internal
                                     //check whether an item changing has resulted in a different group
                                     if (previousGroup.Equals(currentGroup))
                                     {
-                                        // Propagate refresh event
-                                        //TODO:  Add refresh to source list
+                                        // Propagate refresh eventt
                                         var cal = (ChangeAwareList<TObject>) list;
                                         cal.Refresh(currentItem);
                                     }

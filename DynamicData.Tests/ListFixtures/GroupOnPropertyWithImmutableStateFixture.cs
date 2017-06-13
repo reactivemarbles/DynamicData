@@ -9,13 +9,13 @@ namespace DynamicData.Tests.ListFixtures
     public class GroupOnPropertyWithImmutableStateFixture
     {
         private ISourceList<Person> _source;
-        private ChangeSetAggregator<IGroup<Person, int>> _results;
+        private ChangeSetAggregator<List.IGrouping<Person, int>> _results;
 
         [SetUp]
         public void Initialise()
         {
             _source = new SourceList<Person>();
-            _results = _source.Connect().GroupOnProperty(p => p.Age).AsAggregator();
+            _results = _source.Connect().GroupOnPropertyWithImmutableState(p => p.Age).AsAggregator();
         }
 
         [TearDown]
@@ -34,8 +34,8 @@ namespace DynamicData.Tests.ListFixtures
 
             var firstGroup = _results.Data.Items.First();
 
-            Assert.AreEqual(1, firstGroup.List.Count);
-            Assert.AreEqual(10, firstGroup.GroupKey);
+            Assert.AreEqual(1, firstGroup.Count);
+            Assert.AreEqual(10, firstGroup.Key);
         }
 
         [Test]
@@ -58,8 +58,8 @@ namespace DynamicData.Tests.ListFixtures
             Assert.AreEqual(1, _results.Data.Count);
             var firstGroup = _results.Data.Items.First();
 
-            Assert.AreEqual(1, firstGroup.List.Count);
-            Assert.AreEqual(20, firstGroup.GroupKey);
+            Assert.AreEqual(1, firstGroup.Count);
+            Assert.AreEqual(20, firstGroup.Key);
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace DynamicData.Tests.ListFixtures
 
             //check that each item is only in one cache
             var peopleInCache = _results.Data.Items
-                .SelectMany(g => g.List.Items)
+                .SelectMany(g => g.Items)
                 .ToArray();
 
             Assert.AreEqual(100, peopleInCache.Length);

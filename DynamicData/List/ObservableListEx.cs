@@ -184,84 +184,34 @@ namespace DynamicData
         #endregion
 
         #region Auto Refresh
-
+                        
         /// <summary>
         /// Automatically refresh downstream operators when properties change.
         /// </summary>
         /// <param name="source">The source observable</param>
-        /// <param name="properties">Specify a property to observe changes. When it changes a Refresh is invoked</param>
-        /// <returns>An observable change set with additional refresh changes</returns>
-        public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source,
-            string properties)
-            where TObject : INotifyPropertyChanged
-        {
-            return AutoRefresh<TObject>(source, properties, null, null);
-        }
-
-        /// <summary>
-        /// Automatically refresh downstream operators when properties change.
-        /// </summary>
-        /// <param name="source">The source observable</param>
-        /// <param name="properties">Specify a property to observe changes. When it changes a Refresh is invoked</param>
-        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
-        /// <param name="scheduler">The scheduler</param>
-        /// <returns>An observable change set with additional refresh changes</returns>
-        public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source,
-            string properties,
-            TimeSpan? changeSetBuffer,
-            IScheduler scheduler = null)
-            where TObject : INotifyPropertyChanged
-        {
-            return AutoRefresh<TObject>(source, properties, changeSetBuffer, null, scheduler);
-        }
-
-        /// <summary>
-        /// Automatically refresh downstream operators when properties change.
-        /// </summary>
-        /// <param name="source">The source observable</param>
-        /// <param name="properties">Specify a property to observe changes. When it changes a Refresh is invoked</param>
+        /// <param name="propertyAccessor">Specify a property to observe changes. When it changes a Refresh is invoked</param>
         /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
         /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
         /// <param name="scheduler">The scheduler</param>
         /// <returns>An observable change set with additional refresh changes</returns>
-        public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source,
-            string properties,
-            TimeSpan? changeSetBuffer,
-            TimeSpan? propertyChangeThrottle = null,
-            IScheduler scheduler = null)
-            where TObject : INotifyPropertyChanged
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (properties == null) throw new ArgumentNullException(nameof(properties));
-
-            return source.AutoRefresh(new[] { properties }, changeSetBuffer, propertyChangeThrottle, scheduler);
-        }
-
-        /// <summary>
-        /// Automatically refresh downstream operators when properties change.
-        /// </summary>
-        /// <param name="source">The source observable</param>
-        /// <param name="properties">Properties to observe. Specify one or more properties to monitor, otherwise leave blank </param>
-        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
-        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
-        /// <param name="scheduler">The scheduler</param>
-        /// <returns>An observable change set with additional refresh changes</returns>
-        public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source,
-            IEnumerable<string> properties = null,
+        public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source,
+            Expression<Func<TObject, TProperty>> propertyAccessor,
             TimeSpan? changeSetBuffer = null,
             TimeSpan? propertyChangeThrottle = null,
             IScheduler scheduler = null)
             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
+            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            return source.AutoRefresh((t) =>
+            return source.AutoRefresh(t =>
             {
                 if (propertyChangeThrottle == null)
-                    return t.WhenAnyPropertyChanged(properties?.ToArray() ?? new string[0]);
+                    return t.WhenPropertyChanged(propertyAccessor, false);
 
-                return t.WhenAnyPropertyChanged(properties?.ToArray() ?? new string[0])
+                return t.WhenPropertyChanged(propertyAccessor,false)
                     .Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
+
             }, changeSetBuffer, scheduler);
         }
 
@@ -963,9 +913,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
-            return
-                new GroupOnPropertyWithImmutableState<TObject, TGroup>(source, propertySelector, propertyChangedThrottle,
-                    scheduler).Run();
+            return     new GroupOnPropertyWithImmutableState<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
         }
 
         /// <summary>
