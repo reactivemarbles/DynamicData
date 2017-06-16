@@ -18,7 +18,7 @@ namespace DynamicData.Tests.Binding
             var instance = new ClassA {Child = new ClassB {Age = 10}};
 
             //provide a fallback so a value can always be obtained
-            var chain = instance.ObserveProperty(a => a.Child.Age, (sender, a) => a, () => -1);
+            var chain = instance.WhenChanged(a => a.Child.Age, (sender, a) => a, () => -1);
 
             int? result = null;
 

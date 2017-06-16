@@ -111,7 +111,7 @@ namespace DynamicData.List.Internal
                 var currentGroup = grouping.Key;
                 var groupContainer = GetGroup(allGroupings, currentGroup);
 
-                void GroupState()
+                void GetInitialState()
                 {
                     if (!initialStateOfGroups.ContainsKey(grouping.Key))
                         initialStateOfGroups[grouping.Key] = GetGroupState(groupContainer);
@@ -127,7 +127,7 @@ namespace DynamicData.List.Internal
                     {
                         case ListChangeReason.Add:
                         {
-                            GroupState();
+                            GetInitialState();
                             listToModify.Add(change.Current.Item);
                             break;
                         }
@@ -141,7 +141,7 @@ namespace DynamicData.List.Internal
                             if (!previousGroup.Equals(currentGroup))
                             {
 
-                                GroupState();
+                                GetInitialState();
                                 //add to new group
                                 listToModify.Add(currentItem);
 
@@ -159,7 +159,7 @@ namespace DynamicData.List.Internal
                         }
                         case ListChangeReason.Replace:
                         {
-                            GroupState();
+                            GetInitialState();
                             var previousItem = change.Previous.Value.Item;
                             var previousGroup = change.Previous.Value.Group;
 
@@ -189,13 +189,13 @@ namespace DynamicData.List.Internal
                         }
                         case ListChangeReason.Remove:
                         {
-                            GroupState();
+                            GetInitialState();
                             listToModify.Remove(change.Current.Item);
                             break;
                         }
                         case ListChangeReason.Clear:
                         {
-                            GroupState();
+                            GetInitialState();
                             listToModify.Clear();
                             break;
                         }
@@ -236,7 +236,6 @@ namespace DynamicData.List.Internal
             }
             return result.CaptureChanges();
         }
-
 
         private IGrouping<TObject,  TGroupKey> GetGroupState(GroupContainer grouping)
         {
@@ -337,18 +336,5 @@ namespace DynamicData.List.Internal
                 return $"{Item} ({Group})";
             }
         }
-
-
-        //private class GroupWithAddIndicator
-        //{
-        //    public Group<TObject, TGroupKey> Group { get; }
-        //    public bool WasCreated { get; }
-
-        //    public GroupWithAddIndicator(Group<TObject, TGroupKey> @group, bool wasCreated)
-        //    {
-        //        Group = @group;
-        //        WasCreated = wasCreated;
-        //    }
-        //}
     }
 }

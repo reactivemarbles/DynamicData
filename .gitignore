@@ -16,6 +16,8 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+project.lock.json
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -292,3 +294,4 @@ __pycache__/
 *.xsd.cs
 
 # End of https://www.gitignore.io/api/visualstudio
+DynamicData/project.lock.json

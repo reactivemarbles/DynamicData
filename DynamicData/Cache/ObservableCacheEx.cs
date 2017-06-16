@@ -285,7 +285,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
-            return source.MergeMany(t => t.ObserveValue(propertyAccessor, notifyOnInitialValue));
+            return source.MergeMany(t => t.WhenChanged(propertyAccessor, notifyOnInitialValue));
         }
 
         /// <summary>
