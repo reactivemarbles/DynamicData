@@ -1,3 +1,4 @@
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -21,24 +22,24 @@ namespace DynamicData.Tests.ListFixtures
                           .MergeMany(e => e.Connect().RemoveIndex())
                           .AsObservableList();
 
-            Assert.AreEqual(d.Count, 0);
+            0.Should().Be(d.Count);
 
             a.Add(1);
 
-            Assert.AreEqual(d.Count, 1);
+            1.Should().Be(d.Count);
             a.Add(2);
-            Assert.AreEqual(d.Count, 2);
+            2.Should().Be(d.Count);
 
             b.Add(3);
-            Assert.AreEqual(d.Count, 3);
+            3.Should().Be(d.Count);
             b.Add(5);
-            Assert.AreEqual(d.Count, 4);
+            4.Should().Be(d.Count);
             CollectionAssert.AreEquivalent(d.Items, new[] { 1, 2, 3, 5 });
 
             b.Clear();
 
             // Fails below
-            Assert.AreEqual(d.Count, 2);
+            2.Should().Be(d.Count);
             CollectionAssert.AreEquivalent(d.Items, new[] { 1, 2 });
         }
     }

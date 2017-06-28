@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
@@ -36,7 +37,7 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(10, result, "Min value should be 10");
+            result.Should().Be(10, "Min value should be 10");
 
             accumulator.Dispose();
         }
@@ -55,7 +56,7 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("C", 30));
 
             _source.Remove("A");
-            Assert.AreEqual(20, result, "Min value should be 20 after remove");
+            result.Should().Be(20, "Min value should be 20 after remove");
             accumulator.Dispose();
         }
 
@@ -75,13 +76,13 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 11));
             _source.AddOrUpdate(personc);
-            Assert.AreEqual(5, min, "Min should be 5");
+            min.Should().Be(5);
 
             _source.AddOrUpdate(personc);
 
             personc.Age = 11;
 
-            Assert.AreEqual(10, min, "Min should be 10 after inline change");
+            min.Should().Be(10);
             accumulator.Dispose();
         }
 

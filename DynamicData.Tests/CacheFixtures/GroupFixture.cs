@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -31,14 +32,14 @@ namespace DynamicData.Tests.CacheFixtures
                                             .Subscribe(
                                                 updates =>
                                                 {
-                                                    Assert.AreEqual(1, updates.Count, "Should be 1 add");
-                                                    Assert.AreEqual(ChangeReason.Add, updates.First().Reason);
+                                                    updates.Count.Should().Be(1, "Should be 1 add");
+                                                    updates.First().Reason.Should().Be(ChangeReason.Add);
                                                     called = true;
                                                 });
             _source.AddOrUpdate(new Person("Person1", 20));
 
             subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
+            called.Should().BeTrue();
         }
 
         [Test]
@@ -50,7 +51,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.AddOrUpdate(new Person("Person1", 20));
             subscriber.Dispose();
-            Assert.IsFalse(called, "No update has been invoked");
+            called.Should().BeFalse();
         }
 
         [Test]
@@ -62,7 +63,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.AddOrUpdate(new Person("Person1", 21));
             subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
+            called.Should().BeTrue();
         }
 
         [Test]
@@ -74,14 +75,14 @@ namespace DynamicData.Tests.CacheFixtures
                                             .Subscribe(
                                                 updates =>
                                                 {
-                                                    Assert.AreEqual(1, updates.Count, "Should be 1 add");
-                                                    Assert.AreEqual(ChangeReason.Remove, updates.First().Reason);
+                                                    updates.Count.Should().Be(1, "Should be 1 add");
+                                                    updates.First().Reason.Should().Be(ChangeReason.Remove);
                                                     called = true;
                                                 });
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.Remove(new Person("Person1", 20));
             subscriber.Dispose();
-            Assert.IsTrue(called, "Notification should have fired");
+            called.Should().BeTrue();
         }
 
         [Test]
@@ -93,7 +94,7 @@ namespace DynamicData.Tests.CacheFixtures
                                                        () => { completed = true; });
             _source.Dispose();
             subscriber.Dispose();
-            Assert.IsTrue(completed, "Completed has not been invoked");
+            completed.Should().BeTrue();
         }
 
         [Test]
@@ -104,10 +105,10 @@ namespace DynamicData.Tests.CacheFixtures
                                             .Subscribe(
                                                 updates =>
                                                 {
-                                                    Assert.AreEqual(4, updates.Count, "Should be 4 adds");
+                                                    updates.Count.Should().Be(4, "Should be 4 adds");
                                                     foreach (var update in updates)
                                                     {
-                                                        Assert.AreEqual(ChangeReason.Add, update.Reason);
+                                                        update.Reason.Should().Be(ChangeReason.Add);
                                                     }
                                                     called = true;
                                                 });
@@ -120,7 +121,7 @@ namespace DynamicData.Tests.CacheFixtures
             });
 
             subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
+            called.Should().BeTrue();
         }
 
         [Test]
@@ -131,8 +132,8 @@ namespace DynamicData.Tests.CacheFixtures
                                             .Subscribe(
                                                 updates =>
                                                 {
-                                                    Assert.AreEqual(1, updates.Count, "Should be 1 add");
-                                                    Assert.AreEqual(ChangeReason.Add, updates.First().Reason);
+                                                    updates.Count.Should().Be(1, "Should be 1 add");
+                                                    updates.First().Reason.Should().Be(ChangeReason.Add);
                                                     called = true;
                                                 });
             _source.Edit(updater =>
@@ -144,7 +145,7 @@ namespace DynamicData.Tests.CacheFixtures
             });
 
             subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
+            called.Should().BeTrue();
         }
 
         [Test]
@@ -156,10 +157,10 @@ namespace DynamicData.Tests.CacheFixtures
                                             .Subscribe(
                                                 updates =>
                                                 {
-                                                    Assert.AreEqual(1, updates.Count, "Should be 1 update");
+                                                    updates.Count.Should().Be(1, "Should be 1 update");
                                                     foreach (var update in updates)
                                                     {
-                                                        Assert.AreEqual(ChangeReason.Remove, update.Reason);
+                                                        update.Reason.Should().Be(ChangeReason.Remove);
                                                     }
                                                     called = true;
                                                 });
@@ -171,7 +172,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Remove(person);
 
             subscriber.Dispose();
-            Assert.IsTrue(called, "No update has been invoked");
+            called.Should().BeTrue();
         }
 
         [Test]
@@ -182,7 +183,7 @@ namespace DynamicData.Tests.CacheFixtures
                                     .Subscribe(updates => { called = true; });
             _source.AddOrUpdate(new Person("Person1", 20));
             subscriber.Dispose();
-            Assert.IsTrue(called, "Subscription has not been invoked");
+            called.Should().BeTrue();
         }
     }
 }

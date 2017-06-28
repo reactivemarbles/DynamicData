@@ -1,6 +1,7 @@
 using System.Linq;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -35,7 +36,7 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
             var expected = people.Take(25).ToArray();
-            CollectionAssert.AreEqual(expected, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(expected);
         }
 
         [Test]
@@ -46,7 +47,7 @@ namespace DynamicData.Tests.ListFixtures
             _controller.Change(new PageRequest(2, 25));
 
             var expected = people.Skip(25).Take(25).ToArray();
-            CollectionAssert.AreEqual(expected, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(expected);
         }
 
         [Test]
@@ -57,7 +58,7 @@ namespace DynamicData.Tests.ListFixtures
             var expected = people.Take(25).ToArray();
 
             _source.InsertRange(_generator.Take(100), 50);
-            CollectionAssert.AreEqual(expected, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(expected);
         }
 
         [Test]
@@ -72,9 +73,9 @@ namespace DynamicData.Tests.ListFixtures
             var message = _results.Messages[1].ElementAt(0);
             var removedPerson = people.ElementAt(24);
 
-            Assert.AreEqual(newPerson, _results.Data.Items.ElementAt(10));
-            Assert.AreEqual(removedPerson, message.Item.Current);
-            Assert.AreEqual(ListChangeReason.Remove, message.Reason);
+            _results.Data.Items.ElementAt(10).Should().Be(newPerson);
+            message.Item.Current.Should().Be(removedPerson);
+            message.Reason.Should().Be(ListChangeReason.Remove);
         }
 
         [Test]
@@ -86,17 +87,17 @@ namespace DynamicData.Tests.ListFixtures
             _source.RemoveAt(0);
             var expected = people.Skip(26).Take(25).ToArray();
 
-            CollectionAssert.AreEqual(expected, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(expected);
 
             var removedMessage = _results.Messages[2].ElementAt(0);
             var removedPerson = people.ElementAt(25);
-            Assert.AreEqual(removedPerson, removedMessage.Item.Current);
-            Assert.AreEqual(ListChangeReason.Remove, removedMessage.Reason);
+            removedMessage.Item.Current.Should().Be(removedPerson);
+            removedMessage.Reason.Should().Be(ListChangeReason.Remove);
 
             var addedMessage = _results.Messages[2].ElementAt(1);
             var addedPerson = people.ElementAt(50);
-            Assert.AreEqual(addedPerson, addedMessage.Item.Current);
-            Assert.AreEqual(ListChangeReason.Add, addedMessage.Reason);
+            addedMessage.Item.Current.Should().Be(addedPerson);
+            addedMessage.Reason.Should().Be(ListChangeReason.Add);
         }
 
         [Test]
@@ -108,7 +109,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.Move(0, 10);
 
             var actualPersonAtIndex10 = _results.Data.Items.ElementAt(10);
-            Assert.AreEqual(personToMove, actualPersonAtIndex10);
+            actualPersonAtIndex10.Should().Be(personToMove);
         }
 
         [Test]
@@ -120,7 +121,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.Move(10, 0);
 
             var actualPersonAtIndex0 = _results.Data.Items.ElementAt(0);
-            Assert.AreEqual(personToMove, actualPersonAtIndex0);
+            actualPersonAtIndex0.Should().Be(personToMove);
         }
     }
 }

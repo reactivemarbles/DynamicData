@@ -4,6 +4,7 @@ using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -56,9 +57,9 @@ namespace DynamicData.Tests.ListFixtures
             var shouldbefirst = new Person("__A", 99);
             _source.Add(shouldbefirst);
 
-            Assert.AreEqual(101, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(101, "Should be 100 people in the cache");
 
-            Assert.AreEqual(shouldbefirst, _results.Data.Items.First());
+            _results.Data.Items.First().Should().Be(shouldbefirst);
         }
 
         [Test]
@@ -70,9 +71,9 @@ namespace DynamicData.Tests.ListFixtures
             var shouldbefirst = new Person("__A", 99);
             _source.ReplaceAt(10, shouldbefirst);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
-            Assert.AreEqual(shouldbefirst, _results.Data.Items.First());
+            _results.Data.Items.First().Should().Be(shouldbefirst);
         }
 
         [Test]
@@ -85,9 +86,9 @@ namespace DynamicData.Tests.ListFixtures
             people.RemoveAt(20);
             _source.RemoveAt(20);
 
-            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
-            Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
+            _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+            _results.Messages[1].First().Item.Current.Should().Be(toRemove, "Incorrect item removed");
 
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
@@ -102,8 +103,8 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.RemoveMany(people.OrderBy(p => p, _comparer).Skip(10).Take(90));
 
-            Assert.AreEqual(10, _results.Data.Count, "Should be 99 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            _results.Data.Count.Should().Be(10, "Should be 10 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
 
             var expectedResult = people.OrderBy(p => p, _comparer).Take(10);
             var actualResult = _results.Data.Items;
@@ -118,8 +119,8 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.RemoveMany(people.OrderByDescending(p => p, _comparer).Skip(10).Take(90));
 
-            Assert.AreEqual(10, _results.Data.Count, "Should be 99 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            _results.Data.Count.Should().Be(10, "Should be 99 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
 
             var expectedResult = people.OrderByDescending(p => p, _comparer).Take(10);
             var actualResult = _results.Data.Items;

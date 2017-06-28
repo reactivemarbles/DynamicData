@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -53,16 +54,16 @@ namespace DynamicData.Tests.CacheFixtures
             _personCache.AddOrUpdate(people);
             _employmentCache.AddOrUpdate(emphistory);
 
-            Assert.AreEqual(numberOfPeople, allpeopleWithEmpHistory.Count);
-            Assert.AreEqual(emphistory.Count, allpeopleWithEmpHistory.Items.SelectMany(d => d.EmpoymentData.Items).Count());
+            allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople);
+            allpeopleWithEmpHistory.Items.SelectMany(d => d.EmpoymentData.Items).Count().Should().Be(emphistory.Count);
 
             //check grouped items have the same key as the parent
             allpeopleWithEmpHistory.Items.ForEach
-                (p => { Assert.IsTrue(p.EmpoymentData.Items.All(emph => emph.Name == p.Person)); }
+                (p => { p.EmpoymentData.Items.All(emph => emph.Name == p.Person).Should().BeTrue(); }
                 );
 
             _personCache.Edit(updater => updater.Remove("Person1"));
-            Assert.AreEqual(numberOfPeople - 1, allpeopleWithEmpHistory.Count);
+            allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople - 1);
             _employmentCache.Edit(updater => updater.Remove(emphistory));
             allpeopleWithEmpHistory.Dispose();
         }

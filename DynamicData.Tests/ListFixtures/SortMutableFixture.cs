@@ -69,7 +69,7 @@ namespace DynamicData.Tests.ListFixtures
 
             _results.Data.Count.Should().Be(101);
 
-            Assert.AreEqual(shouldbeLast, _results.Data.Items.Last());
+            _results.Data.Items.Last().Should().Be(shouldbeLast);
         }
 
         [Test]
@@ -81,9 +81,9 @@ namespace DynamicData.Tests.ListFixtures
             var shouldbeLast = new Person("__A", 999);
             _source.ReplaceAt(10, shouldbeLast);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
-            Assert.AreEqual(shouldbeLast, _results.Data.Items.Last());
+            _results.Data.Items.Last().Should().Be(shouldbeLast);
         }
 
         [Test]
@@ -96,9 +96,9 @@ namespace DynamicData.Tests.ListFixtures
             people.RemoveAt(20);
             _source.RemoveAt(20);
 
-            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
-            Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
+            _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+            _results.Messages[1].First().Item.Current.Should().Be(toRemove, "Incorrect item removed");
 
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
@@ -113,8 +113,8 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.RemoveMany(people.OrderBy(p => p, _comparer).Skip(10).Take(90));
 
-            Assert.AreEqual(10, _results.Data.Count, "Should be 99 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            _results.Data.Count.Should().Be(10, "Should be 99 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
             //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
 
             var expectedResult = people.OrderBy(p => p, _comparer).Take(10);
@@ -130,8 +130,8 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.RemoveMany(people.OrderByDescending(p => p, _comparer).Skip(10).Take(90));
 
-            Assert.AreEqual(10, _results.Data.Count, "Should be 99 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            _results.Data.Count.Should().Be(10, "Should be 99 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
             //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
 
             var expectedResult = people.OrderByDescending(p => p, _comparer).Take(10);
@@ -168,7 +168,7 @@ namespace DynamicData.Tests.ListFixtures
             var actualResult = _results.Data.Items.ToArray();
 
             //actualResult.(expectedResult);
-            CollectionAssert.AreEqual(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
 
@@ -182,8 +182,8 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.RemoveMany(odd);
 
-            Assert.AreEqual(50, _results.Data.Count, "Should be 99 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            _results.Data.Count.Should().Be(50, "Should be 99 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
             //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
 
             var expectedResult = people.Except(odd).OrderByDescending(p => p, _comparer).ToArray();
@@ -204,7 +204,7 @@ namespace DynamicData.Tests.ListFixtures
 
             _resort.OnNext(Unit.Default);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
@@ -224,7 +224,7 @@ namespace DynamicData.Tests.ListFixtures
 
             _changeComparer.OnNext(newComparer);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
             var expectedResult = people.OrderBy(p => p, newComparer);
             var actualResult = _results.Data.Items;
@@ -240,25 +240,25 @@ namespace DynamicData.Tests.ListFixtures
             var people = allPeople.Take(100).ToArray();
             _source.AddRange(people);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
             var morePeople = allPeople.Skip(100).ToArray();
             _source.AddRange(morePeople);
 
-            Assert.AreEqual(1100, _results.Data.Count, "Should be 1100 people in the cache");
+            _results.Data.Count.Should().Be(1100, "Should be 1100 people in the cache");
             var expectedResult = people.Union(morePeople).OrderBy(p => p, _comparer).ToArray();
             var actualResult = _results.Data.Items;
 
             CollectionAssert.AreEquivalent(expectedResult, actualResult);
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 messages");
+            _results.Messages.Count.Should().Be(2, "Should be 2 messages");
 
             var lastMessage = _results.Messages.Last();
-            Assert.AreEqual(100, lastMessage.First().Range.Count, "Should be 100 in the range");
-            Assert.AreEqual(ListChangeReason.Clear, lastMessage.First().Reason);
+            lastMessage.First().Range.Count.Should().Be(100, "Should be 100 in the range");
+            lastMessage.First().Reason.Should().Be(ListChangeReason.Clear);
 
-            Assert.AreEqual(1100, lastMessage.Last().Range.Count, "Should be 1100 in the range");
-            Assert.AreEqual(ListChangeReason.AddRange, lastMessage.Last().Reason);
+            lastMessage.Last().Range.Count.Should().Be(1100, "Should be 1100 in the range");
+            lastMessage.Last().Reason.Should().Be(ListChangeReason.AddRange);
         }
     }
 }

@@ -2,6 +2,7 @@
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.Kernal
@@ -27,11 +28,10 @@ namespace DynamicData.Tests.Kernal
             _updater.AddOrUpdate(person, "Adult1");
             IChangeSet<Person, string> updates = _updater.AsChangeSet();
 
-            Assert.AreEqual(person, _cache.Lookup("Adult1").Value);
-            Assert.AreEqual(1, _cache.Count);
-            Assert.AreEqual(updates.Count, 1, "Should be 1 updates");
-            Assert.AreEqual(new Change<Person, string>(ChangeReason.Add, person.Name, person), updates.First(),
-                            "Should be 1 updates");
+            _cache.Lookup("Adult1").Value.Should().Be(person);
+            _cache.Count.Should().Be(1);
+            1.Should().Be(updates.Count, "Should be 1 updates");
+            updates.First().Should().Be(new Change<Person, string>(ChangeReason.Add, person.Name, person), "Should be 1 updates");
         }
 
         [Test]
@@ -42,8 +42,8 @@ namespace DynamicData.Tests.Kernal
             _updater.Remove(key);
             IChangeSet<Person, string> updates = _updater.AsChangeSet();
 
-            Assert.AreEqual(0, _cache.Count);
-            Assert.AreEqual(0, updates.Count, "Should be 0 updates");
+            _cache.Count.Should().Be(0);
+            updates.Count.Should().Be(0, "Should be 0 updates");
         }
 
         [Test]
@@ -56,10 +56,10 @@ namespace DynamicData.Tests.Kernal
             _updater.Remove(key);
             IChangeSet<Person, string> updates = _updater.AsChangeSet();
 
-            Assert.AreEqual(0, _cache.Count);
-            Assert.AreEqual(updates.Count(update => update.Reason == ChangeReason.Add), 1, "Should be 1 add");
-            Assert.AreEqual(updates.Count(update => update.Reason == ChangeReason.Remove), 1, "Should be 1 remove");
-            Assert.AreEqual(updates.Count, 2, "Should be 2 updates");
+            _cache.Count.Should().Be(0);
+            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 add");
+            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Remove), "Should be 1 remove");
+            2.Should().Be(updates.Count, "Should be 2 updates");
         }
 
         [Test]
@@ -73,11 +73,11 @@ namespace DynamicData.Tests.Kernal
             _updater.AddOrUpdate(updated, key);
             IChangeSet<Person, string> updates = _updater.AsChangeSet();
 
-            Assert.AreEqual(updated, _cache.Lookup(key).Value);
-            Assert.AreEqual(1, _cache.Count);
-            Assert.AreEqual(updates.Count(update => update.Reason == ChangeReason.Add), 1, "Should be 1 adds");
-            Assert.AreEqual(updates.Count(update => update.Reason == ChangeReason.Update), 1, "Should be 1 update");
-            Assert.AreEqual(updates.Count, 2, "Should be 2 updates");
+            _cache.Lookup(key).Value.Should().Be(updated);
+            _cache.Count.Should().Be(1);
+            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 adds");
+            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Update), "Should be 1 update");
+            2.Should().Be(updates.Count, "Should be 2 updates");
         }
     }
 }

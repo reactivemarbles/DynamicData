@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -31,13 +32,13 @@ namespace DynamicData.Tests.CacheFixtures
         public void BuildTreeFromMixedData()
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
-            Assert.AreEqual(2, _result.Count);
+            _result.Count.Should().Be(2);
 
             var firstNode = _result.Items.First();
-            Assert.AreEqual(3, firstNode.Children.Count);
+            firstNode.Children.Count.Should().Be(3);
 
             var secondNode = _result.Items.Skip(1).First();
-            Assert.AreEqual(0, secondNode.Children.Count);
+            secondNode.Children.Count.Should().Be(0);
         }
 
         [Test]
@@ -52,11 +53,11 @@ namespace DynamicData.Tests.CacheFixtures
             };
 
             _sourceCache.AddOrUpdate(changed);
-            Assert.AreEqual(2, _result.Count);
+            _result.Count.Should().Be(2);
 
             var firstNode = _result.Items.First();
-            Assert.AreEqual(3, firstNode.Children.Count);
-            Assert.AreEqual(changed.Name, firstNode.Item.Name);
+            firstNode.Children.Count.Should().Be(3);
+            firstNode.Item.Name.Should().Be(changed.Name);
         }
 
         [Test]
@@ -71,13 +72,13 @@ namespace DynamicData.Tests.CacheFixtures
             };
 
             _sourceCache.AddOrUpdate(changed);
-            Assert.AreEqual(2, _result.Count);
+            _result.Count.Should().Be(2);
 
             var changedNode = _result.Items.First().Children.Items.First();
 
-            Assert.AreEqual(1, changedNode.Parent.Value.Item.Id);
-            Assert.AreEqual(1, changedNode.Children.Count);
-            Assert.AreEqual(changed.Name, changed.Name);
+            changedNode.Parent.Value.Item.Id.Should().Be(1);
+            changedNode.Children.Count.Should().Be(1);
+            changed.Name.Should().Be(changed.Name);
         }
 
         [Test]
@@ -87,7 +88,7 @@ namespace DynamicData.Tests.CacheFixtures
             _sourceCache.Remove(1);
 
             //we expect the original children nodes to be pushed up become new roots
-            Assert.AreEqual(4, _result.Count);
+            _result.Count.Should().Be(4);
         }
 
         [Test]
@@ -97,10 +98,10 @@ namespace DynamicData.Tests.CacheFixtures
             _sourceCache.Remove(4);
 
             //we expect the children of node 4  to be pushed up become new roots
-            Assert.AreEqual(3, _result.Count);
+            _result.Count.Should().Be(3);
 
             var thirdNode = _result.Items.Skip(2).First();
-            Assert.AreEqual(5, thirdNode.Key);
+            thirdNode.Key.Should().Be(5);
         }
 
         [Test]
@@ -111,13 +112,13 @@ namespace DynamicData.Tests.CacheFixtures
             _sourceCache.AddOrUpdate(boss);
             _sourceCache.AddOrUpdate(minion);
 
-            Assert.AreEqual(1, _result.Count);
+            _result.Count.Should().Be(1);
 
             var firstNode = _result.Items.First();
-            Assert.AreEqual(boss, firstNode.Item);
+            firstNode.Item.Should().Be(boss);
 
             var childNode = firstNode.Children.Items.First();
-            Assert.AreEqual(minion, childNode.Item);
+            childNode.Item.Should().Be(minion);
         }
 
         [Test]
@@ -129,13 +130,13 @@ namespace DynamicData.Tests.CacheFixtures
             _sourceCache.AddOrUpdate(boss);
             _sourceCache.AddOrUpdate(minion);
 
-            Assert.AreEqual(1, _result.Count);
+            _result.Count.Should().Be(1);
 
             var firstNode = _result.Items.First();
-            Assert.AreEqual(boss, firstNode.Item);
+            firstNode.Item.Should().Be(boss);
 
             var childNode = firstNode.Children.Items.First();
-            Assert.AreEqual(minion, childNode.Item);
+            childNode.Item.Should().Be(minion);
         }
 
         [Test]
@@ -153,13 +154,13 @@ namespace DynamicData.Tests.CacheFixtures
             var emp4 = _result.Lookup(1).Value.Children.Lookup(4).Value;
 
             //check boss is = 1
-            Assert.AreEqual(1, emp4.Parent.Value.Item.Id);
+            emp4.Parent.Value.Item.Id.Should().Be(1);
 
             //lookup previous boss (emp 4 should no longet be a child)
             var emp3 = _result.Lookup(1).Value.Children.Lookup(3).Value;
 
             //emp 4 must be removed from previous boss's child collection
-            Assert.IsFalse(emp3.Children.Lookup(4).HasValue);
+            emp3.Children.Lookup(4).HasValue.Should().BeFalse();
         }
 
         [Test]
@@ -169,10 +170,10 @@ namespace DynamicData.Tests.CacheFixtures
             _sourceCache.AddOrUpdate(new EmployeeDto(2) { BossId = 1, Name = "E2" });
 
             //we expect the children of node 4  to be pushed up become new roots
-            Assert.AreEqual(1, _result.Count);
+            _result.Count.Should().Be(1);
 
             var firstNode = _result.Items.First();
-            Assert.AreEqual(1, firstNode.Item.Id);
+            firstNode.Item.Id.Should().Be(1);
         }
 
         #region Employees

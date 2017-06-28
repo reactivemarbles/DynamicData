@@ -5,6 +5,7 @@ using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 using System.Collections.Generic;
+using FluentAssertions;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -36,15 +37,15 @@ namespace DynamicData.Tests.ListFixtures
             var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
 
             _source.AddRange(people);
-            Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
+            _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
 
             _filter.OnNext(p => p.Age <= 50);
-            Assert.AreEqual(50, _results.Data.Count, "Should be 50 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            _results.Data.Count.Should().Be(50, "Should be 50 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
             //  Assert.AreEqual(50, _results.Messages[1].Removes, "Should be 50 removes in the second message");
             // Assert.AreEqual(20, _results.Messages[1].Adds, "Should be 20 adds in the second message");
 
-            Assert.IsTrue(_results.Data.Items.All(p => p.Age <= 50));
+            _results.Data.Items.All(p => p.Age <= 50).Should().BeTrue();
         }
 
         [Test]
@@ -54,7 +55,7 @@ namespace DynamicData.Tests.ListFixtures
             var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray();
 
             _source.AddRange(people);
-            Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
+            _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
 
             foreach (var person in people)
             {
@@ -62,10 +63,10 @@ namespace DynamicData.Tests.ListFixtures
             }
             _filter.OnNext(_filter.Value);
 
-            Assert.AreEqual(90, _results.Data.Count, "Should be 90 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
-            Assert.AreEqual(0, _results.Messages[1].Removes, "Should be 80 removes in the second message");
-            Assert.AreEqual(10, _results.Messages[1].Adds, "Should be 10 adds in the second message");
+            _results.Data.Count.Should().Be(90, "Should be 90 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+            _results.Messages[1].Removes.Should().Be(0, "Should be 80 removes in the second message");
+            _results.Messages[1].Adds.Should().Be(10, "Should be 10 adds in the second message");
 
             foreach (var person in people)
             {
@@ -73,8 +74,8 @@ namespace DynamicData.Tests.ListFixtures
             }
             _filter.OnNext(_filter.Value);
 
-            Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
-            Assert.AreEqual(3, _results.Messages.Count, "Should be 3 update messages");
+            _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
+            _results.Messages.Count.Should().Be(3, "Should be 3 update messages");
             // Assert.AreEqual(10, _results.Messages[2].Removes, "Should be 10 removes in the third message");
         }
 
@@ -96,7 +97,7 @@ namespace DynamicData.Tests.ListFixtures
             person.Age = 10;
             _filter.OnNext(_filter.Value);
 
-            Assert.AreEqual(new[] { 1, 0 }, captureList);
+            captureList.Should().BeEquivalentTo(new[] {1, 0});
         }
 
         #region Static filter tests

@@ -25,12 +25,12 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(1, changes.Adds);
-            Assert.AreEqual(1, changes.First().Item.Current);
+            changes.Count.Should().Be(1);
+            changes.Adds.Should().Be(1);
+            changes.First().Item.Current.Should().Be(1);
 
             //assert collection
-            CollectionAssert.AreEqual(Enumerable.Range(1, 1), _list);
+            _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 1));
         }
 
         [Test]
@@ -43,11 +43,11 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(1, changes.Adds);
-            Assert.AreEqual(2, changes.First().Item.Current);
+            changes.Count.Should().Be(1);
+            changes.Adds.Should().Be(1);
+            changes.First().Item.Current.Should().Be(2);
             //assert collection
-            CollectionAssert.AreEqual(Enumerable.Range(1, 2), _list);
+            _list.ShouldBeEquivalentTo(Enumerable.Range(1, 2));
         }
 
         [Test]
@@ -58,11 +58,11 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(10, changes.Adds);
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
+            changes.Count.Should().Be(1);
+            changes.Adds.Should().Be(10);
+            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
             //assert collection
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), _list);
+            _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
         }
 
         [Test]
@@ -72,12 +72,12 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(10, changes.Adds);
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
+            changes.Count.Should().Be(1);
+            changes.Adds.Should().Be(10);
+            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
 
             //assert collection
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), _list);
+            _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
         }
 
         [Test]
@@ -88,13 +88,13 @@ namespace DynamicData.Tests.ListFixtures
             var changes = _list.CaptureChanges();
 
             //assert changes
-            Assert.AreEqual(2, changes.Count);
-            Assert.AreEqual(20, changes.Adds);
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
-            CollectionAssert.AreEqual(Enumerable.Range(11, 10), changes.Skip(1).First().Range);
+            changes.Count.Should().Be(2);
+            changes.Adds.Should().Be(20);
+            changes.First().Range.ShouldBeEquivalentTo(Enumerable.Range(1, 10));
+            changes.Skip(1).First().Range.ShouldBeEquivalentTo(Enumerable.Range(11, 10));
 
             //assert collection
-            CollectionAssert.AreEqual(Enumerable.Range(1, 20), _list);
+            _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 20));
         }
 
         [Test]
@@ -105,16 +105,16 @@ namespace DynamicData.Tests.ListFixtures
             var changes = _list.CaptureChanges();
 
             //assert changes
-            Assert.AreEqual(2, changes.Count);
-            Assert.AreEqual(20, changes.Adds);
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
-            CollectionAssert.AreEqual(Enumerable.Range(11, 10), changes.Skip(1).First().Range);
+            changes.Count.Should().Be(2);
+            changes.Adds.Should().Be(20);
+            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            changes.Skip(1).First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(11, 10));
 
             var shouldBe = Enumerable.Range(1, 5)
                                      .Union(Enumerable.Range(11, 10))
                                      .Union(Enumerable.Range(6, 5));
             //assert collection
-            CollectionAssert.AreEqual(shouldBe, _list);
+            _list.ShouldAllBeEquivalentTo(shouldBe);
         }
 
         [Test]
@@ -127,11 +127,11 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(1, changes.Removes);
-            Assert.AreEqual(1, changes.First().Item.Current);
+            changes.Count.Should().Be(1);
+            changes.Removes.Should().Be(1);
+            changes.First().Item.Current.Should().Be(1);
             //assert collection
-            Assert.AreEqual(0, _list.Count);
+            _list.Count.Should().Be(0);
         }
 
         [Test]
@@ -144,15 +144,15 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(3, changes.Removes);
-            CollectionAssert.AreEqual(Enumerable.Range(6, 3), changes.First().Range);
+            changes.Count.Should().Be(1);
+            changes.Removes.Should().Be(3);
+            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(6, 3));
 
             //assert collection
             var shouldBe = Enumerable.Range(1, 5)
                                      .Union(Enumerable.Range(9, 2));
             //assert collection
-            CollectionAssert.AreEqual(shouldBe, _list);
+            _list.ShouldAllBeEquivalentTo(shouldBe);
         }
 
         [Test]
@@ -165,12 +165,12 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes (should batch)s
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(10, changes.Removes);
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
+            changes.Count.Should().Be(1);
+            changes.Removes.Should().Be(10);
+            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
 
             //assert collection
-            Assert.AreEqual(0, _list.Count);
+            _list.Count.Should().Be(0);
         }
 
         [Test]
@@ -183,11 +183,11 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes (should batch)
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(10, changes.Removes);
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
+            changes.Count.Should().Be(1);
+            changes.Removes.Should().Be(10);
+            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
             //assert collection
-            Assert.AreEqual(0, _list.Count);
+            _list.Count.Should().Be(0);
         }
 
         [Test]
@@ -200,12 +200,12 @@ namespace DynamicData.Tests.ListFixtures
 
             //assert changes (should batch)s
             var changes = _list.CaptureChanges();
-            Assert.AreEqual(1, changes.Count);
-            Assert.AreEqual(10, changes.Removes);
-            CollectionAssert.AreEqual(Enumerable.Range(1, 10), changes.First().Range);
+            changes.Count.Should().Be(1);
+            changes.Removes.Should().Be(10);
+            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
 
             //assert collection
-            Assert.AreEqual(0, _list.Count);
+            _list.Count.Should().Be(0);
         }
 
 

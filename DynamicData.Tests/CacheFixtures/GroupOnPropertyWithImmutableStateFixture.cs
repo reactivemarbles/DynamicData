@@ -2,6 +2,7 @@
 using DynamicData;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -31,12 +32,12 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.AddOrUpdate(new Person("A", 10));
 
-            Assert.AreEqual(1, _results.Data.Count);
+            _results.Data.Count.Should().Be(1);
 
             var firstGroup = _results.Data.Items.First();
 
-            Assert.AreEqual(1, firstGroup.Count);
-            Assert.AreEqual(10, firstGroup.Key);
+            firstGroup.Count.Should().Be(1);
+            firstGroup.Key.Should().Be(10);
         }
 
         [Test]
@@ -46,7 +47,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(person);
             _source.Remove(person);
 
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
 
         [Test]
@@ -56,11 +57,11 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(person);
             person.Age = 20;
 
-            Assert.AreEqual(1, _results.Data.Count);
+            _results.Data.Count.Should().Be(1);
             var firstGroup = _results.Data.Items.First();
 
-            Assert.AreEqual(1, firstGroup.Count);
-            Assert.AreEqual(20, firstGroup.Key);
+            firstGroup.Count.Should().Be(1);
+            firstGroup.Key.Should().Be(20);
         }
 
         [Test]
@@ -72,7 +73,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(people);
 
             var expectedGroupCount = people.Select(p => p.Age).Distinct().Count();
-            Assert.AreEqual(expectedGroupCount, _results.Data.Count);
+            _results.Data.Count.Should().Be(expectedGroupCount);
         }
 
         [Test]
@@ -84,21 +85,21 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(people);
 
             var initialCount = people.Select(p => p.Age).Distinct().Count();
-            Assert.AreEqual(initialCount, _results.Data.Count);
+            _results.Data.Count.Should().Be(initialCount);
 
             people.Take(25)
                 .ForEach(p => p.Age = 200);
 
 
             var changedCount = people.Select(p => p.Age).Distinct().Count();
-            Assert.AreEqual(changedCount, _results.Data.Count);
+            _results.Data.Count.Should().Be(changedCount);
 
             //check that each item is only in one cache
             var peopleInCache = _results.Data.Items
                 .SelectMany(g => g.Items)
                 .ToArray();
 
-            Assert.AreEqual(100, peopleInCache.Length);
+            peopleInCache.Length.Should().Be(100);
 
         }
     }

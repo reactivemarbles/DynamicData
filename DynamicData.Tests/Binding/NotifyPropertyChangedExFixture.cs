@@ -93,5 +93,14 @@ namespace DynamicData.Tests.Binding
             Assert.That(lastChange.Sender, Is.EqualTo(person));
             Assert.That(lastChange.Value, Is.EqualTo(13));
         }
+
+
+        [Test]
+        public void CanNotifyOnAnExpression()
+        {
+            var person = new Person("Someone", 1);
+            var observer = person.WhenChanged(p => p.Age * 10 + p.Age *23);
+
+        }
     }
 }

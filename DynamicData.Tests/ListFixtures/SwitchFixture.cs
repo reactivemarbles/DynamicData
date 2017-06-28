@@ -1,6 +1,7 @@
 ﻿
 using System.Linq;
 using System.Reactive.Subjects;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -33,9 +34,9 @@ namespace DynamicData.Tests.ListFixtures
             var inital = Enumerable.Range(1,100).ToArray();
             _source.AddRange(inital);
 
-            Assert.AreEqual(100, _results.Data.Count);
+            _results.Data.Count.Should().Be(100);
 
-            CollectionAssert.AreEqual(_source.Items, inital);
+            inital.ShouldAllBeEquivalentTo(_source.Items);
         }
 
         [Test]
@@ -44,19 +45,19 @@ namespace DynamicData.Tests.ListFixtures
             var inital = Enumerable.Range(1, 100).ToArray();
             _source.AddRange(inital);
 
-            Assert.AreEqual(100, _results.Data.Count);
+            _results.Data.Count.Should().Be(100);
 
             var newSource = new SourceList<int>();
             _switchable.OnNext(newSource);
 
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
 
             newSource.AddRange(inital);
-            Assert.AreEqual(100, _results.Data.Count);
+            _results.Data.Count.Should().Be(100);
 
             var nextUpdates = Enumerable.Range(100, 100).ToArray();
             newSource.AddRange(nextUpdates);
-            Assert.AreEqual(200, _results.Data.Count);
+            _results.Data.Count.Should().Be(200);
 
         }
 

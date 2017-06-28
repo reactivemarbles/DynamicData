@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -53,14 +54,14 @@ namespace DynamicData.Tests.ListFixtures
         public void IncludedWhenItemIsInOneSource()
         {
             _source1.Add(1);
-            Assert.AreEqual(1, _results.Data.Count);
+            _results.Data.Count.Should().Be(1);
         }
 
         [Test]
         public void NothingFromOther()
         {
             _source2.Add(1);
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
 
         [Test]
@@ -68,7 +69,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source1.Add(1);
             _source2.Add(1);
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
 
         [Test]
@@ -77,7 +78,7 @@ namespace DynamicData.Tests.ListFixtures
             _source1.Add(1);
             _source2.Add(1);
             _source2.Remove(1);
-            Assert.AreEqual(1, _results.Data.Count);
+            _results.Data.Count.Should().Be(1);
         }
 
         [Test]
@@ -85,7 +86,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source1.AddRange(Enumerable.Range(1, 10));
             _source2.AddRange(Enumerable.Range(6, 10));
-            Assert.AreEqual(5, _results.Data.Count);
+            _results.Data.Count.Should().Be(5);
             CollectionAssert.AreEquivalent(Enumerable.Range(1, 5), _results.Data.Items);
         }
 
@@ -95,7 +96,7 @@ namespace DynamicData.Tests.ListFixtures
             _source1.AddRange(Enumerable.Range(1, 5));
             _source2.AddRange(Enumerable.Range(1, 5));
             _source1.Clear();
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
 
         [Test]
@@ -103,9 +104,9 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source1.AddRange(Enumerable.Range(1, 5));
             _source2.AddRange(Enumerable.Range(1, 5));
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
             _source2.Clear();
-            Assert.AreEqual(5, _results.Data.Count);
+            _results.Data.Count.Should().Be(5);
             CollectionAssert.AreEquivalent(Enumerable.Range(1, 5), _results.Data.Items);
         }
     }

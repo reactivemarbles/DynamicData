@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -33,7 +34,7 @@ namespace DynamicData.Tests.CacheFixtures
             var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
             _source.AddOrUpdate(inital);
 
-            Assert.AreEqual(100, _results.Data.Count);
+            _results.Data.Count.Should().Be(100);
         }
 
         [Test]
@@ -42,19 +43,19 @@ namespace DynamicData.Tests.CacheFixtures
             var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
             _source.AddOrUpdate(inital);
 
-            Assert.AreEqual(100, _results.Data.Count);
+            _results.Data.Count.Should().Be(100);
 
             var newSource = new SourceCache<Person, string>(p => p.Name);
             _switchable.OnNext(newSource);
 
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
             
             newSource.AddOrUpdate(inital);
-            Assert.AreEqual(100, _results.Data.Count);
+            _results.Data.Count.Should().Be(100);
 
             var nextUpdates = Enumerable.Range(101, 100).Select(i => new Person("Person" + i, i)).ToArray();
             newSource.AddOrUpdate(nextUpdates);
-            Assert.AreEqual(200, _results.Data.Count);
+            _results.Data.Count.Should().Be(200);
 
         }
 

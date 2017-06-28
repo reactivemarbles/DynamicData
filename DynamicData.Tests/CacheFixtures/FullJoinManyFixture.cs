@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -160,7 +161,7 @@ namespace DynamicData.Tests.CacheFixtures
                 }).ToArray();
 
 
-            Assert.AreEqual(all.Length, _result.Data.Count);
+            _result.Data.Count.Should().Be(all.Length);
 
             all.ForEach(parentAndChild =>
             {

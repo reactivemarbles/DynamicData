@@ -4,6 +4,7 @@ using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -86,7 +87,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             var expected = people.OrderBy(t => t, _comparer).ToList();
             var actual = _results.Messages.Last().SortedItems.Select(kv => kv.Value).ToList();
-            CollectionAssert.AreEqual(expected, actual);
+            actual.ShouldAllBeEquivalentTo(expected);
 
             var list = new ObservableCollectionExtended<Person>();
             var adaptor = new SortedObservableCollectionAdaptor<Person, string>();

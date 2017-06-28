@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -106,14 +107,14 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Add(_source1.Connect());
             _source.Add(_source2.Connect());
 
-            Assert.AreEqual(10, _results.Data.Count);
+            _results.Data.Count.Should().Be(10);
             CollectionAssert.AreEquivalent(items.Skip(10).Take(10), _results.Data.Items);
 
             _source.Add(_source3.Connect());
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
 
             _source.RemoveAt(2);
-            Assert.AreEqual(10, _results.Data.Count);
+            _results.Data.Count.Should().Be(10);
         }
 
         [Test]
@@ -134,7 +135,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.RemoveAt(0);
             //s _source.Clear();
 
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
     }
 }

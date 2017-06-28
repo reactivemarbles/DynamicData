@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -41,8 +42,8 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(_source2.Connect());
             _source1.Add(1);
 
-            Assert.AreEqual(1, _results.Data.Count);
-            Assert.AreEqual(1, _results.Data.Items.First());
+            _results.Data.Count.Should().Be(1);
+            _results.Data.Items.First().Should().Be(1);
         }
 
         [Test]
@@ -52,8 +53,8 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(_source2.Connect());
             _source1.Add(1);
             _source2.Add(1);
-            Assert.AreEqual(1, _results.Data.Count);
-            Assert.AreEqual(1, _results.Data.Items.First());
+            _results.Data.Count.Should().Be(1);
+            _results.Data.Items.First().Should().Be(1);
         }
 
         [Test]
@@ -63,7 +64,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(_source2.Connect());
             _source1.Add(1);
             _source1.Remove(1);
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
 
         [Test]
@@ -73,7 +74,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(_source2.Connect());
             _source1.AddRange(Enumerable.Range(1, 5));
             _source2.AddRange(Enumerable.Range(6, 5));
-            Assert.AreEqual(10, _results.Data.Count);
+            _results.Data.Count.Should().Be(10);
             CollectionAssert.AreEquivalent(Enumerable.Range(1, 10), _results.Data.Items);
         }
 
@@ -85,7 +86,7 @@ namespace DynamicData.Tests.ListFixtures
             _source1.AddRange(Enumerable.Range(1, 5));
             _source2.AddRange(Enumerable.Range(6, 5));
             _source1.Clear();
-            Assert.AreEqual(5, _results.Data.Count);
+            _results.Data.Count.Should().Be(5);
             CollectionAssert.AreEquivalent(Enumerable.Range(6, 5), _results.Data.Items);
         }
 
@@ -102,11 +103,11 @@ namespace DynamicData.Tests.ListFixtures
 
             var result = Enumerable.Range(1, 5).Union(Enumerable.Range(6, 5)).Union(Enumerable.Range(100, 5));
 
-            Assert.AreEqual(15, _results.Data.Count);
+            _results.Data.Count.Should().Be(15);
             CollectionAssert.AreEquivalent(result, _results.Data.Items);
 
             _source.RemoveAt(1);
-            Assert.AreEqual(10, _results.Data.Count);
+            _results.Data.Count.Should().Be(10);
 
             result = Enumerable.Range(1, 5).Union(Enumerable.Range(100, 5));
             CollectionAssert.AreEquivalent(result, _results.Data.Items);
@@ -126,7 +127,7 @@ namespace DynamicData.Tests.ListFixtures
             _source2.AddRange(Enumerable.Range(6, 5));
             _source.Clear();
 
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
     }
 }

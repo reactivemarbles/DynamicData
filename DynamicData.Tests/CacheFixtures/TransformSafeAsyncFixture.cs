@@ -7,6 +7,7 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -25,16 +26,16 @@ namespace DynamicData.Tests.CacheFixtures
                 stub.Source.AddOrUpdate(people);
                 forceTransform.OnNext(Unit.Default);
 
-                Assert.AreEqual(2, stub.Results.Messages.Count);
-                Assert.AreEqual(10, stub.Results.Messages[1].Updates);
+                stub.Results.Messages.Count.Should().Be(2);
+                stub.Results.Messages[1].Updates.Should().Be(10);
 
                 for (int i = 1; i <= 10; i++)
                 {
                     var original = stub.Results.Messages[0].ElementAt(i - 1).Current;
                     var updated = stub.Results.Messages[1].ElementAt(i - 1).Current;
 
-                    Assert.AreEqual(original, updated);
-                    Assert.IsFalse(ReferenceEquals(original, updated));
+                    updated.Should().Be(original);
+                    ReferenceEquals(original, updated).Should().BeFalse();
                 }
             }
         }
@@ -50,15 +51,15 @@ namespace DynamicData.Tests.CacheFixtures
                 stub.Source.AddOrUpdate(people);
                 forceTransform.OnNext(person => person.Age <= 5);
 
-                Assert.AreEqual(2, stub.Results.Messages.Count);
-                Assert.AreEqual(5, stub.Results.Messages[1].Updates);
+                stub.Results.Messages.Count.Should().Be(2);
+                stub.Results.Messages[1].Updates.Should().Be(5);
 
                 for (int i = 1; i <= 5; i++)
                 {
                     var original = stub.Results.Messages[0].ElementAt(i - 1).Current;
                     var updated = stub.Results.Messages[1].ElementAt(i - 1).Current;
-                    Assert.AreEqual(original, updated);
-                    Assert.IsFalse(ReferenceEquals(original, updated));
+                    updated.Should().Be(original);
+                    ReferenceEquals(original, updated).Should().BeFalse();
                 }
             }
         }
@@ -71,12 +72,12 @@ namespace DynamicData.Tests.CacheFixtures
                 var person = new Person("Adult1", 50);
                 stub.Source.AddOrUpdate(person);
 
-                Assert.AreEqual(1, stub.Results.Messages.Count, "Should be 1 updates");
-                Assert.AreEqual(1, stub.Results.Data.Count, "Should be 1 item in the cache");
+                stub.Results.Messages.Count.Should().Be(1, "Should be 1 updates");
+                stub.Results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
                 var firstPerson = await stub.TransformFactory(person);
 
-                Assert.AreEqual(firstPerson, stub.Results.Data.Items.First(), "Should be same person");
+                stub.Results.Data.Items.First().Should().Be(firstPerson, "Should be same person");
             }
         }
 
@@ -91,11 +92,11 @@ namespace DynamicData.Tests.CacheFixtures
                 stub.Source.AddOrUpdate(person);
                 stub.Source.Remove(key);
 
-                Assert.AreEqual(2, stub.Results.Messages.Count, "Should be 2 updates");
-                Assert.AreEqual(2, stub.Results.Messages.Count, "Should be 2 updates");
-                Assert.AreEqual(1, stub.Results.Messages[0].Adds, "Should be 80 addes");
-                Assert.AreEqual(1, stub.Results.Messages[1].Removes, "Should be 80 removes");
-                Assert.AreEqual(0, stub.Results.Data.Count, "Should be nothing cached");
+                stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
+                stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
+                stub.Results.Messages[0].Adds.Should().Be(1, "Should be 80 addes");
+                stub.Results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
+                stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
             }
         }
 
@@ -111,9 +112,9 @@ namespace DynamicData.Tests.CacheFixtures
                 stub.Source.AddOrUpdate(newperson);
                 stub.Source.AddOrUpdate(updated);
 
-                Assert.AreEqual(2, stub.Results.Messages.Count, "Should be 2 updates");
-                Assert.AreEqual(1, stub.Results.Messages[0].Adds, "Should be 1 adds");
-                Assert.AreEqual(1, stub.Results.Messages[1].Updates, "Should be 1 update");
+                stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
+                stub.Results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
+                stub.Results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
             }
         }
 
@@ -125,12 +126,12 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 stub.Source.AddOrUpdate(people);
 
-                Assert.AreEqual(1, stub.Results.Messages.Count, "Should be 1 updates");
-                Assert.AreEqual(100, stub.Results.Messages[0].Adds, "Should return 100 adds");
+                stub.Results.Messages.Count.Should().Be(1, "Should be 1 updates");
+                stub.Results.Messages[0].Adds.Should().Be(100, "Should return 100 adds");
 
                 var result = await Task.WhenAll(people.Select(stub.TransformFactory));
                 var transformed = result.OrderBy(p => p.Age).ToArray();
-                CollectionAssert.AreEqual(transformed, stub.Results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+                stub.Results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(stub.Results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
             }
         }
 
@@ -143,15 +144,15 @@ namespace DynamicData.Tests.CacheFixtures
 
                 stub.Source.AddOrUpdate(people);
 
-                Assert.AreEqual(1, stub.Results.Messages.Count, "Should be 1 updates");
-                Assert.AreEqual(1, stub.Results.Messages[0].Adds, "Should return 1 adds");
-                Assert.AreEqual(9, stub.Results.Messages[0].Updates, "Should return 9 adds");
-                Assert.AreEqual(1, stub.Results.Data.Count, "Should result in 1 record");
+                stub.Results.Messages.Count.Should().Be(1, "Should be 1 updates");
+                stub.Results.Messages[0].Adds.Should().Be(1, "Should return 1 adds");
+                stub.Results.Messages[0].Updates.Should().Be(9, "Should return 9 adds");
+                stub.Results.Data.Count.Should().Be(1, "Should result in 1 record");
 
                 var lastTransformed = await stub.TransformFactory(people.Last());
                 var onlyItemInCache = stub.Results.Data.Items.First();
 
-                Assert.AreEqual(lastTransformed, onlyItemInCache, "Incorrect transform result");
+                onlyItemInCache.Should().Be(lastTransformed, "Incorrect transform result");
             }
         }
 
@@ -165,10 +166,10 @@ namespace DynamicData.Tests.CacheFixtures
                 stub.Source.AddOrUpdate(people);
                 stub.Source.Clear();
 
-                Assert.AreEqual(2, stub.Results.Messages.Count, "Should be 2 updates");
-                Assert.AreEqual(100, stub.Results.Messages[0].Adds, "Should be 80 addes");
-                Assert.AreEqual(100, stub.Results.Messages[1].Removes, "Should be 80 removes");
-                Assert.AreEqual(0, stub.Results.Data.Count, "Should be nothing cached");
+                stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
+                stub.Results.Messages[0].Adds.Should().Be(100, "Should be 80 addes");
+                stub.Results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
+                stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
             }
         }
 
@@ -196,8 +197,8 @@ namespace DynamicData.Tests.CacheFixtures
 
                 Assert.IsNull(error);
 
-                Assert.AreEqual(50, stub.HandledErrors.Count);
-                Assert.AreEqual(50, stub.Results.Data.Count);
+                stub.HandledErrors.Count.Should().Be(50);
+                stub.Results.Data.Count.Should().Be(50);
             }
         }
 
@@ -251,8 +252,8 @@ namespace DynamicData.Tests.CacheFixtures
                 (
                     Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler, retransformer.Select(x =>
                     {
-                        Func<Person, string, bool> transformer = (p, key) => true;
-                        return transformer;
+                        bool Transformer(Person p, string key) => true;
+                        return (Func<Person, string, bool>) Transformer;
                     }))
                 );
             }
@@ -269,8 +270,8 @@ namespace DynamicData.Tests.CacheFixtures
                 (
                     Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler, retransformer.Select(selector =>
                     {
-                        Func<Person, string, bool> transformed = (p, key) => selector(p);
-                        return transformed;
+                        bool Transformed(Person p, string key) => selector(p);
+                        return (Func<Person, string, bool>) Transformed;
                     }))
                 );
             }

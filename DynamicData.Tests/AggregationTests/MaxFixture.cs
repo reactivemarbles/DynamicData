@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
@@ -37,7 +38,7 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(30, result, "Max value should be 30");
+            result.Should().Be(30, "Max value should be 30");
 
             accumulator.Dispose();
         }

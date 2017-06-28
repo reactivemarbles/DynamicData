@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -27,10 +28,10 @@ namespace DynamicData.Tests.ListFixtures
         public void CanCast()
         {
             _source.AddRange(Enumerable.Range(1,10));
-            Assert.AreEqual(10,_results.Data.Count);
+            _results.Data.Count.Should().Be(10);
 
             _source.Clear();
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 
@@ -19,9 +20,9 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("A", 1);
             subject.OnNext(person);
 
-            Assert.AreEqual(1, results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(person, results.Data.Items.First(), "Should be same person");
+            results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
         [Test]
@@ -36,10 +37,10 @@ namespace DynamicData.Tests.CacheFixtures
             var personamend = new Person("A", 2);
             subject.OnNext(personamend);
 
-            Assert.AreEqual(2, results.Messages.Count, "Should be 2 message");
-            Assert.AreEqual(1, results.Messages[1].Updates, "Should be 1 updates");
-            Assert.AreEqual(1, results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(personamend, results.Data.Items.First(), "Should be same person");
+            results.Messages.Count.Should().Be(2, "Should be 2 message");
+            results.Messages[1].Updates.Should().Be(1, "Should be 1 updates");
+            results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            results.Data.Items.First().Should().Be(personamend, "Should be same person");
         }
 
         [Test]
@@ -51,9 +52,9 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("A", 1);
             subject.OnNext(person);
 
-            Assert.AreEqual(1, results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(person, results.Data.Items.First(), "Should be same person");
+            results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
         [Test]
@@ -71,13 +72,13 @@ namespace DynamicData.Tests.CacheFixtures
 
             scheduler.AdvanceBy(100000);
 
-            Assert.AreEqual(200, results.Messages.Sum(x => x.Adds), "Should be 200 adds");
-            Assert.AreEqual(100, results.Messages.Sum(x => x.Removes), "Should be 100 removes");
-            Assert.AreEqual(100, results.Data.Count);
+            results.Messages.Sum(x => x.Adds).Should().Be(200, "Should be 200 adds");
+            results.Messages.Sum(x => x.Removes).Should().Be(100, "Should be 100 removes");
+            results.Data.Count.Should().Be(100);
 
             var expected = items.Skip(100).ToArray().OrderBy(p => p.Name).ToArray();
             var actual = results.Data.Items.OrderBy(p => p.Name).ToArray();
-            CollectionAssert.AreEqual(expected, actual, "Only second hundred should be in the cache");
+            actual.ShouldAllBeEquivalentTo(actual, "Only second hundred should be in the cache");
         }
 
         [Test]
@@ -95,10 +96,10 @@ namespace DynamicData.Tests.CacheFixtures
 
             scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
 
-            Assert.AreEqual(201, results.Messages.Count, "Should be 300 messages");
-            Assert.AreEqual(200, results.Messages.Sum(x => x.Adds), "Should be 200 adds");
-            Assert.AreEqual(200, results.Messages.Sum(x => x.Removes), "Should be 100 removes");
-            Assert.AreEqual(0, results.Data.Count, "Should be no data in the cache");
+            results.Messages.Count.Should().Be(201, "Should be 300 messages");
+            results.Messages.Sum(x => x.Adds).Should().Be(200, "Should be 200 adds");
+            results.Messages.Sum(x => x.Removes).Should().Be(200, "Should be 100 removes");
+            results.Data.Count.Should().Be(0, "Should be no data in the cache");
         }
     }
 }

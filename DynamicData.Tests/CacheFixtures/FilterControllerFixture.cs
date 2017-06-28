@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -62,24 +63,24 @@ namespace DynamicData.Tests.CacheFixtures
                 using (source.Connect().Filter(subject).Do(changes => latestChanges = changes).AsObservableCache())
                 {
                     subject.OnNext(p => false);
-                    Assert.AreEqual(100, latestChanges.Removes);
-                    Assert.AreEqual(0, latestChanges.Adds);
+                    latestChanges.Removes.Should().Be(100);
+                    latestChanges.Adds.Should().Be(0);
 
                     subject.OnNext(p => true);
-                    Assert.AreEqual(100, latestChanges.Adds);
-                    Assert.AreEqual(0, latestChanges.Removes);
+                    latestChanges.Adds.Should().Be(100);
+                    latestChanges.Removes.Should().Be(0);
 
                     subject.OnNext(p => false);
-                    Assert.AreEqual(100, latestChanges.Removes);
-                    Assert.AreEqual(0, latestChanges.Adds);
+                    latestChanges.Removes.Should().Be(100);
+                    latestChanges.Adds.Should().Be(0);
 
                     subject.OnNext(p => true);
-                    Assert.AreEqual(100, latestChanges.Adds);
-                    Assert.AreEqual(0, latestChanges.Removes);
+                    latestChanges.Adds.Should().Be(100);
+                    latestChanges.Removes.Should().Be(0);
 
                     subject.OnNext(p => false);
-                    Assert.AreEqual(100, latestChanges.Removes);
-                    Assert.AreEqual(0, latestChanges.Adds);
+                    latestChanges.Removes.Should().Be(100);
+                    latestChanges.Adds.Should().Be(0);
                 }
             }
         }
@@ -91,7 +92,7 @@ namespace DynamicData.Tests.CacheFixtures
             var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray();
 
             _source.AddOrUpdate(people);
-            Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
+            _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
 
             foreach (var person in people)
             {
@@ -99,9 +100,9 @@ namespace DynamicData.Tests.CacheFixtures
             }
             _filter.Reevaluate();
 
-            Assert.AreEqual(90, _results.Data.Count, "Should be 90 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
-            Assert.AreEqual(10, _results.Messages[1].Adds, "Should be 10 adds in the second message");
+            _results.Data.Count.Should().Be(90, "Should be 90 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+            _results.Messages[1].Adds.Should().Be(10, "Should be 10 adds in the second message");
 
             foreach (var person in people)
             {
@@ -109,9 +110,9 @@ namespace DynamicData.Tests.CacheFixtures
             }
             _filter.Reevaluate();
 
-            Assert.AreEqual(80, _results.Data.Count, "Should be 80 people in the cache");
-            Assert.AreEqual(3, _results.Messages.Count, "Should be 3 update messages");
-            Assert.AreEqual(10, _results.Messages[2].Removes, "Should be 10 removes in the third message");
+            _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
+            _results.Messages.Count.Should().Be(3, "Should be 3 update messages");
+            _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third message");
         }
 
 

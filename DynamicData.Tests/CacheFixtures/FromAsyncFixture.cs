@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 
@@ -37,22 +38,21 @@ namespace DynamicData.Tests.CacheFixtures
                 .ToObservableChangeSet(p=>p.Key)
                 .AsObservableCache();
 
-            Assert.AreEqual(100, data.Count);
+            data.Count.Should().Be(100);
         }
 
         [Test]
         public void HandlesErrorsInObservable()
         {
-
-            Func<Task<IEnumerable<Person>>> loader = () =>
+            Task<IEnumerable<Person>> Loader()
             {
                 Task.Delay(100);
                 throw new Exception("Broken");
-            };
+            }
 
             Exception error = null;
 
-            var data = Observable.FromAsync(loader)
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
                .ToObservableChangeSet(p => p.Key)
                 .Subscribe((changes) => { }, ex => error = ex);;
 

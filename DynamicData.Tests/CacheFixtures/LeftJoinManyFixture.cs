@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -39,12 +40,12 @@ namespace DynamicData.Tests.CacheFixtures
 
             _people.AddOrUpdate(people);
 
-            Assert.AreEqual(10, _result.Data.Count);
+            _result.Data.Count.Should().Be(10);
             CollectionAssert.AreEquivalent(people, _result.Data.Items.Select(pac=>pac.Parent));
 
             _result.Data.Items.ForEach(pac =>
             {
-                Assert.AreEqual(0, pac.Count);
+                pac.Count.Should().Be(0);
             });
         }
 
@@ -155,7 +156,7 @@ namespace DynamicData.Tests.CacheFixtures
 
         private void AssertDataIsCorrectlyFormed(Person[] expected, params string[] missingParents)
         {
-            Assert.AreEqual(expected.Length, _result.Data.Count);
+            _result.Data.Count.Should().Be(expected.Length);
             CollectionAssert.AreEquivalent(expected, _result.Data.Items.Select(pac => pac.Parent));
 
             expected.GroupBy(p => p.ParentName)

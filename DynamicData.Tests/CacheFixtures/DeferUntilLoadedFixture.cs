@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -23,12 +24,12 @@ namespace DynamicData.Tests.CacheFixtures
                                        result = changes;
                                    });
 
-            Assert.IsFalse(updateReceived, "No update should be received");
+            updateReceived.Should().BeFalse();
             cache.AddOrUpdate(new Person("Test", 1));
 
-            Assert.IsTrue(updateReceived, "Replace should be received");
-            Assert.AreEqual(1, result.Adds);
-            Assert.AreEqual(new Person("Test", 1), result.First().Current);
+            updateReceived.Should().BeTrue();
+            result.Adds.Should().Be(1);
+            result.First().Current.Should().Be(new Person("Test", 1));
             deferStream.Dispose();
         }
 
@@ -42,14 +43,14 @@ namespace DynamicData.Tests.CacheFixtures
             var deferStream = cache.Connect().SkipInitial()
                                    .Subscribe(changes => updateReceived = true);
 
-            Assert.IsFalse(updateReceived, "No update should be received");
+            updateReceived.Should().BeFalse();
 
             cache.AddOrUpdate(new Person("P1", 1));
 
-            Assert.IsFalse(updateReceived, "No update should be received for initial batch of changes");
+            updateReceived.Should().BeFalse();
 
             cache.AddOrUpdate(new Person("P2", 2));
-            Assert.IsTrue(updateReceived, "Replace should be received");
+            updateReceived.Should().BeTrue();
             deferStream.Dispose();
         }
     }

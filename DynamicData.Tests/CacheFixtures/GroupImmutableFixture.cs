@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Reactive.Linq;
-using DynamicData.Cache;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -35,8 +34,8 @@ namespace DynamicData.Tests.CacheFixtures
         {
 
             _source.AddOrUpdate(new Person("Person1", 20));
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 add");
-            Assert.AreEqual(1, _results.Messages.First().Adds);
+            _results.Data.Count.Should().Be(1, "Should be 1 add");
+            _results.Messages.First().Adds.Should().Be(1);
         }
 
         [Test]
@@ -45,12 +44,12 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.AddOrUpdate(new Person("Person2", 20));
 
-            Assert.AreEqual(1, _results.Data.Count);//1 group
-            Assert.AreEqual(1, _results.Messages.First().Adds);
-            Assert.AreEqual(1, _results.Messages.Skip(1).First().Updates);
+            _results.Data.Count.Should().Be(1);//1 group
+            _results.Messages.First().Adds.Should().Be(1);
+            _results.Messages.Skip(1).First().Updates.Should().Be(1);
 
             var group = _results.Data.Items.First();
-            Assert.AreEqual(2, group.Count);
+            group.Count.Should().Be(2);
         }
 
         [Test]
@@ -59,14 +58,14 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.AddOrUpdate(new Person("Person1", 21));
 
-            Assert.AreEqual(1, _results.Data.Count);
-            Assert.AreEqual(1, _results.Messages.First().Adds);
-            Assert.AreEqual(1, _results.Messages.Skip(1).First().Adds);
-            Assert.AreEqual(1, _results.Messages.Skip(1).First().Removes);
+            _results.Data.Count.Should().Be(1);
+            _results.Messages.First().Adds.Should().Be(1);
+            _results.Messages.Skip(1).First().Adds.Should().Be(1);
+            _results.Messages.Skip(1).First().Removes.Should().Be(1);
             var group = _results.Data.Items.First();
-            Assert.AreEqual(1, group.Count);
+            group.Count.Should().Be(1);
 
-            Assert.AreEqual(21, group.Key);
+            group.Key.Should().Be(21);
         }
 
         [Test]
@@ -75,8 +74,8 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.Remove(new Person("Person1", 20));
 
-            Assert.AreEqual(2, _results.Messages.Count);
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Messages.Count.Should().Be(2);
+            _results.Data.Count.Should().Be(0);
         }
 
         [Test]
@@ -90,12 +89,12 @@ namespace DynamicData.Tests.CacheFixtures
                 updater.AddOrUpdate(new Person("Person4", 23));
             });
 
-            Assert.AreEqual(4, _results.Data.Count);
-            Assert.AreEqual(1, _results.Messages.Count);
-            Assert.AreEqual(4, _results.Messages.First().Count);
+            _results.Data.Count.Should().Be(4);
+            _results.Messages.Count.Should().Be(1);
+            _results.Messages.First().Count.Should().Be(4);
             foreach (var update in _results.Messages.First())
             {
-                Assert.AreEqual(ChangeReason.Add, update.Reason);
+                update.Reason.Should().Be(ChangeReason.Add);
             }
         }
 
@@ -110,9 +109,9 @@ namespace DynamicData.Tests.CacheFixtures
                 updater.AddOrUpdate(new Person("Person4", 20));
             });
 
-            Assert.AreEqual(1, _results.Messages.Count);
-            Assert.AreEqual(1, _results.Messages.First().Adds);
-            Assert.AreEqual(4, _results.Data.Items.First().Count);
+            _results.Messages.Count.Should().Be(1);
+            _results.Messages.First().Adds.Should().Be(1);
+            _results.Data.Items.First().Count.Should().Be(4);
         }
 
         [Test]
@@ -145,10 +144,10 @@ namespace DynamicData.Tests.CacheFixtures
 
                 });
             
-            Assert.AreEqual(2, _results.Messages.Count);
-            Assert.AreEqual(10, _results.Messages.First().Adds);
-            Assert.AreEqual(5, _results.Messages.Skip(1).First().Removes);
-            Assert.AreEqual(5, _results.Messages.Skip(1).First().Updates);
+            _results.Messages.Count.Should().Be(2);
+            _results.Messages.First().Adds.Should().Be(10);
+            _results.Messages.Skip(1).First().Removes.Should().Be(5);
+            _results.Messages.Skip(1).First().Updates.Should().Be(5);
         }
 
         [Test]
@@ -159,14 +158,14 @@ namespace DynamicData.Tests.CacheFixtures
                 .ToArray();
 
             _source.AddOrUpdate(initialPeople); 
-            Assert.AreEqual(1, _results.Messages.Count);
+            _results.Messages.Count.Should().Be(1);
 
             //do an inline update
             foreach (var person in initialPeople)
                 person.Age = person.Age + 1;
 
             //signal operators to evaluate again
-            _source.Evaluate();
+            _source.Refresh();
 
             initialPeople.GroupBy(p => p.Age)
                 .ForEach(group =>
@@ -176,13 +175,13 @@ namespace DynamicData.Tests.CacheFixtures
 
                 });
 
-            Assert.AreEqual(2, _results.Data.Count);
-            Assert.AreEqual(2, _results.Messages.Count);
+            _results.Data.Count.Should().Be(2);
+            _results.Messages.Count.Should().Be(2);
 
             var secondMessage = _results.Messages.Skip(1).First();
-            Assert.AreEqual(1, secondMessage.Removes);
-            Assert.AreEqual(1, secondMessage.Updates);
-            Assert.AreEqual(1, secondMessage.Adds);
+            secondMessage.Removes.Should().Be(1);
+            secondMessage.Updates.Should().Be(1);
+            secondMessage.Adds.Should().Be(1);
         }
     }
 }

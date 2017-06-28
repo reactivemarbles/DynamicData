@@ -4,6 +4,7 @@ using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
+using FluentAssertions;
 
 namespace DynamicData.Tests.CacheFixtures
 {
@@ -46,8 +47,8 @@ namespace DynamicData.Tests.CacheFixtures
             suscriber2.Dispose();
             suscriber3.Dispose();
 
-            Assert.AreEqual(1, created);
-            Assert.AreEqual(1, disposals);
+            created.Should().Be(1);
+            disposals.Should().Be(1);
         }
 
         [Test]
@@ -72,8 +73,8 @@ namespace DynamicData.Tests.CacheFixtures
             suscriber = longChain.Subscribe();
             suscriber.Dispose();
 
-            Assert.AreEqual(2, created);
-            Assert.AreEqual(2, disposals);
+            created.Should().Be(2);
+            disposals.Should().Be(2);
         }
 
         // This test is probabilistic, it could be cool to be able to prove RefCount's thread-safety

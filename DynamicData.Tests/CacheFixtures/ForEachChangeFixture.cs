@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 using System;
+using FluentAssertions;
 
 namespace DynamicData.Tests.CacheFixtures
 {
@@ -35,7 +36,7 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
             messageWriter.Dispose();
 
-            Assert.AreEqual(100, messages.Count);
+            messages.Count.Should().Be(100);
         }
     }
 }

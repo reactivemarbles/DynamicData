@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -81,7 +82,7 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source.AddRange(Enumerable.Range(1, 5));
             _source.Clear();
-            Assert.AreEqual(0, _results.Data.Count);
+            _results.Data.Count.Should().Be(0);
         }
 
         [Test]

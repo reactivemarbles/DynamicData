@@ -4,6 +4,7 @@ using DynamicData.Kernel;
 using DynamicData.List.Internal;
 using NUnit.Framework;
 using System.Collections.ObjectModel;
+using FluentAssertions;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -29,7 +30,7 @@ namespace DynamicData.Tests.ListFixtures
             _clone.Clone(changes);
 
             //assert collection
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -40,7 +41,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -51,7 +52,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -61,7 +62,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -71,7 +72,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.AddRange(Enumerable.Range(11, 10));
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -82,7 +83,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -93,7 +94,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -104,7 +105,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -116,7 +117,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.ToArray().ForEach(i => _source.Remove(i));
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -129,7 +130,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -140,7 +141,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.RemoveMany(Enumerable.Range(1, 10));
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -151,7 +152,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.RemoveRange(5, 3);
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]
@@ -162,7 +163,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.RemoveMany(Enumerable.Range(3, 5));
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            CollectionAssert.AreEqual(_source, _clone);
+            _clone.ShouldAllBeEquivalentTo(_source);
         }
 
         [Test]

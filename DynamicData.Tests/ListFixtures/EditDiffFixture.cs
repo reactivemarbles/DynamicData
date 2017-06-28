@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -32,10 +33,10 @@ namespace DynamicData.Tests.ListFixtures
 
             _cache.EditDiff(newPeople, Person.NameAgeGenderComparer);
 
-            Assert.AreEqual(15, _cache.Count);
+            _cache.Count.Should().Be(15);
             CollectionAssert.AreEquivalent(newPeople, _cache.Items);
             var lastChange = _result.Messages.Last();
-            Assert.AreEqual(5, lastChange.Adds);
+            lastChange.Adds.Should().Be(5);
         }
 
         [Test]
@@ -45,9 +46,9 @@ namespace DynamicData.Tests.ListFixtures
 
             _cache.EditDiff(newPeople, Person.NameAgeGenderComparer);
 
-            Assert.AreEqual(10, _cache.Count);
+            _cache.Count.Should().Be(10);
             CollectionAssert.AreEquivalent(newPeople, _cache.Items);
-            Assert.AreEqual(1, _result.Messages.Count);
+            _result.Messages.Count.Should().Be(1);
         }
 
         [Test]
@@ -56,11 +57,11 @@ namespace DynamicData.Tests.ListFixtures
             var newList = Enumerable.Range(5, 3).Select(i => new Person("Name" + i, i + 10)).ToArray();
             _cache.EditDiff(newList, Person.NameAgeGenderComparer);
 
-            Assert.AreEqual(3, _cache.Count);
+            _cache.Count.Should().Be(3);
 
             var lastChange = _result.Messages.Last();
-            Assert.AreEqual(3, lastChange.Adds);
-            Assert.AreEqual(10, lastChange.Removes);
+            lastChange.Adds.Should().Be(3);
+            lastChange.Removes.Should().Be(10);
 
             CollectionAssert.AreEquivalent(newList, _cache.Items);
         }
@@ -71,11 +72,11 @@ namespace DynamicData.Tests.ListFixtures
             var newList = Enumerable.Range(1, 7).Select(i => new Person("Name" + i, i)).ToArray();
             _cache.EditDiff(newList, Person.NameAgeGenderComparer);
 
-            Assert.AreEqual(7, _cache.Count);
+            _cache.Count.Should().Be(7);
 
             var lastChange = _result.Messages.Last();
-            Assert.AreEqual(0, lastChange.Adds);
-            Assert.AreEqual(3, lastChange.Removes);
+            lastChange.Adds.Should().Be(0);
+            lastChange.Removes.Should().Be(3);
 
             CollectionAssert.AreEquivalent(newList, _cache.Items);
         }
@@ -88,11 +89,11 @@ namespace DynamicData.Tests.ListFixtures
 
             _cache.EditDiff(newList, Person.NameAgeGenderComparer);
 
-            Assert.AreEqual(10, _cache.Count);
+            _cache.Count.Should().Be(10);
 
             var lastChange = _result.Messages.Last();
-            Assert.AreEqual(5, lastChange.Adds);
-            Assert.AreEqual(5, lastChange.Removes);
+            lastChange.Adds.Should().Be(5);
+            lastChange.Removes.Should().Be(5);
 
             CollectionAssert.AreEquivalent(newList, _cache.Items);
         }
