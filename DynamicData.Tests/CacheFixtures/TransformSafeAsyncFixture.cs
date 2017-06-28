@@ -188,14 +188,14 @@ namespace DynamicData.Tests.CacheFixtures
                 var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
                 stub.Source.AddOrUpdate(people);
 
-                Assert.IsNull(stub.Results.Error);
+                stub.Results.Error.Should().BeNull();
 
                 Exception error = null;
                 stub.Source.Connect()
                     .Subscribe(changes => { }, ex => error = ex);
 
 
-                Assert.IsNull(error);
+                error.Should().BeNull();
 
                 stub.HandledErrors.Count.Should().Be(50);
                 stub.Results.Data.Count.Should().Be(50);

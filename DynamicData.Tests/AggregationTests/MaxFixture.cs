@@ -57,7 +57,7 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("C", 30));
 
             _source.Remove("C");
-            Assert.AreEqual(20, result, "Max value should be 20 after remove");
+            result.Should().Be(20, "Max value should be 20 after remove");
             accumulator.Dispose();
         }
 
@@ -69,20 +69,20 @@ namespace DynamicData.Tests.AggregationTests
             var somepropChanged = _source.Connect().WhenValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
-                                     .Maximum(p => p.Age)
-                                     .InvalidateWhen(somepropChanged)
-                                     .Subscribe(x => max = x);
+                .Maximum(p => p.Age)
+                .InvalidateWhen(somepropChanged)
+                .Subscribe(x => max = x);
 
             var personc = new Person("C", 5);
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 11));
             _source.AddOrUpdate(personc);
 
-            Assert.AreEqual(11, max, "Max should be 11");
+            max.Should().Be(11, "Max should be 11");
 
             personc.Age = 100;
 
-            Assert.AreEqual(100, max, "Max should be 100 after inline change");
+            max.Should().Be(100, "Max should be 100 after inline change");
             accumulator.Dispose();
         }
 

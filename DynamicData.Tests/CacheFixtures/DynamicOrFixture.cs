@@ -47,8 +47,8 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source1.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
         }
 
         [Test]
@@ -60,9 +60,9 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source1.AddOrUpdate(person);
             _source2.AddOrUpdate(person);
-            Assert.AreEqual(1, _results.Messages.Count, "Should have no updates");
-            Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
-            Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
+            _results.Messages.Count.Should().Be(1, "Should have no updates");
+            _results.Data.Count.Should().Be(1, "Cache should have no items");
+            _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
         [Test]
@@ -76,8 +76,8 @@ namespace DynamicData.Tests.CacheFixtures
             _source2.AddOrUpdate(person);
 
             _source2.Remove(person);
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
+            _results.Messages.Count.Should().Be(1, "Should be 2 updates");
+            _results.Data.Count.Should().Be(1, "Cache should have no items");
         }
 
         [Test]
@@ -92,9 +92,9 @@ namespace DynamicData.Tests.CacheFixtures
 
             var personUpdated = new Person("Adult1", 51);
             _source2.AddOrUpdate(personUpdated);
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
-            Assert.AreEqual(personUpdated, _results.Data.Items.First(), "Should be updated person");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(1, "Cache should have no items");
+            _results.Data.Items.First().Should().Be(personUpdated, "Should be updated person");
         }
 
         [Test]
@@ -111,14 +111,14 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Add(_source3.Connect());
 
             _results.Data.Count.Should().Be(100);
-            CollectionAssert.AreEquivalent(items, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(items);
 
             _source.RemoveAt(1);
             var result = items.Take(10)
-                              .Union(items.Skip(20));
+                .Union(items.Skip(20));
 
             _results.Data.Count.Should().Be(90);
-            CollectionAssert.AreEquivalent(result, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(result);
         }
 
         [Test]

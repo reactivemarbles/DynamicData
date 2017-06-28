@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using DynamicData.Kernel;
 using NUnit.Framework;
+using FluentAssertions;
 
 namespace DynamicData.Tests.CacheFixtures
 {
@@ -42,10 +43,10 @@ namespace DynamicData.Tests.CacheFixtures
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-            Assert.That(_result.Data.Count, Is.EqualTo(0));
-            Assert.IsFalse(_result.Data.Lookup("Device1").HasValue);
-            Assert.IsFalse(_result.Data.Lookup("Device2").HasValue);
-            Assert.IsFalse(_result.Data.Lookup("Device3").HasValue);
+            0.Should().Be(_result.Data.Count);
+            _result.Data.Lookup("Device1").HasValue.Should().BeFalse();
+            _result.Data.Lookup("Device2").HasValue.Should().BeFalse();
+            _result.Data.Lookup("Device3").HasValue.Should().BeFalse();
         }
 
 
@@ -59,10 +60,10 @@ namespace DynamicData.Tests.CacheFixtures
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
 
-            Assert.That(_result.Data.Count, Is.EqualTo(0));
-            Assert.IsFalse(_result.Data.Lookup("Device1").HasValue);
-            Assert.IsFalse(_result.Data.Lookup("Device2").HasValue);
-            Assert.IsFalse(_result.Data.Lookup("Device3").HasValue);
+            0.Should().Be(_result.Data.Count);
+            _result.Data.Lookup("Device1").HasValue.Should().BeFalse();
+            _result.Data.Lookup("Device2").HasValue.Should().BeFalse();
+            _result.Data.Lookup("Device3").HasValue.Should().BeFalse();
         }
 
 
@@ -83,9 +84,9 @@ namespace DynamicData.Tests.CacheFixtures
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
 
-            Assert.That(_result.Data.Count, Is.EqualTo(3));
+            3.Should().Be(_result.Data.Count);
 
-            Assert.IsTrue(_result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None));
+            _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
         }
 
         [Test]
@@ -105,20 +106,20 @@ namespace DynamicData.Tests.CacheFixtures
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
 
-            Assert.IsTrue(_result.Data.Lookup("Device1").HasValue);
-            Assert.IsTrue(_result.Data.Lookup("Device2").HasValue);
-            Assert.IsTrue(_result.Data.Lookup("Device3").HasValue);
+            _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
+            _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
+            _result.Data.Lookup("Device3").HasValue.Should().BeTrue();
 
             _right.Remove("Device3");
 
-            Assert.That(_result.Data.Count, Is.EqualTo(2));
+            2.Should().Be(_result.Data.Count);
 
 
             _left.Remove("Device1");
-            Assert.That(_result.Data.Count, Is.EqualTo(1));
-            Assert.IsFalse(_result.Data.Lookup("Device1").HasValue);
-            Assert.IsTrue(_result.Data.Lookup("Device2").HasValue);
-            Assert.IsFalse(_result.Data.Lookup("Device3").HasValue);
+            1.Should().Be(_result.Data.Count);
+            _result.Data.Lookup("Device1").HasValue.Should().BeFalse();
+            _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
+            _result.Data.Lookup("Device3").HasValue.Should().BeFalse();
         }
 
 
@@ -140,7 +141,7 @@ namespace DynamicData.Tests.CacheFixtures
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-            Assert.That(_result.Data.Count, Is.EqualTo(3));
+            3.Should().Be(_result.Data.Count);
         }
 
         [Test]
@@ -161,7 +162,7 @@ namespace DynamicData.Tests.CacheFixtures
                 innerCache.AddOrUpdate(new Device("Device3"));
             });
 
-            Assert.That(_result.Data.Count, Is.EqualTo(3));
+            3.Should().Be(_result.Data.Count);
         }
 
 

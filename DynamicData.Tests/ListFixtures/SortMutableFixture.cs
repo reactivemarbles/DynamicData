@@ -54,7 +54,7 @@ namespace DynamicData.Tests.ListFixtures
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -102,7 +102,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -115,11 +115,10 @@ namespace DynamicData.Tests.ListFixtures
 
             _results.Data.Count.Should().Be(10, "Should be 99 people in the cache");
             _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
-            //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
 
             var expectedResult = people.OrderBy(p => p, _comparer).Take(10);
             var actualResult = _results.Data.Items;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -132,11 +131,10 @@ namespace DynamicData.Tests.ListFixtures
 
             _results.Data.Count.Should().Be(10, "Should be 99 people in the cache");
             _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
-            //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
 
             var expectedResult = people.OrderByDescending(p => p, _comparer).Take(10);
             var actualResult = _results.Data.Items;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -154,15 +152,10 @@ namespace DynamicData.Tests.ListFixtures
             people[5].Age = -6;
 
 
-            var comparer = SortExpressionComparer<Person>
-                .Descending(p => p.Age)
+            var comparer = SortExpressionComparer<Person>.Descending(p => p.Age)
                 .ThenByAscending(p => p.Name);
 
             _changeComparer.OnNext(comparer);
-
-            //Assert.AreEqual(10, _results.Data.Count, "Should be 99 people in the cache");
-            //Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
-            ////Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
 
             var expectedResult = people.OrderBy(p => p, comparer).ToArray();
             var actualResult = _results.Data.Items.ToArray();
@@ -178,17 +171,16 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToList();
             _source.AddRange(people);
 
-            var odd = people.Select((p, idx) => new { p, idx }).Where(x => x.idx % 2 == 1).Select(x => x.p).ToArray();
+            var odd = people.Select((p, idx) => new {p, idx}).Where(x => x.idx % 2 == 1).Select(x => x.p).ToArray();
 
             _source.RemoveMany(odd);
 
             _results.Data.Count.Should().Be(50, "Should be 99 people in the cache");
             _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
-            //Assert.AreEqual(toRemove, _results.Messages[1].First().Item.Current, "Incorrect item removed");
 
             var expectedResult = people.Except(odd).OrderByDescending(p => p, _comparer).ToArray();
             var actualResult = _results.Data.Items;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -197,10 +189,7 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
 
-            people.OrderBy(_ => Guid.NewGuid()).ForEach((person, index) =>
-            {
-                person.Age = index;
-            });
+            people.OrderBy(_ => Guid.NewGuid()).ForEach((person, index) => { person.Age = index; });
 
             _resort.OnNext(Unit.Default);
 
@@ -209,7 +198,7 @@ namespace DynamicData.Tests.ListFixtures
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -218,9 +207,8 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
 
-            var newComparer = SortExpressionComparer<Person>
-                        .Ascending(p => p.Name)
-                        .ThenByAscending(p => p.Age);
+            var newComparer = SortExpressionComparer<Person>.Ascending(p => p.Name)
+                .ThenByAscending(p => p.Age);
 
             _changeComparer.OnNext(newComparer);
 
@@ -229,7 +217,7 @@ namespace DynamicData.Tests.ListFixtures
             var expectedResult = people.OrderBy(p => p, newComparer);
             var actualResult = _results.Data.Items;
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
 
@@ -249,7 +237,7 @@ namespace DynamicData.Tests.ListFixtures
             var expectedResult = people.Union(morePeople).OrderBy(p => p, _comparer).ToArray();
             var actualResult = _results.Data.Items;
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
 
             _results.Messages.Count.Should().Be(2, "Should be 2 messages");
 

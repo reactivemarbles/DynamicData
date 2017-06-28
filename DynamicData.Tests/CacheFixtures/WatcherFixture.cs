@@ -10,6 +10,7 @@ using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 
+using FluentAssertions;
 #endregion
 
 namespace DynamicData.Tests.CacheFixtures
@@ -58,12 +59,12 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
             var result = _results.Data.Items.First();
-            Assert.AreEqual(1, result.UpdateCount, "Person should have received 1 update");
-            Assert.AreEqual(false, result.Completed, "Person should have received 1 update");
+            result.UpdateCount.Should().Be(1, "Person should have received 1 update");
+            result.Completed.Should().Be(false, "Person should have received 1 update");
         }
 
         [Test]
@@ -77,12 +78,12 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(second);
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
             var secondResult = _results.Messages[1].First();
-            Assert.AreEqual(1, secondResult.Previous.Value.UpdateCount, "Second Person should have received 1 update");
-            Assert.AreEqual(true, secondResult.Previous.Value.Completed, "Second person  should have received 1 update");
+            secondResult.Previous.Value.UpdateCount.Should().Be(1, "Second Person should have received 1 update");
+            secondResult.Previous.Value.Completed.Should().Be(true, "Second person  should have received 1 update");
         }
 
         [Test]
@@ -95,12 +96,12 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Remove(person.Key);
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(11).Ticks);
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(0, _results.Data.Count, "Should be 0 item in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 1 updates");
+            _results.Data.Count.Should().Be(0, "Should be 0 item in the cache");
 
             var secondResult = _results.Messages[1].First();
-            Assert.AreEqual(1, secondResult.Current.UpdateCount, "Second Person should have received 1 update");
-            Assert.AreEqual(true, secondResult.Current.Completed, "Second person  should have received 1 update");
+            secondResult.Current.UpdateCount.Should().Be(1, "Second Person should have received 1 update");
+            secondResult.Current.Completed.Should().Be(true, "Second person  should have received 1 update");
         }
 
         [Test]
@@ -113,8 +114,8 @@ namespace DynamicData.Tests.CacheFixtures
             var watch = _watcher.Watch("Adult1").Subscribe(result.Add);
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
-            Assert.AreEqual(1, result.Count, "Should be 1 updates");
-            Assert.AreEqual(person, result[0].Current, "Should be 1 item in the cache");
+            result.Count.Should().Be(1, "Should be 1 updates");
+            result[0].Current.Should().Be(person, "Should be 1 item in the cache");
 
             _source.Edit(updater => updater.Remove(("Adult1")));
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(500).Ticks);
@@ -133,28 +134,28 @@ namespace DynamicData.Tests.CacheFixtures
             var watch3 = _watcher.Watch("Adult1").Subscribe(result.Add);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
 
-            Assert.AreEqual(3, result.Count, "Should be 3 updates");
+            result.Count.Should().Be(3, "Should be 3 updates");
             foreach (var update in result)
             {
-                Assert.AreEqual(ChangeReason.Add, update.Reason, "Change reason should be add");
+                update.Reason.Should().Be(ChangeReason.Add, "Change reason should be add");
             }
             result.Clear();
 
             _source.AddOrUpdate(new Person("Adult1", 51));
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(500).Ticks);
-            Assert.AreEqual(3, result.Count, "Should be 3 updates");
+            result.Count.Should().Be(3, "Should be 3 updates");
             foreach (var update in result)
             {
-                Assert.AreEqual(ChangeReason.Update, update.Reason, "Change reason should be add");
+                update.Reason.Should().Be(ChangeReason.Update, "Change reason should be add");
             }
             result.Clear();
 
             _source.Remove("Adult1");
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(500).Ticks);
-            Assert.AreEqual(3, result.Count, "Should be 3 updates");
+            result.Count.Should().Be(3, "Should be 3 updates");
             foreach (var update in result)
             {
-                Assert.AreEqual(ChangeReason.Remove, update.Reason, "Change reason should be add");
+                update.Reason.Should().Be(ChangeReason.Remove, "Change reason should be add");
             }
             result.Clear();
 

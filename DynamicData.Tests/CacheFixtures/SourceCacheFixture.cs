@@ -1,5 +1,6 @@
 ﻿using System;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -40,25 +41,24 @@ namespace DynamicData.Tests.CacheFixtures
                 updater.Refresh(torequery);
             });
 
-            Assert.AreEqual(6, _results.Summary.Overall.Count, "Should be  6 up`dates");
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 message");
-            Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 update");
-            Assert.AreEqual(3, _results.Messages[0].Updates, "Should be 3 updates");
-            Assert.AreEqual(1, _results.Messages[0].Removes, "Should be  1 remove");
-            Assert.AreEqual(1, _results.Messages[0].Refreshes, "Should be 1 evaluate");
+            _results.Summary.Overall.Count.Should().Be(6, "Should be  6 up`dates");
+            _results.Messages.Count.Should().Be(1, "Should be 1 message");
+            _results.Messages[0].Adds.Should().Be(1, "Should be 1 update");
+            _results.Messages[0].Updates.Should().Be(3, "Should be 3 updates");
+            _results.Messages[0].Removes.Should().Be(1, "Should be  1 remove");
+            _results.Messages[0].Refreshes.Should().Be(1, "Should be 1 evaluate");
 
-            Assert.AreEqual(0, _results.Data.Count, "Should be 1 item in` the cache");
+            _results.Data.Count.Should().Be(0, "Should be 1 item in` the cache");
         }
 
         [Test]
         public void CountChangedShouldAlwaysInvokeUponeSubscription()
         {
             int? result = null;
-            var subscription = _source.CountChanged
-                                      .Subscribe(count => result = count);
+            var subscription = _source.CountChanged.Subscribe(count => result = count);
 
-            Assert.IsTrue(result.HasValue, "Count has not been invoked. Should start at zero");
-            Assert.AreEqual(0, result.Value, "Count should be zero");
+            result.HasValue.Should().BeTrue();
+            result.Value.Should().Be(0, "Count should be zero");
 
             subscription.Dispose();
         }
@@ -68,13 +68,12 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var generator = new RandomPersonGenerator();
             int? result = null;
-            var subscription = _source.CountChanged
-                                      .Subscribe(count => result = count);
+            var subscription = _source.CountChanged.Subscribe(count => result = count);
 
             _source.AddOrUpdate(generator.Take(100));
 
-            Assert.IsTrue(result.HasValue, "Count has not been invoked. Should start at zero");
-            Assert.AreEqual(100, result.Value, "Count should be 100");
+            result.HasValue.Should().BeTrue();
+            result.Value.Should().Be(100, "Count should be 100");
             subscription.Dispose();
         }
 
@@ -85,17 +84,17 @@ namespace DynamicData.Tests.CacheFixtures
             bool errored = false;
             bool completed = false;
             IDisposable subscription = _source.Connect()
-                                              .FinallySafe(() => completed = true)
-                                              .Subscribe(updates => { called = true; }, ex => errored = true, () => completed = true);
+                .FinallySafe(() => completed = true)
+                .Subscribe(updates => { called = true; }, ex => errored = true, () => completed = true);
             _source.AddOrUpdate(new Person("Adult1", 40));
 
             //_stream.
             subscription.Dispose();
             _source.Dispose();
 
-            Assert.IsFalse(errored, "Should be no error");
-            Assert.IsTrue(called, "Subscription has not been invoked");
-            Assert.IsTrue(completed, "Completed has not been invoked");
+            errored.Should().BeFalse();
+            called.Should().BeTrue();
+            completed.Should().BeTrue();
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -39,9 +40,9 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(_transformFactory(person), _results.Data.Items.First(), "Should be same person");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
         }
 
         [Test]
@@ -53,11 +54,11 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(person);
             _source.Remove(key);
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 80 addes");
-            Assert.AreEqual(1, _results.Messages[1].Removes, "Should be 80 removes");
-            Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Adds.Should().Be(1, "Should be 80 addes");
+            _results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
+            _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
 
         [Test]
@@ -70,9 +71,9 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(newperson);
             _source.AddOrUpdate(updated);
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 adds");
-            Assert.AreEqual(1, _results.Messages[1].Updates, "Should be 1 update");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
+            _results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
         }
 
         [Test]
@@ -81,12 +82,12 @@ namespace DynamicData.Tests.CacheFixtures
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
             _source.AddOrUpdate(people);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(100, _results.Messages[0].Adds, "Should return 100 adds");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Messages[0].Adds.Should().Be(100, "Should return 100 adds");
 
             var transformed = people.Select(_transformFactory).ToArray();
 
-            CollectionAssert.AreEqual(transformed, _results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+            _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
         }
 
         [Test]
@@ -95,15 +96,15 @@ namespace DynamicData.Tests.CacheFixtures
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name", i)).ToArray();
             _source.AddOrUpdate(people);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Messages[0].Adds, "Should return 1 adds");
-            Assert.AreEqual(9, _results.Messages[0].Updates, "Should return 9 adds");
-            Assert.AreEqual(1, _results.Data.Count, "Should result in 1 record");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Messages[0].Adds.Should().Be(1, "Should return 1 adds");
+            _results.Messages[0].Updates.Should().Be(9, "Should return 9 adds");
+            _results.Data.Count.Should().Be(1, "Should result in 1 record");
 
             var lastTransformed = _transformFactory(people.Last());
             var onlyItemInCache = _results.Data.Items.First();
 
-            Assert.AreEqual(lastTransformed, onlyItemInCache, "Incorrect transform result");
+            onlyItemInCache.Should().Be(lastTransformed, "Incorrect transform result");
         }
 
         [Test]
@@ -115,10 +116,10 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.Clear();
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(100, _results.Messages[0].Adds, "Should be 80 addes");
-            Assert.AreEqual(100, _results.Messages[1].Removes, "Should be 80 removes");
-            Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Adds.Should().Be(100, "Should be 80 addes");
+            _results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
+            _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
     }
 }

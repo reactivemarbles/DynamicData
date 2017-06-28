@@ -164,10 +164,10 @@ namespace DynamicData.Tests.CacheFixtures
                 stub.Source.AddOrUpdate(people);
                 stub.Source.Clear();
 
-                Assert.AreEqual(2, stub.Results.Messages.Count, "Should be 2 updates");
-                Assert.AreEqual(100, stub.Results.Messages[0].Adds, "Should be 80 addes");
-                Assert.AreEqual(100, stub.Results.Messages[1].Removes, "Should be 80 removes");
-                Assert.AreEqual(0, stub.Results.Data.Count, "Should be nothing cached");
+                stub.Results.Messages.Count.Should().Be(2, "Should be 2 updates");
+                stub.Results.Messages[0].Adds.Should().Be(100, "Should be 80 addes");
+                stub.Results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
+                stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
             }
         }
 
@@ -183,14 +183,14 @@ namespace DynamicData.Tests.CacheFixtures
                 var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
                 stub.Source.AddOrUpdate(people);
 
-                Assert.IsNotNull(stub.Results.Error);
+                stub.Results.Error.Should().NotBeNull();
 
                 Exception error = null;
                 stub.Source.Connect()
                     .Subscribe(changes => { }, ex => error = ex);
 
 
-                Assert.IsNotNull(error);
+                error.Should().NotBeNull();
 
             }
         }

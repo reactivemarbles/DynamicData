@@ -56,17 +56,13 @@ namespace DynamicData.Tests.CacheFixtures
                .ToObservableChangeSet(p => p.Key)
                 .Subscribe((changes) => { }, ex => error = ex);;
 
-            Assert.IsNotNull(error);
+            error.Should().NotBeNull();
         }
 
         [Test]
         public void HandlesErrorsObservableList()
         {
-
-            Func<Task<IEnumerable<Person>>> loader = () =>
-            {
-                throw new Exception("Broken");
-            };
+            Func<Task<IEnumerable<Person>>> loader = () => { throw new Exception("Broken"); };
 
             Exception error = null;
 
@@ -75,10 +71,10 @@ namespace DynamicData.Tests.CacheFixtures
                 .AsObservableCache();
 
             var subscribed = data.Connect()
-                        .Subscribe(changes=> {}, ex =>  error = ex);
+                .Subscribe(changes => { }, ex => error = ex);
 
 
-            Assert.IsNotNull(error);
+            error.Should().NotBeNull();
         }
 
     }

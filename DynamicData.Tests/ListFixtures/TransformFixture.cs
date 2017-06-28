@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -37,9 +38,9 @@ namespace DynamicData.Tests.ListFixtures
             var person = new Person("Adult1", 50);
             _source.Add(person);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(_transformFactory(person), _results.Data.Items.First(), "Should be same person");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
         }
 
         [Test]
@@ -51,11 +52,11 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(person);
             _source.Remove(person);
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 80 addes");
-            Assert.AreEqual(1, _results.Messages[1].Removes, "Should be 80 removes");
-            Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Adds.Should().Be(1, "Should be 80 addes");
+            _results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
+            _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
 
         [Test]
@@ -68,9 +69,9 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(newperson);
             _source.Add(updated);
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Messages[0].Adds, "Should be 1 adds");
-            Assert.AreEqual(0, _results.Messages[0].Replaced, "Should be 1 update");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
+            _results.Messages[0].Replaced.Should().Be(0, "Should be 1 update");
         }
 
         [Test]
@@ -80,11 +81,11 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.AddRange(people);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(100, _results.Messages[0].Adds, "Should return 100 adds");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Messages[0].Adds.Should().Be(100, "Should return 100 adds");
 
             var transformed = people.Select(_transformFactory).OrderBy(p => p.Age).ToArray();
-            CollectionAssert.AreEqual(transformed, _results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+            _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
         }
 
         [Test]
@@ -94,9 +95,9 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.AddRange(people);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(10, _results.Messages[0].Adds, "Should return 10 adds");
-            Assert.AreEqual(10, _results.Data.Count, "Should result in 10 records");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Messages[0].Adds.Should().Be(10, "Should return 10 adds");
+            _results.Data.Count.Should().Be(10, "Should result in 10 records");
         }
 
         [Test]
@@ -107,10 +108,10 @@ namespace DynamicData.Tests.ListFixtures
             _source.AddRange(people);
             _source.Clear();
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(100, _results.Messages[0].Adds, "Should be 80 addes");
-            Assert.AreEqual(100, _results.Messages[1].Removes, "Should be 80 removes");
-            Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Adds.Should().Be(100, "Should be 80 addes");
+            _results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
+            _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
     }
 }

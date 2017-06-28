@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 
@@ -26,9 +27,9 @@ namespace DynamicData.Tests.CacheFixtures
 
             subject.OnNext(people);
 
-            Assert.AreEqual(1, results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(3, results.Data.Count, "Should be 1 item in the cache");
-            CollectionAssert.AreEquivalent(people, results.Data.Items, "Lists should be equivalent");
+            results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            results.Data.Count.Should().Be(3, "Should be 1 item in the cache");
+            results.Data.Items.ShouldAllBeEquivalentTo(results.Data.Items, "Lists should be equivalent");
         }
 
         [Test]
@@ -44,14 +45,13 @@ namespace DynamicData.Tests.CacheFixtures
 
             scheduler.AdvanceBy(1);
 
-          // Assert.AreEqual(2, results.Messages.Count, "Should be 300 messages");
-            Assert.AreEqual(200, results.Messages.Sum(x => x.Adds), "Should be 200 adds");
-            Assert.AreEqual(100, results.Messages.Sum(x => x.Removes), "Should be 100 removes");
-            Assert.AreEqual(100, results.Data.Count, "Should be 1 item in the cache");
+            results.Messages.Sum(x => x.Adds).Should().Be(200, "Should be 200 adds");
+            results.Messages.Sum(x => x.Removes).Should().Be(100, "Should be 100 removes");
+            results.Data.Count.Should().Be(100, "Should be 1 item in the cache");
 
             var expected = people.Skip(100).ToArray().OrderBy(p => p.Name).ToArray();
             var actual = results.Data.Items.OrderBy(p => p.Name).ToArray();
-            CollectionAssert.AreEqual(expected, actual, "Only second hundred should be in the cache");
+            actual.ShouldAllBeEquivalentTo(actual, "Only second hundred should be in the cache");
         }
 
         [Test]
@@ -67,10 +67,10 @@ namespace DynamicData.Tests.CacheFixtures
 
             scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
             //scheduler.Start();
-            Assert.AreEqual(2, results.Messages.Count, "Should be 300 messages");
-            Assert.AreEqual(200, results.Messages.Sum(x => x.Adds), "Should be 200 adds");
-            Assert.AreEqual(200, results.Messages.Sum(x => x.Removes), "Should be 100 removes");
-            Assert.AreEqual(0, results.Data.Count, "Should be no data in the cache");
+            results.Messages.Count.Should().Be(2, "Should be 300 messages");
+            results.Messages.Sum(x => x.Adds).Should().Be(200, "Should be 200 adds");
+            results.Messages.Sum(x => x.Removes).Should().Be(200, "Should be 100 removes");
+            results.Data.Count.Should().Be(0, "Should be no data in the cache");
         }
     }
 }

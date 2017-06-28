@@ -1,6 +1,7 @@
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 using System.Linq;
+using FluentAssertions;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -29,9 +30,9 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source.Add(new Person("Person1", 20));
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
         [Test]
@@ -44,11 +45,11 @@ namespace DynamicData.Tests.ListFixtures
                 list.Add(new Person("Person3", 22));
             });
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(3, _results.Data.Count, "Should be 3 items in the cache");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(3, "Should be 3 items in the cache");
 
-            CollectionAssert.AreEquivalent(new[] { 20, 21, 22 }, _results.Data.Items);
-            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
+            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {20, 21, 22});
+            _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
         [Test]
@@ -61,9 +62,9 @@ namespace DynamicData.Tests.ListFixtures
                 list.Add(new Person("Person1", 20));
             });
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 update message");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
-            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
+            _results.Messages.Count.Should().Be(1, "Should be 1 update message");
+            _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
+            _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
         [Test]
@@ -73,11 +74,11 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.Add(person);
             _source.Remove(person);
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 1 update message");
-            Assert.AreEqual(0, _results.Data.Count, "Should be 1 items in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 1 update message");
+            _results.Data.Count.Should().Be(0, "Should be 1 items in the cache");
 
-            Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
-            Assert.AreEqual(1, _results.Messages.Skip(1).First().Removes, "Second messsage should be a remove");
+            _results.Messages.First().Adds.Should().Be(1, "First message should be an add");
+            _results.Messages.Skip(1).First().Removes.Should().Be(1, "Second messsage should be a remove");
         }
 
         [Test]
@@ -88,11 +89,11 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.Add(person);
             _source.Replace(person, replaceWith);
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 1 update message");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 1 update message");
+            _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
 
-            Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
-            Assert.AreEqual(2, _results.Messages.Skip(1).First().Count, "Second messsage should be an add an a remove");
+            _results.Messages.First().Adds.Should().Be(1, "First message should be an add");
+            _results.Messages.Skip(1).First().Count.Should().Be(2, "Second messsage should be an add an a remove");
         }
     }
 }

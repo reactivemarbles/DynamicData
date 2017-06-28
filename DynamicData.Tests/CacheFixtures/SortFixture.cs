@@ -2,14 +2,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 #endregion
@@ -185,12 +184,12 @@ namespace DynamicData.Tests.CacheFixtures
             var people = _generator.Take(100).ToArray();
             _source.AddOrUpdate(people);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -204,11 +203,11 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.AddOrUpdate(insert);
 
-            Assert.AreEqual(101, _results.Data.Count, "Should be 101 people in the cache");
+            _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("_Aaron");
 
-            Assert.IsTrue(indexedItem.HasValue, "Item has not been inserted");
-            Assert.AreEqual(0, indexedItem.Value.Index, "Inserted item should have index of zero");
+            indexedItem.HasValue.Should().BeTrue();
+            indexedItem.Value.Index.Should().Be(0, "Inserted item should have index of zero");
         }
 
         [Test]
@@ -222,14 +221,14 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.AddOrUpdate(insert);
 
-            Assert.AreEqual(101, _results.Data.Count, "Should be 101 people in the cache");
+            _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("Marvin");
 
-            Assert.IsTrue(indexedItem.HasValue, "Item has not been inserted");
+            indexedItem.HasValue.Should().BeTrue();
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            CollectionAssert.AreEquivalent(sortedResult, list);
+            list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
         [Test]
@@ -243,14 +242,14 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.AddOrUpdate(insert);
 
-            Assert.AreEqual(101, _results.Data.Count, "Should be 101 people in the cache");
+            _results.Data.Count.Should().Be(101, "Should be 101 people in the cache");
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup("zzzzz");
 
-            Assert.IsTrue(indexedItem.HasValue, "Item has not been inserted");
+            indexedItem.HasValue.Should().BeTrue();
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            CollectionAssert.AreEquivalent(sortedResult, list);
+            list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
         [Test]
@@ -264,14 +263,14 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.Remove(remove.Key);
 
-            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
+            _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
             //TODO: fixed Text
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-            Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
+            indexedItem.HasValue.Should().BeFalse();
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            CollectionAssert.AreEquivalent(sortedResult, list);
+            list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
         [Test]
@@ -285,15 +284,15 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.Remove(remove.Key);
 
-            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
+            _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
 
             //TODO: fixed Text
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-            Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
+            indexedItem.HasValue.Should().BeFalse();
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            CollectionAssert.AreEquivalent(sortedResult, list);
+            list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
         [Test]
@@ -307,14 +306,14 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.Remove(remove.Key);
 
-            Assert.AreEqual(99, _results.Data.Count, "Should be 99 people in the cache");
+            _results.Data.Count.Should().Be(99, "Should be 99 people in the cache");
 
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(remove.Key);
-            Assert.IsFalse(indexedItem.HasValue, "Item has not been removed");
+            indexedItem.HasValue.Should().BeFalse();
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            CollectionAssert.AreEquivalent(sortedResult, list);
+            list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
         [Test]
@@ -328,14 +327,14 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.AddOrUpdate(update);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
             //TODO: fixed Text
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
-            Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
-            Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value), "Change in not the same reference");
+            indexedItem.HasValue.Should().BeTrue();
+            ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            CollectionAssert.AreEquivalent(sortedResult, list);
+            list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
         [Test]
@@ -349,15 +348,15 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.AddOrUpdate(update);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
-            Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
-            Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value), "Change in not the same reference");
+            indexedItem.HasValue.Should().BeTrue();
+            ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            CollectionAssert.AreEquivalent(sortedResult, list);
+            list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
         [Test]
@@ -373,14 +372,14 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.AddOrUpdate(update);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
             var indexedItem = _results.Messages[1].SortedItems.Indexed().Lookup(update.Key);
 
-            Assert.IsTrue(indexedItem.HasValue, "Item has not been updated");
-            Assert.IsTrue(ReferenceEquals(update, indexedItem.Value.Value), "Change in not the same reference");
+            indexedItem.HasValue.Should().BeTrue();
+            ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            CollectionAssert.AreEquivalent(sortedResult, list);
+            list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
         [Test]
@@ -405,7 +404,7 @@ namespace DynamicData.Tests.CacheFixtures
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            CollectionAssert.AreEquivalent(shouldbe, list);
+            list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
         [Test]
@@ -433,7 +432,7 @@ namespace DynamicData.Tests.CacheFixtures
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            CollectionAssert.AreEquivalent(shouldbe, list);
+            list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
         [Test]
@@ -457,7 +456,7 @@ namespace DynamicData.Tests.CacheFixtures
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            CollectionAssert.AreEquivalent(shouldbe, list);
+            list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
         [Test]
@@ -482,7 +481,7 @@ namespace DynamicData.Tests.CacheFixtures
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            CollectionAssert.AreEquivalent(shouldbe, list);
+            list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
         [Test]
@@ -508,7 +507,7 @@ namespace DynamicData.Tests.CacheFixtures
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            CollectionAssert.AreEquivalent(shouldbe, list);
+            list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
         [Test]
@@ -531,7 +530,7 @@ namespace DynamicData.Tests.CacheFixtures
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            CollectionAssert.AreEquivalent(shouldbe, list);
+            list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
         [Test]
@@ -548,7 +547,7 @@ namespace DynamicData.Tests.CacheFixtures
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            CollectionAssert.AreEquivalent(shouldbe, list);
+            list.ShouldAllBeEquivalentTo(shouldbe);
         }
     }
 }

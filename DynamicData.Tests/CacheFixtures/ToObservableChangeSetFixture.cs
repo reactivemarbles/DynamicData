@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic; 
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 
@@ -41,12 +42,12 @@ namespace DynamicData.Tests.CacheFixtures
         public void ShouldLimitSizeOfBoundCollection()
         {
             _scheduler.AdvanceTo(2);
-            Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection");
+            _target.Count.Should().Be(2, "Should be 2 item in target collection");
 
-           _scheduler.AdvanceTo(3);
+            _scheduler.AdvanceTo(3);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks); //push time forward as size limit is checked for after the event 
 
-            Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection because of size limit");
+            _target.Count.Should().Be(2, "Should be 2 item in target collection because of size limit");
         }
     }
 }

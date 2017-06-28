@@ -4,6 +4,7 @@ using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -51,7 +52,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             var expectedResult = people.OrderBy(p => p, _originalComparer).Skip(25).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[1].SortedItems.ToList();
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -66,7 +67,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             var expectedResult = people.OrderBy(p => p, _changedComparer).Skip(25).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[2].SortedItems.ToList();
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -76,12 +77,12 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(people);
             _pageController.Change(new PageRequest(1, 20));
 
-            Assert.AreEqual(1, _aggregators.Messages[1].Response.Page, "Should be page 1");
+            _aggregators.Messages[1].Response.Page.Should().Be(1, "Should be page 1");
 
             var expectedResult = people.OrderBy(p => p, _originalComparer).Take(10).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
     }
 }

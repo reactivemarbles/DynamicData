@@ -55,8 +55,7 @@ namespace DynamicData.Tests.Kernal
 
             _cache.Items.ShouldAllBeEquivalentTo(people);
             _cache.Count.Should().Be(100, "Should be 100 items in the cache");
-            CollectionAssert.AreEquivalent(people?.Select(p => new Change<Person, string>(ChangeReason.Add, p.Name, p)),
-                                           updates);
+            updates.ShouldAllBeEquivalentTo(people?.Select(p => new Change<Person, string>(ChangeReason.Add, p.Name, p)));
             100.Should().Be(updates.Count, "Should be 100 updates");
         }
 

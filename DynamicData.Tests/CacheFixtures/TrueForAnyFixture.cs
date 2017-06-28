@@ -1,7 +1,9 @@
 using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using FluentAssertions;
 using NUnit.Framework;
+
 
 namespace DynamicData.Tests.CacheFixtures
 {
@@ -33,8 +35,8 @@ namespace DynamicData.Tests.CacheFixtures
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
 
-            Assert.IsTrue(valuereturned.HasValue, "An intial value should have been called");
-            Assert.AreEqual(false, valuereturned.Value, "The intial value should be false");
+            valuereturned.HasValue.Should().BeTrue();
+            valuereturned.Value.Should().Be(false, "The intial value should be false");
 
             subscribed.Dispose();
         }
@@ -49,7 +51,7 @@ namespace DynamicData.Tests.CacheFixtures
             item.InvokeObservable(true);
             _source.AddOrUpdate(item);
 
-            Assert.AreEqual(true, valuereturned.Value, "Value should be true");
+            valuereturned.Value.Should().Be(true, "Value should be true");
             subscribed.Dispose();
         }
 
@@ -65,10 +67,10 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(item1);
             _source.AddOrUpdate(item2);
             _source.AddOrUpdate(item3);
-            Assert.AreEqual(false, valuereturned.Value, "Value should be false");
+            valuereturned.Value.Should().Be(false, "Value should be false");
 
             item1.InvokeObservable(true);
-            Assert.AreEqual(true, valuereturned.Value, "Value should be true");
+            valuereturned.Value.Should().Be(true, "Value should be true");
             subscribed.Dispose();
         }
 

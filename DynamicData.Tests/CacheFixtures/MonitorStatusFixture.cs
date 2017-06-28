@@ -2,6 +2,7 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Kernel;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -19,8 +20,8 @@ namespace DynamicData.Tests.CacheFixtures
                 invoked = true;
                 status = s;
             });
-            Assert.IsTrue(invoked, "No status has been received");
-            Assert.AreEqual(ConnectionStatus.Pending, status, "No status has been received");
+            invoked.Should().BeTrue();
+            status.Should().Be(ConnectionStatus.Pending, "No status has been received");
             subscription.Dispose();
         }
 
@@ -30,15 +31,16 @@ namespace DynamicData.Tests.CacheFixtures
             bool invoked = false;
             var status = ConnectionStatus.Pending;
             var subject = new Subject<int>();
-            var subscription = subject.MonitorStatus().Subscribe(s =>
-            {
-                invoked = true;
-                status = s;
-            });
+            var subscription = subject.MonitorStatus()
+                .Subscribe(s =>
+                {
+                    invoked = true;
+                    status = s;
+                });
 
             subject.OnNext(1);
-            Assert.IsTrue(invoked, "No update has been received");
-            Assert.AreEqual(ConnectionStatus.Loaded, status, "Status should be ConnectionStatus.Loaded");
+            invoked.Should().BeTrue();
+            status.Should().Be(ConnectionStatus.Loaded, "Status should be ConnectionStatus.Loaded");
             subscription.Dispose();
         }
 
@@ -50,17 +52,18 @@ namespace DynamicData.Tests.CacheFixtures
             var subject = new Subject<int>();
             Exception exception;
 
-            var subscription = subject.MonitorStatus().Subscribe(s =>
-            {
-                invoked = true;
-                status = s;
-            }, ex => { exception = ex; });
+            var subscription = subject.MonitorStatus()
+                .Subscribe(s =>
+                {
+                    invoked = true;
+                    status = s;
+                }, ex => { exception = ex; });
 
             subject.OnError(new Exception("Test"));
             subscription.Dispose();
 
-            Assert.IsTrue(invoked, "No update has been received");
-            Assert.AreEqual(ConnectionStatus.Errored, status, "Status should be ConnectionStatus.Faulted");
+            invoked.Should().BeTrue();
+            status.Should().Be(ConnectionStatus.Errored, "Status should be ConnectionStatus.Faulted");
         }
 
         [Test]
@@ -69,8 +72,7 @@ namespace DynamicData.Tests.CacheFixtures
             bool invoked = false;
             int invocations = 0;
             var subject = new Subject<int>();
-            var subscription = subject
-                .MonitorStatus()
+            var subscription = subject.MonitorStatus()
                 .Where(status => status == ConnectionStatus.Loaded)
                 .Subscribe(s =>
                 {
@@ -82,8 +84,8 @@ namespace DynamicData.Tests.CacheFixtures
             subject.OnNext(1);
             subject.OnNext(1);
 
-            Assert.IsTrue(invoked, "No status has been received");
-            Assert.AreEqual(1, invocations, "Status should be ConnectionStatus.Loaded");
+            invoked.Should().BeTrue();
+            invocations.Should().Be(1, "Status should be ConnectionStatus.Loaded");
             subscription.Dispose();
         }
     }

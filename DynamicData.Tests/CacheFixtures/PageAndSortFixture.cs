@@ -1,6 +1,7 @@
 using System;
 using DynamicData.Binding;
 using DynamicData.Controllers;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -37,7 +38,7 @@ namespace DynamicData.Tests.CacheFixtures
             item2.DateFavorited = null;
             itemCache.Remove(item2); //ERROR!
 
-            Assert.IsFalse(error, "Error has been thrown");
+            error.Should().BeFalse();
         }
 
         private class TestVm

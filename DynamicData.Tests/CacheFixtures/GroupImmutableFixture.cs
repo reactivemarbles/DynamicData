@@ -127,12 +127,12 @@ namespace DynamicData.Tests.CacheFixtures
                 .ForEach(group =>
                 {
                     var cache = _results.Data.Lookup(group.Key).Value;
-                    CollectionAssert.AreEquivalent(group, cache.Items);
+                    cache.Items.ShouldAllBeEquivalentTo(group);
                 });
 
             var changedPeople = Enumerable.Range(1, 100)
-                 .Select(i => new Person("Person" + i, i % 5))
-                 .ToArray();
+                .Select(i => new Person("Person" + i, i % 5))
+                .ToArray();
 
             _source.AddOrUpdate(changedPeople);
 
@@ -140,10 +140,9 @@ namespace DynamicData.Tests.CacheFixtures
                 .ForEach(group =>
                 {
                     var cache = _results.Data.Lookup(group.Key).Value;
-                    CollectionAssert.AreEquivalent(group,cache.Items);
-
+                    cache.Items.ShouldAllBeEquivalentTo(group);
                 });
-            
+
             _results.Messages.Count.Should().Be(2);
             _results.Messages.First().Adds.Should().Be(10);
             _results.Messages.Skip(1).First().Removes.Should().Be(5);
@@ -157,7 +156,7 @@ namespace DynamicData.Tests.CacheFixtures
                 .Select(i => new Person("Person" + i, i % 2))
                 .ToArray();
 
-            _source.AddOrUpdate(initialPeople); 
+            _source.AddOrUpdate(initialPeople);
             _results.Messages.Count.Should().Be(1);
 
             //do an inline update
@@ -171,7 +170,7 @@ namespace DynamicData.Tests.CacheFixtures
                 .ForEach(group =>
                 {
                     var cache = _results.Data.Lookup(group.Key).Value;
-                    CollectionAssert.AreEquivalent(group, cache.Items);
+                    cache.Items.ShouldAllBeEquivalentTo(group);
 
                 });
 

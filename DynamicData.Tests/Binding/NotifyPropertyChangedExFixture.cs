@@ -1,6 +1,7 @@
 ﻿using System;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.Binding
@@ -18,11 +19,11 @@ namespace DynamicData.Tests.Binding
             source.Add(person);
             source.Add(anotherPerson);
 
-            Assert.That(lastAgeChange, Is.EqualTo(notifyOnInitialValue ? 10 : -1));
+            (notifyOnInitialValue ? 10 : -1).Should().Be(lastAgeChange);
             person.Age = 12;
-            Assert.That(lastAgeChange, Is.EqualTo(12));
+            12.Should().Be(lastAgeChange);
             anotherPerson.Age = 13;
-            Assert.That(lastAgeChange, Is.EqualTo(13));
+            13.Should().Be(lastAgeChange);
         }
 
         [Test]
@@ -32,11 +33,11 @@ namespace DynamicData.Tests.Binding
             var person = new Person("Name", 10);
             person.WhenValueChanged(p => p.Age, notifyOnInitialValue).Subscribe(i => age = i);
 
-            Assert.That(age, Is.EqualTo(notifyOnInitialValue ? 10 : -1));
+            (notifyOnInitialValue ? 10 : -1).Should().Be(age);
             person.Age = 12;
-            Assert.That(age, Is.EqualTo(12));
+            12.Should().Be(age);
             person.Age = 13;
-            Assert.That(age, Is.EqualTo(13));
+            13.Should().Be(age);
         }
 
         [Test]
@@ -52,21 +53,21 @@ namespace DynamicData.Tests.Binding
 
             if (notifyOnInitialValue)
             {
-                Assert.That(lastChange.Sender, Is.EqualTo(anotherPerson));
-                Assert.That(lastChange.Value, Is.EqualTo(10));
+                anotherPerson.Should().Be(lastChange.Sender);
+                10.Should().Be(lastChange.Value);
             }
             else
             {
-                Assert.That(lastChange.Sender, Is.Null);
-                Assert.That(lastChange.Value, Is.EqualTo(-1));
+                lastChange.Sender.Should().BeNull();
+                (-1).Should().Be(lastChange.Value);
             }
 
             person.Age = 12;
-            Assert.That(lastChange.Sender, Is.EqualTo(person));
-            Assert.That(lastChange.Value, Is.EqualTo(12));
+            person.Should().Be(lastChange.Sender);
+            12.Should().Be(lastChange.Value);
             anotherPerson.Age = 13;
-            Assert.That(lastChange.Sender, Is.EqualTo(anotherPerson));
-            Assert.That(lastChange.Value, Is.EqualTo(13));
+            anotherPerson.Should().Be(lastChange.Sender);
+            13.Should().Be(lastChange.Value);
         }
 
         [Test]
@@ -78,20 +79,20 @@ namespace DynamicData.Tests.Binding
 
             if (notifyOnInitialValue)
             {
-                Assert.That(lastChange.Sender, Is.EqualTo(person));
-                Assert.That(lastChange.Value, Is.EqualTo(10));
+                person.Should().Be(lastChange.Sender);
+                10.Should().Be(lastChange.Value);
             }
             else
             {
-                Assert.That(lastChange.Sender, Is.Null);
-                Assert.That(lastChange.Value, Is.EqualTo(-1));
+                lastChange.Sender.Should().BeNull();
+                (-1).Should().Be(lastChange.Value);
             }
             person.Age = 12;
-            Assert.That(lastChange.Sender, Is.EqualTo(person));
-            Assert.That(lastChange.Value, Is.EqualTo(12));
+            person.Should().Be(lastChange.Sender);
+            12.Should().Be(lastChange.Value);
             person.Age = 13;
-            Assert.That(lastChange.Sender, Is.EqualTo(person));
-            Assert.That(lastChange.Value, Is.EqualTo(13));
+            person.Should().Be(lastChange.Sender);
+            13.Should().Be(lastChange.Value);
         }
 
 

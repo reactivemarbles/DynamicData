@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -55,8 +56,8 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _targetSource.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
         }
 
         [Test]
@@ -66,8 +67,8 @@ namespace DynamicData.Tests.CacheFixtures
             _exceptSource.AddOrUpdate(person);
             _targetSource.AddOrUpdate(person);
 
-            Assert.AreEqual(0, _results.Messages.Count, "Should have no updates");
-            Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
+            _results.Messages.Count.Should().Be(0, "Should have no updates");
+            _results.Data.Count.Should().Be(0, "Cache should have no items");
         }
 
         [Test]
@@ -78,8 +79,8 @@ namespace DynamicData.Tests.CacheFixtures
             _targetSource.AddOrUpdate(person);
 
             _exceptSource.Remove(person);
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
+            _results.Messages.Count.Should().Be(1, "Should be 2 updates");
+            _results.Data.Count.Should().Be(1, "Cache should have no items");
         }
     }
 }

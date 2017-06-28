@@ -1,5 +1,5 @@
 ﻿using DynamicData.Tests.Domain;
-using DynamicData.Tests.Utilities;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -36,11 +36,11 @@ namespace DynamicData.Tests.CacheFixtures
                 new Person("Child3", 3)
             });
             _source.AddOrUpdate(parent);
-            Assert.AreEqual(3, _results.Data.Count, "Should be 4 in the cache");
+            _results.Data.Count.Should().Be(3, "Should be 4 in the cache");
 
-            Assert.IsTrue(_results.Data.Lookup("Child1").HasValue, "Child 1 should be in the cache");
-            Assert.IsTrue(_results.Data.Lookup("Child2").HasValue, "Child 2 should be in the cache");
-            Assert.IsTrue(_results.Data.Lookup("Child3").HasValue, "Child 3 should be in the cache");
+            _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
+            _results.Data.Lookup("Child2").HasValue.Should().BeTrue();
+            _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
         }
 
 
@@ -49,13 +49,11 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var parent = new PersonWithChildren("parent", 50, new Person[]
             {
-                new Person("Child1", 1),
-                new Person("Child2", 2),
-                new Person("Child3", 3)
+                new Person("Child1", 1), new Person("Child2", 2), new Person("Child3", 3)
             });
             _source.AddOrUpdate(parent);
             _source.Remove(parent);
-            Assert.AreEqual(0, _results.Data.Count, "Should be 4 in the cache");
+            _results.Data.Count.Should().Be(0, "Should be 4 in the cache");
         }
 
         [Test]
@@ -63,19 +61,16 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var parent1 = new PersonWithChildren("parent", 50, new Person[]
             {
-                new Person("Child1", 1),
-                new Person("Child2", 2),
-                new Person("Child3", 3)
+                new Person("Child1", 1), new Person("Child2", 2), new Person("Child3", 3)
             });
             _source.AddOrUpdate(parent1);
 
             var parent2 = new PersonWithChildren("parent", 50, new Person[]
             {
-                new Person("Child1", 1),
-                new Person("Child3", 3)
+                new Person("Child1", 1), new Person("Child3", 3)
             });
             _source.Remove(parent2);
-            Assert.AreEqual(0, _results.Data.Count, "Should be 0 in the cache");
+            _results.Data.Count.Should().Be(0, "Should be 0 in the cache");
         }
 
         [Test]
@@ -83,21 +78,18 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var parent1 = new PersonWithChildren("parent", 50, new Person[]
             {
-                new Person("Child1", 1),
-                new Person("Child2", 2),
-                new Person("Child3", 3)
+                new Person("Child1", 1), new Person("Child2", 2), new Person("Child3", 3)
             });
             _source.AddOrUpdate(parent1);
 
             var parent2 = new PersonWithChildren("parent", 50, new Person[]
             {
-                new Person("Child1", 1),
-                new Person("Child3", 3),
+                new Person("Child1", 1), new Person("Child3", 3),
             });
             _source.AddOrUpdate(parent2);
-            Assert.AreEqual(2, _results.Data.Count, "Should be 2 in the cache");
-            Assert.IsTrue(_results.Data.Lookup("Child1").HasValue, "Child 1 should be in the cache");
-            Assert.IsTrue(_results.Data.Lookup("Child3").HasValue, "Child 3 should be in the cache");
+            _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
+            _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
+            _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
         }
 
 
@@ -106,23 +98,19 @@ namespace DynamicData.Tests.CacheFixtures
         {
             var parent1 = new PersonWithChildren("parent", 50, new Person[]
             {
-                new Person("Child1", 1),
-                new Person("Child2", 2),
-                new Person("Child3", 3)
+                new Person("Child1", 1), new Person("Child2", 2), new Person("Child3", 3)
             });
             _source.AddOrUpdate(parent1);
 
             var parent2 = new PersonWithChildren("parent", 50, new Person[]
             {
-                new Person("Child1", 1),
-                new Person("Child3", 3),
-                new Person("Child5", 3),
+                new Person("Child1", 1), new Person("Child3", 3), new Person("Child5", 3),
             });
             _source.AddOrUpdate(parent2);
-            Assert.AreEqual(3, _results.Data.Count, "Should be 2 in the cache");
-            Assert.IsTrue(_results.Data.Lookup("Child1").HasValue, "Child 1 should be in the cache");
-            Assert.IsTrue(_results.Data.Lookup("Child3").HasValue, "Child 3 should be in the cache");
-            Assert.IsTrue(_results.Data.Lookup("Child5").HasValue, "Child 5 should be in the cache");
+            _results.Data.Count.Should().Be(3, "Should be 2 in the cache");
+            _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
+            _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
+            _results.Data.Lookup("Child5").HasValue.Should().BeTrue();
         }
     }
 }

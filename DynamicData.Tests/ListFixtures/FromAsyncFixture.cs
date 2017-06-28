@@ -57,13 +57,12 @@ namespace DynamicData.Tests.ListFixtures
                 .ToObservableChangeSet()
                 .Subscribe((changes) => { }, ex => error = ex);;
 
-            Assert.IsNotNull(error);
+            error.Should().NotBeNull();
         }
 
         [Test]
         public void HandlesErrorsObservableList()
         {
-
             Func<Task<IEnumerable<Person>>> loader = () =>
             {
                 Task.Delay(100);
@@ -77,10 +76,10 @@ namespace DynamicData.Tests.ListFixtures
                 .AsObservableList();
 
             var subscribed = data.Connect()
-                        .Subscribe(changes=> {}, ex =>  error = ex);
+                .Subscribe(changes => { }, ex => error = ex);
 
 
-            Assert.IsNotNull(error);
+            error.Should().NotBeNull();
         }
 
     }

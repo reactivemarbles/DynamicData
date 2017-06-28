@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Reactive.Disposables;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -55,9 +56,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.AddOrUpdate(new SubscribeableObject(1));
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(true, _results.Data.Items.First().IsSubscribed, "Should be subscribed");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().IsSubscribed.Should().Be(true, "Should be subscribed");
         }
 
         [Test]
@@ -66,9 +67,9 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new SubscribeableObject(1));
             _source.Remove(1);
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(0, _results.Data.Count, "Should be 0 items in the cache");
-            Assert.AreEqual(false, _results.Messages[1].First().Current.IsSubscribed, "Should be be unsubscribed");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
+            _results.Messages[1].First().Current.IsSubscribed.Should().Be(false, "Should be be unsubscribed");
         }
 
         [Test]
@@ -77,10 +78,10 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(new SubscribeableObject(1));
             _source.AddOrUpdate(new SubscribeableObject(1));
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
-            Assert.AreEqual(true, _results.Messages[1].First().Current.IsSubscribed, "Current should be subscribed");
-            Assert.AreEqual(false, _results.Messages[1].First().Previous.Value.IsSubscribed, "Previous should not be subscribed");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
+            _results.Messages[1].First().Current.IsSubscribed.Should().Be(true, "Current should be subscribed");
+            _results.Messages[1].First().Previous.Value.IsSubscribed.Should().Be(false, "Previous should not be subscribed");
         }
 
         [Test]
@@ -89,8 +90,8 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new SubscribeableObject(i)));
             _source.Clear();
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.IsTrue(_results.Messages[1].All(d => !d.Current.IsSubscribed));
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[1].All(d => !d.Current.IsSubscribed).Should().BeTrue();
         }
     }
 }

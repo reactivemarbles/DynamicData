@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reactive.Disposables;
-using System.Security.Cryptography.X509Certificates;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.ListFixtures
@@ -57,9 +57,9 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source.Add(new SubscribeableObject(1));
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(true, _results.Data.Items.First().IsSubscribed, "Should be subscribed");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().IsSubscribed.Should().Be(true, "Should be subscribed");
         }
 
         [Test]
@@ -68,9 +68,9 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(new SubscribeableObject(1));
             _source.RemoveAt(0);
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(0, _results.Data.Count, "Should be 0 items in the cache");
-            Assert.AreEqual(false, _results.Messages[1].First().Item.Current.IsSubscribed, "Should be be unsubscribed");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
+            _results.Messages[1].First().Item.Current.IsSubscribed.Should().Be(false, "Should be be unsubscribed");
         }
 
         //[Test]
@@ -91,11 +91,11 @@ namespace DynamicData.Tests.ListFixtures
             _source.AddRange(Enumerable.Range(1, 10).Select(i => new SubscribeableObject(i)));
             _source.Clear();
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
 
             var items = _results.Messages[0].SelectMany(x => x.Range);
 
-            Assert.IsTrue(items.All(d => !d.IsSubscribed));
+            items.All(d => !d.IsSubscribed).Should().BeTrue();
         }
     }
 }

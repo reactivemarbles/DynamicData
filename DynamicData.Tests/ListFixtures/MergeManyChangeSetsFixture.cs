@@ -34,13 +34,13 @@ namespace DynamicData.Tests.ListFixtures
             3.Should().Be(d.Count);
             b.Add(5);
             4.Should().Be(d.Count);
-            CollectionAssert.AreEquivalent(d.Items, new[] { 1, 2, 3, 5 });
+            new[] {1, 2, 3, 5}.ShouldAllBeEquivalentTo(d.Items);
 
             b.Clear();
 
             // Fails below
             2.Should().Be(d.Count);
-            CollectionAssert.AreEquivalent(d.Items, new[] { 1, 2 });
+            new[] {1, 2}.ShouldAllBeEquivalentTo(d.Items);
         }
     }
 }

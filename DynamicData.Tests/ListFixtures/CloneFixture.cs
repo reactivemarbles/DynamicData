@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
+using FluentAssertions;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -39,8 +40,8 @@ namespace DynamicData.Tests.ListFixtures
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _collection.Count, "Should be 1 item in the collection");
-            Assert.AreEqual(person, _collection.First(), "Should be same person");
+            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+            _collection.First().Should().Be(person, "Should be same person");
         }
 
         [Test]
@@ -51,8 +52,8 @@ namespace DynamicData.Tests.ListFixtures
             _source.AddOrUpdate(person);
             _source.AddOrUpdate(personUpdated);
 
-            Assert.AreEqual(1, _collection.Count, "Should be 1 item in the collection");
-            Assert.AreEqual(personUpdated, _collection.First(), "Should be updated person");
+            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+            _collection.First().Should().Be(personUpdated, "Should be updated person");
         }
 
         [Test]
@@ -62,7 +63,7 @@ namespace DynamicData.Tests.ListFixtures
             _source.AddOrUpdate(person);
             _source.Remove(person);
 
-            Assert.AreEqual(0, _collection.Count, "Should be 1 item in the collection");
+            _collection.Count.Should().Be(0, "Should be 1 item in the collection");
         }
 
         [Test]
@@ -71,8 +72,8 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToList();
             _source.AddOrUpdate(people);
 
-            Assert.AreEqual(100, _collection.Count, "Should be 100 items in the collection");
-            CollectionAssert.AreEquivalent(people, _collection, "Collections should be equivalent");
+            _collection.Count.Should().Be(100, "Should be 100 items in the collection");
+            _collection.ShouldAllBeEquivalentTo(_collection, "Collections should be equivalent");
         }
 
         [Test]
@@ -81,7 +82,7 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToList();
             _source.AddOrUpdate(people);
             _source.Clear();
-            Assert.AreEqual(0, _collection.Count, "Should be 100 items in the collection");
+            _collection.Count.Should().Be(0, "Should be 100 items in the collection");
         }
     }
 }

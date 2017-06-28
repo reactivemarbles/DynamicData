@@ -1,6 +1,7 @@
 ﻿using System;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.Kernal
@@ -13,8 +14,8 @@ namespace DynamicData.Tests.Kernal
         {
             var person = new Person("Name", 20);
             var option = Optional.Some(person);
-            Assert.IsTrue(option.HasValue, "HasValue should be true");
-            Assert.IsTrue(ReferenceEquals(person, option.Value), "Shuld be same person");
+            option.HasValue.Should().BeTrue();
+            ReferenceEquals(person, option.Value).Should().BeTrue();
         }
 
         [Test]
@@ -23,8 +24,8 @@ namespace DynamicData.Tests.Kernal
             var person = new Person("Name", 20);
             Optional<Person> option = person;
 
-            Assert.IsTrue(option.HasValue, "HasValue should be true");
-            Assert.IsTrue(ReferenceEquals(person, option.Value), "Shuld be same person");
+            option.HasValue.Should().BeTrue();
+            ReferenceEquals(person, option.Value).Should().BeTrue();
         }
 
         [Test]
@@ -32,7 +33,7 @@ namespace DynamicData.Tests.Kernal
         {
             Person person = null;
             var option = Optional.Some(person);
-            Assert.IsFalse(option.HasValue, "HasValue should be false");
+            option.HasValue.Should().BeFalse();
         }
 
         [Test]
@@ -40,14 +41,14 @@ namespace DynamicData.Tests.Kernal
         {
             Person person = null;
             Optional<Person> option = person;
-            Assert.IsFalse(option.HasValue, "HasValue should be false");
+            option.HasValue.Should().BeFalse();
         }
 
         [Test]
         public void OptionNoneHasNoValue()
         {
             var option = Optional.None<IChangeSet<Person, string>>();
-            Assert.IsFalse(option.HasValue, "HasValue should be false");
+            option.HasValue.Should().BeFalse();
         }
 
         [Test]
@@ -59,10 +60,10 @@ namespace DynamicData.Tests.Kernal
             bool elseactioninvoked = false;
 
             source.IfHasValue(p => ifactioninvoked = true)
-                  .Else(() => elseactioninvoked = true);
+                .Else(() => elseactioninvoked = true);
 
-            Assert.IsTrue(ifactioninvoked, "If action should  be invoked");
-            Assert.IsFalse(elseactioninvoked, "Else action should not be invoked");
+            ifactioninvoked.Should().BeTrue();
+            elseactioninvoked.Should().BeFalse();
         }
 
         [Test]
@@ -74,10 +75,10 @@ namespace DynamicData.Tests.Kernal
             bool elseactioninvoked = false;
 
             source.IfHasValue(p => ifactioninvoked = true)
-                  .Else(() => elseactioninvoked = true);
+                .Else(() => elseactioninvoked = true);
 
-            Assert.IsFalse(ifactioninvoked, "If action should not be invoked");
-            Assert.IsTrue(elseactioninvoked, "Else action should  be invoked");
+            ifactioninvoked.Should().BeFalse();
+            elseactioninvoked.Should().BeTrue();
         }
     }
 }

@@ -41,7 +41,7 @@ namespace DynamicData.Tests.CacheFixtures
             _people.AddOrUpdate(people);
 
             _result.Data.Count.Should().Be(1);
-            Assert.IsNull(_result.Data.Items.First().Parent);
+            _result.Data.Items.First().Parent.Should().BeNull();
         }
 
 
@@ -166,7 +166,7 @@ namespace DynamicData.Tests.CacheFixtures
                     .ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
 
                 var children = result.Children;
-                CollectionAssert.AreEquivalent(grouping, children);
+                children.ShouldAllBeEquivalentTo(grouping);
             });
         }
 

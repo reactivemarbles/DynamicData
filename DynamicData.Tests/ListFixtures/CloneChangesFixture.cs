@@ -184,7 +184,7 @@ namespace DynamicData.Tests.ListFixtures
 
             clone.Clone(changes);
 
-            Assert.True(itemMoved);
+            itemMoved.Should().BeTrue();
         }
     }
 }

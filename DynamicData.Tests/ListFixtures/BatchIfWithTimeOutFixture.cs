@@ -1,6 +1,6 @@
 using System;
 using System.Reactive.Subjects;
-using System.Reactive.Linq;
+using FluentAssertions;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
@@ -45,7 +45,7 @@ namespace DynamicData.Tests.ListFixtures
 
             //go forward an arbitary amount of time
             // _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-            Assert.AreEqual(1, _results.Messages.Count, "There should be no messages");
+            _results.Messages.Count.Should().Be(1, "There should be no messages");
         }
 
         [Test]
@@ -57,7 +57,7 @@ namespace DynamicData.Tests.ListFixtures
 
             _source.Add(new Person("A", 1));
 
-            Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
+            _results.Messages.Count.Should().Be(0, "There should be no messages");
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.ListFixtures
 
             //go forward an arbitary amount of time
             _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 update");
+            _results.Messages.Count.Should().Be(1, "Should be 1 update");
         }
 
         [Test]
@@ -80,14 +80,14 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(new Person("A", 1));
 
             //go forward an arbitary amount of time
-            Assert.AreEqual(0, _results.Messages.Count, "There should be no messages");
+            _results.Messages.Count.Should().Be(0, "There should be no messages");
 
             _pausingSubject.OnNext(false);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
             _source.Add(new Person("B", 1));
 
-            Assert.AreEqual(2, _results.Messages.Count, "There should be no messages");
+            _results.Messages.Count.Should().Be(2, "There should be no messages");
         }
     }
 }

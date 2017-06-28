@@ -190,14 +190,12 @@
     <Compile Include="CacheFixtures\WatchFixture.cs" />
     <Compile Include="Kernal\CacheUpdaterFixture.cs" />
     <Compile Include="Kernal\SourceUpdaterFixture.cs" />
-    <Compile Include="Kernal\DistinctUpdateCollectionFixture.cs" />
     <Compile Include="Kernal\DistinctUpdateFixture.cs" />
     <Compile Include="Kernal\ErrorHandlingFixture.cs" />
     <Compile Include="CacheFixtures\FilterFixture.cs" />
     <Compile Include="Kernal\OptionFixture.cs" />
     <Compile Include="CacheFixtures\TimeExpiryFixture.cs" />
     <Compile Include="Kernal\KeyValueFixture.cs" />
-    <Compile Include="Kernal\UpdateCollectionFixture.cs" />
     <Compile Include="Kernal\UpdateFixture.cs" />
     <Compile Include="CacheFixtures\DistinctFixture.cs" />
     <Compile Include="CacheFixtures\GroupFixture.cs" />

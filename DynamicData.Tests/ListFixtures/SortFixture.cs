@@ -1,8 +1,7 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Binding;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using NUnit.Framework;
@@ -40,12 +39,12 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -92,7 +91,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -108,7 +107,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var expectedResult = people.OrderBy(p => p, _comparer).Take(10);
             var actualResult = _results.Data.Items;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -124,7 +123,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var expectedResult = people.OrderByDescending(p => p, _comparer).Take(10);
             var actualResult = _results.Data.Items;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -133,16 +132,16 @@ namespace DynamicData.Tests.ListFixtures
             var people = _generator.Take(100).ToList();
             _source.AddRange(people);
 
-            var odd = people.Select((p, idx) => new { p, idx }).Where(x => x.idx % 2 == 1).Select(x => x.p).ToArray();
+            var odd = people.Select((p, idx) => new {p, idx}).Where(x => x.idx % 2 == 1).Select(x => x.p).ToArray();
 
             _source.RemoveMany(odd);
 
-            Assert.AreEqual(50, _results.Data.Count, "Should be 99 people in the cache");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 update messages");
+            _results.Data.Count.Should().Be(50, "Should be 99 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
 
             var expectedResult = people.Except(odd).OrderByDescending(p => p, _comparer).ToArray();
             var actualResult = _results.Data.Items;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
     }
 }

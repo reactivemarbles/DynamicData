@@ -34,7 +34,7 @@ namespace DynamicData.Tests.ListFixtures
             _cache.EditDiff(newPeople, Person.NameAgeGenderComparer);
 
             _cache.Count.Should().Be(15);
-            CollectionAssert.AreEquivalent(newPeople, _cache.Items);
+            _cache.Items.ShouldAllBeEquivalentTo(newPeople);
             var lastChange = _result.Messages.Last();
             lastChange.Adds.Should().Be(5);
         }
@@ -47,7 +47,7 @@ namespace DynamicData.Tests.ListFixtures
             _cache.EditDiff(newPeople, Person.NameAgeGenderComparer);
 
             _cache.Count.Should().Be(10);
-            CollectionAssert.AreEquivalent(newPeople, _cache.Items);
+            _cache.Items.ShouldAllBeEquivalentTo(newPeople);
             _result.Messages.Count.Should().Be(1);
         }
 
@@ -63,7 +63,7 @@ namespace DynamicData.Tests.ListFixtures
             lastChange.Adds.Should().Be(3);
             lastChange.Removes.Should().Be(10);
 
-            CollectionAssert.AreEquivalent(newList, _cache.Items);
+            _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
 
         [Test]
@@ -78,7 +78,7 @@ namespace DynamicData.Tests.ListFixtures
             lastChange.Adds.Should().Be(0);
             lastChange.Removes.Should().Be(3);
 
-            CollectionAssert.AreEquivalent(newList, _cache.Items);
+            _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
 
 
@@ -95,7 +95,7 @@ namespace DynamicData.Tests.ListFixtures
             lastChange.Adds.Should().Be(5);
             lastChange.Removes.Should().Be(5);
 
-            CollectionAssert.AreEquivalent(newList, _cache.Items);
+            _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
     }
 }

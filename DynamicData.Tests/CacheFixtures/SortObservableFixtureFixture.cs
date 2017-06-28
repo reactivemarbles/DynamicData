@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Binding;
-using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using NUnit.Framework;
@@ -52,12 +51,12 @@ namespace DynamicData.Tests.CacheFixtures
             var people = _generator.Take(100).ToArray();
             _cache.AddOrUpdate(people);
 
-            Assert.AreEqual(100, _results.Data.Count, "Should be 100 people in the cache");
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -72,7 +71,7 @@ namespace DynamicData.Tests.CacheFixtures
             var expectedResult = people.OrderBy(p => p, desc).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
         [Test]
@@ -88,7 +87,7 @@ namespace DynamicData.Tests.CacheFixtures
             var items = _results.Messages.Last().SortedItems;
             var actualResult = items.ToList();
             var sortReason = items.SortReason;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
             sortReason.Should().Be(SortReason.Reorder);
         }
 
@@ -105,7 +104,7 @@ namespace DynamicData.Tests.CacheFixtures
             var items = _results.Messages.Last().SortedItems;
             var actualResult = items.ToList();
             var sortReason = items.SortReason;
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
             sortReason.Should().Be(SortReason.Reset);
         }
 
@@ -133,7 +132,7 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 adaptor.Adapt(message, list);
             }
-            CollectionAssert.AreEquivalent(expected, list);
+            list.ShouldAllBeEquivalentTo(expected);
         }
 
         [Test]
@@ -146,7 +145,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[2].SortedItems.ToList();
-            CollectionAssert.AreEquivalent(expectedResult, actualResult);
+            actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
     }
 }

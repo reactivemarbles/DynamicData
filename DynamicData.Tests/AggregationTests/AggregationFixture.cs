@@ -3,6 +3,7 @@ using System.Reactive.Linq;
 using DynamicData.Aggregation;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
@@ -58,8 +59,8 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(3, counter, "Should be 3 updates");
-            Assert.AreEqual(60, latest, "Accumulated value should be 60");
+            counter.Should().Be(3, "Should be 3 updates");
+            latest.Should().Be(60, "Accumulated value should be 60");
             _source.AddOrUpdate(new Person("A", 5));
 
             accumulator.Dispose();
@@ -80,8 +81,8 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("A", 15));
 
-            Assert.AreEqual(2, counter, "Should be 2 updates");
-            Assert.AreEqual(15, latest, "Accumulated value should be 60");
+            counter.Should().Be(2, "Should be 2 updates");
+            latest.Should().Be(15, "Accumulated value should be 60");
             accumulator.Dispose();
         }
     }

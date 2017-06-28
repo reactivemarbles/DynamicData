@@ -166,7 +166,7 @@ namespace DynamicData.Tests.CacheFixtures
                     .ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
 
                 var children = result.Children;
-                CollectionAssert.AreEquivalent(grouping, children);
+                children.ShouldAllBeEquivalentTo(grouping);
             });
         }
 

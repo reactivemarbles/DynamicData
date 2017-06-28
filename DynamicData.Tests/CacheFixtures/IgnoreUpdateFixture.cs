@@ -1,5 +1,6 @@
 ﻿using System;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -28,8 +29,8 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(person);
             _source.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
         }
 
         [TearDown]

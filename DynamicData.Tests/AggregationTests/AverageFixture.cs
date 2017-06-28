@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
@@ -36,7 +37,7 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(20, avg, "Average value should be 20");
+            avg.Should().Be(20, "Average value should be 20");
 
             accumulator.Dispose();
         }
@@ -47,15 +48,15 @@ namespace DynamicData.Tests.AggregationTests
             double avg = 0;
 
             var accumulator = _source.Connect()
-                                     .Avg(p => p.Age) 
-                                     .Subscribe(x => avg = x);
+                .Avg(p => p.Age)
+                .Subscribe(x => avg = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
             _source.Remove("A");
-            Assert.AreEqual(25, avg, "Average value should be 25 after remove");
+            avg.Should().Be(25, "Average value should be 25 after remove");
             accumulator.Dispose();
         }
 
@@ -67,20 +68,20 @@ namespace DynamicData.Tests.AggregationTests
             var somepropChanged = _source.Connect().WhenValueChanged(p => p.Age);
 
             var accumulator = _source.Connect()
-                                     .Avg(p => p.Age)
-                                     .InvalidateWhen(somepropChanged)
-                                     .Subscribe(x => avg = x);
+                .Avg(p => p.Age)
+                .InvalidateWhen(somepropChanged)
+                .Subscribe(x => avg = x);
 
             var personb = new Person("B", 5);
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(personb);
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(15, avg, "Sum should be 15 after inline change");
+            avg.Should().Be(15, "Sum should be 15 after inline change");
 
             personb.Age = 20;
 
-            Assert.AreEqual(20, avg, "Sum should be 20 after inline change");
+            avg.Should().Be(20, "Sum should be 20 after inline change");
             accumulator.Dispose();
         }
 

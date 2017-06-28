@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -47,9 +48,9 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(_transformFactory(person), _results.Data.Items.First(), "Should be same person");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
         }
 
         [Test]
@@ -58,8 +59,8 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Person", 3);
             _source.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _errors.Count, "Should be 1 error reported");
-            Assert.AreEqual(0, _results.Messages.Count, "Should be no messages");
+            _errors.Count.Should().Be(1, "Should be 1 error reported");
+            _results.Messages.Count.Should().Be(0, "Should be no messages");
         }
 
         [Test]
@@ -74,11 +75,11 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(update2);
             _source.AddOrUpdate(update3);
 
-            Assert.AreEqual(1, _errors.Count, "Should be 1 error reported");
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 messages");
+            _errors.Count.Should().Be(1, "Should be 1 error reported");
+            _results.Messages.Count.Should().Be(2, "Should be 2 messages");
 
-            Assert.AreEqual(1, _results.Data.Count, "Should 1 item in the cache");
-            Assert.AreEqual(_transformFactory(update2), _results.Data.Items.First(), "Change 2 shoud be the only item cached");
+            _results.Data.Count.Should().Be(1, "Should 1 item in the cache");
+            _results.Data.Items.First().Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
         }
 
         [Test]
@@ -96,11 +97,11 @@ namespace DynamicData.Tests.CacheFixtures
                 updater.AddOrUpdate(update3);
             });
 
-            Assert.AreEqual(1, _errors.Count, "Should be 1 error reported");
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 messages");
+            _errors.Count.Should().Be(1, "Should be 1 error reported");
+            _results.Messages.Count.Should().Be(1, "Should be 1 messages");
 
-            Assert.AreEqual(1, _results.Data.Count, "Should 1 item in the cache");
-            Assert.AreEqual(_transformFactory(update2), _results.Data.Items.First(), "Change 2 shoud be the only item cached");
+            _results.Data.Count.Should().Be(1, "Should 1 item in the cache");
+            _results.Data.Items.First().Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
         }
 
         [Test]
@@ -111,12 +112,12 @@ namespace DynamicData.Tests.CacheFixtures
             _source.AddOrUpdate(people);
             _source.Clear();
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
 
-            Assert.AreEqual(33, _errors.Count, "Should be 33 errors");
-            Assert.AreEqual(67, _results.Messages[0].Adds, "Should be 67 add");
-            Assert.AreEqual(67, _results.Messages[1].Removes, "Should be 67 removes");
-            Assert.AreEqual(0, _results.Data.Count, "Should be nothing cached");
+            _errors.Count.Should().Be(33, "Should be 33 errors");
+            _results.Messages[0].Adds.Should().Be(67, "Should be 67 add");
+            _results.Messages[1].Removes.Should().Be(67, "Should be 67 removes");
+            _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
     }
 }

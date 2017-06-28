@@ -1,6 +1,7 @@
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 using System;
+using FluentAssertions;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -32,7 +33,7 @@ namespace DynamicData.Tests.ListFixtures
             var subscription = _source.Connect()
                                       .QueryWhenChanged()
                                       .Subscribe(x => invoked = true);
-            Assert.IsTrue(invoked, "Should have received on next");
+            invoked.Should().BeTrue();
             subscription.Dispose();
         }
 
@@ -41,14 +42,14 @@ namespace DynamicData.Tests.ListFixtures
         {
             bool invoked = false;
             var subscription = _source.Connect()
-                                      .QueryWhenChanged(q => q.Count)
-                                      .Subscribe(query => invoked = true);
+                .QueryWhenChanged(q => q.Count)
+                .Subscribe(query => invoked = true);
 
             var person = new Person("A", 1);
             _source.Add(person);
             _source.Remove(person);
 
-            Assert.IsTrue(invoked, "Should have received on next");
+            invoked.Should().BeTrue();
             subscription.Dispose();
         }
 
@@ -58,13 +59,13 @@ namespace DynamicData.Tests.ListFixtures
             bool invoked = false;
 
             var subscription = _source.Connect()
-                                      .QueryWhenChanged()
-                                      .Subscribe(x => invoked = true);
+                .QueryWhenChanged()
+                .Subscribe(x => invoked = true);
 
-            Assert.IsFalse(invoked, "Should have received on next");
+            invoked.Should().BeFalse();
 
             _source.Add(new Person("A", 1));
-            Assert.IsTrue(invoked, "Should have received on next");
+            invoked.Should().BeTrue();
 
             subscription.Dispose();
         }
@@ -75,9 +76,9 @@ namespace DynamicData.Tests.ListFixtures
             bool invoked = false;
             _source.Add(new Person("A", 1));
             var subscription = _source.Connect()
-                                      .QueryWhenChanged(query => query.Count)
-                                      .Subscribe(x => invoked = true);
-            Assert.IsTrue(invoked, "Should have received on next");
+                .QueryWhenChanged(query => query.Count)
+                .Subscribe(x => invoked = true);
+            invoked.Should().BeTrue();
             subscription.Dispose();
         }
 
@@ -87,13 +88,13 @@ namespace DynamicData.Tests.ListFixtures
             bool invoked = false;
 
             var subscription = _source.Connect()
-                                      .QueryWhenChanged(query => query.Count)
-                                      .Subscribe(x => invoked = true);
+                .QueryWhenChanged(query => query.Count)
+                .Subscribe(x => invoked = true);
 
-            Assert.IsFalse(invoked, "Should have received on next");
+            invoked.Should().BeFalse();
 
             _source.Add(new Person("A", 1));
-            Assert.IsTrue(invoked, "Should have received on next");
+            invoked.Should().BeTrue();
 
             subscription.Dispose();
         }

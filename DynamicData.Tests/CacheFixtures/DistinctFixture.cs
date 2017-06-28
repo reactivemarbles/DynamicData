@@ -1,6 +1,7 @@
-﻿using System;
+﻿
 using System.Linq;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -30,9 +31,9 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.AddOrUpdate(new Person("Person1", 20));
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
         [Test]
@@ -45,11 +46,11 @@ namespace DynamicData.Tests.CacheFixtures
                 updater.AddOrUpdate(new Person("Person3", 22));
             });
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(3, _results.Data.Count, "Should be 3 items in the cache");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(3, "Should be 3 items in the cache");
 
-            CollectionAssert.AreEquivalent(new[] { 20, 21, 22 }, _results.Data.Items);
-            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
+            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {20, 21, 22});
+            _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
         [Test]
@@ -62,9 +63,9 @@ namespace DynamicData.Tests.CacheFixtures
                 updater.AddOrUpdate(new Person("Person1", 20));
             });
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 update message");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
-            Assert.AreEqual(20, _results.Data.Items.First(), "Should 20");
+            _results.Messages.Count.Should().Be(1, "Should be 1 update message");
+            _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
+            _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
         [Test]
@@ -72,11 +73,11 @@ namespace DynamicData.Tests.CacheFixtures
         {
             _source.AddOrUpdate(new Person("Person1", 20));
             _source.Remove(new Person("Person1", 20));
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 1 update message");
-            Assert.AreEqual(0, _results.Data.Count, "Should be 1 items in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 1 update message");
+            _results.Data.Count.Should().Be(0, "Should be 1 items in the cache");
 
-            Assert.AreEqual(1, _results.Messages.First().Adds, "First message should be an add");
-            Assert.AreEqual(1, _results.Messages.Skip(1).First().Removes, "Second messsage should be a remove");
+            _results.Messages.First().Adds.Should().Be(1, "First message should be an add");
+            _results.Messages.Skip(1).First().Removes.Should().Be(1, "Second messsage should be a remove");
         }
 
         [Test]
@@ -94,12 +95,12 @@ namespace DynamicData.Tests.CacheFixtures
                 updater.AddOrUpdate(new Person("Person4", 14));
             });
 
-            CollectionAssert.AreEquivalent(new[] { 1, 12, 13, 14 }, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {1, 12, 13, 14});
 
             //This previously threw
             _source.Remove(new Person("Person3", 13));
 
-            CollectionAssert.AreEquivalent(new[] { 1, 12, 14 }, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {1, 12, 14});
         }
     }
 }

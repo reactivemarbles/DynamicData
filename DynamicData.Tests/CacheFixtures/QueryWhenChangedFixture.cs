@@ -1,6 +1,7 @@
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 using System;
+using FluentAssertions;
 
 namespace DynamicData.Tests.CacheFixtures
 {
@@ -32,7 +33,7 @@ namespace DynamicData.Tests.CacheFixtures
             var subscription = _source.Connect()
                                       .QueryWhenChanged()
                                       .Subscribe(x => invoked = true);
-            Assert.IsTrue(invoked, "Should have received on next");
+            invoked.Should().BeTrue();
             subscription.Dispose();
         }
 
@@ -42,13 +43,13 @@ namespace DynamicData.Tests.CacheFixtures
             bool invoked = false;
 
             var subscription = _source.Connect()
-                                      .QueryWhenChanged()
-                                      .Subscribe(x => invoked = true);
+                .QueryWhenChanged()
+                .Subscribe(x => invoked = true);
 
-            Assert.IsFalse(invoked, "Should have received on next");
+            invoked.Should().BeFalse();
 
             _source.AddOrUpdate(new Person("A", 1));
-            Assert.IsTrue(invoked, "Should have received on next");
+            invoked.Should().BeTrue();
 
             subscription.Dispose();
         }
@@ -59,9 +60,9 @@ namespace DynamicData.Tests.CacheFixtures
             bool invoked = false;
             _source.AddOrUpdate(new Person("A", 1));
             var subscription = _source.Connect()
-                                      .QueryWhenChanged(query => query.Count)
-                                      .Subscribe(x => invoked = true);
-            Assert.IsTrue(invoked, "Should have received on next");
+                .QueryWhenChanged(query => query.Count)
+                .Subscribe(x => invoked = true);
+            invoked.Should().BeTrue();
             subscription.Dispose();
         }
 
@@ -71,13 +72,13 @@ namespace DynamicData.Tests.CacheFixtures
             bool invoked = false;
 
             var subscription = _source.Connect()
-                                      .QueryWhenChanged(query => query.Count)
-                                      .Subscribe(x => invoked = true);
+                .QueryWhenChanged(query => query.Count)
+                .Subscribe(x => invoked = true);
 
-            Assert.IsFalse(invoked, "Should have received on next");
+            invoked.Should().BeFalse();
 
             _source.AddOrUpdate(new Person("A", 1));
-            Assert.IsTrue(invoked, "Should have received on next");
+            invoked.Should().BeTrue();
 
             subscription.Dispose();
         }

@@ -3,6 +3,7 @@ using System.Linq;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
+using FluentAssertions;
 
 namespace DynamicData.Tests.CacheFixtures
 {
@@ -45,10 +46,10 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.AddOrUpdate(people);
 
-            Assert.IsTrue(IsContainedIn("P1", AgeBracket.Under20));
-            Assert.IsTrue(IsContainedIn("P2", AgeBracket.Under20));
-            Assert.IsTrue(IsContainedIn("P3", AgeBracket.Adult));
-            Assert.IsTrue(IsContainedIn("P4", AgeBracket.Pensioner));
+            IsContainedIn("P1", AgeBracket.Under20).Should().BeTrue();
+            IsContainedIn("P2", AgeBracket.Under20).Should().BeTrue();
+            IsContainedIn("P3", AgeBracket.Adult).Should().BeTrue();
+            IsContainedIn("P4", AgeBracket.Pensioner).Should().BeTrue();
 
             p1.Age = 60;
             p2.Age = 80;
@@ -57,15 +58,15 @@ namespace DynamicData.Tests.CacheFixtures
 
             _controller.RefreshGroup();
 
-            Assert.IsTrue(IsContainedIn("P1", AgeBracket.Adult));
-            Assert.IsTrue(IsContainedIn("P2", AgeBracket.Pensioner));
-            Assert.IsTrue(IsContainedIn("P3", AgeBracket.Under20));
-            Assert.IsTrue(IsContainedIn("P4", AgeBracket.Adult));
+            IsContainedIn("P1", AgeBracket.Adult).Should().BeTrue();
+            IsContainedIn("P2", AgeBracket.Pensioner).Should().BeTrue();
+            IsContainedIn("P3", AgeBracket.Under20).Should().BeTrue();
+            IsContainedIn("P4", AgeBracket.Adult).Should().BeTrue();
 
-            Assert.IsTrue(IsContainedOnlyInOneGroup("P1"));
-            Assert.IsTrue(IsContainedOnlyInOneGroup("P2"));
-            Assert.IsTrue(IsContainedOnlyInOneGroup("P3"));
-            Assert.IsTrue(IsContainedOnlyInOneGroup("P4"));
+            IsContainedOnlyInOneGroup("P1").Should().BeTrue();
+            IsContainedOnlyInOneGroup("P2").Should().BeTrue();
+            IsContainedOnlyInOneGroup("P3").Should().BeTrue();
+            IsContainedOnlyInOneGroup("P4").Should().BeTrue();
         }
 
         [Test]
@@ -75,14 +76,14 @@ namespace DynamicData.Tests.CacheFixtures
             var p2 = new Person("P2", 15);
             var p3 = new Person("P3", 30);
             var p4 = new Person("P4", 70);
-            var people = new[] { p1, p2, p3, p4 };
+            var people = new[] {p1, p2, p3, p4};
 
             _source.AddOrUpdate(people);
 
-            Assert.IsTrue(IsContainedIn("P1", AgeBracket.Under20));
-            Assert.IsTrue(IsContainedIn("P2", AgeBracket.Under20));
-            Assert.IsTrue(IsContainedIn("P3", AgeBracket.Adult));
-            Assert.IsTrue(IsContainedIn("P4", AgeBracket.Pensioner));
+            IsContainedIn("P1", AgeBracket.Under20).Should().BeTrue();
+            IsContainedIn("P2", AgeBracket.Under20).Should().BeTrue();
+            IsContainedIn("P3", AgeBracket.Adult).Should().BeTrue();
+            IsContainedIn("P4", AgeBracket.Pensioner).Should().BeTrue();
 
             p1.Age = 60;
             p2.Age = 80;
@@ -91,17 +92,17 @@ namespace DynamicData.Tests.CacheFixtures
 
             // _controller.RefreshGroup();
 
-            _source.Refresh(new[] { p1, p2, p3, p4 });
+            _source.Refresh(new[] {p1, p2, p3, p4});
 
-            Assert.IsTrue(IsContainedIn("P1", AgeBracket.Adult));
-            Assert.IsTrue(IsContainedIn("P2", AgeBracket.Pensioner));
-            Assert.IsTrue(IsContainedIn("P3", AgeBracket.Under20));
-            Assert.IsTrue(IsContainedIn("P4", AgeBracket.Adult));
+            IsContainedIn("P1", AgeBracket.Adult).Should().BeTrue();
+            IsContainedIn("P2", AgeBracket.Pensioner).Should().BeTrue();
+            IsContainedIn("P3", AgeBracket.Under20).Should().BeTrue();
+            IsContainedIn("P4", AgeBracket.Adult).Should().BeTrue();
 
-            Assert.IsTrue(IsContainedOnlyInOneGroup("P1"));
-            Assert.IsTrue(IsContainedOnlyInOneGroup("P2"));
-            Assert.IsTrue(IsContainedOnlyInOneGroup("P3"));
-            Assert.IsTrue(IsContainedOnlyInOneGroup("P4"));
+            IsContainedOnlyInOneGroup("P1").Should().BeTrue();
+            IsContainedOnlyInOneGroup("P2").Should().BeTrue();
+            IsContainedOnlyInOneGroup("P3").Should().BeTrue();
+            IsContainedOnlyInOneGroup("P4").Should().BeTrue();
         }
 
         private bool IsContainedIn(string name, AgeBracket bracket)

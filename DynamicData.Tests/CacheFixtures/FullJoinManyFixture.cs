@@ -169,7 +169,7 @@ namespace DynamicData.Tests.CacheFixtures
 
                 var result = _result.Data.Lookup(parentAndChild.ParentId).ValueOr(() => null);
                 var children = result.Children;
-                CollectionAssert.AreEquivalent(parentAndChild.Children, children);
+                children.ShouldBeEquivalentTo(parentAndChild.Children);
             });
         }
 

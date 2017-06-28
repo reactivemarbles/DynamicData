@@ -3,6 +3,7 @@ using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using FluentAssertions;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -14,9 +15,9 @@ namespace DynamicData.Tests.ListFixtures
         private IDisposable _disposable;
         private List<Person> _target;
 
-        private Person person1 = new Person("One", 1);
-        private Person person2 = new Person("Two", 2);
-        private Person person3 = new Person("Three", 3);
+        private readonly Person person1 = new Person("One", 1);
+        private readonly Person person2 = new Person("Two", 2);
+        private readonly Person person3 = new Person("Three", 3);
 
         [SetUp]
         public void Initialise()
@@ -45,14 +46,14 @@ namespace DynamicData.Tests.ListFixtures
         public void ShouldLimitSizeOfBoundCollection()
         {
             _scheduler.AdvanceTo(2);
-            Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection");
+            _target.Count.Should().Be(2, "Should be 2 item in target collection");
 
             _scheduler.AdvanceTo(3);
-            Assert.AreEqual(2, _target.Count, "Should be 2 item in target collection because of size limit");
+            _target.Count.Should().Be(2, "Should be 2 item in target collection because of size limit");
             
             var expected = new[] { person2, person3 };
 
-            CollectionAssert.AreEquivalent(expected, _target);
+            _target.ShouldAllBeEquivalentTo(expected);
         }
     }
 }

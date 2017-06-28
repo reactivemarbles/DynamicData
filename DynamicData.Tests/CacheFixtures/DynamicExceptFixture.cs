@@ -47,8 +47,8 @@ namespace DynamicData.Tests.CacheFixtures
             var person = new Person("Adult1", 50);
             _source1.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
         }
 
         [Test]
@@ -61,8 +61,8 @@ namespace DynamicData.Tests.CacheFixtures
             _source2.AddOrUpdate(person);
             _source1.AddOrUpdate(person);
 
-            Assert.AreEqual(0, _results.Messages.Count, "Should have no updates");
-            Assert.AreEqual(0, _results.Data.Count, "Cache should have no items");
+            _results.Messages.Count.Should().Be(0, "Should have no updates");
+            _results.Data.Count.Should().Be(0, "Cache should have no items");
         }
 
         [Test]
@@ -76,8 +76,8 @@ namespace DynamicData.Tests.CacheFixtures
             _source1.AddOrUpdate(person);
 
             _source2.Remove(person);
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Cache should have no items");
+            _results.Messages.Count.Should().Be(1, "Should be 2 updates");
+            _results.Data.Count.Should().Be(1, "Cache should have no items");
         }
 
         [Test]
@@ -94,15 +94,15 @@ namespace DynamicData.Tests.CacheFixtures
             _source.Add(_source3.Connect());
 
             _results.Data.Count.Should().Be(80);
-            CollectionAssert.AreEquivalent(items.Skip(10).Take(80), _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(items.Skip(10).Take(80));
 
             _source.RemoveAt(2);
             _results.Data.Count.Should().Be(90);
-            CollectionAssert.AreEquivalent(items.Skip(10), _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(items.Skip(10));
 
             _source.RemoveAt(0);
             _results.Data.Count.Should().Be(10);
-            CollectionAssert.AreEquivalent(items.Take(10), _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(items.Take(10));
         }
 
         [Test]

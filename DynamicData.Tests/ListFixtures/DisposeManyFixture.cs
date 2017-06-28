@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using FluentAssertions;
 
 namespace DynamicData.Tests.ListFixtures
 {
@@ -29,9 +30,9 @@ namespace DynamicData.Tests.ListFixtures
         {
             _source.Add(new DisposableObject(1));
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(false, _results.Data.Items.First().IsDisposed, "Should not be disposed");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().IsDisposed.Should().Be(false, "Should not be disposed");
         }
 
         [Test]
@@ -40,9 +41,9 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(new DisposableObject(1));
             _source.RemoveAt(0);
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(0, _results.Data.Count, "Should be 0 items in the cache");
-            Assert.AreEqual(true, _results.Messages[1].First().Item.Current.IsDisposed, "Should be disposed");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
+            _results.Messages[1].First().Item.Current.IsDisposed.Should().Be(true, "Should be disposed");
         }
 
         [Test]
@@ -51,10 +52,10 @@ namespace DynamicData.Tests.ListFixtures
             _source.Add(new DisposableObject(1));
             _source.ReplaceAt(0, new DisposableObject(1));
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 items in the cache");
-            Assert.AreEqual(false, _results.Messages[1].First().Item.Current.IsDisposed, "Current should not be disposed");
-            Assert.AreEqual(true, _results.Messages[1].First().Item.Previous.Value.IsDisposed, "Previous should be disposed");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
+            _results.Messages[1].First().Item.Current.IsDisposed.Should().Be(false, "Current should not be disposed");
+            _results.Messages[1].First().Item.Previous.Value.IsDisposed.Should().Be(true, "Previous should be disposed");
         }
 
         [Test]
@@ -64,10 +65,10 @@ namespace DynamicData.Tests.ListFixtures
             _source.AddRange(toadd);
             _source.Clear();
 
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
 
             var itemsCleared = _results.Messages[1].First().Range;
-            Assert.IsTrue(itemsCleared.All(d => d.IsDisposed));
+            itemsCleared.All(d => d.IsDisposed).Should().BeTrue();
         }
 
         private class DisposableObject : IDisposable

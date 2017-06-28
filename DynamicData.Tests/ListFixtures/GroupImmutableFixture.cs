@@ -130,17 +130,17 @@ namespace DynamicData.Tests.ListFixtures
                 .ForEach(group =>
                 {
                     var grp = _results.Data.Items.First(g=> g.Key.Equals(group.Key));
-                    CollectionAssert.AreEquivalent(group.ToArray(), grp.Items);
+                    grp.Items.ShouldAllBeEquivalentTo(group.ToArray());
                 });
 
             _source.RemoveMany(initialPeople.Take(15));
 
-            initialPeople.Skip(15).GroupBy(p => p.Age)
+            initialPeople.Skip(15)
+                .GroupBy(p => p.Age)
                 .ForEach(group =>
                 {
                     var list = _results.Data.Items.First(p => p.Key == group.Key);
-                    CollectionAssert.AreEquivalent(group, list.Items);
-
+                    list.Items.ShouldAllBeEquivalentTo(group);
                 });
 
             _results.Messages.Count.Should().Be(2);
@@ -168,9 +168,8 @@ namespace DynamicData.Tests.ListFixtures
             initialPeople.GroupBy(p => p.Age)
                 .ForEach(groupContainer =>
                 {
-                    
-                    var grouping = _results.Data.Items.First(g=>g.Key == groupContainer.Key);
-                    CollectionAssert.AreEquivalent(groupContainer, grouping.Items);
+                    var grouping = _results.Data.Items.First(g => g.Key == groupContainer.Key);
+                    grouping.Items.ShouldAllBeEquivalentTo(groupContainer);
 
                 });
 

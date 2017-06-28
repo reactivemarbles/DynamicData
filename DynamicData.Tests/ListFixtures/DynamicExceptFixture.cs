@@ -82,7 +82,7 @@ namespace DynamicData.Tests.ListFixtures
             _source1.AddRange(Enumerable.Range(1, 10));
             _source2.AddRange(Enumerable.Range(6, 10));
             _results.Data.Count.Should().Be(5);
-            CollectionAssert.AreEquivalent(Enumerable.Range(1, 5), _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
         }
 
         [Test]
@@ -107,7 +107,7 @@ namespace DynamicData.Tests.ListFixtures
             _results.Data.Count.Should().Be(0);
             _source2.Clear();
             _results.Data.Count.Should().Be(5);
-            CollectionAssert.AreEquivalent(Enumerable.Range(1, 5), _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace DynamicData.Tests.ListFixtures
 
             var result = Enumerable.Range(1, 5);
             _results.Data.Count.Should().Be(5);
-            CollectionAssert.AreEquivalent(result, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(result);
 
             _source2.Edit(innerList =>
             {
@@ -133,23 +133,23 @@ namespace DynamicData.Tests.ListFixtures
 
             result = Enumerable.Range(1, 2);
             _results.Data.Count.Should().Be(2);
-            CollectionAssert.AreEquivalent(result, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(result);
 
             _source.RemoveAt(1);
             result = Enumerable.Range(1, 5);
             _results.Data.Count.Should().Be(5);
-            CollectionAssert.AreEquivalent(result, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(result);
 
             _source.Add(_source2.Connect());
             result = Enumerable.Range(1, 2);
             _results.Data.Count.Should().Be(2);
-            CollectionAssert.AreEquivalent(result, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(result);
 
             //remove root except
             _source.RemoveAt(0);
             result = Enumerable.Range(100, 5);
             _results.Data.Count.Should().Be(5);
-            CollectionAssert.AreEquivalent(result, _results.Data.Items);
+            _results.Data.Items.ShouldAllBeEquivalentTo(result);
         }
     }
 }

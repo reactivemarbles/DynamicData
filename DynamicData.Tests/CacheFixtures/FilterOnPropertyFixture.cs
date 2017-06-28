@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.CacheFixtures
@@ -17,10 +18,10 @@ namespace DynamicData.Tests.CacheFixtures
             {
                 stub.Source.AddOrUpdate(people);
 
-                Assert.That(stub.Results.Messages.Count, Is.EqualTo(1));
-                Assert.That(stub.Results.Data.Count, Is.EqualTo(82));
+                1.Should().Be(stub.Results.Messages.Count);
+                82.Should().Be(stub.Results.Data.Count);
 
-                CollectionAssert.AreEquivalent(people.Skip(18), stub.Results.Data.Items);
+                stub.Results.Data.Items.ShouldAllBeEquivalentTo(people.Skip(18));
             }
         }
 
@@ -34,8 +35,8 @@ namespace DynamicData.Tests.CacheFixtures
 
                 people[20].Age = 10;
 
-                Assert.That(stub.Results.Messages.Count, Is.EqualTo(2));
-                Assert.That(stub.Results.Data.Count, Is.EqualTo(81));
+                2.Should().Be(stub.Results.Messages.Count);
+                81.Should().Be(stub.Results.Data.Count);
             }
         }
 
@@ -49,10 +50,11 @@ namespace DynamicData.Tests.CacheFixtures
 
                 people[10].Age = 20;
 
-                Assert.That(stub.Results.Messages.Count, Is.EqualTo(2));
-                Assert.That(stub.Results.Data.Count, Is.EqualTo(83));
+                2.Should().Be(stub.Results.Messages.Count);
+                83.Should().Be(stub.Results.Data.Count);
             }
         }
+
         [Test]
         public void ChangeAValueSoItIsStillInTheFilter()
         {
@@ -63,8 +65,8 @@ namespace DynamicData.Tests.CacheFixtures
 
                 people[50].Age = 100;
 
-                Assert.That(stub.Results.Messages.Count, Is.EqualTo(1));
-                Assert.That(stub.Results.Data.Count, Is.EqualTo(82));
+                1.Should().Be(stub.Results.Messages.Count);
+                82.Should().Be(stub.Results.Data.Count);
             }
         }
 

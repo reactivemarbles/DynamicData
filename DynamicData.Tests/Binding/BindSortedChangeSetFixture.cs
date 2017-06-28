@@ -75,7 +75,7 @@ namespace DynamicData.Tests.Binding
             _source.AddOrUpdate(people);
 
             _collection.Count.Should().Be(100, "Should be 100 items in the collection");
-            CollectionAssert.AreEquivalent(people, _collection, "Collections should be equivalent");
+            _collection.ShouldAllBeEquivalentTo(_collection, "Collections should be equivalent");
         }
 
         [Test]
@@ -109,7 +109,7 @@ namespace DynamicData.Tests.Binding
             };
             _source.AddOrUpdate(_generator.Take(100));
 
-            Assert.IsTrue(invoked);
+            invoked.Should().BeTrue();
         }
 
         [Test]
@@ -128,8 +128,8 @@ namespace DynamicData.Tests.Binding
             };
             _source.AddOrUpdate(_generator.Take(24));
 
-            Assert.IsTrue(invoked);
-            Assert.IsFalse(resetinvoked, "Reset should not has been invoked");
+            invoked.Should().BeTrue();
+            resetinvoked.Should().BeFalse();
         }
     }
 }

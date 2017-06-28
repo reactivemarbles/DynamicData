@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
+using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 
@@ -42,9 +43,9 @@ namespace DynamicData.Tests.CacheFixtures
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
         [Test]
@@ -55,9 +56,9 @@ namespace DynamicData.Tests.CacheFixtures
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(50).Ticks);
 
             _source.Dispose();
-            Assert.AreEqual(2, _results.Messages.Count, "Should be 2 updates");
-            Assert.AreEqual(100, _results.Messages[0].Adds, "Should be 100 adds in the first update");
-            Assert.AreEqual(90, _results.Messages[1].Removes, "Should be 90 removes in the second update");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Adds.Should().Be(100, "Should be 100 adds in the first update");
+            _results.Messages[1].Removes.Should().Be(90, "Should be 90 removes in the second update");
         }
 
         [Test]
@@ -68,10 +69,10 @@ namespace DynamicData.Tests.CacheFixtures
 
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
 
-            Assert.AreEqual(3, _results.Messages.Count, "Should be 3 updates");
-            Assert.AreEqual(10, _results.Messages[0].Adds, "Should be 10 adds in the first update");
-            Assert.AreEqual(10, _results.Messages[1].Adds, "Should be 10 adds in the second update");
-            Assert.AreEqual(10, _results.Messages[2].Removes, "Should be 10 removes in the third update");
+            _results.Messages.Count.Should().Be(3, "Should be 3 updates");
+            _results.Messages[0].Adds.Should().Be(10, "Should be 10 adds in the first update");
+            _results.Messages[1].Adds.Should().Be(10, "Should be 10 adds in the second update");
+            _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
         }
 
         [Test]
@@ -80,9 +81,9 @@ namespace DynamicData.Tests.CacheFixtures
             var person = _generator.Take(1).First();
             _source.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _results.Messages.Count, "Should be 1 updates");
-            Assert.AreEqual(1, _results.Data.Count, "Should be 1 item in the cache");
-            Assert.AreEqual(person, _results.Data.Items.First(), "Should be same person");
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
         [Test]
@@ -104,7 +105,7 @@ namespace DynamicData.Tests.CacheFixtures
 
             _source.Dispose();
 
-            Assert.IsTrue(completed, "Completed has not been called");
+            completed.Should().BeTrue();
         }
     }
 }
