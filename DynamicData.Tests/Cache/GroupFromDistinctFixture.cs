@@ -11,11 +11,10 @@ namespace DynamicData.Tests.Cache
     
     public class GroupFromDistinctFixture: IDisposable
     {
-        private ISourceCache<Person, string> _personCache;
-        private ISourceCache<PersonEmployment, PersonEmpKey> _employmentCache;
+        private readonly ISourceCache<Person, string> _personCache;
+        private readonly ISourceCache<PersonEmployment, PersonEmpKey> _employmentCache;
 
-        [SetUp]
-        public void SetStream()
+        public GroupFromDistinctFixture()
         {
             _personCache = new SourceCache<Person, string>(p => p.Key);
             _employmentCache = new SourceCache<PersonEmployment, PersonEmpKey>(e => e.Key);

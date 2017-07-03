@@ -10,11 +10,10 @@ namespace DynamicData.Tests.Cache
     
     public class DistinctFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private DistinctChangeSetAggregator<int> _results;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly DistinctChangeSetAggregator<int> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  DistinctFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _results = _source.Connect().DistinctValues(p => p.Age).AsAggregator();

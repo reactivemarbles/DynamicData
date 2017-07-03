@@ -12,7 +12,7 @@ namespace DynamicData.Tests.Cache
         private class SubscribeableObject
         {
             public bool IsSubscribed { get; private set; }
-            public int Id { get; private set; }
+            public int Id { get; }
 
             public void Subscribe()
             {
@@ -30,11 +30,10 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        private ISourceCache<SubscribeableObject, int> _source;
-        private ChangeSetAggregator<SubscribeableObject, int> _results;
+        private readonly ISourceCache<SubscribeableObject, int> _source;
+        private readonly ChangeSetAggregator<SubscribeableObject, int> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  SubscribeManyFixture()
         {
             _source = new SourceCache<SubscribeableObject, int>(p => p.Id);
             _results = new ChangeSetAggregator<SubscribeableObject, int>(

@@ -11,12 +11,11 @@ namespace DynamicData.Tests.Cache
     internal class ToObservableChangeSetFixture:  ReactiveTest,IDisposable
     {        
         private IObservable<Person> _observable;
-        private TestScheduler _scheduler;
-        private IDisposable _disposable;
-        private List<Person> _target;
+        private readonly TestScheduler _scheduler;
+        private readonly IDisposable _disposable;
+        private readonly List<Person> _target;
 
-        [SetUp]
-        public void Initialise()
+        public  ToObservableChangeSetFixture()
         {
             _scheduler = new TestScheduler();
             _observable = _scheduler.CreateColdObservable(

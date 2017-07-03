@@ -12,15 +12,14 @@ namespace DynamicData.Tests.Cache
     
     public class SortControllerFixture: IDisposable
     {
-        private ISourceCache<Person, string> _cache;
-        private SortController<Person> _sortController;
-        private SortedChangeSetAggregator<Person, string> _results;
-
+        private readonly ISourceCache<Person, string> _cache;
+        private readonly SortController<Person> _sortController;
+        private readonly SortedChangeSetAggregator<Person, string> _results;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private IComparer<Person> _comparer;
+        private readonly IComparer<Person> _comparer;
 
-        [SetUp]
-        public void Initialise()
+
+        public  SortControllerFixture()
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 

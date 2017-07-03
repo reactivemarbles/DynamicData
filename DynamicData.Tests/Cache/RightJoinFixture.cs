@@ -8,12 +8,11 @@ namespace DynamicData.Tests.Cache
 {
     public class RightJoinFixture: IDisposable
     {
-        private SourceCache<Device, string> _left;
-        private SourceCache<DeviceMetaData, string> _right;
-        private ChangeSetAggregator<DeviceWithMetadata, string> _result;
+        private readonly SourceCache<Device, string> _left;
+        private readonly SourceCache<DeviceMetaData, string> _right;
+        private readonly ChangeSetAggregator<DeviceWithMetadata, string> _result;
 
-        [SetUp]
-        public void Initialise()
+        public  RightJoinFixture()
         {
             _left = new SourceCache<Device, string>(device => device.Name);
             _right = new SourceCache<DeviceMetaData, string>(device => device.Name);

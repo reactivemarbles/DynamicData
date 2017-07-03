@@ -8,11 +8,10 @@ namespace DynamicData.Tests.Cache
 {
     public class TransformTreeFixture: IDisposable
     {
-        private ISourceCache<EmployeeDto, int> _sourceCache;
-        private IObservableCache<Node<EmployeeDto, int>, int> _result;
+        private readonly ISourceCache<EmployeeDto, int> _sourceCache;
+        private readonly IObservableCache<Node<EmployeeDto, int>, int> _result;
 
-        [SetUp]
-        public void SetUp()
+        public  TransformTreeFixture()
         {
             _sourceCache = new SourceCache<EmployeeDto, int>(e => e.Id);
 

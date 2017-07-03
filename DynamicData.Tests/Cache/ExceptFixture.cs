@@ -32,8 +32,7 @@ namespace DynamicData.Tests.Cache
         protected ISourceCache<Person, string> _exceptSource;
         private ChangeSetAggregator<Person, string> _results;
 
-        [SetUp]
-        public void Initialise()
+        protected ExceptFixtureBase()
         {
             _targetSource = new SourceCache<Person, string>(p => p.Name);
             _exceptSource = new SourceCache<Person, string>(p => p.Name);

@@ -9,10 +9,6 @@ namespace DynamicData.Tests.Kernal
     
     public class ErrorHandlingFixture
     {
-        [SetUp]
-        public void Initialise()
-        {
-        }
 
         private class Entity
         {

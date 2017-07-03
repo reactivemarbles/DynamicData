@@ -12,8 +12,7 @@ namespace DynamicData.Tests.Cache
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;
 
-        [SetUp]
-        public void Initialise()
+        public FilterFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _results = _source.Connect(p => p.Age > 20).AsAggregator();

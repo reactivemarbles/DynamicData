@@ -18,13 +18,13 @@ namespace DynamicData.Tests.Cache
     
     public class SortFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private SortedChangeSetAggregator<Person, string> _results;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly SortedChangeSetAggregator<Person, string> _results;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private IComparer<Person> _comparer;
+        private readonly IComparer<Person> _comparer;
 
-        [SetUp]
-        public void Initialise()
+
+        public SortFixture()
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 

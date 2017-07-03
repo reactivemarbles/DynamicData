@@ -24,11 +24,10 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        private ISourceCache<DisposableObject, int> _source;
-        private ChangeSetAggregator<DisposableObject, int> _results;
+        private readonly ISourceCache<DisposableObject, int> _source;
+        private readonly ChangeSetAggregator<DisposableObject, int> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  WatchFixture()
         {
             _source = new SourceCache<DisposableObject, int>(p => p.Id);
             _results = new ChangeSetAggregator<DisposableObject, int>(_source.Connect().DisposeMany());

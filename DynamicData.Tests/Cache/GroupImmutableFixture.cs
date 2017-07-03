@@ -10,11 +10,10 @@ namespace DynamicData.Tests.Cache
     
     public class GroupImmutableFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<IGrouping<Person, string, int>, int> _results;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<IGrouping<Person, string, int>, int> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  GroupImmutableFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _results = _source.Connect().GroupWithImmutableState(p => p.Age).AsAggregator();

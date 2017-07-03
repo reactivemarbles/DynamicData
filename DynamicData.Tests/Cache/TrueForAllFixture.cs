@@ -9,11 +9,10 @@ namespace DynamicData.Tests.Cache
     
     public class TrueForAllFixture: IDisposable
     {
-        private ISourceCache<ObjectWithObservable, int> _source;
-        private IObservable<bool> _observable;
+        private readonly ISourceCache<ObjectWithObservable, int> _source;
+        private readonly IObservable<bool> _observable;
 
-        [SetUp]
-        public void Initialise()
+        public  TrueForAllFixture()
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
             _observable = _source.Connect()

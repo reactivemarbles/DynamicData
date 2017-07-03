@@ -8,11 +8,10 @@ namespace DynamicData.Tests.Cache
     
     public class SourceCacheFixture: IDisposable
     {
-        private ChangeSetAggregator<Person, string> _results;
-        private ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
+        private readonly ISourceCache<Person, string> _source;
 
-        [SetUp]
-        public void MyTestInitialize()
+        public  SourceCacheFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = _source.Connect().AsAggregator();

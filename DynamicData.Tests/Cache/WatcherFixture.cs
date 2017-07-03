@@ -18,15 +18,14 @@ namespace DynamicData.Tests.Cache
     
     public class WatcherFixture: IDisposable
     {
-        private TestScheduler _scheduler = new TestScheduler();
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<SelfObservingPerson, string> _results;
-        private IWatcher<Person, string> _watcher;
+        private readonly TestScheduler _scheduler = new TestScheduler();
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<SelfObservingPerson, string> _results;
+        private readonly IWatcher<Person, string> _watcher;
 
-        private IDisposable _cleanUp;
+        private readonly IDisposable _cleanUp;
 
-        [SetUp]
-        public void SetUp()
+        public  WatcherFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);

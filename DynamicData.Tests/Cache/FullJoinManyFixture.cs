@@ -9,11 +9,10 @@ namespace DynamicData.Tests.Cache
 {
     public class FullJoinManyFixture: IDisposable
     {
-        private SourceCache<Person, string> _people;
-        private ChangeSetAggregator<ParentAndChildren, string> _result;
+        private readonly SourceCache<Person, string> _people;
+        private readonly ChangeSetAggregator<ParentAndChildren, string> _result;
 
-        [SetUp]
-        public void Initialise()
+        public FullJoinManyFixture()
         {
             _people = new SourceCache<Person, string>(p => p.Name);
             _result = _people.Connect()

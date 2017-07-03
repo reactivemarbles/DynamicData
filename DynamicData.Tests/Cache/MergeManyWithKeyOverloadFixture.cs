@@ -11,13 +11,12 @@ namespace DynamicData.Tests.Cache
     {
         private class ObjectWithObservable
         {
-            private readonly int _id;
             private readonly ISubject<bool> _changed = new Subject<bool>();
             private bool _value;
 
             public ObjectWithObservable(int id)
             {
-                _id = id;
+                Id = id;
             }
 
             public void InvokeObservable(bool value)
@@ -28,13 +27,12 @@ namespace DynamicData.Tests.Cache
 
             public IObservable<bool> Observable => _changed.AsObservable();
 
-            public int Id => _id;
+            public int Id { get; }
         }
 
-        private ISourceCache<ObjectWithObservable, int> _source;
+        private readonly ISourceCache<ObjectWithObservable, int> _source;
 
-        [SetUp]
-        public void Initialise()
+        public  MergeManyWithKeyOverloadFixture()
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
         }
@@ -47,7 +45,7 @@ namespace DynamicData.Tests.Cache
         [Test]
         public void InvocationOnlyWhenChildIsInvoked()
         {
-            bool invoked = false;
+            var invoked = false;
 
             var stream = _source.Connect()
                                 .MergeMany((o, key) => o.Observable)

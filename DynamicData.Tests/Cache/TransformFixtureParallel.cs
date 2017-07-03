@@ -14,12 +14,11 @@ namespace DynamicData.Tests.Cache
 
         private readonly Func<Person, PersonWithGender> _transformFactory = p =>
         {
-            string gender = p.Age % 2 == 0 ? "M" : "F";
+            var gender = p.Age % 2 == 0 ? "M" : "F";
             return new PersonWithGender(p, gender);
         };
 
-        [SetUp]
-        public void Initialise()
+        public  TransformFixturParallel()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 

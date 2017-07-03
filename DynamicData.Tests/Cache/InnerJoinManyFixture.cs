@@ -10,11 +10,10 @@ namespace DynamicData.Tests.Cache
 {
     public class InnerJoinManyFixture: IDisposable
     {
-        private SourceCache<Person, string> _people;
-        private ChangeSetAggregator<ParentAndChildren, string> _result;
+        private readonly SourceCache<Person, string> _people;
+        private readonly ChangeSetAggregator<ParentAndChildren, string> _result;
 
-        [SetUp]
-        public void Initialise()
+        public  InnerJoinManyFixture()
         {
             _people = new SourceCache<Person, string>(p => p.Name);
             //Only parent which have children will be included

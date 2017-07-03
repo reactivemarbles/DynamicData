@@ -12,16 +12,15 @@ namespace DynamicData.Tests.Cache
     
     public class PageFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private PagedChangeSetAggregator<Person, string> _aggregators;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly PagedChangeSetAggregator<Person, string> _aggregators;
 
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private IComparer<Person> _comparer;
-        private ISubject<IComparer<Person>> _sort;
-        private ISubject<IPageRequest> _pager;
+        private readonly IComparer<Person> _comparer;
+        private readonly ISubject<IComparer<Person>> _sort;
+        private readonly ISubject<IPageRequest> _pager;
 
-        [SetUp]
-        public void Initialise()
+        public  PageFixture()
         {
             _source = new SourceCache<Person, string>(p=>p.Name);
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);

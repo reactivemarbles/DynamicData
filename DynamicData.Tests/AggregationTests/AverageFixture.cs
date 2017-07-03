@@ -10,10 +10,9 @@ namespace DynamicData.Tests.AggregationTests
     
     public class AverageFixture: IDisposable
     {
-        private SourceCache<Person, string> _source;
+        private readonly SourceCache<Person, string> _source;
 
-        [SetUp]
-        public void Initialise()
+        public AverageFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
         }

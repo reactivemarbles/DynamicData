@@ -10,8 +10,7 @@ namespace DynamicData.Tests.Cache
     
     public class GroupFixture: IDisposable
     {
-        [SetUp]
-        public void Initialise()
+        public  GroupFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
         }
@@ -21,7 +20,7 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
         }
 
-        private ISourceCache<Person, string> _source;
+        private readonly ISourceCache<Person, string> _source;
 
         [Test]
         public void Add()

@@ -13,18 +13,17 @@ namespace DynamicData.Tests.Cache
     
     public class FromAsyncFixture
     {
-        private TestScheduler _scheduler;
+        public TestScheduler Scheduler { get; }
 
-        [SetUp]
-        public void SetUp()
+        public  FromAsyncFixture()
         {
-            this._scheduler = new TestScheduler();
+            Scheduler = new TestScheduler();
         }
 
         [Test]
         public void CanLoadFromTask()
         {
-            Func<Task<IEnumerable<Person>>> loader = () =>
+            Task<IEnumerable<Person>> Loader()
             {
                 var items = Enumerable.Range(1, 100)
                     .Select(i => new Person("Person" + i, 1))
@@ -32,9 +31,9 @@ namespace DynamicData.Tests.Cache
                     .AsEnumerable();
 
                 return Task.FromResult(items);
-            };
+            }
 
-            var data = Observable.FromAsync(loader)
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
                 .ToObservableChangeSet(p=>p.Key)
                 .AsObservableCache();
 

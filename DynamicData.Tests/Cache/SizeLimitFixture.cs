@@ -11,15 +11,14 @@ namespace DynamicData.Tests.Cache
     
     internal class SizeLimitFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
-        private TestScheduler _scheduler;
-        private IDisposable _sizeLimiter;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
+        private readonly TestScheduler _scheduler;
+        private readonly IDisposable _sizeLimiter;
 
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        [SetUp]
-        public void Initialise()
+        public  SizeLimitFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);

@@ -13,8 +13,7 @@ namespace DynamicData.Tests.Cache
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;
 
-        [SetUp]
-        public void Initialise()
+        public FilterParallelFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new ChangeSetAggregator<Person, string>(_source.Connect().Filter(p => p.Age > 20, new ParallelisationOptions(ParallelType.Ordered)));

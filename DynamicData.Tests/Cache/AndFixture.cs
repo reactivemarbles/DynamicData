@@ -33,8 +33,7 @@ namespace DynamicData.Tests.Cache
         protected ISourceCache<Person, string> _source2;
         private ChangeSetAggregator<Person, string> _results;
 
-        [SetUp]
-        public void Initialise()
+        protected AndFixtureBase()
         {
             _source1 = new SourceCache<Person, string>(p => p.Name);
             _source2 = new SourceCache<Person, string>(p => p.Name);

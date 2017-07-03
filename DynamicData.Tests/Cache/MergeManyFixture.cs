@@ -11,13 +11,12 @@ namespace DynamicData.Tests.Cache
     {
         private class ObjectWithObservable
         {
-            private readonly int _id;
             private readonly ISubject<bool> _changed = new Subject<bool>();
             private bool _value;
 
             public ObjectWithObservable(int id)
             {
-                _id = id;
+                Id = id;
             }
 
             public void InvokeObservable(bool value)
@@ -26,15 +25,14 @@ namespace DynamicData.Tests.Cache
                 _changed.OnNext(value);
             }
 
-            public IObservable<bool> Observable { get { return _changed.AsObservable(); } }
+            public IObservable<bool> Observable => _changed.AsObservable();
 
-            public int Id { get { return _id; } }
+            public int Id { get; }
         }
 
-        private SourceCache<ObjectWithObservable, int> _source;
+        private readonly SourceCache<ObjectWithObservable, int> _source;
 
-        [SetUp]
-        public void Initialise()
+        public  MergeManyFixture()
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
         }

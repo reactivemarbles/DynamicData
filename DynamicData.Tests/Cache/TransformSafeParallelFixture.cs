@@ -11,9 +11,9 @@ namespace DynamicData.Tests.Cache
     
     public class TransformSafeParallelFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<PersonWithGender, string> _results;
-        private IList<Error<Person, string>> _errors;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<PersonWithGender, string> _results;
+        private readonly IList<Error<Person, string>> _errors;
 
         private readonly Func<Person, PersonWithGender> _transformFactory = p =>
         {
@@ -25,8 +25,7 @@ namespace DynamicData.Tests.Cache
             return new PersonWithGender(p, gender);
         };
 
-        [SetUp]
-        public void Initialise()
+        public  TransformSafeParallelFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _errors = new List<Error<Person, string>>();

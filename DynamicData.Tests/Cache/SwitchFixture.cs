@@ -10,12 +10,11 @@ namespace DynamicData.Tests.Cache
     
     public class SwitchFixture: IDisposable
     {
-        private ISubject<ISourceCache<Person, string>> _switchable;
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
+        private readonly ISubject<ISourceCache<Person, string>> _switchable;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  SwitchFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _switchable = new BehaviorSubject<ISourceCache<Person, string>>(_source);

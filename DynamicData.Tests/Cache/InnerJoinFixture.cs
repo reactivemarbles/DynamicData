@@ -12,8 +12,8 @@ namespace DynamicData.Tests.Cache
         private SourceCache<DeviceMetaData, string> _right;
         private ChangeSetAggregator<DeviceWithMetadata, string> _result;
 
-        [SetUp]
-        public void Initialise()
+
+        public InnerJoinFixture()
         {
             _left = new SourceCache<Device, string>(device => device.Name);
             _right = new SourceCache<DeviceMetaData, string>(device => device.Name);

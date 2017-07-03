@@ -9,12 +9,12 @@ namespace DynamicData.Tests.Cache
     
     public class BatchFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
-        private TestScheduler _scheduler;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
+        private readonly TestScheduler _scheduler;
 
-        [SetUp]
-        public void MyTestInitialize()
+ 
+        public  BatchFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);

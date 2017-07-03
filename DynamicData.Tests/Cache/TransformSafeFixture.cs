@@ -25,8 +25,7 @@ namespace DynamicData.Tests.Cache
             return new PersonWithGender(p, gender);
         };
 
-        [SetUp]
-        public void Initialise()
+        public  TransformSafeFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _errors = new List<Error<Person, string>>();

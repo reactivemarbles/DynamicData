@@ -12,14 +12,13 @@ namespace DynamicData.Tests.Binding
     
     public class BindSortedChangeSetFixture: IDisposable
     {
-        private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
-        private ISourceCache<Person, string> _source;
-        private IDisposable _binder;
+        private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
+        private readonly ISourceCache<Person, string> _source;
+        private readonly IDisposable _binder;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name);
 
-        [SetUp]
-        public void SetUp()
+        public BindSortedChangeSetFixture()
         {
             _collection = new ObservableCollectionExtended<Person>();
             _source = new SourceCache<Person, string>(p => p.Name);

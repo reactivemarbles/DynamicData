@@ -11,12 +11,11 @@ namespace DynamicData.Tests.Binding
     
     public class ReadOnlyObservableCollectionToChangeSetFixture: IDisposable
     {
-        private TestObservableCollection<int> _collection;
-        private ChangeSetAggregator<int> _results;
-        private ReadOnlyObservableCollection<int> _target;
+        private readonly TestObservableCollection<int> _collection;
+        private readonly ChangeSetAggregator<int> _results;
+        private readonly ReadOnlyObservableCollection<int> _target;
 
-        [SetUp]
-        public void SetUp()
+        public ReadOnlyObservableCollectionToChangeSetFixture()
         {
             _collection = new TestObservableCollection<int>();
             _target = new ReadOnlyObservableCollection<int>(_collection);

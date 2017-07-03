@@ -8,11 +8,10 @@ namespace DynamicData.Tests.Cache
     
     public class IgnoreUpdateFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
 
-        [SetUp]
-        public void SetUp()
+        public  IgnoreUpdateFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new ChangeSetAggregator<Person, string>

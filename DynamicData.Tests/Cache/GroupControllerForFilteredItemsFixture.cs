@@ -27,6 +27,14 @@ namespace DynamicData.Tests.Cache
         private GroupController _controller;
         private IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
 
+        public  GroupControllerForFilteredItemsFixture()
+        {
+            _source = new SourceCache<Person, string>(p => p.Name);
+            _controller = new GroupController();
+            _grouped = _source.Connect(p => _grouper(p) != AgeBracket.Pensioner)
+                .Group(_grouper, _controller).AsObservableCache();
+        }
+        
         public void Dispose()
         {
             _source?.Dispose();
@@ -34,14 +42,7 @@ namespace DynamicData.Tests.Cache
             _grouped?.Dispose();
         }
 
-        [SetUp]
-        public void Initialise()
-        {
-            _source = new SourceCache<Person, string>(p => p.Name);
-            _controller = new GroupController();
-            _grouped = _source.Connect(p => _grouper(p) != AgeBracket.Pensioner)
-                              .Group(_grouper, _controller).AsObservableCache();
-        }
+
 
         [Test]
         public void RegroupRecaluatesGroupings()

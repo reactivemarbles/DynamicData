@@ -11,17 +11,17 @@ namespace DynamicData.Tests.Cache
 {
     public class PageWithSortControllerFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private PagedChangeSetAggregator<Person, string> _aggregators;
-
-        private PageController _pageController;
-        private SortController<Person> _sortController;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly PagedChangeSetAggregator<Person, string> _aggregators;
+        private readonly PageController _pageController;
+        private readonly SortController<Person> _sortController;
+        
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly IComparer<Person> _originalComparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
         private readonly IComparer<Person> _changedComparer = SortExpressionComparer<Person>.Descending(p => p.Name).ThenByAscending(p => p.Age);
 
-        [SetUp]
-        public void Initialise()
+
+        public  PageWithSortControllerFixture()
         {
             _sortController = new SortController<Person>(_originalComparer);
             _source = new SourceCache<Person, string>(p => p.Key);

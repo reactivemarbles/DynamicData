@@ -10,11 +10,10 @@ namespace DynamicData.Tests.Cache
     
     public class GroupOnPropertyFixture: IDisposable
     {
-        private SourceCache<Person, string> _source;
-        private ChangeSetAggregator<IGroup<Person, string, int>, int> _results;
+        private readonly SourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<IGroup<Person, string, int>, int> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  GroupOnPropertyFixture()
         {
             _source = new SourceCache<Person,string>(p=>p.Key);
             _results = _source.Connect().GroupOnProperty(p => p.Age).AsAggregator();

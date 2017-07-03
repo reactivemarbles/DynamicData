@@ -10,13 +10,12 @@ namespace DynamicData.Tests.Binding
     
     public class BindFromObservableListFixture: IDisposable
     {
-        private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
-        private SourceList<Person> _source;
-        private IDisposable _binder;
+        private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
+        private readonly SourceList<Person> _source;
+        private readonly IDisposable _binder;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        [SetUp]
-        public void SetUp()
+        public BindFromObservableListFixture()
         {
             _collection = new ObservableCollectionExtended<Person>();
             _source = new SourceList<Person>();

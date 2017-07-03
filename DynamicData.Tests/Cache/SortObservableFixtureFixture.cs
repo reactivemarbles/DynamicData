@@ -12,19 +12,15 @@ namespace DynamicData.Tests.Cache
     
     public class SortObservableFixture: IDisposable
     {
-        private ISourceCache<Person, string> _cache;
-        private SortedChangeSetAggregator<Person, string> _results;
-
-         
+        private readonly ISourceCache<Person, string> _cache;
+        private readonly SortedChangeSetAggregator<Person, string> _results;        
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-
-        private BehaviorSubject<IComparer<Person>> _comparerObservable;
-        private SortExpressionComparer<Person> _comparer;
+        private readonly BehaviorSubject<IComparer<Person>> _comparerObservable;
+        private readonly SortExpressionComparer<Person> _comparer;
 
         //  private IComparer<Person> _comparer;
 
-        [SetUp]
-        public void Initialise()
+        public  SortObservableFixture()
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
             _comparerObservable = new BehaviorSubject<IComparer<Person>>(_comparer);

@@ -31,10 +31,9 @@ namespace DynamicData.Tests.Cache
             public int Id => _id;
         }
 
-        private ISourceCache<ObjectWithObservable, int> _source;
+        private readonly ISourceCache<ObjectWithObservable, int> _source;
 
-        [SetUp]
-        public void Initialise()
+        public  MergeManyItemsFixture()
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
         }

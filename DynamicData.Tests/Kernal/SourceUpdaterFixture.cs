@@ -8,21 +8,15 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Kernal
 {
     
-    internal class SourceUpdaterFixture: IDisposable
+    internal class SourceUpdaterFixture
     {
-        private ChangeAwareCache<Person, string> _cache;
-        private CacheUpdater<Person, string> _updater;
+        private readonly ChangeAwareCache<Person, string> _cache;
+        private readonly CacheUpdater<Person, string> _updater;
 
-        [SetUp]
-        public void Initialise()
+        public  SourceUpdaterFixture()
         {
             _cache = new ChangeAwareCache<Person, string>();
             _updater = new CacheUpdater<Person, string>(_cache, new KeySelector<Person, string>(p => p.Name));
-        }
-
-
-        public void Dispose()
-        {
         }
 
         [Test]

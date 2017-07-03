@@ -13,12 +13,12 @@ namespace DynamicData.Tests.Cache
     
     public class FilterControllerFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
-        private FilterController<Person> _filter;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
+        private readonly FilterController<Person> _filter;
 
-        [SetUp]
-        public void Initialise()
+
+        public  FilterControllerFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _filter = new FilterController<Person>(p => p.Age > 20);

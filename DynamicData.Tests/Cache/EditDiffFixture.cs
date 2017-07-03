@@ -10,11 +10,11 @@ namespace DynamicData.Tests.Cache
     
     public class EditDiffFixture: IDisposable
     {
-        private SourceCache<Person, string> _cache;
-        private ChangeSetAggregator<Person, string> _result;
+        private readonly SourceCache<Person, string> _cache;
+        private readonly ChangeSetAggregator<Person, string> _result;
 
-        [SetUp]
-        public void Initialise()
+
+        public  EditDiffFixture()
         {
             _cache = new SourceCache<Person, string>(p => p.Name);
             _result = _cache.Connect().AsAggregator();

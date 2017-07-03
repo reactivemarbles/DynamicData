@@ -10,14 +10,13 @@ namespace DynamicData.Tests.Cache
     
     public class BatchIfWithTimeOutFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
-        private TestScheduler _scheduler;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
+        private readonly TestScheduler _scheduler;
 
-        private ISubject<bool> _pausingSubject = new Subject<bool>();
+        private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
 
-        [SetUp]
-        public void MyTestInitialize()
+        public  BatchIfWithTimeOutFixture()
         {
             _pausingSubject = new Subject<bool>();
             _scheduler = new TestScheduler();

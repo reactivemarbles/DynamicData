@@ -11,10 +11,9 @@ namespace DynamicData.Tests.Cache
     
     public class RefCountFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
+        private readonly ISourceCache<Person, string> _source;
 
-        [SetUp]
-        public void MyTestInitialize()
+        public  RefCountFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
         }

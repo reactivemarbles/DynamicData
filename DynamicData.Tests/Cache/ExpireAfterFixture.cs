@@ -11,13 +11,12 @@ namespace DynamicData.Tests.Cache
     
     internal class ExpireAfterFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
+        private readonly TestScheduler _scheduler;
 
-        private TestScheduler _scheduler;
 
-        [SetUp]
-        public void MyTestInitialize()
+        public ExpireAfterFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);

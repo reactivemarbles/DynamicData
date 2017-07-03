@@ -10,10 +10,9 @@ namespace DynamicData.Tests.Cache
     
     public class ForEachChangeFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
+        private readonly ISourceCache<Person, string> _source;
 
-        [SetUp]
-        public void Initialise()
+        public  ForEachChangeFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
         }

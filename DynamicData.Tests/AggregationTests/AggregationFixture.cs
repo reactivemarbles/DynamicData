@@ -11,14 +11,13 @@ namespace DynamicData.Tests.AggregationTests
     
     public class AggregationFixture: IDisposable
     {
-        private SourceCache<Person, string> _source;
-        private IObservable<int> _accumulator;
+        private readonly SourceCache<Person, string> _source;
+        private readonly IObservable<int> _accumulator;
 
         /// <summary>
         /// Initialises this instance.
         /// </summary>
-        [SetUp]
-        public void Initialise()
+        public AggregationFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 

@@ -31,10 +31,9 @@ namespace DynamicData.Tests.Cache
     {
         protected ISourceCache<Person, string> _source1;
         protected ISourceCache<Person, string> _source2;
-        private ChangeSetAggregator<Person, string> _results;
+        private readonly ChangeSetAggregator<Person, string> _results;
 
-        [SetUp]
-        public void Initialise()
+        protected OrFixtureBase()
         {
             _source1 = new SourceCache<Person, string>(p => p.Name);
             _source2 = new SourceCache<Person, string>(p => p.Name);

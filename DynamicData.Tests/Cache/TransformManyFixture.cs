@@ -10,11 +10,10 @@ namespace DynamicData.Tests.Cache
     
     public class TransformManyFixture: IDisposable
     {
-        private ISourceCache<PersonWithRelations, string> _source;
-        private ChangeSetAggregator<PersonWithRelations, string> _results;
+        private readonly ISourceCache<PersonWithRelations, string> _source;
+        private readonly ChangeSetAggregator<PersonWithRelations, string> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  TransformManyFixture()
         {
             _source = new SourceCache<PersonWithRelations, string>(p => p.Key);
 

@@ -11,15 +11,13 @@ namespace DynamicData.Tests.Cache
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        private ISourceCache<Person, string> _source1;
-        private ISourceCache<Person, string> _source2;
-        private ISourceCache<Person, string> _source3;
-        private ISourceList<IObservable<IChangeSet<Person, string>>> _source;
+        private readonly ISourceCache<Person, string> _source1;
+        private readonly ISourceCache<Person, string> _source2;
+        private readonly ISourceCache<Person, string> _source3;
+        private readonly ISourceList<IObservable<IChangeSet<Person, string>>> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
 
-        private ChangeSetAggregator<Person, string> _results;
-
-        [SetUp]
-        public void Initialise()
+        public  DynamicOrFixture()
         {
             _source1 = new SourceCache<Person, string>(p => p.Name);
             _source2 = new SourceCache<Person, string>(p => p.Name);

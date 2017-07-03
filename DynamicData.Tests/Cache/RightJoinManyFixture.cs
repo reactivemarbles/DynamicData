@@ -9,11 +9,10 @@ namespace DynamicData.Tests.Cache
 {
     public class RightJoinManyFixture: IDisposable
     {
-        private SourceCache<Person, string> _people;
-        private ChangeSetAggregator<ParentAndChildren, string> _result;
+        private readonly SourceCache<Person, string> _people;
+        private readonly ChangeSetAggregator<ParentAndChildren, string> _result;
 
-        [SetUp]
-        public void Initialise()
+        public  RightJoinManyFixture()
         {
             _people = new SourceCache<Person, string>(p => p.Name);
             //All children will be included whether there is a parent or not

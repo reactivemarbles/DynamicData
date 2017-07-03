@@ -8,11 +8,10 @@ namespace DynamicData.Tests.Cache
     
     public class TransformManySimpleFixture: IDisposable
     {
-        private ISourceCache<PersonWithChildren, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
+        private readonly ISourceCache<PersonWithChildren, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  TransformManySimpleFixture()
         {
             _source = new SourceCache<PersonWithChildren, string>(p => p.Key);
 

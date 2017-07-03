@@ -8,17 +8,14 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
-    [TestFixture: IDisposable()]
     internal class TimeExpiryFixture: IDisposable
     {
-        private ISourceCache<Person, string> _cache;
-        private IDisposable _remover;
-        private ChangeSetAggregator<Person, string> _results;
+        private readonly ISourceCache<Person, string> _cache;
+        private readonly IDisposable _remover;
+        private readonly ChangeSetAggregator<Person, string> _results;
+        private readonly TestScheduler _scheduler;
 
-        private TestScheduler _scheduler;
-
-        [SetUp]
-        public void MyTestInitialize()
+        public  TimeExpiryFixture()
         {
             _scheduler = new TestScheduler();
 
@@ -29,7 +26,6 @@ namespace DynamicData.Tests.Cache
 
         public void Dispose()
         {
-            //    _remover.Dispose();
             _results.Dispose();
             _remover.Dispose();
             _cache.Dispose();
