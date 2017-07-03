@@ -102,7 +102,7 @@ namespace DynamicData.Tests.CacheFixtures
             var person6 = new Person("Person6", 100, parentName: current6.ParentName);
             _people.AddOrUpdate(person6);
 
-            var updatedPeople = people.Where(p => p.Name != "person6").Union(new[] {person6}).ToArray();
+            var updatedPeople = people.Where(p => p.Name != "Person6").Union(new[] {person6}).ToArray();
 
             AssertDataIsCorrectlyFormed(updatedPeople);
         }

@@ -19,8 +19,7 @@ namespace DynamicData.Tests.Kernal
             _cache = new ChangeAwareCache<Person, string>();
             _updater = new CacheUpdater<Person, string>(_cache, new KeySelector<Person, string>(p => p.Name));
         }
-
-
+             
         [Test]
         public void Add()
         {
@@ -51,12 +50,13 @@ namespace DynamicData.Tests.Kernal
         {
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
             _updater.AddOrUpdate(people);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            var updates = _updater.AsChangeSet();
 
-            _cache.Items.ShouldAllBeEquivalentTo(people);
-            _cache.Count.Should().Be(100, "Should be 100 items in the cache");
-            updates.ShouldAllBeEquivalentTo(people?.Select(p => new Change<Person, string>(ChangeReason.Add, p.Name, p)));
-            100.Should().Be(updates.Count, "Should be 100 updates");
+
+            _cache.Items.ToArray().ShouldAllBeEquivalentTo(people);
+            _cache.Count.Should().Be(100);
+            updates.Adds.Should().Be(100);
+            updates.Count.Should().Be(100);
         }
 
         [Test]

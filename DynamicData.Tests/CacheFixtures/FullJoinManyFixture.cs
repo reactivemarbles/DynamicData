@@ -96,7 +96,7 @@ namespace DynamicData.Tests.CacheFixtures
             var person6 = new Person("Person6", 100, parentName: current6.ParentName);
             _people.AddOrUpdate(person6);
 
-            var updatedPeople = people.Where(p => p.Name != "person6").Union(new[] { person6 }).ToArray();
+            var updatedPeople = people.Where(p => p.Name != "Person6").Union(new[] { person6 }).ToArray();
 
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
@@ -165,11 +165,9 @@ namespace DynamicData.Tests.CacheFixtures
 
             all.ForEach(parentAndChild =>
             {
-               // if (missingParents.Length > 0 && missingParents.Contains(grouping.Key)) return;
-
                 var result = _result.Data.Lookup(parentAndChild.ParentId).ValueOr(() => null);
                 var children = result.Children;
-                children.ShouldBeEquivalentTo(parentAndChild.Children);
+                children.ShouldAllBeEquivalentTo(parentAndChild.Children);
             });
         }
 
