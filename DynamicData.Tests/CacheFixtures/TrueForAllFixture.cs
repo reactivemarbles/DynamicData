@@ -4,7 +4,7 @@ using System.Reactive.Subjects;
 using FluentAssertions;
 using NUnit.Framework;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     [TestFixture]
     public class TrueForAllFixture

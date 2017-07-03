@@ -4,7 +4,7 @@ using DynamicData.Kernel;
 using NUnit.Framework;
 using FluentAssertions;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     public class InnerJoinFixture
     {

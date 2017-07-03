@@ -4,7 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     public class TransformTreeFixture
     {

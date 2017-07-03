@@ -13,7 +13,7 @@ using NUnit.Framework;
 using FluentAssertions;
 #endregion
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     [TestFixture]
     public class WatcherFixture

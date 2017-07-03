@@ -4,7 +4,7 @@ using System.Reactive.Subjects;
 using NUnit.Framework;
 using FluentAssertions;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     [TestFixture]
     public class MergeManyFixture

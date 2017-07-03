@@ -3,7 +3,7 @@ using NUnit.Framework;
 using System;
 using FluentAssertions;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     [TestFixture]
     public class QueryWhenChangedFixture

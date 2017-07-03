@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Linq;
 using FluentAssertions;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     [TestFixture]
     public class RefCountFixture

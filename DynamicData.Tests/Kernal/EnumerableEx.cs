@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     public static class EnumerableEx
     {

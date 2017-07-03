@@ -5,7 +5,7 @@ using DynamicData.Tests.Utilities;
 using FluentAssertions;
 using NUnit.Framework;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     [TestFixture]
     public class FilterOnPropertyFixture

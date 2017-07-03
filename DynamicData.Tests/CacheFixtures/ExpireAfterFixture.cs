@@ -6,7 +6,7 @@ using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using NUnit.Framework;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     [TestFixture]
     internal class ExpireAfterFixture

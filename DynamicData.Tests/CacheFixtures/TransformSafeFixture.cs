@@ -6,7 +6,7 @@ using DynamicData.Tests.Domain;
 using FluentAssertions;
 using NUnit.Framework;
 
-namespace DynamicData.Tests.CacheFixtures
+namespace DynamicData.Tests.Cache
 {
     [TestFixture]
     public class TransformSafeFixture
