@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Kernal
 {
-    [TestFixture]
+    
     public class KeyValueFixture
     {
         [Test]

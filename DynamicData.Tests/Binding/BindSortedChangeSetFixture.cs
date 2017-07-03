@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Binding
 {
-    [TestFixture]
+    
     public class BindSortedChangeSetFixture
     {
         private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
@@ -29,8 +29,7 @@ namespace DynamicData.Tests.Binding
                              .Subscribe();
         }
 
-        [TearDown]
-        public void CleanUp()
+        public void Dispose()
         {
             _binder.Dispose();
             _source.Dispose();

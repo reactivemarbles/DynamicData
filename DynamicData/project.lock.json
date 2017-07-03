@@ -3063,16 +3063,11 @@
   },
   "project": {
     "restore": {
-      "projectUniqueName": "U:\\Work\\DynamicData\\DynamicData\\DynamicData.csproj",
+      "projectUniqueName": "U:\\Work\\DynamicData\\DynamicData",
       "projectName": "DynamicData",
-      "projectPath": "U:\\Work\\DynamicData\\DynamicData\\DynamicData.csproj",
+      "projectPath": "U:\\Work\\DynamicData\\DynamicData",
       "projectJsonPath": "U:\\Work\\DynamicData\\DynamicData\\project.json",
-      "projectStyle": "ProjectJson",
-      "frameworks": {
-        "netstandard1.1": {
-          "projectReferences": {}
-        }
-      }
+      "projectStyle": "ProjectJson"
     },
     "dependencies": {
       "Microsoft.NETCore.Portable.Compatibility": "1.0.1",

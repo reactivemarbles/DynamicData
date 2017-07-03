@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
 {
-    [TestFixture]
+    
     public class MaxFixture
     {
         private SourceCache<Person, string> _source;
@@ -19,8 +19,7 @@ namespace DynamicData.Tests.AggregationTests
             _source = new SourceCache<Person, string>(p => p.Name);
         }
 
-        [TearDown]
-        public void Cleanup()
+        public void Dispose()
         {
             _source.Dispose();
         }

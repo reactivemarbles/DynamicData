@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Kernal
 {
-    [TestFixture]
+    
     internal class CacheUpdaterFixture
     {
         private ChangeAwareCache<Person, string> _cache;

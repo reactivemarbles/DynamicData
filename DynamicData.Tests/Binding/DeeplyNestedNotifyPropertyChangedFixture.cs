@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Binding
 {              
 
-    [TestFixture]
+    
     public class DeeplyNestedNotifyPropertyChangedFixture
     {
         [Test]

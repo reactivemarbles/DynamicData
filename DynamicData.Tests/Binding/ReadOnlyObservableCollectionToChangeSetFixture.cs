@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Binding
 {
-    [TestFixture]
+    
     public class ReadOnlyObservableCollectionToChangeSetFixture
     {
         private TestObservableCollection<int> _collection;
@@ -22,8 +22,7 @@ namespace DynamicData.Tests.Binding
             _results = _target.ToObservableChangeSet().AsAggregator();
         }
 
-        [TearDown]
-        public void CleanUp()
+        public void Dispose()
         {
             _results.Dispose();
         }

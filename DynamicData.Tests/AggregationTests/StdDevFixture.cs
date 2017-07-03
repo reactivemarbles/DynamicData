@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.AggregationTests
 {
-    [TestFixture]
+    
     public class StdDevFixture
     {
         //TODO: TEST ACURACY
