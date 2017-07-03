@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using NUnit.Framework;
@@ -6,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class FilterFixture
+    public class FilterFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;

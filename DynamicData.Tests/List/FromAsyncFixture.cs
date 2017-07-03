@@ -18,7 +18,7 @@ namespace DynamicData.Tests.List
         [SetUp]
         public void SetUp()
         {
-            this._scheduler = new TestScheduler();
+            _scheduler = new TestScheduler();
         }
 
         [Test]
@@ -44,16 +44,15 @@ namespace DynamicData.Tests.List
         [Test]
         public void HandlesErrorsInObservable()
         {
-
-            Func<Task<IEnumerable<Person>>> loader = () =>
+            Task<IEnumerable<Person>> Loader()
             {
                 Task.Delay(100);
                 throw new Exception("Broken");
-            };
+            }
 
             Exception error = null;
 
-            var data = Observable.FromAsync(loader)
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
                 .ToObservableChangeSet()
                 .Subscribe((changes) => { }, ex => error = ex);;
 

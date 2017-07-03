@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class BatchIfFixture
+    public class BatchIfFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;

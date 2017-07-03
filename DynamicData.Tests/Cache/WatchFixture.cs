@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class WatchFixture
+    public class WatchFixture: IDisposable
     {
         private class DisposableObject : IDisposable
         {

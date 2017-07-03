@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class GroupFixture
+    public class GroupFixture: IDisposable
     {
         [SetUp]
         public void Initialise()

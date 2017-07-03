@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class SubscribeManyFixture
+    public class SubscribeManyFixture: IDisposable
     {
         private class SubscribeableObject
         {

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -7,10 +8,10 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class GroupOnPropertyFixture
+    public class GroupOnPropertyFixture: IDisposable
     {
         private ISourceList<Person> _source;
-        private ChangeSetAggregator<List.IGrouping<Person, int>> _results;
+        private ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
 
         [SetUp]
         public void Initialise()

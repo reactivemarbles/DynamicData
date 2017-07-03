@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class VirtualisationFixture
+    public class VirtualisationFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;

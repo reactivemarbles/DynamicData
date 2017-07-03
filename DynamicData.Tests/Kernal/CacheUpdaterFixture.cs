@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
@@ -19,6 +20,7 @@ namespace DynamicData.Tests.Kernal
             _cache = new ChangeAwareCache<Person, string>();
             _updater = new CacheUpdater<Person, string>(_cache);
         }
+
 
 
         [Test]
@@ -79,5 +81,6 @@ namespace DynamicData.Tests.Kernal
             1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Update), "Should be 1 update");
             2.Should().Be(updates.Count, "Should be 2 updates");
         }
+
     }
 }

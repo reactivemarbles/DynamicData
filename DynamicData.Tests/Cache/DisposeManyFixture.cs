@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class DisposeManyFixture
+    public class DisposeManyFixture: IDisposable
     {
         private class DisposableObject : IDisposable
         {

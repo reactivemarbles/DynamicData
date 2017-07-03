@@ -9,7 +9,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class RefCountFixture
+    public class RefCountFixture: IDisposable
     {
         private ISourceList<Person> _source;
 

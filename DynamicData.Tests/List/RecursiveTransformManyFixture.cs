@@ -1,3 +1,4 @@
+using System;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using NUnit.Framework;
@@ -6,7 +7,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class RecursiveTransformManyFixture
+    public class RecursiveTransformManyFixture: IDisposable
     {
         private ISourceList<PersonWithRelations> _source;
         private ChangeSetAggregator<PersonWithRelations> _results;

@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    public class LeftJoinFixture
+    public class LeftJoinFixture: IDisposable
     {
         private SourceCache<Device, string> _left;
         private SourceCache<DeviceMetaData, string> _right;
@@ -23,8 +23,8 @@ namespace DynamicData.Tests.Cache
                             .AsAggregator();
         }
 
-        [TearDown]
-        public void OnTestCompleted()
+
+        public void Dispose()
         {
             _left.Dispose();
             _right.Dispose();

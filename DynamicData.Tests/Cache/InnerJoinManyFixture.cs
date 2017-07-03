@@ -8,7 +8,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
-    public class InnerJoinManyFixture
+    public class InnerJoinManyFixture: IDisposable
     {
         private SourceCache<Person, string> _people;
         private ChangeSetAggregator<ParentAndChildren, string> _result;

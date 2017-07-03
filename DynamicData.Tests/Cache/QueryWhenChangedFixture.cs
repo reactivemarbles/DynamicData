@@ -6,7 +6,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.Cache
 {
     
-    public class QueryWhenChangedFixture
+    public class QueryWhenChangedFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;

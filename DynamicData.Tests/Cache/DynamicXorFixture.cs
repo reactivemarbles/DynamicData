@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class DynamicXorFixture
+    public class DynamicXorFixture: IDisposable
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 

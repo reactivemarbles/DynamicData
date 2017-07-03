@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
-using DynamicData.List.Internal;
 using NUnit.Framework;
 using System.Collections.ObjectModel;
 using FluentAssertions;

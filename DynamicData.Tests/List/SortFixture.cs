@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Binding;
@@ -9,7 +10,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    internal class SortFixture
+    internal class SortFixture: IDisposable
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private ISourceList<Person> _source;

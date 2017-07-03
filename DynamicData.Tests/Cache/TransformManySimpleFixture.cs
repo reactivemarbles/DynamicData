@@ -1,11 +1,12 @@
-﻿using DynamicData.Tests.Domain;
+﻿using System;
+using DynamicData.Tests.Domain;
 using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
     
-    public class TransformManySimpleFixture
+    public class TransformManySimpleFixture: IDisposable
     {
         private ISourceCache<PersonWithChildren, string> _source;
         private ChangeSetAggregator<Person, string> _results;

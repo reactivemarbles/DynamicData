@@ -1,11 +1,12 @@
-﻿using DynamicData.Tests.Domain;
+﻿using System;
+using DynamicData.Tests.Domain;
 using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
     
-    public class IncludeUpdateFixture
+    public class IncludeUpdateFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;

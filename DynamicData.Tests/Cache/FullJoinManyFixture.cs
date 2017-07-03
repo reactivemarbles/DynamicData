@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
-    public class FullJoinManyFixture
+    public class FullJoinManyFixture: IDisposable
     {
         private SourceCache<Person, string> _people;
         private ChangeSetAggregator<ParentAndChildren, string> _result;

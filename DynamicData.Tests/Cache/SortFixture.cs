@@ -16,7 +16,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class SortFixture
+    public class SortFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private SortedChangeSetAggregator<Person, string> _results;

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -7,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class SwitchFixture
+    public class SwitchFixture: IDisposable
     {
         private ISubject<ISourceCache<Person, string>> _switchable;
         private ISourceCache<Person, string> _source;

@@ -7,7 +7,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.Cache
 {
     
-    public class MergeManyWithKeyOverloadFixture
+    public class MergeManyWithKeyOverloadFixture: IDisposable
     {
         private class ObjectWithObservable
         {

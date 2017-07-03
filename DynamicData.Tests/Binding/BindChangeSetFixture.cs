@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Binding
 {
     
-    public class BindChangeSetFixture
+    public class BindChangeSetFixture: IDisposable
     {
         private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
         private ISourceCache<Person, string> _source;

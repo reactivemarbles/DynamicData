@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class TransformAsyncFixture
+    public class TransformAsyncFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<PersonWithGender> _results;

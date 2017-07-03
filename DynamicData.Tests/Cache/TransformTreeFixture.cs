@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
-    public class TransformTreeFixture
+    public class TransformTreeFixture: IDisposable
     {
         private ISourceCache<EmployeeDto, int> _sourceCache;
         private IObservableCache<Node<EmployeeDto, int>, int> _result;
@@ -21,8 +21,7 @@ namespace DynamicData.Tests.Cache
                                   .AsObservableCache();
         }
 
-        [TearDown]
-        public void TearDown()
+        public void Dispose()
         {
             _sourceCache.Dispose();
             _result.Dispose();

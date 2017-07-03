@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class BatchIfWithTimeOutFixture
+    public class BatchIfWithTimeOutFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;

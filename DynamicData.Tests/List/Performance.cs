@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.List
 {
-    [TestFixture()]
+    [TestFixture: IDisposable()]
     public class Performance
     {
         [Test]

@@ -1,3 +1,4 @@
+using System;
 using DynamicData.Tests.Domain;
 using NUnit.Framework;
 using System.Linq;
@@ -6,7 +7,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class DistinctValuesFixture
+    public class DistinctValuesFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<int> _results;

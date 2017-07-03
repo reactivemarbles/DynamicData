@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class FilterControllerFixture
+    public class FilterControllerFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;

@@ -26,7 +26,7 @@ namespace DynamicData.Tests.Cache
     }
 
     
-    public abstract class ExceptFixtureBase
+    public abstract class ExceptFixtureBase: IDisposable
     {
         protected ISourceCache<Person, string> _targetSource;
         protected ISourceCache<Person, string> _exceptSource;

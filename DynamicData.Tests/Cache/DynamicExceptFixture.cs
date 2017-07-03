@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class DynamicExceptFixture
+    public class DynamicExceptFixture: IDisposable
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 

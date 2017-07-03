@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
@@ -7,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class PageFixture
+    public class PageFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;

@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class ForEachChangeFixture
+    public class ForEachChangeFixture: IDisposable
     {
         private ISourceList<Person> _source;
 

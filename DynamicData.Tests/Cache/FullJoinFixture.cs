@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    public class FullJoinFixture
+    public class FullJoinFixture: IDisposable
     {
         private class Person
         {
@@ -182,8 +182,7 @@ namespace DynamicData.Tests.Cache
             _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
         }
 
-        [TearDown]
-        public void OnTestCompleted()
+        public void Dispose()
         {
             _left.Dispose();
             _right.Dispose();

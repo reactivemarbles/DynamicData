@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class GroupImmutableFixture
+    public class GroupImmutableFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<IGrouping<Person, string, int>, int> _results;

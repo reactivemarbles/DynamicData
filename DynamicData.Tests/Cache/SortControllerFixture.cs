@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class SortControllerFixture
+    public class SortControllerFixture: IDisposable
     {
         private ISourceCache<Person, string> _cache;
         private SortController<Person> _sortController;

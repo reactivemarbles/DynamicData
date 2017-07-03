@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -7,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class EditDiffFixture
+    public class EditDiffFixture: IDisposable
     {
         private SourceCache<Person, string> _cache;
         private ChangeSetAggregator<Person, string> _result;
@@ -20,8 +21,7 @@ namespace DynamicData.Tests.Cache
             _cache.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray());
         }
 
-        [TearDown]
-        public void OnTestCompleted()
+        public void Dispose()
         {
             _cache.Dispose();
             _result.Dispose();

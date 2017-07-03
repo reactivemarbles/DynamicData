@@ -6,8 +6,8 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
-    
-    public class TransformFixtureParallel
+
+    public class TransformFixturParallel : IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<PersonWithGender, string> _results;

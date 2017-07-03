@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    internal class SizeLimitFixture
+    internal class SizeLimitFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;

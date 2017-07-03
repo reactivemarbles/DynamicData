@@ -9,7 +9,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.Cache
 {
     
-    public class RefCountFixture
+    public class RefCountFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
 

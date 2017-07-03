@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Binding
 {
     
-    public class BindFromObservableListFixture
+    public class BindFromObservableListFixture: IDisposable
     {
         private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
         private SourceList<Person> _source;

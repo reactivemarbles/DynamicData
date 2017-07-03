@@ -1,6 +1,6 @@
+using System;
 using System.Linq;
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using NUnit.Framework;
@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Kernal
 {
     
-    internal class SourceUpdaterFixture
+    internal class SourceUpdaterFixture: IDisposable
     {
         private ChangeAwareCache<Person, string> _cache;
         private CacheUpdater<Person, string> _updater;
@@ -19,7 +19,12 @@ namespace DynamicData.Tests.Kernal
             _cache = new ChangeAwareCache<Person, string>();
             _updater = new CacheUpdater<Person, string>(_cache, new KeySelector<Person, string>(p => p.Name));
         }
-             
+
+
+        public void Dispose()
+        {
+        }
+
         [Test]
         public void Add()
         {
@@ -141,5 +146,6 @@ namespace DynamicData.Tests.Kernal
         {
             // Assert.Throws<ArgumentNullException>(() => new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null)));
         }
+
     }
 }

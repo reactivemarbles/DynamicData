@@ -26,7 +26,7 @@ namespace DynamicData.Tests.List
     }
 
     
-    public abstract class AndFixtureBase
+    public abstract class AndFixtureBase: IDisposable
     {
         protected ISourceList<int> _source1;
         protected ISourceList<int> _source2;

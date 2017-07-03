@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    internal class ToObservableChangeSetFixture : ReactiveTest
+    internal class ToObservableChangeSetFixture:  ReactiveTest,IDisposable
     {        
         private IObservable<Person> _observable;
         private TestScheduler _scheduler;

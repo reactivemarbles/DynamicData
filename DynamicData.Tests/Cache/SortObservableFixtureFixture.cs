@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class SortObservableFixtureFixture
+    public class SortObservableFixture: IDisposable
     {
         private ISourceCache<Person, string> _cache;
         private SortedChangeSetAggregator<Person, string> _results;

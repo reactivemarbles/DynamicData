@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    public class InnerJoinFixture
+    public class InnerJoinFixture: IDisposable
     {
         private SourceCache<Device, string> _left;
         private SourceCache<DeviceMetaData, string> _right;
@@ -24,14 +24,13 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [TearDown]
-        public void OnTestCompleted()
-        {
-            _left.Dispose();
-            _right.Dispose();
-            _result.Dispose();
-        }
 
+        public void Dispose()
+        {
+            _left?.Dispose();
+            _right?.Dispose();
+            _result?.Dispose();
+        }
 
         [Test]
         public void AddLeftOnly()
@@ -323,5 +322,6 @@ namespace DynamicData.Tests.Cache
                 return $"{Key}: {Device} ({MetaData})";
             }
         }
+
     }
 }

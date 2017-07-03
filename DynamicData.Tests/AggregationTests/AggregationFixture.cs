@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.AggregationTests
 {
     
-    public class AggregationFixture
+    public class AggregationFixture: IDisposable
     {
         private SourceCache<Person, string> _source;
         private IObservable<int> _accumulator;

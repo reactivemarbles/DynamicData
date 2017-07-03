@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.Cache
 {
     
-    public class GroupControllerFixture
+    public class GroupControllerFixture: IDisposable
     {
         private enum AgeBracket
         {
@@ -26,6 +26,14 @@ namespace DynamicData.Tests.Cache
         private ISourceCache<Person, string> _source;
         private GroupController _controller;
         private IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
+
+
+        public void Dispose()
+        {
+            _source?.Dispose();
+            _controller?.Dispose();
+            _grouped?.Dispose();
+        }
 
         [SetUp]
         public void Initialise()
@@ -119,5 +127,6 @@ namespace DynamicData.Tests.Cache
 
             return person.Count == 1;
         }
+
     }
 }

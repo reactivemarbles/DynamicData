@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
@@ -8,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Binding
 {
     
-    public class ObservableCollectionExtendedToChangeSetFixture
+    public class ObservableCollectionExtendedToChangeSetFixture: IDisposable
     {
         private ObservableCollectionExtended<int> _collection;
         private ChangeSetAggregator<int> _results;

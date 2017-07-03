@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.AggregationTests
 {
     
-    public class MinFixture
+    public class MinFixture: IDisposable
     {
         private SourceCache<Person, string> _source;
 

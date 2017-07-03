@@ -98,7 +98,6 @@
     <Compile Include="AggregationTests\AverageFixture.cs" />
     <Compile Include="AggregationTests\MaxFixture.cs" />
     <Compile Include="AggregationTests\MinFixture.cs" />
-    <Compile Include="AggregationTests\StdDevFixture.cs" />
     <Compile Include="Binding\BindChangeSetFixture.cs" />
     <Compile Include="Binding\BindFromObservableListFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />

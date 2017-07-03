@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.AggregationTests
 {
     
-    public class AverageFixture
+    public class AverageFixture: IDisposable
     {
         private SourceCache<Person, string> _source;
 

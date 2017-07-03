@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Linq;
 using System.Reactive.Subjects;
 using FluentAssertions;
@@ -7,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class SwitchFixture
+    public class SwitchFixture: IDisposable
     {
         private ISubject<ISourceList<int>> _switchable;
         private ISourceList<int> _source;

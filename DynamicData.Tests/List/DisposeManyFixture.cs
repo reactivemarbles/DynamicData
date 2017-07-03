@@ -6,7 +6,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class DisposeManyFixture
+    public class DisposeManyFixture: IDisposable
     {
         private ISourceList<DisposableObject> _source;
         private ChangeSetAggregator<DisposableObject> _results;

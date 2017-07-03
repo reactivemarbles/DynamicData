@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
-    public class PageWithSortControllerFixture
+    public class PageWithSortControllerFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private PagedChangeSetAggregator<Person, string> _aggregators;

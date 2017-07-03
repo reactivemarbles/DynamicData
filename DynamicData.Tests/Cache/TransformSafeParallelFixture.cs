@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class TransformSafeParallelFixture
+    public class TransformSafeParallelFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<PersonWithGender, string> _results;

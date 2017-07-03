@@ -1,11 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.List
 {
     
-    internal class ReverseFixture
+    internal class ReverseFixture: IDisposable
     {
         private ISourceList<int> _source;
         private ChangeSetAggregator<int> _results;

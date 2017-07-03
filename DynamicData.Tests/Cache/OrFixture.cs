@@ -27,7 +27,7 @@ namespace DynamicData.Tests.Cache
     }
 
     
-    public abstract class OrFixtureBase
+    public abstract class OrFixtureBase : IDisposable
     {
         protected ISourceCache<Person, string> _source1;
         protected ISourceCache<Person, string> _source2;

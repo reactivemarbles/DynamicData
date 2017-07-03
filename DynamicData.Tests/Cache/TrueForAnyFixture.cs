@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class TrueForAnyFixture
+    public class TrueForAnyFixture: IDisposable
     {
         private ISourceCache<ObjectWithObservable, int> _source;
         private IObservable<bool> _observable;

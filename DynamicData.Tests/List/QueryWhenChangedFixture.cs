@@ -6,7 +6,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class QueryWhenChangedFixture
+    public class QueryWhenChangedFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;

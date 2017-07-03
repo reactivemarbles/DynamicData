@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class GroupFromDistinctFixture
+    public class GroupFromDistinctFixture: IDisposable
     {
         private ISourceCache<Person, string> _personCache;
         private ISourceCache<PersonEmployment, PersonEmpKey> _employmentCache;

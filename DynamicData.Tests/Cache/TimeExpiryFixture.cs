@@ -8,8 +8,8 @@ using NUnit.Framework;
 
 namespace DynamicData.Tests.Cache
 {
-    [TestFixture()]
-    internal class TimeExpiryFixture
+    [TestFixture: IDisposable()]
+    internal class TimeExpiryFixture: IDisposable
     {
         private ISourceCache<Person, string> _cache;
         private IDisposable _remover;

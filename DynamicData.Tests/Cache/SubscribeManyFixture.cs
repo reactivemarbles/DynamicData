@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reactive.Disposables;
 using FluentAssertions;
 using NUnit.Framework;
@@ -6,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class SubscribeManyFixture
+    public class SubscribeManyFixture: IDisposable
     {
         private class SubscribeableObject
         {

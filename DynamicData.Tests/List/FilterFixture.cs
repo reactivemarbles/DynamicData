@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class FilterFixture
+    public class FilterFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;
@@ -50,7 +50,7 @@ namespace DynamicData.Tests.List
         }
 
         [Test]
-        public void ClearFixture()
+        public void Clear()
         {
             var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
 
@@ -141,7 +141,7 @@ namespace DynamicData.Tests.List
         }
 
         [Test]
-        public void Clear()
+        public void Clear1()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
             _source.AddRange(people);

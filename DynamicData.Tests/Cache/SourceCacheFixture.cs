@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class SourceCacheFixture
+    public class SourceCacheFixture: IDisposable
     {
         private ChangeSetAggregator<Person, string> _results;
         private ISourceCache<Person, string> _source;

@@ -26,7 +26,7 @@ namespace DynamicData.Tests.List
     }
 
     
-    public abstract class OrFixtureBase
+    public abstract class OrFixtureBase: IDisposable
     {
         protected ISourceList<int> _source1;
         protected ISourceList<int> _source2;

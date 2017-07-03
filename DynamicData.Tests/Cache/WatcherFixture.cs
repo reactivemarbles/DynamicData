@@ -16,7 +16,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.Cache
 {
     
-    public class WatcherFixture
+    public class WatcherFixture: IDisposable
     {
         private TestScheduler _scheduler = new TestScheduler();
         private ISourceCache<Person, string> _source;

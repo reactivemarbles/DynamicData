@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
@@ -7,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class FilterControllerFixtureWithDiffSet
+    public class FilterControllerFixtureWithDiffSet : IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;

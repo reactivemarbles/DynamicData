@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.AggregationTests
 {
     
-    public class SumFixture
+    public class SumFixture: IDisposable
     {
         private SourceCache<Person, string> _source;
 

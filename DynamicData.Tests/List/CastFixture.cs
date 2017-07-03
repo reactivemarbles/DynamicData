@@ -1,11 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
 
 namespace DynamicData.Tests.List
 {
     
-    public class CastFixture
+    public class CastFixture: IDisposable
     {
         private ISourceList<int> _source;
         private ChangeSetAggregator<decimal> _results;

@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class TransformFixture
+    public class TransformFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<PersonWithGender> _results;

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using DynamicData.PLinq;
 using DynamicData.Tests.Domain;
@@ -7,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class FilterParallelFixture
+    public class FilterParallelFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<Person, string> _results;

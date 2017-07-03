@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class ExceptFixture : ExceptFixtureBase
+    public class ExceptFixture : ExceptFixtureBase 
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
         {
@@ -26,7 +26,7 @@ namespace DynamicData.Tests.List
     }
 
     
-    public abstract class ExceptFixtureBase
+    public abstract class ExceptFixtureBase :IDisposable
     {
         protected ISourceList<int> _source1;
         protected ISourceList<int> _source2;

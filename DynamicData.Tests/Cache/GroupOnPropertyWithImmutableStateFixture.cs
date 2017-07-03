@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using DynamicData;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
@@ -8,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class GroupOnPropertyWithImmutableStateFixture
+    public class GroupOnPropertyWithImmutableStateFixture: IDisposable
     {
         private SourceCache<Person, string> _source;
         private ChangeSetAggregator<IGrouping<Person, string, int>, int> _results;

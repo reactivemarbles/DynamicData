@@ -10,10 +10,10 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class GroupImmutableFixture
+    public class GroupImmutableFixture: IDisposable
     {
         private ISourceList<Person> _source;
-        private ChangeSetAggregator<List.IGrouping<Person, int>> _results;
+        private ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
         private ISubject<Unit> _regrouper;
         [SetUp]
         public void Initialise()

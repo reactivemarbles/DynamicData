@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -7,7 +8,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.Cache
 {
     
-    public class DistinctFixture
+    public class DistinctFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
         private DistinctChangeSetAggregator<int> _results;

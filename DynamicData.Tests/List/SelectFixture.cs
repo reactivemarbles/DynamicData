@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class SelectFixture
+    public class SelectFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<PersonWithGender> _results;

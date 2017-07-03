@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.AggregationTests
 {
     
-    public class MaxFixture
+    public class MaxFixture: IDisposable
     {
         private SourceCache<Person, string> _source;
 

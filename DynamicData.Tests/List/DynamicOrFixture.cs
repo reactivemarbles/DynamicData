@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace DynamicData.Tests.List
 {
     
-    public class DynamicOrFixture
+    public class DynamicOrFixture: IDisposable
     {
         private ISourceList<int> _source1;
         private ISourceList<int> _source2;

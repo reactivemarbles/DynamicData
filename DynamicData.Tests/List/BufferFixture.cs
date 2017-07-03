@@ -8,7 +8,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Tests.List
 {
     
-    public class BufferFixture
+    public class BufferFixture: IDisposable
     {
         private ISourceList<Person> _source;
         private ChangeSetAggregator<Person> _results;

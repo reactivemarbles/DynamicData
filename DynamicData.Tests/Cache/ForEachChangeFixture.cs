@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.Cache
 {
     
-    public class ForEachChangeFixture
+    public class ForEachChangeFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
 
