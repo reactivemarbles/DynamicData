@@ -12,12 +12,11 @@ namespace DynamicData.Tests.List
     
     public class FilterWithObservable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
-        private BehaviorSubject<Func<Person, bool>> _filter;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
+        private readonly BehaviorSubject<Func<Person, bool>> _filter;
 
-        [SetUp]
-        public void Initialise()
+        public  FilterWithObservable()
         {
             _source = new SourceList<Person>();
             _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20);

@@ -10,14 +10,13 @@ namespace DynamicData.Tests.List
     
     public class BatchIfFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
-        private TestScheduler _scheduler;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
+        private readonly TestScheduler _scheduler;
 
-        private ISubject<bool> _pausingSubject = new Subject<bool>();
+        private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
 
-        [SetUp]
-        public void MyTestInitialize()
+        public  BatchIfFixture()
         {
             _pausingSubject = new Subject<bool>();
             _scheduler = new TestScheduler();

@@ -12,11 +12,12 @@ namespace DynamicData.Tests.List
     
     public class GroupImmutableFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
-        private ISubject<Unit> _regrouper;
-        [SetUp]
-        public void Initialise()
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
+        private readonly ISubject<Unit> _regrouper;
+
+        
+        public  GroupImmutableFixture()
         {
             _source = new SourceList<Person>();
             _regrouper = new Subject<Unit>();

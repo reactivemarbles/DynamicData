@@ -11,7 +11,7 @@ namespace DynamicData.Tests.List
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
         {
-            return _source1.Connect().Except(_source2.Connect());
+            return Source1.Connect().Except(Source2.Connect());
         }
     }
 
@@ -20,7 +20,7 @@ namespace DynamicData.Tests.List
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
         {
-            var l = new List<IObservable<IChangeSet<int>>> { _source1.Connect(), _source2.Connect() };
+            var l = new List<IObservable<IChangeSet<int>>> { Source1.Connect(), Source2.Connect() };
             return l.Except();
         }
     }
@@ -28,15 +28,14 @@ namespace DynamicData.Tests.List
     
     public abstract class ExceptFixtureBase :IDisposable
     {
-        protected ISourceList<int> _source1;
-        protected ISourceList<int> _source2;
-        private ChangeSetAggregator<int> _results;
+        protected ISourceList<int> Source1;
+        protected ISourceList<int> Source2;
+        private readonly ChangeSetAggregator<int> _results;
 
-        [SetUp]
-        public void Initialise()
+        protected ExceptFixtureBase()
         {
-            _source1 = new SourceList<int>();
-            _source2 = new SourceList<int>();
+            Source1 = new SourceList<int>();
+            Source2 = new SourceList<int>();
             _results = CreateObservable().AsAggregator();
         }
 
@@ -44,47 +43,47 @@ namespace DynamicData.Tests.List
 
         public void Dispose()
         {
-            _source1.Dispose();
-            _source2.Dispose();
+            Source1.Dispose();
+            Source2.Dispose();
             _results.Dispose();
         }
 
         [Test]
         public void IncludedWhenItemIsInOneSource()
         {
-            _source1.Add(1);
+            Source1.Add(1);
             _results.Data.Count.Should().Be(1);
         }
 
         [Test]
         public void NothingFromOther()
         {
-            _source2.Add(1);
+            Source2.Add(1);
             _results.Data.Count.Should().Be(0);
         }
 
         [Test]
         public void ExcludedWhenItemIsInTwoSources()
         {
-            _source1.Add(1);
-            _source2.Add(1);
+            Source1.Add(1);
+            Source2.Add(1);
             _results.Data.Count.Should().Be(0);
         }
 
         [Test]
         public void AddedWhenNoLongerInSecond()
         {
-            _source1.Add(1);
-            _source2.Add(1);
-            _source2.Remove(1);
+            Source1.Add(1);
+            Source2.Add(1);
+            Source2.Remove(1);
             _results.Data.Count.Should().Be(1);
         }
 
         [Test]
         public void CombineRange()
         {
-            _source1.AddRange(Enumerable.Range(1, 10));
-            _source2.AddRange(Enumerable.Range(6, 10));
+            Source1.AddRange(Enumerable.Range(1, 10));
+            Source2.AddRange(Enumerable.Range(6, 10));
             _results.Data.Count.Should().Be(5);
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
         }
@@ -92,19 +91,19 @@ namespace DynamicData.Tests.List
         [Test]
         public void ClearFirstClearsResult()
         {
-            _source1.AddRange(Enumerable.Range(1, 5));
-            _source2.AddRange(Enumerable.Range(1, 5));
-            _source1.Clear();
+            Source1.AddRange(Enumerable.Range(1, 5));
+            Source2.AddRange(Enumerable.Range(1, 5));
+            Source1.Clear();
             _results.Data.Count.Should().Be(0);
         }
 
         [Test]
         public void ClearSecondEnsuresFirstIsIncluded()
         {
-            _source1.AddRange(Enumerable.Range(1, 5));
-            _source2.AddRange(Enumerable.Range(1, 5));
+            Source1.AddRange(Enumerable.Range(1, 5));
+            Source2.AddRange(Enumerable.Range(1, 5));
             _results.Data.Count.Should().Be(0);
-            _source2.Clear();
+            Source2.Clear();
             _results.Data.Count.Should().Be(5);
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
         }

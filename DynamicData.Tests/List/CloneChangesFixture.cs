@@ -10,11 +10,10 @@ namespace DynamicData.Tests.List
     
     internal class CloneChangesFixture
     {
-        private ChangeAwareList<int> _source;
-        private List<int> _clone;
+        private readonly ChangeAwareList<int> _source;
+        private readonly List<int> _clone;
 
-        [SetUp]
-        public void Setup()
+        public  CloneChangesFixture()
         {
             _source = new ChangeAwareList<int>();
             _clone = new List<int>();

@@ -30,10 +30,10 @@ namespace DynamicData.Tests.List
     {
         protected ISourceList<int> _source1;
         protected ISourceList<int> _source2;
-        private ChangeSetAggregator<int> _results;
+        private readonly ChangeSetAggregator<int> _results;
 
-        [SetUp]
-        public void Initialise()
+
+        protected AndFixtureBase()
         {
             _source1 = new SourceList<int>();
             _source2 = new SourceList<int>();

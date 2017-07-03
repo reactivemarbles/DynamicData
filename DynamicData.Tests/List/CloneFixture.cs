@@ -11,14 +11,14 @@ namespace DynamicData.Tests.List
     
     public class CloneFixture: IDisposable
     {
-        private ICollection<Person> _collection = new Collection<Person>();
-        private ISourceCache<Person, string> _source;
+        private readonly ICollection<Person> _collection = new Collection<Person>();
+        private readonly ISourceCache<Person, string> _source;
 
-        private IDisposable _cloner;
+        private readonly IDisposable _cloner;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        [SetUp]
-        public void SetUp()
+
+        public  CloneFixture()
         {
             _collection = new Collection<Person>();
             _source = new SourceCache<Person, string>(p => p.Name);

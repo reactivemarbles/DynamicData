@@ -10,12 +10,11 @@ namespace DynamicData.Tests.List
     
     public class BufferFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
-        private TestScheduler _scheduler;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
+        private readonly TestScheduler _scheduler;
 
-        [SetUp]
-        public void MyTestInitialize()
+        public  BufferFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();

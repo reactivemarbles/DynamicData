@@ -10,10 +10,9 @@ namespace DynamicData.Tests.List
     
     public class ForEachChangeFixture: IDisposable
     {
-        private ISourceList<Person> _source;
+        private readonly ISourceList<Person> _source;
 
-        [SetUp]
-        public void Initialise()
+        public  ForEachChangeFixture()
         {
             _source = new SourceList<Person>();
         }

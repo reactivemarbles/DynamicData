@@ -10,12 +10,11 @@ namespace DynamicData.Tests.List
     
     public class FilterControllerFixtureWithDiffSet : IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
-        private FilterController<Person> _filter;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
+        private readonly FilterController<Person> _filter;
 
-        [SetUp]
-        public void Initialise()
+        public  FilterControllerFixtureWithDiffSet()
         {
             _source = new SourceList<Person>();
             _filter = new FilterController<Person>(p => p.Age > 20);

@@ -11,13 +11,12 @@ namespace DynamicData.Tests.List
     
     internal class ExpireAfterFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
 
-        private TestScheduler _scheduler;
+        private readonly TestScheduler _scheduler;
 
-        [SetUp]
-        public void MyTestInitialize()
+        public ExpireAfterFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
@@ -33,7 +32,7 @@ namespace DynamicData.Tests.List
         [Test]
         public void ComplexRemove()
         {
-            Func<Person, TimeSpan?> removeFunc = t =>
+            TimeSpan? RemoveFunc(Person t)
             {
                 if (t.Age <= 40)
                     return TimeSpan.FromSeconds(5);
@@ -41,13 +40,13 @@ namespace DynamicData.Tests.List
                 if (t.Age <= 80)
                     return TimeSpan.FromSeconds(7);
                 return null;
-            };
+            }
 
             const int size = 100;
             Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
             _source.AddRange(items);
 
-            var remover = _source.ExpireAfter(removeFunc, _scheduler).Subscribe();
+            var remover = _source.ExpireAfter(RemoveFunc, _scheduler).Subscribe();
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(5010).Ticks);
 
             _source.Count.Should().Be(60, "40 items should have been removed from the cache");

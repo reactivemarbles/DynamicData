@@ -10,11 +10,10 @@ namespace DynamicData.Tests.List
     
     public class FilterFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  FilterFixture()
         {
             _source = new SourceList<Person>();
             _results = _source.Connect(p => p.Age > 20).AsAggregator();

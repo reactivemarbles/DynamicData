@@ -10,11 +10,11 @@ namespace DynamicData.Tests.List
     
     public class GroupOnPropertyWithImmutableStateFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
 
-        [SetUp]
-        public void Initialise()
+
+        public  GroupOnPropertyWithImmutableStateFixture()
         {
             _source = new SourceList<Person>();
             _results = _source.Connect().GroupOnPropertyWithImmutableState(p => p.Age).AsAggregator();

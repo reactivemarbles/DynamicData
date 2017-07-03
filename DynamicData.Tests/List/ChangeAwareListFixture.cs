@@ -11,8 +11,7 @@ namespace DynamicData.Tests.List
     {
         private ChangeAwareList<int> _list;
 
-        [SetUp]
-        public void Setup()
+        public ChangeAwareListFixture()
         {
             _list = new ChangeAwareList<int>();
         }

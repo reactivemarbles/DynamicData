@@ -9,11 +9,10 @@ namespace DynamicData.Tests.List
     
     public class EditDiffFixture: IDisposable
     {
-        private SourceList<Person> _cache;
-        private ChangeSetAggregator<Person> _result;
+        private readonly SourceList<Person> _cache;
+        private readonly ChangeSetAggregator<Person> _result;
 
-        [SetUp]
-        public void Initialise()
+        public  EditDiffFixture()
         {
             _cache = new SourceList<Person>();
             _result = _cache.Connect().AsAggregator();

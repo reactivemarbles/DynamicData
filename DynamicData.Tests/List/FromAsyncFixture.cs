@@ -15,8 +15,8 @@ namespace DynamicData.Tests.List
     {
         private TestScheduler _scheduler;
 
-        [SetUp]
-        public void SetUp()
+
+        public  FromAsyncFixture()
         {
             _scheduler = new TestScheduler();
         }

@@ -9,11 +9,11 @@ namespace DynamicData.Tests.List
     
     public class DistinctValuesFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<int> _results;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<int> _results;
 
-        [SetUp]
-        public void Initialise()
+
+        public  DistinctValuesFixture()
         {
             _source = new SourceList<Person>();
             _results = _source.Connect().DistinctValues(p => p.Age).AsAggregator();

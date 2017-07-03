@@ -8,11 +8,10 @@ namespace DynamicData.Tests.List
     
     public class DisposeManyFixture: IDisposable
     {
-        private ISourceList<DisposableObject> _source;
-        private ChangeSetAggregator<DisposableObject> _results;
+        private readonly ISourceList<DisposableObject> _source;
+        private readonly ChangeSetAggregator<DisposableObject> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  DisposeManyFixture()
         {
             _source = new SourceList<DisposableObject>();
             _results = new ChangeSetAggregator<DisposableObject>(_source.Connect().DisposeMany());

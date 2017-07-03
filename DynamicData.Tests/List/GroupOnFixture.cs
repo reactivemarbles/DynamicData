@@ -9,11 +9,10 @@ namespace DynamicData.Tests.List
     
     public class GroupOnFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<IGroup<Person, int>> _results;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<IGroup<Person, int>> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  GroupOnFixture()
         {
             _source = new SourceList<Person>();
             _results = _source.Connect().GroupOn(p => p.Age).AsAggregator();

@@ -8,15 +8,15 @@ namespace DynamicData.Tests.List
     
     public class DynamicOrFixture: IDisposable
     {
-        private ISourceList<int> _source1;
-        private ISourceList<int> _source2;
-        private ISourceList<int> _source3;
-        private ISourceList<IObservable<IChangeSet<int>>> _source;
+        private readonly ISourceList<int> _source1;
+        private readonly ISourceList<int> _source2;
+        private readonly ISourceList<int> _source3;
+        private readonly ISourceList<IObservable<IChangeSet<int>>> _source;
 
-        private ChangeSetAggregator<int> _results;
+        private readonly ChangeSetAggregator<int> _results;
 
-        [SetUp]
-        public void Initialise()
+
+        public  DynamicOrFixture()
         {
             _source1 = new SourceList<int>();
             _source2 = new SourceList<int>();

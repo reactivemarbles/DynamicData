@@ -8,11 +8,11 @@ namespace DynamicData.Tests.List
     
     public class CastFixture: IDisposable
     {
-        private ISourceList<int> _source;
-        private ChangeSetAggregator<decimal> _results;
+        private readonly ISourceList<int> _source;
+        private readonly ChangeSetAggregator<decimal> _results;
 
-        [SetUp]
-        public void Initialise()
+
+        public  CastFixture()
         {
             _source = new SourceList<int>();
             _results = _source.Cast(i=>(decimal)i).AsAggregator();
