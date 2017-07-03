@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.List
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddToSourceAddsToDestination()
         {
             var person = new Person("Adult1", 50);
@@ -43,7 +43,7 @@ namespace DynamicData.Tests.List
             _collection.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void UpdateToSourceUpdatesTheDestination()
         {
             var person = new Person("Adult1", 50);
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.List
             _collection.First().Should().Be(personUpdated, "Should be updated person");
         }
 
-        [Test]
+        [Fact]
         public void RemoveSourceRemovesFromTheDestination()
         {
             var person = new Person("Adult1", 50);
@@ -65,7 +65,7 @@ namespace DynamicData.Tests.List
             _collection.Count.Should().Be(0, "Should be 1 item in the collection");
         }
 
-        [Test]
+        [Fact]
         public void BatchAdd()
         {
             var people = _generator.Take(100).ToList();
@@ -75,7 +75,7 @@ namespace DynamicData.Tests.List
             _collection.ShouldAllBeEquivalentTo(_collection, "Collections should be equivalent");
         }
 
-        [Test]
+        [Fact]
         public void BatchRemove()
         {
             var people = _generator.Take(100).ToList();

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reactive.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.Kernal
             public static int Key => throw new Exception("Calling Key");
         }
 
-        [Test]
+        [Fact]
         public void TransformError()
         {
             bool completed = false;
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.Kernal
             completed.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void FilterError()
         {
             bool completed = false;
@@ -75,7 +75,7 @@ namespace DynamicData.Tests.Kernal
             completed.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ErrorUpdatingStreamIsHandled()
         {
             bool completed = false;

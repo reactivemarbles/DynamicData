@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using DynamicData.Kernel;
 using FluentAssertions;
 
@@ -30,7 +30,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
         
-        [Test]
+        [Fact]
         public void Add()
         {
 
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.List
             _results.Messages.First().Adds.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void UpdatesArePermissible()
         {
             _source.Add(new Person("Person1", 20));
@@ -53,7 +53,7 @@ namespace DynamicData.Tests.List
             group.Count.Should().Be(2);
         }
 
-        [Test]
+        [Fact]
         public void UpdateAnItemWillChangedThegroup()
         {
             var person1 = new Person("Person1", 20);
@@ -70,7 +70,7 @@ namespace DynamicData.Tests.List
             group.Key.Should().Be(21);
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             var person = new Person("Person1", 20);
@@ -81,7 +81,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void FiresManyValueForBatchOfDifferentAdds()
         {
             _source.Edit(updater =>
@@ -101,7 +101,7 @@ namespace DynamicData.Tests.List
             }
         }
 
-        [Test]
+        [Fact]
         public void FiresOnlyOnceForABatchOfUniqueValues()
         {
             _source.Edit(updater =>
@@ -117,7 +117,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Count.Should().Be(4);
         }
 
-        [Test]
+        [Fact]
         public void ChanegMultipleGroups()
         {
             var initialPeople = Enumerable.Range(1, 10000)
@@ -148,7 +148,7 @@ namespace DynamicData.Tests.List
             _results.Messages.Skip(1).First().Replaced.Should().Be(10);
         }
 
-        [Test]
+        [Fact]
         public void Reevaluate()
         {
             var initialPeople = Enumerable.Range(1, 10)

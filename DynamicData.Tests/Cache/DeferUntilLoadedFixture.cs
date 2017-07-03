@@ -2,14 +2,14 @@ using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class DeferAnsdSkipFixture
     {
-        [Test]
+        [Fact]
         public void DeferUntilLoadedDoesNothingUntilDataHasBeenReceived()
         {
             bool updateReceived = false;
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.Cache
             deferStream.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void SkipInitialDoesNotReturnTheFirstBatchOfData()
         {
             bool updateReceived = false;

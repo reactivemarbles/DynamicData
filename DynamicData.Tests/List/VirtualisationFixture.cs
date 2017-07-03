@@ -6,20 +6,19 @@ using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     public class VirtualisationFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
-        private VirtualisingController _controller;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
+        private readonly VirtualisingController _controller;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        [SetUp]
-        public void Initialise()
+        public  VirtualisationFixture()
         {
             _source = new SourceList<Person>();
             _controller = new VirtualisingController(new VirtualRequest(0, 25));
@@ -33,7 +32,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void VirtualiseInitial()
         {
             var people = _generator.Take(100).ToArray();
@@ -44,7 +43,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(expected);
         }
 
-        [Test]
+        [Fact]
         public void MoveToNextPage()
         {
             var people = _generator.Take(100).ToArray();
@@ -55,7 +54,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(expected);
         }
 
-        [Test]
+        [Fact]
         public void InsertAfterPageProducesNothing()
         {
             var people = _generator.Take(100).ToArray();
@@ -67,7 +66,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(expected);
         }
 
-        [Test]
+        [Fact]
         public void InsertInPageReflectsChange()
         {
             var people = _generator.Take(100).ToArray();
@@ -84,7 +83,7 @@ namespace DynamicData.Tests.List
             message.Reason.Should().Be(ListChangeReason.Remove);
         }
 
-        [Test]
+        [Fact]
         public void RemoveBeforeShiftsPage()
         {
             var people = _generator.Take(100).ToArray();
@@ -106,7 +105,7 @@ namespace DynamicData.Tests.List
             addedMessage.Reason.Should().Be(ListChangeReason.Add);
         }
 
-        [Test]
+        [Fact]
         public void MoveWithinSamePage()
         {
             var people = _generator.Take(100).ToArray();
@@ -118,7 +117,7 @@ namespace DynamicData.Tests.List
             actualPersonAtIndex10.Should().Be(personToMove);
         }
 
-        [Test]
+        [Fact]
         public void MoveWithinSamePage2()
         {
             var people = _generator.Take(100).ToArray();

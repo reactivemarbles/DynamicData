@@ -2,15 +2,15 @@
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     public class TransformFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<PersonWithGender> _results;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<PersonWithGender> _results;
 
         private readonly Func<Person, PersonWithGender> _transformFactory = p =>
         {
@@ -18,8 +18,7 @@ namespace DynamicData.Tests.List
             return new PersonWithGender(p, gender);
         };
 
-        [SetUp]
-        public void Initialise()
+        public  TransformFixture()
         {
             _source = new SourceList<Person>();
             _results = new ChangeSetAggregator<PersonWithGender>(_source.Connect().Transform(_transformFactory));
@@ -31,7 +30,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             var person = new Person("Adult1", 50);
@@ -42,7 +41,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             const string key = "Adult1";
@@ -58,7 +57,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
 
-        [Test]
+        [Fact]
         public void Update()
         {
             const string key = "Adult1";
@@ -73,7 +72,7 @@ namespace DynamicData.Tests.List
             _results.Messages[0].Replaced.Should().Be(0, "Should be 1 update");
         }
 
-        [Test]
+        [Fact]
         public void BatchOfUniqueUpdates()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -87,7 +86,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
         }
 
-        [Test]
+        [Fact]
         public void SameKeyChanges()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name", i)).ToArray();
@@ -99,7 +98,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(10, "Should result in 10 records");
         }
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();

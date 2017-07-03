@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Cache
             _comparerObservable.OnCompleted();
         }
 
-        [Test]
+        [Fact]
         public void SortInitialBatch()
         {
             var people = _generator.Take(100).ToArray();
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void ChangeSort()
         {
             var people = _generator.Take(100).ToArray();
@@ -69,7 +69,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void ChangeSortWithinThreshold()
         {
             var people = _generator.Take(20).ToArray();
@@ -86,7 +86,7 @@ namespace DynamicData.Tests.Cache
             sortReason.Should().Be(SortReason.Reorder);
         }
 
-        [Test]
+        [Fact]
         public void ChangeSortAboveThreshold()
         {
             var people = _generator.Take(30).ToArray();
@@ -103,7 +103,7 @@ namespace DynamicData.Tests.Cache
             sortReason.Should().Be(SortReason.Reset);
         }
 
-        [Test]
+        [Fact]
         public void InlineChanges()
         {
             var people = _generator.Take(10000).ToArray();
@@ -130,7 +130,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(expected);
         }
 
-        [Test]
+        [Fact]
         public void Reset()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).OrderBy(x => Guid.NewGuid()).ToArray();

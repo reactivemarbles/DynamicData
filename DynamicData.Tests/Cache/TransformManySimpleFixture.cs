@@ -1,7 +1,7 @@
 ﻿using System;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -25,7 +25,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void Adds()
         {
             var parent = new PersonWithChildren("parent", 50, new Person[]
@@ -43,7 +43,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             var parent = new PersonWithChildren("parent", 50, new Person[]
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(0, "Should be 4 in the cache");
         }
 
-        [Test]
+        [Fact]
         public void RemovewithIncompleteChildren()
         {
             var parent1 = new PersonWithChildren("parent", 50, new Person[]
@@ -72,7 +72,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(0, "Should be 0 in the cache");
         }
 
-        [Test]
+        [Fact]
         public void UpdateWithLessChildren()
         {
             var parent1 = new PersonWithChildren("parent", 50, new Person[]
@@ -92,7 +92,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void UpdateWithMultipleChanges()
         {
             var parent1 = new PersonWithChildren("parent", 50, new Person[]

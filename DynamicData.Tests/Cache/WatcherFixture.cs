@@ -8,7 +8,7 @@ using System.Reactive.Linq;
 using DynamicData.Experimental;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 using FluentAssertions;
 #endregion
@@ -51,7 +51,7 @@ namespace DynamicData.Tests.Cache
             _cleanUp.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddNew()
         {
             var person = new Person("Adult1", 50);
@@ -65,7 +65,7 @@ namespace DynamicData.Tests.Cache
             result.Completed.Should().Be(false, "Person should have received 1 update");
         }
 
-        [Test]
+        [Fact]
         public void Update()
         {
             var first = new Person("Adult1", 50);
@@ -84,7 +84,7 @@ namespace DynamicData.Tests.Cache
             secondResult.Previous.Value.Completed.Should().Be(true, "Second person  should have received 1 update");
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             var person = new Person("Adult1", 50);
@@ -102,7 +102,7 @@ namespace DynamicData.Tests.Cache
             secondResult.Current.Completed.Should().Be(true, "Second person  should have received 1 update");
         }
 
-        [Test]
+        [Fact]
         public void Watch()
         {
             var person = new Person("Adult1", 50);
@@ -121,7 +121,7 @@ namespace DynamicData.Tests.Cache
             watch.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void WatchMany()
         {
             _source.AddOrUpdate(new Person("Adult1", 50));

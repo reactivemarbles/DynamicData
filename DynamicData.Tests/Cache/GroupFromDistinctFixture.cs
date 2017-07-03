@@ -4,7 +4,7 @@ using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -26,7 +26,7 @@ namespace DynamicData.Tests.Cache
             _employmentCache?.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void GroupFromDistinct()
         {
             const int numberOfPeople = 1000;

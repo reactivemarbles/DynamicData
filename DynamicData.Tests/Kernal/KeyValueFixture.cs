@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
     
     public class KeyValueFixture
     {
-        [Test]
+        [Fact]
         public void Create()
         {
             var person = new Person("Person", 10);

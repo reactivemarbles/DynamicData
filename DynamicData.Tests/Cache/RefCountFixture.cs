@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Threading.Tasks;
 using System.Linq;
@@ -23,7 +23,7 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChainIsInvokedOnceForMultipleSubscribers()
         {
             int created = 0;
@@ -49,7 +49,7 @@ namespace DynamicData.Tests.Cache
             disposals.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void CanResubscribe()
         {
             int created = 0;
@@ -78,7 +78,7 @@ namespace DynamicData.Tests.Cache
         // This test is probabilistic, it could be cool to be able to prove RefCount's thread-safety
         // more accurately but I don't think that there is an easy way to do this.
         // At least this test can catch some bugs in the old implementation.
-        [Test]
+        [Fact]
         public async Task IsHopefullyThreadSafe()
         {
             var refCount = _source.Connect().RefCount();

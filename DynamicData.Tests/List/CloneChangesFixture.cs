@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
-using NUnit.Framework;
+using Xunit;
 using System.Collections.ObjectModel;
 using FluentAssertions;
 
@@ -19,7 +19,7 @@ namespace DynamicData.Tests.List
             _clone = new List<int>();
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             _source.Add(1);
@@ -31,7 +31,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void AddSecond()
         {
             _source.Add(1);
@@ -42,7 +42,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void AddManyInSuccession()
         {
             Enumerable.Range(1, 10)
@@ -53,7 +53,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void AddRange()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -63,7 +63,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void AddSecondRange()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -73,7 +73,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void InsertRangeInCentre()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -84,7 +84,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             _source.Add(1);
@@ -95,7 +95,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void RemoveRange()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -106,7 +106,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void RemoveSucession()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -118,7 +118,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void RemoveSucessionReversed()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -131,7 +131,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void RemoveMany()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -142,7 +142,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void RemoveInnerRange()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -153,7 +153,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void RemoveManyPartial()
         {
             _source.AddRange(Enumerable.Range(1, 10));
@@ -164,7 +164,7 @@ namespace DynamicData.Tests.List
             _clone.ShouldAllBeEquivalentTo(_source);
         }
 
-        [Test]
+        [Fact]
         public void MovedItemInObservableCollectionIsMoved()
         {
             _source.AddRange(Enumerable.Range(1, 10));

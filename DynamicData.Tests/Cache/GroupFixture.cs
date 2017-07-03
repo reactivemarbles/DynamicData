@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -22,7 +22,7 @@ namespace DynamicData.Tests.Cache
 
         private readonly ISourceCache<Person, string> _source;
 
-        [Test]
+        [Fact]
         public void Add()
         {
             bool called = false;
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Cache
             called.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void UpdateNotPossible()
         {
             bool called = false;
@@ -52,7 +52,7 @@ namespace DynamicData.Tests.Cache
             called.Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void UpdateAnItemWillChangedThegroup()
         {
             bool called = false;
@@ -64,7 +64,7 @@ namespace DynamicData.Tests.Cache
             called.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             bool called = false;
@@ -83,7 +83,7 @@ namespace DynamicData.Tests.Cache
             called.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void FiresCompletedWhenDisposed()
         {
             bool completed = false;
@@ -95,7 +95,7 @@ namespace DynamicData.Tests.Cache
             completed.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void FiresManyValueForBatchOfDifferentAdds()
         {
             bool called = false;
@@ -122,7 +122,7 @@ namespace DynamicData.Tests.Cache
             called.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void FiresOnlyOnceForABatchOfUniqueValues()
         {
             bool called = false;
@@ -146,7 +146,7 @@ namespace DynamicData.Tests.Cache
             called.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void FiresRemoveWhenEmptied()
         {
             bool called = false;
@@ -173,7 +173,7 @@ namespace DynamicData.Tests.Cache
             called.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ReceivesUpdateWhenFeederIsInvoked()
         {
             bool called = false;

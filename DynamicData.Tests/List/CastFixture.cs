@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -24,7 +24,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanCast()
         {
             _source.AddRange(Enumerable.Range(1,10));

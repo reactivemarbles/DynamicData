@@ -2,14 +2,16 @@
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
     public class NotifyPropertyChangedExFixture
     {
-        [Test]
-        public void SubscribeToValueChangeForAllItemsInList([Values(true, false)] bool notifyOnInitialValue)
+        [Theory,
+         InlineData(true),
+         InlineData(false)]
+        public void SubscribeToValueChangeForAllItemsInList( bool notifyOnInitialValue)
         {
             var lastAgeChange = -1;
             var source = new SourceList<Person>();
@@ -26,8 +28,10 @@ namespace DynamicData.Tests.Binding
             13.Should().Be(lastAgeChange);
         }
 
-        [Test]
-        public void SubscribeToValueChangedOnASingleItem([Values(true, false)] bool notifyOnInitialValue)
+        [Theory,
+         InlineData(true),
+         InlineData(false)]
+        public void SubscribeToValueChangedOnASingleItem( bool notifyOnInitialValue)
         {
             var age = -1;
             var person = new Person("Name", 10);
@@ -40,8 +44,10 @@ namespace DynamicData.Tests.Binding
             13.Should().Be(age);
         }
 
-        [Test]
-        public void SubscribeToPropertyChangeForAllItemsInList([Values(true, false)] bool notifyOnInitialValue)
+        [Theory,
+         InlineData(true),
+         InlineData(false)]
+        public void SubscribeToPropertyChangeForAllItemsInList( bool notifyOnInitialValue)
         {
             var lastChange = new PropertyValue<Person, int>(null, -1);
             var source = new SourceList<Person>();
@@ -70,8 +76,10 @@ namespace DynamicData.Tests.Binding
             13.Should().Be(lastChange.Value);
         }
 
-        [Test]
-        public void SubscribeToProperyChangedOnASingleItem([Values(true, false)] bool notifyOnInitialValue)
+        [Theory,
+         InlineData(true),
+         InlineData(false)]
+        public void SubscribeToProperyChangedOnASingleItem( bool notifyOnInitialValue)
         {
             var lastChange = new PropertyValue<Person, int>(null, -1);
             var person = new Person("Name", 10);
@@ -96,12 +104,5 @@ namespace DynamicData.Tests.Binding
         }
 
 
-        [Test]
-        public void CanNotifyOnAnExpression()
-        {
-            var person = new Person("Someone", 1);
-            var observer = person.WhenChanged(p => p.Age * 10 + p.Age *23);
-
-        }
     }
 }

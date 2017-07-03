@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -26,7 +26,7 @@ namespace DynamicData.Tests.Cache
             _result.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void BuildTreeFromMixedData()
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.Cache
             secondNode.Children.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void UpdateAParentNode()
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.Cache
             firstNode.Item.Name.Should().Be(changed.Name);
         }
 
-        [Test]
+        [Fact]
         public void UpdateChildNode()
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
@@ -79,7 +79,7 @@ namespace DynamicData.Tests.Cache
             changed.Name.Should().Be(changed.Name);
         }
 
-        [Test]
+        [Fact]
         public void RemoveARootNodeWillPushOrphansUpTheHierachy()
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
@@ -89,7 +89,7 @@ namespace DynamicData.Tests.Cache
             _result.Count.Should().Be(4);
         }
 
-        [Test]
+        [Fact]
         public void RemoveAChildNodeWillPushOrphansUpTheHierachy()
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
@@ -102,7 +102,7 @@ namespace DynamicData.Tests.Cache
             thirdNode.Key.Should().Be(5);
         }
 
-        [Test]
+        [Fact]
         public void AddMissingChild()
         {
             var boss = new EmployeeDto(2) { BossId = 0, Name = "Boss" };
@@ -119,7 +119,7 @@ namespace DynamicData.Tests.Cache
             childNode.Item.Should().Be(minion);
         }
 
-        [Test]
+        [Fact]
         public void AddMissingParent()
         {
             var minion = new EmployeeDto(1) { BossId = 2, Name = "DogsBody" };
@@ -137,7 +137,7 @@ namespace DynamicData.Tests.Cache
             childNode.Item.Should().Be(minion);
         }
 
-        [Test]
+        [Fact]
         public void ChangeParent()
         {
             _sourceCache.AddOrUpdate(CreateEmployees());
@@ -161,7 +161,7 @@ namespace DynamicData.Tests.Cache
             emp3.Children.Lookup(4).HasValue.Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void AddParent()
         {
             _sourceCache.AddOrUpdate(new EmployeeDto(1) { BossId = 2, Name = "E1" });

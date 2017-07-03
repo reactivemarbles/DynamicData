@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -21,7 +21,7 @@ namespace DynamicData.Tests.List
             _scheduler = new TestScheduler();
         }
 
-        [Test]
+        [Fact]
         public void CanLoadFromTask()
         {
             Task<IEnumerable<Person>> Loader()
@@ -41,7 +41,7 @@ namespace DynamicData.Tests.List
             data.Count.Should().Be(100);
         }
 
-        [Test]
+        [Fact]
         public void HandlesErrorsInObservable()
         {
             Task<IEnumerable<Person>> Loader()
@@ -59,7 +59,7 @@ namespace DynamicData.Tests.List
             error.Should().NotBeNull();
         }
 
-        [Test]
+        [Fact]
         public void HandlesErrorsObservableList()
         {
             Func<Task<IEnumerable<Person>>> loader = () =>

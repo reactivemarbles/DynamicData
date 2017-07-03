@@ -2,14 +2,14 @@
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
     
     public class UpdateFixture
     {
-        [Test]
+        [Fact]
         public void Add()
         {
             var person = new Person("Person", 10);
@@ -21,7 +21,7 @@ namespace DynamicData.Tests.Kernal
             update.Previous.Should().Be(Optional.None<Person>());
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             var person = new Person("Person", 10);
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.Kernal
             update.Previous.Should().Be(Optional.None<Person>());
         }
 
-        [Test]
+        [Fact]
         public void Update()
         {
             var current = new Person("Person", 10);
@@ -47,7 +47,7 @@ namespace DynamicData.Tests.Kernal
             update.Previous.Value.Should().Be(previous);
         }
 
-        [Test]
+        [Fact]
         public void UpdateWillThrowIfNoPreviousValueIsSupplied()
         {
             var current = new Person("Person", 10);

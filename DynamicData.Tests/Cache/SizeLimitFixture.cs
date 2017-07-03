@@ -4,7 +4,7 @@ using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddLessThanLimit()
         {
             var person = _generator.Take(1).First();
@@ -46,7 +46,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void AddMoreThanLimit()
         {
             var people = _generator.Take(100).OrderBy(p => p.Name).ToArray();
@@ -59,7 +59,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[1].Removes.Should().Be(90, "Should be 90 removes in the second update");
         }
 
-        [Test]
+        [Fact]
         public void AddMoreThanLimitInBatched()
         {
             _source.AddOrUpdate(_generator.Take(10).ToArray());
@@ -73,7 +73,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             var person = _generator.Take(1).First();
@@ -84,7 +84,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void ThrowsIfSizeLimitIsZero()
         {
             // Initialise();
@@ -92,7 +92,7 @@ namespace DynamicData.Tests.Cache
             ;
         }
 
-        [Test]
+        [Fact]
         public void OnCompleteIsInvokedWhenSourceIsDisposed()
         {
             bool completed = false;

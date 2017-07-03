@@ -3,7 +3,7 @@ using System.Diagnostics;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.AggregationTests
 {
@@ -22,7 +22,7 @@ namespace DynamicData.Tests.AggregationTests
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddedItemsContributeToSum()
         {
             double avg = 0;
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.AggregationTests
             accumulator.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void RemoveProduceCorrectResult()
         {
             double avg = 0;
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.AggregationTests
             accumulator.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void InlineChangeReEvaluatesTotals()
         {
             double avg = 0;
@@ -83,11 +83,12 @@ namespace DynamicData.Tests.AggregationTests
             accumulator.Dispose();
         }
 
-        [TestCase(100)]
-        [TestCase(1000)]
-        [TestCase(10000)]
-        [TestCase(100000)]
-        [Explicit]
+        [Theory,
+         InlineData(100),
+         InlineData(1000),
+         InlineData(10000),
+         InlineData(100000)]
+        [Trait("Performance","")]
         public void CachePerformance(int n)
         {
             /*
@@ -108,8 +109,8 @@ namespace DynamicData.Tests.AggregationTests
             var sw = Stopwatch.StartNew();
 
             var summation = cache.Connect()
-                                 .Avg(i => i)
-                                 .Subscribe(result => runningSum = result);
+                .Avg(i => i)
+                .Subscribe(result => runningSum = result);
 
             //1. this is very slow if there are loads of updates (each updates causes a new summation)
             for (int i = 1; i < n; i++)
@@ -127,11 +128,12 @@ namespace DynamicData.Tests.AggregationTests
             Console.WriteLine("Cache Summation: {0} updates took {1} ms {2:F3} ms each. {3}", n, sw.ElapsedMilliseconds, sw.Elapsed.TotalMilliseconds / n, DateTime.Now.ToShortDateString());
         }
 
-        [TestCase(100)]
-        [TestCase(1000)]
-        [TestCase(10000)]
-        [TestCase(100000)]
-        [Explicit]
+        [Theory,
+         InlineData(100),
+         InlineData(1000),
+         InlineData(10000),
+         InlineData(100000)]
+        [Trait("Performance","")]
         public void ListPerformance(int n)
         {
             var list = new SourceList<int>();

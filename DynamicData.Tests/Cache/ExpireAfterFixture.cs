@@ -4,7 +4,7 @@ using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -29,7 +29,7 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ComplexRemove()
         {
             TimeSpan? RemoveFunc(Person t)
@@ -57,7 +57,7 @@ namespace DynamicData.Tests.Cache
             remover.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ItemAddedIsExpired()
         {
             var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
@@ -72,7 +72,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[1].Removes.Should().Be(1, "Should be 1 removes in the second update");
         }
 
-        [Test]
+        [Fact]
         public void ExpireIsCancelledWhenUpdated()
         {
             var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
@@ -92,7 +92,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[1].Removes.Should().Be(1, "Should be 1 remove in the second message");
         }
 
-        [Test]
+        [Fact]
         public void CanHandleABatchOfUpdates()
         {
             var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();

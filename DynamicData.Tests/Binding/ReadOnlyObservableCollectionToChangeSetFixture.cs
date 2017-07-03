@@ -4,7 +4,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using DynamicData.Binding;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
@@ -27,7 +27,7 @@ namespace DynamicData.Tests.Binding
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void Move()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Items.ShouldAllBeEquivalentTo(_target);
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             _collection.Add(1);
@@ -50,7 +50,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Items.First().Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
@@ -62,7 +62,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Items.ShouldAllBeEquivalentTo(_target);
         }
 
-        [Test]
+        [Fact]
         public void Duplicates()
         {
             _collection.Add(1);
@@ -71,7 +71,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Count.Should().Be(2);
         }
 
-        [Test]
+        [Fact]
         public void Replace()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
@@ -80,7 +80,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Items.ShouldBeEquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 20, 10 });
         }
 
-        [Test]
+        [Fact]
         public void ResetFiresClearsAndAdds()
         {
             _collection.AddRange(Enumerable.Range(1, 10));

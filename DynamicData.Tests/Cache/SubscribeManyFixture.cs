@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reactive.Disposables;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -50,7 +50,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddedItemWillbeSubscribed()
         {
             _source.AddOrUpdate(new SubscribeableObject(1));
@@ -60,7 +60,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().IsSubscribed.Should().Be(true, "Should be subscribed");
         }
 
-        [Test]
+        [Fact]
         public void RemoveIsUnsubscribed()
         {
             _source.AddOrUpdate(new SubscribeableObject(1));
@@ -71,7 +71,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[1].First().Current.IsSubscribed.Should().Be(false, "Should be be unsubscribed");
         }
 
-        [Test]
+        [Fact]
         public void UpdateUnsubscribesPrevious()
         {
             _source.AddOrUpdate(new SubscribeableObject(1));
@@ -83,7 +83,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[1].First().Previous.Value.IsSubscribed.Should().Be(false, "Previous should not be subscribed");
         }
 
-        [Test]
+        [Fact]
         public void EverythingIsUnsubscribedWhenStreamIsDisposed()
         {
             _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new SubscribeableObject(i)));

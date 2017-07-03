@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void IncludedWhenItemIsInOneSource()
         {
             _source.Add(_source1.Connect());
@@ -42,7 +42,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void NothingFromOther()
         {
             _source.Add(_source1.Connect());
@@ -51,7 +51,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void ExcludedWhenItemIsInTwoSources()
         {
             _source.Add(_source1.Connect());
@@ -61,7 +61,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void AddedWhenNoLongerInSecond()
         {
             _source.Add(_source1.Connect());
@@ -72,7 +72,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void CombineRange()
         {
             _source.Add(_source1.Connect());
@@ -83,7 +83,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
         }
 
-        [Test]
+        [Fact]
         public void ClearFirstClearsResult()
         {
             _source.Add(_source1.Connect());
@@ -94,7 +94,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void ClearSecondEnsuresFirstIsIncluded()
         {
             _source.Add(_source1.Connect());
@@ -108,7 +108,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
         }
 
-        [Test]
+        [Fact]
         public void AddAndRemoveLists()
         {
             _source1.AddRange(Enumerable.Range(1, 5));

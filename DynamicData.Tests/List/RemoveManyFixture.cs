@@ -2,22 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     internal class RemoveManyFixture
     {
-        private List<int> _list;
+        private readonly List<int> _list;
 
-        [SetUp]
-        public void Setup()
+
+        public  RemoveManyFixture()
         {
             _list = new List<int>();
         }
 
-        [Test]
+        [Fact]
         public void RemoveManyWillRemoveARange()
         {
             _list.AddRange(Enumerable.Range(1, 10));
@@ -25,7 +25,7 @@ namespace DynamicData.Tests.List
             _list.ShouldAllBeEquivalentTo(new[] {1, 10});
         }
 
-        [Test]
+        [Fact]
         public void DoesNotRemoveDuplicates()
         {
             _list.AddRange(new[] {1, 1, 1, 5, 6, 7});
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.List
             _list.ShouldAllBeEquivalentTo(new[] {1, 5, 6});
         }
 
-        [Test]
+        [Fact]
         public void RemoveLargeBatch()
         {
             var toAdd = Enumerable.Range(1, 10000).ToArray();

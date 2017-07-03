@@ -2,7 +2,7 @@
 using System.Linq;
 using DynamicData.Kernel;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -16,7 +16,7 @@ namespace DynamicData.Tests.List
             _list = new ChangeAwareList<int>();
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             _list.Add(1);
@@ -31,7 +31,7 @@ namespace DynamicData.Tests.List
             _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 1));
         }
 
-        [Test]
+        [Fact]
         public void AddSecond()
         {
             _list.Add(1);
@@ -48,7 +48,7 @@ namespace DynamicData.Tests.List
             _list.ShouldBeEquivalentTo(Enumerable.Range(1, 2));
         }
 
-        [Test]
+        [Fact]
         public void AddManyInSuccession()
         {
             Enumerable.Range(1, 10)
@@ -63,7 +63,7 @@ namespace DynamicData.Tests.List
             _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
         }
 
-        [Test]
+        [Fact]
         public void AddRange()
         {
             _list.AddRange(Enumerable.Range(1, 10));
@@ -78,7 +78,7 @@ namespace DynamicData.Tests.List
             _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
         }
 
-        [Test]
+        [Fact]
         public void AddSecondRange()
         {
             _list.AddRange(Enumerable.Range(1, 10));
@@ -95,7 +95,7 @@ namespace DynamicData.Tests.List
             _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 20));
         }
 
-        [Test]
+        [Fact]
         public void InsertRangeInCentre()
         {
             _list.AddRange(Enumerable.Range(1, 10));
@@ -115,7 +115,7 @@ namespace DynamicData.Tests.List
             _list.ShouldAllBeEquivalentTo(shouldBe);
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             _list.Add(1);
@@ -132,7 +132,7 @@ namespace DynamicData.Tests.List
             _list.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void RemoveRange()
         {
             _list.AddRange(Enumerable.Range(1, 10));
@@ -153,7 +153,7 @@ namespace DynamicData.Tests.List
             _list.ShouldAllBeEquivalentTo(shouldBe);
         }
 
-        [Test]
+        [Fact]
         public void RemoveSucession()
         {
             _list.AddRange(Enumerable.Range(1, 10));
@@ -171,7 +171,7 @@ namespace DynamicData.Tests.List
             _list.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void RemoveSucessionReversed()
         {
             _list.AddRange(Enumerable.Range(1, 10));
@@ -188,7 +188,7 @@ namespace DynamicData.Tests.List
             _list.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void RemoveMany()
         {
             _list.AddRange(Enumerable.Range(1, 10));
@@ -207,7 +207,7 @@ namespace DynamicData.Tests.List
         }
 
 
-        [Test]
+        [Fact]
         public void RefreshAt()
         {
             _list.AddRange(Enumerable.Range(0, 9));
@@ -227,7 +227,7 @@ namespace DynamicData.Tests.List
             Assert.Throws<ArgumentException>(() => _list.RefreshAt(1000));
         }
 
-        [Test]
+        [Fact]
         public void Refresh()
         {
             _list.AddRange(Enumerable.Range(0, 9));
@@ -249,19 +249,19 @@ namespace DynamicData.Tests.List
 
 
 
-        [Test]
+        [Fact]
         public void ThrowWhenRemovingItemOutsideOfBoundaries()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveAt(0));
         }
 
-        [Test]
+        [Fact]
         public void ThrowWhenRemovingRangeThatBeginsOutsideOfBoundaries()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveRange(0, 1));
         }
 
-        [Test]
+        [Fact]
         public void ThrowWhenRemovingRangeThatFinishesOutsideOfBoundaries()
         {
             _list.Add(0);

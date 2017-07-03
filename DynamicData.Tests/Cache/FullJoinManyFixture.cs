@@ -3,7 +3,7 @@ using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -28,7 +28,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void AddLeftOnly()
         {
             var people = Enumerable.Range(1, 1000)
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void AddPeopleWithParents()
         {
             var people = Enumerable.Range(1, 10)
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(people);
         }
 
-        [Test]
+        [Fact]
         public void UpdateParent()
         {
             var people = Enumerable.Range(1, 10)
@@ -77,7 +77,7 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
 
-        [Test]
+        [Fact]
         public void UpdateChild()
         {
             var people = Enumerable.Range(1, 10)
@@ -99,7 +99,7 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
 
-        [Test]
+        [Fact]
         public void AddChild()
         {
             var people = Enumerable.Range(1, 10)
@@ -121,7 +121,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void RemoveChild()
         {
             var people = Enumerable.Range(1, 10)

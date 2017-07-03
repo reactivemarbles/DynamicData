@@ -5,7 +5,7 @@ using DynamicData.Binding;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -42,7 +42,7 @@ namespace DynamicData.Tests.Cache
             _pageController.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangePage()
         {
             var people = _generator.Take(100).ToArray();
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void ChangeSort()
         {
             var people = _generator.Take(100).ToArray();
@@ -69,7 +69,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void PageSizeLargerThanElements()
         {
             var people = _generator.Take(10).ToArray();

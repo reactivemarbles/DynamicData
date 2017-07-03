@@ -1,5 +1,5 @@
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using System;
 using FluentAssertions;
 
@@ -8,11 +8,10 @@ namespace DynamicData.Tests.List
     
     public class QueryWhenChangedFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  QueryWhenChangedFixture()
         {
             _source = new SourceList<Person>();
             _results = new ChangeSetAggregator<Person>(_source.Connect(p => p.Age > 20));
@@ -24,7 +23,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangeInvokedOnSubscriptionIfItHasData()
         {
             bool invoked = false;
@@ -36,7 +35,7 @@ namespace DynamicData.Tests.List
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanHandleAddsAndUpdates()
         {
             bool invoked = false;
@@ -52,7 +51,7 @@ namespace DynamicData.Tests.List
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangeInvokedOnNext()
         {
             bool invoked = false;
@@ -69,7 +68,7 @@ namespace DynamicData.Tests.List
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangeInvokedOnSubscriptionIfItHasData_WithSelector()
         {
             bool invoked = false;
@@ -81,7 +80,7 @@ namespace DynamicData.Tests.List
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangeInvokedOnNext_WithSelector()
         {
             bool invoked = false;

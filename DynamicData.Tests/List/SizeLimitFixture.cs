@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.List
@@ -10,14 +10,14 @@ namespace DynamicData.Tests.List
     
     internal class SizeLimitFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
-        private TestScheduler _scheduler;
-        private IDisposable _sizeLimiter;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
+        private readonly TestScheduler _scheduler;
+        private readonly IDisposable _sizeLimiter;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        [SetUp]
-        public void Initialise()
+
+        public  SizeLimitFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
@@ -32,7 +32,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddLessThanLimit()
         {
             var person = _generator.Take(1).First();
@@ -45,7 +45,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void AddMoreThanLimit()
         {
             var people = _generator.Take(100).OrderBy(p => p.Name).ToArray();
@@ -59,7 +59,7 @@ namespace DynamicData.Tests.List
             _results.Messages[1].Removes.Should().Be(90, "Should be 90 removes in the second update");
         }
 
-        [Test]
+        [Fact]
         public void AddMoreThanLimitInBatched()
         {
             _source.AddRange(_generator.Take(10).ToArray());
@@ -73,7 +73,7 @@ namespace DynamicData.Tests.List
             _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             var person = _generator.Take(1).First();
@@ -84,7 +84,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
 
         public void ForceError()
         {
@@ -92,7 +92,7 @@ namespace DynamicData.Tests.List
             Assert.Throws<ArgumentOutOfRangeException>(() => _source.RemoveAt(1));
         }
 
-        [Test]
+        [Fact]
         public void HandleError()
         {
             Exception exception = null;
@@ -100,7 +100,7 @@ namespace DynamicData.Tests.List
             exception.Should().NotBeNull();
         }
 
-        [Test]
+        [Fact]
         public void ThrowsIfSizeLimitIsZero()
         {
             // Initialise();

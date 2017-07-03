@@ -4,7 +4,7 @@ using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddWithNoError()
         {
             var person = new Person("Adult1", 50);
@@ -51,7 +51,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void AddWithError()
         {
             var person = new Person("Person", 3);
@@ -61,7 +61,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages.Count.Should().Be(0, "Should be no messages");
         }
 
-        [Test]
+        [Fact]
         public void UpdateSucessively()
         {
             const string key = "Adult1";
@@ -80,7 +80,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
         }
 
-        [Test]
+        [Fact]
         public void UpdateBatch()
         {
             const string key = "Adult1";
@@ -102,7 +102,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");
         }
 
-        [Test]
+        [Fact]
         public void UpdateBatchAndClear()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();

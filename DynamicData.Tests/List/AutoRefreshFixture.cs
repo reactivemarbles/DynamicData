@@ -6,14 +6,14 @@ using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     public class AutoRefreshFixture
     {
-        [Test]
+        [Fact]
         public void AutoRefresh()
         {
             var items = Enumerable.Range(1, 100)
@@ -53,7 +53,7 @@ namespace DynamicData.Tests.List
             }
         }
 
-        [Test]
+        [Fact]
         public void AutoRefreshBatched()
         {
             var scheduler = new TestScheduler();
@@ -83,7 +83,7 @@ namespace DynamicData.Tests.List
             }
         }
 
-        [Test]
+        [Fact]
         public void AutoRefreshFilter()
         {
             var items = Enumerable.Range(1, 100)
@@ -129,7 +129,7 @@ namespace DynamicData.Tests.List
             }
         }
         
-        [Test]
+        [Fact]
         public void AutoRefreshTransform()
         {
             var items = Enumerable.Range(1, 100)
@@ -163,7 +163,7 @@ namespace DynamicData.Tests.List
             }
         }
 
-        [Test]
+        [Fact]
         public void AutoRefreshSort()
         {
             var items = Enumerable.Range(1, 100)
@@ -219,7 +219,7 @@ namespace DynamicData.Tests.List
             }
         }
 
-        [Test]
+        [Fact]
         public void AutoRefreshGroup()
         {
             var items = Enumerable.Range(1, 100)
@@ -281,7 +281,7 @@ namespace DynamicData.Tests.List
             }
         }
 
-        [Test]
+        [Fact]
         public void AutoRefreshGroupImmutable()
         {
             var items = Enumerable.Range(1, 100)
@@ -338,7 +338,7 @@ namespace DynamicData.Tests.List
         }
 
 
-        [Test]
+        [Fact]
         public void AutoRefreshDistinct()
         {
             var items = Enumerable.Range(1, 100)

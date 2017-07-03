@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -48,21 +48,21 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void IncludedWhenItemIsInOneSource()
         {
             Source1.Add(1);
             _results.Data.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void NothingFromOther()
         {
             Source2.Add(1);
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void ExcludedWhenItemIsInTwoSources()
         {
             Source1.Add(1);
@@ -70,7 +70,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void AddedWhenNoLongerInSecond()
         {
             Source1.Add(1);
@@ -79,7 +79,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void CombineRange()
         {
             Source1.AddRange(Enumerable.Range(1, 10));
@@ -88,7 +88,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
         }
 
-        [Test]
+        [Fact]
         public void ClearFirstClearsResult()
         {
             Source1.AddRange(Enumerable.Range(1, 5));
@@ -97,7 +97,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void ClearSecondEnsuresFirstIsIncluded()
         {
             Source1.AddRange(Enumerable.Range(1, 5));

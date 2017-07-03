@@ -3,7 +3,7 @@ using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -26,7 +26,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanGroupOnAdds()
         {
             _source.Add(new Person("A",10));
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.List
             firstGroup.Key.Should().Be(10);
         }
 
-        [Test]
+        [Fact]
         public void CanRemoveFromGroup()
         {
             var person = new Person("A", 10);
@@ -49,7 +49,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void Regroup()
         {
             var person = new Person("A", 10);
@@ -63,7 +63,7 @@ namespace DynamicData.Tests.List
             firstGroup.Key.Should().Be(20);
         }
 
-        [Test]
+        [Fact]
         public void CanHandleAddBatch()
         {
             var generator = new RandomPersonGenerator();
@@ -75,7 +75,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(expectedGroupCount);
         }
 
-        [Test]
+        [Fact]
         public void CanHandleChangedItemsBatch()
         {
             var generator = new RandomPersonGenerator();

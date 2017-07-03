@@ -2,14 +2,14 @@ using System;
 using DynamicData.Binding;
 using DynamicData.Controllers;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class PageAndSortFixture
     {
-        [Test]
+        [Fact]
         public void DoNotThrowAWobblyWhenRemovingaMutatedValue()
         {
             var pageController = new PageController();

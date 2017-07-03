@@ -2,14 +2,14 @@
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class AutoRefreshFixture
     {
-        [Test]
+        [Fact]
         public void AutoRefresh()
         {
             var items = Enumerable.Range(1, 100)

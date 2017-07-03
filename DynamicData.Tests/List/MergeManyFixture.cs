@@ -1,7 +1,7 @@
 using System;
 using System.Reactive.Subjects;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -30,10 +30,9 @@ namespace DynamicData.Tests.List
             public int Id => _id;
         }
 
-        private ISourceList<ObjectWithObservable> _source;
+        private readonly ISourceList<ObjectWithObservable> _source;
 
-        [SetUp]
-        public void Initialise()
+        public  MergeManyFixture()
         {
             _source = new SourceList<ObjectWithObservable>();
         }
@@ -46,7 +45,7 @@ namespace DynamicData.Tests.List
         /// <summary>
         /// Invocations the only when child is invoked.
         /// </summary>
-        [Test]
+        [Fact]
         public void InvocationOnlyWhenChildIsInvoked()
         {
             bool invoked = false;
@@ -65,7 +64,7 @@ namespace DynamicData.Tests.List
             stream.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void RemovedItemWillNotCauseInvocation()
         {
             bool invoked = false;
@@ -83,7 +82,7 @@ namespace DynamicData.Tests.List
             stream.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void EverythingIsUnsubscribedWhenStreamIsDisposed()
         {
             bool invoked = false;

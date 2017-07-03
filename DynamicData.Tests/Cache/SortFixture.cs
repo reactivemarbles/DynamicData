@@ -9,7 +9,7 @@ using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 #endregion
 
@@ -42,7 +42,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void DoesNotThrow1()
         {
             var cache = new SourceCache<Data, int>(d => d.Id);
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.Cache
             disposable.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void DoesNotThrow2()
         {
             var cache = new SourceCache<Data, int>(d => d.Id);
@@ -129,7 +129,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void SortAfterFilter()
         {
             var source = new SourceCache<Person, string>(p => p.Key);
@@ -153,7 +153,7 @@ namespace DynamicData.Tests.Cache
             filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.InvariantCultureIgnoreCase));
         }
 
-        [Test]
+        [Fact]
         public void SortAfterFilterList()
         {
             var source = new SourceList<Person>();
@@ -177,7 +177,7 @@ namespace DynamicData.Tests.Cache
             filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.InvariantCultureIgnoreCase));
         }
 
-        [Test]
+        [Fact]
         public void SortInitialBatch()
         {
             var people = _generator.Take(100).ToArray();
@@ -191,7 +191,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void AppendAtBeginning()
         {
             var people = _generator.Take(100).ToArray();
@@ -209,7 +209,7 @@ namespace DynamicData.Tests.Cache
             indexedItem.Value.Index.Should().Be(0, "Inserted item should have index of zero");
         }
 
-        [Test]
+        [Fact]
         public void AppendInMiddle()
         {
             var people = _generator.Take(100).ToArray();
@@ -230,7 +230,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
-        [Test]
+        [Fact]
         public void AppendAtEnd()
         {
             var people = _generator.Take(100).ToArray();
@@ -251,7 +251,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
-        [Test]
+        [Fact]
         public void RemoveFirst()
         {
             var people = _generator.Take(100).ToArray();
@@ -272,7 +272,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
-        [Test]
+        [Fact]
         public void RemoveFromMiddle()
         {
             var people = _generator.Take(100).ToArray();
@@ -294,7 +294,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
-        [Test]
+        [Fact]
         public void RemoveFromEnd()
         {
             var people = _generator.Take(100).ToArray();
@@ -315,7 +315,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
-        [Test]
+        [Fact]
         public void UpdateFirst()
         {
             var people = _generator.Take(100).ToArray();
@@ -336,7 +336,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
-        [Test]
+        [Fact]
         public void UpdateMiddle()
         {
             var people = _generator.Take(100).ToArray();
@@ -358,7 +358,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
-        [Test]
+        [Fact]
         public void UpdateLast()
         {
             //TODO: fixed Text
@@ -381,7 +381,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(sortedResult);
         }
 
-        [Test]
+        [Fact]
         public void BatchUpdate1()
         {
             var people = _generator.Take(10).ToArray();
@@ -406,7 +406,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
-        [Test]
+        [Fact]
         public void BatchUpdateWhereUpdateMovesTheIndexDown()
         {
             var people = _generator.Take(10).ToArray();
@@ -434,7 +434,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
-        [Test]
+        [Fact]
         public void BatchUpdate2()
         {
             var people = _generator.Take(10).ToArray();
@@ -458,7 +458,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
-        [Test]
+        [Fact]
         public void BatchUpdate3()
         {
             var people = _generator.Take(10).ToArray();
@@ -483,7 +483,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
-        [Test]
+        [Fact]
         public void BatchUpdate4()
         {
             var people = _generator.Take(10).ToArray();
@@ -509,7 +509,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
-        [Test]
+        [Fact]
         public void BatchUpdate6()
         {
             var people = _generator.Take(10).ToArray();
@@ -532,7 +532,7 @@ namespace DynamicData.Tests.Cache
             list.ShouldAllBeEquivalentTo(shouldbe);
         }
 
-        [Test]
+        [Fact]
         public void InlineUpdateProducesAReplace()
         {
             var people = _generator.Take(10).ToArray();

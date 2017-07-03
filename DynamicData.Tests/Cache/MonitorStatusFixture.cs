@@ -3,14 +3,14 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Kernel;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class MonitorStatusFixture
     {
-        [Test]
+        [Fact]
         public void InitialiStatusIsLoadding()
         {
             bool invoked = false;
@@ -25,7 +25,7 @@ namespace DynamicData.Tests.Cache
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void SetToLoaded()
         {
             bool invoked = false;
@@ -44,7 +44,7 @@ namespace DynamicData.Tests.Cache
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void SetToError()
         {
             bool invoked = false;
@@ -66,7 +66,7 @@ namespace DynamicData.Tests.Cache
             status.Should().Be(ConnectionStatus.Errored, "Status should be ConnectionStatus.Faulted");
         }
 
-        [Test]
+        [Fact]
         public void MultipleInvokesDoNotCallLoadedAgain()
         {
             bool invoked = false;

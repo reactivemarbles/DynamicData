@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -35,7 +35,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void UpdatingOneSourceOnlyProducesResult()
         {
             _source.Add(_source1.Connect());
@@ -48,7 +48,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
         }
 
-        [Test]
+        [Fact]
         public void UpdatingBothProducesResultsAndDoesNotDuplicateTheMessage()
         {
             _source.Add(_source1.Connect());
@@ -62,7 +62,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void RemovingFromOneDoesNotFromResult()
         {
             _source.Add(_source1.Connect());
@@ -77,7 +77,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(1, "Cache should have no items");
         }
 
-        [Test]
+        [Fact]
         public void UpdatingOneProducesOnlyOneUpdate()
         {
             _source.Add(_source1.Connect());
@@ -94,7 +94,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Should().Be(personUpdated, "Should be updated person");
         }
 
-        [Test]
+        [Fact]
         public void AddAndRemoveLists()
         {
             var items = _generator.Take(100).ToArray();
@@ -118,7 +118,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.ShouldAllBeEquivalentTo(result);
         }
 
-        [Test]
+        [Fact]
         public void RemoveAllLists()
         {
             var items = _generator.Take(100).ToArray();

@@ -3,7 +3,7 @@ using System.Linq;
 using DynamicData.Cache.Internal;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
@@ -19,7 +19,7 @@ namespace DynamicData.Tests.Kernal
             _updater = new CacheUpdater<Person, string>(_cache, new KeySelector<Person, string>(p => p.Name));
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             var person = new Person("Adult1", 50);
@@ -32,7 +32,7 @@ namespace DynamicData.Tests.Kernal
             updates.First().Should().Be(new Change<Person, string>(ChangeReason.Add, person.Name, person), "Should be 1 updates");
         }
 
-        [Test]
+        [Fact]
         public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
         {
             const string key = "Adult1";
@@ -44,7 +44,7 @@ namespace DynamicData.Tests.Kernal
             updates.Count.Should().Be(0, "Should be 0 updates");
         }
 
-        [Test]
+        [Fact]
         public void BatchOfUniqueUpdates()
         {
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.Kernal
             updates.Count.Should().Be(100);
         }
 
-        [Test]
+        [Fact]
         public void BatchRemoves()
         {
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -72,7 +72,7 @@ namespace DynamicData.Tests.Kernal
             200.Should().Be(updates.Count, "Should be 200 updates");
         }
 
-        [Test]
+        [Fact]
         public void BatchSuccessiveUpdates()
         {
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name1", i)).ToArray();
@@ -87,7 +87,7 @@ namespace DynamicData.Tests.Kernal
             100.Should().Be(updates.Count, "Should be 100 updates");
         }
 
-        [Test]
+        [Fact]
         public void CanRemove()
         {
             const string key = "Adult1";
@@ -103,7 +103,7 @@ namespace DynamicData.Tests.Kernal
             2.Should().Be(updates.Count, "Should be 2 updates");
         }
 
-        [Test]
+        [Fact]
         public void CanUpdate()
         {
             const string key = "Adult1";
@@ -121,7 +121,7 @@ namespace DynamicData.Tests.Kernal
             2.Should().Be(updates.Count, "Should be 2 updates");
         }
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -135,7 +135,7 @@ namespace DynamicData.Tests.Kernal
             200.Should().Be(updates.Count, "Should be 200 updates");
         }
 
-        [Test]
+        [Fact]
         public void NullSelectorWillThrow()
         {
             // Assert.Throws<ArgumentNullException>(() => new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null)));

@@ -4,14 +4,14 @@ using System.Reactive;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class TransformFixture
     {
-        [Test]
+        [Fact]
         public void ReTransformAll()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void ReTransformSelected()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
@@ -60,7 +60,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             using (var stub = new TransformStub())
@@ -74,7 +74,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             const string key = "Adult1";
@@ -93,7 +93,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void Update()
         {
             const string key = "Adult1";
@@ -111,7 +111,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void BatchOfUniqueUpdates()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -127,7 +127,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void SameKeyChanges()
         {
             using (var stub = new TransformStub())
@@ -148,7 +148,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             using (var stub = new TransformStub())

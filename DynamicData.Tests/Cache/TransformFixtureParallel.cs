@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -32,7 +32,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             var person = new Person("Adult1", 50);
@@ -43,7 +43,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Should().Be(_transformFactory(person), "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             const string key = "Adult1";
@@ -59,7 +59,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
 
-        [Test]
+        [Fact]
         public void Update()
         {
             const string key = "Adult1";
@@ -74,7 +74,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
         }
 
-        [Test]
+        [Fact]
         public void BatchOfUniqueUpdates()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -88,7 +88,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
         }
 
-        [Test]
+        [Fact]
         public void SameKeyChanges()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name", i)).ToArray();
@@ -105,7 +105,7 @@ namespace DynamicData.Tests.Cache
             onlyItemInCache.Should().Be(lastTransformed, "Incorrect transform result");
         }
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();

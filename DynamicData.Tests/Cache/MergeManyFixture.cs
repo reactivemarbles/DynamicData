@@ -1,7 +1,7 @@
 using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
@@ -45,7 +45,7 @@ namespace DynamicData.Tests.Cache
         /// <summary>
         /// Invocations the only when child is invoked.
         /// </summary>
-        [Test]
+        [Fact]
         public void InvocationOnlyWhenChildIsInvoked()
         {
             bool invoked = false;
@@ -64,7 +64,7 @@ namespace DynamicData.Tests.Cache
             stream.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void RemovedItemWillNotCauseInvocation()
         {
             bool invoked = false;
@@ -82,7 +82,7 @@ namespace DynamicData.Tests.Cache
             stream.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void EverythingIsUnsubscribedWhenStreamIsDisposed()
         {
             bool invoked = false;

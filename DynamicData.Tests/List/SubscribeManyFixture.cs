@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reactive.Disposables;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -12,7 +12,7 @@ namespace DynamicData.Tests.List
         private class SubscribeableObject
         {
             public bool IsSubscribed { get; private set; }
-            public int Id { get; private set; }
+            private int Id { get; }
 
             public void Subscribe()
             {
@@ -30,11 +30,10 @@ namespace DynamicData.Tests.List
             }
         }
 
-        private ISourceList<SubscribeableObject> _source;
-        private ChangeSetAggregator<SubscribeableObject> _results;
+        private readonly ISourceList<SubscribeableObject> _source;
+        private readonly ChangeSetAggregator<SubscribeableObject> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  SubscribeManyFixture()
         {
             _source = new SourceList<SubscribeableObject>();
             _results = new ChangeSetAggregator<SubscribeableObject>(
@@ -51,7 +50,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddedItemWillbeSubscribed()
         {
             _source.Add(new SubscribeableObject(1));
@@ -61,7 +60,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().IsSubscribed.Should().Be(true, "Should be subscribed");
         }
 
-        [Test]
+        [Fact]
         public void RemoveIsUnsubscribed()
         {
             _source.Add(new SubscribeableObject(1));
@@ -72,7 +71,7 @@ namespace DynamicData.Tests.List
             _results.Messages[1].First().Item.Current.IsSubscribed.Should().Be(false, "Should be be unsubscribed");
         }
 
-        //[Test]
+        //[Fact]
         //public void UpdateUnsubscribesPrevious()
         //{
         //	_source.Add(new SubscribeableObject(1));
@@ -84,7 +83,7 @@ namespace DynamicData.Tests.List
         //	Assert.AreEqual(false, _results.Messages[1].First().Previous.Value.IsSubscribed, "Previous should not be subscribed");
         //}
 
-        [Test]
+        [Fact]
         public void EverythingIsUnsubscribedWhenStreamIsDisposed()
         {
             _source.AddRange(Enumerable.Range(1, 10).Select(i => new SubscribeableObject(i)));

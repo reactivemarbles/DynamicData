@@ -7,14 +7,14 @@ using System.Reactive.Linq;
 using  DynamicData;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class TransformManyObservableCollectionFixture
     {
-        [Test]
+        [Fact]
         public void FlattenObservableCollection()
         {
             var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -69,7 +69,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void FlattenReadOnlyObservableCollection()
         {
             var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -124,8 +124,8 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
-        [Ignore("Manual run only")]
+        [Fact]
+        [Trait("Performance","Manual run only")]
         public void Perf()
         {
             var children = Enumerable.Range(1, 10000).Select(i => new Person("Name" + i, i)).ToArray();

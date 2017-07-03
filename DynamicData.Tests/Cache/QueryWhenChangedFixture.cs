@@ -1,5 +1,5 @@
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using System;
 using FluentAssertions;
 
@@ -23,7 +23,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangeInvokedOnSubscriptionIfItHasData()
         {
             bool invoked = false;
@@ -35,7 +35,7 @@ namespace DynamicData.Tests.Cache
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangeInvokedOnNext()
         {
             bool invoked = false;
@@ -52,7 +52,7 @@ namespace DynamicData.Tests.Cache
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangeInvokedOnSubscriptionIfItHasData_WithSelector()
         {
             bool invoked = false;
@@ -64,7 +64,7 @@ namespace DynamicData.Tests.Cache
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ChangeInvokedOnNext_WithSelector()
         {
             bool invoked = false;

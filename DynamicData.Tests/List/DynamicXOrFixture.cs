@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -34,7 +34,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void IncludedWhenItemIsInOneSource()
         {
             _source.Add(_source1.Connect());
@@ -45,7 +45,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void NotIncludedWhenItemIsInTwoSources()
         {
             _source.Add(_source1.Connect());
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void RemovedWhenNoLongerInBoth()
         {
             _source.Add(_source1.Connect());
@@ -66,7 +66,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void RemovedWhenNoLongerInEither()
         {
             _source.Add(_source1.Connect());
@@ -76,7 +76,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void CombineRange()
         {
             _source.Add(_source1.Connect());
@@ -87,7 +87,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
         }
 
-        [Test]
+        [Fact]
         public void ClearOnlyClearsOneSource()
         {
             _source.Add(_source1.Connect());
@@ -99,7 +99,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(6, 5));
         }
 
-        [Test]
+        [Fact]
         public void OverlappingRangeExludesInteresct()
         {
             _source.Add(_source1.Connect());
@@ -111,7 +111,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5).Union(Enumerable.Range(11, 5)));
         }
 
-        [Test]
+        [Fact]
         public void AddAndRemoveLists()
         {
             _source1.AddRange(Enumerable.Range(1, 5));

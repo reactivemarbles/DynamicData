@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -27,7 +27,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
         
-        [Test]
+        [Fact]
         public void PoulatesFirstSource()
         {
             var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(100);
         }
 
-        [Test]
+        [Fact]
         public void ClearsForNewSource()
         {
             var inital = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, i)).ToArray();

@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddWillNotCallDispose()
         {
             _source.AddOrUpdate(new DisposableObject(1));
@@ -49,7 +49,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().IsDisposed.Should().Be(false, "Should not be disposed");
         }
 
-        [Test]
+        [Fact]
         public void RemoveWillCallDispose()
         {
             _source.AddOrUpdate(new DisposableObject(1));
@@ -60,7 +60,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[1].First().Current.IsDisposed.Should().Be(true, "Should be disposed");
         }
 
-        [Test]
+        [Fact]
         public void UpdateWillCallDispose()
         {
             _source.AddOrUpdate(new DisposableObject(1));
@@ -72,7 +72,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages[1].First().Previous.Value.IsDisposed.Should().Be(true, "Previous should be disposed");
         }
 
-        [Test]
+        [Fact]
         public void EverythingIsDisposedWhenStreamIsDisposed()
         {
             _source.AddOrUpdate(Enumerable.Range(1, 10).Select(i => new DisposableObject(i)));

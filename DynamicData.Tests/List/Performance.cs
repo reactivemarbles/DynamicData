@@ -2,16 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Tests.Utilities;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    [TestFixture: IDisposable()]
     public class Performance
     {
-        [Test]
-        [Explicit]
-        public void Test()
+        [Fact]
+ public void Test()
         {
             for (int i = 1; i < 8; i++)
             {
@@ -32,8 +30,8 @@ namespace DynamicData.Tests.List
             }
         }
 
-        [Test]
-        [Explicit]
+        [Fact]
+
         public void TestWithOutCapacity()
         {
             for (int i = 1; i < 6; i++)

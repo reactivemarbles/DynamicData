@@ -4,14 +4,14 @@ using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class ObservableToObservableChangeSetFixture
     {
-        [Test]
+        [Fact]
         public void OnNextFiresAdd()
         {
             var subject = new Subject<Person>();
@@ -25,7 +25,7 @@ namespace DynamicData.Tests.Cache
             results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void OnNextForAmendedItemFiresUpdate()
         {
             var subject = new Subject<Person>();
@@ -43,7 +43,7 @@ namespace DynamicData.Tests.Cache
             results.Data.Items.First().Should().Be(personamend, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void OnNextProducesAndAddChangeForSingleItem()
         {
             var subject = new Subject<Person>();
@@ -57,7 +57,7 @@ namespace DynamicData.Tests.Cache
             results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void LimitSizeTo()
         {
             var subject = new Subject<Person>();
@@ -81,7 +81,7 @@ namespace DynamicData.Tests.Cache
             actual.ShouldAllBeEquivalentTo(actual, "Only second hundred should be in the cache");
         }
 
-        [Test]
+        [Fact]
         public void ExpireAfterTime()
         {
             var subject = new Subject<Person>();

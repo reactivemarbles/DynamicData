@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Cache
             _disposable.Dispose();            
         }
 
-        [Test]
+        [Fact]
         public void ShouldLimitSizeOfBoundCollection()
         {
             _scheduler.AdvanceTo(2);

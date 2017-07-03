@@ -4,14 +4,14 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     public class TransformManyObservableCollectionFixture
     {
-        [Test]
+        [Fact]
         public void FlattenObservableCollection()
         {
             var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.List
             }
         }
 
-        [Test]
+        [Fact]
         public void FlattenReadOnlyObservableCollection()
         {
             var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();

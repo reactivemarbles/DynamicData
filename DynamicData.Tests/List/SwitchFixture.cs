@@ -3,19 +3,19 @@ using System;
 using System.Linq;
 using System.Reactive.Subjects;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     public class SwitchFixture: IDisposable
     {
-        private ISubject<ISourceList<int>> _switchable;
-        private ISourceList<int> _source;
-        private ChangeSetAggregator<int> _results;
+        private readonly ISubject<ISourceList<int>> _switchable;
+        private readonly ISourceList<int> _source;
+        private readonly ChangeSetAggregator<int> _results;
 
-        [SetUp]
-        public void Initialise()
+
+        public  SwitchFixture()
         {
             _source = new SourceList<int>();
             _switchable = new BehaviorSubject<ISourceList<int>>(_source);
@@ -28,7 +28,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void PoulatesFirstSource()
         {
             var inital = Enumerable.Range(1,100).ToArray();
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.List
             inital.ShouldAllBeEquivalentTo(_source.Items);
         }
 
-        [Test]
+        [Fact]
         public void ClearsForNewSource()
         {
             var inital = Enumerable.Range(1, 100).ToArray();

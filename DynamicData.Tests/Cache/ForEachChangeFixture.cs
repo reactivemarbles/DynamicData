@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using System;
 using FluentAssertions;
 
@@ -22,7 +22,7 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void Test()
         {
             var messages = new List<Change<Person, string>>();

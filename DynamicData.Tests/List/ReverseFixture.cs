@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     internal class ReverseFixture: IDisposable
     {
-        private ISourceList<int> _source;
-        private ChangeSetAggregator<int> _results;
+        private readonly ISourceList<int> _source;
+        private readonly ChangeSetAggregator<int> _results;
 
-        [SetUp]
-        public void SetUp()
+
+        public  ReverseFixture()
         {
             _source = new SourceList<int>();
             _results = _source.Connect().Reverse().AsAggregator();
@@ -24,7 +24,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddInSucession()
         {
             _source.Add(1);
@@ -36,14 +36,14 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] {5, 4, 3, 2, 1});
         }
 
-        [Test]
+        [Fact]
         public void AddRange()
         {
             _source.AddRange(Enumerable.Range(1, 5));
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] {5, 4, 3, 2, 1});
         }
 
-        [Test]
+        [Fact]
         public void Removes()
         {
             _source.AddRange(Enumerable.Range(1, 5));
@@ -52,7 +52,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] {5, 3, 2});
         }
 
-        [Test]
+        [Fact]
         public void RemoveRange()
         {
             _source.AddRange(Enumerable.Range(1, 5));
@@ -60,7 +60,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] {5, 1});
         }
 
-        [Test]
+        [Fact]
         public void RemoveRangeThenInsert()
         {
             _source.AddRange(Enumerable.Range(1, 5));
@@ -69,7 +69,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] {5, 3, 1});
         }
 
-        [Test]
+        [Fact]
         public void Replace()
         {
             _source.AddRange(Enumerable.Range(1, 5));
@@ -77,7 +77,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] {5, 4, 100, 2, 1});
         }
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             _source.AddRange(Enumerable.Range(1, 5));
@@ -85,7 +85,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void Move()
         {
             _source.AddRange(Enumerable.Range(1, 5));
@@ -93,7 +93,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] {4, 3, 2, 5, 1});
         }
 
-        [Test]
+        [Fact]
         public void Move2()
         {
             _source.AddRange(Enumerable.Range(1, 5));

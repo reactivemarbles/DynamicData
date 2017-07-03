@@ -2,14 +2,14 @@ using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class FilterOnPropertyFixture
     {
-        [Test]
+        [Fact]
         public void InitialValues()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -24,7 +24,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void ChangeAValueToMatchFilter()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void ChangeAValueToNoLongerMatchFilter()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void ChangeAValueSoItIsStillInTheFilter()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();

@@ -4,7 +4,8 @@ using DynamicData.Aggregation;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
+
 
 namespace DynamicData.Tests.AggregationTests
 {
@@ -41,7 +42,7 @@ namespace DynamicData.Tests.AggregationTests
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanAccumulate()
         {
             int latest = 0;
@@ -64,7 +65,7 @@ namespace DynamicData.Tests.AggregationTests
             accumulator.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanHandleUpdatedItem()
         {
             int latest = 0;

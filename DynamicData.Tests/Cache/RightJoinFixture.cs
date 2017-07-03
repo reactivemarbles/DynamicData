@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using DynamicData.Kernel;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
@@ -22,7 +22,7 @@ namespace DynamicData.Tests.Cache
                 .AsAggregator();
         }
 
-        [Test]
+        [Fact]
         public void AddLeftOnly()
         {
             _left.Edit(innerCache =>
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void AddRightOnly()
         {
             _right.Edit(innerCache =>
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void AddLetThenRight()
         {
             _left.Edit(innerCache =>
@@ -77,7 +77,7 @@ namespace DynamicData.Tests.Cache
             _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void RemoveVarious()
         {
             _left.Edit(innerCache =>
@@ -105,7 +105,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void AddRightThenLeft()
         {
             _right.Edit(innerCache =>
@@ -128,7 +128,7 @@ namespace DynamicData.Tests.Cache
             _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void UpdateRight()
         {
             _right.Edit(innerCache =>

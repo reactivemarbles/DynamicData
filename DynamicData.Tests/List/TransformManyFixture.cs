@@ -2,18 +2,17 @@ using System;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     public class TransformManyFixture: IDisposable
     {
-        private ISourceList<PersonWithRelations> _source;
-        private ChangeSetAggregator<PersonWithRelations> _results;
+        private readonly ISourceList<PersonWithRelations> _source;
+        private readonly ChangeSetAggregator<PersonWithRelations> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  TransformManyFixture()
         {
             _source = new SourceList<PersonWithRelations>();
 
@@ -27,7 +26,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);
@@ -43,7 +42,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] { child1, child2, child3, frientofchild1 });
         }
 
-        [Test]
+        [Fact]
         public void RemoveParent()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);
@@ -59,7 +58,7 @@ namespace DynamicData.Tests.List
 
         }
 
-        [Test]
+        [Fact]
         public void Replace()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);
@@ -79,7 +78,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] { child1, child2, frientofchild1, child4 });
         }
 
-        [Test]
+        [Fact]
         public void AddRange()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);
@@ -105,7 +104,7 @@ namespace DynamicData.Tests.List
 
         }
 
-        [Test]
+        [Fact]
         public void RemoveRange()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);
@@ -129,7 +128,7 @@ namespace DynamicData.Tests.List
         }
 
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);
@@ -151,7 +150,7 @@ namespace DynamicData.Tests.List
 
         }
 
-        [Test]
+        [Fact]
         public void Move()
         {
             //Move should have no effect 

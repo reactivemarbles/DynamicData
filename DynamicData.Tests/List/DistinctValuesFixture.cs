@@ -1,6 +1,6 @@
 using System;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using System.Linq;
 using FluentAssertions;
 
@@ -25,7 +25,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void FiresAddWhenaNewItemIsAdded()
         {
             _source.Add(new Person("Person1", 20));
@@ -35,7 +35,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
-        [Test]
+        [Fact]
         public void FiresBatchResultOnce()
         {
             _source.Edit(list =>
@@ -52,7 +52,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
-        [Test]
+        [Fact]
         public void DuplicatedResultsResultInNoAdditionalMessage()
         {
             _source.Edit(list =>
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
-        [Test]
+        [Fact]
         public void RemovingAnItemRemovesTheDistinct()
         {
             var person = new Person("Person1", 20);
@@ -81,7 +81,7 @@ namespace DynamicData.Tests.List
             _results.Messages.Skip(1).First().Removes.Should().Be(1, "Second messsage should be a remove");
         }
 
-        [Test]
+        [Fact]
         public void Replacing()
         {
             var person = new Person("A", 20);

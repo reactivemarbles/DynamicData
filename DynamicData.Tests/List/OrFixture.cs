@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -30,10 +30,10 @@ namespace DynamicData.Tests.List
     {
         protected ISourceList<int> _source1;
         protected ISourceList<int> _source2;
-        private ChangeSetAggregator<int> _results;
+        private readonly ChangeSetAggregator<int> _results;
 
-        [SetUp]
-        public void Initialise()
+
+        protected OrFixtureBase()
         {
             _source1 = new SourceList<int>();
             _source2 = new SourceList<int>();
@@ -49,7 +49,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void IncludedWhenItemIsInOneSource()
         {
             _source1.Add(1);
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void IncludedWhenItemIsInTwoSources()
         {
             _source1.Add(1);
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void RemovedWhenNoLongerInEither()
         {
             _source1.Add(1);
@@ -75,7 +75,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void CombineRange()
         {
             _source1.AddRange(Enumerable.Range(1, 5));
@@ -84,7 +84,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
         }
 
-        [Test]
+        [Fact]
         public void ClearOnlyClearsOneSource()
         {
             _source1.AddRange(Enumerable.Range(1, 5));

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Cache
             Scheduler = new TestScheduler();
         }
 
-        [Test]
+        [Fact]
         public void CanLoadFromTask()
         {
             Task<IEnumerable<Person>> Loader()
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Cache
             data.Count.Should().Be(100);
         }
 
-        [Test]
+        [Fact]
         public void HandlesErrorsInObservable()
         {
             Task<IEnumerable<Person>> Loader()
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.Cache
             error.Should().NotBeNull();
         }
 
-        [Test]
+        [Fact]
         public void HandlesErrorsObservableList()
         {
             Func<Task<IEnumerable<Person>>> loader = () => { throw new Exception("Broken"); };

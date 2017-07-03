@@ -1,7 +1,7 @@
 using System;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 using System.Reactive.Linq;
 using FluentAssertions;
 
@@ -30,14 +30,14 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void NoResultsWillBeReceivedBeforeClosingBuffer()
         {
             _source.Add(new Person("A", 1));
             _results.Messages.Count.Should().Be(0, "There should be no messages");
         }
 
-        [Test]
+        [Fact]
         public void ResultsWillBeReceivedAfterClosingBuffer()
         {
             _source.Add(new Person("A", 1));

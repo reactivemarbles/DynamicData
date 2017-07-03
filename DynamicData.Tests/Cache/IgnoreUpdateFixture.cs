@@ -1,7 +1,7 @@
 ﻿using System;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Cache
                 );
         }
 
-        [Test]
+        [Fact]
         public void IgnoreFunctionWillIgnoreSubsequentUpdatesOfAnItem()
         {
             var person = new Person("Person", 10);

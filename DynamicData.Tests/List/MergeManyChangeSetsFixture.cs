@@ -1,13 +1,13 @@
 using System;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
     
     public class MergeManyChangeSetsFixture
     {
-        [Test]
+        [Fact]
         public void MergeManyShouldWork()
         {
             var a = new SourceList<int>();

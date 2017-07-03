@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
@@ -44,7 +44,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void RegroupRecaluatesGroupings()
         {
             var p1 = new Person("P1", 10);
@@ -78,7 +78,7 @@ namespace DynamicData.Tests.Cache
             IsContainedOnlyInOneGroup("P4").Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void RegroupRecaluatesGroupings2()
         {
             var p1 = new Person("P1", 10);

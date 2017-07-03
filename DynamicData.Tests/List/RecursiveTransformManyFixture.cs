@@ -1,7 +1,7 @@
 using System;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.List
@@ -9,11 +9,10 @@ namespace DynamicData.Tests.List
     
     public class RecursiveTransformManyFixture: IDisposable
     {
-        private ISourceList<PersonWithRelations> _source;
-        private ChangeSetAggregator<PersonWithRelations> _results;
+        private readonly ISourceList<PersonWithRelations> _source;
+        private readonly ChangeSetAggregator<PersonWithRelations> _results;
 
-        [SetUp]
-        public void Initialise()
+        public  RecursiveTransformManyFixture()
         {
             _source = new SourceList<PersonWithRelations>();
 
@@ -26,7 +25,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void RecursiveChildrenCanBeAdded()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);
@@ -45,7 +44,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.IndexOfOptional(frientofchild1).HasValue.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ChildrenAreRemovedWhenParentIsRemoved()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);

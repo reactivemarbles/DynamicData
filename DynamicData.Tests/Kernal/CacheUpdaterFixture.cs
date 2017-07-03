@@ -4,7 +4,7 @@ using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
@@ -22,7 +22,7 @@ namespace DynamicData.Tests.Kernal
 
 
 
-        [Test]
+        [Fact]
         public void Add()
         {
             var person = new Person("Adult1", 50);
@@ -35,7 +35,7 @@ namespace DynamicData.Tests.Kernal
             updates.First().Should().Be(new Change<Person, string>(ChangeReason.Add, person.Name, person), "Should be 1 updates");
         }
 
-        [Test]
+        [Fact]
         public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
         {
             const string key = "Adult1";
@@ -47,7 +47,7 @@ namespace DynamicData.Tests.Kernal
             updates.Count.Should().Be(0, "Should be 0 updates");
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             const string key = "Adult1";
@@ -63,7 +63,7 @@ namespace DynamicData.Tests.Kernal
             2.Should().Be(updates.Count, "Should be 2 updates");
         }
 
-        [Test]
+        [Fact]
         public void Update()
         {
             const string key = "Adult1";

@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.List
@@ -24,7 +24,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             var person = new Person("Adult1", 50);
@@ -37,7 +37,7 @@ namespace DynamicData.Tests.List
             firstGroup[0].Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             var person = new Person("Adult1", 50);
@@ -47,7 +47,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should be no groups");
         }
 
-        [Test]
+        [Fact]
         public void UpdateWillChangeTheGroup()
         {
             var person = new Person("Adult1", 50);
@@ -62,7 +62,7 @@ namespace DynamicData.Tests.List
             firstGroup[0].Should().Be(amended, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void BigList()
         {
             var generator = new RandomPersonGenerator();

@@ -2,14 +2,14 @@
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
     
     public class OptionFixture
     {
-        [Test]
+        [Fact]
         public void OptionSomeHasValue()
         {
             var person = new Person("Name", 20);
@@ -18,7 +18,7 @@ namespace DynamicData.Tests.Kernal
             ReferenceEquals(person, option.Value).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ImplictCastHasValue()
         {
             var person = new Person("Name", 20);
@@ -28,7 +28,7 @@ namespace DynamicData.Tests.Kernal
             ReferenceEquals(person, option.Value).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void OptionSetToNullHasNoValue1()
         {
             Person person = null;
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Kernal
             option.HasValue.Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void OptionSetToNullHasNoValue2()
         {
             Person person = null;
@@ -44,14 +44,14 @@ namespace DynamicData.Tests.Kernal
             option.HasValue.Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void OptionNoneHasNoValue()
         {
             var option = Optional.None<IChangeSet<Person, string>>();
             option.HasValue.Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void OptionIfHasValueInvokedIfOptionHasValue()
         {
             Optional<Person> source = new Person("A", 1);
@@ -66,7 +66,7 @@ namespace DynamicData.Tests.Kernal
             elseactioninvoked.Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void OptionElseInvokedIfOptionHasNoValue()
         {
             Optional<Person> source = null;

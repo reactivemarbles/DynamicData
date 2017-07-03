@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ExcludedWhenItemIsInOneSource()
         {
             _source.Add(_source1.Connect());
@@ -42,7 +42,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void IncludedWhenItemIsInTwoSources()
         {
             _source.Add(_source1.Connect());
@@ -52,7 +52,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void RemovedWhenNoLongerInBoth()
         {
             _source.Add(_source1.Connect());
@@ -63,7 +63,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void CombineRange()
         {
             _source.Add(_source1.Connect());
@@ -74,7 +74,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(6, 5));
         }
 
-        [Test]
+        [Fact]
         public void ClearOneClearsResult()
         {
             _source.Add(_source1.Connect());
@@ -85,7 +85,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void AddAndRemoveLists()
         {
             _source1.AddRange(Enumerable.Range(1, 5));

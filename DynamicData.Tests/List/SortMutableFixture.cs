@@ -7,7 +7,7 @@ using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.List
@@ -26,8 +26,7 @@ namespace DynamicData.Tests.List
             .Ascending(p => p.Age)
             .ThenByAscending(p => p.Name);
 
-        [SetUp]
-        public void SetUp()
+        public  SortMutableFixture()
         {
             _source = new SourceList<Person>();
             _changeComparer = new BehaviorSubject<IComparer<Person>>(_comparer);
@@ -42,7 +41,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void SortInitialBatch()
         {
             var people = _generator.Take(100).ToArray();
@@ -56,7 +55,7 @@ namespace DynamicData.Tests.List
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void Insert()
         {
             var people = _generator.Take(100).ToArray();
@@ -71,7 +70,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.Last().Should().Be(shouldbeLast);
         }
 
-        [Test]
+        [Fact]
         public void Replace()
         {
             var people = _generator.Take(100).ToArray();
@@ -85,7 +84,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.Last().Should().Be(shouldbeLast);
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             var people = _generator.Take(100).ToList();
@@ -104,7 +103,7 @@ namespace DynamicData.Tests.List
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void RemoveManyOrdered()
         {
             var people = _generator.Take(100).ToList();
@@ -120,7 +119,7 @@ namespace DynamicData.Tests.List
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void RemoveManyReverseOrdered()
         {
             var people = _generator.Take(100).ToList();
@@ -136,7 +135,7 @@ namespace DynamicData.Tests.List
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void ResortOnInlineChanges()
         {
             var people = _generator.Take(10).ToList();
@@ -164,7 +163,7 @@ namespace DynamicData.Tests.List
         }
 
 
-        [Test]
+        [Fact]
         public void RemoveManyOdds()
         {
             var people = _generator.Take(100).ToList();
@@ -182,7 +181,7 @@ namespace DynamicData.Tests.List
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void Resort()
         {
             var people = _generator.Take(100).ToArray();
@@ -200,7 +199,7 @@ namespace DynamicData.Tests.List
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void ChangeComparer()
         {
             var people = _generator.Take(100).ToArray();
@@ -220,7 +219,7 @@ namespace DynamicData.Tests.List
         }
 
 
-        [Test]
+        [Fact]
         public void UpdateMoreThanThreshold()
         {
             var allPeople = _generator.Take(1100).ToList();

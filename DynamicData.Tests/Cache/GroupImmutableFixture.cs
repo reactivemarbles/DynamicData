@@ -3,7 +3,7 @@ using System.Linq;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -27,7 +27,7 @@ namespace DynamicData.Tests.Cache
 
 
 
-        [Test]
+        [Fact]
         public void Add()
         {
 
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages.First().Adds.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void UpdatesArePermissible()
         {
             _source.AddOrUpdate(new Person("Person1", 20));
@@ -50,7 +50,7 @@ namespace DynamicData.Tests.Cache
             group.Count.Should().Be(2);
         }
 
-        [Test]
+        [Fact]
         public void UpdateAnItemWillChangedThegroup()
         {
             _source.AddOrUpdate(new Person("Person1", 20));
@@ -66,7 +66,7 @@ namespace DynamicData.Tests.Cache
             group.Key.Should().Be(21);
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             _source.AddOrUpdate(new Person("Person1", 20));
@@ -76,7 +76,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(0);
         }
 
-        [Test]
+        [Fact]
         public void FiresManyValueForBatchOfDifferentAdds()
         {
             _source.Edit(updater =>
@@ -96,7 +96,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void FiresOnlyOnceForABatchOfUniqueValues()
         {
             _source.Edit(updater =>
@@ -112,7 +112,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Items.First().Count.Should().Be(4);
         }
 
-        [Test]
+        [Fact]
         public void ChanegMultipleGroups()
         {
             var initialPeople = Enumerable.Range(1, 100)
@@ -147,7 +147,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages.Skip(1).First().Updates.Should().Be(5);
         }
 
-        [Test]
+        [Fact]
         public void Reevaluate()
         {
             var initialPeople = Enumerable.Range(1, 10)

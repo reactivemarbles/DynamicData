@@ -5,7 +5,7 @@ using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.Cache
             _aggregators.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ReorderBelowThreshold()
         {
             var people = _generator.Take(50).ToArray();
@@ -53,7 +53,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void PageInitialBatch()
         {
             var people = _generator.Take(100).ToArray();
@@ -70,7 +70,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void ChangePage()
         {
             var people = _generator.Take(100).ToArray();
@@ -83,7 +83,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void ChangePageSize()
         {
             var people = _generator.Take(100).ToArray();
@@ -98,7 +98,7 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void PageGreaterThanNumberOfPagesAvailable()
         {
             var people = _generator.Take(100).ToArray();
@@ -113,13 +113,13 @@ namespace DynamicData.Tests.Cache
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
 
-        [Test]
+        [Fact]
         public void ThrowsForNegativeSizeParameters()
         {
             Assert.Throws<ArgumentException>(() => _pager.OnNext(new PageRequest(1, -1)));
         }
 
-        [Test]
+        [Fact]
         public void ThrowsForNegativePage()
         {
             Assert.Throws<ArgumentException>(() => _pager.OnNext(new PageRequest(-1, 1)));

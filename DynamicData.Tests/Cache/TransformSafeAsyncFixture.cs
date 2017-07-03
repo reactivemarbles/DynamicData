@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class TransformSafeAsyncFixture
     {
-        [Test]
+        [Fact]
         public void ReTransformAll()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void ReTransformSelected()
         {
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
@@ -64,7 +64,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public async Task Add()
         {
             using (var stub = new TransformStub())
@@ -81,7 +81,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             const string key = "Adult1";
@@ -100,7 +100,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void Update()
         {
             const string key = "Adult1";
@@ -118,7 +118,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public async Task BatchOfUniqueUpdates()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -135,7 +135,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public async Task SameKeyChanges()
         {
             using (var stub = new TransformStub())
@@ -156,7 +156,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             using (var stub = new TransformStub())
@@ -174,7 +174,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void HandleError()
         {
             using (var stub = new TransformStub(p =>

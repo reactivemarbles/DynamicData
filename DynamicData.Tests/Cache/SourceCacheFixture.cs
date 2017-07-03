@@ -1,7 +1,7 @@
 ﻿using System;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -23,7 +23,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanHandleABatchOfUpdates()
         {
             _source.Edit(updater =>
@@ -49,7 +49,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(0, "Should be 1 item in` the cache");
         }
 
-        [Test]
+        [Fact]
         public void CountChangedShouldAlwaysInvokeUponeSubscription()
         {
             int? result = null;
@@ -61,7 +61,7 @@ namespace DynamicData.Tests.Cache
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CountChangedShouldReflectContentsOfCacheInvokeUponeSubscription()
         {
             var generator = new RandomPersonGenerator();
@@ -75,7 +75,7 @@ namespace DynamicData.Tests.Cache
             subscription.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void SubscribesDisposesCorrectly()
         {
             bool called = false;

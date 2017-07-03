@@ -2,7 +2,7 @@
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
@@ -25,7 +25,7 @@ namespace DynamicData.Tests.List
             _result.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void New()
         {
             var newPeople = Enumerable.Range(1, 15).Select(i => new Person("Name" + i, i)).ToArray();
@@ -38,7 +38,7 @@ namespace DynamicData.Tests.List
             lastChange.Adds.Should().Be(5);
         }
 
-        [Test]
+        [Fact]
         public void EditWithSameData()
         {
             var newPeople = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
@@ -50,7 +50,7 @@ namespace DynamicData.Tests.List
             _result.Messages.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void Amends()
         {
             var newList = Enumerable.Range(5, 3).Select(i => new Person("Name" + i, i + 10)).ToArray();
@@ -65,7 +65,7 @@ namespace DynamicData.Tests.List
             _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
 
-        [Test]
+        [Fact]
         public void Removes()
         {
             var newList = Enumerable.Range(1, 7).Select(i => new Person("Name" + i, i)).ToArray();
@@ -81,7 +81,7 @@ namespace DynamicData.Tests.List
         }
 
 
-        [Test]
+        [Fact]
         public void VariousChanges()
         {
             var newList = Enumerable.Range(6, 10).Select(i => new Person("Name" + i, i)).ToArray();

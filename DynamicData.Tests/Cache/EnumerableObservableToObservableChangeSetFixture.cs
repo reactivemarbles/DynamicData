@@ -5,14 +5,14 @@ using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     
     public class EnumerableObservableToObservableChangeSetFixture
     {
-        [Test]
+        [Fact]
         public void OnNextProducesAnAddChangeForEnumerableSource()
         {
             var subject = new Subject<IEnumerable<Person>>();
@@ -32,7 +32,7 @@ namespace DynamicData.Tests.Cache
             results.Data.Items.ShouldAllBeEquivalentTo(results.Data.Items, "Lists should be equivalent");
         }
 
-        [Test]
+        [Fact]
         public void LimitSizeTo()
         {
             var subject = new Subject<IEnumerable<Person>>();
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.Cache
             actual.ShouldAllBeEquivalentTo(actual, "Only second hundred should be in the cache");
         }
 
-        [Test]
+        [Fact]
         public void ExpireAfterTime()
         {
             var subject = new Subject<IEnumerable<Person>>();

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.List
@@ -22,7 +22,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void EachChangeInokesTheCallback()
         {
             var messages = new List<Change<Person>>();
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.List
             messageWriter.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void EachItemChangeInokesTheCallback()
         {
             var messages = new List<ItemChange<Person>>();
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.List
             messageWriter.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void EachItemChangeInokesTheCallbac2()
         {
             var messages = new List<ItemChange<Person>>();

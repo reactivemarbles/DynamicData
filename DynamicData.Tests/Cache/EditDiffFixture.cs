@@ -3,7 +3,7 @@ using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -29,7 +29,7 @@ namespace DynamicData.Tests.Cache
 
 
 
-        [Test]
+        [Fact]
         public void New()
         {
             var newPeople = Enumerable.Range(1, 15).Select(i => new Person("Name" + i, i)).ToArray();
@@ -42,7 +42,7 @@ namespace DynamicData.Tests.Cache
             lastChange.Adds.Should().Be(5);
         }
 
-        [Test]
+        [Fact]
         public void EditWithSameData()
         {
             var newPeople = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.Cache
             _result.Messages.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void Amends()
         {
             var newList = Enumerable.Range(5, 3).Select(i => new Person("Name" + i, i + 10)).ToArray();
@@ -70,7 +70,7 @@ namespace DynamicData.Tests.Cache
             _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
 
-        [Test]
+        [Fact]
         public void Removes()
         {
             var newList = Enumerable.Range(1, 7).Select(i => new Person("Name" + i, i)).ToArray();
@@ -87,7 +87,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void VariousChanges()
         {
             var newList = Enumerable.Range(6, 10).Select(i => new Person("Name" + i, i + 10)).ToArray();
@@ -104,7 +104,7 @@ namespace DynamicData.Tests.Cache
             _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
 
-        [Test]
+        [Fact]
         public void New_WithEqualityComparer()
         {
             var newPeople = Enumerable.Range(1, 15).Select(i => new Person("Name" + i, i)).ToArray();
@@ -117,7 +117,7 @@ namespace DynamicData.Tests.Cache
             lastChange.Adds.Should().Be(5);
         }
 
-        [Test]
+        [Fact]
         public void EditWithSameData_WithEqualityComparer()
         {
             var newPeople = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
@@ -130,7 +130,7 @@ namespace DynamicData.Tests.Cache
             _result.Messages.Count.Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void Amends_WithEqualityComparer()
         {
             var newList = Enumerable.Range(5, 3).Select(i => new Person("Name" + i, i + 10)).ToArray();
@@ -146,7 +146,7 @@ namespace DynamicData.Tests.Cache
             _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
 
-        [Test]
+        [Fact]
         public void Removes_WithEqualityComparer()
         {
             var newList = Enumerable.Range(1, 7).Select(i => new Person("Name" + i, i)).ToArray();
@@ -163,7 +163,7 @@ namespace DynamicData.Tests.Cache
         }
 
 
-        [Test]
+        [Fact]
         public void VariousChanges_WithEqualityComparer()
         {
             var newList = Enumerable.Range(6, 10).Select(i => new Person("Name" + i, i + 10)).ToArray();

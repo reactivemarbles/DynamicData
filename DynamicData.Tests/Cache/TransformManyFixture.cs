@@ -3,7 +3,7 @@ using System;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
         
 namespace DynamicData.Tests.Cache
 {
@@ -28,7 +28,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void RecursiveChildrenCanBeAdded()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);
@@ -47,7 +47,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Lookup("Friend1").HasValue.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ChildrenAreRemovedWhenParentIsRemoved()
         {
             var frientofchild1 = new PersonWithRelations("Friend1", 10);

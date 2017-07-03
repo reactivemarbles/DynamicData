@@ -3,7 +3,7 @@ using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -31,7 +31,7 @@ namespace DynamicData.Tests.Cache
             _pausingSubject.OnCompleted();
         }
 
-        [Test]
+        [Fact]
         public void WillApplyTimeout()
         {
             _pausingSubject.OnNext(true);
@@ -46,7 +46,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages.Count.Should().Be(1, "There should be no messages");
         }
 
-        [Test]
+        [Fact]
         public void NoResultsWillBeReceivedIfPaused()
         {
             _pausingSubject.OnNext(true);
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages.Count.Should().Be(0, "There should be no messages");
         }
 
-        [Test]
+        [Fact]
         public void ResultsWillBeReceivedIfNotPaused()
         {
             _source.AddOrUpdate(new Person("A", 1));
@@ -68,7 +68,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages.Count.Should().Be(1, "Should be 1 update");
         }
 
-        [Test]
+        [Fact]
         public void CanToggleSuspendResume()
         {
             _pausingSubject.OnNext(true);

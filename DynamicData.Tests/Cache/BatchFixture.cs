@@ -2,7 +2,7 @@ using System;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
@@ -27,14 +27,14 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void NoResultsWillBeReceivedBeforeClosingBuffer()
         {
             _source.AddOrUpdate(new Person("A", 1));
             _results.Messages.Count.Should().Be(0, "There should be no messages");
         }
 
-        [Test]
+        [Fact]
         public void ResultsWillBeReceivedAfterClosingBuffer()
         {
             _source.AddOrUpdate(new Person("A", 1));

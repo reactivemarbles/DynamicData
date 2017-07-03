@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
@@ -48,7 +48,7 @@ namespace DynamicData.Tests.Cache
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void UpdatingOneSourceOnlyProducesResult()
         {
             var person = new Person("Adult1", 50);
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
         }
 
-        [Test]
+        [Fact]
         public void UpdatingBothDoeNotProducesResult()
         {
             var person = new Person("Adult1", 50);
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(0, "Cache should have no items");
         }
 
-        [Test]
+        [Fact]
         public void RemovingFromOneDoesNotFromResult()
         {
             var person = new Person("Adult1", 50);
@@ -79,7 +79,7 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(1, "Cache should have no items");
         }
 
-        [Test]
+        [Fact]
         public void UpdatingOneProducesOnlyOneUpdate()
         {
             var person = new Person("Adult1", 50);

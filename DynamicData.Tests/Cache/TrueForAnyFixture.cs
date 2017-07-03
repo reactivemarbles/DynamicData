@@ -2,7 +2,7 @@ using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 
 namespace DynamicData.Tests.Cache
@@ -24,7 +24,7 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void InitialItemReturnsFalseWhenObservaleHasNoValue()
         {
             bool? valuereturned = null;
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.Cache
             subscribed.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void InlineObservableChangeProducesResult()
         {
             bool? valuereturned = null;
@@ -53,7 +53,7 @@ namespace DynamicData.Tests.Cache
             subscribed.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void MultipleValuesReturnTrue()
         {
             bool? valuereturned = null;

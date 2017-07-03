@@ -2,7 +2,7 @@ using System;
 using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.List
@@ -30,7 +30,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void NoResultsWillBeReceivedIfPaused()
         {
             _pausingSubject.OnNext(true);
@@ -44,7 +44,7 @@ namespace DynamicData.Tests.List
             _results.Messages.Count.Should().Be(0, "There should be no messages");
         }
 
-        [Test]
+        [Fact]
         public void ResultsWillBeReceivedIfNotPaused()
         {
             _source.Add(new Person("A", 1));
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.List
             _results.Messages.Count.Should().Be(1, "Should be 1 update");
         }
 
-        [Test]
+        [Fact]
         public void CanToggleSuspendResume()
         {
             _pausingSubject.OnNext(true);

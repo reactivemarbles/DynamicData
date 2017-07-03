@@ -2,7 +2,7 @@
 using System.Linq;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using Xunit;
 using FluentAssertions;
 
 namespace DynamicData.Tests.List
@@ -25,7 +25,7 @@ namespace DynamicData.Tests.List
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddMatched()
         {
             var person = new Person("Adult1", 50);
@@ -36,7 +36,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void AddRange()
         {
             var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
@@ -48,7 +48,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(80, "Should be 50 item in the cache");
         }
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
@@ -62,7 +62,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should be 50 item in the cache");
         }
 
-        [Test]
+        [Fact]
         public void AddNotMatched()
         {
             var person = new Person("Adult1", 10);
@@ -72,7 +72,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Cache should have no items");
         }
 
-        [Test]
+        [Fact]
         public void AddNotMatchedAndUpdateMatched()
         {
             const string key = "Adult1";
@@ -90,14 +90,14 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(matched, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void AttemptedRemovalOfANonExistentKeyWillBeIgnored()
         {
             _source.Remove(new Person("anyone", 1));
             _results.Messages.Count.Should().Be(0, "Should be 0 updates");
         }
 
-        [Test]
+        [Fact]
         public void BatchOfUniqueUpdates()
         {
             var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
@@ -110,7 +110,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect Filter result");
         }
 
-        [Test]
+        [Fact]
         public void BatchRemoves()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
@@ -123,7 +123,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
 
-        [Test]
+        [Fact]
         public void BatchSuccessiveUpdates()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
@@ -139,7 +139,7 @@ namespace DynamicData.Tests.List
             _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect Filter result");
         }
 
-        [Test]
+        [Fact]
         public void Clear1()
         {
             var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
@@ -152,7 +152,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             const string key = "Adult1";
@@ -168,7 +168,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
 
-        [Test]
+        [Fact]
         public void SameKeyChanges()
         {
             const string key = "Adult1";
@@ -188,7 +188,7 @@ namespace DynamicData.Tests.List
             _results.Messages[0].Removes.Should().Be(1, "Should be 1 remove");
         }
 
-        [Test]
+        [Fact]
         public void UpdateNotMatched()
         {
             const string key = "Adult1";
@@ -202,7 +202,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should nothing cached");
         }
 
-        [Test]
+        [Fact]
         public void FilterSubscribedToMultipleTimes()
         {
             var source = new SourceList<Person>();
@@ -214,7 +214,7 @@ namespace DynamicData.Tests.List
             filtered.Filter(new FilterController<Person>(person => true))
                     .Subscribe();
 
-            Assert.DoesNotThrow(() => source.Add(new Person("test", 1)));
+             source.Add(new Person("test", 1));
         }
     }
 }

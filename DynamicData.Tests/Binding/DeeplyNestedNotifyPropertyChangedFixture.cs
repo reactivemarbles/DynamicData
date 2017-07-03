@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Binding
 {              
@@ -12,7 +12,7 @@ namespace DynamicData.Tests.Binding
     
     public class DeeplyNestedNotifyPropertyChangedFixture
     {
-        [Test]
+        [Fact]
         public void NotifiesInitialValue_WithFallback()
         {
             var instance = new ClassA {Child = new ClassB {Age = 10}};
@@ -41,7 +41,7 @@ namespace DynamicData.Tests.Binding
             result.Should().Be(21);
         }
 
-        [Test]
+        [Fact]
         public void NotifiesInitialValueAndNullChild()
         {
             var instance = new ClassA();
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.Binding
          
         }
 
-        [Test]
+        [Fact]
         public void WithoutInitialValue()
         {
             var instance = new ClassA {Name="TestClass", Child = new ClassB {Age = 10}};
@@ -88,7 +88,7 @@ namespace DynamicData.Tests.Binding
             result.Should().Be(30);
         }
 
-        [Test]
+        [Fact]
         public void NullChildWithoutInitialValue()
         {
             var instance = new ClassA();
@@ -113,7 +113,7 @@ namespace DynamicData.Tests.Binding
             result.Should().Be(30);
         }
 
-        [Test]
+        [Fact]
         public void NullChildWithInitialValue()
         {
             var instance = new ClassA();
@@ -138,7 +138,7 @@ namespace DynamicData.Tests.Binding
             result.Should().Be(30);
         }
 
-        [Test]
+        [Fact]
         public void DepthOfOne()
         {
             var instance = new ClassA {Name="Someone"};
@@ -161,8 +161,8 @@ namespace DynamicData.Tests.Binding
 
         }
 
-        [Test]
-        [Ignore("Manual run for benchmarking")]
+        [Fact]
+        [Trait("Manual run for benchmarking","xx")]
         public void StressIt()
         {
             var list = new SourceList<ClassA>();

@@ -1,6 +1,6 @@
 ﻿using DynamicData.Tests.Domain;
 using Microsoft.Reactive.Testing;
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using FluentAssertions;
@@ -11,16 +11,15 @@ namespace DynamicData.Tests.List
     internal class ToObservableChangeSetFixture : ReactiveTest, IDisposable
     {
         private IObservable<Person> _observable;
-        private TestScheduler _scheduler;
-        private IDisposable _disposable;
-        private List<Person> _target;
+        private readonly TestScheduler _scheduler;
+        private readonly IDisposable _disposable;
+        private readonly List<Person> _target;
 
         private readonly Person _person1 = new Person("One", 1);
         private readonly Person _person2 = new Person("Two", 2);
         private readonly Person _person3 = new Person("Three", 3);
 
-        [SetUp]
-        public void Initialise()
+        public  ToObservableChangeSetFixture()
         {
             _scheduler = new TestScheduler();
             _observable = _scheduler.CreateColdObservable(
@@ -41,7 +40,7 @@ namespace DynamicData.Tests.List
             _disposable.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void ShouldLimitSizeOfBoundCollection()
         {
             _scheduler.AdvanceTo(2);
