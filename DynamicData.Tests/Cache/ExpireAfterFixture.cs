@@ -9,7 +9,7 @@ using Xunit;
 namespace DynamicData.Tests.Cache
 {
     
-    internal class ExpireAfterFixture: IDisposable
+    public class ExpireAfterFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;

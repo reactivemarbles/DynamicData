@@ -7,7 +7,7 @@ using Xunit;
 namespace DynamicData.Tests.List
 {
     
-    internal class RemoveManyFixture
+    public class RemoveManyFixture
     {
         private readonly List<int> _list;
 

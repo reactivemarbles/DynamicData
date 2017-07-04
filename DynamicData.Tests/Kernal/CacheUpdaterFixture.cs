@@ -1,7 +1,6 @@
-﻿using System;
+﻿
 using System.Linq;
 using DynamicData.Cache.Internal;
-using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
@@ -9,7 +8,7 @@ using Xunit;
 namespace DynamicData.Tests.Kernal
 {
     
-    internal class CacheUpdaterFixture
+    public class CacheUpdaterFixture
     {
         private readonly ChangeAwareCache<Person, string> _cache;
         private readonly CacheUpdater<Person, string> _updater;

@@ -13,13 +13,13 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    internal class SortMutableFixture: IDisposable
+    public class SortMutableFixture: IDisposable
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private ISourceList<Person> _source;
-        private ISubject<IComparer<Person>> _changeComparer;
-        private ISubject<Unit> _resort;
-        private ChangeSetAggregator<Person> _results;
+        private readonly ISourceList<Person> _source;
+        private readonly ISubject<IComparer<Person>> _changeComparer;
+        private readonly ISubject<Unit> _resort;
+        private readonly ChangeSetAggregator<Person> _results;
 
 
         private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>

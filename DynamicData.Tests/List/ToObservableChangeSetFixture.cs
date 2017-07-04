@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
 
-    internal class ToObservableChangeSetFixture : ReactiveTest, IDisposable
+    public class ToObservableChangeSetFixture : ReactiveTest, IDisposable
     {
         private IObservable<Person> _observable;
         private readonly TestScheduler _scheduler;

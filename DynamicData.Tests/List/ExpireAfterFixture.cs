@@ -9,7 +9,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    internal class ExpireAfterFixture: IDisposable
+    public class ExpireAfterFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<Person> _results;

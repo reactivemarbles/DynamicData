@@ -3063,9 +3063,9 @@
   },
   "project": {
     "restore": {
-      "projectUniqueName": "U:\\Work\\DynamicData\\DynamicData\\DynamicData.csproj",
+      "projectUniqueName": "U:\\Work\\DynamicData\\DynamicData",
       "projectName": "DynamicData",
-      "projectPath": "U:\\Work\\DynamicData\\DynamicData\\DynamicData.csproj",
+      "projectPath": "U:\\Work\\DynamicData\\DynamicData",
       "projectJsonPath": "U:\\Work\\DynamicData\\DynamicData\\project.json",
       "projectStyle": "ProjectJson"
     },

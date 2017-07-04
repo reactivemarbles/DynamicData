@@ -8,7 +8,7 @@ using Xunit;
 namespace DynamicData.Tests.Cache
 {
     
-    internal class ToObservableChangeSetFixture:  ReactiveTest,IDisposable
+    public class ToObservableChangeSetFixture:  ReactiveTest,IDisposable
     {        
         private IObservable<Person> _observable;
         private readonly TestScheduler _scheduler;

@@ -8,7 +8,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    internal class TimeExpiryFixture: IDisposable
+    public class TimeExpiryFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _cache;
         private readonly IDisposable _remover;

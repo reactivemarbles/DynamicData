@@ -9,8 +9,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
-    internal class SortFixture: IDisposable
+    public class SortFixture: IDisposable
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly ISourceList<Person> _source;

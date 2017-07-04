@@ -250,6 +250,7 @@
     <Compile Include="List\SizeLimitFixture.cs" />
     <Compile Include="List\SortFixture.cs" />
     <Compile Include="List\SortMutableFixture.cs" />
+    <Compile Include="List\SortPrimitiveFixture.cs" />
     <Compile Include="List\SubscribeManyFixture.cs" />
     <Compile Include="List\SwitchFixture.cs" />
     <Compile Include="List\ToObservableChangeSetFixture.cs" />

@@ -7,7 +7,7 @@ using Xunit;
 namespace DynamicData.Tests.List
 {
     
-    internal class ChangeAwareListFixture
+    public class ChangeAwareListFixture
     {
         private ChangeAwareList<int> _list;
 

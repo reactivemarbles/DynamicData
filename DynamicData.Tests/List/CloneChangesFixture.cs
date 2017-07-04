@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    internal class CloneChangesFixture
+    public class CloneChangesFixture
     {
         private readonly ChangeAwareList<int> _source;
         private readonly List<int> _clone;

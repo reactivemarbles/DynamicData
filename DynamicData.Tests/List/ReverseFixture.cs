@@ -6,7 +6,7 @@ using Xunit;
 namespace DynamicData.Tests.List
 {
     
-    internal class ReverseFixture: IDisposable
+    public class ReverseFixture: IDisposable
     {
         private readonly ISourceList<int> _source;
         private readonly ChangeSetAggregator<int> _results;

@@ -10,8 +10,8 @@ namespace DynamicData.Tests.Cache
     
     public class FilterParallelFixture: IDisposable
     {
-        private ISourceCache<Person, string> _source;
-        private ChangeSetAggregator<Person, string> _results;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ChangeSetAggregator<Person, string> _results;
 
         public FilterParallelFixture()
         {

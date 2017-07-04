@@ -8,7 +8,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    internal class SizeLimitFixture: IDisposable
+    public class SizeLimitFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<Person> _results;

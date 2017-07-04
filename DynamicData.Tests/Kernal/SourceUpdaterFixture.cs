@@ -8,7 +8,7 @@ using Xunit;
 namespace DynamicData.Tests.Kernal
 {
     
-    internal class SourceUpdaterFixture
+    public class SourceUpdaterFixture
     {
         private readonly ChangeAwareCache<Person, string> _cache;
         private readonly CacheUpdater<Person, string> _updater;
