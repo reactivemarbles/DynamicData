@@ -14,7 +14,7 @@ namespace DynamicData.Cache.Internal
                                   SortReason sortReason,
                                   SortOptimisations optimisations)
         {
-            _items = items?.AsList() ?? throw new ArgumentNullException(nameof(items));
+            _items = items?.ToList() ?? throw new ArgumentNullException(nameof(items));
             Comparer = comparer;
             SortReason = sortReason;
             Optimisations = optimisations;
