@@ -15,7 +15,7 @@ namespace DynamicData.List.Internal
         private readonly int _resetThreshold;
         private readonly IObservable<Unit> _resort;
         private readonly IObservable<IComparer<T>> _comparerObservable;
-        private readonly IEqualityComparer<T> _referencEqualityComparer = ReferenceEqualityComparer<T>.Instance;
+
         private IComparer<T> _comparer;
 
         public Sort([NotNull] IObservable<IChangeSet<T>> source,
@@ -116,7 +116,7 @@ namespace DynamicData.List.Internal
                         //add to current list so downstream operators can receive a refresh
                         //notification, so get the latest index and pass the index up the chain
                         var indexed = target
-                            .IndexOfOptional(change.Item.Current, ReferenceEqualityComparer<T>.Instance)
+                            .IndexOfOptional(change.Item.Current)
                             .ValueOrThrow(() => new SortException($"Cannot find index of {typeof(T).Name} -> {change.Item.Current}. Expected to be in the list"));
 
                         target.Refresh(indexed.Item, indexed.Index);
@@ -176,7 +176,7 @@ namespace DynamicData.List.Internal
                 if (ReferenceEquals(item, existing)) continue;
 
                 //Cannot use binary search as Resort is implicit of a mutable change
-                var old = target.IndexOf(item, _referencEqualityComparer);
+                var old = target.IndexOf(item);
                 target.Move(old, index);
             }
 
@@ -248,7 +248,7 @@ namespace DynamicData.List.Internal
             int index;
             index = _sortOptions == SortOptions.UseBinarySearch 
                 ? target.BinarySearch(item, _comparer) 
-                : target.IndexOf(item, _referencEqualityComparer);
+                : target.IndexOf(item);
 
             if (index < 0)
                 throw new SortException($"Cannot find item: {typeof(T).Name} -> {item}");

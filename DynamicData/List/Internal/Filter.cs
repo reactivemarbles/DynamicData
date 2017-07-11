@@ -98,7 +98,7 @@ namespace DynamicData.List.Internal
                             {
                                 //an update, so get the latest index and pass the index up the chain
                                 var previous = filtered.Select(x => x.Item)
-                                    .IndexOfOptional(change.Previous.Value.Item, ReferenceEqualityComparer<T>.Instance)
+                                    .IndexOfOptional(change.Previous.Value.Item)
                                     .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
 
                                     //replace inline
@@ -127,7 +127,7 @@ namespace DynamicData.List.Internal
                             {
                                 //an update, so get the latest index and pass the index up the chain
                                 var previous = filtered.Select(x => x.Item)
-                                    .IndexOfOptional(change.Current.Item, ReferenceEqualityComparer<T>.Instance)
+                                    .IndexOfOptional(change.Current.Item)
                                     .ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
 
                                 filtered.RefreshAt(previous.Index);

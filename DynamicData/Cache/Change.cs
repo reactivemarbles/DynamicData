@@ -140,8 +140,10 @@ namespace DynamicData
         public bool Equals(Change<TObject, TKey> other)
         {
             return EqualityComparer<TKey>.Default.Equals(Key, other.Key) 
-                && Reason == other.Reason && EqualityComparer<TObject>.Default.Equals(Current, other.Current)
-                && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) 
+                && Reason == other.Reason 
+                && EqualityComparer<TObject>.Default.Equals(Current, other.Current) 
+                && CurrentIndex == other.CurrentIndex 
+                && Previous.Equals(other.Previous) 
                 && PreviousIndex == other.PreviousIndex;
         }
 

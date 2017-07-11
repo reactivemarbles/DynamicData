@@ -135,7 +135,7 @@ namespace DynamicData.List.Internal
                                         if (previousGroup.Equals(currentGroup))
                                         {
                                             //find and replace
-                                            var index = list.IndexOf(previousItem, ReferenceEqualityComparer<TObject>.Instance);
+                                            var index = list.IndexOf(previousItem);
                                             list[index] = change.Current.Item;
                                         }
                                         else

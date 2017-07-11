@@ -3,21 +3,22 @@ using System.Reactive.Linq;
 using DynamicData.Aggregation;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using FluentAssertions;
+using Xunit;
+
 
 namespace DynamicData.Tests.AggregationTests
 {
-    [TestFixture]
-    public class AggregationFixture
+    
+    public class AggregationFixture: IDisposable
     {
-        private SourceCache<Person, string> _source;
-        private IObservable<int> _accumulator;
+        private readonly SourceCache<Person, string> _source;
+        private readonly IObservable<int> _accumulator;
 
         /// <summary>
         /// Initialises this instance.
         /// </summary>
-        [SetUp]
-        public void Initialise()
+        public AggregationFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 
@@ -36,13 +37,12 @@ namespace DynamicData.Tests.AggregationTests
                                   });
         }
 
-        [TearDown]
-        public void Cleanup()
+        public void Dispose()
         {
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanAccumulate()
         {
             int latest = 0;
@@ -58,14 +58,14 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("B", 20));
             _source.AddOrUpdate(new Person("C", 30));
 
-            Assert.AreEqual(3, counter, "Should be 3 updates");
-            Assert.AreEqual(60, latest, "Accumulated value should be 60");
+            counter.Should().Be(3, "Should be 3 updates");
+            latest.Should().Be(60, "Accumulated value should be 60");
             _source.AddOrUpdate(new Person("A", 5));
 
             accumulator.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void CanHandleUpdatedItem()
         {
             int latest = 0;
@@ -80,8 +80,8 @@ namespace DynamicData.Tests.AggregationTests
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("A", 15));
 
-            Assert.AreEqual(2, counter, "Should be 2 updates");
-            Assert.AreEqual(15, latest, "Accumulated value should be 60");
+            counter.Should().Be(2, "Should be 2 updates");
+            latest.Should().Be(15, "Accumulated value should be 60");
             accumulator.Dispose();
         }
     }

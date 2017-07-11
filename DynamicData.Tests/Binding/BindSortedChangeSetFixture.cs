@@ -4,21 +4,21 @@ using System.Collections.Specialized;
 using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using FluentAssertions;
+using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-    [TestFixture]
-    public class BindSortedChangeSetFixture
+    
+    public class BindSortedChangeSetFixture: IDisposable
     {
-        private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
-        private ISourceCache<Person, string> _source;
-        private IDisposable _binder;
+        private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
+        private readonly ISourceCache<Person, string> _source;
+        private readonly IDisposable _binder;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name);
 
-        [SetUp]
-        public void SetUp()
+        public BindSortedChangeSetFixture()
         {
             _collection = new ObservableCollectionExtended<Person>();
             _source = new SourceCache<Person, string>(p => p.Name);
@@ -28,24 +28,23 @@ namespace DynamicData.Tests.Binding
                              .Subscribe();
         }
 
-        [TearDown]
-        public void CleanUp()
+        public void Dispose()
         {
             _binder.Dispose();
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddToSourceAddsToDestination()
         {
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
 
-            Assert.AreEqual(1, _collection.Count, "Should be 1 item in the collection");
-            Assert.AreEqual(person, _collection.First(), "Should be same person");
+            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+            _collection.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void UpdateToSourceUpdatesTheDestination()
         {
             var person = new Person("Adult1", 50);
@@ -53,48 +52,48 @@ namespace DynamicData.Tests.Binding
             _source.AddOrUpdate(person);
             _source.AddOrUpdate(personUpdated);
 
-            Assert.AreEqual(1, _collection.Count, "Should be 1 item in the collection");
-            Assert.AreEqual(personUpdated, _collection.First(), "Should be updated person");
+            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+            _collection.First().Should().Be(personUpdated, "Should be updated person");
         }
 
-        [Test]
+        [Fact]
         public void RemoveSourceRemovesFromTheDestination()
         {
             var person = new Person("Adult1", 50);
             _source.AddOrUpdate(person);
             _source.Remove(person);
 
-            Assert.AreEqual(0, _collection.Count, "Should be 1 item in the collection");
+            _collection.Count.Should().Be(0, "Should be 1 item in the collection");
         }
 
-        [Test]
+        [Fact]
         public void BatchAdd()
         {
             var people = _generator.Take(100).ToList();
             _source.AddOrUpdate(people);
 
-            Assert.AreEqual(100, _collection.Count, "Should be 100 items in the collection");
-            CollectionAssert.AreEquivalent(people, _collection, "Collections should be equivalent");
+            _collection.Count.Should().Be(100, "Should be 100 items in the collection");
+            _collection.ShouldAllBeEquivalentTo(_collection, "Collections should be equivalent");
         }
 
-        [Test]
+        [Fact]
         public void BatchRemove()
         {
             var people = _generator.Take(100).ToList();
             _source.AddOrUpdate(people);
             _source.Clear();
-            Assert.AreEqual(0, _collection.Count, "Should be 100 items in the collection");
+            _collection.Count.Should().Be(0, "Should be 100 items in the collection");
         }
 
-        [Test]
+        [Fact]
         public void CollectionIsInSortOrder()
         {
             _source.AddOrUpdate(_generator.Take(100));
             var sorted = _source.Items.OrderBy(p => p, _comparer).ToList();
-            CollectionAssert.AreEqual(_collection.ToList(), sorted);
+            sorted.ShouldAllBeEquivalentTo(_collection.ToList());
         }
 
-        [Test]
+        [Fact]
         public void LargeUpdateInvokesAReset()
         {
             //update once as intital load is always a reset
@@ -104,14 +103,14 @@ namespace DynamicData.Tests.Binding
             _collection.CollectionChanged += (sender, e) =>
             {
                 invoked = true;
-                Assert.AreEqual(NotifyCollectionChangedAction.Reset, e.Action);
+                e.Action.Should().Be(NotifyCollectionChangedAction.Reset);
             };
             _source.AddOrUpdate(_generator.Take(100));
 
-            Assert.IsTrue(invoked);
+            invoked.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void SmallChangeDoesNotInvokeReset()
         {
             //update once as intital load is always a reset
@@ -127,8 +126,8 @@ namespace DynamicData.Tests.Binding
             };
             _source.AddOrUpdate(_generator.Take(24));
 
-            Assert.IsTrue(invoked);
-            Assert.IsFalse(resetinvoked, "Reset should not has been invoked");
+            invoked.Should().BeTrue();
+            resetinvoked.Should().BeFalse();
         }
     }
 }

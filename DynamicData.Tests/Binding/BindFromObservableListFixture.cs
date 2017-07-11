@@ -2,44 +2,43 @@ using System;
 using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using NUnit.Framework;
+using FluentAssertions;
+using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-    [TestFixture]
-    public class BindFromObservableListFixture
+    
+    public class BindFromObservableListFixture: IDisposable
     {
-        private ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
-        private SourceList<Person> _source;
-        private IDisposable _binder;
+        private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
+        private readonly SourceList<Person> _source;
+        private readonly IDisposable _binder;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        [SetUp]
-        public void SetUp()
+        public BindFromObservableListFixture()
         {
             _collection = new ObservableCollectionExtended<Person>();
             _source = new SourceList<Person>();
             _binder = _source.Connect().Bind(_collection).Subscribe();
         }
 
-        [TearDown]
-        public void CleanUp()
+        public void Dispose()
         {
             _binder.Dispose();
             _source.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void AddToSourceAddsToDestination()
         {
             var person = new Person("Adult1", 50);
             _source.Add(person);
 
-            Assert.AreEqual(1, _collection.Count, "Should be 1 item in the collection");
-            Assert.AreEqual(person, _collection.First(), "Should be same person");
+            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+            _collection.First().Should().Be(person, "Should be same person");
         }
 
-        [Test]
+        [Fact]
         public void UpdateToSourceUpdatesTheDestination()
         {
             var person = new Person("Adult1", 50);
@@ -47,37 +46,37 @@ namespace DynamicData.Tests.Binding
             _source.Add(person);
             _source.Replace(person, personUpdated);
 
-            Assert.AreEqual(1, _collection.Count, "Should be 1 item in the collection");
-            Assert.AreEqual(personUpdated, _collection.First(), "Should be updated person");
+            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+            _collection.First().Should().Be(personUpdated, "Should be updated person");
         }
 
-        [Test]
+        [Fact]
         public void RemoveSourceRemovesFromTheDestination()
         {
             var person = new Person("Adult1", 50);
             _source.Add(person);
             _source.Remove(person);
 
-            Assert.AreEqual(0, _collection.Count, "Should be 1 item in the collection");
+            _collection.Count.Should().Be(0, "Should be 1 item in the collection");
         }
 
-        [Test]
+        [Fact]
         public void AddRange()
         {
             var people = _generator.Take(100).ToList();
             _source.AddRange(people);
 
-            Assert.AreEqual(100, _collection.Count, "Should be 100 items in the collection");
-            CollectionAssert.AreEquivalent(people, _collection, "Collections should be equivalent");
+            _collection.Count.Should().Be(100, "Should be 100 items in the collection");
+            _collection.ShouldAllBeEquivalentTo(_collection, "Collections should be equivalent");
         }
 
-        [Test]
+        [Fact]
         public void Clear()
         {
             var people = _generator.Take(100).ToList();
             _source.AddRange(people);
             _source.Clear();
-            Assert.AreEqual(0, _collection.Count, "Should be 100 items in the collection");
+            _collection.Count.Should().Be(0, "Should be 100 items in the collection");
         }
     }
 }

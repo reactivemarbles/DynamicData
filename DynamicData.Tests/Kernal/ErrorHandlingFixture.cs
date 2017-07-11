@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
-using DynamicData.Kernel;
-using NUnit.Framework;
+using FluentAssertions;
+using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
-    [TestFixture]
+    
     public class ErrorHandlingFixture
     {
-        [SetUp]
-        public void Initialise()
-        {
-        }
 
         private class Entity
         {
@@ -38,7 +33,7 @@ namespace DynamicData.Tests.Kernal
             public static int Key => throw new Exception("Calling Key");
         }
 
-        [Test]
+        [Fact]
         public void TransformError()
         {
             bool completed = false;
@@ -56,11 +51,11 @@ namespace DynamicData.Tests.Kernal
 
             subscriber.Dispose();
 
-            Assert.IsTrue(error, "Error has not been invoked");
-            Assert.IsTrue(completed, "Completed has not been called");
+            error.Should().BeTrue();
+            completed.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void FilterError()
         {
             bool completed = false;
@@ -69,18 +64,18 @@ namespace DynamicData.Tests.Kernal
             var source = new SourceCache<TransformEntityWithError, int>(e => e.Key);
 
             var subscriber = source.Connect()
-                                   .Filter(x => true)
-                                   .Finally(() => completed = true)
-                                   .Subscribe(updates => { Console.WriteLine(); });
+                .Filter(x => true)
+                .Finally(() => completed = true)
+                .Subscribe(updates => { Console.WriteLine(); });
 
             source.Edit(updater => updater.AddOrUpdate(new TransformEntityWithError(new Entity())), ex => error = true);
             subscriber.Dispose();
 
-            Assert.IsTrue(error, "Error has not been invoked");
-            Assert.IsTrue(completed, "Completed has not been called");
+            error.Should().BeTrue();
+            completed.Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ErrorUpdatingStreamIsHandled()
         {
             bool completed = false;
@@ -88,14 +83,15 @@ namespace DynamicData.Tests.Kernal
 
             var cache = new SourceCache<ErrorInKey, int>(p => ErrorInKey.Key);
 
-            var subscriber = cache.Connect().Finally(() => completed = true)
-                                  .Subscribe(updates => { Console.WriteLine(); });
+            var subscriber = cache.Connect()
+                .Finally(() => completed = true)
+                .Subscribe(updates => { Console.WriteLine(); });
 
             cache.Edit(updater => updater.AddOrUpdate(new ErrorInKey()), ex => error = true);
             subscriber.Dispose();
 
-            Assert.IsTrue(error, "Error has not been invoked");
-            Assert.IsTrue(completed, "Completed has not been called");
+            error.Should().BeTrue();
+            completed.Should().BeTrue();
         }
     }
 }

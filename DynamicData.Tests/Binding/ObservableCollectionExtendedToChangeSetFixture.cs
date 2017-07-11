@@ -1,34 +1,33 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using DynamicData.Binding;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-    [TestFixture]
-    public class ObservableCollectionExtendedToChangeSetFixture
+    
+    public class ObservableCollectionExtendedToChangeSetFixture: IDisposable
     {
-        private ObservableCollectionExtended<int> _collection;
-        private ChangeSetAggregator<int> _results;
-        private ReadOnlyObservableCollection<int> _target;
+        private readonly ObservableCollectionExtended<int> _collection;
+        private readonly ChangeSetAggregator<int> _results;
+        private readonly ReadOnlyObservableCollection<int> _target;
 
-        [SetUp]
-        public void SetUp()
+        public ObservableCollectionExtendedToChangeSetFixture()
         {
             _collection = new ObservableCollectionExtended<int>();
             _target = new ReadOnlyObservableCollection<int>(_collection);
             _results = _target.ToObservableChangeSet().AsAggregator();
         }
 
-        [TearDown]
-        public void CleanUp()
+        public void Dispose()
         {
             _results.Dispose();
         }
 
-        [Test]
+        [Fact]
         public void Move()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
@@ -41,7 +40,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Items.ShouldAllBeEquivalentTo(_target);
         }
 
-        [Test]
+        [Fact]
         public void Add()
         {
             _collection.Add(1);
@@ -51,7 +50,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Items.First().Should().Be(1);
         }
 
-        [Test]
+        [Fact]
         public void Remove()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
@@ -63,7 +62,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Items.ShouldAllBeEquivalentTo(_target);
         }
 
-        [Test]
+        [Fact]
         public void Duplicates()
         {
             _collection.Add(1);
@@ -72,7 +71,7 @@ namespace DynamicData.Tests.Binding
             _results.Data.Count.Should().Be(2);
         }
 
-        [Test]
+        [Fact]
         public void Replace()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
@@ -82,7 +81,7 @@ namespace DynamicData.Tests.Binding
 
         }
 
-        //[Test]
+        //[Fact]
         //public void ResetFiresClearsAndAdds()
         //{
         //    _collection.AddRange(Enumerable.Range(1, 10));

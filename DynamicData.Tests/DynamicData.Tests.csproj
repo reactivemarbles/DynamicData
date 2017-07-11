@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\xunit.runner.visualstudio.2.2.0\build\net20\xunit.runner.visualstudio.props" Condition="Exists('..\packages\xunit.runner.visualstudio.2.2.0\build\net20\xunit.runner.visualstudio.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -16,6 +17,8 @@
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -53,10 +56,6 @@
       <HintPath>..\packages\Microsoft.Reactive.Testing.3.0.0\lib\net45\Microsoft.Reactive.Testing.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -84,9 +83,17 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
-    <Reference Include="xunit.assert, Version=2.1.0.3179, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
-      <HintPath>..\packages\xunit.assert.2.1.0\lib\dotnet\xunit.assert.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="xunit.abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
+      <HintPath>..\packages\xunit.abstractions.2.0.1\lib\net35\xunit.abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.assert, Version=2.2.0.3545, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
+      <HintPath>..\packages\xunit.assert.2.2.0\lib\netstandard1.1\xunit.assert.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.core, Version=2.2.0.3545, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
+      <HintPath>..\packages\xunit.extensibility.core.2.2.0\lib\netstandard1.1\xunit.core.dll</HintPath>
+    </Reference>
+    <Reference Include="xunit.execution.desktop, Version=2.2.0.3545, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c">
+      <HintPath>..\packages\xunit.extensibility.execution.2.2.0\lib\net452\xunit.execution.desktop.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -98,7 +105,6 @@
     <Compile Include="AggregationTests\AverageFixture.cs" />
     <Compile Include="AggregationTests\MaxFixture.cs" />
     <Compile Include="AggregationTests\MinFixture.cs" />
-    <Compile Include="AggregationTests\StdDevFixture.cs" />
     <Compile Include="Binding\BindChangeSetFixture.cs" />
     <Compile Include="Binding\BindFromObservableListFixture.cs" />
     <Compile Include="Binding\BindSortedChangeSetFixture.cs" />
@@ -106,39 +112,39 @@
     <Compile Include="Binding\ObservableCollectionExtendedToChangeSetFixture.cs" />
     <Compile Include="Binding\ObservableCollectionToChangeSetFixture.cs" />
     <Compile Include="Binding\ReadOnlyObservableCollectionToChangeSetFixture.cs" />
-    <Compile Include="CacheFixtures\AutoRefreshFixture.cs" />
-    <Compile Include="CacheFixtures\DynamicAndFixture.cs" />
-    <Compile Include="CacheFixtures\DynamicExceptFixture.cs" />
-    <Compile Include="CacheFixtures\DynamicOrFixture.cs" />
-    <Compile Include="CacheFixtures\DynamicXorFixture.cs" />
-    <Compile Include="CacheFixtures\EditDiffFixture.cs" />
-    <Compile Include="CacheFixtures\FilterOnPropertyFixture.cs" />
-    <Compile Include="CacheFixtures\ForEachChangeFixture.cs" />
-    <Compile Include="CacheFixtures\FromAsyncFixture.cs" />
-    <Compile Include="CacheFixtures\FullJoinManyFixture.cs" />
-    <Compile Include="CacheFixtures\GroupImmutableFixture.cs" />
-    <Compile Include="CacheFixtures\GroupOnPropertyFixture.cs" />
-    <Compile Include="CacheFixtures\GroupOnPropertyWithImmutableStateFixture.cs" />
-    <Compile Include="CacheFixtures\InnerJoinFixture.cs" />
-    <Compile Include="CacheFixtures\FullJoinFixture.cs" />
-    <Compile Include="CacheFixtures\InnerJoinManyFixture.cs" />
-    <Compile Include="CacheFixtures\LeftJoinManyFixture.cs" />
-    <Compile Include="CacheFixtures\LeftJoinFixture.cs" />
-    <Compile Include="CacheFixtures\KeyValueCollectionEx.cs" />
-    <Compile Include="CacheFixtures\PageAndSortFixture.cs" />
-    <Compile Include="CacheFixtures\PageWithSortControllerFixture.cs" />
+    <Compile Include="Cache\AutoRefreshFixture.cs" />
+    <Compile Include="Cache\DynamicAndFixture.cs" />
+    <Compile Include="Cache\DynamicExceptFixture.cs" />
+    <Compile Include="Cache\DynamicOrFixture.cs" />
+    <Compile Include="Cache\DynamicXorFixture.cs" />
+    <Compile Include="Cache\EditDiffFixture.cs" />
+    <Compile Include="Cache\FilterOnPropertyFixture.cs" />
+    <Compile Include="Cache\ForEachChangeFixture.cs" />
+    <Compile Include="Cache\FromAsyncFixture.cs" />
+    <Compile Include="Cache\FullJoinManyFixture.cs" />
+    <Compile Include="Cache\GroupImmutableFixture.cs" />
+    <Compile Include="Cache\GroupOnPropertyFixture.cs" />
+    <Compile Include="Cache\GroupOnPropertyWithImmutableStateFixture.cs" />
+    <Compile Include="Cache\InnerJoinFixture.cs" />
+    <Compile Include="Cache\FullJoinFixture.cs" />
+    <Compile Include="Cache\InnerJoinManyFixture.cs" />
+    <Compile Include="Cache\LeftJoinManyFixture.cs" />
+    <Compile Include="Cache\LeftJoinFixture.cs" />
+    <Compile Include="Cache\KeyValueCollectionEx.cs" />
+    <Compile Include="Cache\PageAndSortFixture.cs" />
+    <Compile Include="Cache\PageWithSortControllerFixture.cs" />
     <Compile Include="AggregationTests\SumFixture.cs" />
-    <Compile Include="CacheFixtures\RightJoinFixture.cs" />
-    <Compile Include="CacheFixtures\RightJoinManyFixture.cs" />
-    <Compile Include="CacheFixtures\SortObservableFixtureFixture.cs" />
-    <Compile Include="CacheFixtures\SwitchFixture.cs" />
-    <Compile Include="CacheFixtures\ToObservableChangeSetFixture.cs" />
-    <Compile Include="CacheFixtures\TransformAsyncFixture.cs" />
-    <Compile Include="CacheFixtures\TransformManyObservableCacheFixture.cs" />
-    <Compile Include="CacheFixtures\TransformManySimpleFixture.cs" />
-    <Compile Include="CacheFixtures\TransformSafeAsyncFixture.cs" />
-    <Compile Include="CacheFixtures\TransformTreeFixture.cs" />
-    <Compile Include="CacheFixtures\XorFixture.cs" />
+    <Compile Include="Cache\RightJoinFixture.cs" />
+    <Compile Include="Cache\RightJoinManyFixture.cs" />
+    <Compile Include="Cache\SortObservableFixtureFixture.cs" />
+    <Compile Include="Cache\SwitchFixture.cs" />
+    <Compile Include="Cache\ToObservableChangeSetFixture.cs" />
+    <Compile Include="Cache\TransformAsyncFixture.cs" />
+    <Compile Include="Cache\TransformManyObservableCacheFixture.cs" />
+    <Compile Include="Cache\TransformManySimpleFixture.cs" />
+    <Compile Include="Cache\TransformSafeAsyncFixture.cs" />
+    <Compile Include="Cache\TransformTreeFixture.cs" />
+    <Compile Include="Cache\XorFixture.cs" />
     <Compile Include="Domain\ParentAndChildren.cs" />
     <Compile Include="Domain\ParentChild.cs" />
     <Compile Include="Domain\PersonEmployment.cs" />
@@ -149,119 +155,117 @@
     <Compile Include="Domain\RandomPersonGenerator.cs" />
     <Compile Include="Domain\SelfObservingPerson.cs" />
     <Compile Include="AggregationTests\AggregationFixture.cs" />
-    <Compile Include="CacheFixtures\AndFixture.cs" />
-    <Compile Include="CacheFixtures\BatchFixture.cs" />
-    <Compile Include="CacheFixtures\BatchIfFixture.cs" />
-    <Compile Include="CacheFixtures\ExceptFixture.cs" />
-    <Compile Include="CacheFixtures\ExpireAfterFixture.cs" />
-    <Compile Include="CacheFixtures\BatchIfWithTimeOutFixture.cs" />
-    <Compile Include="CacheFixtures\DeferUntilLoadedFixture.cs" />
-    <Compile Include="ListFixtures\AutoRefreshFixture.cs" />
-    <Compile Include="ListFixtures\FilterWithObservable.cs" />
-    <Compile Include="ListFixtures\FromAsyncFixture.cs" />
+    <Compile Include="Cache\AndFixture.cs" />
+    <Compile Include="Cache\BatchFixture.cs" />
+    <Compile Include="Cache\BatchIfFixture.cs" />
+    <Compile Include="Cache\ExceptFixture.cs" />
+    <Compile Include="Cache\ExpireAfterFixture.cs" />
+    <Compile Include="Cache\BatchIfWithTimeOutFixture.cs" />
+    <Compile Include="Cache\DeferUntilLoadedFixture.cs" />
+    <Compile Include="List\AutoRefreshFixture.cs" />
+    <Compile Include="List\FilterWithObservable.cs" />
+    <Compile Include="List\FromAsyncFixture.cs" />
     <Compile Include="Kernal\EnumerableEx.cs" />
-    <Compile Include="CacheFixtures\EnumerableObservableToObservableChangeSetFixture.cs" />
-    <Compile Include="CacheFixtures\GroupControllerFixture.cs" />
-    <Compile Include="CacheFixtures\GroupControllerForFilteredItemsFixture.cs" />
-    <Compile Include="CacheFixtures\IgnoreUpdateFixture.cs" />
-    <Compile Include="CacheFixtures\IncludeUpdateFixture.cs" />
-    <Compile Include="CacheFixtures\MergeManyFixture.cs" />
-    <Compile Include="CacheFixtures\MergeManyItemsFixture.cs" />
-    <Compile Include="CacheFixtures\MergeManyWithKeyOverloadFixture.cs" />
-    <Compile Include="CacheFixtures\OrFixture.cs" />
-    <Compile Include="CacheFixtures\QueryWhenChangedFixture.cs" />
-    <Compile Include="CacheFixtures\SizeLimitFixture.cs" />
-    <Compile Include="CacheFixtures\SortFixture.cs" />
-    <Compile Include="CacheFixtures\RefCountFixture.cs" />
-    <Compile Include="CacheFixtures\ObservableToObservableChangeSetFixture.cs" />
-    <Compile Include="CacheFixtures\TrueForAllFixture.cs" />
-    <Compile Include="CacheFixtures\TrueForAnyFixture.cs" />
-    <Compile Include="CacheFixtures\WatcherFixture.cs" />
-    <Compile Include="CacheFixtures\FilterControllerFixture.cs" />
-    <Compile Include="CacheFixtures\PageFixture.cs" />
-    <Compile Include="CacheFixtures\SortControllerFixture.cs" />
-    <Compile Include="CacheFixtures\DisposeManyFixture.cs" />
-    <Compile Include="CacheFixtures\FilterParallelFixture.cs" />
-    <Compile Include="CacheFixtures\GroupFromDistinctFixture.cs" />
-    <Compile Include="CacheFixtures\SubscribeManyFixture.cs" />
-    <Compile Include="CacheFixtures\TransformFixtureParallel.cs" />
-    <Compile Include="CacheFixtures\TransformSafeFixture.cs" />
-    <Compile Include="CacheFixtures\TransformSafeParallelFixture.cs" />
-    <Compile Include="CacheFixtures\WatchFixture.cs" />
+    <Compile Include="Cache\EnumerableObservableToObservableChangeSetFixture.cs" />
+    <Compile Include="Cache\GroupControllerFixture.cs" />
+    <Compile Include="Cache\GroupControllerForFilteredItemsFixture.cs" />
+    <Compile Include="Cache\IgnoreUpdateFixture.cs" />
+    <Compile Include="Cache\IncludeUpdateFixture.cs" />
+    <Compile Include="Cache\MergeManyFixture.cs" />
+    <Compile Include="Cache\MergeManyItemsFixture.cs" />
+    <Compile Include="Cache\MergeManyWithKeyOverloadFixture.cs" />
+    <Compile Include="Cache\OrFixture.cs" />
+    <Compile Include="Cache\QueryWhenChangedFixture.cs" />
+    <Compile Include="Cache\SizeLimitFixture.cs" />
+    <Compile Include="Cache\SortFixture.cs" />
+    <Compile Include="Cache\RefCountFixture.cs" />
+    <Compile Include="Cache\ObservableToObservableChangeSetFixture.cs" />
+    <Compile Include="Cache\TrueForAllFixture.cs" />
+    <Compile Include="Cache\TrueForAnyFixture.cs" />
+    <Compile Include="Cache\WatcherFixture.cs" />
+    <Compile Include="Cache\FilterControllerFixture.cs" />
+    <Compile Include="Cache\PageFixture.cs" />
+    <Compile Include="Cache\SortControllerFixture.cs" />
+    <Compile Include="Cache\DisposeManyFixture.cs" />
+    <Compile Include="Cache\FilterParallelFixture.cs" />
+    <Compile Include="Cache\GroupFromDistinctFixture.cs" />
+    <Compile Include="Cache\SubscribeManyFixture.cs" />
+    <Compile Include="Cache\TransformFixtureParallel.cs" />
+    <Compile Include="Cache\TransformSafeFixture.cs" />
+    <Compile Include="Cache\TransformSafeParallelFixture.cs" />
+    <Compile Include="Cache\WatchFixture.cs" />
     <Compile Include="Kernal\CacheUpdaterFixture.cs" />
     <Compile Include="Kernal\SourceUpdaterFixture.cs" />
-    <Compile Include="Kernal\DistinctUpdateCollectionFixture.cs" />
     <Compile Include="Kernal\DistinctUpdateFixture.cs" />
     <Compile Include="Kernal\ErrorHandlingFixture.cs" />
-    <Compile Include="CacheFixtures\FilterFixture.cs" />
+    <Compile Include="Cache\FilterFixture.cs" />
     <Compile Include="Kernal\OptionFixture.cs" />
-    <Compile Include="CacheFixtures\TimeExpiryFixture.cs" />
+    <Compile Include="Cache\TimeExpiryFixture.cs" />
     <Compile Include="Kernal\KeyValueFixture.cs" />
-    <Compile Include="Kernal\UpdateCollectionFixture.cs" />
     <Compile Include="Kernal\UpdateFixture.cs" />
-    <Compile Include="CacheFixtures\DistinctFixture.cs" />
-    <Compile Include="CacheFixtures\GroupFixture.cs" />
+    <Compile Include="Cache\DistinctFixture.cs" />
+    <Compile Include="Cache\GroupFixture.cs" />
     <Compile Include="Domain\Person.cs" />
     <Compile Include="Domain\PersonWithGender.cs" />
-    <Compile Include="CacheFixtures\MonitorStatusFixture.cs" />
-    <Compile Include="CacheFixtures\TransformFixture.cs" />
-    <Compile Include="ListFixtures\AndFixture.cs" />
-    <Compile Include="ListFixtures\BatchFixture.cs" />
-    <Compile Include="ListFixtures\CastFixture.cs" />
-    <Compile Include="ListFixtures\CloneFixture.cs" />
-    <Compile Include="ListFixtures\BufferFixture.cs" />
-    <Compile Include="ListFixtures\BatchIfFixture.cs" />
-    <Compile Include="ListFixtures\BatchIfWithTimeOutFixture.cs" />
-    <Compile Include="ListFixtures\ChangeAwareListFixture.cs" />
-    <Compile Include="ListFixtures\CloneChangesFixture.cs" />
-    <Compile Include="ListFixtures\DeferUntilLoadedFixture.cs" />
-    <Compile Include="ListFixtures\DisposeManyFixture.cs" />
-    <Compile Include="ListFixtures\DistinctValuesFixture.cs" />
-    <Compile Include="ListFixtures\DynamicAndFixture.cs" />
-    <Compile Include="ListFixtures\DynamicExceptFixture.cs" />
-    <Compile Include="ListFixtures\DynamicOrFixture.cs" />
-    <Compile Include="ListFixtures\DynamicXOrFixture.cs" />
-    <Compile Include="ListFixtures\EditDiffFixture.cs" />
-    <Compile Include="ListFixtures\ExceptFixture.cs" />
-    <Compile Include="ListFixtures\ExpireAfterFixture.cs" />
-    <Compile Include="ListFixtures\FilterControllerFixtureWithDiffSet.cs" />
-    <Compile Include="ListFixtures\FilterControllerFixtureWithClearAndReplace.cs" />
-    <Compile Include="ListFixtures\FilterFixture.cs" />
-    <Compile Include="ListFixtures\FilterOnPropertyFixture.cs" />
-    <Compile Include="ListFixtures\ForEachChangeFixture.cs" />
-    <Compile Include="ListFixtures\GroupImmutableFixture.cs" />
-    <Compile Include="ListFixtures\GroupOnFixture.cs" />
-    <Compile Include="ListFixtures\GroupOnPropertyFixture.cs" />
-    <Compile Include="ListFixtures\GroupOnPropertyWithImmutableStateFixture.cs" />
-    <Compile Include="ListFixtures\MergeManyChangeSetsFixture.cs" />
-    <Compile Include="ListFixtures\MergeManyFixture.cs" />
-    <Compile Include="ListFixtures\OrFixture.cs" />
-    <Compile Include="ListFixtures\PageFixture.cs" />
-    <Compile Include="ListFixtures\Performance.cs" />
-    <Compile Include="ListFixtures\QueryWhenChangedFixture.cs" />
-    <Compile Include="ListFixtures\RecursiveTransformManyFixture.cs" />
-    <Compile Include="ListFixtures\RefCountFixture.cs" />
-    <Compile Include="ListFixtures\RemoveManyFixture.cs" />
-    <Compile Include="ListFixtures\ReverseFixture.cs" />
-    <Compile Include="ListFixtures\SelectFixture.cs" />
-    <Compile Include="ListFixtures\SizeLimitFixture.cs" />
-    <Compile Include="ListFixtures\SortFixture.cs" />
-    <Compile Include="ListFixtures\SortMutableFixture.cs" />
-    <Compile Include="ListFixtures\SubscribeManyFixture.cs" />
-    <Compile Include="ListFixtures\SwitchFixture.cs" />
-    <Compile Include="ListFixtures\ToObservableChangeSetFixture.cs" />
-    <Compile Include="ListFixtures\TransformAsyncFixture.cs" />
-    <Compile Include="ListFixtures\TransformFixture.cs" />
-    <Compile Include="ListFixtures\TransformManyFixture.cs" />
-    <Compile Include="ListFixtures\TransformManyObservableCollectionFixture.cs" />
-    <Compile Include="ListFixtures\VirtualisationFixture.cs" />
-    <Compile Include="ListFixtures\XOrFixture.cs" />
+    <Compile Include="Cache\MonitorStatusFixture.cs" />
+    <Compile Include="Cache\TransformFixture.cs" />
+    <Compile Include="List\AndFixture.cs" />
+    <Compile Include="List\BatchFixture.cs" />
+    <Compile Include="List\CastFixture.cs" />
+    <Compile Include="List\CloneFixture.cs" />
+    <Compile Include="List\BufferFixture.cs" />
+    <Compile Include="List\BatchIfFixture.cs" />
+    <Compile Include="List\BatchIfWithTimeOutFixture.cs" />
+    <Compile Include="List\ChangeAwareListFixture.cs" />
+    <Compile Include="List\CloneChangesFixture.cs" />
+    <Compile Include="List\DeferUntilLoadedFixture.cs" />
+    <Compile Include="List\DisposeManyFixture.cs" />
+    <Compile Include="List\DistinctValuesFixture.cs" />
+    <Compile Include="List\DynamicAndFixture.cs" />
+    <Compile Include="List\DynamicExceptFixture.cs" />
+    <Compile Include="List\DynamicOrFixture.cs" />
+    <Compile Include="List\DynamicXOrFixture.cs" />
+    <Compile Include="List\EditDiffFixture.cs" />
+    <Compile Include="List\ExceptFixture.cs" />
+    <Compile Include="List\ExpireAfterFixture.cs" />
+    <Compile Include="List\FilterControllerFixtureWithDiffSet.cs" />
+    <Compile Include="List\FilterControllerFixtureWithClearAndReplace.cs" />
+    <Compile Include="List\FilterFixture.cs" />
+    <Compile Include="List\FilterOnPropertyFixture.cs" />
+    <Compile Include="List\ForEachChangeFixture.cs" />
+    <Compile Include="List\GroupImmutableFixture.cs" />
+    <Compile Include="List\GroupOnFixture.cs" />
+    <Compile Include="List\GroupOnPropertyFixture.cs" />
+    <Compile Include="List\GroupOnPropertyWithImmutableStateFixture.cs" />
+    <Compile Include="List\MergeManyChangeSetsFixture.cs" />
+    <Compile Include="List\MergeManyFixture.cs" />
+    <Compile Include="List\OrFixture.cs" />
+    <Compile Include="List\PageFixture.cs" />
+    <Compile Include="List\QueryWhenChangedFixture.cs" />
+    <Compile Include="List\RecursiveTransformManyFixture.cs" />
+    <Compile Include="List\RefCountFixture.cs" />
+    <Compile Include="List\RemoveManyFixture.cs" />
+    <Compile Include="List\ReverseFixture.cs" />
+    <Compile Include="List\SelectFixture.cs" />
+    <Compile Include="List\SizeLimitFixture.cs" />
+    <Compile Include="List\SortFixture.cs" />
+    <Compile Include="List\SortMutableFixture.cs" />
+    <Compile Include="List\SortPrimitiveFixture.cs" />
+    <Compile Include="List\SubscribeManyFixture.cs" />
+    <Compile Include="List\SwitchFixture.cs" />
+    <Compile Include="List\ToObservableChangeSetFixture.cs" />
+    <Compile Include="List\TransformAsyncFixture.cs" />
+    <Compile Include="List\TransformFixture.cs" />
+    <Compile Include="List\TransformManyFixture.cs" />
+    <Compile Include="List\TransformManyObservableCollectionFixture.cs" />
+    <Compile Include="List\VirtualisationFixture.cs" />
+    <Compile Include="List\XOrFixture.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Binding\NotifyPropertyChangedExFixture.cs" />
     <Compile Include="Utilities\SelectManyExtensions.cs" />
-    <Compile Include="CacheFixtures\SourceCacheFixture.cs" />
+    <Compile Include="Cache\SourceCacheFixture.cs" />
     <Compile Include="Utilities\Timer.cs" />
-    <Compile Include="CacheFixtures\TransformManyFixture.cs" />
+    <Compile Include="Cache\TransformManyFixture.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -291,5 +295,11 @@
       <Output TaskParameter="Assemblies" ItemName="OutputAssemblyInfo" />
     </GetAssemblyIdentity>
     <Message Text="Info: %(OutputAssemblyInfo.Version)" />
+  </Target>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\xunit.runner.visualstudio.2.2.0\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\xunit.runner.visualstudio.2.2.0\build\net20\xunit.runner.visualstudio.props'))" />
   </Target>
 </Project>
