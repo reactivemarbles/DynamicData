@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
@@ -82,11 +83,10 @@ namespace DynamicData.Tests.Cache
             bool errored = false;
             bool completed = false;
             IDisposable subscription = _source.Connect()
-                .FinallySafe(() => completed = true)
+                .Finally(() => completed = true)
                 .Subscribe(updates => { called = true; }, ex => errored = true, () => completed = true);
             _source.AddOrUpdate(new Person("Adult1", 40));
 
-            //_stream.
             subscription.Dispose();
             _source.Dispose();
 

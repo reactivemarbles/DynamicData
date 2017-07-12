@@ -95,7 +95,7 @@ namespace DynamicData.Cache.Internal
                 var subscriber = published.SubscribeSafe(observer);
 
                 var autoRemover = published.ForExpiry(_timeSelector, _interval, _scheduler)
-                    .FinallySafe(observer.OnCompleted)
+                    .Finally(observer.OnCompleted)
                     .Subscribe(keys =>
                     {
                         try

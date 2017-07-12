@@ -25,8 +25,8 @@ namespace DynamicData
 
             var loader = source
                 .Synchronize(_locker)
-                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, _changes.OnError),
-                              _changes.OnError,
+                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, _changes.OnError), 
+                                _changes.OnError,
                                () => _changes.OnCompleted());
 
 
@@ -105,7 +105,7 @@ namespace DynamicData
                             if (initial.HasValue)
                                 observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
 
-                            return _changes.FinallySafe(observer.OnCompleted).Subscribe(changes =>
+                            return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
                             {
                                 var matches = changes.Where(update => update.Key.Equals(key));
                                 foreach (var match in matches)
@@ -126,7 +126,7 @@ namespace DynamicData
                         lock (_locker)
                         {
                             var initial = GetInitialUpdates(predicate);
-                            var source = _changes.FinallySafe(observer.OnCompleted);
+                            var source = _changes.Finally(observer.OnCompleted);
 
                             if (predicate == null)
                             {

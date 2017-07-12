@@ -36,7 +36,7 @@ namespace DynamicData.Cache.Internal
                         root.Edit(updater => removes.ForEach(c => updater.Remove((TKey)c.Key)));
                         return result;
                     })
-                    .FinallySafe(observer.OnCompleted)
+                    .Finally(observer.OnCompleted)
                     .SubscribeSafe(observer);
 
                 return Disposable.Create(() =>

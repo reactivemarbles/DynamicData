@@ -1,6 +1,7 @@
 ﻿#region
 
 using System;
+using System.Reactive.Linq;
 using DynamicData.Kernel;
 
 #endregion
@@ -16,7 +17,7 @@ namespace DynamicData.Tests.Domain
 
         public SelfObservingPerson(IObservable<Person> observable)
         {
-            _cleanUp = observable.FinallySafe(() => _completed = true).Subscribe(p =>
+            _cleanUp = observable.Finally(() => _completed = true).Subscribe(p =>
             {
                 _person = p;
                 _updateCount++;
