@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net452</TargetFrameworks>
+    <TargetFramework>net452</TargetFramework>
     <Description>DynamicData.Tests</Description>
     <Copyright>Copyright Roland Pheasant 2011-2017</Copyright>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
