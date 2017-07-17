@@ -4212,6 +4212,24 @@ namespace DynamicData
             source.Edit(updater => updater.Refresh(items));
         }
 
+
+        /// <summary>
+        /// Removes the specified key from the cache.
+        /// If the item is not contained in the cache then the operation does nothing.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="item"></param>
+        /// <param name="key">The key.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void AddOrUpdate<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TObject item, TKey key)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (item == null) throw new ArgumentNullException(nameof(item));
+            source.Edit(updater => updater.AddOrUpdate(item, key));
+        }
+
         /// <summary>
         /// Signal observers to re-evaluate the all items.
         /// </summary>

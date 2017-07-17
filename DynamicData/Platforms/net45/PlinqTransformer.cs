@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
 
+#if P_LINQ
+// ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
     internal class PlinqTransformer<TDestination, TSource, TKey>
@@ -195,4 +197,5 @@ namespace DynamicData.PLinq
         }
     }
 }
+#endif
 
