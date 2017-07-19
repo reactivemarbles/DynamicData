@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFrameworks>net45</TargetFrameworks>
     <Description>DynamicData.Tests</Description>
     <Copyright>Copyright Roland Pheasant 2011-2017</Copyright>
     <AssemblyVersion>5.0.0.0</AssemblyVersion>
@@ -14,11 +14,16 @@
 
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="3.0.0" />
-    <PackageReference Include="Microsoft.Reactive.Testing" Version="3.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.console" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
     <PackageReference Include="FluentAssertions" Version="4.19.3" />
+    <PackageReference Include="Microsoft.Reactive.Testing" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+
   </ItemGroup>
 
 </Project>

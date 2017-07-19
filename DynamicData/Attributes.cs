@@ -1,6 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 [assembly: InternalsVisibleTo("DynamicData.Tests")]
+
+//[assembly: AssemblyVersion("5.4.0")]
+//[assembly: AssemblyFileVersion("5.4.0")]
+//[assembly: AssemblyInformationalVersion("5.4.0-beta")]
