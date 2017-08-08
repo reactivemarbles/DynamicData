@@ -1,11 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
-    <AssemblyVersion>5.4.0.0</AssemblyVersion>
-    <FileVersion>5.4.0.0</FileVersion>
-    <Version>5.4.0-beta</Version>
+    <TargetFrameworks>netstandard1.1;net45</TargetFrameworks>
+    <AssemblyVersion>5.5.0</AssemblyVersion>
+    <FileVersion>5.5.0.0</FileVersion>
+    <Version>5.5.0-beta</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="3.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
+    <DefineConstants>P_LINQ</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.1|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard1.1\DynamicData.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+    <DocumentationFile>bin\Release\net45\DynamicData.xml</DocumentationFile>
+  </PropertyGroup>
+
 
   <PropertyGroup>
     <Authors>Roland Pheasant</Authors>
@@ -25,24 +41,5 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     <PackageTags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</PackageTags>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
-    <DefineConstants>P_LINQ</DefineConstants>
-  </PropertyGroup>
-
-  <ItemGroup>
-   <Compile Remove="Properties\AssemblyInfo.cs" />
- </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="3.0.0" />
-  </ItemGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.1|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard1.1\DynamicData.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
-    <DocumentationFile>bin\Release\net45\DynamicData.xml</DocumentationFile>
-  </PropertyGroup>
-  
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

@@ -4,14 +4,12 @@
     <TargetFrameworks>net452</TargetFrameworks>
     <Description>DynamicData.Tests</Description>
     <Copyright>Copyright Roland Pheasant 2011-2017</Copyright>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.0.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="System.Reactive" Version="3.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
@@ -22,8 +20,7 @@
     <PackageReference Include="Microsoft.Reactive.Testing" Version="3.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
 
-  </ItemGroup>
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 
 </Project>
