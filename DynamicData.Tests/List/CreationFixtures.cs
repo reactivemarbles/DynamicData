@@ -14,7 +14,7 @@ namespace DynamicData.Tests.List
         {
             SubscribeAndAssert(ObservableChangeSet.Create<int>(async list =>
             {
-                var value = await Create<int>(10);
+                var value = await CreateTask<int>(10);
                 list.Add(value);
                 return () => { };
             }));
@@ -44,7 +44,7 @@ namespace DynamicData.Tests.List
         }
 
 
-        private Task<T> Create<T>(T value)
+        private Task<T> CreateTask<T>(T value)
         {
             return Task.FromResult(value);
         }
