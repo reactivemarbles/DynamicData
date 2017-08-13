@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.1;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard1.1;net45;net46</TargetFrameworks>
     <AssemblyVersion>5.5.0</AssemblyVersion>
     <FileVersion>5.5.0.0</FileVersion>
     <Version>5.5.0-beta</Version>
@@ -10,7 +10,7 @@
     <PackageReference Include="System.Reactive" Version="3.0.0" />
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net45' or '$(TargetFramework)'=='net46'">
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 

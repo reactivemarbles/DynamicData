@@ -124,7 +124,7 @@ namespace DynamicData.Binding
         /// <summary>
         /// Adds the elements of the specified collection to the end of the collection.
         /// </summary>
-        /// <param name="collection">The collection whose elements should be added to the end of the List. The collection itself cannot be null, but it can contain elements that are null, if type <paramref name="T" /> is a reference type.</param>
+        /// <param name="collection">The collection whose elements should be added to the end of the List. The collection itself cannot be null, but it can contain elements that are null</param>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="collection" /> is null.</exception>
         public void AddRange(IEnumerable<T> collection)
         {

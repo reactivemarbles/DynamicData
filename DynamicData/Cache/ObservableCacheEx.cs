@@ -1442,6 +1442,7 @@ namespace DynamicData
         /// <param name="filterController">The filter.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
                                                                                    FilterController<TObject> filterController)
         {
@@ -1555,6 +1556,8 @@ namespace DynamicData
         /// <param name="resetThreshold">The number of updates before the entire list is resorted (rather than inline sore)</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">scheduler</exception>
+
+        [Obsolete("Use IObservable<IChangeSet<TObject, TKey>> and IObservable<Unit> as it is more in the spirit of Rx")]
         public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
                                             [NotNull] SortController<TObject> sortController,
                                             SortOptimisations sortOptimisations = SortOptimisations.None,
@@ -2807,6 +2810,7 @@ namespace DynamicData
         /// or
         /// groupController
         /// </exception>
+        [Obsolete("Use IObservable<Unit> overload as it is more in the spirit of Rx")]
         public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
                                                                                                              Func<TObject, TGroupKey> groupSelectorKey,
                                                                                                              GroupController groupController)
@@ -2983,6 +2987,7 @@ namespace DynamicData
         /// <param name="virtualisingController">The virtualising controller.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete("Use IObservable<IVirtualRequest> overload as it is more in the spirit of Rx")]
         public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
                                                                                               VirtualisingController virtualisingController)
         {
@@ -3771,6 +3776,7 @@ namespace DynamicData
         /// <param name="filterController">The controlled filter.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">filterController</exception>
+        [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
         public static IObservable<IChangeSet<TObject, TKey>> Connect<TObject, TKey>(this IObservableCache<TObject, TKey> source, FilterController<TObject> filterController)
         {
             if (filterController == null) throw new ArgumentNullException(nameof(filterController));

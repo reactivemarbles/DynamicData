@@ -10,7 +10,7 @@ using FluentAssertions;
 namespace DynamicData.Tests.List
 {
     
-    public class FilterWithObservable
+    public class FilterWithObservable: IDisposable
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<Person> _results;

@@ -30,22 +30,6 @@ namespace DynamicData.Alias
             return source.Filter(predicate);
         }
 
-        /// <summary>
-        /// Filters source using the specified filter controller.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="filterController">The filter controller.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source
-        /// or
-        /// filterController</exception>
-        public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, FilterController<T> filterController)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-            return source.Filter(filterController);
-        }
 
         /// <summary>
         /// Filters source using the specified filter observable predicate.

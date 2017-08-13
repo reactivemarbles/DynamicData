@@ -536,6 +536,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// filterController</exception>
+        [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
         public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source,
             FilterController<T> filterController)
         {
@@ -1445,6 +1446,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="virtualisingController">The virtualising controller.</param>
         /// <returns></returns>
+        [Obsolete("Use IObservable<IVirtualRequest> overload as it is more in the spirit of Rx")]
         public static IObservable<IVirtualChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] VirtualisingController virtualisingController)
         {

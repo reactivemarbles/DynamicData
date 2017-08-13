@@ -97,7 +97,7 @@ namespace DynamicData.Tests.Cache
 
             public bool Equals(TestString other)
             {
-                return StringComparer.InvariantCultureIgnoreCase.Equals(_name, other._name);
+                return StringComparer.OrdinalIgnoreCase.Equals(_name, other._name);
             }
 
             public override bool Equals(object obj)
@@ -107,7 +107,7 @@ namespace DynamicData.Tests.Cache
 
             public override int GetHashCode()
             {
-                return StringComparer.InvariantCultureIgnoreCase.GetHashCode(_name);
+                return StringComparer.OrdinalIgnoreCase.GetHashCode(_name);
             }
         }
 
@@ -124,7 +124,7 @@ namespace DynamicData.Tests.Cache
             {
                 public int Compare(ViewModel x, ViewModel y)
                 {
-                    return StringComparer.InvariantCultureIgnoreCase.Compare(x.Name, y.Name);
+                    return StringComparer.OrdinalIgnoreCase.Compare(x.Name, y.Name);
                 }
             }
         }
@@ -150,7 +150,7 @@ namespace DynamicData.Tests.Cache
                 x.AddOrUpdate(new Person("b", 1, "M"));
             });
 
-            filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.InvariantCultureIgnoreCase));
+            filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.OrdinalIgnoreCase));
         }
 
         [Fact]
@@ -174,7 +174,7 @@ namespace DynamicData.Tests.Cache
                 x.Add(new Person("b", 1, "M"));
             });
 
-            filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.InvariantCultureIgnoreCase));
+            filterSubject.OnNext(p => p.Name.Equals("a", StringComparison.OrdinalIgnoreCase));
         }
 
         [Fact]

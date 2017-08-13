@@ -17,7 +17,7 @@ namespace DynamicData.Tests.Utilities
             }
             sw.Stop();
 
-            var avg = Decimal.Round((decimal)sw.Elapsed.TotalMilliseconds / (decimal)times, 8);
+            var avg = Math.Round((decimal)sw.Elapsed.TotalMilliseconds / (decimal)times, 8);
             var persecond = (int)((1 / avg) * 1000);
             Console.WriteLine(template, times, sw.Elapsed.TotalMilliseconds, avg, persecond);
         }
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.Utilities
             var duration = sw.ElapsedMilliseconds;
 
             // avg = sw.ElapsedTicks /times;
-            var avgticks = Decimal.Round((decimal)sw.ElapsedTicks / (decimal)times, 8);
+            var avgticks = Math.Round((decimal)sw.ElapsedTicks / (decimal)times, 8);
             var avgelapsed = TimeSpan.FromTicks((long)avgticks);
 
             var avg = sw.Elapsed.TotalMilliseconds / times;

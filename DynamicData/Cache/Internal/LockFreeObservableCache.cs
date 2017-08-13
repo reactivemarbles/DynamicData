@@ -165,6 +165,9 @@ namespace DynamicData.Cache.Internal
         /// </summary>
         public int Count => _innerCache.Count;
 
+        /// <summary
+        /// >Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose() => _cleanUp.Dispose();
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Subjects;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using Xunit;
@@ -23,23 +25,22 @@ namespace DynamicData.Tests.Cache
             return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
         };
 
-        private ISourceCache<Person, string> _source;
-        private GroupController _controller;
-        private IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
+        private readonly ISourceCache<Person, string> _source;
+        private readonly ISubject<Unit> _refreshSubject = new Subject<Unit>();
+        private readonly IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
 
         public  GroupControllerForFilteredItemsFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
-            _controller = new GroupController();
+
             _grouped = _source.Connect(p => _grouper(p) != AgeBracket.Pensioner)
-                .Group(_grouper, _controller).AsObservableCache();
+                .Group(_grouper, _refreshSubject).AsObservableCache();
         }
         
         public void Dispose()
         {
-            _source?.Dispose();
-            _controller?.Dispose();
-            _grouped?.Dispose();
+            _source.Dispose();
+            _grouped.Dispose();
         }
 
 
@@ -64,7 +65,7 @@ namespace DynamicData.Tests.Cache
             p3.Age = 15;
             p4.Age = 30;
 
-            _controller.RefreshGroup();
+            _refreshSubject.OnNext(Unit.Default);
 
             IsContainedIn("P1", AgeBracket.Adult).Should().BeTrue();
             IsContainedIn("P3", AgeBracket.Under20).Should().BeTrue();
