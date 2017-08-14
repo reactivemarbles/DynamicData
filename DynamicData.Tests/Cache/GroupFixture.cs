@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
@@ -182,6 +183,90 @@ namespace DynamicData.Tests.Cache
             _source.AddOrUpdate(new Person("Person1", 20));
             subscriber.Dispose();
             called.Should().BeTrue();
-        }
-    }
+      }
+
+       [Fact]
+       public void AddItemAfterUpdateItemProcessAdd()
+       {
+          var subscriber = _source.Connect()
+             .Group(x => x.Name[0].ToString())
+             .Transform(x => new GroupViewModel(x))
+             .Bind(out _entries)
+             .Subscribe();
+
+          _source.Edit(x =>
+          {
+             x.AddOrUpdate(new Person("Adam", 1));
+          });
+
+          var firstGroup = _entries.First();
+          firstGroup.Entries.Count.Should().Be(1);
+
+          _source.Edit(x =>
+          {
+             x.AddOrUpdate(new Person("Adam", 3)); // update
+             x.AddOrUpdate(new Person("Alfred", 1)); // add
+          });
+
+          firstGroup.Entries.Count.Should().Be(2);
+
+
+          subscriber.Dispose();
+       }
+
+       [Fact]
+       public void UpdateItemAfterAddItemProcessAdd()
+       {
+          var subscriber = _source.Connect()
+             .Group(x => x.Name[0].ToString())
+             .Transform(x => new GroupViewModel(x))
+             .Bind(out _entries)
+             .Subscribe();
+
+          _source.Edit(x =>
+          {
+             x.AddOrUpdate(new Person("Adam", 1));
+          });
+
+          var firstGroup = _entries.First();
+          firstGroup.Entries.Count.Should().Be(1);
+
+          _source.Edit(x =>
+          {
+             x.AddOrUpdate(new Person("Alfred", 1)); // add
+             x.AddOrUpdate(new Person("Adam", 3)); // update
+          });
+
+          firstGroup.Entries.Count.Should().Be(2);
+
+
+          subscriber.Dispose();
+       }
+
+       private ReadOnlyObservableCollection<GroupViewModel> _entries;
+
+       public class GroupViewModel
+       {
+          public ReadOnlyObservableCollection<GroupEntryViewModel> Entries => _entries;
+          private readonly ReadOnlyObservableCollection<GroupEntryViewModel> _entries;
+
+          public GroupViewModel(IGroup<Person, string, string> person)
+          {
+             person.Cache.Connect()
+                .Transform(x => new GroupEntryViewModel(x))
+                .Bind(out _entries)
+                .Subscribe();
+          }
+       }
+
+       public class GroupEntryViewModel
+       {
+          public Person Person { get; }
+
+          public GroupEntryViewModel(Person person)
+          {
+             Person = person;
+          }
+       }
+   }
 }
