@@ -91,6 +91,7 @@ namespace DynamicData.Cache.Internal
                 //2. maintain which group each item belongs to (_itemCache) 
                 grouped.ForEach(group =>
                 {
+                    var enumerable = group.ToArray();
                     var groupItem = GetCache(group.Key);
                     var groupCache = groupItem.Item1;
                     if (groupItem.Item2)
@@ -98,7 +99,7 @@ namespace DynamicData.Cache.Internal
 
                     groupCache.Update(groupUpdater =>
                     {
-                        foreach (var current in group)
+                        foreach (var current in enumerable)
                         {
                             switch (current.Reason)
                             {
@@ -118,18 +119,19 @@ namespace DynamicData.Cache.Internal
                                                         .FormatWith(current.Key, typeof(TObject), typeof(TKey),
                                                             typeof(TGroupKey))));
 
-                                        if (previous.GroupKey.Equals(current.GroupKey)) return;
+                                        if (!previous.GroupKey.Equals(current.GroupKey))
+                                        {
+                                            _groupCache.Lookup(previous.GroupKey)
+                                                .IfHasValue(g =>
+                                                {
+                                                    g.Update(u => u.Remove(current.Key));
+                                                    if (g.Count != 0) return;
+                                                    _groupCache.Remove(g.Key);
+                                                    result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, g));
+                                                });
 
-                                        _groupCache.Lookup(previous.GroupKey)
-                                                   .IfHasValue(g =>
-                                                   {
-                                                       g.Update(u => u.Remove(current.Key));
-                                                       if (g.Count != 0) return;
-                                                       _groupCache.Remove(g.Key);
-                                                       result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, g));
-                                                   });
-
-                                        _itemCache[current.Key] = current;
+                                            _itemCache[current.Key] = current;
+                                        };
                                         break;
                                     }
                                 case ChangeReason.Remove:
@@ -199,20 +201,15 @@ namespace DynamicData.Cache.Internal
                         }
                     });
 
-                    if (groupCache.Count != 0) return;
+                    if (groupCache.Count == 0)
+                    {
+                        _groupCache.RemoveIfContained(group.Key);
+                        result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key, groupCache));
+                    };
 
-                    _groupCache.RemoveIfContained(group.Key);
-                    result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key, groupCache));
                 });
                 return new GroupChangeSet<TObject, TKey, TGroupKey>(result);
             }
-
-            //private Exception CreateMissingKeyException(ChangeReason reason, TKey key)
-            //{
-            //    var message = $"{key} is missing. The change reason is '{reason}'." +
-            //                  $"{Environment.NewLine}Object type {typeof(TObject)}, Key type {typeof(TKey)}";
-            //    return new MissingKeyException(message);
-            //}
 
 
             private Tuple<ManagedGroup<TObject, TKey, TGroupKey>, bool> GetCache(TGroupKey key)
