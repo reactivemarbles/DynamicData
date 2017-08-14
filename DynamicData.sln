@@ -1,16 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.13
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicData", "DynamicData\DynamicData.csproj", "{FE903921-6C55-40E3-9A16-4127ECACC12C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{3F134FB4-A65D-4CFD-A161-644BB18D05C7}"
-	ProjectSection(SolutionItems) = preProject
-		DynamicData.build = DynamicData.build
-		DynamicData\DynamicData.nuspec = DynamicData\DynamicData.nuspec
-		DynamicData.PLinq\DynamicData.PLinq.nuspec = DynamicData.PLinq\DynamicData.PLinq.nuspec
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".other", ".other", "{DFCC45F8-251C-4D78-AF9B-15C1EDF0E603}"
 	ProjectSection(SolutionItems) = preProject
