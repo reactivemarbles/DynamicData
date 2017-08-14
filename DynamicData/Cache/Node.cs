@@ -36,8 +36,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException"></exception>
         public Node([NotNull] TObject item, TKey key, Optional<Node<TObject, TKey>> parent)
         {
-            if (item == null) throw new ArgumentNullException(nameof(item));
-            Item = item;
+            Item = item ?? throw new ArgumentNullException(nameof(item));
             Key = key;
             Parent = parent;
             Children = _children.AsObservableCache();
@@ -99,6 +98,11 @@ namespace DynamicData
 
         #region Equality
 
+
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <param name="other">The object to compare with the current object. </param>
+        /// <filterpriority>2</filterpriority>
         public bool Equals(Node<TObject, TKey> other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -106,6 +110,10 @@ namespace DynamicData
             return EqualityComparer<TKey>.Default.Equals(Key, other.Key);
         }
 
+        /// <summary>Determines whether the specified object is equal to the current object.</summary>
+        /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
+        /// <param name="obj">The object to compare with the current object. </param>
+        /// <filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -114,16 +122,25 @@ namespace DynamicData
             return Equals((Node<TObject, TKey>)obj);
         }
 
+        /// <summary>Serves as the default hash function. </summary>
+        /// <returns>A hash code for the current object.</returns>
+        /// <filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
             return EqualityComparer<TKey>.Default.GetHashCode(Key);
         }
 
+        /// <summary>
+        ///  Determines whether the specified objects are equal
+        /// </summary>
         public static bool operator ==(Node<TObject, TKey> left, Node<TObject, TKey> right)
         {
             return Equals(left, right);
         }
 
+        /// <summary>
+        ///  Determines whether the specified objects are equal
+        /// </summary>
         public static bool operator !=(Node<TObject, TKey> left, Node<TObject, TKey> right)
         {
             return !Equals(left, right);
@@ -143,9 +160,9 @@ namespace DynamicData
             return $"{Item}{count}";
         }
 
-        /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
-        /// </summary>
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
             _cleanUp.Dispose();

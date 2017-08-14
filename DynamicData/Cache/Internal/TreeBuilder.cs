@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Annotations;
 using DynamicData.Controllers;
 using DynamicData.Kernel;
@@ -16,11 +17,8 @@ namespace DynamicData.Cache.Internal
 
         public TreeBuilder([NotNull] IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, TKey> pivotOn)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (pivotOn == null) throw new ArgumentNullException(nameof(pivotOn));
-
-            _source = source;
-            _pivotOn = pivotOn;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _pivotOn = pivotOn ?? throw new ArgumentNullException(nameof(pivotOn));
         }
 
         public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run()
@@ -28,9 +26,8 @@ namespace DynamicData.Cache.Internal
             return Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(observer =>
             {
                 var locker = new object();
-                var filter = new FilterController<Node<TObject, TKey>>();
-                filter.Change(node => node.IsRoot);
-
+                var filter = new BehaviorSubject<Func<Node<TObject, TKey>, bool>>(node => node.IsRoot);
+                
                 var allData = _source.Synchronize(locker).AsObservableCache();
 
                 //for each object we need a node which provides
@@ -157,10 +154,10 @@ namespace DynamicData.Cache.Internal
                                                    }
                                                }
 
-                                               filter.Reevaluate();
+                                               filter.OnNext(node => node.IsRoot);
                                            });
 
-                var result = allNodes.Connect(filter).SubscribeSafe(observer);
+                var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);
 
                 return Disposable.Create(() =>
                 {

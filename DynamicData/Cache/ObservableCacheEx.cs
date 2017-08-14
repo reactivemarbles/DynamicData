@@ -1337,6 +1337,7 @@ namespace DynamicData
         /// <param name="controller">The controller.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete("Use IObservable<IPageRequest> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
         public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
                                                                                       PageController controller)
         {

@@ -33,9 +33,9 @@ namespace DynamicData
         /// </summary>
         RemoveRange,
 
-        ///// <summary>
-        /////   Command to operators to re-evaluate.
-        ///// </summary>
+        /// <summary>
+        ///   Command to operators to re-evaluate.
+        /// </summary>
         Refresh,
 
         /// <summary>

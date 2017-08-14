@@ -111,11 +111,11 @@ namespace DynamicData.Tests.Cache
 
             //apply mutable changes to the items
             var random = new Random();
-            var tochange = people.OrderBy(x => Guid.NewGuid()).Take(10).ToList();
+            var toChange = people.OrderBy(x => Guid.NewGuid()).Take(10).ToList();
 
-            tochange.ForEach(p => p.Age = random.Next(0, 100));
+            toChange.ForEach(p => p.Age = random.Next(0, 100));
 
-            _cache.Refresh(tochange);
+            _cache.Refresh(toChange);
 
             var expected = people.OrderBy(t => t, _comparer).ToList();
             var actual = _results.Messages.Last().SortedItems.Select(kv => kv.Value).ToList();

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
-using DynamicData.Controllers;
+using System.Reactive;
+using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using Xunit;
 using FluentAssertions;
@@ -24,7 +25,7 @@ namespace DynamicData.Tests.Cache
         };
 
         private readonly ISourceCache<Person, string> _source;
-        private readonly GroupController _controller;
+        private readonly ISubject<Unit> _refresher;
         private readonly IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
 
 
@@ -32,14 +33,13 @@ namespace DynamicData.Tests.Cache
         public GroupControllerFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
-            _controller = new GroupController();
-            _grouped = _source.Connect().Group(_grouper, _controller).AsObservableCache();
+            _refresher =new Subject<Unit>();
+            _grouped = _source.Connect().Group(_grouper, _refresher).AsObservableCache();
         }
         
         public void Dispose()
         {
             _source?.Dispose();
-            _controller?.Dispose();
             _grouped?.Dispose();
         }
 
@@ -65,7 +65,7 @@ namespace DynamicData.Tests.Cache
             p3.Age = 15;
             p4.Age = 30;
 
-            _controller.RefreshGroup();
+            _refresher.OnNext(Unit.Default);
 
             IsContainedIn("P1", AgeBracket.Adult).Should().BeTrue();
             IsContainedIn("P2", AgeBracket.Pensioner).Should().BeTrue();
@@ -99,7 +99,7 @@ namespace DynamicData.Tests.Cache
             p3.Age = 15;
             p4.Age = 30;
 
-            // _controller.RefreshGroup();
+            // _refresher.RefreshGroup();
 
             _source.Refresh(new[] {p1, p2, p3, p4});
 

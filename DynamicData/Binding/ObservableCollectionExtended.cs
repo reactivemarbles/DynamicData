@@ -135,7 +135,7 @@ namespace DynamicData.Binding
         /// <summary>
         /// Inserts the elements of a collection into the <see cref="T:System.Collections.Generic.List`1" /> at the specified index.
         /// </summary>
-        /// <param name="collection">The collection whose elements should be inserted into the <see cref="T:System.Collections.Generic.List`1" />. The collection itself cannot be null, but it can contain elements that are null, if type <paramref name="T" /> is a reference type.</param>
+        /// <param name="collection">Inserts the items at the specified index</param>
         /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="collection" /> is null.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <see cref="P:System.Collections.Generic.List`1.Count" />.</exception>

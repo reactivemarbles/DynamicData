@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -12,12 +13,12 @@ namespace DynamicData.Tests.List
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<Person> _results;
-        private readonly FilterController<Person> _filter;
+        private readonly ISubject<Func<Person,bool>> _filter;
 
         public  FilterControllerFixtureWithClearAndReplace()
         {
             _source = new SourceList<Person>();
-            _filter = new FilterController<Person>(p => p.Age > 20);
+            _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20);
             _results = _source.Connect().Filter(_filter).AsAggregator();
         }
 
@@ -35,7 +36,7 @@ namespace DynamicData.Tests.List
             _source.AddRange(people);
             _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
 
-            _filter.Change(p => p.Age <= 50);
+            _filter.OnNext(p => p.Age <= 50);
             _results.Data.Count.Should().Be(50, "Should be 50 people in the cache");
             _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
 
@@ -55,7 +56,7 @@ namespace DynamicData.Tests.List
             {
                 person.Age = person.Age + 10;
             }
-            _filter.Reevaluate();
+            _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(90, "Should be 90 people in the cache");
             _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
@@ -66,7 +67,7 @@ namespace DynamicData.Tests.List
             {
                 person.Age = person.Age - 10;
             }
-            _filter.Reevaluate();
+            _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
             _results.Messages.Count.Should().Be(3, "Should be 3 update messages");

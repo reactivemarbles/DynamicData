@@ -122,11 +122,17 @@ namespace DynamicData
 
         #region Equality
 
+        /// <summary>
+        ///  Determines whether the specified objects are equal
+        /// </summary>
         public static bool operator ==(Change<TObject, TKey> left, Change<TObject, TKey> right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        ///  Determines whether the specified objects are equal
+        /// </summary>
         public static bool operator !=(Change<TObject, TKey> left, Change<TObject, TKey> right)
         {
             return !left.Equals(right);

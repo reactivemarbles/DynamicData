@@ -51,7 +51,7 @@ namespace DynamicData
         /// <summary>
         /// Adds the elements of the specified collection to the end of the collection.
         /// </summary>
-        /// <param name="collection">The collection whose elements should be added to the end of the <see cref="T:System.Collections.Generic.List`1" />. The collection itself cannot be null, but it can contain elements that are null, if type <paramref name="T" /> is a reference type.</param>
+        /// <param name="collection">The items to add.</param>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="collection" /> is null.</exception>
         public void AddRange(IEnumerable<T> collection)
         {
@@ -65,7 +65,7 @@ namespace DynamicData
         /// <summary>
         /// Inserts the elements of a collection into the <see cref="T:System.Collections.Generic.List`1" /> at the specified index.
         /// </summary>
-        /// <param name="collection">The collection whose elements should be inserted into the <see cref="T:System.Collections.Generic.List`1" />. The collection itself cannot be null, but it can contain elements that are null, if type <paramref name="T" /> is a reference type.</param>
+        /// <param name="collection">Inserts the specified items</param>
         /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
         /// <exception cref="T:System.ArgumentNullException"><paramref name="collection" /> is null.</exception>
         /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <see cref="P:System.Collections.Generic.List`1.Count" />.</exception>
@@ -265,13 +265,21 @@ namespace DynamicData
             _innerList.Insert(index, item);
         }
 
-
+        /// <summary>
+        /// Remove the item which is at the specified index
+        /// </summary>
+        /// <param name="index"></param>
         protected void RemoveItem(int index)
         {
             var item = _innerList[index];
             RemoveItem(index, item);
         }
 
+        /// <summary>
+        /// Removes the item from the specified index - intended for internal use only
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="item"></param>
         protected virtual void RemoveItem(int index, T item)
         {
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
@@ -332,6 +340,9 @@ namespace DynamicData
             _innerList.RemoveAt(index);
         }
 
+        /// <summary>
+        /// Replaces the element which is as the specified index wth the specified item 
+        /// </summary>
         protected virtual void SetItem(int index, T item)
         {
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
@@ -380,60 +391,87 @@ namespace DynamicData
 
         #region ISupportsCapcity
 
-
+        /// <summary>
+        /// Gets or sets the total number of elements the internal data structure can hold without resizing.
+        /// </summary>
         public int Capacity
         {
             get => _innerList.Capacity;
             set => _innerList.Capacity = value;
         }
 
+        /// <summary>
+        /// Gets the element count
+        /// </summary>
         public int Count => _innerList.Count;
 
         #endregion
 
         #region IList<T> implementation
 
+        /// <summary>
+        /// Determines whether the element is in the collection 
+        /// </summary>
         public virtual bool Contains(T item)
         {
             return _innerList.Contains(item);
         }
-
+        /// <summary>
+        /// Copies the entire collection to a compatible one-dimensional array, starting at the specified index of the target array.
+        /// </summary>
         public void CopyTo(T[] array, int arrayIndex)
         {
             _innerList.CopyTo(array, arrayIndex);
         }
 
+        /// <summary>
+        /// Searches for the specified object and returns the zero-based index of the first occurrence within the entire collection.
+        /// </summary>
         public int IndexOf(T item)
         {
             return _innerList.IndexOf(item);
         }
 
+        /// <summary>
+        /// Searches for the specified object and returns the zero-based index of the first occurrence within the entire collection, using the specified comparer
+        /// </summary>
         public int IndexOf(T item, IEqualityComparer<T> equalityComparer)
         {
             return _innerList.IndexOf(item, equalityComparer);
         }
 
+        /// <summary>
+        /// Inserts an element into the list at the specified index.
+        /// </summary>
         public void Insert(int index, T item)
         {
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
             if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
-
             InsertItem(index, item);
         }
 
+        /// <summary>
+        /// Removes the item from the specified index
+        /// </summary>
+        /// <param name="index"></param>
         public void RemoveAt(int index)
         {
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
             if (index > _innerList.Count) throw new ArgumentOutOfRangeException($"{nameof(index)} cannot be greater than the size of the collection");
-
             RemoveItem(index);
         }
 
+        /// <summary>
+        /// Adds the item to the end of the collection
+        /// </summary>
         public void Add(T item)
         {
             InsertItem(_innerList.Count, item);
         }
 
+        /// <summary>
+        /// Removes the item from the collection and returns true if the item was successfully removed
+        /// </summary>
         public bool Remove(T item)
         {
             var index = _innerList.IndexOf(item);
@@ -442,6 +480,9 @@ namespace DynamicData
             return true;
         }
 
+        /// <summary>
+        /// Gets or sets the item at the specified index
+        /// </summary>
         public T this[int index]
         {
             get => _innerList[index];
@@ -449,17 +490,22 @@ namespace DynamicData
         }
 
 
+        /// <summary>Returns an enumerator that iterates through the collection.</summary>
+        /// <returns>An enumerator that can be used to iterate through the collection.</returns>
         public IEnumerator<T> GetEnumerator()
-
         {
             return _innerList.GetEnumerator();
         }
 
+        /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Is this collection read only
+        /// </summary>
         public bool IsReadOnly { get; } = false;
 
         #endregion

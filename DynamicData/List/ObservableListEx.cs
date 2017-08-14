@@ -590,8 +590,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            return
-                new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate, propertyChangedThrottle,
+            return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate, propertyChangedThrottle,
                     scheduler).Run();
         }
 
@@ -669,7 +668,7 @@ namespace DynamicData
         /// <typeparam name="TSource">The type of the source.</typeparam>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="transformFactory">The transform fuunction</param>
+        /// <param name="transformFactory">The transform function</param>
         /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
         /// <returns>A an observable changeset of the transformed object</returns>
         /// <exception cref="System.ArgumentNullException">
@@ -1495,6 +1494,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="pageController">The page controller.</param>
         /// <returns></returns>
+        [Obsolete("Use IObservable<IPageRequest> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
         public static IObservable<IChangeSet<T>> Page<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] PageController pageController)
         {

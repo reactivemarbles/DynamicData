@@ -1,12 +1,11 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace DynamicData.Tests.Cache
 {
@@ -15,14 +14,14 @@ namespace DynamicData.Tests.Cache
     {
         private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
-        private readonly FilterController<Person> _filter;
+        private readonly ISubject<Func<Person, bool>> _filter;
 
 
         public  FilterControllerFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
-            _filter = new FilterController<Person>(p => p.Age > 20);
-            _results = new ChangeSetAggregator<Person, string>(_source.Connect(_filter));
+            _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20); ;
+            _results = new ChangeSetAggregator<Person, string>(_source.Connect().Filter(_filter));
         }
 
         public void Dispose()
@@ -39,7 +38,7 @@ namespace DynamicData.Tests.Cache
             _source.AddOrUpdate(people);
             _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
 
-            _filter.Change(p => p.Age <= 50);
+            _filter.OnNext(p => p.Age <= 50);
             _results.Data.Count.Should().Be(50, "Should be 50 people in the cache");
             _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
             _results.Messages[1].Removes.Should().Be(50, "Should be 50 removes in the second message");
@@ -59,7 +58,8 @@ namespace DynamicData.Tests.Cache
                 subject.OnNext(x => true);
 
                 IChangeSet<Person, string> latestChanges = null;
-                using (source.Connect().Filter(subject).Do(changes => latestChanges = changes).AsObservableCache())
+                using (source.Connect().Filter(_filter)
+                    .Do(changes => latestChanges = changes).AsObservableCache())
                 {
                     subject.OnNext(p => false);
                     latestChanges.Removes.Should().Be(100);
@@ -97,7 +97,7 @@ namespace DynamicData.Tests.Cache
             {
                 person.Age = person.Age + 10;
             }
-            _filter.Reevaluate();
+            _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(90, "Should be 90 people in the cache");
             _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
@@ -107,7 +107,7 @@ namespace DynamicData.Tests.Cache
             {
                 person.Age = person.Age - 10;
             }
-            _filter.Reevaluate();
+            _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
             _results.Messages.Count.Should().Be(3, "Should be 3 update messages");
