@@ -36,7 +36,7 @@ namespace DynamicData
             _cleanUp = Disposable.Create(() =>
             {
                 loader.Dispose();
-                _changes.OnCompleted();
+                OnCompleted();
                 if (_countChanged.IsValueCreated)
                     _countChanged.Value.OnCompleted();
             });
@@ -44,9 +44,9 @@ namespace DynamicData
 
         private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source)
         {
-            return source.Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, _changes.OnError),
-                              _changes.OnError,
-                               () => _changes.OnCompleted());
+            return source
+                .Finally(OnCompleted)
+                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, OnError), OnError);
         }
 
         /// <summary>
@@ -66,6 +66,24 @@ namespace DynamicData
             }
         }
 
+        /// <summary>
+        /// Notifies the observer that the source list has finished sending notifications.
+        /// </summary>
+        public void OnCompleted()
+        {
+            lock (_locker)
+                _changes.OnCompleted();
+        }
+
+        /// <summary>
+        /// Notifies the observer that the source list has experienced an error condition.
+        /// </summary>
+        public void OnError(Exception exception)
+        {
+            lock (_locker)
+                _changes.OnError(exception);
+        }
+
         private void InvokeNext(IChangeSet<T> changes)
         {
             if (changes.Count == 0) return;
@@ -81,7 +99,7 @@ namespace DynamicData
                 }
                 catch (Exception ex)
                 {
-                    _changes.OnError(ex);
+                    OnError(ex);
                 }
             }
         }

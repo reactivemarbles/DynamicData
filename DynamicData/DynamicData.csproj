@@ -1,319 +1,45 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FE903921-6C55-40E3-9A16-4127ECACC12C}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DynamicData</RootNamespace>
-    <AssemblyName>DynamicData</AssemblyName>
-    <DefaultLanguage>en-US</DefaultLanguage>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <TargetFrameworks>netstandard1.1;net45;net46</TargetFrameworks>
+    <AssemblyVersion>5.5.0</AssemblyVersion>
+    <FileVersion>5.5.0.0</FileVersion>
+    <Version>5.5.0-beta</Version>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>TRACE;PORTABLE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\DynamicData.XML</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;PORTABLE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\DynamicData.XML</DocumentationFile>
-    <CodeAnalysisIgnoreGeneratedCode>true</CodeAnalysisIgnoreGeneratedCode>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Compile Include="Aggregation\AggregateItem.cs" />
-    <Compile Include="Aggregation\AggregateType.cs" />
-    <Compile Include="Aggregation\AvgEx.cs" />
-    <Compile Include="Aggregation\Avg.cs" />
-    <Compile Include="Aggregation\CountEx.cs" />
-    <Compile Include="Aggregation\IAggregateChangeSet.cs" />
-    <Compile Include="Aggregation\MaxEx.cs" />
-    <Compile Include="Aggregation\StdDev.cs" />
-    <Compile Include="Aggregation\StdDevEx.cs" />
-    <Compile Include="Aggregation\SumEx.cs" />
-    <Compile Include="Alias\ObservableListAlias.cs" />
-    <Compile Include="Binding\AbstractNotifyPropertyChanged.cs" />
-    <Compile Include="Binding\ExpressionBuilder.cs" />
-    <Compile Include="Binding\NotifyPropertyChangedEx.cs" />
-    <Compile Include="Binding\ObservablePropertyFactory.cs" />
-    <Compile Include="Binding\ObservablePropertyFactoryCache.cs" />
-    <Compile Include="Binding\ObservablePropertyPart.cs" />
-    <Compile Include="Binding\PropertyValue.cs" />
-    <Compile Include="Aggregation\AggregateEnumerator.cs" />
-    <Compile Include="Aggregation\AggregationEx.cs" />
-    <Compile Include="Binding\IEvaluateAware.cs" />
-    <Compile Include="Binding\IIndexAware.cs" />
-    <Compile Include="Binding\IObservableCollection.cs" />
-    <Compile Include="Binding\IObservableCollectionAdaptor.cs" />
-    <Compile Include="Binding\ISortedObservableCollectionAdaptor.cs" />
-    <Compile Include="Binding\ObservableCollectionAdaptor.cs" />
-    <Compile Include="Binding\ObservableCollectionEx.cs" />
-    <Compile Include="Binding\ObservableCollectionExtended.cs" />
-    <Compile Include="Binding\SortDirection.cs" />
-    <Compile Include="Binding\SortedObservableCollectionAdaptor.cs" />
-    <Compile Include="Binding\SortExpression.cs" />
-    <Compile Include="Binding\SortExpressionComparer.cs" />
-    <Compile Include="Cache\IImmutableGroupChangeSet.cs" />
-    <Compile Include="Cache\Internal\AutoRefresh.cs" />
-    <Compile Include="Cache\Internal\ImmutableGroupChangeSet.cs" />
-    <Compile Include="Cache\Internal\Cast.cs" />
-    <Compile Include="Cache\Internal\EditDiff.cs" />
-    <Compile Include="Cache\Internal\BatchIf.cs" />
-    <Compile Include="Cache\ChangeAwareCache.cs" />
-    <Compile Include="Cache\Internal\DeferUntilLoaded.cs" />
-    <Compile Include="Cache\Internal\DynamicCombiner.cs" />
-    <Compile Include="Cache\Internal\FilterOnProperty.cs" />
-    <Compile Include="Cache\Internal\FinallySafe.cs" />
-    <Compile Include="Cache\Internal\FullJoinMany.cs" />
-    <Compile Include="Cache\Internal\GroupImmutable.cs" />
-    <Compile Include="Cache\Internal\GroupOnProperty.cs" />
-    <Compile Include="Cache\IGrouping.cs" />
-    <Compile Include="Cache\Internal\GroupOnPropertyWithImmutableState.cs" />
-    <Compile Include="Cache\Internal\ImmutableGroup.cs" />
-    <Compile Include="Cache\Internal\InnerJoin.cs" />
-    <Compile Include="Cache\Internal\FullJoin.cs" />
-    <Compile Include="Cache\Internal\InnerJoinMany.cs" />
-    <Compile Include="Cache\Internal\LeftJoin.cs" />
-    <Compile Include="Cache\Internal\LeftJoinMany.cs" />
-    <Compile Include="Cache\Internal\LockFreeObservableCache.cs" />
-    <Compile Include="Cache\Internal\MergeMany.cs" />
-    <Compile Include="Cache\Internal\MergeManyItems.cs" />
-    <Compile Include="Cache\Internal\OnItemRemoved.cs" />
-    <Compile Include="Cache\Internal\Page.cs" />
-    <Compile Include="Cache\Internal\QueryWhenChanged.cs" />
-    <Compile Include="Cache\Internal\RefCount.cs" />
-    <Compile Include="Cache\Internal\RemoveKeyEnumerator.cs" />
-    <Compile Include="Cache\Internal\RightJoin.cs" />
-    <Compile Include="Cache\Internal\RightJoinMany.cs" />
-    <Compile Include="Cache\Internal\SizeExpirer.cs" />
-    <Compile Include="Cache\Internal\Sort.cs" />
-    <Compile Include="Cache\Internal\SpecifiedGrouper.cs" />
-    <Compile Include="Cache\Internal\StatusMonitor.cs" />
-    <Compile Include="Cache\Internal\SubscribeMany.cs" />
-    <Compile Include="Cache\Internal\Switch.cs" />
-    <Compile Include="Cache\Internal\TimeExpirer.cs" />
-    <Compile Include="Cache\Internal\ToObservableChangeSet.cs" />
-    <Compile Include="Cache\Internal\Transform.cs" />
-    <Compile Include="Cache\Internal\TransformAsync.cs" />
-    <Compile Include="Cache\Internal\TransformMany.cs" />
-    <Compile Include="Cache\Internal\TrueFor.cs" />
-    <Compile Include="Cache\Node.cs" />
-    <Compile Include="Cache\Internal\TreeBuilder.cs" />
-    <Compile Include="Cache\SourceCacheEx.cs" />
-    <Compile Include="IChangeSet.cs" />
-    <Compile Include="Kernel\ISupportsCapcity.cs" />
-    <Compile Include="Kernel\ItemWithIndex.cs" />
-    <Compile Include="Kernel\ParallelEx.cs" />
-    <Compile Include="Kernel\ReadOnlyCollectionLight.cs" />
-    <Compile Include="List\Change.cs" />
-    <Compile Include="List\ChangeSetEx.cs" />
-    <Compile Include="List\ChangeType.cs" />
-    <Compile Include="List\Internal\AutoRefresh.cs" />
-    <Compile Include="List\Internal\EditDiff.cs" />
-    <Compile Include="List\IChangeSetAdaptor.cs" />
-    <Compile Include="List\Internal\BufferIf.cs" />
-    <Compile Include="List\ChangeAwareListWithRefCounts.cs" />
-    <Compile Include="List\Internal\Combiner.cs" />
-    <Compile Include="List\Internal\DeferUntilLoaded.cs" />
-    <Compile Include="List\Internal\Distinct.cs" />
-    <Compile Include="List\Internal\DynamicCombiner.cs" />
-    <Compile Include="List\Internal\ExpirableItem.cs" />
-    <Compile Include="List\Internal\ExpireAfter.cs" />
-    <Compile Include="List\Internal\FilterOnProperty.cs" />
-    <Compile Include="List\Internal\Group.cs" />
-    <Compile Include="List\Internal\GroupOn.cs" />
-    <Compile Include="List\IGroup.cs" />
-    <Compile Include="List\Internal\GroupOnImmutable.cs" />
-    <Compile Include="List\Internal\GroupOnProperty.cs" />
-    <Compile Include="List\IGrouping.cs" />
-    <Compile Include="List\Internal\GroupOnPropertyWithImmutableState.cs" />
-    <Compile Include="Kernel\ReferenceEqualityComparer.cs" />
-    <Compile Include="Cache\ChangeReason.cs" />
-    <Compile Include="Kernel\ConnectionStatus.cs" />
-    <Compile Include="Controllers\FilterController.cs" />
-    <Compile Include="Controllers\GroupController.cs" />
-    <Compile Include="Controllers\PageController.cs" />
-    <Compile Include="Controllers\SortController.cs" />
-    <Compile Include="Controllers\VirtualisingController.cs" />
-    <Compile Include="Diagnostics\ChangeStatistics.cs" />
-    <Compile Include="Diagnostics\ChangeSummary.cs" />
-    <Compile Include="Diagnostics\DiagnosticOperators.cs" />
-    <Compile Include="Cache\ObservableCacheEx.cs" />
-    <Compile Include="Experimental\ExperimentalEx.cs" />
-    <Compile Include="Experimental\ISubjectWithRefCount.cs" />
-    <Compile Include="Experimental\IWatcher.cs" />
-    <Compile Include="Experimental\SubjectWithRefCount.cs" />
-    <Compile Include="Experimental\Watcher.cs" />
-    <Compile Include="Cache\IChangeSet.cs" />
-    <Compile Include="Cache\IChangeSetAdaptor.cs" />
-    <Compile Include="Cache\IDistinctChangeSet.cs" />
-    <Compile Include="Cache\IGroup.cs" />
-    <Compile Include="Cache\IGroupChangeSet.cs" />
-    <Compile Include="Cache\IIntermediateCache.cs" />
-    <Compile Include="Cache\IKeyValue.cs" />
-    <Compile Include="Cache\IObservableCache.cs" />
-    <Compile Include="Cache\IPagedChangeSet.cs" />
-    <Compile Include="Cache\IQuery.cs" />
-    <Compile Include="Cache\ISortedChangeSet.cs" />
-    <Compile Include="Cache\ISortedChangeSetAdaptor.cs" />
-    <Compile Include="Cache\ISourceCache.cs" />
-    <Compile Include="Cache\ISourceUpdater.cs" />
-    <Compile Include="Cache\IVirtualChangeSet.cs" />
-    <Compile Include="Cache\IVirtualParameters.cs" />
-    <Compile Include="Cache\IVirtualRequest.cs" />
-    <Compile Include="Cache\Internal\ObservableWithValue.cs" />
-    <Compile Include="Cache\Internal\AbstractFilter.cs" />
-    <Compile Include="Cache\Internal\AnonymousObservableCache.cs" />
-    <Compile Include="Cache\Internal\AnonymousQuery.cs" />
-    <Compile Include="Cache\Internal\Cache.cs" />
-    <Compile Include="Cache\Internal\CacheEx.cs" />
-    <Compile Include="Cache\Change.cs" />
-    <Compile Include="Cache\ChangeSet.cs" />
-    <Compile Include="Kernel\Continuation.cs" />
-    <Compile Include="Cache\DistinctChangeSet.cs" />
-    <Compile Include="Kernel\DoubleCheck.cs" />
-    <Compile Include="Cache\Internal\FilteredIndexCalculator.cs" />
-    <Compile Include="Cache\Internal\FilteredUpdater.cs" />
-    <Compile Include="Cache\ICache.cs" />
-    <Compile Include="Cache\Internal\IFilter.cs" />
-    <Compile Include="Cache\ICacheUpdater.cs" />
-    <Compile Include="Cache\Internal\IKeySelector.cs" />
-    <Compile Include="Cache\IKeyValueCollection.cs" />
-    <Compile Include="Cache\IntermediateCache.cs" />
-    <Compile Include="Kernel\EnumerableEx.cs" />
-    <Compile Include="Kernel\InternalEx.cs" />
-    <Compile Include="Cache\Internal\IReaderWriter.cs" />
-    <Compile Include="Cache\Internal\KeyComparer.cs" />
-    <Compile Include="Cache\Internal\KeySelector.cs" />
-    <Compile Include="Cache\Internal\KeySelectorException.cs" />
-    <Compile Include="Cache\Internal\KeyValueCollection.cs" />
-    <Compile Include="Cache\Internal\KeyValueComparer.cs" />
-    <Compile Include="Cache\ObservableCache.cs" />
-    <Compile Include="Kernel\ItemWithValue.cs" />
-    <Compile Include="Kernel\Optional.cs" />
-    <Compile Include="Kernel\OptionElse.cs" />
-    <Compile Include="Kernel\OptionExtensions.cs" />
-    <Compile Include="Cache\Internal\ReaderWriter.cs" />
-    <Compile Include="Cache\SortedChangeSet.cs" />
-    <Compile Include="Cache\Internal\CacheUpdater.cs" />
-    <Compile Include="Cache\MissingKeyException.cs" />
-    <Compile Include="List\Internal\AnonymousObservableList.cs" />
-    <Compile Include="List\ChangeSet.cs" />
-    <Compile Include="List\Internal\ImmutableGroup.cs" />
-    <Compile Include="List\Internal\MergeMany.cs" />
-    <Compile Include="List\Internal\Filter.cs" />
-    <Compile Include="List\Internal\OnBeingAdded.cs" />
-    <Compile Include="List\Internal\OnBeingRemoved.cs" />
-    <Compile Include="List\Internal\Pager.cs" />
-    <Compile Include="List\Internal\QueryWhenChanged.cs" />
-    <Compile Include="List\Internal\RefCount.cs" />
-    <Compile Include="List\Internal\ReferenceCountTracker.cs" />
-    <Compile Include="List\Internal\SizeLimiter.cs" />
-    <Compile Include="List\Internal\SubscribeMany.cs" />
-    <Compile Include="List\Internal\Switch.cs" />
-    <Compile Include="List\Internal\ToObservableChangeSet.cs" />
-    <Compile Include="List\Internal\TransformAsync.cs" />
-    <Compile Include="List\Internal\Transformer.cs" />
-    <Compile Include="List\Internal\TransformMany.cs" />
-    <Compile Include="List\Internal\UnifiedChange.cs" />
-    <Compile Include="List\IPageChangeSet.cs" />
-    <Compile Include="List\IVirtualChangeSet.cs" />
-    <Compile Include="List\Linq\ItemChangeEnumerator.cs" />
-    <Compile Include="List\Linq\ReverseEnumerator.cs" />
-    <Compile Include="List\Linq\UnifiedChangeEnumerator.cs" />
-    <Compile Include="List\IExtendedList.cs" />
-    <Compile Include="List\Internal\Virtualiser.cs" />
-    <Compile Include="List\Linq\WithoutIndexEnumerator.cs" />
-    <Compile Include="List\ItemChange.cs" />
-    <Compile Include="List\ListChangeReason.cs" />
-    <Compile Include="List\Linq\AddKeyEnumerator.cs" />
-    <Compile Include="List\ListEx.cs" />
-    <Compile Include="List\IChangeSet.cs" />
-    <Compile Include="List\ChangeAwareList.cs" />
-    <Compile Include="List\IObservableList.cs" />
-    <Compile Include="List\ISourceList.cs" />
-    <Compile Include="List\ObservableListEx.cs" />
-    <Compile Include="List\Internal\Sort.cs" />
-    <Compile Include="List\PageChangeSet.cs" />
-    <Compile Include="List\RangeChange.cs" />
-    <Compile Include="List\SortException.cs" />
-    <Compile Include="List\SortOptions.cs" />
-    <Compile Include="List\SourceList.cs" />
-    <Compile Include="List\Internal\ReaderWriter.cs" />
-    <Compile Include="List\SourceListEditConvenienceEx.cs" />
-    <Compile Include="List\SourceListEx.cs" />
-    <Compile Include="List\Tests\ChangeSetAggregator.cs" />
-    <Compile Include="List\Tests\TestEx.cs" />
-    <Compile Include="List\UnspecifiedIndexException.cs" />
-    <Compile Include="List\VirtualChangeSet.cs" />
-    <Compile Include="Cache\Internal\CombineOperator.cs" />
-    <Compile Include="Cache\Internal\Combiner.cs" />
-    <Compile Include="Cache\Internal\DistinctCalculator.cs" />
-    <Compile Include="Cache\Internal\DistinctCounter.cs" />
-    <Compile Include="Cache\Internal\DynamicFilter.cs" />
-    <Compile Include="Cache\Internal\DynamicSubscriber.cs" />
-    <Compile Include="Kernel\Error.cs" />
-    <Compile Include="Cache\Internal\ExpirableItem.cs" />
-    <Compile Include="Cache\GroupChangeSet.cs" />
-    <Compile Include="Cache\Internal\GroupOn.cs" />
-    <Compile Include="Cache\Internal\IndexCalculator.cs" />
-    <Compile Include="Cache\IndexedItem.cs" />
-    <Compile Include="Cache\IPageRequest.cs" />
-    <Compile Include="Cache\IPageResponse.cs" />
-    <Compile Include="Cache\Internal\ManagedGroup.cs" />
-    <Compile Include="Cache\PagedChangeSet.cs" />
-    <Compile Include="Cache\PageRequest.cs" />
-    <Compile Include="Cache\PageResponse.cs" />
-    <Compile Include="Cache\Internal\SizeLimiter.cs" />
-    <Compile Include="Cache\SortOptimisations.cs" />
-    <Compile Include="Cache\SortReason.cs" />
-    <Compile Include="Cache\Internal\StaticFilter.cs" />
-    <Compile Include="Cache\VirtualChangeSet.cs" />
-    <Compile Include="Cache\Internal\Virtualiser.cs" />
-    <Compile Include="Cache\VirtualRequest.cs" />
-    <Compile Include="Cache\VirtualResponse.cs" />
-    <Compile Include="Alias\ObservableCacheAlias.cs" />
-    <Compile Include="ObsoleteEx.cs" />
-    <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Cache\SourceCache.cs" />
-    <Compile Include="Cache\Tests\ChangeSetAggregator.cs" />
-    <Compile Include="Cache\Tests\DistinctChangeSetAggregator.cs" />
-    <Compile Include="Cache\Tests\PagedChangeSetAggregator.cs" />
-    <Compile Include="Cache\Tests\SortedChangeSetAggregator.cs" />
-    <Compile Include="Cache\Tests\TestEx.cs" />
-    <Compile Include="Cache\Tests\VirtualChangeSetAggregator.cs" />
+    <PackageReference Include="System.Reactive" Version="3.0.0" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="project.json" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='net45' or '$(TargetFramework)'=='net46'">
+    <DefineConstants>P_LINQ</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.1|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard1.1\DynamicData.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+    <DocumentationFile>bin\Release\net45\DynamicData.xml</DocumentationFile>
+  </PropertyGroup>
+
+
+  <PropertyGroup>
+    <Authors>Roland Pheasant</Authors>
+    <Owners>Roland Pheasant</Owners>
+    <Title>Dynamic Data</Title>
+    <PackageLicenseUrl>http://opensource.org/licenses/MS-PL</PackageLicenseUrl>
+    <PackageProjectUrl>http://dynamic-data.org</PackageProjectUrl>
+    <Description>
+Bring the power of Rx to collections using Dynamic Data.
+Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
+      Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
+</Description>
+    <Copyright>Copyright Roland Pheasant 2011-2017</Copyright>
+    <Tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</Tags>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/RolandPheasant/DynamicData</RepositoryUrl>
+    <PackageTags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</PackageTags>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

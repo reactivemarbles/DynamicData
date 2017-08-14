@@ -113,8 +113,8 @@ namespace DynamicData
         /// </value>
         public int Capacity
         {
-            get { return Items.Capacity; }
-            set { Items.Capacity = value; }
+            get => Items.Capacity;
+            set => Items.Capacity = value;
         }
 
         /// <summary>

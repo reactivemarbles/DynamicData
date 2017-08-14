@@ -1442,6 +1442,7 @@ namespace DynamicData
         /// <param name="filterController">The filter.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
                                                                                    FilterController<TObject> filterController)
         {
@@ -1555,6 +1556,8 @@ namespace DynamicData
         /// <param name="resetThreshold">The number of updates before the entire list is resorted (rather than inline sore)</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">scheduler</exception>
+
+        [Obsolete("Use IObservable<IChangeSet<TObject, TKey>> and IObservable<Unit> as it is more in the spirit of Rx")]
         public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
                                             [NotNull] SortController<TObject> sortController,
                                             SortOptimisations sortOptimisations = SortOptimisations.None,
@@ -2807,6 +2810,7 @@ namespace DynamicData
         /// or
         /// groupController
         /// </exception>
+        [Obsolete("Use IObservable<Unit> overload as it is more in the spirit of Rx")]
         public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
                                                                                                              Func<TObject, TGroupKey> groupSelectorKey,
                                                                                                              GroupController groupController)
@@ -2983,6 +2987,7 @@ namespace DynamicData
         /// <param name="virtualisingController">The virtualising controller.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete("Use IObservable<IVirtualRequest> overload as it is more in the spirit of Rx")]
         public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
                                                                                               VirtualisingController virtualisingController)
         {
@@ -3771,6 +3776,7 @@ namespace DynamicData
         /// <param name="filterController">The controlled filter.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">filterController</exception>
+        [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
         public static IObservable<IChangeSet<TObject, TKey>> Connect<TObject, TKey>(this IObservableCache<TObject, TKey> source, FilterController<TObject> filterController)
         {
             if (filterController == null) throw new ArgumentNullException(nameof(filterController));
@@ -4210,6 +4216,24 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             source.Edit(updater => updater.Refresh(items));
+        }
+
+
+        /// <summary>
+        /// Removes the specified key from the cache.
+        /// If the item is not contained in the cache then the operation does nothing.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="item"></param>
+        /// <param name="key">The key.</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void AddOrUpdate<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TObject item, TKey key)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (item == null) throw new ArgumentNullException(nameof(item));
+            source.Edit(updater => updater.AddOrUpdate(item, key));
         }
 
         /// <summary>

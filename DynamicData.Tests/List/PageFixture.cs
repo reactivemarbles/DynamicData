@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
-using DynamicData.Controllers;
+using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
-using FluentAssertions;
+using  FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.List
@@ -10,21 +10,20 @@ namespace DynamicData.Tests.List
     
     public class PageFixture: IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<Person> _results;
-        private PageController _controller;
+        private readonly ISourceList<Person> _source;
+        private readonly ChangeSetAggregator<Person> _results;
+        private readonly ISubject<PageRequest> _requestSubject = new BehaviorSubject<PageRequest>(new PageRequest(1, 25));
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
         public  PageFixture()
         {
             _source = new SourceList<Person>();
-            _controller = new PageController(new PageRequest(1, 25));
-            _results = _source.Connect().Page(_controller).AsAggregator();
+            _results = _source.Connect().Page(_requestSubject).AsAggregator();
         }
 
         public void Dispose()
         {
-            _controller.Dispose();
+            _requestSubject.OnCompleted();
             _source.Dispose();
             _results.Dispose();
         }
@@ -43,7 +42,7 @@ namespace DynamicData.Tests.List
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            _controller.Change(new PageRequest(2, 25));
+            _requestSubject.OnNext(new PageRequest(2, 25));
 
             var expected = people.Skip(25).Take(25).ToArray();
             _results.Data.Items.ShouldAllBeEquivalentTo(expected);
@@ -82,7 +81,7 @@ namespace DynamicData.Tests.List
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            _controller.Change(new PageRequest(2, 25));
+            _requestSubject.OnNext(new PageRequest(2, 25));
             _source.RemoveAt(0);
             var expected = people.Skip(26).Take(25).ToArray();
 

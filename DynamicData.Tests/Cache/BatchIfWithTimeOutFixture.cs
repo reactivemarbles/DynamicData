@@ -18,7 +18,6 @@ namespace DynamicData.Tests.Cache
 
         public  BatchIfWithTimeOutFixture()
         {
-            _pausingSubject = new Subject<bool>();
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = _source.Connect().BatchIf(_pausingSubject, TimeSpan.FromMinutes(1), _scheduler).AsAggregator();

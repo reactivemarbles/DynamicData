@@ -43,7 +43,7 @@ namespace DynamicData.Tests.Domain
                         select new { First = first, Second = second, Third = third, Gender = "M" });
 
             var maxage = 100;
-            return girls.Union(boys).AsParallel().OrderBy(x => Guid.NewGuid())
+            return girls.Union(boys).OrderBy(x => Guid.NewGuid())
                         .Select
                 (x =>
                 {

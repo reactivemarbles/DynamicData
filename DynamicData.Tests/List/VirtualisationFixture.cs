@@ -1,9 +1,6 @@
 using System;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using DynamicData.Binding;
-using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
@@ -15,19 +12,17 @@ namespace DynamicData.Tests.List
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<Person> _results;
-        private readonly VirtualisingController _controller;
+        private readonly ISubject<VirtualRequest> _requestSubject = new BehaviorSubject<VirtualRequest>(new  VirtualRequest(0, 25));
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        public  VirtualisationFixture()
+        public VirtualisationFixture()
         {
             _source = new SourceList<Person>();
-            _controller = new VirtualisingController(new VirtualRequest(0, 25));
-            _results = _source.Connect().Virtualise(_controller).AsAggregator();
+            _results = _source.Connect().Virtualise(_requestSubject).AsAggregator();
         }
 
         public void Dispose()
         {
-            _controller.Dispose();
             _source.Dispose();
             _results.Dispose();
         }
@@ -48,7 +43,7 @@ namespace DynamicData.Tests.List
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            _controller.Virtualise(new VirtualRequest(25, 25));
+            _requestSubject.OnNext(new VirtualRequest(25, 25));
 
             var expected = people.Skip(25).Take(25).ToArray();
             _results.Data.Items.ShouldAllBeEquivalentTo(expected);
@@ -88,7 +83,7 @@ namespace DynamicData.Tests.List
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
-            _controller.Virtualise(new VirtualRequest(25, 25));
+            _requestSubject.OnNext(new VirtualRequest(25, 25));
             _source.RemoveAt(0);
             var expected = people.Skip(26).Take(25).ToArray();
 

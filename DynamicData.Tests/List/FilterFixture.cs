@@ -202,19 +202,5 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should nothing cached");
         }
 
-        [Fact]
-        public void FilterSubscribedToMultipleTimes()
-        {
-            var source = new SourceList<Person>();
-            var filtered = source.Connect()
-                                 .Filter(new FilterController<Person>(person => true));
-
-            filtered.Subscribe();
-
-            filtered.Filter(new FilterController<Person>(person => true))
-                    .Subscribe();
-
-             source.Add(new Person("test", 1));
-        }
     }
 }
