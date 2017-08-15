@@ -139,7 +139,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Determines whether the specified objects are equal
+        ///  Determines whether the specified objects are not equal
         /// </summary>
         public static bool operator !=(Node<TObject, TKey> left, Node<TObject, TKey> right)
         {

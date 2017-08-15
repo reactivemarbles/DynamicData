@@ -132,15 +132,16 @@ namespace DynamicData
             }
         }
 
-        public static bool operator ==(ItemChange<T> left, ItemChange<T> right)
-        {
-            return left.Equals(right);
-        }
+        /// <summary>
+        ///  Determines whether the specified objects are equal
+        /// </summary>
+        public static bool operator ==(ItemChange<T> left, ItemChange<T> right) => left.Equals(right);
 
-        public static bool operator !=(ItemChange<T> left, ItemChange<T> right)
-        {
-            return !left.Equals(right);
-        }
+
+        /// <summary>
+        ///  Determines whether the specified objects are not equal
+        /// </summary>
+        public static bool operator !=(ItemChange<T> left, ItemChange<T> right) => !left.Equals(right);
 
         #endregion
 

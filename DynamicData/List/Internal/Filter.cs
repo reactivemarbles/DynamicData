@@ -140,7 +140,7 @@ namespace DynamicData.List.Internal
                         else
                         {
                             if (wasMatch)
-                                filtered.Remove(change.Previous.Value);
+                                filtered.Remove(change.Current);
                         }
                         break;
                     }

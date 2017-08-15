@@ -105,25 +105,33 @@ namespace DynamicData.Tests.List
                 results.Messages.Count.Should().Be(2);
                 results.Messages[1].First().Reason.Should().Be(ListChangeReason.Add);
 
+                //check for removes
+                items[0].Age = 21;
+                results.Data.Count.Should().Be(50);
+                results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Remove);
+                items[0].Age = 60;
+
                 //update an item which matched the filter and still does [refresh should have propagated]
                 items[60].Age = 160;
                 results.Data.Count.Should().Be(51);
-                results.Messages.Count.Should().Be(3);
-                results.Messages[2].First().Reason.Should().Be(ListChangeReason.Refresh);
+                results.Messages.Count.Should().Be(5);
+                results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
 
                 //remove an item and check no change is fired
                 var toRemove = items[65];
                 list.Remove(toRemove);
                 results.Data.Count.Should().Be(50);
-                results.Messages.Count.Should().Be(4);
+                results.Messages.Count.Should().Be(6);
                 toRemove.Age = 100;
-                results.Messages.Count.Should().Be(4);
+                results.Messages.Count.Should().Be(6);
 
                 //add it back in and check it updates
                 list.Add(toRemove);
-                results.Messages.Count.Should().Be(5);
+                results.Messages.Count.Should().Be(7);
                 toRemove.Age = 101;
-                results.Messages.Count.Should().Be(6);
+                results.Messages.Count.Should().Be(8);
+
+
 
                 results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
             }
@@ -199,19 +207,19 @@ namespace DynamicData.Tests.List
                 results.Messages.Last().Refreshes.Should().Be(1);
                 results.Messages.Last().Moves.Should().Be(1);
 
-                items[90].Age = -1; //move to begining
+                items[90].Age = -1; //move to beginning
                 CheckOrder();
                 results.Messages.Count.Should().Be(3);
                 results.Messages.Last().Refreshes.Should().Be(1);
                 results.Messages.Last().Moves.Should().Be(1);
 
-                items[50].Age = 49;  //same positon so no move
+                items[50].Age = 49;  //same position so no move
                 CheckOrder();
                 results.Messages.Count.Should().Be(4);
                 results.Messages.Last().Refreshes.Should().Be(1);
                 results.Messages.Last().Moves.Should().Be(0);
 
-                items[50].Age = 51;  //same positon so no move
+                items[50].Age = 51;  //same position so no move
                 CheckOrder();
                 results.Messages.Count.Should().Be(5);
                 results.Messages.Last().Refreshes.Should().Be(1);
