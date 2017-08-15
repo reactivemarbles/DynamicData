@@ -24,12 +24,13 @@ namespace DynamicData.Tests.Cache
                                        result = changes;
                                    });
 
+            var person = new Person("Test", 1);
             updateReceived.Should().BeFalse();
-            cache.AddOrUpdate(new Person("Test", 1));
+            cache.AddOrUpdate(person);
 
             updateReceived.Should().BeTrue();
             result.Adds.Should().Be(1);
-            result.First().Current.Should().Be(new Person("Test", 1));
+            result.First().Current.Should().Be(person);
             deferStream.Dispose();
         }
 

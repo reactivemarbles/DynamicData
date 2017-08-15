@@ -53,31 +53,29 @@ namespace DynamicData.Tests.Cache
             using (var source = new SourceCache<Person, string>(p => p.Key))
             {
                 source.AddOrUpdate(Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray());
-
-                var subject = new ReplaySubject<Func<Person, bool>>();
-                subject.OnNext(x => true);
+                _filter.OnNext(p => true);
 
                 IChangeSet<Person, string> latestChanges = null;
                 using (source.Connect().Filter(_filter)
                     .Do(changes => latestChanges = changes).AsObservableCache())
                 {
-                    subject.OnNext(p => false);
+                    _filter.OnNext(p => false);
                     latestChanges.Removes.Should().Be(100);
                     latestChanges.Adds.Should().Be(0);
 
-                    subject.OnNext(p => true);
+                    _filter.OnNext(p => true);
                     latestChanges.Adds.Should().Be(100);
                     latestChanges.Removes.Should().Be(0);
 
-                    subject.OnNext(p => false);
+                    _filter.OnNext(p => false);
                     latestChanges.Removes.Should().Be(100);
                     latestChanges.Adds.Should().Be(0);
 
-                    subject.OnNext(p => true);
+                    _filter.OnNext(p => true);
                     latestChanges.Adds.Should().Be(100);
                     latestChanges.Removes.Should().Be(0);
 
-                    subject.OnNext(p => false);
+                    _filter.OnNext(p => false);
                     latestChanges.Removes.Should().Be(100);
                     latestChanges.Adds.Should().Be(0);
                 }

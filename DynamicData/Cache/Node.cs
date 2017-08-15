@@ -7,7 +7,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
     /// <summary>
-    /// Node describing the relationship between and item and it's ancestors and decendents
+    /// Node describing the relationship between and item and it's ancestors and descendent
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>

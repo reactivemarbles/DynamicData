@@ -80,8 +80,8 @@ namespace DynamicData.Tests.Kernal
 
             IChangeSet<Person, string> updates = _updater.AsChangeSet();
 
-            _cache.Lookup("Name1").Value.Should().Be(new Person("Name1", 100));
-            _cache.Count.Should().Be(1, "Sucessive updates should replace cache value");
+            _cache.Lookup("Name1").Value.Age.Should().Be(100);
+            _cache.Count.Should().Be(1, "Successive updates should replace cache value");
             99.Should().Be(updates.Count(update => update.Reason == ChangeReason.Update), "Should be 99 updates");
             1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 add");
             100.Should().Be(updates.Count, "Should be 100 updates");
