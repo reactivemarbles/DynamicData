@@ -1,8 +1,8 @@
 # configuration for master branch
--  
+-
     branches:
     only:
-      - master
+        - master
 
     version: 5.5.0.{build}-beta
     image: Visual Studio 2017 Preview
@@ -13,14 +13,13 @@
     disable_publish_on_pr: true
 
     environment:
-      # Set the DOTNET_SKIP_FIRST_TIME_EXPERIENCE environment variable to stop wasting time caching packages
-      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-      # Disable sending usage data to Microsoft
-      DOTNET_CLI_TELEMETRY_OPTOUT: true
-
+        # Set the DOTNET_SKIP_FIRST_TIME_EXPERIENCE environment variable to stop wasting time caching packages
+        DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+        # Disable sending usage data to Microsoft
+        DOTNET_CLI_TELEMETRY_OPTOUT: true
 
     build_script:
-      # Add test when I can work out why the tests dont run on appveyor: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build when I can 
+        # Add test when I can work out why the tests dont run on appveyor: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build when I can 
     - cmd: >-
         dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
         dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
@@ -32,8 +31,9 @@
     deploy:
     - provider: NuGet
       api_key:
-      secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
-    on:
+        secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
+      skip_symbols: false
+      on:
         # Only publish if the trigger was a Git tag
         # git tag v0.1.0-beta
         # git push origin --tags
@@ -71,10 +71,10 @@
     deploy:
     - provider: NuGet
       api_key:
-      secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
-    on:
+        secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
+      skip_symbols: false
+      on:
         # Only publish if the trigger was a Git tag
         # git tag v0.1.0-beta
         # git push origin --tags
         appveyor_repo_tag: true
-
