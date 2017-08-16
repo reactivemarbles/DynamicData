@@ -1,11 +1,11 @@
-# configuration for master/CI branch
--
-  branches:
+# configuration for master branch
+-  branches:
     only:
       - master
 
     version: 5.5.0.{build}-beta
     image: Visual Studio 2017 Preview
+    configuration: AppVeyor
     install:
     - cmd: 
     nuget:
@@ -28,8 +28,8 @@
 
     test: off
 
-     deploy:
-     - provider: NuGet
+    deploy:
+    - provider: NuGet
       api_key:
         secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
       skip_symbols: false
@@ -38,7 +38,7 @@
         # git push origin --tags
         appveyor_repo_tag: true
 
-    # configuration for master/CI branch
+# configuration for version 4 branch
 -
   branches:
     only:
@@ -46,6 +46,7 @@
 
     version: 4.15.0.{build}-beta
     image: Visual Studio 2017 Preview
+    configuration: AppVeyor
     install:
     - cmd: 
     nuget:
@@ -63,10 +64,11 @@
         dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
         appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
         appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
+    
     test: off
 
-     deploy:
-     - provider: NuGet
+    deploy:
+    - provider: NuGet
       api_key:
         secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
       skip_symbols: false
