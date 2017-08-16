@@ -1,5 +1,6 @@
 # configuration for master branch
--  branches:
+-  
+    branches:
     only:
       - master
 
@@ -31,8 +32,8 @@
     deploy:
     - provider: NuGet
       api_key:
-        secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
-      skip_symbols: false
+      secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
+    on:
         # Only publish if the trigger was a Git tag
         # git tag v0.1.0-beta
         # git push origin --tags
@@ -70,9 +71,10 @@
     deploy:
     - provider: NuGet
       api_key:
-        secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
-      skip_symbols: false
+      secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
+    on:
         # Only publish if the trigger was a Git tag
         # git tag v0.1.0-beta
         # git push origin --tags
         appveyor_repo_tag: true
+
