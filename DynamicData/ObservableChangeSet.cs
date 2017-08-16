@@ -43,6 +43,9 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, IDisposable> subscribe, Func<TObject, TKey> keySelector)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
@@ -73,6 +76,9 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>                                                                                                      
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
             return Create(async (list, ct) => await subscribe(list), keySelector);
         }
 
@@ -86,6 +92,9 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
             return Observable.Create<IChangeSet<TObject, TKey>>(async (observer, ct) =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
@@ -117,6 +126,9 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<Action>> subscribe, Func<TObject, TKey> keySelector)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
             return Create(async (list, ct) => await subscribe(list),keySelector);
         }
 
@@ -131,6 +143,8 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task<Action>> subscribe, Func<TObject, TKey> keySelector)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             return Observable.Create<IChangeSet<TObject, TKey>>(async (observer, ct) =>
             {
@@ -165,6 +179,8 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task> subscribe, Func<TObject, TKey> keySelector)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             return Observable.Create<IChangeSet<TObject, TKey>>(async observer =>
             {
@@ -195,6 +211,8 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task> subscribe, Func<TObject, TKey> keySelector)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
             return Observable.Create<IChangeSet<TObject, TKey>>(async (observer, ct) =>
             {
@@ -229,6 +247,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Action> subscribe)
         {
             if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+
             return Create<T>(list =>
             {
                 var action = subscribe(list);
@@ -244,6 +263,8 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, IDisposable> subscribe)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var list = new SourceList<T>();
@@ -274,6 +295,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>                                                                                                        
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<IDisposable>> subscribe)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
             return Create<T>(async (list, ct) => await subscribe(list));
         }
 
@@ -285,6 +307,8 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<IDisposable>> subscribe)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+
             return Observable.Create<IChangeSet<T>>(async (observer, ct) =>
             {
                 var list = new SourceList<T>();
@@ -316,6 +340,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>,  Task<Action>> subscribe)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
             return Create<T>(async (list, ct) => await subscribe(list));
         }
 
@@ -328,6 +353,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<Action>> subscribe)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
 
             return Observable.Create<IChangeSet<T>>(async (observer, ct) =>
             {
@@ -359,6 +385,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task> subscribe)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
 
             return Observable.Create<IChangeSet<T>>(async observer =>
             {
@@ -386,6 +413,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task> subscribe)
         {
+            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
 
             return Observable.Create<IChangeSet<T>>(async (observer, ct) =>
             {

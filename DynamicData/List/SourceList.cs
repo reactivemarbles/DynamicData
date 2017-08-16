@@ -163,8 +163,9 @@ namespace DynamicData
             return new ChangeSet<T>(initial);
         }
 
+
         /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
+        /// Disposes the instance
         /// </summary>
         public void Dispose()
         {

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
+using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
 
@@ -18,6 +21,11 @@ namespace DynamicData.Tests.List
                 list.Add(value);
                 return () => { };
             }));
+
+            var xxx = ObservableChangeSet.Create<Person, string>(cache =>
+            {
+                return new CompositeDisposable();
+            }, p => p.Key);
         }
 
         private void SubscribeAndAssert<T>(IObservable<IChangeSet<T>> observableChangeset, bool expectsError = false)
@@ -26,8 +34,10 @@ namespace DynamicData.Tests.List
             bool complete = false;
             IChangeSet<T> changes = null;
 
-            using (var myList = observableChangeset.AsObservableList())
-            using (myList.Connect().Subscribe(result => changes = result, ex => error = ex, () => complete = true))
+            using (var myList = observableChangeset
+                .Finally(()=> complete = true)
+                .AsObservableList())
+            using (myList.Connect().Subscribe(result => changes = result, ex => error = ex))
             {         
                 if (!expectsError)
                 {
@@ -37,10 +47,8 @@ namespace DynamicData.Tests.List
                 {
                     error.Should().NotBeNull();
                 }
-
-                myList.Dispose();
-                complete.Should().BeTrue();
             }
+            complete.Should().BeTrue();
         }
 
 
