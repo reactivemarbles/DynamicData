@@ -27,12 +27,13 @@
       
       dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
       
-      dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
-      
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
-  test: off
+  
+  test_script:
+-   cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
+
   deploy:
   - provider: NuGet
     api_key:
@@ -75,7 +76,10 @@
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
-  test: off
+  
+  test_script:
+-   cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
+  
   deploy:
   - provider: NuGet
     api_key:
