@@ -38,8 +38,7 @@ namespace DynamicData.Cache.Internal
                             cacheToDispose = _cache;
                             _cache = null;
                         }
-                    if (cacheToDispose != null)
-                        cacheToDispose.Dispose();
+                    cacheToDispose?.Dispose();
                 });
             });
         }

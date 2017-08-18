@@ -17,7 +17,6 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IQuery<TObject, TKey>> Run()
         {
-
             if (_itemChangedTrigger == null)
             {
                 return _source

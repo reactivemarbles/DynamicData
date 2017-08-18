@@ -7,7 +7,7 @@ namespace DynamicData
     /// as well as data access methods
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface ISourceList<T> : IObservableList<T>
+    public interface ISourceList<T> : IObservableList<T>, ICollectionSubject
     {
         /// <summary>
         /// Edit the inner list within the list's internal locking mechanism
@@ -16,14 +16,5 @@ namespace DynamicData
         /// <param name="errorHandler">The error handler.</param>
         void Edit(Action<IExtendedList<T>> updateAction, Action<Exception> errorHandler = null);
 
-        /// <summary>
-        /// Notifies the observer that the source list has finished sending push-based notifications.
-        /// </summary>
-        void OnCompleted();
-
-        /// <summary>
-        /// Notifies the observer that the source list has experienced an error condition.
-        /// </summary>
-        void OnError(Exception exception);
     }
 }

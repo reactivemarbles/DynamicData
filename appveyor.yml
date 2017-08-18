@@ -21,6 +21,8 @@
   # Hangs indefinitely! dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
   build_script:
   - cmd: >-
+      dotnet --info
+
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
       
       dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
@@ -64,6 +66,8 @@
   # Hangs indefinitely! dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
   build_script:
   - cmd: >-
+      dotnet --info
+
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
       
       dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%

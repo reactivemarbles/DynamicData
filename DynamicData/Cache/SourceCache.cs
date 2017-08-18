@@ -40,8 +40,22 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// A count changed observable starting with the current count
+        /// Notifies the observer that the source list has finished sending notifications.
         /// </summary>
+        public void OnCompleted()
+        {
+
+        }
+
+        /// <summary>
+        /// Notifies the observer that the source list has experienced an error condition.
+        /// </summary>
+        public void OnError(Exception exception)
+        {
+
+        }
+
+        /// <inheritdoc />
         public IObservable<int> CountChanged => _innerCache.CountChanged;
 
         /// <summary>

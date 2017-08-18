@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.1;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard1.1;net45;net46</TargetFrameworks>
     <AssemblyVersion>5.5.0</AssemblyVersion>
     <FileVersion>5.5.0.0</FileVersion>
     <Version>5.5.0-beta</Version>
@@ -10,7 +10,7 @@
     <PackageReference Include="System.Reactive" Version="3.0.0" />
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' or '$(TargetFramework)' == 'net46'">
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 
@@ -18,10 +18,17 @@
     <DocumentationFile>bin\Release\netstandard1.1\DynamicData.xml</DocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <DocumentationFile>bin\Release\netstandard2.0\DynamicData.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
     <DocumentationFile>bin\Release\net45\DynamicData.xml</DocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net46|AnyCPU'">
+    <DocumentationFile>bin\Release\net46\DynamicData.xml</DocumentationFile>
+  </PropertyGroup>
 
   <PropertyGroup>
     <Authors>Roland Pheasant</Authors>
@@ -41,5 +48,5 @@ Dynamic Data is a comprehensive caching and data manipulation solution which int
     <PackageTags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</PackageTags>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+
 </Project>
