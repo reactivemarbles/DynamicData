@@ -4,6 +4,12 @@
     only:
       - master
 
+  environment:
+    # Set the DOTNET_SKIP_FIRST_TIME_EXPERIENCE environment variable to stop wasting time caching packages
+    DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    # Disable sending usage data to Microsoft
+    DOTNET_CLI_TELEMETRY_OPTOUT: true
+
   version: 5.5.0.{build}-beta
   image: Visual Studio 2017 Preview
   configuration: Release
@@ -11,6 +17,8 @@
   - cmd: 
   nuget:
     disable_publish_on_pr: true
+
+  # Hangs indefinitely! dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
   build_script:
   - cmd: >-
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
@@ -37,22 +45,28 @@
 -
   branches:
     only:
-      - master
+      - Version4
+
+  environment:
+    # Set the DOTNET_SKIP_FIRST_TIME_EXPERIENCE environment variable to stop wasting time caching packages
+    DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    # Disable sending usage data to Microsoft
+    DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   version: 4.15.0.{build}-beta
   image: Visual Studio 2017 Preview
-  configuration: Version4
+  configuration: Release
   install:
   - cmd: 
   nuget:
     disable_publish_on_pr: true
+
+  # Hangs indefinitely! dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
   build_script:
   - cmd: >-
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
       
       dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
-      
-      dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
       
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       
@@ -64,6 +78,6 @@
       secure: CnOOhO/BwAogsD+dC9Q9BD38q6nxehHPS5LOHU977QtiJpqx3qE6vP+V+GHzpwac
     skip_symbols: false
     on:
-      # Only publish from the master branch
-      branch: master
+      # Only publish from the Version4 branch
+      branch: Version4
       appveyor_repo_tag: true
