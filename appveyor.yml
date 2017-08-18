@@ -2,7 +2,7 @@
 -
   branches:
     only:
-      - master
+    - master
 
   environment:
     # Set the DOTNET_SKIP_FIRST_TIME_EXPERIENCE environment variable to stop wasting time caching packages
@@ -48,7 +48,7 @@
 -
   branches:
     only:
-      - Version4
+    - Version4
 
   environment:
     # Set the DOTNET_SKIP_FIRST_TIME_EXPERIENCE environment variable to stop wasting time caching packages
