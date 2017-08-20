@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>DynamicData</id>
+    <version>$version$</version>
+    <title>Dynamic Data</title>
+    <authors>Roland Pheasant</authors>
+    <copyright>Roland Pheasant</copyright>
+    <projectUrl>http://dynamic-data.org</projectUrl>
+    <owners>Roland Pheasant</owners>
+    <licenseUrl>http://opensource.org/licenses/MS-PL</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      Bring the power of Rx to collections using Dynamic Data.
+      Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
+      Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
+    </description>
+    <tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</tags>
+  </metadata>
+  <files>
+
+    <!--Net45 files-->
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\net45\DynamicData.dll" />
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" target="lib\net45\DynamicData.pdb" />
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" target="lib\net45\DynamicData.xml" />
+
+    <!--Portable files-->
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.dll" />
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.pdb" />
+    <file src="bin\Release\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" target="lib\portable-net45+winrt45+wp8+wpa81\DynamicData.xml" />
+
+    <file src="..\DynamicData\**\*.cs" target="src" />
+  </files>
+</package>

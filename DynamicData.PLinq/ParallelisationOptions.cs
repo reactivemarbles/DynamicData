@@ -1,5 +1,4 @@
-#if P_LINQ
-// ReSharper disable once CheckNamespace
+
 namespace DynamicData.PLinq
 {
     /// <summary>
@@ -43,4 +42,3 @@ namespace DynamicData.PLinq
         public int Threshold { get; } = 0;
     }
 }
-#endif

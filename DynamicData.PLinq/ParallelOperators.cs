@@ -5,7 +5,7 @@ using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
-#if P_LINQ
+
 namespace DynamicData.PLinq
 {
     /// <summary>
@@ -13,7 +13,7 @@ namespace DynamicData.PLinq
     /// </summary>
     public static class ParallelOperators
     {
-#region Subscribe Many
+        #region Subscribe Many
 
         /// <summary>
         /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed
@@ -97,9 +97,9 @@ namespace DynamicData.PLinq
                 });
         }
 
-#endregion
+        #endregion
 
-#region  Transform
+        #region  Transform
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
@@ -170,9 +170,9 @@ namespace DynamicData.PLinq
                 });
         }
 
-#endregion
+        #endregion
 
-#region Transform safe
+        #region Transform safe
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function,
@@ -253,9 +253,9 @@ namespace DynamicData.PLinq
                 });
         }
 
-#endregion
+        #endregion
 
-#region Filter
+        #region Filter
 
         /// <summary>
         /// Filters the stream using the specified predicate
@@ -284,8 +284,6 @@ namespace DynamicData.PLinq
                 });
         }
 
-#endregion
+        #endregion
     }
 }
-
-#endif
