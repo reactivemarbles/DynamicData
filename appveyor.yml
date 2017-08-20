@@ -77,6 +77,8 @@
       7z a DynamicData.zip %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\*.*
 
       appveyor PushArtifact DynamicData.zip
+  test_script:
+  - cmd: packages\xunit.runner.console.2.2.0\tools\xunit.console %APPVEYOR_BUILD_FOLDER%\DynamicData.Tests\bin\Release\DynamicData.Tests.dll
   deploy:
   - provider: NuGet
     api_key:
