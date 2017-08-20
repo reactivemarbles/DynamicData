@@ -17,7 +17,6 @@
   - cmd: 
   nuget:
     disable_publish_on_pr: true
-
   build_script:
   - cmd: >-
       dotnet --info
@@ -29,7 +28,7 @@
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
-  
+  test: off
   # Hangs indefinitely and I do not know why as the same command works locally
   # test_script:
   # - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
@@ -108,7 +107,6 @@
   - cmd: 
   nuget:
     disable_publish_on_pr: true
-
   
   build_script:
   - cmd: >-
@@ -121,7 +119,7 @@
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
-
+  test: off
   # Hangs indefinitely and I do not know why as the same command works locally
   # test_script:
   # - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
