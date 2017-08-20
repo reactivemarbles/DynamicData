@@ -24,7 +24,7 @@
 
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
 
-      dotnet test -configuration Release
+      dotnet test --configuration Release
       
       dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
       
