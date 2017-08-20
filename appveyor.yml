@@ -11,7 +11,7 @@
     DOTNET_CLI_TELEMETRY_OPTOUT: true
 
   version: 5.5.0.{build}-beta
-  image: Visual Studio 2017 Preview
+  image: Visual Studio 2017
   configuration: Release
   install:
   - cmd: 
@@ -23,8 +23,6 @@
       dotnet --info
 
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
-
-      dotnet test --configuration Release
       
       dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
       
@@ -33,8 +31,8 @@
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
   
   # Hangs indefinitely and I do not know why as the same command works locally
-  # test_script:
-  # - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
+  test_script:
+  - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
 
   deploy:
   - provider: NuGet
@@ -48,39 +46,39 @@
 
 # configuration for version 4
 -
+  version: 4.15.0.{build}
   branches:
     only:
     - Version4
-
-  environment:
-    # Set the DOTNET_SKIP_FIRST_TIME_EXPERIENCE environment variable to stop wasting time caching packages
-    DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-    # Disable sending usage data to Microsoft
-    DOTNET_CLI_TELEMETRY_OPTOUT: true
-
-  version: 4.15.0.{build}-beta
-  image: Visual Studio 2017 Preview
+  image: Visual Studio 2017
   configuration: Release
-  install:
-  - cmd: 
+  platform: Any CPU
+  assembly_info:
+    patch: true
+    file: '**\AssemblyInfo.*'
+    assembly_version: '{version}'
+    assembly_file_version: '{version}'
+    assembly_informational_version: '{version}'
   nuget:
+    account_feed: true
     disable_publish_on_pr: true
-
-  build_script:
+  before_build:
   - cmd: >-
-      dotnet --info
+      appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
 
-      dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
-      
-      dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
-      
-      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
-      
-      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
-  
-  test_script:
-  - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
-  
+      nuget restore DynamicData.sln
+  build:
+    project: DynamicData.sln
+    publish_nuget: true
+    publish_nuget_symbols: true
+    include_nuget_references: true
+    verbosity: minimal
+  after_build:
+  - cmd: >-
+      7z a DynamicData.zip %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\*.*
+
+      appveyor PushArtifact DynamicData.zip
+
   deploy:
   - provider: NuGet
     api_key:
