@@ -27,6 +27,7 @@ namespace DynamicData
 
         #region Delegated Members
 
+        /// <inheritdoc />
         /// <summary>
         /// Add, update and remove api via an action method. Enables the consumer to perform queries and updates
         /// safely within the innner caches lock.
@@ -44,7 +45,7 @@ namespace DynamicData
         /// </summary>
         public void OnCompleted()
         {
-
+            (_innerCache as ICollectionSubject)?.OnCompleted();
         }
 
         /// <summary>
@@ -52,7 +53,7 @@ namespace DynamicData
         /// </summary>
         public void OnError(Exception exception)
         {
-
+            (_innerCache as ICollectionSubject)?.OnCompleted();
         }
 
         /// <inheritdoc />

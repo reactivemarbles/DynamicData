@@ -60,9 +60,10 @@ namespace DynamicData
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer), 
-                    cache, 
-                    Disposable.Create(observer.OnCompleted));
+                return new CompositeDisposable(disposable,
+                    Disposable.Create(observer.OnCompleted),
+                    cache.Connect().SubscribeSafe(observer), 
+                    cache);
             });
         }
 

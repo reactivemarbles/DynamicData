@@ -10,7 +10,7 @@ using DynamicData.Kernel;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
-    internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+    internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>, ICollectionSubject
     {
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
@@ -25,9 +25,9 @@ namespace DynamicData
 
             var loader = source
                 .Synchronize(_locker)
-                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, _changes.OnError), 
-                                _changes.OnError,
-                               () => _changes.OnCompleted());
+                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, _changes.OnError),
+                    _changes.OnError,
+                    () => _changes.OnCompleted());
 
 
             _cleanUp = Disposable.Create(() =>
@@ -96,54 +96,54 @@ namespace DynamicData
         public IObservable<Change<TObject, TKey>> Watch(TKey key)
         {
             return Observable.Create<Change<TObject, TKey>>
-                (
-                    observer =>
+            (
+                observer =>
+                {
+                    lock (_locker)
                     {
-                        lock (_locker)
-                        {
-                            var initial = _readerWriter.Lookup(key);
-                            if (initial.HasValue)
-                                observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+                        var initial = _readerWriter.Lookup(key);
+                        if (initial.HasValue)
+                            observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
 
-                            return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
+                        return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
+                        {
+                            var matches = changes.Where(update => update.Key.Equals(key));
+                            foreach (var match in matches)
                             {
-                                var matches = changes.Where(update => update.Key.Equals(key));
-                                foreach (var match in matches)
-                                {
-                                    observer.OnNext(match);
-                                }
-                            });
-                        }
-                    });
+                                observer.OnNext(match);
+                            }
+                        });
+                    }
+                });
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null)
         {
             return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
+            (
+                observer =>
+                {
+                    lock (_locker)
                     {
-                        lock (_locker)
+                        var initial = GetInitialUpdates(predicate);
+                        var source = _changes.Finally(observer.OnCompleted);
+
+                        if (predicate == null)
                         {
-                            var initial = GetInitialUpdates(predicate);
-                            var source = _changes.Finally(observer.OnCompleted);
-
-                            if (predicate == null)
-                            {
-                                if (initial.Count > 0) observer.OnNext(initial);
-                                return source.SubscribeSafe(observer);
-                            }
-
-                            var updater = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), predicate);
-                            var filtered = updater.Update(GetInitialUpdates(predicate));
-                            if (filtered.Count != 0)
-                                observer.OnNext(filtered);
-
-                            return source.Select(updater.Update)
-                                    .NotEmpty()
-                                    .SubscribeSafe(observer);
+                            if (initial.Count > 0) observer.OnNext(initial);
+                            return source.SubscribeSafe(observer);
                         }
-                    });
+
+                        var updater = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), predicate);
+                        var filtered = updater.Update(GetInitialUpdates(predicate));
+                        if (filtered.Count != 0)
+                            observer.OnNext(filtered);
+
+                        return source.Select(updater.Update)
+                            .NotEmpty()
+                            .SubscribeSafe(observer);
+                    }
+                });
         }
 
         internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null) => _readerWriter.AsInitialUpdates(filter);
@@ -161,6 +161,18 @@ namespace DynamicData
         public void Dispose()
         {
             _cleanUp.Dispose();
+        }
+
+        void ICollectionSubject.OnCompleted()
+        {
+            lock (_locker)
+                _changes.OnCompleted();
+        }
+        
+        void ICollectionSubject.OnError(Exception exception)
+        {
+            lock (_locker)
+                _changes.OnError(exception);
         }
     }
 }

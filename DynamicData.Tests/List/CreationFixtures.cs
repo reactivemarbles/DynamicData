@@ -25,54 +25,6 @@ namespace DynamicData.Tests.List
                 list.Add(value);
                 return () => { };
             }));
-
-         
-
-            //Load list or cache from observables
-            IObservable<IEnumerable<Person>> LoadPeople() =>Observable.Return(Enumerable.Empty<Person>());
-            IObservable<IEnumerable<Person>> SubscribePeople() => Observable.Return(Enumerable.Empty<Person>());
-
-            IObservable<IChangeSet<Person>> listFromObservable = ObservableChangeSet.Create<Person>(list =>
-            {
-                var peopleLoader = LoadPeople().Subscribe(list.AddRange, list.OnError);
-                var peopleSubscriber = SubscribePeople().Subscribe(list.AddRange, list.OnError);
-                return new CompositeDisposable(peopleLoader, peopleSubscriber);
-            });
-
-            IObservable<IChangeSet<Person, string>> cacheFromObservable = ObservableChangeSet.Create<Person, string>(cache =>
-            {
-                var peopleLoader = LoadPeople().Subscribe(cache.AddOrUpdate, cache.OnError);
-                var peopleSubscriber = SubscribePeople().Subscribe(cache.AddOrUpdate, cache.OnError);
-
-                return new CompositeDisposable(peopleLoader, peopleSubscriber);
-            }, p=>p.Name);
-
-
-            //Load list or cache from tasks
-            Task<IEnumerable<Person>> LoadPeopleAsync() => Task.FromResult(Enumerable.Empty<Person>());
-
-            IObservable<IChangeSet<Person>> listFromTask = ObservableChangeSet.Create<Person>(async list =>
-            {
-                var people =await LoadPeopleAsync();
-                list.AddRange(people);
-            });
-
-            IObservable<IChangeSet<Person, string>> cacheFromTask = ObservableChangeSet.Create<Person, string>(async cache =>
-            {
-                var people = await LoadPeopleAsync();
-                cache.AddOrUpdate(people);
-            }, p => p.Name);
-
-
-
-
-            var myObservableCache = ObservableChangeSet.Create<Person, string>(cache =>
-            {
-
-
-
-                return new CompositeDisposable();
-            }, p => p.Name);
         }
 
         private void SubscribeAndAssert<T>(IObservable<IChangeSet<T>> observableChangeset, bool expectsError = false)
@@ -97,8 +49,5 @@ namespace DynamicData.Tests.List
             }
             complete.Should().BeTrue();
         }
-
-
-
     }
 }

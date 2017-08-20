@@ -23,6 +23,8 @@
       dotnet --info
 
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
+
+      dotnet test -configuration Release
       
       dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
       
@@ -31,8 +33,8 @@
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
   
   # Hangs indefinitely and I do not know why as the same command works locally
-  test_script:
-  - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
+  # test_script:
+  # - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
 
   deploy:
   - provider: NuGet

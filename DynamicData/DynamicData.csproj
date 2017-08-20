@@ -1,9 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard1.1;net45;net46</TargetFrameworks>
-    <AssemblyVersion>5.5.0</AssemblyVersion>
-    <FileVersion>5.5.0.0</FileVersion>
-    <Version>5.5.0-beta</Version>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,28 +12,12 @@
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard1.1|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard1.1\DynamicData.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard2.0\DynamicData.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
-    <DocumentationFile>bin\Release\net45\DynamicData.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net46|AnyCPU'">
-    <DocumentationFile>bin\Release\net46\DynamicData.xml</DocumentationFile>
-  </PropertyGroup>
-
   <PropertyGroup>
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
     <Title>Dynamic Data</Title>
     <PackageLicenseUrl>http://opensource.org/licenses/MS-PL</PackageLicenseUrl>
-    <PackageProjectUrl>http://dynamic-data.org</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/RolandPheasant/DynamicData</PackageProjectUrl>
     <Description>
 Bring the power of Rx to collections using Dynamic Data.
 Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
