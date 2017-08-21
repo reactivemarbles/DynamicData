@@ -82,7 +82,7 @@
   - cmd: >-
       cd %APPVEYOR_BUILD_FOLDER%
 
-      packages\xunit.runner.console.2.2.0\tools\xunit.console DynamicData.Tests\bin\Release\DynamicData.Tests.dll /appveyor
+      packages\xunit.runner.console.2.2.0\tools\xunit.console DynamicData.Tests\bin\Release\DynamicData.Tests.dll
   deploy:
   - provider: NuGet
     api_key:
