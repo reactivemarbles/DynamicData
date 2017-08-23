@@ -78,11 +78,11 @@
 
       appveyor PushArtifact DynamicData.zip
   test: off
-  test_script:
-  - cmd: >-
-      cd %APPVEYOR_BUILD_FOLDER%
-
-      %APPVEYOR_BUILD_FOLDER%\packages\xunit.runner.console.2.2.0\tools\xunit.console %APPVEYOR_BUILD_FOLDER%\DynamicData.Tests\bin\Release\DynamicData.Tests.dll
+ # test_script:
+ # - cmd: >-
+ #     cd %APPVEYOR_BUILD_FOLDER%
+ #   
+ #    %APPVEYOR_BUILD_FOLDER%\packages\xunit.runner.console.2.2.0\tools\xunit.console %APPVEYOR_BUILD_FOLDER%\DynamicData.Tests\bin\Release\DynamicData.Tests.dll
   deploy:
   - provider: NuGet
     api_key:
