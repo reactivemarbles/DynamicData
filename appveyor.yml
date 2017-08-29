@@ -28,10 +28,19 @@
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
+
+      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.nupkg
+
+      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
+
   test: off
-  # Hangs indefinitely and I do not know why as the same command works locally
-  # test_script:
-  # - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
+  test_script:
+  - cmd: >-
+      cd %APPVEYOR_BUILD_FOLDER%
+
+      dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
+
+      dotnet test DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build
 
   deploy:
   - provider: NuGet
@@ -122,10 +131,23 @@
       
       dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
       
+      dotnet pack DynamicData.ReactiveUI\DynamicData.ReactiveUI.csproj --configuration Release --no-build --include-symbols /p:Version=%APPVEYOR_BUILD_VERSION%
+
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
+
+      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.nupkg
+
+      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
+
+
   test: off
   # Hangs indefinitely and I do not know why as the same command works locally
-  # test_script:
-  # - cmd: dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
+  test_script:
+  - cmd: >-
+      cd %APPVEYOR_BUILD_FOLDER%
+
+      dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
+
+      dotnet test DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build
