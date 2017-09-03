@@ -7,7 +7,7 @@
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="reactiveui" Version="8.0.0-alpha0057" />
+    <PackageReference Include="reactiveui" Version="8.0.0-alpha0069" />
   </ItemGroup>
 
   <PropertyGroup>
