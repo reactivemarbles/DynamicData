@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="3.1.1" />
+    <PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +27,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0-beta4-build3742" />
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.0-beta4-build3742" />
     <PackageReference Include="FluentAssertions" Version="4.19.3" />
-    <PackageReference Include="Microsoft.Reactive.Testing" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Reactive.Testing" Version="[3.1.1,4)" />
   </ItemGroup>
 </Project>
