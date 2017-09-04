@@ -34,12 +34,6 @@ namespace DynamicData
         Refresh =3,
 
         /// <summary>
-        ///   Command to operators to re-evaluate.
-        /// </summary>
-        [Obsolete(Constants.EvaluateIsDead)]
-        Evaluate = 3,
-
-        /// <summary>
         /// An item has been moved in a sorted collection
         /// </summary>
         Moved = 4,

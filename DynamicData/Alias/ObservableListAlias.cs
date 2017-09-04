@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using DynamicData.Annotations;
-using DynamicData.Controllers;
 
 namespace DynamicData.Alias
 {

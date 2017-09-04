@@ -4,7 +4,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Annotations;
-using DynamicData.Controllers;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using DynamicData.Controllers;
 using DynamicData.Tests.Domain;
 using Xunit;
 using FluentAssertions;

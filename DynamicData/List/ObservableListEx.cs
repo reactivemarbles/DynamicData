@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using DynamicData.Annotations;
 using DynamicData.Binding;
 using DynamicData.Cache.Internal;
-using DynamicData.Controllers;
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
 using DynamicData.List.Linq;
@@ -524,26 +523,6 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
             return new Filter<T>(source, new BehaviorSubject<Func<T, bool>>(predicate)).Run();
-        }
-
-        /// <summary>
-        /// Filters source using the specified filter controller.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="filterController">The filter controller.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source
-        /// or
-        /// filterController</exception>
-        [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
-        public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source,
-            FilterController<T> filterController)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-            var predicates = filterController.EvaluateChanged.Merge(filterController.FilterChanged);
-            return source.Filter(predicates);
         }
 
         /// <summary>
@@ -1439,22 +1418,6 @@ namespace DynamicData
         #region Virtualisation / Paging
 
         /// <summary>
-        /// Virtualises the source using parameters provided by the specified virtualising controller
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="virtualisingController">The virtualising controller.</param>
-        /// <returns></returns>
-        [Obsolete("Use IObservable<IVirtualRequest> overload as it is more in the spirit of Rx")]
-        public static IObservable<IVirtualChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source,
-            [NotNull] VirtualisingController virtualisingController)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (virtualisingController == null) throw new ArgumentNullException(nameof(virtualisingController));
-            return source.Virtualise(virtualisingController.Changed);
-        }
-
-        /// <summary>
         /// Virtualises the source using parameters provided via the requests observable
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -1487,21 +1450,6 @@ namespace DynamicData
             return source.Virtualise(Observable.Return(new VirtualRequest(0, numberOfItems)));
         }
 
-        /// <summary>
-        /// Applies paging to the the data source
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="pageController">The page controller.</param>
-        /// <returns></returns>
-        [Obsolete("Use IObservable<IPageRequest> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
-        public static IObservable<IChangeSet<T>> Page<T>([NotNull] this IObservable<IChangeSet<T>> source,
-            [NotNull] PageController pageController)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (pageController == null) throw new ArgumentNullException(nameof(pageController));
-            return source.Page(pageController.Changed);
-        }
 
         /// <summary>
         /// Applies paging to the the data source

@@ -14,7 +14,6 @@ using DynamicData.Annotations;
 using DynamicData.Binding;
 using DynamicData.Cache;
 using DynamicData.Cache.Internal;
-using DynamicData.Controllers;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -1328,24 +1327,6 @@ namespace DynamicData
 
         #region Paged
 
-        /// <summary>
-        /// Returns the page as specified by the page controller
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="controller">The controller.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        [Obsolete("Use IObservable<IPageRequest> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
-        public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
-                                                                                      PageController controller)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (controller == null) throw new ArgumentNullException(nameof(controller));
-
-            return source.Page(controller.Changed);
-        }
 
         /// <summary>
         /// Returns the page as specified by the pageRequests observable
@@ -1434,24 +1415,6 @@ namespace DynamicData
             return new DynamicFilter<TObject, TKey>(source, predicateChanged, reapplyFilter).Run();
         }
 
-        /// <summary>
-        /// A filtered observerable where the filter is changed using the filter controller
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="filterController">The filter.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                   FilterController<TObject> filterController)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-
-            return new DynamicFilter<TObject, TKey>(source, filterController.FilterChanged, filterController.EvaluateChanged.ToUnit()).Run();
-        }
 
         /// <summary>
         /// Filters source on the specified property using the specified predicate.
@@ -1542,31 +1505,6 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
             return new Sort<TObject, TKey>(source, comparer, sortOptimisations, resetThreshold: resetThreshold).Run();
-        }
-
-        /// <summary>
-        /// Sorts a sequence as dictated by the sort controller.
-        /// Sequence returns a changeset as as per the system conventions.
-        /// Additionally returns a fully sort collection of cached data
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="sortController">The controlled sort.</param>
-        /// <param name="sortOptimisations">Sort optimisation flags. Specify one or more sort optimisations</param>
-        /// <param name="resetThreshold">The number of updates before the entire list is resorted (rather than inline sore)</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">scheduler</exception>
-
-        [Obsolete("Use IObservable<IChangeSet<TObject, TKey>> and IObservable<Unit> as it is more in the spirit of Rx")]
-        public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
-                                            [NotNull] SortController<TObject> sortController,
-                                            SortOptimisations sortOptimisations = SortOptimisations.None,
-                                            int resetThreshold = -1)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (sortController == null) throw new ArgumentNullException(nameof(sortController));
-            return new Sort<TObject, TKey>(source, null, sortOptimisations, sortController.ComparerChanged, sortController.SortAgain, resetThreshold).Run();
         }
 
         /// <summary>
@@ -2794,34 +2732,6 @@ namespace DynamicData
             return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, null).Run();
         }
 
-        /// <summary>
-        ///  Groups the source on the value returned by group selector factory. 
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="groupSelectorKey">The group selector key.</param>
-        /// <param name="groupController">The group controller which enables reapplying the group</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// source
-        /// or
-        /// groupSelectorKey
-        /// or
-        /// groupController
-        /// </exception>
-        [Obsolete("Use IObservable<Unit> overload as it is more in the spirit of Rx")]
-        public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Group<TObject, TKey, TGroupKey>(this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                                             Func<TObject, TGroupKey> groupSelectorKey,
-                                                                                                             GroupController groupController)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
-            if (groupController == null) throw new ArgumentNullException(nameof(groupController));
-
-            return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, groupController.Regrouped).Run();
-        }
 
         /// <summary>
         ///  Groups the source on the value returned by group selector factory. 
@@ -2979,24 +2889,6 @@ namespace DynamicData
             return source.Sort(comparer).Top(size);
         }
 
-        /// <summary>
-        /// Virtualises the specified source.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="virtualisingController">The virtualising controller.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        [Obsolete("Use IObservable<IVirtualRequest> overload as it is more in the spirit of Rx")]
-        public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source,
-                                                                                              VirtualisingController virtualisingController)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (virtualisingController == null) throw new ArgumentNullException(nameof(virtualisingController));
-
-            return source.Virtualise(virtualisingController.Changed);
-        }
 
         /// <summary>
         /// Virtualises the underlying data from the specified source.
@@ -3767,22 +3659,6 @@ namespace DynamicData
             return new LockFreeObservableCache<TObject, TKey>(source);
         }
 
-        /// <summary>
-        /// Creates a stream using the specified controlled filter.
-        /// The controlled filter enables dynamic inline changing of the filter.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="filterController">The controlled filter.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">filterController</exception>
-        [Obsolete("Use IObservable<Func<TObject, bool>> and IObservable<Unit> overloads as they are more in the spirit of Rx")]
-        public static IObservable<IChangeSet<TObject, TKey>> Connect<TObject, TKey>(this IObservableCache<TObject, TKey> source, FilterController<TObject> filterController)
-        {
-            if (filterController == null) throw new ArgumentNullException(nameof(filterController));
-            return source.Connect().Filter(filterController);
-        }
 
         #endregion
 
