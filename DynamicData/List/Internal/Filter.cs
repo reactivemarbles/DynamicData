@@ -9,12 +9,15 @@ namespace DynamicData.List.Internal
 {
     internal class Filter<T>
     {
+        private readonly ListFilterPolicy _policy;
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<Func<T, bool>> _predicates;
 
         public Filter([NotNull] IObservable<IChangeSet<T>> source,
-                             [NotNull] IObservable<Func<T, bool>> predicates)
+            [NotNull] IObservable<Func<T, bool>> predicates,
+            ListFilterPolicy policy = ListFilterPolicy.CalculateDiff)
         {
+            _policy = policy;
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _predicates = predicates ?? throw new ArgumentNullException(nameof(predicates));
         }
@@ -167,6 +170,23 @@ namespace DynamicData.List.Internal
 
         private void Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
         {
+            if (_policy == ListFilterPolicy.ClearAndReplace)
+            {
+
+                var newMatches = all.Where(iwm => predicate(iwm.Item)).ToList();
+
+                //mark items as matched?
+                filtered.Clear();
+                filtered.AddRange(newMatches);
+
+                //reset state
+                all.Where(iwm => iwm.IsMatch).ForEach(iwm=>iwm.IsMatch=false);
+                newMatches.ForEach(iwm => iwm.IsMatch = true);
+
+                return;
+            }
+
+
             var mutatedMatches = new List<Action>(all.Count);
 
             var newState = all.Select(item =>
@@ -206,7 +226,7 @@ namespace DynamicData.List.Internal
             public bool IsMatch { get; set; }
             public bool WasMatch { get; set; }
 
-            public ItemWithMatch(T item,int index, bool isMatch, bool wasMatch = false)
+            public ItemWithMatch(T item, int index, bool isMatch, bool wasMatch = false)
             {
                 Item = item;
                 Index = index;
