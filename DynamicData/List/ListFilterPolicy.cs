@@ -7,12 +7,16 @@ namespace DynamicData
     public enum ListFilterPolicy
     {
         /// <summary>
-        /// Clear all items and replace with matches - optimised for large data sets
+        /// Clear all items and replace with matches - optimised for large data sets.
+        /// 
+        /// This option preserves order.
         /// </summary>
         ClearAndReplace,
 
         /// <summary>
-        /// Caclulate diff set - optimisied for generaral filtering.
+        /// Calculate diff set - optimised for general filtering.
+        /// 
+        /// This option does not preserve order.
         /// </summary>
         CalculateDiff
     }
