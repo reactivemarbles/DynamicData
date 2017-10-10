@@ -8,7 +8,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
     /// <summary>
-    /// A list which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.
+    /// A list which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point the changes are cleared.
     /// 
     /// Used for creating custom operators
     /// </summary>

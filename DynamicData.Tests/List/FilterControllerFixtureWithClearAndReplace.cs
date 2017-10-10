@@ -18,7 +18,7 @@ namespace DynamicData.Tests.List
         {
             _source = new SourceList<Person>();
             _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20);
-            _results = _source.Connect().Filter(_filter).AsAggregator();
+            _results = _source.Connect().Filter(_filter,ListFilterPolicy.ClearAndReplace).AsAggregator();
         }
 
         public void Dispose()
@@ -43,6 +43,19 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
+        public void VeryLargeDataSet()
+        {
+            var filter = new BehaviorSubject<Func<int, bool>>(i => false);
+            var source = new SourceList<int>();
+
+            var result = source.Connect().Filter(filter, ListFilterPolicy.ClearAndReplace).AsObservableList();
+            source.AddRange(Enumerable.Range(1,250000));
+            
+            filter.OnNext(i => true);
+            filter.OnNext(i => false);
+        }
+
+        [Fact]
         public void ReevaluateFilter()
         {
             //re-evaluate for inline changes
@@ -57,10 +70,10 @@ namespace DynamicData.Tests.List
             }
             _filter.OnNext(p => p.Age > 20);
 
-            _results.Data.Count.Should().Be(90, "Should be 90 people in the cache");
-            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
-            _results.Messages[1].Removes.Should().Be(0, "Should be 80 removes in the second message");
-            _results.Messages[1].Adds.Should().Be(10, "Should be 10 adds in the second message");
+            _results.Data.Count.Should().Be(90);
+            _results.Messages.Count.Should().Be(2);
+            _results.Messages[1].Removes.Should().Be(80);
+            _results.Messages[1].Adds.Should().Be(90);
 
             foreach (var person in people)
             {

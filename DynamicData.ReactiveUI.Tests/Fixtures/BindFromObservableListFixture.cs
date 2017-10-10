@@ -13,7 +13,7 @@ namespace DynamicData.ReactiveUI.Tests.Fixtures
         private readonly ReactiveList<Person> _collection;
         private readonly SourceList<Person> _source;
         private readonly IDisposable _binder;
-        private static readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private static readonly RandomPersonGenerator Generator = new RandomPersonGenerator();
 
         public BindFromObservableListFixture()
         {
@@ -64,7 +64,7 @@ namespace DynamicData.ReactiveUI.Tests.Fixtures
         [Fact]
         public void AddRange()
         {
-            var people = _generator.Take(100).ToList();
+            var people = Generator.Take(100).ToList();
             _source.AddRange(people);
 
             _collection.Count.Should().Be(100, "Should be 100 items in the collection");
@@ -74,7 +74,7 @@ namespace DynamicData.ReactiveUI.Tests.Fixtures
         [Fact]
         public void Clear()
         {
-            var people = _generator.Take(100).ToList();
+            var people = Generator.Take(100).ToList();
             _source.AddRange(people);
             _source.Clear();
             _collection.Count.Should().Be(0, "Should be 100 items in the collection");

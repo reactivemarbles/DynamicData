@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Reactive.Linq;
-using DynamicData.Cache.Internal;
 
-namespace DynamicData.Cache
+namespace DynamicData.Cache.Internal
 {
     internal sealed class Virtualise<TObject, TKey>
     {

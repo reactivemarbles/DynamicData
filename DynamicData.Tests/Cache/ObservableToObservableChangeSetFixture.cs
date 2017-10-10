@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
@@ -65,12 +66,10 @@ namespace DynamicData.Tests.Cache
             var results = subject.ToObservableChangeSet(p => p.Key, limitSizeTo: 100, scheduler: scheduler).AsAggregator();
 
             var items = Enumerable.Range(1, 200).Select(i => new Person("p" + i.ToString("000"), i)).ToArray();
-            foreach (var person in items)
-            {
-                subject.OnNext(person);
-            }
 
-            scheduler.AdvanceBy(100000);
+            items.ForEach(subject.OnNext);
+
+            scheduler.Start();
 
             results.Messages.Sum(x => x.Adds).Should().Be(200, "Should be 200 adds");
             results.Messages.Sum(x => x.Removes).Should().Be(100, "Should be 100 removes");
@@ -78,7 +77,7 @@ namespace DynamicData.Tests.Cache
 
             var expected = items.Skip(100).ToArray().OrderBy(p => p.Name).ToArray();
             var actual = results.Data.Items.OrderBy(p => p.Name).ToArray();
-            actual.ShouldAllBeEquivalentTo(actual, "Only second hundred should be in the cache");
+            expected.ShouldAllBeEquivalentTo(actual, "Only second hundred should be in the cache");
         }
 
         [Fact]

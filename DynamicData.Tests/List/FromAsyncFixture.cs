@@ -62,15 +62,15 @@ namespace DynamicData.Tests.List
         [Fact]
         public void HandlesErrorsObservableList()
         {
-            Func<Task<IEnumerable<Person>>> loader = () =>
+            Task<IEnumerable<Person>> Loader()
             {
                 Task.Delay(100);
                 throw new Exception("Broken");
-            };
+            }
 
             Exception error = null;
 
-            var data = Observable.FromAsync(loader)
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
                 .ToObservableChangeSet()
                 .AsObservableList();
 
