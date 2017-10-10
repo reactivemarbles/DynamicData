@@ -3,9 +3,13 @@ using System.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
+
 using Xunit;
 using System.Collections.Generic;
 using FluentAssertions;
+using DynamicData.Alias;
+
+
 
 namespace DynamicData.Tests.List
 {

@@ -493,6 +493,32 @@ namespace DynamicData
         /// Automatically refresh downstream operators when properties change.
         /// </summary>
         /// <param name="source">The source observable</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
+        /// <param name="scheduler">The scheduler</param>
+        /// <returns>An observable change set with additional refresh changes</returns>
+        public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            TimeSpan? changeSetBuffer = null,
+            TimeSpan? propertyChangeThrottle = null,
+            IScheduler scheduler = null)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return source.AutoRefresh((t, v) =>
+            {
+                if (propertyChangeThrottle == null)
+                    return t.WhenAnyPropertyChanged();
+
+                return t.WhenAnyPropertyChanged()
+                    .Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
+            }, changeSetBuffer, scheduler);
+        }
+
+        /// <summary>
+        /// Automatically refresh downstream operators when properties change.
+        /// </summary>
+        /// <param name="source">The source observable</param>
         /// <param name="propertyAccessor">Specify a property to observe changes. When it changes a Refresh is invoked</param>
         /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
         /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
