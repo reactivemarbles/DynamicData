@@ -81,7 +81,7 @@ There are direct edit methods, for example
 myCache.Clear();
 myCache.AddOrUpdate(myItems);
 ```
-The `Clear` and `AddOrUpdate` methods above will each produce a distinct change notification.  In order to increase efficiency when making multiple amendments, the cache provides a means of batch editing. This is achieved using the `.BatchUpdate` method which ensures only a single change notification is produced.
+The `Clear` and `AddOrUpdate` methods above will each produce a distinct change notification.  In order to increase efficiency when making multiple amendments, the cache provides a means of batch editing. This is achieved using the `.Edit` method which ensures only a single change notification is produced.
 
 ```cs
 myCache.Edit(innerCache =>
