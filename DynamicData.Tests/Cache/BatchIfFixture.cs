@@ -1,5 +1,8 @@
 using System;
+using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
@@ -28,6 +31,54 @@ namespace DynamicData.Tests.Cache
         {
             _results.Dispose();
             _source.Dispose();
+        }
+
+        /// <summary>
+        /// Test case to prove the issue and fix to DynamicData GitHub issue #98 - BatchIf race condition
+        /// </summary>
+        [Fact]
+        public void ChangesNotLostIfConsumerIsRunningOnDifferentThread()
+        {
+            var producerScheduler = new TestScheduler();
+            var consumerScheduler = new TestScheduler();
+
+            //Note consumer is running on a different scheduler
+            _source.Connect()
+                   .BatchIf(_pausingSubject, producerScheduler)
+                   .ObserveOn(consumerScheduler)
+                   .Bind(out var target)
+                   .AsAggregator();
+
+            _source.AddOrUpdate(new Person("A", 1));
+
+            producerScheduler.AdvanceBy(1);
+            consumerScheduler.AdvanceBy(1);
+
+            target.Count.Should().Be(1, "There should be 1 message");
+
+            _pausingSubject.OnNext(true);
+
+            producerScheduler.AdvanceBy(1);
+            consumerScheduler.AdvanceBy(1);
+
+            _source.AddOrUpdate(new Person("B", 2));
+
+            producerScheduler.AdvanceBy(1);
+            consumerScheduler.AdvanceBy(1);
+
+            target.Count.Should().Be(1, "There should be 1 message");
+
+            _pausingSubject.OnNext(false);
+
+            producerScheduler.AdvanceBy(1);
+
+            //Target doesnt get the messages until its scheduler runs, but the
+            //messages shouldnt be lost
+            target.Count.Should().Be(1, "There should be 1 message");
+
+            consumerScheduler.AdvanceBy(1);
+
+            target.Count.Should().Be(2, "There should be 2 message");
         }
 
         [Fact]
