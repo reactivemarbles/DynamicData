@@ -865,9 +865,9 @@ namespace DynamicData
             if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
             var timer = Observable<Unit>.Empty;
-            if (null != timeOut)
+            if (timeOut.HasValue)
             {
-                timer = Observable.Timer(timeOut.Value).Select(_ => Unit.Default);
+                timer = Observable.Timer(timeOut.Value, scheduler ?? Scheduler.Default).Select(_ => Unit.Default);
             }
             return BatchIf(source, pauseIfTrueSelector, intialPauseState, timer, scheduler);
         }

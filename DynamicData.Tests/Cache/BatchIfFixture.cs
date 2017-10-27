@@ -18,11 +18,10 @@ namespace DynamicData.Tests.Cache
         private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
         private readonly TestScheduler _scheduler;
-        private readonly ISubject<bool> _pausingSubject;
+        private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
 
         public  BatchIfFixture()
         {
-            _pausingSubject = new Subject<bool>();
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
@@ -142,66 +141,6 @@ namespace DynamicData.Tests.Cache
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
             _results.Messages.Count.Should().Be(3, "There should be 3 messages");
-        }
-
-        [Fact]
-        public void PublishesOnIntervalEvent()
-        {
-            var intervalTimer = Observable.Interval(TimeSpan.FromMilliseconds(5), _scheduler).Select(_ => Unit.Default);
-            var results = _source.Connect().BatchIf(_pausingSubject, true, intervalTimer, _scheduler).AsAggregator();
-
-            //Buffering
-            _source.AddOrUpdate(new Person("A", 1));
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks);
-            results.Messages.Count.Should().Be(0, "There should be 0 messages");
-
-            //Interval Fires and drains buffer
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(5).Ticks);
-            results.Messages.Count.Should().Be(1, "There should be 1 messages");
-
-            //Buffering again
-            _source.AddOrUpdate(new Person("B", 2));
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks);
-            results.Messages.Count.Should().Be(1, "There should be 1 messages");
-
-            //Interval Fires and drains buffer
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(5).Ticks);
-            results.Messages.Count.Should().Be(2, "There should be 2 messages");
-
-            //Buffering again
-            _source.AddOrUpdate(new Person("C", 3));
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks);
-            results.Messages.Count.Should().Be(2, "There should be 2 messages");
-
-            //Interval Fires and drains buffer
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(5).Ticks);
-            results.Messages.Count.Should().Be(3, "There should be 3 messages");
-        }
-
-        [Fact]
-        public void PublishesOnTimerCompletion()
-        {
-            var intervalTimer = Observable.Timer(TimeSpan.FromMilliseconds(5), _scheduler).Select(_ => Unit.Default);
-            var results = _source.Connect().BatchIf(_pausingSubject, true, intervalTimer, _scheduler).AsAggregator();
-
-            //Buffering
-            _source.AddOrUpdate(new Person("A", 1));
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks);
-            results.Messages.Count.Should().Be(0, "There should be 0 messages");
-
-            //Timer should event, buffered items delivered
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(5).Ticks);
-            results.Messages.Count.Should().Be(1, "There should be 1 messages");
-
-            //Unbuffered from here
-            _source.AddOrUpdate(new Person("B", 2));
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks);
-            results.Messages.Count.Should().Be(2, "There should be 2 messages");
-
-            //Unbuffered from here
-            _source.AddOrUpdate(new Person("C", 3));
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(1).Ticks);
-            results.Messages.Count.Should().Be(3, "There should be 3 messages");
         }
     }
 }

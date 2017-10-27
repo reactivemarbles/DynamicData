@@ -61,7 +61,7 @@ namespace DynamicData.Cache.Internal
                     var observerSubscription = buffered.Buffer(bufferClosing)
                                                        .FlattenBufferResult()
                                                        .Merge(unbuffered)
-                                                       .Subscribe(observer);
+                                                       .SubscribeSafe(observer);
 
                     var sourceSubscription = _source.Synchronize(locker)
                                                     .Subscribe(update =>
