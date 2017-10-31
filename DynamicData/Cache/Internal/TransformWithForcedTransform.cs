@@ -6,32 +6,54 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal sealed class Transform<TDestination, TSource, TKey>
+    internal sealed class TransformWithForcedTransform<TDestination, TSource, TKey>
     {
         private readonly IObservable<IChangeSet<TSource, TKey>> _source;
         private readonly Func<TSource, Optional<TSource>, TKey, TDestination> _transformFactory;
+        private readonly IObservable<Func<TSource, TKey, bool>> _forceTransform;
         private readonly Action<Error<TSource, TKey>> _exceptionCallback;
 
-        public Transform(IObservable<IChangeSet<TSource, TKey>> source,
+        public TransformWithForcedTransform(IObservable<IChangeSet<TSource, TKey>> source, 
             Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
+            IObservable<Func<TSource, TKey, bool>> forceTransform,
             Action<Error<TSource, TKey>> exceptionCallback = null)
         {
             _source = source;
             _exceptionCallback = exceptionCallback;
             _transformFactory = transformFactory;
+            _forceTransform = forceTransform;
         }
 
         public IObservable<IChangeSet<TDestination, TKey>> Run()
         {
             return Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
             {
-                var cache = new ChangeAwareCache<TDestination, TKey>();
+                var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
                 var transformer = _source.Select(changes => DoTransform(cache, changes));
+
+                var locker = new object();
+                var forced = _forceTransform
+                    .Synchronize(locker)
+                    .Select(shouldTransform => DoTransform(cache, shouldTransform));
+
+                transformer = transformer.Synchronize(locker).Merge(forced);
+
                 return transformer.NotEmpty().SubscribeSafe(observer);
             });
         }
 
-        private IChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
+        private  IChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, Func<TSource, TKey, bool> shouldTransform)
+        {
+            var toTransform = cache.KeyValues
+                .Where(kvp => shouldTransform(kvp.Value.Source, kvp.Key))
+                .Select(kvp => new Change<TSource, TKey>(ChangeReason.Update, kvp.Key, kvp.Value.Source, kvp.Value.Source))
+                .ToArray();
+
+            var transformed = TransformChanges(toTransform);
+            return ProcessUpdates(cache, transformed.ToArray());
+        }
+
+        private  IChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey> cache, IChangeSet<TSource, TKey> changes)
         {
             var transformed = TransformChanges(changes);
             return ProcessUpdates(cache, transformed.ToArray());
@@ -39,17 +61,17 @@ namespace DynamicData.Cache.Internal
 
         private TransformResult[] TransformChanges(IEnumerable<Change<TSource, TKey>> changes)
         {
-            return changes.Select(Select).AsArray();
+            return changes.Select(Select).AsArray();  
         }
-
-        private TransformResult Select(Change<TSource, TKey> change)
+ 
+        private  TransformResult Select(Change<TSource, TKey> change)
         {
             try
             {
                 if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
                 {
                     var destination = _transformFactory(change.Current, change.Previous, change.Key);
-                    return new TransformResult(change, destination);
+                    return new TransformResult(change, new TransformedItemContainer(change.Current, destination));
                 }
                 return new TransformResult(change);
             }
@@ -62,7 +84,7 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-        private IChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TDestination, TKey> cache, TransformResult[] transformedItems)
+        private  IChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TransformedItemContainer, TKey> cache, TransformResult[] transformedItems)
         {
             //check for errors and callback if a handler has been specified
             var errors = transformedItems.Where(t => !t.Success).ToArray();
@@ -89,7 +111,15 @@ namespace DynamicData.Cache.Internal
                 }
             }
 
-            return cache.CaptureChanges();
+            var changes = cache.CaptureChanges();
+            var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
+                change.Key,
+                change.Current.Destination,
+                change.Previous.Convert(x => x.Destination),
+                change.CurrentIndex,
+                change.PreviousIndex));
+
+            return new ChangeSet<TDestination, TKey>(transformed);
         }
 
         private struct TransformResult
@@ -97,11 +127,11 @@ namespace DynamicData.Cache.Internal
             public Change<TSource, TKey> Change { get; }
             public Exception Error { get; }
             public bool Success { get; }
-            public Optional<TDestination> Container { get; }
-            public TKey Key { get; }
+            public Optional<TransformedItemContainer> Container { get; }
+            public TKey Key { get;  }
 
-            public TransformResult(Change<TSource, TKey> change, TDestination container)
-                : this()
+            public TransformResult(Change<TSource, TKey> change, TransformedItemContainer  container)
+                :this()
             {
                 Change = change;
                 Container = container;
@@ -114,7 +144,7 @@ namespace DynamicData.Cache.Internal
                 : this()
             {
                 Change = change;
-                Container = Optional<TDestination>.None;
+                Container = Optional<TransformedItemContainer>.None;
                 Success = true;
                 Key = change.Key;
             }
@@ -126,6 +156,18 @@ namespace DynamicData.Cache.Internal
                 Error = error;
                 Success = false;
                 Key = change.Key;
+            }
+        }
+
+        private sealed class TransformedItemContainer
+        {
+            public TSource Source { get; }
+            public TDestination Destination { get; }
+
+            public TransformedItemContainer(TSource source, TDestination destination)
+            {
+                Source = source;
+                Destination = destination;
             }
         }
     }

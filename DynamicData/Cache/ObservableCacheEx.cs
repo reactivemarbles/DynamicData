@@ -2158,7 +2158,10 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
-            return new Transform<TDestination, TSource, TKey>(source, transformFactory, null, forceTransform).Run();
+            if (forceTransform!=null)
+                return new TransformWithForcedTransform<TDestination, TSource, TKey>(source, transformFactory, forceTransform).Run();
+
+            return new Transform<TDestination, TSource, TKey>(source, transformFactory).Run();
         }
 
         /// <summary>
@@ -2479,7 +2482,11 @@ namespace DynamicData
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
             if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
 
-            return new Transform<TDestination, TSource, TKey>(source, transformFactory, errorHandler, forceTransform).Run();
+
+            if (forceTransform != null)
+                return new TransformWithForcedTransform<TDestination, TSource, TKey>(source, transformFactory, forceTransform, errorHandler).Run();
+
+            return new Transform<TDestination, TSource, TKey>(source, transformFactory, errorHandler).Run();
         }
 
         /// <summary>
