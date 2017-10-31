@@ -40,8 +40,8 @@ namespace DynamicData
         /// <param name="items">The items.</param>
         public ChangeSet([NotNull] IEnumerable<Change<TObject, TKey>> items)
         {
-            Items = items?.AsList() ?? throw new ArgumentNullException(nameof(items));
-            Items.ForEach(change => Add(change, true));
+            if(items == null) throw new ArgumentNullException(nameof(items));
+            items.ForEach(change => Add(change, false));
         }
 
         /// <summary>

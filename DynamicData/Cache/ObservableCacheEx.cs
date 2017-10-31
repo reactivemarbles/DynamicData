@@ -845,7 +845,7 @@ namespace DynamicData
                                                                                     bool intialPauseState = false,
                                                                                     IScheduler scheduler = null)
         {
-            return BatchIf(source, pauseIfTrueSelector, intialPauseState, null, scheduler);
+            return BatchIf(source, pauseIfTrueSelector, intialPauseState, Observable<Unit>.Empty, scheduler);
         }
 
         /// <summary>
@@ -856,7 +856,7 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
-        /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long</param>
+        /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long. On completion buffering will cease</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
@@ -877,7 +877,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
         /// <param name="intialPauseState">if set to <c>true</c> [intial pause state].</param>
-        /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long</param>
+        /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long. On completion buffering will cease</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
@@ -890,7 +890,34 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
 
-            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, intialPauseState, timeOut, scheduler).Run();
+            var timer = Observable<Unit>.Empty;
+            if (timeOut.HasValue)
+            {
+                timer = Observable.Timer(timeOut.Value, scheduler ?? Scheduler.Default).Select(_ => Unit.Default);
+            }
+            return BatchIf(source, pauseIfTrueSelector, intialPauseState, timer, scheduler);
+        }
+
+        /// <summary>
+        /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
+        /// When a resume signal has been received the batched updates will  be fired.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified</param>
+        /// <param name="intialPauseState">if set to <c>true</c> [intial pause state].</param>
+        /// <param name="timer">Specify a time observable. The buffer will be emptied each time the timer produces a value and when it completes. On completion buffering will cease</param>
+        /// <param name="scheduler">The scheduler.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+                                                                                    IObservable<bool> pauseIfTrueSelector,
+                                                                                    bool intialPauseState = false,
+                                                                                    IObservable<Unit> timer = null,
+                                                                                    IScheduler scheduler = null)
+        {
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, timer, intialPauseState, scheduler).Run();
         }
 
         /// <summary>

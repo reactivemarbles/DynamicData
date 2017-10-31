@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -7,97 +7,79 @@ using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class BatchIf<TObject, TKey>
+    internal sealed class BatchIf<TObject, TKey>
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly IObservable<bool> _pauseIfTrueSelector;
+        private readonly IObservable<Unit> _timer;
         private readonly bool _intialPauseState;
-        private readonly TimeSpan? _timeOut;
         private readonly IScheduler _scheduler;
 
         public BatchIf(IObservable<IChangeSet<TObject, TKey>> source,
-            IObservable<bool> pauseIfTrueSelector,
-            bool intialPauseState = false,
-            TimeSpan? timeOut = null,
-            IScheduler scheduler = null)
+                       IObservable<bool> pauseIfTrueSelector,
+                       IObservable<Unit> timer,
+                       bool intialPauseState = false,
+                       IScheduler scheduler = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
+            _timer = timer ?? throw new ArgumentNullException(nameof(timer));
             _intialPauseState = intialPauseState;
-            _timeOut = timeOut;
-            _scheduler = scheduler;
+            _scheduler = scheduler ?? Scheduler.Default;
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
             return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
-                    {
-                        bool paused = _intialPauseState;
-                        var locker = new object();
-                        var buffer = new List<Change<TObject, TKey>>();
-                        var timeoutSubscriber = new SerialDisposable();
-                        var timeoutSubject = new Subject<bool>();
+            (
+                observer =>
+                {
+                    var buffer = _intialPauseState;
+                    var locker = new object();
+                    var pulse = new Subject<Unit>();
+                    var buffered = new Subject<IChangeSet<TObject, TKey>>();
+                    var unbuffered = new Subject<IChangeSet<TObject, TKey>>();
+                    var bufferClosing = _timer.Finally(() => buffer = false /*No more buffering*/)
+                                              .Merge(pulse);
 
-                        var schedulertouse = _scheduler ?? Scheduler.Default;
+                    var pauseSignal = Observable.Return(_intialPauseState)
+                                                .Concat(_pauseIfTrueSelector)
+                                                .ObserveOn(_scheduler)
+                                                .Synchronize(locker)
+                                                .Subscribe(paused =>
+                                                           {
+                                                               buffer = paused;
 
-                        var bufferSelector = Observable.Return(_intialPauseState)
-                            .Concat(_pauseIfTrueSelector.Merge(timeoutSubject))
-                            .ObserveOn(schedulertouse)
-                            .Synchronize(locker)
-                            .Publish();
+                                                               if (!buffer)
+                                                               {
+                                                                   //Make sure we notify the buffer to empty
+                                                                   //anything it has buffered
+                                                                   pulse.OnNext(Unit.Default);
+                                                               }
+                                                           });
 
-                        var pause = bufferSelector.Where(shouldPause => shouldPause)
-                            .Subscribe(_ =>
-                            {
-                                paused = true;
-                                //add pause timeout if required
-                                if (_timeOut != null && _timeOut.Value != TimeSpan.Zero)
-                                    timeoutSubscriber.Disposable = Observable.Timer(_timeOut.Value, schedulertouse)
-                                        .Select(l => false)
-                                        .SubscribeSafe(timeoutSubject);
-                            });
+                    var observerSubscription = buffered.Buffer(bufferClosing)
+                                                       .FlattenBufferResult()
+                                                       .Merge(unbuffered)
+                                                       .SubscribeSafe(observer);
 
-                        var resume = bufferSelector.Where(shouldPause => !shouldPause)
-                            .Subscribe(_ =>
-                            {
-                                paused = false;
-                                //publish changes and clear buffer
-                                if (buffer.Count == 0) return;
-                                observer.OnNext(new ChangeSet<TObject, TKey>(buffer));
-                                buffer.Clear();
+                    var sourceSubscription = _source.Synchronize(locker)
+                                                    .Subscribe(update =>
+                                                               {
+                                                                   //Buffer or unbuffered observable?
+                                                                   var target = buffer ? buffered : unbuffered;
 
-                                //kill off timeout if required
-                                timeoutSubscriber.Disposable = Disposable.Empty;
-                            });
+                                                                   target.OnNext(update);
+                                                               });
 
-                        var updateSubscriber = _source.Synchronize(locker)
-                            .Subscribe(updates =>
-                            {
-                                if (paused)
-                                {
-                                    buffer.AddRange(updates);
-                                }
-                                else
-                                {
-                                    observer.OnNext(updates);
-                                }
-                            });
-
-                        var connected = bufferSelector.Connect();
-
-                        return Disposable.Create(() =>
-                        {
-                            connected.Dispose();
-                            pause.Dispose();
-                            resume.Dispose();
-                            updateSubscriber.Dispose();
-                            timeoutSubject.OnCompleted();
-                            timeoutSubscriber.Dispose();
-                        });
-                    }
-                );
+                    return new CompositeDisposable(buffered,
+                                                   unbuffered,
+                                                   pulse,
+                                                   pauseSignal,
+                                                   observerSubscription,
+                                                   sourceSubscription);
+                }
+            );
         }
     }
 }
