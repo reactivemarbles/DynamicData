@@ -34,12 +34,12 @@ namespace DynamicData.Cache.Internal
         private IChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
         {
             var transformed = TransformChanges(changes);
-            return ProcessUpdates(cache, transformed.ToArray());
+            return ProcessUpdates(cache, transformed);
         }
 
-        private TransformResult[] TransformChanges(IEnumerable<Change<TSource, TKey>> changes)
+        private IEnumerable<TransformResult> TransformChanges(IEnumerable<Change<TSource, TKey>> changes)
         {
-            return changes.Select(Select).AsArray();
+            return changes.Select(Select);
         }
 
         private TransformResult Select(Change<TSource, TKey> change)
@@ -62,30 +62,31 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-        private IChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TDestination, TKey> cache, TransformResult[] transformedItems)
+        private IChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TDestination, TKey> cache, IEnumerable<TransformResult> transformedItems)
         {
-            //check for errors and callback if a handler has been specified
-            var errors = transformedItems.Where(t => !t.Success).ToArray();
-            if (errors.Any())
-                errors.ForEach(t => _exceptionCallback(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
-
-            foreach (var result in transformedItems.Where(t => t.Success))
+            foreach (var result in transformedItems)
             {
-                TKey key = result.Key;
-                switch (result.Change.Reason)
+                if (result.Success)
                 {
-                    case ChangeReason.Add:
-                    case ChangeReason.Update:
-                        cache.AddOrUpdate(result.Container.Value, key);
-                        break;
+                    switch (result.Change.Reason)
+                    {
+                        case ChangeReason.Add:
+                        case ChangeReason.Update:
+                            cache.AddOrUpdate(result.Container.Value, result.Key);
+                            break;
 
-                    case ChangeReason.Remove:
-                        cache.Remove(key);
-                        break;
+                        case ChangeReason.Remove:
+                            cache.Remove(result.Key);
+                            break;
 
-                    case ChangeReason.Refresh:
-                        cache.Refresh(key);
-                        break;
+                        case ChangeReason.Refresh:
+                            cache.Refresh(result.Key);
+                            break;
+                    }
+                }
+                else
+                {
+                    _exceptionCallback(new Error<TSource, TKey>(result.Error, result.Change.Current, result.Change.Key));
                 }
             }
 
