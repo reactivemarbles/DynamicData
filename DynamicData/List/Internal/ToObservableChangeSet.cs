@@ -40,6 +40,26 @@ namespace DynamicData.List.Internal
         {
             return Observable.Create<IChangeSet<T>>(observer =>
             {
+                if (_expireAfter == null && _limitSizeTo < 1)
+                {
+                    return _source.Scan(new ChangeAwareList<T>(), (state, latest) =>
+                        {
+                            var items = latest.AsArray();
+                            if (items.Length == 1)
+                            {
+                                state.Add(items);
+                            }
+                            else
+                            {
+                                state.AddRange(items);
+                            }
+                            return state;
+                        })
+                        .Select(state => state.CaptureChanges())
+                        .SubscribeSafe(observer);
+                }
+
+
                 long orderItemWasAdded = -1;
                 var locker = new object();
 

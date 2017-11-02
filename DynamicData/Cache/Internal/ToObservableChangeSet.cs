@@ -48,17 +48,27 @@ namespace DynamicData.Cache.Internal
                 long orderItemWasAdded = -1;
                 var locker = new object();
 
-                var cache = new ChangeAwareCache<ExpirableItem<TObject,TKey>, TKey>();
+                if (_expireAfter == null && _limitSizeTo < 1)
+                {
+                    return _source.Scan(new ChangeAwareCache<TObject, TKey>(), (state, latest) =>
+                        {
+                            latest.ForEach(t => state.AddOrUpdate(t, _keySelector(t)));
+                            return state;
+                        })
+                        .Select(state => state.CaptureChanges())
+                        .SubscribeSafe(observer);
+                }
 
+                var cache = new ChangeAwareCache<ExpirableItem<TObject, TKey>, TKey>();
                 var sizeLimited = _source.Synchronize(locker)
                     .Scan(cache, (state, latest) =>
                     {
-                       latest.Select(t =>
+                        latest.Select(t =>
                         {
                             var key = _keySelector(t);
                             return CreateExpirableItem(t, key, ref orderItemWasAdded);
                         }).ForEach(ei => cache.AddOrUpdate(ei, ei.Key));
-                        
+
                         if (_limitSizeTo > 0 && state.Count > _limitSizeTo)
                         {
                             var toRemove = state.Count - _limitSizeTo;
@@ -74,7 +84,7 @@ namespace DynamicData.Cache.Internal
                     .Select(state => state.CaptureChanges())
                     .Publish();
 
-                var timeLimited = (_expireAfter == null ? Observable.Never<IChangeSet<ExpirableItem<TObject,TKey>, TKey>>() : sizeLimited)
+                var timeLimited = (_expireAfter == null ? Observable.Never<IChangeSet<ExpirableItem<TObject, TKey>, TKey>>() : sizeLimited)
                     .Filter(ei => ei.ExpireAt != DateTime.MaxValue)
                     .GroupWithImmutableState(ei => ei.ExpireAt)
                     .MergeMany(grouping =>
@@ -97,6 +107,7 @@ namespace DynamicData.Cache.Internal
 
                 return new CompositeDisposable(publisher, sizeLimited.Connect());
             });
+
         }
 
         private ExpirableItem<TObject,TKey> CreateExpirableItem(TObject item,TKey key, ref long orderItemWasAdded)

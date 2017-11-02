@@ -14,9 +14,6 @@ namespace DynamicData.ReactiveUI.Tests.Fixtures
         private readonly ReactiveList<int> _collection;
         private readonly ChangeSetAggregator<int> _results;
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-
-
         public ToObservableChangeSetFixture()
         {
             _collection = new ReactiveList<int>();

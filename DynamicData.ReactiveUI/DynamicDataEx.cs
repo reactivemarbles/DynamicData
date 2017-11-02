@@ -2,6 +2,7 @@
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Cache.Internal;
 using ReactiveUI;
 
 namespace DynamicData.ReactiveUI
@@ -11,6 +12,32 @@ namespace DynamicData.ReactiveUI
     /// </summary>
     public static class DynamicDataEx
     {
+
+        /// <summary>
+        /// Flattens a nested reactive list
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="keySelector">The key selector which must be unique across all</param>
+        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
+            this IObservable<IChangeSet<TSource, TSourceKey>> source,
+            Func<TSource, ReactiveList<TDestination>> manyselector,
+            Func<TDestination, TDestinationKey> keySelector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (manyselector == null) throw new ArgumentNullException(nameof(manyselector));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source,
+                manyselector,
+                keySelector,
+                t => manyselector(t).ToObservableChangeSet(keySelector)).Run();
+        }
+
         /// <summary>
         /// Binds the observable changeset to the target ReactiveList
         /// </summary>
