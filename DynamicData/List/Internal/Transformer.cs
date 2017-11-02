@@ -85,8 +85,6 @@ namespace DynamicData.List.Internal
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
 
-            transformed.EnsureCapacityFor(changes);
-
             foreach (var item in changes)
             {
                 switch (item.Reason)
@@ -175,7 +173,7 @@ namespace DynamicData.List.Internal
                             }
                             else
                             {
-                                var toremove = transformed.Where(t => ReferenceEquals(t.Source, t)).ToArray();
+                                var toremove = transformed.Where(t => ReferenceEquals(t.Source, t));
                                 transformed.RemoveMany(toremove);
                             }
 

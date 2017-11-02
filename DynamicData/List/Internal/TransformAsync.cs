@@ -55,8 +55,6 @@ namespace DynamicData.List.Internal
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
 
-            transformed.EnsureCapacityFor(changes);
-
             foreach (var item in changes)
             {
                 switch (item.Reason)

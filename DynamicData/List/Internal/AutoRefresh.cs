@@ -59,7 +59,7 @@ namespace DynamicData.List.Internal
                     .Select(items =>
                     {
                         //catch all the indices of items which have been refreshed
-                        return allItems.IndexOfMany(items, (t, idx) => new Change<TObject>(ListChangeReason.Refresh, t, idx)).ToArray();
+                        return allItems.IndexOfMany(items, (t, idx) => new Change<TObject>(ListChangeReason.Refresh, t, idx));
                     }).Select(changes => new ChangeSet<TObject>(changes));
 
 

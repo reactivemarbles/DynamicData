@@ -91,7 +91,6 @@ namespace DynamicData.Cache.Internal
                 //2. maintain which group each item belongs to (_itemCache) 
                 grouped.ForEach(group =>
                 {
-                    var enumerable = group.ToArray();
                     var groupItem = GetCache(group.Key);
                     var groupCache = groupItem.Item1;
                     if (groupItem.Item2)
@@ -99,7 +98,7 @@ namespace DynamicData.Cache.Internal
 
                     groupCache.Update(groupUpdater =>
                     {
-                        foreach (var current in enumerable)
+                        foreach (var current in group)
                         {
                             switch (current.Reason)
                             {

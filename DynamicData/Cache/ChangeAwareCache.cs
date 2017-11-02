@@ -137,7 +137,7 @@ namespace DynamicData
         /// </summary>
         public void Clear()
         {
-            var toremove = _data.Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value)).ToArray();
+            var toremove = _data.Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
             _changes.AddRange(toremove);
             _data.Clear();
         }

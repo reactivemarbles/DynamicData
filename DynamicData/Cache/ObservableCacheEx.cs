@@ -3879,23 +3879,23 @@ namespace DynamicData
             {
                 scheduler = scheduler ?? Scheduler.Default;
                 return source.Connect()
-                             .ForExpiry(timeSelector, pollingInterval, scheduler)
-                             .Finally(observer.OnCompleted)
-                             .Subscribe(toRemove =>
-                             {
-                                 try
-                                 {
-                                     //remove from cache and notify which items have been auto removed
-                                     var keyValuePairs = toRemove as KeyValuePair<TKey, TObject>[] ?? toRemove.ToArray();
-                                     if (keyValuePairs.Length == 0) return;
-                                     source.Remove(keyValuePairs.Select(kv => kv.Key));
-                                     observer.OnNext(keyValuePairs);
-                                 }
-                                 catch (Exception ex)
-                                 {
-                                     observer.OnError(ex);
-                                 }
-                             });
+                    .ForExpiry(timeSelector, pollingInterval, scheduler)
+                    .Finally(observer.OnCompleted)
+                    .Subscribe(toRemove =>
+                    {
+                        try
+                        {
+                            //remove from cache and notify which items have been auto removed
+                            var keyValuePairs = toRemove as KeyValuePair<TKey, TObject>[] ?? toRemove.AsArray();
+                            if (keyValuePairs.Length == 0) return;
+                            source.Remove(keyValuePairs.Select(kv => kv.Key));
+                            observer.OnNext(keyValuePairs);
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                        }
+                    });
             });
         }
 

@@ -32,58 +32,58 @@ namespace DynamicData.Cache.Internal
                 //Transform to a merge container. 
                 //This populates a RefTracker when the original source is subscribed to
                 var sourceLists = _source.Connect()
-                                         .Synchronize(locker)
-                                         .Transform(changeset => new MergeContainer(changeset))
-                                         .AsObservableList();
+                    .Synchronize(locker)
+                    .Transform(changeset => new MergeContainer(changeset))
+                    .AsObservableList();
 
                 //merge the items back together
                 var allChanges = sourceLists.Connect()
-                                            .MergeMany(mc => mc.Source)
-                                            .Synchronize(locker)
-                                            .Subscribe(changes =>
-                                            {
-                                                //Populate result list and chck for changes
-                                                UpdateResultList(resultCache, sourceLists.Items.AsArray(), changes);
+                    .MergeMany(mc => mc.Source)
+                    .Synchronize(locker)
+                    .Subscribe(changes =>
+                    {
+                        //Populate result list and chck for changes
+                        UpdateResultList(resultCache, sourceLists.Items.AsArray(), changes);
 
-                                                var notifications = resultCache.CaptureChanges();
-                                                if (notifications.Count != 0)
-                                                    observer.OnNext(notifications);
-                                            });
+                        var notifications = resultCache.CaptureChanges();
+                        if (notifications.Count != 0)
+                            observer.OnNext(notifications);
+                    });
 
                 //when an list is removed, need to 
                 var removedItem = sourceLists.Connect()
-                                             .OnItemRemoved(mc =>
-                                             {
-                                                 //Remove items if required
-                                                 ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Cache.KeyValues);
+                    .OnItemRemoved(mc =>
+                    {
+                        //Remove items if required
+                        ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Cache.KeyValues);
 
-                                                 if (_type == CombineOperator.And || _type == CombineOperator.Except)
-                                                 {
-                                                     var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Cache.KeyValues).ToArray();
-                                                     ProcessChanges(resultCache, sourceLists.Items.AsArray(), itemsToCheck);
-                                                 }
+                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                        {
+                            var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Cache.KeyValues);
+                            ProcessChanges(resultCache, sourceLists.Items.AsArray(), itemsToCheck);
+                        }
 
-                                                 var notifications = resultCache.CaptureChanges();
-                                                 if (notifications.Count != 0)
-                                                     observer.OnNext(notifications);
-                                             })
-                                             .Subscribe();
+                        var notifications = resultCache.CaptureChanges();
+                        if (notifications.Count != 0)
+                            observer.OnNext(notifications);
+                    })
+                    .Subscribe();
 
                 //when an list is added or removed, need to 
                 var sourceChanged = sourceLists.Connect()
-                                               .WhereReasonsAre(ListChangeReason.Add, ListChangeReason.AddRange)
-                                               .ForEachItemChange(mc =>
-                                               {
-                                                   ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Current.Cache.KeyValues);
+                    .WhereReasonsAre(ListChangeReason.Add, ListChangeReason.AddRange)
+                    .ForEachItemChange(mc =>
+                    {
+                        ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Current.Cache.KeyValues);
 
-                                                   if (_type == CombineOperator.And || _type == CombineOperator.Except)
-                                                       ProcessChanges(resultCache, sourceLists.Items.AsArray(), resultCache.KeyValues.ToArray());
+                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                            ProcessChanges(resultCache, sourceLists.Items.AsArray(), resultCache.KeyValues.ToArray());
 
-                                                   var notifications = resultCache.CaptureChanges();
-                                                   if (notifications.Count != 0)
-                                                       observer.OnNext(notifications);
-                                               })
-                                               .Subscribe();
+                        var notifications = resultCache.CaptureChanges();
+                        if (notifications.Count != 0)
+                            observer.OnNext(notifications);
+                    })
+                    .Subscribe();
 
                 return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged);
             });
@@ -131,23 +131,23 @@ namespace DynamicData.Cache.Internal
             switch (_type)
             {
                 case CombineOperator.And:
-                    {
-                        return sources.All(s => s.Cache.Lookup(key).HasValue);
-                    }
+                {
+                    return sources.All(s => s.Cache.Lookup(key).HasValue);
+                }
                 case CombineOperator.Or:
-                    {
-                        return sources.Any(s => s.Cache.Lookup(key).HasValue);
-                    }
+                {
+                    return sources.Any(s => s.Cache.Lookup(key).HasValue);
+                }
                 case CombineOperator.Xor:
-                    {
-                        return sources.Count(s => s.Cache.Lookup(key).HasValue) == 1;
-                    }
+                {
+                    return sources.Count(s => s.Cache.Lookup(key).HasValue) == 1;
+                }
                 case CombineOperator.Except:
-                    {
-                        bool first = sources.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
-                        bool others = sources.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
-                        return first && !others;
-                    }
+                {
+                    bool first = sources.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
+                    bool others = sources.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
+                    return first && !others;
+                }
                 default:
                     throw new ArgumentOutOfRangeException();
             }
