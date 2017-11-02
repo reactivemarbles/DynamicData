@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Cache.Internal;
+using DynamicData.List.Internal;
 using ReactiveUI;
 
 namespace DynamicData.ReactiveUI
@@ -15,6 +17,21 @@ namespace DynamicData.ReactiveUI
 
         /// <summary>
         /// Flattens a nested reactive list
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
+        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source,
+            Func<TSource, ReactiveList<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+        {
+            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer, t => manyselector(t).ToObservableChangeSet()).Run();
+        }
+
+        /// <summary>
+        /// Flattens a nested reactive list, using the key selector to ensure only unique items are added
         /// </summary>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
