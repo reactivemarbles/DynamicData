@@ -14,8 +14,7 @@ namespace DynamicData.Cache.Internal
 
         public RefCount([NotNull] IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            _source = source;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()

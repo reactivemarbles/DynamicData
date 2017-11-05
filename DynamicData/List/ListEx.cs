@@ -571,34 +571,6 @@ namespace DynamicData
 
         }
 
-        /// <summary>
-        /// Ensures the collection has enough capacity where capacity
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The enumerable.</param>
-        /// <param name="changes">The changes.</param>
-        /// <exception cref="ArgumentNullException">enumerable</exception>
-        public static void EnsureCapacityFor<T>(this IEnumerable<T> source, IChangeSet changes)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
-            if (source is List<T>)
-            {
-                var list = (List<T>)source;
-                list.Capacity = list.Count + changes.Adds;
-            }
-            else if (source is ISupportsCapcity)
-            {
-                var list = (ISupportsCapcity)source;
-                list.Capacity = list.Count + changes.Adds;
-            }
-            else if (source is IChangeSet)
-            {
-                var original = (IChangeSet)source;
-                original.Capacity = original.Count + changes.Count;
-            }
-        }
-
         #endregion
     }
 }

@@ -33,16 +33,11 @@ namespace DynamicData.Cache.Internal
 
         private IChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
         {
-            var transformed = TransformChanges(changes);
+            var transformed = changes.Select(ToDestination);
             return ProcessUpdates(cache, transformed);
         }
 
-        private IEnumerable<TransformResult> TransformChanges(IEnumerable<Change<TSource, TKey>> changes)
-        {
-            return changes.Select(Select);
-        }
-
-        private TransformResult Select(Change<TSource, TKey> change)
+        private TransformResult ToDestination(Change<TSource, TKey> change)
         {
             try
             {
@@ -72,7 +67,7 @@ namespace DynamicData.Cache.Internal
                     {
                         case ChangeReason.Add:
                         case ChangeReason.Update:
-                            cache.AddOrUpdate(result.Container.Value, result.Key);
+                            cache.AddOrUpdate(result.Destination.Value, result.Key);
                             break;
 
                         case ChangeReason.Remove:
@@ -98,14 +93,14 @@ namespace DynamicData.Cache.Internal
             public Change<TSource, TKey> Change { get; }
             public Exception Error { get; }
             public bool Success { get; }
-            public Optional<TDestination> Container { get; }
+            public Optional<TDestination> Destination { get; }
             public TKey Key { get; }
 
-            public TransformResult(Change<TSource, TKey> change, TDestination container)
+            public TransformResult(Change<TSource, TKey> change, TDestination destination)
                 : this()
             {
                 Change = change;
-                Container = container;
+                Destination = destination;
                 Success = true;
                 Key = change.Key;
             }
@@ -115,7 +110,7 @@ namespace DynamicData.Cache.Internal
                 : this()
             {
                 Change = change;
-                Container = Optional<TDestination>.None;
+                Destination = Optional<TDestination>.None;
                 Success = true;
                 Key = change.Key;
             }

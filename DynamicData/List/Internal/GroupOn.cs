@@ -31,9 +31,9 @@ namespace DynamicData.List.Internal
 
                 //capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source
-                    .Transform<TObject, ItemWithGroupKey>((t, previous, idx) =>
+                    .Transform<TObject, ItemWithGroupKey>((t, previous) =>
                     {
-                        return new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p=>p.Group), idx);
+                        return new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p=>p.Group));
                     },true);
                 
                 var locker = new object();
@@ -221,14 +221,15 @@ namespace DynamicData.List.Internal
             return new GroupWithAddIndicator(newcache, true);
         }
 
-        private class GroupWithAddIndicator
+        private struct GroupWithAddIndicator
         {
             public Group<TObject, TGroupKey> Group { get; }
             public bool WasCreated { get; }
 
-            public GroupWithAddIndicator(Group<TObject, TGroupKey> @group, bool wasCreated)
+            public GroupWithAddIndicator(Group<TObject, TGroupKey> group, bool wasCreated)
+                :this()
             {
-                Group = @group;
+                Group = group;
                 WasCreated = wasCreated;
             }
         }
@@ -238,14 +239,12 @@ namespace DynamicData.List.Internal
             public TObject Item { get; }
             public TGroupKey Group { get; set; }
             public Optional<TGroupKey> PrevousGroup { get; }
-            public int Index { get; }
 
-            public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> prevousGroup, int index)
+            public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> prevousGroup)
             {
                 Item = item;
                 Group = group;
                 PrevousGroup = prevousGroup;
-                Index = index;
             }
 
             #region Equality 

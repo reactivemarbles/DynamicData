@@ -67,9 +67,7 @@ namespace DynamicData
         /// <param name="key">The key.</param>
         public void AddOrUpdate(TObject item, TKey key)
         {
-            TObject existingItem;
-
-            _changes.Add(_data.TryGetValue(key, out existingItem)
+            _changes.Add(_data.TryGetValue(key, out var existingItem)
                 ? new Change<TObject, TKey>(ChangeReason.Update, key, item, existingItem)
                 : new Change<TObject, TKey>(ChangeReason.Add, key, item));
 
@@ -85,14 +83,14 @@ namespace DynamicData
             keys.ForEach(Remove);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Removes the item matching the specified key.
         /// </summary>
         /// <param name="key">The key.</param>
         public void Remove(TKey key)
         {
-            TObject existingItem;
-            if (_data.TryGetValue(key, out existingItem))
+            if (_data.TryGetValue(key, out var existingItem))
             {
                 _changes.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existingItem));
                 _data.Remove(key);
@@ -124,8 +122,7 @@ namespace DynamicData
         /// <param name="key">The key.</param>
         public void Refresh(TKey key)
         {
-            TObject existingItem;
-            if (_data.TryGetValue(key, out existingItem))
+            if (_data.TryGetValue(key, out var existingItem))
             {
                 _changes.Add(new Change<TObject, TKey>(ChangeReason.Refresh, key, existingItem));
             }
@@ -152,9 +149,10 @@ namespace DynamicData
 
             //for efficiency resize dictionary to initial batch size
             if (_data.Count == 0)
+            {
                 _data = new Dictionary<TKey, TObject>(changes.Count);
-
-            _changes.Capacity = changes.Count + _changes.Count;
+                _changes.Capacity = changes.Count;
+            }
 
             foreach (var change in changes)
             {

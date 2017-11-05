@@ -31,7 +31,7 @@ namespace DynamicData.Cache.Internal
             });
         }
 
-        internal sealed class Virtualiser
+        private sealed class Virtualiser
         {
             private readonly FilteredIndexCalculator<TObject, TKey> _changedCalculator = new FilteredIndexCalculator<TObject, TKey>();
             private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();

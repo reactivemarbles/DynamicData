@@ -32,10 +32,10 @@ namespace DynamicData.List.Internal
                 {
                     var changed = transformed.CaptureChanges();
                     return changed.Transform(container => container.Destination);
-                });
+                }); 
         }
         
-        private class TransformedItemContainer : IEquatable<TransformedItemContainer>
+        private sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
         {
             public TSource Source { get; }
             public TDestination Destination { get; }
@@ -194,17 +194,7 @@ namespace DynamicData.List.Internal
                             if (!hasIndex)
                                 throw new UnspecifiedIndexException("Cannot move as an index was not specified");
 
-                            var collection = transformed as IExtendedList<TransformedItemContainer>;
-                            if (collection != null)
-                            {
-                                collection.Move(change.PreviousIndex, change.CurrentIndex);
-                            }
-                            else
-                            {
-                                var current = transformed[change.PreviousIndex];
-                                transformed.RemoveAt(change.PreviousIndex);
-                                transformed.Insert(change.CurrentIndex, current);
-                            }
+                            transformed.Move(change.PreviousIndex, change.CurrentIndex);
                             break;
                         }
                 }
