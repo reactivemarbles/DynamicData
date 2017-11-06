@@ -12,6 +12,7 @@ namespace DynamicData.List.Internal
         private readonly ListFilterPolicy _policy;
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<Func<T, bool>> _predicates;
+        private readonly Func<T, bool> _predicate;
 
         public Filter([NotNull] IObservable<IChangeSet<T>> source,
             [NotNull] IObservable<Func<T, bool>> predicates,
@@ -20,6 +21,15 @@ namespace DynamicData.List.Internal
             _policy = policy;
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _predicates = predicates ?? throw new ArgumentNullException(nameof(predicates));
+        }
+
+        public Filter([NotNull] IObservable<IChangeSet<T>> source,
+            [NotNull] Func<T, bool> predicate,
+            ListFilterPolicy policy = ListFilterPolicy.CalculateDiff)
+        {
+            _policy = policy;
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
         }
 
         public IObservable<IChangeSet<T>> Run()
@@ -31,16 +41,26 @@ namespace DynamicData.List.Internal
                 Func<T, bool> predicate = t => false;
                 var all = new List<ItemWithMatch>();
                 var filtered = new ChangeAwareList<ItemWithMatch>();
-                
-                //requery when predicate changes
-                var predicateChanged = _predicates
-                    .Synchronize(locker)
-                    .Select(newPredicate =>
-                    {
-                        predicate = newPredicate;
-                        Requery(predicate, all, filtered);
-                        return filtered.CaptureChanges();
-                    });
+                var immutableFilter = _predicate != null;
+
+                IObservable<IChangeSet<ItemWithMatch>> predicateChanged;
+
+                if (immutableFilter)
+                {
+                    predicateChanged = Observable.Never<IChangeSet<ItemWithMatch>>();
+                    predicate = _predicate;
+                }
+                else
+                {
+                    predicateChanged = _predicates
+                        .Synchronize(locker)
+                        .Select(newPredicate =>
+                        {
+                            predicate = newPredicate;
+                            Requery(predicate, all, filtered);
+                            return filtered.CaptureChanges();
+                        });
+                }
 
                 /*
                  * Apply the transform operator so 'IsMatch' state can be evalutated and captured one time only
@@ -51,14 +71,16 @@ namespace DynamicData.List.Internal
                 //Need to get item by index and store it in the transform
                 var filteredResult = _source
                     .Synchronize(locker)
-                    .Transform<T, ItemWithMatch>((t, previous, idx) =>
+                    .Transform<T, ItemWithMatch>((t, previous) =>
                     {
                         var wasMatch = previous.ConvertOr(p => p.IsMatch, () => false);
-                        return new ItemWithMatch(t, idx, predicate(t), wasMatch);
+                        return new ItemWithMatch(t,  predicate(t), wasMatch);
                     },true)
                     .Select(changes =>
                     {
-                        all.Clone(changes); //keep track of all changes
+                        //keep track of all changes if filtering on an observable
+                        if (!immutableFilter) all.Clone(changes);
+
                         Process( filtered, changes);
                         return filtered.CaptureChanges();
                     });
@@ -70,7 +92,7 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private void Process( ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
+        private void Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
         {
             //Maintain all items as well as filtered list. This enables us to a) requery when the predicate changes b) check the previous state when Refresh is called
             foreach (var item in changes)
@@ -170,66 +192,57 @@ namespace DynamicData.List.Internal
 
         private void Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
         {
+            if (all.Count == 0) return;
+
             if (_policy == ListFilterPolicy.ClearAndReplace)
             {
-
-                var newMatches = all.Where(iwm => predicate(iwm.Item)).ToList();
+                var itemsWithMatch = all.Select(iwm => new ItemWithMatch(iwm.Item, predicate(iwm.Item), iwm.IsMatch)).ToList();
 
                 //mark items as matched?
                 filtered.Clear();
-                filtered.AddRange(newMatches);
-
-                //reset state
-                all.Where(iwm => iwm.IsMatch).ForEach(iwm=>iwm.IsMatch=false);
-                newMatches.ForEach(iwm => iwm.IsMatch = true);
-
+                filtered.AddRange(itemsWithMatch.Where(iwm => iwm.IsMatch));
+                
+                //reset state for all items
+                all.Clear();
+                all.AddRange(itemsWithMatch);
                 return;
             }
+            
+            var toAdd = new List<ItemWithMatch>(all.Count);
+            var toRemove = new List<ItemWithMatch>(all.Count);
 
-
-            var mutatedMatches = new List<Action>(all.Count);
-
-            var newState = all.Select(item =>
+            for (int i = 0; i < all.Count; i++)
             {
-                var match = predicate(item.Item);
-                var wasMatch = item.IsMatch;
+                var original = all[i];
 
-                //Mutate match - defer until filtered list has been modified
-                //[to prevent potential IndexOf failures]
-                if (item.IsMatch != match)
-                    mutatedMatches.Add(()=> item.IsMatch = match);
+                var newItem = new ItemWithMatch(original.Item, predicate(original.Item), original.IsMatch);
+                all[i] = newItem;
 
-                return new
+                if (newItem.IsMatch && !newItem.WasMatch)
                 {
-                    Item = item,
-                    IsMatch = match,
-                    WasMatch = wasMatch
-                };
-            }).ToList();
+                    toAdd.Add(newItem);
+                }
+                else if (!newItem.IsMatch && newItem.WasMatch)
+                {
+                    toRemove.Add(newItem);
+                }
+            }
 
-            //reflect items which are no longer matched
-            var noLongerMatched = newState.Where(state => !state.IsMatch && state.WasMatch).Select(state => state.Item);
-            filtered.RemoveMany(noLongerMatched);
-
-            //reflect new matches in the list
-            var newMatched = newState.Where(state => state.IsMatch && !state.WasMatch).Select(state => state.Item);
-            filtered.AddRange(newMatched);
-
-            //finally apply mutations
-            mutatedMatches.ForEach(m => m());
+            filtered.RemoveMany(toRemove);
+            filtered.AddRange(toAdd);
+            
         }
 
-        private sealed class ItemWithMatch : IEquatable<ItemWithMatch>
+        private struct ItemWithMatch : IEquatable<ItemWithMatch>
         {
             public T Item { get; }
-            public int Index { get; }
-            public bool IsMatch { get; set; }
-            public bool WasMatch { get; set; }
+            public bool IsMatch { get; }
+            public bool WasMatch { get; }
 
-            public ItemWithMatch(T item, int index, bool isMatch, bool wasMatch = false)
+            public ItemWithMatch(T item, bool isMatch, bool wasMatch = false)
+                :this()
             {
                 Item = item;
-                Index = index;
                 IsMatch = isMatch;
                 WasMatch = wasMatch;
             }
@@ -238,15 +251,12 @@ namespace DynamicData.List.Internal
 
             public bool Equals(ItemWithMatch other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
                 return EqualityComparer<T>.Default.Equals(Item, other.Item);
             }
 
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
                 return Equals((ItemWithMatch) obj);
             }
@@ -278,7 +288,7 @@ namespace DynamicData.List.Internal
 
             public override string ToString()
             {
-                return $"{Item} @ {Index}, (was {IsMatch} is {WasMatch}";
+                return $"{Item}, (was {IsMatch} is {WasMatch}";
             }
         }
     }

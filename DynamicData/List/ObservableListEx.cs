@@ -548,7 +548,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            return new Filter<T>(source, new BehaviorSubject<Func<T, bool>>(predicate)).Run();
+            return new Filter<T>(source, predicate).Run();
         }
 
         /// <summary>
