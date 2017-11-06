@@ -35,6 +35,29 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
+
+        [Fact]
+        public void ReplaceWithMatch()
+        {
+            var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
+            _source.AddRange(itemstoadd);
+
+            _source.ReplaceAt(0, new Person("Adult1", 50));
+
+            _results.Data.Count.Should().Be(81);
+        }
+
+        [Fact]
+        public void ReplaceWithNonMatch()
+        {
+            var itemstoadd = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToList();
+            _source.AddRange(itemstoadd);
+
+            _source.ReplaceAt(50, new Person("Adult1", 1));
+
+            _results.Data.Count.Should().Be(79);
+        }
+
         [Fact]
         public void AddRange()
         {
