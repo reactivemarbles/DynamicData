@@ -490,7 +490,7 @@ namespace DynamicData
         #region Auto Refresh
 
         /// <summary>
-        /// Automatically refresh downstream operators when properties change.
+        /// Automatically refresh downstream operators when any properties change.
         /// </summary>
         /// <param name="source">The source observable</param>
         /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
@@ -505,7 +505,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            return source.AutoRefresh((t, v) =>
+            return source.AutoRefreshOnObservable((t, v) =>
             {
                 if (propertyChangeThrottle == null)
                     return t.WhenAnyPropertyChanged();
@@ -533,7 +533,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            return source.AutoRefresh((t, v) =>
+            return source.AutoRefreshOnObservable((t, v) =>
             {
                 if (propertyChangeThrottle == null)
                     return t.WhenPropertyChanged(propertyAccessor, false);
@@ -544,30 +544,30 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Automatically refresh downstream operators when properties change.
+        /// Automatically refresh downstream operator. The refresh is triggered when the observable receives a notification
         /// </summary>
         /// <param name="source">The source observable change set</param>
         /// <param name="reevaluator">An observable which acts on items within the collection and produces a value when the item should be refreshed</param>
         /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements require a refresh</param>
         /// <param name="scheduler">The scheduler</param>
         /// <returns>An observable change set with additional refresh changes</returns>
-        public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
+        public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, IObservable<TAny>> reevaluator,
             TimeSpan? changeSetBuffer = null,
             IScheduler scheduler = null)
         {
-            return source.AutoRefresh((t, v) => reevaluator(t), changeSetBuffer, scheduler);
+            return source.AutoRefreshOnObservable((t, v) => reevaluator(t), changeSetBuffer, scheduler);
         }
 
         /// <summary>
-        /// Automatically refresh downstream operators when properties change.
+        /// Automatically refresh downstream operator. The refresh is triggered when the observable receives a notification
         /// </summary>
         /// <param name="source">The source observable change set</param>
         /// <param name="reevaluator">An observable which acts on items within the collection and produces a value when the item should be refreshed</param>
         /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This g  reatly increases performance when many elements require a refresh</param>
         /// <param name="scheduler">The scheduler</param>
         /// <returns>An observable change set with additional refresh changes</returns>
-        public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
+        public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TKey, IObservable<TAny>> reevaluator,
             TimeSpan? changeSetBuffer = null,
             IScheduler scheduler = null)
