@@ -32,7 +32,7 @@ namespace DynamicData.Cache.Internal
                     {
                         var published = _source.Publish();
                         var subscriptions = published
-                            .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, _subscriptionFactory))
+                            .Transform((t, k) => _subscriptionFactory(t, k))
                             .DisposeMany()
                             .Subscribe();
 

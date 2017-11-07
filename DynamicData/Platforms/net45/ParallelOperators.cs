@@ -43,7 +43,7 @@ namespace DynamicData.PLinq
                 {
                     var published = source.Publish();
                     var subscriptions = published
-                        .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k,(a,b)=> subscriptionFactory(a)), parallelisationOptions)
+                        .Transform((t, k) =>  subscriptionFactory(t), parallelisationOptions)
                         .DisposeMany()
                         .Subscribe();
 
@@ -81,7 +81,7 @@ namespace DynamicData.PLinq
                 {
                     var published = source.Publish();
                     var subscriptions = published
-                        .Transform((t, k) => new SubscriptionContainer<TObject, TKey>(t, k, subscriptionFactory), parallelisationOptions)
+                        .Transform(subscriptionFactory, parallelisationOptions)
                         .DisposeMany()
                         .Subscribe();
 
