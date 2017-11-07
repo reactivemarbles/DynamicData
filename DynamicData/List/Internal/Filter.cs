@@ -57,8 +57,7 @@ namespace DynamicData.List.Internal
                         .Select(newPredicate =>
                         {
                             predicate = newPredicate;
-                            Requery(predicate, all, filtered);
-                            return filtered.CaptureChanges();
+                            return Requery(predicate, all, filtered);
                         });
                 }
 
@@ -80,9 +79,7 @@ namespace DynamicData.List.Internal
                     {
                         //keep track of all changes if filtering on an observable
                         if (!immutableFilter) all.Clone(changes);
-
-                        Process( filtered, changes);
-                        return filtered.CaptureChanges();
+                        return Process(filtered, changes);
                     });
                 
                 return predicateChanged.Merge(filteredResult)
@@ -92,7 +89,7 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private void Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
+        private IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
         {
             //Maintain all items as well as filtered list. This enables us to a) requery when the predicate changes b) check the previous state when Refresh is called
             foreach (var item in changes)
@@ -187,12 +184,14 @@ namespace DynamicData.List.Internal
                         break;
                     }
                 }
+
             }
+            return filtered.CaptureChanges();
         }
 
-        private void Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
+        private IChangeSet<ItemWithMatch> Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
         {
-            if (all.Count == 0) return;
+            if (all.Count == 0) return ChangeSet<ItemWithMatch>.Empty;
 
             if (_policy == ListFilterPolicy.ClearAndReplace)
             {
@@ -205,7 +204,7 @@ namespace DynamicData.List.Internal
                 //reset state for all items
                 all.Clear();
                 all.AddRange(itemsWithMatch);
-                return;
+                return filtered.CaptureChanges();
             }
             
             var toAdd = new List<ItemWithMatch>(all.Count);
@@ -230,7 +229,8 @@ namespace DynamicData.List.Internal
 
             filtered.RemoveMany(toRemove);
             filtered.AddRange(toAdd);
-            
+
+            return filtered.CaptureChanges();
         }
 
         private struct ItemWithMatch : IEquatable<ItemWithMatch>

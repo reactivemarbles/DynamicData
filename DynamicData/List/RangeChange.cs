@@ -12,6 +12,8 @@ namespace DynamicData
     /// <typeparam name="T"></typeparam>
     public sealed class RangeChange<T> : IEnumerable<T>
     {
+        public static readonly RangeChange<T> Empty = new RangeChange<T>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
         /// </summary>
@@ -21,6 +23,12 @@ namespace DynamicData
         {
             Index = index;
             _items = items.AsList();
+        }
+
+        /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+        private RangeChange()
+        {
+            _items = new List<T>();
         }
 
         /// <summary>

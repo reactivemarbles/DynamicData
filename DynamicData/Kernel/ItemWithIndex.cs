@@ -7,7 +7,7 @@ namespace DynamicData.Kernel
     /// Container for an item and it's index from a list
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public sealed class ItemWithIndex<T> : IEquatable<ItemWithIndex<T>>
+    public struct ItemWithIndex<T> : IEquatable<ItemWithIndex<T>>
     {
         /// <summary>
         /// Gets the item.
@@ -32,71 +32,46 @@ namespace DynamicData.Kernel
 
         #region Equality 
 
-        /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
+        /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>
+        /// <param name="other">An object to compare with this object.</param>
         public bool Equals(ItemWithIndex<T> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return EqualityComparer<T>.Default.Equals(Item, other.Item) && Index == other.Index;
+            return EqualityComparer<T>.Default.Equals(Item, other.Item);
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <summary>Indicates whether this instance and a specified object are equal.</summary>
+        /// <returns>true if <paramref name="obj" /> and this instance are the same type and represent the same value; otherwise, false. </returns>
+        /// <param name="obj">The object to compare with the current instance. </param>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ItemWithIndex<T>)obj);
+            return obj is ItemWithIndex<T> && Equals((ItemWithIndex<T>) obj);
         }
 
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
+        /// <summary>Returns the hash code for this instance.</summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return (EqualityComparer<T>.Default.GetHashCode(Item) * 397) ^ Index;
-            }
+            return EqualityComparer<T>.Default.GetHashCode(Item);
         }
 
-        /// <summary>
-        /// Implements the operator ==.
-        /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
-        /// <returns>
-        /// The result of the operator.
-        /// </returns>
+        /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.Kernel.ItemWithIndex`1" /> objects are equal.</summary>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
         public static bool operator ==(ItemWithIndex<T> left, ItemWithIndex<T> right)
         {
-            return Equals(left, right);
+            return left.Equals(right);
         }
 
-        /// <summary>
-        /// Implements the operator !=.
-        /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
-        /// <returns>
-        /// The result of the operator.
-        /// </returns>
+        /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.Kernel.ItemWithIndex`1" /> objects have different values.</summary>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
         public static bool operator !=(ItemWithIndex<T> left, ItemWithIndex<T> right)
         {
-            return !Equals(left, right);
+            return !left.Equals(right);
         }
 
         #endregion

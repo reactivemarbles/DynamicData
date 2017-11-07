@@ -164,9 +164,7 @@ namespace DynamicData
         }
 
 
-        /// <summary>
-        /// Disposes the instance
-        /// </summary>
+        /// <inheritdoc />
         public void Dispose()
         {
             _cleanUp.Dispose();
