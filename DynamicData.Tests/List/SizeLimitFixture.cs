@@ -93,14 +93,6 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
-        public void HandleError()
-        {
-            Exception exception = null;
-            _source.Edit(innerList => innerList.RemoveAt(1), ex => exception = ex);
-            exception.Should().NotBeNull();
-        }
-
-        [Fact]
         public void ThrowsIfSizeLimitIsZero()
         {
             // Initialise();

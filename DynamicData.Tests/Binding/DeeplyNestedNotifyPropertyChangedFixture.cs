@@ -166,7 +166,7 @@ namespace DynamicData.Tests.Binding
         public void StressIt()
         {
             var list = new SourceList<ClassA>();
-            var items = Enumerable.Range(1, 10000)
+            var items = Enumerable.Range(1, 10_000)
                 .Select(i => new ClassA { Name = i.ToString(), Child = new ClassB { Age = i } })
                 .ToArray();
 

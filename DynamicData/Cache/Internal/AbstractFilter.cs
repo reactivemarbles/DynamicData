@@ -66,12 +66,10 @@ namespace DynamicData.Cache.Internal
 
         private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> source)
         {
-            var result = source.AsArray();
-
             //Have to process one item at a time as an item can be included multiple
             //times in any batch
 
-            foreach (var item in result)
+            foreach (var item in source)
             {
                 var matches = item.IsMatch;
                 var key = item.Change.Key;

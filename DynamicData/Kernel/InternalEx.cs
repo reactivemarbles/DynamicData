@@ -3,6 +3,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 using DynamicData.Annotations;
 
@@ -17,6 +18,22 @@ namespace DynamicData.Kernel
         internal static string FormatWith(this string source, params object[] parameters)
         {
             return string.Format(source, parameters);
+        }
+
+        public static IObservable<T> CountSubscribers<T>(this IObservable<T> source, Action<int> countChanged)
+        {
+            int count = 0;
+
+            return Observable.Defer(() =>
+            {
+                count = Interlocked.Increment(ref count);
+                countChanged(count);
+                return source.Finally(() =>
+                {
+                    count = Interlocked.Decrement(ref count);
+                    countChanged(count);
+                });
+            });
         }
 
         /// <summary>

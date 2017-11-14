@@ -73,13 +73,13 @@ namespace DynamicData.Cache.Internal
                 {
                     if (predicate == null)
                     {
-                        return Observable.Return(_innerCache.AsInitialUpdates())
+                        return Observable.Return(_innerCache.GetInitialUpdates())
                             .Concat(_changes)
                             .SubscribeSafe(observer);
                     }
 
                     var updater = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), predicate);
-                    var filtered = updater.Update(_innerCache.AsInitialUpdates(predicate));
+                    var filtered = updater.Update(_innerCache.GetInitialUpdates(predicate));
                     if (filtered.Count != 0)
                         observer.OnNext(filtered);
 

@@ -5,7 +5,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal sealed class ReaderWriter<TObject, TKey> : IReaderWriter<TObject, TKey>
+    internal sealed class ReaderWriter<TObject, TKey> 
     {
         private readonly ChangeAwareCache<TObject, TKey> _cache = new ChangeAwareCache<TObject, TKey>();
         private readonly object _locker = new object();
@@ -21,62 +21,42 @@ namespace DynamicData.Cache.Internal
 
         #region Writers
 
-        public Continuation<IChangeSet<TObject, TKey>> Write(IChangeSet<TObject, TKey> changes)
+        public IChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
             IChangeSet<TObject, TKey> result;
             lock (_locker)
             {
-                try
-                {
                     _updater.Update(changes);
                     result = _updater.AsChangeSet();
-                }
-                catch (Exception ex)
-                {
-                    return new Continuation<IChangeSet<TObject, TKey>>(ex);
-                }
+
             }
-            return new Continuation<IChangeSet<TObject, TKey>>(result);
+            return result;
         }
 
-        public Continuation<IChangeSet<TObject, TKey>> Write(Action<ICacheUpdater<TObject, TKey>> updateAction)
+        public IChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             IChangeSet<TObject, TKey> result;
             lock (_locker)
             {
-                try
-                {
-                    updateAction(_updater);
-                    result = _updater.AsChangeSet();
-                }
-                catch (Exception ex)
-                {
-                    return new Continuation<IChangeSet<TObject, TKey>>(ex);
-                }
+                updateAction(_updater);
+                result = _updater.AsChangeSet();
             }
-            return new Continuation<IChangeSet<TObject, TKey>>(result);
+            return result;
         }
 
-        public Continuation<IChangeSet<TObject, TKey>> Write(Action<ISourceUpdater<TObject, TKey>> updateAction)
+        public IChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
             IChangeSet<TObject, TKey> result;
             lock (_locker)
             {
-                try
-                {
-                    updateAction(_updater);
-                    result = _updater.AsChangeSet();
-                }
-                catch (Exception ex)
-                {
-                    return new Continuation<IChangeSet<TObject, TKey>>(ex);
-                }
+                updateAction(_updater);
+                result = _updater.AsChangeSet();
             }
-            return new Continuation<IChangeSet<TObject, TKey>>(result);
+            return result;
         }
 
         #endregion

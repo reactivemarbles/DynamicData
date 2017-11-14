@@ -41,10 +41,9 @@ namespace DynamicData
         /// The result of the action will produce a single changeset
         /// </summary>
         /// <param name="updateAction">The update action.</param>
-        /// <param name="errorHandler">The error handler.</param>
-        public void Edit(Action<ICacheUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
+        public void Edit(Action<ICacheUpdater<TObject, TKey>> updateAction)
         {
-            _innnerCache.UpdateFromIntermediate(updateAction, errorHandler);
+            _innnerCache.UpdateFromIntermediate(updateAction);
         }
 
         /// <summary>

@@ -34,10 +34,9 @@ namespace DynamicData
         /// The result of the action will produce appropriate notifications.
         /// </summary>
         /// <param name="updateAction">The update action.</param>
-        /// <param name="errorHandler">The error handler.</param>
-        public void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
+        public void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction)
         {
-            _innerCache.UpdateFromSource(updateAction, errorHandler);
+            _innerCache.UpdateFromSource(updateAction);
         }
 
         /// <summary>

@@ -31,7 +31,7 @@ namespace DynamicData.Tests.List
 
             updateReceived.Should().BeTrue();
             result.Adds.Should().Be(1);
-            result.First().Item.Current.Should().Be(person);
+            result.Unified().First().Current.Should().Be(person);
             deferStream.Dispose();
         }
 

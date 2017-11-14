@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net452;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net452;netcoreapp2.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
   
@@ -11,6 +11,11 @@
   <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Playground\ErrorHandlingFixture.cs" />
+    <Compile Remove="Playground\Perf.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />

@@ -14,7 +14,7 @@ namespace DynamicData
     {
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
-        private readonly IReaderWriter<TObject, TKey> _readerWriter;
+        private readonly ReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
@@ -25,10 +25,9 @@ namespace DynamicData
 
             var loader = source
                 .Synchronize(_locker)
-                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, _changes.OnError),
-                    _changes.OnError,
-                    () => _changes.OnCompleted());
-
+                .Select(_readerWriter.Write)
+                .Finally(_changes.OnCompleted)
+                .Subscribe(InvokeNext,ex=> _changes.OnError(ex));
 
             _cleanUp = Disposable.Create(() =>
             {
@@ -51,43 +50,33 @@ namespace DynamicData
             });
         }
 
-        internal void UpdateFromIntermediate(Action<ICacheUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
+        internal void UpdateFromIntermediate(Action<ICacheUpdater<TObject, TKey>> updateAction)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             lock (_writeLock)
             {
-                _readerWriter.Write(updateAction)
-                    .Then(InvokeNext, errorHandler);
+                InvokeNext(_readerWriter.Write(updateAction));
             }
         }
 
-        internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null)
+        internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             lock (_writeLock)
             {
-                _readerWriter.Write(updateAction)
-                    .Then(InvokeNext, errorHandler);
+                InvokeNext(_readerWriter.Write(updateAction));
             }
         }
 
         private void InvokeNext(IChangeSet<TObject, TKey> changes)
         {
-            if (changes.Count == 0) return;
-
             lock (_locker)
             {
-                try
-                {
-                    _changes.OnNext(changes);
+                if (changes.Count == 0) return;
+                _changes.OnNext(changes);
 
-                    if (_countChanged.IsValueCreated)
-                        _countChanged.Value.OnNext(_readerWriter.Count);
-                }
-                catch (Exception ex)
-                {
-                    _changes.OnError(ex);
-                }
+                if (_countChanged.IsValueCreated)
+                    _countChanged.Value.OnNext(_readerWriter.Count);
             }
         }
 
@@ -135,7 +124,7 @@ namespace DynamicData
                         }
 
                         var updater = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), predicate);
-                        var filtered = updater.Update(GetInitialUpdates(predicate));
+                        var filtered = updater.Update(initial);
                         if (filtered.Count != 0)
                             observer.OnNext(filtered);
 
@@ -146,7 +135,7 @@ namespace DynamicData
                 });
         }
 
-        internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null) => _readerWriter.AsInitialUpdates(filter);
+        internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null) => _readerWriter.GetInitialUpdates(filter);
 
         public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
 

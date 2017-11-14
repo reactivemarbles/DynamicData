@@ -16,7 +16,6 @@ namespace DynamicData
         /// The result of the action will produce a single changeset
         /// </summary>
         /// <param name="updateAction">The update action.</param>
-        /// <param name="errorHandler">The error handler.</param>
-        void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<Exception> errorHandler = null);
+        void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction);
     }
 }

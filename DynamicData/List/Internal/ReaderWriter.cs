@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
@@ -10,42 +9,30 @@ namespace DynamicData.List.Internal
         private readonly ChangeAwareList<T> _data = new ChangeAwareList<T>();
         private readonly object _locker = new object();
 
-        public Continuation<IChangeSet<T>> Write(IChangeSet<T> changes)
+        public IChangeSet<T> Write(IChangeSet<T> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
             IChangeSet<T> result;
             lock (_locker)
             {
-                try
-                {
-                    _data.Clone(changes);
-                    result = _data.CaptureChanges();
-                }
-                catch (Exception ex)
-                {
-                    return new Continuation<IChangeSet<T>>(ex);
-                }
+                _data.Clone(changes);
+                result = _data.CaptureChanges();
             }
-            return new Continuation<IChangeSet<T>>(result);
+            return result;
         }
 
-        public Continuation<IChangeSet<T>> Write(Action<IExtendedList<T>> updateAction)
+        public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+                throw new ArgumentNullException(nameof(updateAction));
+
             IChangeSet<T> result;
             lock (_locker)
             {
-                try
-                {
-                    updateAction(_data);
-                    result = _data.CaptureChanges();
-                }
-                catch (Exception ex)
-                {
-                    return new Continuation<IChangeSet<T>>(ex);
-                }
+                updateAction(_data);
+                result = _data.CaptureChanges();
             }
-            return new Continuation<IChangeSet<T>>(result);
+            return result;
         }
 
         public IEnumerable<T> Items

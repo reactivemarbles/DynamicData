@@ -5,7 +5,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Annotations;
-using DynamicData.Kernel;
 using DynamicData.List.Internal;
 
 // ReSharper disable once CheckNamespace
@@ -23,6 +22,7 @@ namespace DynamicData
         private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SourceList{T}"/> class.
         /// </summary>
@@ -46,43 +46,21 @@ namespace DynamicData
         {
             return source
                 .Finally(OnCompleted)
-                .Subscribe(changes => _readerWriter.Write(changes).Then(InvokeNext, OnError), OnError);
+                .Select(_readerWriter.Write)
+                .Subscribe(InvokeNext, OnError, OnCompleted);
         }
 
-        /// <summary>
-        /// Edit the inner list within the list's internal locking mechanism
-        /// </summary>
-        /// <param name="updateAction">The update action.</param>
-        /// <param name="errorHandler">The error handler.</param>
-        /// <exception cref="System.ArgumentNullException"></exception>
-        public void Edit([NotNull] Action<IExtendedList<T>> updateAction, Action<Exception> errorHandler = null)
+        /// <inheritdoc />
+        public void Edit([NotNull] Action<IExtendedList<T>> updateAction)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
             lock (_writeLock)
             {
-                _readerWriter.Write(updateAction)
-                    .Then(InvokeNext, errorHandler);
+                InvokeNext(_readerWriter.Write(updateAction));
             }
         }
 
-        /// <summary>
-        /// Notifies the observer that the source list has finished sending notifications.
-        /// </summary>
-        public void OnCompleted()
-        {
-            lock (_locker)
-                _changes.OnCompleted();
-        }
-
-        /// <summary>
-        /// Notifies the observer that the source list has experienced an error condition.
-        /// </summary>
-        public void OnError(Exception exception)
-        {
-            lock (_locker)
-                _changes.OnError(exception);
-        }
 
         private void InvokeNext(IChangeSet<T> changes)
         {
@@ -90,59 +68,46 @@ namespace DynamicData
 
             lock (_locker)
             {
-                try
-                {
-                    _changes.OnNext(changes);
+                _changes.OnNext(changes);
 
-                    if (_countChanged.IsValueCreated)
-                        _countChanged.Value.OnNext(_readerWriter.Count);
-                }
-                catch (Exception ex)
-                {
-                    OnError(ex);
-                }
+                if (_countChanged.IsValueCreated)
+                    _countChanged.Value.OnNext(_readerWriter.Count);
             }
         }
 
-        /// <summary>
-        /// Gets or sets the items.
-        /// </summary>
-        /// <value>
-        /// The items.
-        /// </value>
+
+        /// <inheritdoc />
+        public void OnCompleted()
+        {
+            lock (_locker)
+                _changes.OnCompleted();
+        }
+
+        /// <inheritdoc />
+        public void OnError(Exception exception)
+        {
+            lock (_locker)
+                _changes.OnError(exception);
+        }
+
+        /// <inheritdoc />
         public IEnumerable<T> Items => _readerWriter.Items;
 
-        /// <summary>
-        /// Gets or sets the count.
-        /// </summary>
-        /// <value>
-        /// The count.
-        /// </value>
+        /// <inheritdoc />
         public int Count => _readerWriter.Count;
 
-        /// <summary>
-        /// Gets or sets the count changed.
-        /// </summary>
-        /// <value>
-        /// The count changed.
-        /// </value>
+        /// <inheritdoc />
         public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
 
-        /// <summary>
-        /// Connects using the specified predicate.
-        /// </summary>
-        /// <param name="predicate">The predicate.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null)
         {
-            return Observable.Create<IChangeSet<T>>
-                (
-                    observer =>
+            return Observable.Create<IChangeSet<T>>(observer =>
                     {
                         lock (_locker)
                         {
                             var initial = GetInitialUpdates(predicate);
-                            if (initial.Count > 0) observer.OnNext(initial);
+                            if (initial.TotalChanges > 0) observer.OnNext(initial);
                             var source = _changes.Finally(observer.OnCompleted);
 
                             if (predicate != null)
@@ -159,10 +124,9 @@ namespace DynamicData
                 ? _readerWriter.Items
                 : _readerWriter.Items.Where(predicate);
 
-            var initial = items.WithIndex().Select(t => new Change<T>(ListChangeReason.Add, t.Item, t.Index));
-            return new ChangeSet<T>(initial);
+            return new ChangeSet<T>(new[] {new Change<T>(ListChangeReason.AddRange, items)});
         }
-
+         
 
         /// <inheritdoc />
         public void Dispose()
