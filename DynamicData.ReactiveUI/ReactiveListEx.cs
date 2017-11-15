@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using DynamicData.Binding;
 using ReactiveUI;
 
@@ -167,14 +164,14 @@ namespace DynamicData.ReactiveUI
 
         }
 
-        internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+        private static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
         {
             foreach (var item in source)
                 action(item);
        
         }
 
-        internal static void ForEach<T>(this IEnumerable<T> source, Action<T, int> action)
+        private static void ForEach<T>(this IEnumerable<T> source, Action<T, int> action)
         {
             var i = -1;
             foreach (var item in source)

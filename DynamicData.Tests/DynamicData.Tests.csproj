@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net452;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net452;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
     <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
   
@@ -13,8 +13,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Playground\ErrorHandlingFixture.cs" />
-    <Compile Remove="Playground\Perf.cs" />
+    <Compile Remove="Playground\**" />
+    <EmbeddedResource Remove="Playground\**" />
+    <None Remove="Playground\**" />
   </ItemGroup>
 
   <ItemGroup>

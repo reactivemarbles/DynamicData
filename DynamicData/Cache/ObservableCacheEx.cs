@@ -776,6 +776,24 @@ namespace DynamicData
         #region Delayed Stream
 
         /// <summary>
+        /// Buffers changes for an intial period only. After the period has elapsed, not further buffering occurs. 
+        /// </summary>
+        /// <param name="source">The source changeset</param>
+        /// <param name="initalBuffer">The period to buffer, measure from the time that the first item arrives</param>
+        /// <param name="scheduler">The scheduler to buffer on</param>
+        public static IObservable<IChangeSet<TObject, TKey>> BufferInitial<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TimeSpan initalBuffer, IScheduler scheduler = null)
+        {
+            return source.DeferUntilLoaded().Publish(shared =>
+            {
+                var initial = shared.Buffer(initalBuffer, scheduler ?? Scheduler.Default)
+                    .FlattenBufferResult()
+                    .Take(1);
+
+                return initial.Concat(shared);
+            });
+        }
+
+        /// <summary>
         /// Batches the updates for the specified time period
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>

@@ -69,10 +69,10 @@ namespace DynamicData.Tests.Playground
                                    .Finally(() => completed = true)
                                    .Subscribe(updates => { Console.WriteLine(); });
 
-            source.Edit(updater => updater.AddOrUpdate(new TransformEntityWithError(new Entity())), ex => error = true);
+            source.Edit(updater => updater.AddOrUpdate(new TransformEntityWithError(new Entity())));
             subscriber.Dispose();
 
-            error.Should().BeTrue();
+
             completed.Should().BeTrue();
         }
 
@@ -134,7 +134,15 @@ namespace DynamicData.Tests.Playground
             s.Connect().Subscribe(i => { throw new NotImplementedException(); });
             s.Connect().Subscribe(i => secondSubscriberCallCount++);
 
-            s.Edit(u => u.Add(1));
+            try
+            {
+                s.Edit(u => u.Add(1));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
 
             firstSubscriberCallCount.Should().Be(1);
             secondSubscriberCallCount.Should().Be(1);
@@ -190,9 +198,12 @@ namespace DynamicData.Tests.Playground
             Exception exceptionCaughtViaTryCatch = null;
             var subject = new Subject<int>();
 
-            subject.Subscribe(i => Debug.WriteLine(i), e => exceptionsCaughtViaOnError.Add(e));
+            var firstSubscriberCallCount = 0;
+            var secondSubscriberCallCount = 0;
+
+            subject.Subscribe(i => firstSubscriberCallCount++, e => exceptionsCaughtViaOnError.Add(e));
             subject.Subscribe(i => { throw new NotImplementedException(); }, e => exceptionsCaughtViaOnError.Add(e));
-            subject.Subscribe(i => Debug.WriteLine(i), e => exceptionsCaughtViaOnError.Add(e));
+            subject.Subscribe(i => secondSubscriberCallCount++, e => exceptionsCaughtViaOnError.Add(e));
 
             try
             {

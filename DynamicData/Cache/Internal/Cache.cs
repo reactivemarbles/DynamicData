@@ -17,14 +17,7 @@ namespace DynamicData.Cache.Internal
 
         public Cache(int capacity = -1)
         {
-            if (capacity > 1)
-            {
-                _data = new Dictionary<TKey, TObject>(capacity);
-            }
-            else
-            {
-                _data = new Dictionary<TKey, TObject>();
-            }
+            _data = capacity > 1 ? new Dictionary<TKey, TObject>(capacity) : new Dictionary<TKey, TObject>();
         }
 
         public Cache(IDictionary<TKey, TObject> dictionary)

@@ -61,16 +61,25 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void HandlesErrorsObservableList()
         {
-            Func<Task<IEnumerable<Person>>> loader = () => { throw new Exception("Broken"); };
+            Task<IEnumerable<Person>> Loader()
+            {
+                throw new Exception("Broken");
+            }
 
             Exception error = null;
 
-            var data = Observable.FromAsync(loader)
+            var data = Observable.FromAsync(Loader)
                 .ToObservableChangeSet(p => p.Key)
-                .AsObservableCache();
-
-            var subscribed = data.Connect()
                 .Subscribe(changes => { }, ex => error = ex);
+
+            var data2 = Observable.FromAsync(Loader)
+                .ToObservableChangeSet(p => p.Key)
+                .AsObservableCache()
+                .Connect()
+                .Subscribe(changes => { }, ex => error = ex); ;
+
+            //var subscribed = data.Connect()
+            //    
 
 
             error.Should().NotBeNull();

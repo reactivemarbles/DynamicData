@@ -65,7 +65,7 @@ namespace DynamicData.ReactiveUI
                     break;
                 case SortReason.Reorder:
 
-                    //Updates will only be moves, so appply logic
+                    //Updates will only be moves, so apply logic
                     DoUpdate(changes);
                     break;
 
@@ -92,11 +92,11 @@ namespace DynamicData.ReactiveUI
                         _target.Move(change.PreviousIndex, change.CurrentIndex);
                         break;
                     case ChangeReason.Update:
-                        {
-                            _target.RemoveAt(change.PreviousIndex);
-                            _target.Insert(change.CurrentIndex, change.Current);
-                        }
-                        break;
+                    {
+                        _target.RemoveAt(change.PreviousIndex);
+                        _target.Insert(change.CurrentIndex, change.Current);
+                    }
+                    break;
                 }
             }
 

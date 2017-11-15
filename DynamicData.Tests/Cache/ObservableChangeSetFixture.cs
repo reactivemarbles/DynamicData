@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -10,7 +11,7 @@ using Xunit;
 namespace DynamicData.Tests.Cache
 {
 
-    public class CacheCreationFixtures
+    public class ObservableChangeSetFixture
     {
 
         [Fact]
@@ -78,18 +79,54 @@ namespace DynamicData.Tests.Cache
             isDisposed.Should().BeTrue();
         }
 
-        //[Fact]
-        //public void CreateFromTask()
-        //{
-        //    
+        [Fact]
+        public void HandlesAsyncError()
+        {
+            Exception error = null;
+            Task<IEnumerable<Person>> Loader()
+            {
+                throw new Exception("Broken");
+            }
+            
+          var observable =   ObservableChangeSet.Create<Person, string>(async cache =>
+            {
+                var people = await Loader();
+                cache.AddOrUpdate(people);
+                return () => { };
+            }, p => p.Name);
 
-        //    SubscribeAndAssert(ObservableChangeSet.Create<int>(async list =>
-        //    {
-        //        var value = await CreateTask<int>(10);
-        //        list.Add(value);
-        //        return () => { };
-        //    }));
-        //}
+
+            using (var dervived = observable.AsObservableCache())
+            using (dervived.Connect().Subscribe(_ => { }, ex => error = ex ))
+            {
+                error.Should().NotBeNull();
+            }
+        }
+
+        [Fact]
+        public void HandlesError()
+        {
+            Exception error = null;
+            IEnumerable<Person> Loader()
+            {
+                throw new Exception("Broken");
+            }
+
+            var observable = ObservableChangeSet.Create<Person, string>(cache =>
+            {
+                var people =  Loader();
+                cache.AddOrUpdate(people);
+                return () => { };
+            }, p => p.Name);
+
+
+            using (var dervived = observable.AsObservableCache())
+            using (dervived.Connect().Subscribe(_ => { }, ex => error = ex))
+            {
+                error.Should().NotBeNull();
+            }
+        }
+
 
         private void SubscribeAndAssert<TObject,TKey>(IObservable<IChangeSet<TObject, TKey>> observableChangeset,  
             bool expectsError = false,

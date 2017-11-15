@@ -27,7 +27,7 @@ namespace DynamicData
                 .Synchronize(_locker)
                 .Select(_readerWriter.Write)
                 .Finally(_changes.OnCompleted)
-                .Subscribe(InvokeNext,ex=> _changes.OnError(ex));
+                .Subscribe(InvokeNext, ex => _changes.OnError(ex));
 
             _cleanUp = Disposable.Create(() =>
             {

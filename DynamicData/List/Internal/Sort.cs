@@ -245,8 +245,7 @@ namespace DynamicData.List.Internal
 
         private int GetCurrentPosition(ChangeAwareList<T> target, T item)
         {
-            int index;
-            index = _sortOptions == SortOptions.UseBinarySearch 
+            var index = _sortOptions == SortOptions.UseBinarySearch 
                 ? target.BinarySearch(item, _comparer) 
                 : target.IndexOf(item);
 
