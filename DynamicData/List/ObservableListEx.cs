@@ -557,6 +557,7 @@ namespace DynamicData
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
         /// <param name="predicate"></param>
+        /// <param name="filterPolicy">Should the filter clear and replace, or calculate a diff-set</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or

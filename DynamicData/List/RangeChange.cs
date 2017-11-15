@@ -12,8 +12,6 @@ namespace DynamicData
     /// <typeparam name="T"></typeparam>
     public sealed class RangeChange<T> : IEnumerable<T>
     {
-        public static readonly RangeChange<T> Empty = new RangeChange<T>();
-
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
         /// </summary>
