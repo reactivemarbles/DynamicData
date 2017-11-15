@@ -1502,6 +1502,7 @@ namespace DynamicData
         /// <param name="scheduler">The scheduler used when throttling</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException"></exception>
+        [Obsolete("Use AutoRefresh(), followed by Filter() instead")]
         public static IObservable<IChangeSet<TObject, TKey>> FilterOnProperty<TObject, TKey, TProperty>(
             this IObservable<IChangeSet<TObject, TKey>> source,
             Expression<Func<TObject, TProperty>> propertySelector,

@@ -69,6 +69,33 @@ namespace DynamicData.Tests.List
             }
         }
 
+        [Fact]
+        public void Clear()
+        {
+            var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
+            using (var stub = new FilterPropertyStub())
+            {
+                stub.Source.AddRange(people);
+                stub.Source.Clear();
+
+                stub.Results.Data.Count.Should().Be(0);
+            }
+        }
+
+
+        [Fact]
+        public void RemoveRange()
+        {
+            var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
+            using (var stub = new FilterPropertyStub())
+            {
+                stub.Source.AddRange(people);
+                stub.Source.RemoveRange(89,10);
+
+                stub.Results.Data.Count.Should().Be(72);
+            }
+        }
+
         private class FilterPropertyStub : IDisposable
         {
             public ISourceList<Person> Source { get; } = new SourceList<Person>();

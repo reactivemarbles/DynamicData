@@ -386,5 +386,68 @@ namespace DynamicData.Tests.List
                 Index = index;
             }
         }
+
+        [Fact]
+        public void AutoRefreshSelected()
+        {
+            //test added as v6 broke unit test in DynamicData.Snippets
+            var initialItems = Enumerable.Range(1, 10)
+                .Select(i => new SelectableItem(i))
+                .ToArray();
+
+            //result should only be true when all items are set to true
+            using (var sourceList = new SourceList<SelectableItem>())
+            using (var sut = sourceList.Connect().AutoRefresh().Filter(si => si.IsSelected).AsObservableList())
+            {
+                sourceList.AddRange(initialItems);
+                sut.Count.Should().Be(0);
+
+                initialItems[0].IsSelected = true;
+                sut.Count.Should().Be(1);
+
+                initialItems[1].IsSelected = true;
+                sut.Count.Should().Be(2);
+
+                //remove the selected items
+                sourceList.RemoveRange(0, 2);
+                sut.Count.Should().Be(0);
+            }
+        }
+
+        private class SelectableItem : AbstractNotifyPropertyChanged
+        {
+            public int Id { get; }
+
+            public SelectableItem(int id)
+            {
+                Id = id;
+            }
+
+            private bool _isSelected;
+
+            public bool IsSelected
+            {
+                get => _isSelected;
+                set => SetAndRaise(ref _isSelected, value);
+            }
+
+            protected bool Equals(SelectableItem other)
+            {
+                return Id == other.Id;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((SelectableItem)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return Id;
+            }
+        }
     }
 }
