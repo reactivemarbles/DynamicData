@@ -84,32 +84,6 @@ namespace DynamicData.Alias
         }
 
 
-
-        /// <summary>
-        /// Filters source on the specified property using the specified predicate.
-        /// 
-        /// The filter will automatically reapply when a property changes 
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <typeparam name="TProperty">The type of the property.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="propertySelector">The property selector. When the property changes a the filter specified will be re-evaluated</param>
-        /// <param name="predicate">A predicate based on the object which contains the changed property</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static IObservable<IChangeSet<TObject, TKey>> WhereProperty<TObject, TKey, TProperty>(this IObservable<IChangeSet<TObject, TKey>> source,
-                Expression<Func<TObject, TProperty>> propertySelector,
-                Func<TObject, bool> predicate) where TObject : INotifyPropertyChanged
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-
-            return source.FilterOnProperty(propertySelector, predicate);
-        }
-
         #endregion
 
         #region Transform -> Select

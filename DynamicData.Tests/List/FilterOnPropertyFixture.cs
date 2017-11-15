@@ -63,9 +63,8 @@ namespace DynamicData.Tests.List
                 stub.Source.AddRange(people);
 
                 people[50].Age = 100;
-
-                1.Should().Be(stub.Results.Messages.Count);
-                82.Should().Be(stub.Results.Data.Count);
+                stub.Results.Messages.Count.Should().Be(2);
+                stub.Results.Data.Count.Should().Be(82);
             }
         }
 
