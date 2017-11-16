@@ -5,11 +5,6 @@ using DynamicData.Kernel;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
-    //public static class ChangeEx
-    //{
-    //    public int GetStart
-    //}
-
     /// <summary>
     ///   Container to describe a single change to a cache
     /// </summary>
@@ -129,11 +124,7 @@ namespace DynamicData
 
         #region Equality
 
-        /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool Equals(Change<T> other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -141,13 +132,7 @@ namespace DynamicData
             return Reason == other.Reason && Item.Equals(other.Item) && Equals(Range, other.Range);
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
-        /// </summary> 
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -156,12 +141,7 @@ namespace DynamicData
             return Equals((Change<T>)obj);
         }
 
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -201,12 +181,7 @@ namespace DynamicData
 
         #endregion
 
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
+        /// <inheritdoc />
         public override string ToString()
         {
             return Range != null ? $"{Reason}. {Range.Count} changes"

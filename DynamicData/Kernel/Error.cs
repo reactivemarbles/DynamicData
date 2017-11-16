@@ -108,12 +108,7 @@ namespace DynamicData.Kernel
 
         #endregion
 
-        /// <summary>
-        /// Returns the fully qualified type name of this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.String"/> containing a fully qualified type name.
-        /// </returns>
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"Key: {Key}, Value: {Value}, Exception: {Exception}";

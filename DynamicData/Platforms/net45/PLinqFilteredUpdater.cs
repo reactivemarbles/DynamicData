@@ -1,52 +1,73 @@
+#if P_LINQ
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
-#if P_LINQ
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    internal class PLinqFilteredUpdater<TObject, TKey> : AbstractFilter<TObject, TKey>
+    internal class PFilter<TObject, TKey>
     {
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+        private readonly Func<TObject, bool> _filter;
         private readonly ParallelisationOptions _parallelisationOptions;
 
-        public PLinqFilteredUpdater(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
-            : base(new ChangeAwareCache<TObject, TKey>(), filter)
+        public PFilter(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
         {
+            _source = source;
+            _filter = filter;
             _parallelisationOptions = parallelisationOptions;
         }
 
-        public PLinqFilteredUpdater(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
-            : base(cache, filter)
+        public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-            _parallelisationOptions = parallelisationOptions;
-        }
-
-        protected override IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory)
-        {
-            var keyValuePairs = items as KeyValuePair<TKey, TObject>[] ?? items.ToArray();
-
-            return keyValuePairs.ShouldParallelise(_parallelisationOptions)
-                ? keyValuePairs.Parallelise(_parallelisationOptions).Select(factory).SelectValues()
-                : keyValuePairs.Select(factory).SelectValues();
-        }
-
-        protected override IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates)
-        {
-            if (updates.ShouldParallelise(_parallelisationOptions))
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
-                return updates.Parallelise(_parallelisationOptions)
-                              .Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
+                var filterer = new PLinqFilteredUpdater(_filter, _parallelisationOptions);
+                return _source
+                    .Select(filterer.Update)
+                    .NotEmpty()
+                    .SubscribeSafe(observer);
+            });
+        }
+
+        private  class PLinqFilteredUpdater: AbstractFilter<TObject, TKey>
+        {
+            private readonly ParallelisationOptions _parallelisationOptions;
+
+            public PLinqFilteredUpdater(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
+                : base(new ChangeAwareCache<TObject, TKey>(), filter)
+            {
+                _parallelisationOptions = parallelisationOptions;
             }
-            return updates.Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
+
+            protected override IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory)
+            {
+                var keyValuePairs = items as KeyValuePair<TKey, TObject>[] ?? items.ToArray();
+
+                return keyValuePairs.ShouldParallelise(_parallelisationOptions)
+                    ? keyValuePairs.Parallelise(_parallelisationOptions).Select(factory).SelectValues()
+                    : keyValuePairs.Select(factory).SelectValues();
+            }
+
+            protected override IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates)
+            {
+                if (updates.ShouldParallelise(_parallelisationOptions))
+                {
+                    return updates.Parallelise(_parallelisationOptions)
+                        .Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
+                }
+                return updates.Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
+            }
         }
     }
+
+
+
+
 }
 #endif

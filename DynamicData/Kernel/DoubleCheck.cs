@@ -20,8 +20,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">factory</exception>
         public DoubleCheck(Func<T> factory)
         {
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
-            _factory = factory;
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
         }
 
         /// <summary>

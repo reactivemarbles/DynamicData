@@ -32,17 +32,13 @@ namespace DynamicData.Kernel
 
         #region Equality 
 
-        /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>
-        /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>
-        /// <param name="other">An object to compare with this object.</param>
+        /// <inheritdoc />
         public bool Equals(ItemWithIndex<T> other)
         {
             return EqualityComparer<T>.Default.Equals(Item, other.Item);
         }
 
-        /// <summary>Indicates whether this instance and a specified object are equal.</summary>
-        /// <returns>true if <paramref name="obj" /> and this instance are the same type and represent the same value; otherwise, false. </returns>
-        /// <param name="obj">The object to compare with the current instance. </param>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -76,12 +72,8 @@ namespace DynamicData.Kernel
 
         #endregion
 
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
+
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"{Item} ({Index})";

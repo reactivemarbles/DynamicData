@@ -1,10 +1,9 @@
+#if P_LINQ
+
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
-
-#if P_LINQ
-    
      
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
@@ -14,8 +13,6 @@ namespace DynamicData.PLinq
     ///  </summary>
     internal static class ParallelEx
     {
-
-
         internal static bool ShouldParallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
         {
             return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered)

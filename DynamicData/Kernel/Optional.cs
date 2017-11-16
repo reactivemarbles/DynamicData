@@ -111,7 +111,7 @@ namespace DynamicData.Kernel
         }
 
         /// <summary>
-        /// Explicit cast from option to valiue
+        /// Explicit cast from option to value
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns></returns>
@@ -173,13 +173,7 @@ namespace DynamicData.Kernel
             return obj is Optional<T> && Equals((Optional<T>)obj);
         }
 
-        /// <summary>
-        /// Retrieves the hash code of the object returned by the <see cref="P:System.Nullable`1.Value"/> property.
-        /// </summary>
-        /// 
-        /// <returns>
-        /// The hash code of the object returned by the <see cref="P:System.Nullable`1.Value"/> property if the <see cref="P:System.Nullable`1.HasValue"/> property is true, or zero if the <see cref="P:System.Nullable`1.HasValue"/> property is false.
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -190,12 +184,7 @@ namespace DynamicData.Kernel
 
         #endregion
 
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
+        /// <inheritdoc />
         public override string ToString()
         {
             return !HasValue ? "<None>" : _value.ToString();
