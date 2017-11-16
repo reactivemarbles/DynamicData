@@ -34,13 +34,13 @@ namespace DynamicData.Tests.Cache
             var companies = new List<string> { "Company A", "Company B", "Company C" };
 
             //create 100 people
-            var people = Enumerable.Range(1, numberOfPeople).Select(i => new Person("Person{0}".FormatWith(i), i)).ToArray();
+            var people = Enumerable.Range(1, numberOfPeople).Select(i => new Person($"Person{i}", i)).ToArray();
 
             //create 0-3 jobs for each person and select from companies
             var emphistory = Enumerable.Range(1, numberOfPeople).SelectMany(i =>
             {
                 var companiestogenrate = random.Next(0, 4);
-                return Enumerable.Range(0, companiestogenrate).Select(c => new PersonEmployment("Person{0}".FormatWith(i), companies[c]));
+                return Enumerable.Range(0, companiestogenrate).Select(c => new PersonEmployment($"Person{i}", companies[c]));
             }).ToList();
 
             // Cache results

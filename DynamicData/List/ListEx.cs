@@ -498,7 +498,7 @@ namespace DynamicData
             }
             else
             {
-                throw new NotSupportedException("Cannot remove range from {0}".FormatWith(source.GetType()));
+                throw new NotSupportedException($"Cannot remove range from {source.GetType().FullName}");
             }
         }
 

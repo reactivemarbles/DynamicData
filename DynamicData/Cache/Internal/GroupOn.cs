@@ -114,9 +114,7 @@ namespace DynamicData.Cache.Internal
 
                                         //check whether the previous item was in a different group. If so remove from old group
                                         var previous = _itemCache.Lookup(current.Key)
-                                            .ValueOrThrow(() => new MissingKeyException("{0} is missing from previous value on update. Object type {1}, Key type {2}, Group key type {3}"
-                                                        .FormatWith(current.Key, typeof(TObject), typeof(TKey),
-                                                            typeof(TGroupKey))));
+                                            .ValueOrThrow(() => new MissingKeyException($"{current.Key} is missing from previous value on update. Object type {typeof(TObject).FullName}, Key type {typeof(TKey).FullName}, Group key type {typeof(TGroupKey).FullName}"));
 
                                         if (!previous.GroupKey.Equals(current.GroupKey))
                                         {
@@ -144,9 +142,9 @@ namespace DynamicData.Cache.Internal
                                         {
                                             //this has been removed due to an underlying evaluate resulting in a remove
                                             var previousGroupKey = _itemCache.Lookup(current.Key)
-                                                .ValueOrThrow(() => new MissingKeyException("{0} is missing from previous value on remove. Object type {1}, Key type {2}, Group key type {3}"
-                                                            .FormatWith(current.Key, typeof(TObject), typeof(TKey), typeof(TGroupKey)))).GroupKey;
-
+                                                .ValueOrThrow(() => new MissingKeyException($"{current.Key} is missing from previous value on remove. Object type {typeof(TObject).FullName}, Key type {typeof(TKey).FullName}, Group key type {typeof(TGroupKey).FullName}"))
+                                                .GroupKey;
+                                                
                                             _groupCache.Lookup(previousGroupKey)
                                                        .IfHasValue(g =>
                                                        {

@@ -43,7 +43,7 @@ namespace DynamicData.Tests.Cache
             }
 
             const int size = 100;
-            Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
+            Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
             _source.AddOrUpdate(items);
 
             var remover = _source.ExpireAfter(RemoveFunc, _scheduler).Subscribe();
@@ -97,7 +97,7 @@ namespace DynamicData.Tests.Cache
         {
             var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
             const int size = 100;
-            Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
+            Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
 
             _source.AddOrUpdate(items);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(200).Ticks);

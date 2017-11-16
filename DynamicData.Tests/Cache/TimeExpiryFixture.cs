@@ -45,7 +45,7 @@ namespace DynamicData.Tests.Cache
             }
 
             const int size = 100;
-            Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
+            Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name{i}", i)).ToArray();
             _cache.AddOrUpdate(items);
 
             var xxx = _cache.ExpireAfter(RemoveFunc, _scheduler).Subscribe();
@@ -90,7 +90,7 @@ namespace DynamicData.Tests.Cache
         public void CanHandleABatchOfUpdates()
         {
             const int size = 100;
-            Person[] items = Enumerable.Range(1, size).Select(i => new Person("Name.{0}".FormatWith(i), i)).ToArray();
+            Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
 
             _cache.AddOrUpdate(items);
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
