@@ -67,26 +67,25 @@ namespace DynamicData.Cache.Internal
             }
             else
             {
-                int index = -1;
+                var index = -1;
                 var sorted = _list.OrderBy(t => t, _comparer).ToList();
+                var unsortedCache = _list.Select((kvp, idx) => new { kvp, idx }).ToDictionary(o => o.kvp, o => o.idx);
+
                 foreach (var item in sorted)
                 {
-                    KeyValuePair<TKey, TObject> current = item;
                     index++;
 
-                    //Cannot use binary search as Resort is implicit of a mutable change
-                    KeyValuePair<TKey, TObject> existing = _list[index];
-                    var areequal = EqualityComparer<TKey>.Default.Equals(current.Key, existing.Key);
-                    if (areequal)
+                    var oldPos = unsortedCache[item];
+
+                    if (oldPos == index)
                     {
                         continue;
                     }
-                    var old = _list.IndexOf(current);
-                    _list.RemoveAt(old);
-                    _list.Insert(index, current);
 
-                    result.Add(new Change<TObject, TKey>(current.Key, current.Value, index, old));
+                    result.Add(new Change<TObject, TKey>(item.Key, item.Value, index, oldPos));
                 }
+
+                _list = sorted;
             }
 
             return new ChangeSet<TObject, TKey>(result);
