@@ -51,9 +51,10 @@ namespace DynamicData.Cache.Internal
 
                 var transformed = _source.Transform((t, key) =>
                 {
+                    //Only skip initial for first time Adds where there is isinitial data records 
                     var locker = new object();
                     var collection = _manyselector(t);
-                    var changes = _childChanges(t).Synchronize(locker).Skip(1);
+                    var changes = _childChanges(t).Synchronize(locker);//.Skip(1);
                     return new ManyContainer(() =>
                     {
                         lock (locker)
@@ -133,6 +134,7 @@ namespace DynamicData.Cache.Internal
                     }
                 }
             }
+
             IEnumerator IEnumerable.GetEnumerator()
             {
                 return GetEnumerator();

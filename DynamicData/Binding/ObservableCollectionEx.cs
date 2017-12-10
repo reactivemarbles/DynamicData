@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -93,73 +94,79 @@ namespace DynamicData.Binding
             where TCollection : INotifyCollectionChanged, IEnumerable<T>
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return Observable.Create<IChangeSet<T>>
-                (
-                    observer =>
+
+            return Observable.Create<IChangeSet<T>>(observer =>
+            {
+                var data = new ChangeAwareList<T>(source);
+
+                if (data.Count > 0)
+                    observer.OnNext(data.CaptureChanges());
+
+                return source.ObserveCollectionChanges()
+                    .Scan(data, (list, args) =>
                     {
-                        ChangeSet<T> InitialChangeSet()
+                        var changes = args.EventArgs;
+
+                        switch (changes.Action)
                         {
-                            return new ChangeSet<T>() { new Change<T>(ListChangeReason.AddRange, source.ToList()) };
-                        }
-
-                        //populate local cache, otherwise there is no way to deal with a reset
-                        var cloneOfList = new SourceList<T>();
-
-                        var sourceUpdates = Observable
-                            .FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-                                h => source.CollectionChanged += h,
-                                h => source.CollectionChanged -= h)
-                            .Select
-                            (
-                                args =>
+                            case NotifyCollectionChangedAction.Add:
+                            {
+                                if (changes.NewItems.Count == 1)
                                 {
-                                    var changes = args.EventArgs;
+                                    list.Insert(changes.NewStartingIndex, (T) changes.NewItems[0]);
+                                }
+                                else
+                                {
+                                    list.InsertRange(changes.NewItems.Cast<T>(), changes.NewStartingIndex);
+                                }
+                                break;
+                            }
+                            case NotifyCollectionChangedAction.Remove:
+                            {
+                                if (changes.OldItems.Count == 1)
+                                {
+                                    list.RemoveAt(changes.OldStartingIndex);
+                                }
+                                else
+                                {
+                                    list.RemoveRange(changes.OldStartingIndex, changes.OldItems.Count);
+                                }
+                                break;
+                            }
+                            case NotifyCollectionChangedAction.Replace:
+                            {
+                                list[changes.NewStartingIndex] = (T) changes.NewItems[0];
+                                break;
+                            }
+                            case NotifyCollectionChangedAction.Reset:
+                            {
+                                list.Clear();
+                                list.AddRange(source);
+                                break;
+                            }
 
-                                    switch (changes.Action)
-                                    {
-                                        case NotifyCollectionChangedAction.Add:
-                                            return changes.NewItems.OfType<T>()
-                                                          .Select((t, index) => new Change<T>(ListChangeReason.Add, t, index + changes.NewStartingIndex));
+                            case NotifyCollectionChangedAction.Move:
+                            {
+                                list.Move(changes.OldStartingIndex, changes.NewStartingIndex);
+                                break;
+                            }
+                        }
+                        return list;
+                    })
+                    .Select(list => list.CaptureChanges())
+                    .SubscribeSafe(observer);
+            });
+        }
 
-                                        case NotifyCollectionChangedAction.Remove:
-                                            return changes.OldItems.OfType<T>()
-                                                          .Select((t, index) => new Change<T>(ListChangeReason.Remove, t, index + changes.OldStartingIndex));
-
-                                        case NotifyCollectionChangedAction.Replace:
-                                            return changes.NewItems.OfType<T>()
-                                                          .Select((t, idx) =>
-                                                          {
-                                                              var old = changes.OldItems[idx];
-                                                              return new Change<T>(ListChangeReason.Replace, t, (T)old, idx + changes.NewStartingIndex, + changes.NewStartingIndex);
-                                                          });
-
-                                        case NotifyCollectionChangedAction.Reset:
-                                            var cleared = new Change<T>(ListChangeReason.Clear, cloneOfList.Items.ToList(), 0);
-                                            var clearedChangeSet = new ChangeSet<T>() { cleared };
-                                            return clearedChangeSet.Concat(InitialChangeSet());
-
-                                        case NotifyCollectionChangedAction.Move:
-                                            var item = changes.NewItems.OfType<T>().First();
-                                            var change = new Change<T>(item, changes.NewStartingIndex, changes.OldStartingIndex);
-                                            return new[] { change };
-
-                                        default:
-                                            return null;
-                                    }
-                                })
-                            .Where(updates => updates != null)
-                            .Select(updates => (IChangeSet<T>)new ChangeSet<T>(updates));
-
-
-                        var changed = includeInitial
-                            ? Observable.Defer(() => Observable.Return(InitialChangeSet())).Concat(sourceUpdates)
-                            : sourceUpdates;
-
-                        var cacheLoader = changed.PopulateInto(cloneOfList);
-
-                        var subscriber = cloneOfList.Connect().SubscribeSafe(observer);
-                        return new CompositeDisposable(cacheLoader, subscriber, cloneOfList);
-                    });
+        /// <summary>
+        /// Observes notify collection changed args
+        /// </summary>
+        public static IObservable<EventPattern<NotifyCollectionChangedEventArgs>> ObserveCollectionChanges(this INotifyCollectionChanged source)
+        {
+            return Observable
+                .FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                    h => source.CollectionChanged += h,
+                    h => source.CollectionChanged -= h);
         }
     }
 }

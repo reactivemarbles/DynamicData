@@ -16,8 +16,22 @@ namespace DynamicData
     /// <seealso cref="DynamicData.IExtendedList{T}" />
     public class ChangeAwareList<T> : ISupportsCapcity, IExtendedList<T>
     {
-        private readonly List<T> _innerList = new List<T>();
+        private readonly List<T> _innerList;
         private List<Change<T>> _changes = new List<Change<T>>();
+
+        public ChangeAwareList(int capacity = -1)
+        {
+            _innerList = capacity > 0 ? new List<T>(capacity) : new List<T>();
+        }
+
+        public ChangeAwareList(IEnumerable<T> items)
+        {
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            _innerList = new List<T>(items);
+
+
+            _changes.Add(new Change<T>(ListChangeReason.AddRange, items));
+        }
 
         /// <summary>
         /// Create a changeset from recorded changes and clears known changes.
