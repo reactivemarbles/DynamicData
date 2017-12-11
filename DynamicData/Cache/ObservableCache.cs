@@ -96,8 +96,7 @@ namespace DynamicData
 
                         return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
                         {
-                            var matches = changes.Where(update => update.Key.Equals(key));
-                            foreach (var match in matches)
+                            foreach (var match in changes.Where(update => update.Key.Equals(key)))
                             {
                                 observer.OnNext(match);
                             }

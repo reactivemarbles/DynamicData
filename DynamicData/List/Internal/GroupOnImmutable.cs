@@ -288,14 +288,14 @@ namespace DynamicData.List.Internal
 
             public bool Equals(ItemWithGroupKey other)
             {
-                if (ReferenceEquals(null, other)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
                 return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 return obj is ItemWithGroupKey && Equals((ItemWithGroupKey)obj);
             }

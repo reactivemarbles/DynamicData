@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
 
@@ -8,19 +9,11 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
     /// <summary>
-    /// A set of changes applied to the 
+    /// A collection of changes
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
     public class ChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>
     {
-        private List<Change<TObject, TKey>> Items { get; } = new List<Change<TObject, TKey>>();
-
-        private int _adds;
-        private int _removes;
-        private int _refreshes;
-        private int _updates;
-        private int _moves;
+        private List<Change<TObject, TKey>> Items { get; } 
 
         /// <summary>
         /// An empty change set
@@ -32,6 +25,7 @@ namespace DynamicData
         /// </summary>
         public ChangeSet()
         {
+            Items = new List<Change<TObject, TKey>>();
         }
 
         /// <summary>
@@ -40,8 +34,8 @@ namespace DynamicData
         /// <param name="items">The items.</param>
         public ChangeSet([NotNull] IEnumerable<Change<TObject, TKey>> items)
         {
-            if(items == null) throw new ArgumentNullException(nameof(items));
-            items.ForEach(change => Add(change, false));
+            if (items == null) throw new ArgumentNullException(nameof(items));
+            Items = new List<Change<TObject, TKey>>(items);
         }
 
         /// <summary>
@@ -63,101 +57,43 @@ namespace DynamicData
         /// <param name="current">The current.</param>
         /// <param name="previous">The previous.</param>
         private ChangeSet(ChangeReason reason, TKey key, TObject current, Optional<TObject> previous)
-            : this()
         {
-            Add(new Change<TObject, TKey>(reason, key, current, previous));
-        }
-
-        /// <summary>
-        /// Adds the specified item.
-        /// </summary>
-        /// <param name="item">The item.</param>
-        public void Add(Change<TObject, TKey> item)
-        {
-            Add(item, false);
-        }
-
-        /// <summary>
-        /// Adds the specified item.
-        /// </summary>
-        /// <param name="item">The item.</param>
-        /// <param name="countOnly">set to true if the item has already been added</param>
-        private void Add(Change<TObject, TKey> item, bool countOnly)
-        {
-            switch (item.Reason)
+            Items = new List<Change<TObject, TKey>>
             {
-                case ChangeReason.Add:
-                    _adds++;
-                    break;
-                case ChangeReason.Update:
-                    _updates++;
-                    break;
-                case ChangeReason.Remove:
-                    _removes++;
-                    break;
-                case ChangeReason.Refresh:
-                    _refreshes++;
-                    break;
-                case ChangeReason.Moved:
-                    _moves++;
-                    break;
-            }
-            if (!countOnly) Items.Add(item);
+                new Change<TObject, TKey>(reason, key, current, previous)
+            };
         }
 
-        /// <summary>
-        /// Gets or sets the capacity.
-        /// </summary>
-        /// <value>
-        /// The capacity.
-        /// </value>
+        /// <inheritdoc />
         public int Capacity
         {
             get => Items.Capacity;
             set => Items.Capacity = value;
         }
 
-        /// <summary>
-        ///     The total update count
-        /// </summary>
+        /// <inheritdoc />
         public int Count => Items.Count;
 
-        /// <summary>
-        ///     Gets the number of additions
-        /// </summary>
-        public int Adds => _adds;
+        /// <inheritdoc />
+        public int Adds => Items.Count(c => c.Reason == ChangeReason.Add);
 
-        /// <summary>
-        ///     Gets the number of updates
-        /// </summary>
-        public int Updates => _updates;
+        /// <inheritdoc />
+        public int Updates => Items.Count(c => c.Reason == ChangeReason.Update);
 
-        /// <summary>
-        ///     Gets the number of removes
-        /// </summary>
-        public int Removes => _removes;
+        /// <inheritdoc />
+        public int Removes => Items.Count(c => c.Reason == ChangeReason.Remove);
 
-        /// <summary>
-        ///     The number of refreshes
-        /// </summary>
-        public int Refreshes => _refreshes;
+        /// <inheritdoc />
+        public int Refreshes => Items.Count(c => c.Reason == ChangeReason.Refresh);
 
-        /// <summary>
-        ///     The number of requeries
-        /// </summary>
-        public int Evaluates => _refreshes;
+        /// <inheritdoc />
+        public int Evaluates => Items.Count(c => c.Reason == ChangeReason.Refresh);
 
-        /// <summary>
-        ///     Gets the number of moves
-        /// </summary>
-        public int Moves => _moves;
+        /// <inheritdoc />
+        public int Moves => Items.Count(c => c.Reason == ChangeReason.Moved);
 
-        #region Enumeration
 
-        /// <summary>
-        /// Gets the enumerator.
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IEnumerator<Change<TObject, TKey>> GetEnumerator()
         {
             return Items.GetEnumerator();
@@ -168,14 +104,8 @@ namespace DynamicData
             return GetEnumerator();
         }
 
-        #endregion
 
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"ChangeSet<{typeof(TObject).Name}.{typeof(TKey).Name}>. Count={Count}";

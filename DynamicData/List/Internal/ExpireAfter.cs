@@ -45,16 +45,15 @@ namespace DynamicData.List.Internal
                                              })
                                              .AsObservableList();
 
-                Action removalAction = () =>
+                void RemovalAction()
                 {
                     try
                     {
                         lock (_locker)
                         {
-                            var toRemove = autoRemover.Items
-                                                      .Where(ei => ei.ExpireAt <= _scheduler.Now.DateTime)
-                                                      .Select(ei => ei.Item)
-                                                      .ToList();
+                            var toRemove = autoRemover.Items.Where(ei => ei.ExpireAt <= _scheduler.Now.DateTime)
+                                .Select(ei => ei.Item)
+                                .ToList();
 
                             observer.OnNext(toRemove);
                         }
@@ -63,13 +62,13 @@ namespace DynamicData.List.Internal
                     {
                         observer.OnError(ex);
                     }
-                };
+                }
 
                 var removalSubscripion = new SingleAssignmentDisposable();
                 if (_pollingInterval.HasValue)
                 {
                     // use polling
-                    removalSubscripion.Disposable = _scheduler.ScheduleRecurringAction(_pollingInterval.Value, removalAction);
+                    removalSubscripion.Disposable = _scheduler.ScheduleRecurringAction(_pollingInterval.Value, RemovalAction);
                 }
                 else
                 {
@@ -82,7 +81,7 @@ namespace DynamicData.List.Internal
                                                                    var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
                                                                    return Observable.Timer(expireAt, _scheduler)
                                                                                     .Take(1)
-                                                                                    .Subscribe(_ => removalAction());
+                                                                                    .Subscribe(_ => RemovalAction());
                                                                })
                                                                .Subscribe();
                 }

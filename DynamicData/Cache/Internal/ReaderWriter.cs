@@ -69,9 +69,8 @@ namespace DynamicData.Cache.Internal
             {
                 IEnumerable<TKey> result;
                 lock (_locker)
-                {
                     result = _cache.Keys.ToArray();
-                }
+
                 return result;
             }
         }
@@ -82,9 +81,8 @@ namespace DynamicData.Cache.Internal
             {
                 IEnumerable<KeyValuePair<TKey, TObject>> result;
                 lock (_locker)
-                {
                     result = _cache.KeyValues.ToArray();
-                }
+
                 return result;
             }
         }
@@ -95,16 +93,19 @@ namespace DynamicData.Cache.Internal
             {
                 IEnumerable<TObject> result;
                 lock (_locker)
-                {
                     result = _cache.Items.ToArray();
-                }
+
                 return result;
             }
         }
 
         public Optional<TObject> Lookup(TKey key)
         {
-            return _cache.Lookup(key);
+            Optional<TObject> result;
+            lock (_locker)
+                result= _cache.Lookup(key);
+   
+            return result;
         }
 
         public int Count => _cache.Count;
