@@ -87,10 +87,9 @@ namespace DynamicData.Binding
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <typeparam name="TCollection"></typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="includeInitial">Should the initial changes be included in the results  set</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source, bool includeInitial = true)
+        public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
             where TCollection : INotifyCollectionChanged, IEnumerable<T>
         {
             if (source == null) throw new ArgumentNullException(nameof(source));

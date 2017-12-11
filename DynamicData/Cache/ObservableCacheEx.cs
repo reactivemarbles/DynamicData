@@ -2421,10 +2421,7 @@ namespace DynamicData
             Func<TSource, ObservableCollection<TDestination>> manyselector,
             Func<TDestination, TDestinationKey> keySelector)
         {
-            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey> (source, 
-                manyselector, 
-                keySelector,
-                t => manyselector(t).ToObservableChangeSet(keySelector)).Run();
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
         }
 
         /// <summary>
@@ -2441,10 +2438,7 @@ namespace DynamicData
             Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
             Func<TDestination, TDestinationKey> keySelector)
         {
-            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source,
-                manyselector,
-                keySelector,
-                t => manyselector(t).ToObservableChangeSet(keySelector)).Run();
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
         }
 
 

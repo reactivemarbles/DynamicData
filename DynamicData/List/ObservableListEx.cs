@@ -774,7 +774,7 @@ namespace DynamicData
             Func<TSource, ObservableCollection<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
         {
-            return new TransformMany<TSource, TDestination>(source,manyselector, equalityComparer,t => manyselector(t).ToObservableChangeSet()).Run();
+            return new TransformMany<TSource, TDestination>(source,manyselector, equalityComparer).Run();
         }
 
         /// <summary>
@@ -789,11 +789,9 @@ namespace DynamicData
             Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
         {
-            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer, t => manyselector(t).ToObservableChangeSet()).Run();
+            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer).Run();
         }
-
-
-
+        
 
         /// <summary>
         /// Selects distinct values from the source, using the specified value selector

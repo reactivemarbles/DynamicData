@@ -124,17 +124,65 @@ namespace DynamicData.Tests.List
             }
         }
 
+        [Fact]
+        public void ObservableCollectionWithoutInitialData()
+        {
+            using (var parents = new SourceList<Parent>())
+            {
+
+                var collection = parents.Connect()
+                    .TransformMany(d => d.Children)
+                    .AsObservableList();
+
+                var parent = new Parent();
+                parents.Add(parent);
+
+                collection.Count.Should().Be(0);
+
+                parent.Children.Add(new Person("child1", 1));
+                collection.Count.Should().Be(1);
+
+                parent.Children.Add(new Person("child2", 2));
+                collection.Count.Should().Be(2);
+            }
+        }
+
+        [Fact]
+        public void ReadOnlyObservableCollectionWithoutInitialData()
+        {
+            using (var parents = new SourceList<Parent>())
+            {
+                var collection = parents.Connect()
+                    .TransformMany(d => d.ChildrenReadonly)
+                    .AsObservableList();
+
+                var parent = new Parent();
+                parents.Add(parent);
+
+                collection.Count.Should().Be(0);
+
+                parent.Children.Add(new Person("child1", 1));
+                collection.Count.Should().Be(1);
+
+                parent.Children.Add(new Person("child2", 2));
+                collection.Count.Should().Be(2);
+            }
+        }
 
         private class Parent
         {
-            public int Id { get; }
             public ObservableCollection<Person> Children { get; }
             public ReadOnlyObservableCollection<Person> ChildrenReadonly { get; }
 
             public Parent(int id, IEnumerable<Person> children)
             {
-                Id = id;
                 Children = new ObservableCollection<Person>(children);
+                ChildrenReadonly = new ReadOnlyObservableCollection<Person>(Children);
+            }
+
+            public Parent()
+            {
+                Children = new ObservableCollection<Person>();
                 ChildrenReadonly = new ReadOnlyObservableCollection<Person>(Children);
             }
         }

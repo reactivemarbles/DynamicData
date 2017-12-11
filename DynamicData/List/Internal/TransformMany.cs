@@ -1,10 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
+using DynamicData.Binding;
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
@@ -15,6 +17,38 @@ namespace DynamicData.List.Internal
         private readonly Func<TSource, IEnumerable<TDestination>> _manyselector;
         private readonly Func<TSource, IObservable<IChangeSet<TDestination>>> _childChanges;
         private readonly IEqualityComparer<TDestination> _equalityComparer;
+
+        public TransformMany(IObservable<IChangeSet<TSource>> source,
+            Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+            : this(source, manyselector, equalityComparer, t => Observable.Defer(() =>
+            {
+                var subsequentChanges = manyselector(t).ToObservableChangeSet();
+
+                if (manyselector(t).Count > 0)
+                    return subsequentChanges;
+
+                return Observable.Return(ChangeSet<TDestination>.Empty)
+                    .Concat(subsequentChanges);
+            }))
+        {
+        }
+
+        public TransformMany(IObservable<IChangeSet<TSource>> source,
+            Func<TSource, ObservableCollection<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+            :this(source,manyselector, equalityComparer, t => Observable.Defer(() =>
+            {
+                var subsequentChanges = manyselector(t).ToObservableChangeSet();
+
+                if (manyselector(t).Count > 0)
+                    return subsequentChanges;
+
+                return Observable.Return(ChangeSet<TDestination>.Empty)
+                    .Concat(subsequentChanges);
+            }))
+        {
+        }
 
 
         public TransformMany([NotNull] IObservable<IChangeSet<TSource>> source,
@@ -33,7 +67,7 @@ namespace DynamicData.List.Internal
             if (_childChanges != null)
                 return CreateWithChangeset();
 
-            return _source.Transform(item => new ManyContainer(item, _manyselector(item)))
+            return _source.Transform(item => new ManyContainer(_manyselector(item)))
                 .Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer))).NotEmpty();
         }
           
@@ -48,7 +82,7 @@ namespace DynamicData.List.Internal
                     var locker = new object();
                     var collection = _manyselector(t);
                     var changes = _childChanges(t).Synchronize(locker).Skip(1);
-                    return new ManyContainer(t, collection, changes);
+                    return new ManyContainer(collection, changes);
                 })
                 .Publish();
 
@@ -74,13 +108,11 @@ namespace DynamicData.List.Internal
 
         private sealed class ManyContainer
         {
-            public TSource Source { get; }
             public IEnumerable<TDestination> Destination { get; }
             public IObservable<IChangeSet<TDestination>> Changes { get; }
 
-            public ManyContainer(TSource source, IEnumerable<TDestination> destination, IObservable<IChangeSet<TDestination>> changes = null)
+            public ManyContainer(IEnumerable<TDestination> destination, IObservable<IChangeSet<TDestination>> changes = null)
             {
-                Source = source;
                 Destination = destination;
                 Changes = changes;
             }

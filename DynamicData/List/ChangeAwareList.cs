@@ -19,17 +19,21 @@ namespace DynamicData
         private readonly List<T> _innerList;
         private List<Change<T>> _changes = new List<Change<T>>();
 
+        /// <summary>
+        /// Create a change aware list with the specified capacity
+        /// </summary>
         public ChangeAwareList(int capacity = -1)
         {
             _innerList = capacity > 0 ? new List<T>(capacity) : new List<T>();
         }
 
+        /// <summary>
+        /// Create a change aware list with the specified items
+        /// </summary>
         public ChangeAwareList(IEnumerable<T> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
             _innerList = new List<T>(items);
-
-
             _changes.Add(new Change<T>(ListChangeReason.AddRange, items));
         }
 

@@ -11,17 +11,48 @@ namespace DynamicData.ReactiveUI
     /// </summary>
     public static class ReactiveListEx
     {
-		/// <summary>
-		/// Converts the Reactive List into an observable change set
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="source">The source.</param>
-		/// <returns></returns>
-		/// <exception cref="System.ArgumentNullException">source</exception>
-		public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this  ReactiveList<T> source)
+        /// <summary>
+        /// Converts the Reactive List into an observable change set
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IReadOnlyReactiveList<T> source)
+        {
+            return source.ToObservableChangeSet<IReadOnlyReactiveList<T>, T>();
+        }
+
+        /// <summary>
+        /// Converts the Reactive List into an observable change set
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReactiveList<T> source)
         {
             return source.ToObservableChangeSet<ReactiveList<T>, T>();
 		}
+
+        /// <summary>
+        /// Clones the ReactiveList from all changes
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="keySelector">The key selector.</param>
+        /// <returns></returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IReadOnlyReactiveList<TObject> source, Func<TObject, TKey> keySelector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+            return source.ToObservableChangeSet<IReadOnlyReactiveList<TObject>, TObject>().AddKey(keySelector);
+        }
 
         /// <summary>
         /// Clones the ReactiveList from all changes
@@ -171,12 +202,5 @@ namespace DynamicData.ReactiveUI
        
         }
 
-        private static void ForEach<T>(this IEnumerable<T> source, Action<T, int> action)
-        {
-            var i = -1;
-            foreach (var item in source)
-                action(item,i++);
-          
-        }
     }
 }

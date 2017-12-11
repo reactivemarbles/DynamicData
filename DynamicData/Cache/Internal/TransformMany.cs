@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Binding;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -14,6 +16,39 @@ namespace DynamicData.Cache.Internal
         private readonly Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>> _childChanges;
         private readonly Func<TSource, IEnumerable<TDestination>> _manyselector;
         private readonly Func<TDestination, TDestinationKey> _keySelector;
+
+        public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
+            Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
+            Func<TDestination, TDestinationKey> keySelector)
+            : this(source, manyselector, keySelector, t => Observable.Defer(() =>
+            {
+                var subsequentChanges = manyselector(t).ToObservableChangeSet(keySelector);
+
+                if (manyselector(t).Count > 0)
+                    return subsequentChanges;
+
+                return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
+                    .Concat(subsequentChanges);
+            }))
+
+        {
+        }
+
+        public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
+            Func<TSource, ObservableCollection<TDestination>> manyselector,
+            Func<TDestination, TDestinationKey> keySelector)
+            :this(source, manyselector, keySelector, t => Observable.Defer(() =>
+            {
+                var subsequentChanges = manyselector(t).ToObservableChangeSet(keySelector);
+
+                if (manyselector(t).Count > 0)
+                    return subsequentChanges;
+
+                return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
+                    .Concat(subsequentChanges);
+            }))
+        {
+        }
 
         public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
             Func<TSource, IEnumerable<TDestination>> manyselector,
@@ -54,7 +89,7 @@ namespace DynamicData.Cache.Internal
                     //Only skip initial for first time Adds where there is isinitial data records 
                     var locker = new object();
                     var collection = _manyselector(t);
-                    var changes = _childChanges(t).Synchronize(locker);//.Skip(1);
+                    var changes = _childChanges(t).Synchronize(locker).Skip(1);
                     return new ManyContainer(() =>
                     {
                         lock (locker)
@@ -173,7 +208,7 @@ namespace DynamicData.Cache.Internal
                 public bool Equals(DestinationContainer x, DestinationContainer y)
                 {
                     if (ReferenceEquals(x, y)) return true;
-                    if (ReferenceEquals(x, null)) return false;
+                    if (x is null) return false;
                     if (ReferenceEquals(y, null)) return false;
                     if (x.GetType() != y.GetType()) return false;
                     return EqualityComparer<TDestinationKey>.Default.Equals(x.Key, y.Key);

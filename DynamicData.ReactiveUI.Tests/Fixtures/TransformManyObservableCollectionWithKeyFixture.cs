@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
-using  DynamicData;
-using DynamicData.Tests.Domain;
+using DynamicData.ReactiveUI.Tests.Domain;
+using DynamicData.Tests;
 using FluentAssertions;
+using ReactiveUI;
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.ReactiveUI.Tests.Fixtures
 {
 
-    public class TransformManyObservableCollectionFixture
+    public class TransformManyObservableCollectionWithKeyFixture
     {
         [Fact]
         public void FlattenObservableCollection()
@@ -208,21 +208,21 @@ namespace DynamicData.Tests.Cache
         private class Parent
         {
             public int Id { get; }
-            public ObservableCollection<Person> Children { get; }
-            public ReadOnlyObservableCollection<Person> ChildrenReadonly { get; }
+            public ReactiveList<Person> Children { get; }
+            public IReadOnlyReactiveList<Person> ChildrenReadonly { get; }
 
             public Parent(int id, IEnumerable<Person> children)
             {
                 Id = id;
-                Children = new ObservableCollection<Person>(children);
-                ChildrenReadonly = new ReadOnlyObservableCollection<Person>(Children);
+                Children = new ReactiveList<Person>(children);
+                ChildrenReadonly = Children;
             }
 
             public Parent(int id)
             {
                 Id = id;
-                Children = new ObservableCollection<Person>();
-                ChildrenReadonly = new ReadOnlyObservableCollection<Person>(Children);
+                Children = new ReactiveList<Person>();
+                ChildrenReadonly = Children;
             }
         }
     }

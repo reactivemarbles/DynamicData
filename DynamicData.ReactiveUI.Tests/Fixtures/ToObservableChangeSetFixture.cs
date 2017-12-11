@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using DynamicData.ReactiveUI.Tests.Domain;
 using DynamicData.Tests;
 using ReactiveUI;
 using Xunit;

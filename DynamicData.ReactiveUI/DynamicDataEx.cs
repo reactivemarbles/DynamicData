@@ -14,6 +14,30 @@ namespace DynamicData.ReactiveUI
     /// </summary>
     public static class DynamicDataEx
     {
+        /// <summary>
+        /// Flattens a nested reactive list
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
+        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source,
+            Func<TSource, IReadOnlyReactiveList<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+        {
+            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer, t => Observable.Defer(() =>
+            {
+                var subsequentChanges = manyselector(t).ToObservableChangeSet();
+
+                if (manyselector(t).Count > 0)
+                    return subsequentChanges;
+
+                return Observable.Return(ChangeSet<TDestination>.Empty)
+                    .Concat(subsequentChanges);
+            })).Run();
+        }
+
 
         /// <summary>
         /// Flattens a nested reactive list
@@ -27,7 +51,16 @@ namespace DynamicData.ReactiveUI
             Func<TSource, ReactiveList<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
         {
-            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer, t => manyselector(t).ToObservableChangeSet()).Run();
+            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer,  t => Observable.Defer(() =>
+            {
+                var subsequentChanges = manyselector(t).ToObservableChangeSet();
+
+                if (manyselector(t).Count > 0)
+                    return subsequentChanges;
+
+                return Observable.Return(ChangeSet<TDestination>.Empty)
+                    .Concat(subsequentChanges);
+            })).Run();
         }
 
         /// <summary>
@@ -52,7 +85,50 @@ namespace DynamicData.ReactiveUI
             return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source,
                 manyselector,
                 keySelector,
-                t => manyselector(t).ToObservableChangeSet(keySelector)).Run();
+                t => Observable.Defer(() =>
+                {
+                    var subsequentChanges = manyselector(t).ToObservableChangeSet(keySelector);
+
+                    if (manyselector(t).Count > 0)
+                        return subsequentChanges;
+
+                    return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
+                        .Concat(subsequentChanges);
+                })).Run(); ;
+        }
+
+        /// <summary>
+        /// Flattens a nested reactive list, using the key selector to ensure only unique items are added
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TSourceKey">The type of the source key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="keySelector">The key selector which must be unique across all</param>
+        public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
+            this IObservable<IChangeSet<TSource, TSourceKey>> source,
+            Func<TSource, IReadOnlyReactiveList<TDestination>> manyselector,
+            Func<TDestination, TDestinationKey> keySelector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (manyselector == null) throw new ArgumentNullException(nameof(manyselector));
+            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+            return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source,
+                manyselector,
+                keySelector,
+                t => Observable.Defer(() =>
+                {
+                    var subsequentChanges = manyselector(t).ToObservableChangeSet(keySelector);
+
+                    if (manyselector(t).Count > 0)
+                        return subsequentChanges;
+
+                    return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
+                        .Concat(subsequentChanges);
+                })).Run(); ;
         }
 
         /// <summary>
