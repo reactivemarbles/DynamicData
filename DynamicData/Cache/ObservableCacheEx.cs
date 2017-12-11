@@ -1552,6 +1552,8 @@ namespace DynamicData
 
         #region Sort
 
+        private const int DefaultSortResetThreshold = 100;
+
         /// <summary>
         /// Sorts using the specified comparer.
         /// Returns the underlying ChangeSet as as per the system conventions.
@@ -1562,7 +1564,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="comparer">The comparer.</param>
         /// <param name="sortOptimisations">Sort optimisation flags. Specify one or more sort optimisations</param>
-        /// <param name="resetThreshold">The number of updates before the entire list is resorted (rather than inline sore)</param>
+        /// <param name="resetThreshold">The number of updates before the entire list is resorted (rather than inline sort)</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">
         /// source
@@ -1572,7 +1574,7 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
                                                                                        IComparer<TObject> comparer,
                                                                                        SortOptimisations sortOptimisations = SortOptimisations.None,
-                                                                                       int resetThreshold = -1)
+                                                                                       int resetThreshold = DefaultSortResetThreshold)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
@@ -1592,7 +1594,7 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             IObservable<IComparer<TObject>> comparerObservable,
             SortOptimisations sortOptimisations = SortOptimisations.None,
-            int resetThreshold = -1)
+            int resetThreshold = DefaultSortResetThreshold)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparerObservable == null) throw new ArgumentNullException(nameof(comparerObservable));
@@ -1615,7 +1617,7 @@ namespace DynamicData
             IObservable<IComparer<TObject>> comparerObservable,
             IObservable<Unit> resorter,
             SortOptimisations sortOptimisations = SortOptimisations.None,
-            int resetThreshold = -1)
+            int resetThreshold = DefaultSortResetThreshold)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (comparerObservable == null) throw new ArgumentNullException(nameof(comparerObservable));
@@ -1638,7 +1640,7 @@ namespace DynamicData
             IComparer<TObject> comparer,
             IObservable<Unit> resorter,
             SortOptimisations sortOptimisations = SortOptimisations.None,
-            int resetThreshold = -1)
+            int resetThreshold = DefaultSortResetThreshold)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (resorter == null) throw new ArgumentNullException(nameof(resorter));

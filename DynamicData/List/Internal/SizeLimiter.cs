@@ -17,11 +17,9 @@ namespace DynamicData.List.Internal
 
         public LimitSizeTo([NotNull] ISourceList<T> sourceList, int sizeLimit, [NotNull] IScheduler scheduler, object locker)
         {
-            if (sourceList == null) throw new ArgumentNullException(nameof(sourceList));
-            if (scheduler == null) throw new ArgumentNullException(nameof(scheduler));
-            _sourceList = sourceList;
+            _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
             _sizeLimit = sizeLimit;
-            _scheduler = scheduler;
+            _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
             _locker = locker;
         }
 

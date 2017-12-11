@@ -21,8 +21,7 @@ namespace DynamicData.List.Internal
         /// </summary>
         public bool Add(T item)
         {
-            int currentCount;
-            if (!ReferenceCounts.TryGetValue(item, out currentCount))
+            if (!ReferenceCounts.TryGetValue(item, out var currentCount))
             {
                 ReferenceCounts.Add(item, 1);
                 return true;
