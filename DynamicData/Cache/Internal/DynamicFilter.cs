@@ -42,14 +42,14 @@ namespace DynamicData.Cache.Internal
                     });
 
                 var dataChanged = _source
-                    .Finally(observer.OnCompleted)
+                   // .Finally(observer.OnCompleted)
                     .Synchronize(locker)
                     .Select(changes =>
                     {
                         //maintain all data [required to re-apply filter]
                         allData.Clone(changes); 
 
-                        //maintain filtered data
+                        //maintain filtered data 
                         filteredData.FilterChanges(changes, predicate);
 
                         //get latest changes

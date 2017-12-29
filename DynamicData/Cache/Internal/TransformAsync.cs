@@ -82,11 +82,11 @@ namespace DynamicData.Cache.Internal
         }
 
         private IChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TransformedItemContainer, TKey> cache, TransformResult[] transformedItems)
-            {
-                //check for errors and callback if a handler has been specified
-                var errors = transformedItems.Where(t => !t.Success).ToArray();
-                if (errors.Any())
-                    errors.ForEach(t => _exceptionCallback(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
+        {
+            //check for errors and callback if a handler has been specified
+            var errors = transformedItems.Where(t => !t.Success).ToArray();
+            if (errors.Any())
+                errors.ForEach(t => _exceptionCallback(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
 
             foreach (var result in transformedItems.Where(t => t.Success))
             {
@@ -109,15 +109,15 @@ namespace DynamicData.Cache.Internal
             }
 
             var changes = cache.CaptureChanges();
-                var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
-                                                                                          change.Key,
-                                                                                          change.Current.Destination,
-                                                                                          change.Previous.Convert(x => x.Destination),
-                                                                                          change.CurrentIndex,
-                                                                                          change.PreviousIndex));
+            var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason,
+                change.Key,
+                change.Current.Destination,
+                change.Previous.Convert(x => x.Destination),
+                change.CurrentIndex,
+                change.PreviousIndex));
 
-                return new ChangeSet<TDestination, TKey>(transformed);
-            }
+            return new ChangeSet<TDestination, TKey>(transformed);
+        }
 
         private sealed class TransformResult
         {

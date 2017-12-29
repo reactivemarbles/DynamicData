@@ -107,31 +107,17 @@ namespace DynamicData
 
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null)
         {
-            return Observable.Create<IChangeSet<TObject, TKey>>
-            (
-                observer =>
+            return Observable.Defer(() =>
+            {
+                lock (_locker)
                 {
-                    lock (_locker)
-                    {
-                        var initial = GetInitialUpdates(predicate);
-                        var source = _changes.Finally(observer.OnCompleted);
+                    var initial = GetInitialUpdates(predicate);
+                    var changes = Observable.Return(initial).Concat(_changes);
 
-                        if (predicate == null)
-                        {
-                            if (initial.Count > 0) observer.OnNext(initial);
-                            return source.SubscribeSafe(observer);
-                        }
-
-                        var updater = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), predicate);
-                        var filtered = updater.Update(initial);
-                        if (filtered.Count != 0)
-                            observer.OnNext(filtered);
-
-                        return source.Select(updater.Update)
-                            .NotEmpty()
-                            .SubscribeSafe(observer);
-                    }
-                });
+                    return (predicate == null ? changes : changes.Filter(predicate))
+                        .NotEmpty();
+                }
+            });
         }
 
         internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null) => _readerWriter.GetInitialUpdates(filter);
