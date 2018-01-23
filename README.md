@@ -31,7 +31,8 @@ This is a simple example to show how using Dynamic Data's collections and operat
 - [![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)](http://www.nuget.org/packages/DynamicData/)	
 - [![Build status](https://ci.appveyor.com/api/projects/status/jnq3kagdkp5xtqi5?svg=true)](https://ci.appveyor.com/project/RolandPheasant/dynamicdata-dpbpa)
 - Downloading the latest release of Dynamic Data from [Dynamic Data on nuget](https://www.nuget.org/packages/DynamicData/) 
-- Sample wpf project https://github.com/RolandPheasant/Dynamic.Trader
+- Sample wpf project trading project [Dynamic Trader](https://github.com/RolandPheasant/Dynamic.Trader)
+- Various unit tested examples of many different operators [Snippets](https://github.com/RolandPheasant/DynamicData.Snippets)
 - Blog at  http://dynamic-data.org/
 - You can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
 
@@ -154,6 +155,31 @@ var myConnection = myObservableCollection.ToObservableChangeSet();
 ```
 This method is only recommended for simple queries which act only on the UI thread as `ObservableCollection` is not thread safe.
 
+### Using the ObservableChangeSet static class
+
+There is also  another way to create observable change sets, and that is to use the ```ObservableChangeSet``` static class.  This class is a facsimile of the Rx.Net ```Observable``` static class and provides an almost identical API. 
+
+An observable list can be created as follows:
+
+```cs
+  var myObservableList = ObservableChangeSet.Create<int>(observableList =>
+  {
+	  //some code to load data and subscribe
+      var loader= myService.LoadMyDataObservable().Subscribe(observableList.Add);
+      var subscriber = myService.GetMySubscriptionsObservable().Subscribe(observableList .Add);
+      //dispose of resources
+      return new CompositeDisposable(loader,subscriber );
+  });
+```
+and creating a cache is almost identical except a key has to be specified 
+```cs
+  var myObservableList = ObservableChangeSet.Create<Trade, int>(observableCache =>
+  {
+	  //code omitted
+  }, trade = > trade.Id);
+```
+There are several overloads ```ObservableChangeSet.Create``` which match the overloads which ```Observable.Create``` provides.
+
 ## Consuming Observable Change Sets
 The examples below illustrate the kind of things you can achieve after creating an observable change set. 
 No you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
@@ -218,12 +244,12 @@ var myPeopleObservable = myPeople.Connect();
 var myTransformedObservable = myPeopleObservable.Transform(person => new PersonProxy(person));
 ```
 
-The `TransformToTree` operator allows you to create a fully formed reactive tree
+The `TransformToTree` operator allows you to create a fully formed reactive tree (only available for observable cache)
 ```cs
-var myPeople = new SourceList<People>();
-var myPeopleObservable = myPeople.Connect();
-var myTransformedObservable = myPeopleObservable.TransformToTree(person => person.BossId);
+var myPeople = new SourceCache<Person, string>(p => p.Name);
+var myTransformedObservable = myPeople.Connect().TransformToTree(person => person.BossId);
 ```
+
 
 Flatten a child enumerable
 ```cs
@@ -346,6 +372,11 @@ var myoperation = somedynamicdatasource.Connect()
 ```
 This wires and unwires ```SomeObservable``` as the collection changes.
 
+## Observable list vs observable cache
+I get asked about the differences between these a lot and the answer is really simple. If you have a unique id, you should use an observable cache as it is dictionary based which will ensure no duplicates can be added and it notifies on adds, updates and removes, whereas list allows duplicates and only has no concept of an update.
+
+There is another difference. The cache side of dynamic data is much more mature and has a wider range of operators. Having more operators is mainly because I found it easier to achieve good all round performance with the key based operators and do not want to add anything to Dynamic Data which inherently has poor performance.
+
 ## History of Dynamic Data
 Even before Rx existed I had implemented a similar concept using old f ashioned events but the code was very ugly and my implementation full of race conditions so it never existed outside of my own private sphere. My second attempt was a similar implementation to the first but using Rx when it first came out. This also failed as my understanding of Rx was flawed and limited and my design forced consumers to implement interfaces.  Then finally I got my design head on and in 2011-ish I started writing what has become dynamic data. No inheritance, no interfaces, just the ability to plug in and use it as you please.  All along I meant to open source it but having so utterly failed on my first 2 attempts I decided to wait until the exact design had settled down. The wait lasted longer than I expected and end up taking over 2 years but the benefit is it has been trialled for 2 years on a very busy high volume low latency trading system which has seriously complicated data management. And what's more that system has gathered a load of attention for how slick and cool and reliable it is both from the user and IT point of view. So I present this library with the confidence of it being tried, tested, optimised and mature. I hope it can make your life easier like it has done for me.
 
@@ -355,4 +386,3 @@ I could go on endlessly but this is not the place for full documentation.  I pro
 Also if you following me on Twitter you will find out when new samples or blog posts have been updated.
 
 Additionally if you have read up to here and not pressed star then why not? Ha. A star may make me be more responsive to any requests or queries.
-
