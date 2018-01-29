@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -13,19 +14,23 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TKey> _pivotOn;
+        private readonly IObservable<Func<Node<TObject, TKey>, bool>> _predicateChanged;
 
-        public TreeBuilder([NotNull] IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, TKey> pivotOn)
+        public TreeBuilder([NotNull] IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>> predicateChanged)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _pivotOn = pivotOn ?? throw new ArgumentNullException(nameof(pivotOn));
+            _predicateChanged = predicateChanged ?? Observable.Return(DefaultPredicate);
         }
+
+        internal static Func<Node<TObject, TKey>, bool> DefaultPredicate => node => node.IsRoot;
 
         public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run()
         {
             return Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(observer =>
             {
                 var locker = new object();
-                var filter = new BehaviorSubject<Func<Node<TObject, TKey>, bool>>(node => node.IsRoot);
+                var refilterObservable = new Subject<Unit>();
                 
                 var allData = _source.Synchronize(locker).AsObservableCache();
 
@@ -153,9 +158,10 @@ namespace DynamicData.Cache.Internal
                                                    }
                                                }
 
-                                               filter.OnNext(node => node.IsRoot);
+                                               refilterObservable.OnNext(Unit.Default);
                                            });
 
+                var filter = _predicateChanged.Synchronize(locker).CombineLatest(refilterObservable, (predicate, _) => predicate);
                 var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);
 
                 return Disposable.Create(() =>
@@ -164,7 +170,7 @@ namespace DynamicData.Cache.Internal
                     parentSetter.Dispose();
                     allData.Dispose();
                     allNodes.Dispose();
-                    filter.Dispose();
+                    refilterObservable.Dispose();
                 });
             });
         }
