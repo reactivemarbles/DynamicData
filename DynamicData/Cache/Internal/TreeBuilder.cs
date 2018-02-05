@@ -23,7 +23,7 @@ namespace DynamicData.Cache.Internal
             _predicateChanged = predicateChanged ?? Observable.Return(DefaultPredicate);
         }
 
-        internal static Func<Node<TObject, TKey>, bool> DefaultPredicate => node => node.IsRoot;
+        internal static readonly Func<Node<TObject, TKey>, bool> DefaultPredicate = node => node.IsRoot;
 
         public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run()
         {
@@ -170,7 +170,7 @@ namespace DynamicData.Cache.Internal
                     parentSetter.Dispose();
                     allData.Dispose();
                     allNodes.Dispose();
-                    refilterObservable.Dispose();
+                    refilterObservable.OnCompleted();
                 });
             });
         }
