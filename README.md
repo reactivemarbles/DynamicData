@@ -173,7 +173,7 @@ An observable list can be created as follows:
 ```
 and creating a cache is almost identical except a key has to be specified 
 ```cs
-  var myObservableList = ObservableChangeSet.Create<Trade, int>(observableCache =>
+  var myObservableCache = ObservableChangeSet.Create<Trade, int>(observableCache =>
   {
 	  //code omitted
   }, trade = > trade.Id);
