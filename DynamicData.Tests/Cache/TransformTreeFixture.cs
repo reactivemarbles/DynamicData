@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
+using DynamicData.Cache.Internal;
 using FluentAssertions;
 using Xunit;
 
@@ -10,13 +12,16 @@ namespace DynamicData.Tests.Cache
     {
         private readonly ISourceCache<EmployeeDto, int> _sourceCache;
         private readonly IObservableCache<Node<EmployeeDto, int>, int> _result;
+        private readonly BehaviorSubject<Func<Node<EmployeeDto, int>, bool>> _filter;
 
         public  TransformTreeFixture()
         {
             _sourceCache = new SourceCache<EmployeeDto, int>(e => e.Id);
 
+            _filter = new BehaviorSubject<Func<Node<EmployeeDto, int>, bool>>(TreeBuilder<EmployeeDto, int>.DefaultPredicate);
+
             _result = _sourceCache.Connect()
-                                  .TransformToTree(e => e.BossId)
+                                  .TransformToTree(e => e.BossId, _filter)
                                   .AsObservableCache();
         }
 
@@ -172,6 +177,26 @@ namespace DynamicData.Tests.Cache
 
             var firstNode = _result.Items.First();
             firstNode.Item.Id.Should().Be(1);
+        }
+
+        [Fact]
+        public void UseCustomFilter()
+        {
+            _sourceCache.AddOrUpdate(CreateEmployees());
+
+            _result.Count.Should().Be(2);
+
+            _filter.OnNext(node => true);
+            _result.Count.Should().Be(8);
+
+            _filter.OnNext(node => node.Depth == 3);
+            _result.Count.Should().Be(1);
+
+            _sourceCache.RemoveKey(5);
+            _result.Count.Should().Be(0);
+
+            _filter.OnNext(node => node.IsRoot);
+            _result.Count.Should().Be(2);
         }
 
         #region Employees

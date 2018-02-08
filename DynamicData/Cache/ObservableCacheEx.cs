@@ -2737,14 +2737,16 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="pivotOn">The pivot on.</param>
+        /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
         /// <returns></returns>
         public static IObservable<IChangeSet<Node<TObject, TKey>, TKey>> TransformToTree<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
-                                                                                                        [NotNull] Func<TObject, TKey> pivotOn)
+                                                                                                        [NotNull] Func<TObject, TKey> pivotOn,
+                                                                                                        IObservable<Func<Node<TObject, TKey>, bool>> predicateChanged = null)
             where TObject : class
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (pivotOn == null) throw new ArgumentNullException(nameof(pivotOn));
-            return new TreeBuilder<TObject, TKey>(source, pivotOn).Run();
+            return new TreeBuilder<TObject, TKey>(source, pivotOn, predicateChanged).Run();
         }
 
 
