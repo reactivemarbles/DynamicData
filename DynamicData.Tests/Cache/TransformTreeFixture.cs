@@ -18,7 +18,7 @@ namespace DynamicData.Tests.Cache
         {
             _sourceCache = new SourceCache<EmployeeDto, int>(e => e.Id);
 
-            _filter = new BehaviorSubject<Func<Node<EmployeeDto, int>, bool>>(TreeBuilder<EmployeeDto, int>.DefaultPredicate);
+            _filter = new BehaviorSubject<Func<Node<EmployeeDto, int>, bool>>(n=>n.IsRoot);
 
             _result = _sourceCache.Connect()
                                   .TransformToTree(e => e.BossId, _filter)

@@ -23,14 +23,14 @@ namespace DynamicData.Cache.Internal
             _predicateChanged = predicateChanged ?? Observable.Return(DefaultPredicate);
         }
 
-        internal static readonly Func<Node<TObject, TKey>, bool> DefaultPredicate = node => node.IsRoot;
+        private static readonly Func<Node<TObject, TKey>, bool> DefaultPredicate = node => node.IsRoot;
 
         public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run()
         {
             return Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(observer =>
             {
                 var locker = new object();
-                var refilterObservable = new Subject<Unit>();
+                var refilterObservable = new BehaviorSubject<Unit>(Unit.Default);
                 
                 var allData = _source.Synchronize(locker).AsObservableCache();
 
