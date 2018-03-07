@@ -1,9 +1,7 @@
 using System;
-using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal
 {
@@ -11,19 +9,19 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly IObservable<bool> _pauseIfTrueSelector;
-        private readonly IObservable<Unit> _timer;
+        private readonly TimeSpan? _timeOut;
         private readonly bool _intialPauseState;
         private readonly IScheduler _scheduler;
 
         public BatchIf(IObservable<IChangeSet<TObject, TKey>> source,
                        IObservable<bool> pauseIfTrueSelector,
-                       IObservable<Unit> timer,
+                        TimeSpan? timeOut,
                        bool intialPauseState = false,
                        IScheduler scheduler = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-            _timer = timer ?? throw new ArgumentNullException(nameof(timer));
+            _timeOut = timeOut;
             _intialPauseState = intialPauseState;
             _scheduler = scheduler ?? Scheduler.Default;
         }
@@ -34,50 +32,55 @@ namespace DynamicData.Cache.Internal
             (
                 observer =>
                 {
-                    var buffer = _intialPauseState;
+                    var result = new ChangeAwareCache<TObject, TKey>();
                     var locker = new object();
-                    var pulse = new Subject<Unit>();
-                    var buffered = new Subject<IChangeSet<TObject, TKey>>();
-                    var unbuffered = new Subject<IChangeSet<TObject, TKey>>();
-                    var bufferClosing = _timer.Finally(() => buffer = false /*No more buffering*/)
-                                              .Merge(pulse);
+                    var paused = _intialPauseState;
+                    var timeoutDisposer = new SerialDisposable();
 
-                    var pauseSignal = Observable.Return(_intialPauseState)
-                                                .Concat(_pauseIfTrueSelector)
-                                                .ObserveOn(_scheduler)
-                                                .Synchronize(locker)
-                                                .Subscribe(paused =>
-                                                           {
-                                                               buffer = paused;
+                    var pausedHander = _pauseIfTrueSelector
+                        .Synchronize(locker)
+                        .Subscribe(p =>
+                        {
+                            void ResumeAction()
+                            {
+                                //publish changes (if there are any)
+                                var changes = result.CaptureChanges();
+                                if (changes.Count > 0) observer.OnNext(changes);
+                            }
 
-                                                               if (!buffer)
-                                                               {
-                                                                   //Make sure we notify the buffer to empty
-                                                                   //anything it has buffered
-                                                                   pulse.OnNext(Unit.Default);
-                                                               }
-                                                           });
+                            paused = p;
+                            if (!p)
+                            {
+                                //pause window has closed, so reset timer 
+                               if (_timeOut.HasValue) timeoutDisposer.Disposable = Disposable.Empty;
+                                ResumeAction();
+                            }
+                            else
+                            {
+                                if (_timeOut.HasValue)
+                                    timeoutDisposer.Disposable = Observable.Timer(_timeOut.Value, _scheduler)
+                                        .Synchronize(locker)
+                                        .Subscribe(_ =>
+                                        {
+                                            paused = false;
+                                            ResumeAction();
+                                        });
+                            }
 
-                    var observerSubscription = buffered.Buffer(bufferClosing)
-                                                       .FlattenBufferResult()
-                                                       .Merge(unbuffered)
-                                                       .SubscribeSafe(observer);
+                        });
 
-                    var sourceSubscription = _source.Synchronize(locker)
-                                                    .Subscribe(update =>
-                                                               {
-                                                                   //Buffer or unbuffered observable?
-                                                                   var target = buffer ? buffered : unbuffered;
+                    var publisher = _source
+                        .Synchronize(locker)
+                        .Subscribe(changes =>
+                        {
+                            result.Clone(changes);
 
-                                                                   target.OnNext(update);
-                                                               });
+                            //publish if not paused
+                            if (!paused)
+                                observer.OnNext(result.CaptureChanges());
+                        });
 
-                    return new CompositeDisposable(buffered,
-                                                   unbuffered,
-                                                   pulse,
-                                                   pauseSignal,
-                                                   observerSubscription,
-                                                   sourceSubscription);
+                    return new CompositeDisposable(publisher, pausedHander, timeoutDisposer);
                 }
             );
         }

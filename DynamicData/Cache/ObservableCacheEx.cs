@@ -927,13 +927,8 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-
-            var timer = Observable<Unit>.Empty;
-            if (timeOut.HasValue)
-            {
-                timer = Observable.Timer(timeOut.Value, scheduler ?? Scheduler.Default).Select(_ => Unit.Default);
-            }
-            return BatchIf(source, pauseIfTrueSelector, intialPauseState, timer, scheduler);
+            
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, timeOut, intialPauseState, scheduler).Run();
         }
 
         /// <summary>
@@ -955,7 +950,7 @@ namespace DynamicData
                                                                                     IObservable<Unit> timer = null,
                                                                                     IScheduler scheduler = null)
         {
-            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, timer, intialPauseState, scheduler).Run();
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, intialPauseState, scheduler).Run();
         }
 
         /// <summary>

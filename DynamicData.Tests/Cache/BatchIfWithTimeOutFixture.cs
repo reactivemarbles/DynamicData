@@ -9,7 +9,87 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+    public class BatchIfWithTimeoutFixture : IDisposable
+    {
+        private readonly ISourceCache<Person, string> _source;
+        private readonly TestScheduler _scheduler;
+
+        public BatchIfWithTimeoutFixture()
+        {
+            _scheduler = new TestScheduler();
+            _source = new SourceCache<Person, string>(p => p.Key);
+        }
+
+        [Fact]
+        public void InitialPause()
+        {
+             var pausingSubject = new Subject<bool>();
+            using (var results = _source.Connect().BatchIf(pausingSubject, true, _scheduler).AsAggregator())
+            {
+                // no results because the initial pause state is pause
+                _source.AddOrUpdate(new Person("A", 1));
+                results.Data.Count.Should().Be(0);
+
+                //resume and expect a result
+                pausingSubject.OnNext(false);
+                results.Data.Count.Should().Be(1);
+
+                //add another in the window where there is no pause
+                _source.AddOrUpdate(new Person("B", 1));
+                results.Data.Count.Should().Be(2);
+
+                // pause again
+                pausingSubject.OnNext(true);
+                _source.AddOrUpdate(new Person("C", 1));
+                results.Data.Count.Should().Be(2);
+
+                //resume for the second time
+                pausingSubject.OnNext(false);
+                results.Data.Count.Should().Be(3);
+            }
+        }
+
+        [Fact]
+        public void Timeout()
+        {
+            var pausingSubject = new Subject<bool>();
+            using (var results = _source.Connect().BatchIf(pausingSubject, TimeSpan.FromSeconds(1), _scheduler).AsAggregator())
+            {
+                // no results because the initial pause state is pause
+                _source.AddOrUpdate(new Person("A", 1));
+                results.Data.Count.Should().Be(1);
+
+                // pause and add
+                pausingSubject.OnNext(true);
+                _source.AddOrUpdate(new Person("B", 1));
+                results.Data.Count.Should().Be(1);
+
+                //resume before timeout ends
+                _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(500).Ticks);
+                results.Data.Count.Should().Be(1);
+
+                pausingSubject.OnNext(false);
+                results.Data.Count.Should().Be(2);
+
+                //pause and advance past timeout window
+                pausingSubject.OnNext(true);
+                _source.AddOrUpdate(new Person("C", 1));
+                _scheduler.AdvanceBy(TimeSpan.FromSeconds(2.1).Ticks);
+                results.Data.Count.Should().Be(3);
+
+                _source.AddOrUpdate(new Person("D", 1));
+                results.Data.Count.Should().Be(4);
+            }
+        }
+
+
+        public void Dispose()
+        {
+            _source.Dispose();
+        }
+
+    }
+
     public class BatchIfWithTimeOutFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
