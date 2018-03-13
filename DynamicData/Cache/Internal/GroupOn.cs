@@ -220,7 +220,7 @@ namespace DynamicData.Cache.Internal
                 return Tuple.Create(newcache, true);
             }
 
-            private struct ChangeWithGroup : IEquatable<ChangeWithGroup>
+            private readonly struct ChangeWithGroup : IEquatable<ChangeWithGroup>
             {
                 /// <summary>
                 ///     Initializes a new instance of the <see cref="T:System.Object" /> class.

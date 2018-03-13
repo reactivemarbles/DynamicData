@@ -8,7 +8,7 @@ namespace DynamicData
     /// <summary>
     ///   Container to describe a single change to a cache
     /// </summary>
-    public struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
+    public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     {
         /// <summary>
         /// The unique key of the item which has changed

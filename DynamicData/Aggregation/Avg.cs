@@ -1,7 +1,7 @@
  
 namespace DynamicData.Aggregation
 {
-    internal struct Avg<TValue>
+    internal readonly struct Avg<TValue>
     {
         public Avg(int count, TValue sum)
         {

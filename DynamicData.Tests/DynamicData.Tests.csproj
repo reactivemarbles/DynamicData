@@ -12,6 +12,11 @@
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 
+
+  <PropertyGroup>
+    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Playground\**" />
     <EmbeddedResource Remove="Playground\**" />

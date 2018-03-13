@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <PropertyGroup>
+    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
     <Title>Dynamic Data / Reactive UI intergration</Title>
@@ -29,4 +33,6 @@ Dynamic data provides an observable cache and an observable list with at least 5
     <RepositoryUrl>https://github.com/RolandPheasant/DynamicData</RepositoryUrl>
     <PackageTags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</PackageTags>
   </PropertyGroup>
+
+
 </Project>

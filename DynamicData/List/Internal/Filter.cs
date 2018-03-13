@@ -233,7 +233,7 @@ namespace DynamicData.List.Internal
             return filtered.CaptureChanges();
         }
 
-        private struct ItemWithMatch : IEquatable<ItemWithMatch>
+        private readonly struct ItemWithMatch : IEquatable<ItemWithMatch>
         {
             public T Item { get; }
             public bool IsMatch { get; }

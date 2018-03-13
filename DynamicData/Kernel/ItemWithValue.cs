@@ -8,7 +8,7 @@ namespace DynamicData.Kernel
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
-    public sealed class ItemWithValue<TObject, TValue> : IEquatable<ItemWithValue<TObject, TValue>>
+    public readonly struct ItemWithValue<TObject, TValue> : IEquatable<ItemWithValue<TObject, TValue>>
     {
         /// <summary>
         /// Gets the item.
@@ -34,42 +34,26 @@ namespace DynamicData.Kernel
 
         #region Equality 
 
-        /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool Equals(ItemWithValue<TObject, TValue> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
+            return EqualityComparer<TObject>.Default.Equals(Item, other.Item) && EqualityComparer<TValue>.Default.Equals(Value, other.Value);
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((ItemWithValue<TObject, TValue>)obj);
+            return obj is ItemWithValue<TObject, TValue> && Equals((ItemWithValue<TObject, TValue>) obj);
         }
 
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
-            return EqualityComparer<TObject>.Default.GetHashCode(Item);
+            unchecked
+            {
+                return (EqualityComparer<TObject>.Default.GetHashCode(Item) * 397) ^ EqualityComparer<TValue>.Default.GetHashCode(Value);
+            }
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic; 
+using System.Collections.Generic;
+using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
@@ -7,15 +8,15 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
-    public class ToObservableChangeSetFixture:  ReactiveTest,IDisposable
-    {        
-        private IObservable<Person> _observable;
+
+    public class ToObservableChangeSetFixture : ReactiveTest, IDisposable
+    {
+        private readonly IObservable<Person> _observable;
         private readonly TestScheduler _scheduler;
         private readonly IDisposable _disposable;
         private readonly List<Person> _target;
 
-        public  ToObservableChangeSetFixture()
+        public ToObservableChangeSetFixture()
         {
             _scheduler = new TestScheduler();
             _observable = _scheduler.CreateColdObservable(
@@ -25,17 +26,12 @@ namespace DynamicData.Tests.Cache
 
             _target = new List<Person>();
 
-            _disposable = _observable                
-                .ToObservableChangeSet(p=>p.Key,limitSizeTo: 2, scheduler: _scheduler)                                                                          
+            _disposable = _observable
+                .ToObservableChangeSet(p => p.Key, limitSizeTo: 2, scheduler: _scheduler)
                 .Clone(_target)
-                .Subscribe();            
+                .Subscribe();
         }
-
-        public void Dispose()
-        {
-            _disposable.Dispose();            
-        }
-
+        
         [Fact]
         public void ShouldLimitSizeOfBoundCollection()
         {
@@ -47,5 +43,10 @@ namespace DynamicData.Tests.Cache
 
             _target.Count.Should().Be(2, "Should be 2 item in target collection because of size limit");
         }
+        public void Dispose()
+        {
+            _disposable.Dispose();
+        }
+
     }
 }

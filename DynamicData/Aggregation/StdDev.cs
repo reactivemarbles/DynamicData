@@ -1,7 +1,7 @@
 
 namespace DynamicData.Aggregation
 {
-    internal struct StdDev<TValue>
+    internal readonly struct StdDev<TValue>
     {
         public StdDev(int count, TValue sumOfItems, TValue sumOfSquares)
         {
