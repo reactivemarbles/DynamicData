@@ -97,7 +97,17 @@ namespace DynamicData
                 }
                 case ListChangeReason.Refresh:
                 {
-                    changeAware?.RefreshAt(item.Item.CurrentIndex);
+                    if (changeAware != null)
+                    {
+                        changeAware.RefreshAt(item.Item.CurrentIndex);
+                        }
+
+                    else
+                    {
+                        source.RemoveAt(item.Item.CurrentIndex);
+                        source.Insert(item.Item.CurrentIndex, item.Item.Current);
+                    }
+
                     break;
                 }
                 case ListChangeReason.Remove:

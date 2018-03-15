@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Binding;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using Xunit;
@@ -10,46 +12,46 @@ namespace DynamicData.Tests.Playground
     public class Issue104
     {
         [Fact]
-        public void ReadonlyCollectionDynamicData()
+        public void MakeSelectMagicWorkWithObservable()
         {
-            var scheduler = new TestScheduler();
-            var list = new SourceList<int>();
-            var filterFunc = new BehaviorSubject<Func<int, bool>>(x => true);
+            var initialItem = new IntHolder() { Value = 1, Description = "Initial Description" };
 
-            list.Connect()
-                //if you comment out the filter or the observeon then this passes
-                .Filter(filterFunc.ObserveOn(scheduler))
-                .ObserveOn(scheduler)
-                .Bind(out var oc)
-                .Subscribe();
+            var sourceList = new SourceList<IntHolder>();
+            sourceList.Add(initialItem);
 
-            list.Edit(updateAction =>
+            var descriptionStream = sourceList
+                .Connect()
+                .AutoRefresh(intHolder => intHolder.Description)
+                .Transform(intHolder => intHolder.Description, true)
+                .Do(x => { }) // <--- Add break point here to check the overload fixes it
+                .Bind(out ReadOnlyObservableCollection<string> resultCollection);
+
+            using (descriptionStream.Subscribe())
             {
-                updateAction.Add(1);
-                updateAction.Add(2);
-                updateAction.Add(3);
-            });
+                var newDescription = "New Description";
+                initialItem.Description = newDescription;
 
-            scheduler.Start();
-            oc.Count.Should().Be(3);
-
-            list.Edit(updateAction =>
-            {
-                updateAction.Remove(1);
-                updateAction.Remove(2);
-                updateAction.Remove(3);
-
-                updateAction.Count.Should().Be(0);
-
-                updateAction.Add(4);
-                updateAction.Add(5);
-                updateAction.Add(6);
-            });
-
-            scheduler.Start();
-
-            //This fails and those other update actions aren't removed 
-            oc.Count.Should().Be(3);
+                newDescription.Should().Be(resultCollection[0]);
+                //Assert.AreEqual(newDescription, resultCollection[0]);
+            }
         }
+
+        public class IntHolder : AbstractNotifyPropertyChanged
+        {
+            public int _value;
+            public int Value
+            {
+                get => _value;
+                set => this.SetAndRaise(ref _value, value);
+            }
+
+            public string _description_;
+            public string Description
+            {
+                get => _description_;
+                set => this.SetAndRaise(ref _description_, value);
+            }
+        }
+
     }
 }

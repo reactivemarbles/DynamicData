@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Playground\Issue104.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
   </ItemGroup>
 
@@ -39,9 +43,5 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
     <PackageReference Include="FluentAssertions" Version="4.19.3" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="[3.1.1,4)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Playground\" />
   </ItemGroup>
 </Project>

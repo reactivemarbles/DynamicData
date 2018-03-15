@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
+using DynamicData.Tests.Playground;
 using FluentAssertions;
 using Xunit;
 
@@ -87,6 +90,31 @@ namespace DynamicData.Tests.Cache
                 results.Messages.Count.Should().Be(5);
 
                 results.Messages.Last().First().Reason.Should().Be(ChangeReason.Refresh);
+            }
+        }
+
+        [Fact]
+        public void MakeSelectMagicWorkWithObservable()
+        {
+            var initialItem = new Issue104.IntHolder() { Value = 1, Description = "Initial Description" };
+
+            var sourceList = new SourceList<Issue104.IntHolder>();
+            sourceList.Add(initialItem);
+
+            var descriptionStream = sourceList
+                .Connect()
+                .AutoRefresh(intHolder => intHolder.Description)
+                .Transform(intHolder => intHolder.Description, true)
+                .Do(x => { }) // <--- Add break point here to check the overload fixes it
+                .Bind(out ReadOnlyObservableCollection<string> resultCollection);
+
+            using (descriptionStream.Subscribe())
+            {
+                var newDescription = "New Description";
+                initialItem.Description = newDescription;
+
+                newDescription.Should().Be(resultCollection[0]);
+                //Assert.AreEqual(newDescription, resultCollection[0]);
             }
         }
     }

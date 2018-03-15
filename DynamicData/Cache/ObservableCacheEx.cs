@@ -883,7 +883,7 @@ namespace DynamicData
                                                                                     bool intialPauseState = false,
                                                                                     IScheduler scheduler = null)
         {
-            return BatchIf(source, pauseIfTrueSelector, intialPauseState, Observable<Unit>.Empty, scheduler);
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, intialPauseState, scheduler: scheduler).Run();
         }
 
         /// <summary>
@@ -928,7 +928,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
             
-            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, timeOut, intialPauseState, scheduler).Run();
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, timeOut, intialPauseState,scheduler: scheduler).Run();
         }
 
         /// <summary>
@@ -950,7 +950,7 @@ namespace DynamicData
                                                                                     IObservable<Unit> timer = null,
                                                                                     IScheduler scheduler = null)
         {
-            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, intialPauseState, scheduler).Run();
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, intialPauseState, timer, scheduler: scheduler).Run();
         }
 
         /// <summary>

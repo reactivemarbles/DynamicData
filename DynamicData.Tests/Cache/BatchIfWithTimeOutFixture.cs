@@ -23,7 +23,7 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void InitialPause()
         {
-             var pausingSubject = new Subject<bool>();
+            var pausingSubject = new Subject<bool>();
             using (var results = _source.Connect().BatchIf(pausingSubject, true, _scheduler).AsAggregator())
             {
                 // no results because the initial pause state is pause
@@ -90,14 +90,14 @@ namespace DynamicData.Tests.Cache
 
     }
 
-    public class BatchIfWithTimeOutFixture: IDisposable
+    public class BatchIfWithTimeOutFixture : IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
         private readonly TestScheduler _scheduler;
         private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
 
-        public  BatchIfWithTimeOutFixture()
+        public BatchIfWithTimeOutFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
