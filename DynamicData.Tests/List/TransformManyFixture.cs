@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
@@ -169,7 +171,73 @@ namespace DynamicData.Tests.List
             _results.Messages.Count.Should().Be(1);
 
         }
-    }
 
+        [Fact]
+        public void Remove()
+        {
+            var tourProviders = new SourceList<TourProvider>();
+
+
+            var allTours = tourProviders
+                      .Connect()
+                      .TransformMany(tourProvider => tourProvider.Tours)
+                      .AsObservableList();
+
+
+            var tour1_1 = new Tour("Tour 1.1");
+            var tour2_1 = new Tour("Tour 2.1");
+            var tour2_2 = new Tour("Tour 2.2");
+            var tour3_1 = new Tour("Tour 3.1");
+
+            var tp1 = new TourProvider("Tour provider 1", new[] { tour1_1 });
+            var tp2 = new TourProvider("Tour provider 2", new[] { tour2_1, tour2_2 });
+            var tp3 = new TourProvider("Tour provider 3", null);
+
+            tourProviders.AddRange(new[] { tp1, tp2, tp3 });
+
+            allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2 });
+
+            tp3.Tours.Add(tour3_1);
+            allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
+
+            tp2.Tours.Remove(tour2_1);
+            allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_2, tour3_1 });
+
+            tp2.Tours.Add(tour2_1);
+            allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
+        }
+
+
+
+        public class TourProvider
+        {
+            public TourProvider(string name, IEnumerable<Tour> tours)
+            {
+                this.Name = name;
+
+                if (tours != null)
+                    this.Tours.AddRange(tours);
+            }
+
+            public string Name { get; set; }
+
+            public ObservableCollection<Tour> Tours { get; } = new ObservableCollection<Tour>();
+        }
+
+        public class Tour
+        {
+            public Tour(string name)
+            {
+                this.Name = name;
+            }
+
+            public string Name { get; }
+
+            public override string ToString()
+            {
+                return $"{nameof(Name)}: {Name}";
+            }
+        }
+    }
 
 }

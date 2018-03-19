@@ -96,9 +96,9 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void MakeSelectMagicWorkWithObservable()
         {
-            var initialItem = new Issue104.IntHolder() { Value = 1, Description = "Initial Description" };
+            var initialItem = new IntHolder() { Value = 1, Description = "Initial Description" };
 
-            var sourceList = new SourceList<Issue104.IntHolder>();
+            var sourceList = new SourceList<IntHolder>();
             sourceList.Add(initialItem);
 
             var descriptionStream = sourceList
@@ -117,5 +117,23 @@ namespace DynamicData.Tests.Cache
                 //Assert.AreEqual(newDescription, resultCollection[0]);
             }
         }
+
+        public class IntHolder : AbstractNotifyPropertyChanged
+        {
+            public int _value;
+            public int Value
+            {
+                get => _value;
+                set => this.SetAndRaise(ref _value, value);
+            }
+
+            public string _description_;
+            public string Description
+            {
+                get => _description_;
+                set => this.SetAndRaise(ref _description_, value);
+            }
+        }
+
     }
 }
