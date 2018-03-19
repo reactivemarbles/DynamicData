@@ -177,7 +177,6 @@ namespace DynamicData.Tests.List
         {
             var tourProviders = new SourceList<TourProvider>();
 
-
             var allTours = tourProviders
                       .Connect()
                       .TransformMany(tourProvider => tourProvider.Tours)
@@ -228,7 +227,7 @@ namespace DynamicData.Tests.List
         {
             public Tour(string name)
             {
-                this.Name = name;
+                Name = name;
             }
 
             public string Name { get; }
