@@ -88,9 +88,26 @@ namespace DynamicData
                     }
                     else
                     {
-                        //is this best? or replace + move?
-                        source.RemoveAt(change.PreviousIndex);
-                        source.Insert(change.CurrentIndex, change.Current);
+                        if (change.PreviousIndex == -1)
+                        {
+                            source.Remove(change.Previous.Value);
+                        }
+                        else
+                        {
+                            //is this best? or replace + move?
+                            source.RemoveAt(change.PreviousIndex);
+                        }
+
+                        if (change.CurrentIndex == -1)
+                        {
+                            source.Add(change.Current);
+                        }
+                        else
+                        {
+                            source.Insert(change.CurrentIndex, change.Current);
+                        }
+
+
                     }
 
                     break;
