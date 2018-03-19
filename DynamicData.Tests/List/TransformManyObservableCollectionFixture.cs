@@ -169,6 +169,7 @@ namespace DynamicData.Tests.List
             }
         }
 
+
         private class Parent
         {
             public ObservableCollection<Person> Children { get; }
