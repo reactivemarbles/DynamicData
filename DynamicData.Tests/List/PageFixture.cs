@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using  FluentAssertions;
 using Xunit;
@@ -122,4 +124,68 @@ namespace DynamicData.Tests.List
             actualPersonAtIndex0.Should().Be(personToMove);
         }
     }
+
+    public class PageFixtureWithNoInitialData
+    {
+        private readonly Animal[] _items =
+        {
+            new Animal("Holly", "Cat", AnimalFamily.Mammal),
+            new Animal("Rover", "Dog", AnimalFamily.Mammal),
+            new Animal("Rex", "Dog", AnimalFamily.Mammal),
+            new Animal("Whiskers", "Cat", AnimalFamily.Mammal),
+            new Animal("Nemo", "Fish", AnimalFamily.Fish),
+            new Animal("Moby Dick", "Whale", AnimalFamily.Mammal),
+            new Animal("Fred", "Frog", AnimalFamily.Amphibian),
+            new Animal("Isaac", "Next", AnimalFamily.Amphibian),
+            new Animal("Sam", "Snake", AnimalFamily.Reptile),
+            new Animal("Sharon", "Red Backed Shrike", AnimalFamily.Bird),
+        };
+
+        [Fact]
+        public void SimplePagging()
+        {
+            using (var pager = new BehaviorSubject<IPageRequest>(new PageRequest(0, 0)))
+            using (var sourceList = new SourceList<Animal>())
+            using (var sut = new SimplePagging(sourceList, pager))
+            {
+                // Add items to source
+                sourceList.AddRange(_items);
+
+                sut.Paged.Count.Should().Be(0);
+
+                pager.OnNext(new PageRequest(1, 2));
+                sut.Paged.Count.Should().Be(2);
+
+                pager.OnNext(new PageRequest(1, 4)); 
+                sut.Paged.Count.Should().Be(4);
+
+                pager.OnNext(new PageRequest(2, 3));
+                sut.Paged.Count.Should().Be(3);
+            }
+        }
+    }
+
+    public class SimplePagging : AbstractNotifyPropertyChanged, IDisposable
+    {
+        private readonly IDisposable _cleanUp;
+
+        public IObservableList<Animal> Paged { get; }
+
+        public SimplePagging(IObservableList<Animal> source, IObservable<IPageRequest> pager)
+        {
+            Paged = source.Connect()
+                .Page(pager)
+                .Do(changes=>Console.WriteLine(changes.TotalChanges)) //added as a quick and dirty way to debug
+                .AsObservableList();
+
+            _cleanUp = Paged;
+        }
+
+        public void Dispose()
+        {
+            _cleanUp.Dispose();
+        }
+    }
+
+
 }

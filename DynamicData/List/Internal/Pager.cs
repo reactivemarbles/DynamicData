@@ -114,7 +114,7 @@ namespace DynamicData.List.Internal
 
         private int CalculatePages(List<T> all, IPageRequest request)
         {
-            if (request.Size >= all.Count)
+            if (request.Size >= all.Count || request.Size==0)
             {
                 return 1;
             }
