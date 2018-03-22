@@ -22,16 +22,21 @@ namespace DynamicData.List.Internal
         {
             return Observable.Create<IChangeSet<T>>(observer =>
                     {
+                        var locker = new object();
                         var items = new List<T>();
                         var subscriber = _source
+                            .Synchronize(locker)
                             .Do(changes => RegisterForRemoval(items, changes), observer.OnError)
                             .SubscribeSafe(observer);
 
                         return Disposable.Create(() =>
                         {
                             subscriber.Dispose();
-                            items.ForEach(t => _callback(t));
-                            items.Clear();
+                            lock (locker)
+                            {
+                                items.ForEach(t => _callback(t));
+                                items.Clear();
+                            }
                         });
                     });
         }
