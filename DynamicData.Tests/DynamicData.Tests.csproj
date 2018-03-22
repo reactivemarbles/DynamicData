@@ -18,16 +18,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Playground\**" />
-    <EmbeddedResource Remove="Playground\**" />
-    <None Remove="Playground\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Playground\Class1.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
   </ItemGroup>
 
