@@ -32,11 +32,7 @@ namespace DynamicData.List.Internal
                         return Disposable.Create(() =>
                         {
                             subscriber.Dispose();
-                            lock (locker)
-                            {
-                                items.ForEach(t => _callback(t));
-                                items.Clear();
-                            }
+                            items.ForEach(t => _callback(t));
                         });
                     });
         }
