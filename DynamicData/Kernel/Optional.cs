@@ -41,7 +41,7 @@ namespace DynamicData.Kernel
         /// <summary>
         /// The default valueless optional
         /// </summary>
-        public static readonly Optional<T> None = default(Optional<T>);
+        public static readonly Optional<T> None = default;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Optional{T}"/> struct.
@@ -52,7 +52,7 @@ namespace DynamicData.Kernel
             if (ReferenceEquals(value, null))
             {
                 HasValue = false;
-                _value = default(T);
+                _value = default;
             }
             else
             {
@@ -122,37 +122,19 @@ namespace DynamicData.Kernel
 
         #region Equality members
 
-        /// <summary>
-        /// Implements the operator ==.
-        /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
-        /// <returns>
-        /// The result of the operator.
-        /// </returns>
+        /// <inheritdoc />
         public static bool operator ==(Optional<T> left, Optional<T> right)
         {
             return left.Equals(right);
         }
 
-        /// <summary>
-        /// Implements the operator !=.
-        /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
-        /// <returns>
-        /// The result of the operator.
-        /// </returns>
+        /// <inheritdoc />
         public static bool operator !=(Optional<T> left, Optional<T> right)
         {
             return !left.Equals(right);
         }
 
-        /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>s
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool Equals(Optional<T> other)
         {
             if (!HasValue) return !other.HasValue;
@@ -160,13 +142,7 @@ namespace DynamicData.Kernel
             return HasValue.Equals(other.HasValue) && EqualityComparer<T>.Default.Equals(_value, other._value);
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;

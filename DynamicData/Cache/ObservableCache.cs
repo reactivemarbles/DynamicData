@@ -27,7 +27,7 @@ namespace DynamicData
                 .Synchronize(_locker)
                 .Select(_readerWriter.Write)
                 .Finally(_changes.OnCompleted)
-                .Subscribe(InvokeNext, ex => _changes.OnError(ex));
+                .Subscribe(InvokeNext,_changes.OnError);
 
             _cleanUp = Disposable.Create(() =>
             {
@@ -96,7 +96,7 @@ namespace DynamicData
 
                         return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
                         {
-                            foreach (var match in changes.Where(update => update.Key.Equals(key)))
+                            foreach (var match in changes.Where(update => EqualityComparer<TKey>.Default.Equals(update.Key,key)))
                             {
                                 observer.OnNext(match);
                             }
@@ -114,8 +114,7 @@ namespace DynamicData
                     var initial = GetInitialUpdates(predicate);
                     var changes = Observable.Return(initial).Concat(_changes);
 
-                    return (predicate == null ? changes : changes.Filter(predicate))
-                        .NotEmpty();
+                    return (predicate == null ? changes : changes.Filter(predicate)).NotEmpty();
                 }
             });
         }
