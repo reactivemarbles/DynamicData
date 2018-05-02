@@ -77,7 +77,7 @@ namespace DynamicData.Binding
         {
             _cache.Clone(changes);
 
-            if (changes.Count > _refreshThreshold || !_loaded)
+            if (changes.Count - changes.Refreshes > _refreshThreshold || !_loaded)
             {
                 _loaded = true;
                 using (collection.SuspendNotifications())
