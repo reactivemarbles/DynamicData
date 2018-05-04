@@ -1663,6 +1663,45 @@ namespace DynamicData
             return new Sort<TObject, TKey>(source, comparer, sortOptimisations, null, resorter, resetThreshold).Run();
         }
 
+	    /// <summary>
+	    /// Converts moves changes to remove + add
+	    /// </summary>
+	    /// <typeparam name="TObject">The type of the object.</typeparam>
+	    /// <typeparam name="TKey">The type of the key.</typeparam>
+	    /// <param name="source">The source.</param>
+	    /// <returns>the same SortedChangeSets, except all moves are replaced with remove + add.</returns>
+	    public static IObservable<ISortedChangeSet<TObject, TKey>> TreatMovesAsRemoveAdd<TObject, TKey>(
+		    this IObservable<ISortedChangeSet<TObject, TKey>> source)
+	    {
+		    if (source == null) throw new ArgumentNullException(nameof(source));
+
+		    return source.Select(changes =>
+		    {
+			    var changesWithoutMoves = changes.SelectMany(change =>
+			    {
+				    if (change.Reason == ChangeReason.Moved)
+				    {
+					    var removeChange = new Change<TObject, TKey>(
+						    ChangeReason.Remove,
+						    change.Key,
+						    change.Current, change.PreviousIndex);
+					    var addChange = new Change<TObject, TKey>(
+						    ChangeReason.Add,
+						    change.Key,
+						    change.Current,
+						    change.CurrentIndex);
+
+					    return new[] {removeChange, addChange};
+				    }
+
+				    return new[] {change};
+			    }).ToArray();
+
+
+			    return new SortedChangeSet<TObject, TKey>(changes.SortedItems, changesWithoutMoves);
+		    });
+	    }
+
 
         #endregion
 

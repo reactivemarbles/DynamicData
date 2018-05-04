@@ -129,5 +129,50 @@ namespace DynamicData.Tests.Binding
             invoked.Should().BeTrue();
             resetinvoked.Should().BeFalse();
         }
+
+	    [Fact]
+	    public void TreatMovesAsRemoveAdd()
+	    {
+		    var cache = new SourceCache<Person, string>(p => p.Name);
+
+		    var people = Enumerable.Range(0,10).Select(age => new Person("Person" + age, age)).ToList();
+		    var importantGuy = people.First();
+		    cache.AddOrUpdate(people);
+
+		    ISortedChangeSet<Person, string> latestSetWithoutMoves = null;
+		    ISortedChangeSet<Person, string> latestSetWithMoves = null;
+
+		    var boundList1 = new ObservableCollectionExtended<Person>();
+		    var boundList2 = new ObservableCollectionExtended<Person>();
+
+
+		    using (cache.Connect()
+			    .AutoRefresh(p => p.Age)
+			    .Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))
+			    .TreatMovesAsRemoveAdd()
+			    .Bind(boundList1)
+			    .Subscribe(set => latestSetWithoutMoves = set))
+
+		    using (cache.Connect()
+			    .AutoRefresh(p => p.Age)
+			    .Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))
+			    .Bind(boundList2)
+			    .Subscribe(set => latestSetWithMoves = set))
+		    {
+
+			    importantGuy.Age = importantGuy.Age + 200;
+
+		
+			    latestSetWithoutMoves.Removes.Should().Be(1);
+			    latestSetWithoutMoves.Adds.Should().Be(1);
+			    latestSetWithoutMoves.Moves.Should().Be(0);
+			    latestSetWithoutMoves.Updates.Should().Be(0);
+
+			    latestSetWithMoves.Moves.Should().Be(1);
+			    latestSetWithMoves.Updates.Should().Be(0);
+			    latestSetWithMoves.Removes.Should().Be(0);
+			    latestSetWithMoves.Adds.Should().Be(0);
+		    }
+	    }
     }
 }
