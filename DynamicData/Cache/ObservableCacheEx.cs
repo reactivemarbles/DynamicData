@@ -1675,31 +1675,31 @@ namespace DynamicData
 	    {
 		    if (source == null) throw new ArgumentNullException(nameof(source));
 
-		    return source.Select(changes =>
+		    IEnumerable<Change<TObject, TKey>> ReplaceMoves(IChangeSet<TObject, TKey> items)
 		    {
-			    var changesWithoutMoves = changes.SelectMany(change =>
+			    foreach (var change in items)
 			    {
 				    if (change.Reason == ChangeReason.Moved)
 				    {
-					    var removeChange = new Change<TObject, TKey>(
+					    yield return new Change<TObject, TKey>(
 						    ChangeReason.Remove,
 						    change.Key,
 						    change.Current, change.PreviousIndex);
-					    var addChange = new Change<TObject, TKey>(
+
+					    yield return new Change<TObject, TKey>(
 						    ChangeReason.Add,
 						    change.Key,
 						    change.Current,
 						    change.CurrentIndex);
-
-					    return new[] {removeChange, addChange};
 				    }
+				    else
+				    {
+					    yield return change;
+				    }
+			    }
+		    }
 
-				    return new[] {change};
-			    }).ToArray();
-
-
-			    return new SortedChangeSet<TObject, TKey>(changes.SortedItems, changesWithoutMoves);
-		    });
+		    return source.Select(changes => new SortedChangeSet<TObject, TKey>(changes.SortedItems, ReplaceMoves(changes)));
 	    }
 
 
