@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard1.1;net46</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard1.1;net461</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -8,7 +8,7 @@
     <PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' or '$(TargetFramework)' == 'net46'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 
