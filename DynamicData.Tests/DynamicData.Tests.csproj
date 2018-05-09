@@ -5,7 +5,7 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <Copyright>Copyright Roland Pheasant 2011-2017</Copyright>
+    <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
