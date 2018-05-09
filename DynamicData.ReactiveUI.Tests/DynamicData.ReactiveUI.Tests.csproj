@@ -4,6 +4,10 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\DynamicData.ReactiveUI\DynamicData.ReactiveUI.csproj" />
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
