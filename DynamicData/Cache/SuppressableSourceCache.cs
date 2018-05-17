@@ -9,7 +9,7 @@ namespace DynamicData.Cache
     {
         public static ISuppressableSourceCache<TObject, TKey> WithNotificationSuppressionSupport<TObject, TKey>(this SourceCache<TObject, TKey> self)
         {
-            return new SurppressableSourceCache<TObject, TKey>(self);
+            return new SuppressableSourceCache<TObject, TKey>(self);
         }
     }
 
@@ -18,12 +18,12 @@ namespace DynamicData.Cache
         ISourceCache<TObject, TKey> SuppressNotifications();
     }
 
-    internal class SurppressableSourceCache<TObject, TKey> : ISuppressableSourceCache<TObject, TKey>
+    internal class SuppressableSourceCache<TObject, TKey> : ISuppressableSourceCache<TObject, TKey>
     {
         private readonly ISourceCache<TObject, TKey> _target;
         private volatile bool _suppressed;
 
-        internal SurppressableSourceCache(ISourceCache<TObject, TKey> target)
+        internal SuppressableSourceCache(ISourceCache<TObject, TKey> target)
         {
             _target = target ?? throw new ArgumentNullException(nameof(target));
         }

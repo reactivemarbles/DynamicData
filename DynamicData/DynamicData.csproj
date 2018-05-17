@@ -8,6 +8,10 @@
     <PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="DynamicData.csproj" />
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
