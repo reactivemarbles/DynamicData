@@ -22,7 +22,7 @@ namespace DynamicData.Tests.Cache
         private readonly ChangeSetAggregator<string, string> _result;
 
         [Fact]
-        public void CHangesNotSuppressed()
+        public void ChangesNotSuppressed()
         {
             _subjectUnderTest.Edit(innerCache =>
             {
