@@ -49,5 +49,32 @@ namespace DynamicData.Tests.Cache
 
             0.Should().Be(_result.Data.Count);
         }
+
+        [Fact]
+        public void EnableDisableSuppressions()
+        {
+            using (var inner = _subjectUnderTest.SuppressNotifications())
+            {
+                inner.Edit(innerCache =>
+                {
+                    innerCache.AddOrUpdate("first");
+                });
+            }
+
+            _subjectUnderTest.Edit(innerCache =>
+            {
+                innerCache.AddOrUpdate("second");
+            });
+
+            using (var inner = _subjectUnderTest.SuppressNotifications())
+            {
+                inner.Edit(innerCache =>
+                {
+                    innerCache.AddOrUpdate("third");
+                });
+            }
+
+            1.Should().Be(_result.Data.Count);
+        }
     }
 }
