@@ -5,7 +5,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache
 {
-    public static class SourceCacheSupressableExtensions
+    public static class SourceCacheSuppressableExtensions
     {
         public static ISuppressableSourceCache<TObject, TKey> WithNotificationSuppressionSupport<TObject, TKey>(this SourceCache<TObject, TKey> self)
         {
