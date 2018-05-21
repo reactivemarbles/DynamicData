@@ -37,7 +37,7 @@ namespace DynamicData.List.Internal
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var locker = new object();
-                var orginal = new ChangeAwareList<T>();
+                var orginal = new List<T>();
                 var target = new ChangeAwareList<T>();
 
                 var changed = _source.Synchronize(locker).Select(changes =>
@@ -195,7 +195,7 @@ namespace DynamicData.List.Internal
             return target.CaptureChanges();
         }
 
-        private IChangeSet<T> Reset(ChangeAwareList<T> original, ChangeAwareList<T> target)
+        private IChangeSet<T> Reset(List<T> original, ChangeAwareList<T> target)
         {
             var sorted = original.OrderBy(t => t, _comparer).ToList();
             target.Clear();
