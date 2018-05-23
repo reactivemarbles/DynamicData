@@ -295,3 +295,5 @@ __pycache__/
 
 # End of https://www.gitignore.io/api/visualstudio
 DynamicData/project.lock.json
+DynamicData/.DS_Store
+.DS_Store
