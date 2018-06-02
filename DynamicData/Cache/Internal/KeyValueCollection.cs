@@ -2,22 +2,19 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal class KeyValueCollection<TObject, TKey> : IKeyValueCollection<TObject, TKey>
     {
-        private readonly Lazy<List<KeyValuePair<TKey, TObject>>> _items;
+        private readonly IReadOnlyCollection<KeyValuePair<TKey, TObject>> _items;
 
-        public KeyValueCollection(IEnumerable<KeyValuePair<TKey, TObject>> items,
+        public KeyValueCollection(IReadOnlyCollection<KeyValuePair<TKey, TObject>> items,
                                   IComparer<KeyValuePair<TKey, TObject>> comparer,
                                   SortReason sortReason,
                                   SortOptimisations optimisations)
         {
-            if (items == null) throw new ArgumentNullException(nameof(items));
- 
-             _items = new Lazy<List<KeyValuePair<TKey, TObject>>>(() => items.ToList());
+            _items = items ?? throw new ArgumentNullException(nameof(items));
             Comparer = comparer;
             SortReason = sortReason;
             Optimisations = optimisations;
@@ -26,7 +23,7 @@ namespace DynamicData.Cache.Internal
         public KeyValueCollection()
         {
             Optimisations = SortOptimisations.None;
-            _items = new Lazy<List<KeyValuePair<TKey, TObject>>>(() => new List<KeyValuePair<TKey, TObject>>());
+            _items = new List<KeyValuePair<TKey, TObject>>();
             Comparer = new KeyValueComparer<TObject, TKey>();
         }
 
@@ -38,9 +35,9 @@ namespace DynamicData.Cache.Internal
         /// </value>
         public IComparer<KeyValuePair<TKey, TObject>> Comparer { get; }
 
-        public int Count => _items.Value.Count;
+        public int Count => _items.Count;
 
-        public KeyValuePair<TKey, TObject> this[int index] => _items.Value[index];
+        public KeyValuePair<TKey, TObject> this[int index] => _items.ElementAt(index);
 
         public SortReason SortReason { get; }
 
@@ -48,7 +45,7 @@ namespace DynamicData.Cache.Internal
 
         public IEnumerator<KeyValuePair<TKey, TObject>> GetEnumerator()
         {
-            return _items.Value.GetEnumerator();
+            return _items.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
