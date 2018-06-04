@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace DynamicData.Cache.Internal
@@ -12,7 +13,7 @@ namespace DynamicData.Cache.Internal
     internal sealed class IndexCalculator<TObject, TKey>
     {
         private KeyValueComparer<TObject, TKey> _comparer;
-        private List<KeyValuePair<TKey, TObject>> _list;
+        private ImmutableList<KeyValuePair<TKey, TObject>> _list;
 
         private readonly SortOptimisations _optimisations;
 
@@ -23,7 +24,7 @@ namespace DynamicData.Cache.Internal
         {
             _comparer = comparer;
             _optimisations = optimisations;
-            _list = new List<KeyValuePair<TKey, TObject>>();
+            _list = ImmutableList<KeyValuePair<TKey, TObject>>.Empty;
         }
 
         /// <summary>
@@ -35,7 +36,7 @@ namespace DynamicData.Cache.Internal
         {
             //for the first batch of changes may have arrived before the comparer was set.
             //therefore infer the first batch of changes from the cache
-            _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
+            _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToImmutableList();
             var initialItems = _list.Select((t, index) => new Change<TObject, TKey>(ChangeReason.Add, t.Key, t.Value, index));
             return new ChangeSet<TObject, TKey>(initialItems);
         }
@@ -47,7 +48,7 @@ namespace DynamicData.Cache.Internal
         /// <returns></returns>
         public void Reset(ChangeAwareCache<TObject, TKey> cache)
         {
-            _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
+            _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToImmutableList();
         }
 
         public IChangeSet<TObject, TKey> ChangeComparer(KeyValueComparer<TObject, TKey> comparer)
@@ -63,7 +64,7 @@ namespace DynamicData.Cache.Internal
             if (_optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
             {
                 //reorder entire sequence and do not calculate moves
-                _list = _list.OrderBy(kv => kv, _comparer).ToList();
+                _list = _list.OrderBy(kv => kv, _comparer).ToImmutableList();
             }
             else
             {
@@ -82,8 +83,8 @@ namespace DynamicData.Cache.Internal
                         continue;
                     }
                     var old = _list.IndexOf(current);
-                    _list.RemoveAt(old);
-                    _list.Insert(index, current);
+                    _list = _list.RemoveAt(old);
+                    _list = _list.Insert(index, current);
 
                     result.Add(new Change<TObject, TKey>(current.Key, current.Value, index, old));
                 }
@@ -110,7 +111,7 @@ namespace DynamicData.Cache.Internal
                     case ChangeReason.Add:
                         {
                             var position = GetInsertPositionBinary(current);
-                            _list.Insert(position, current);
+                            _list = _list.Insert(position, current);
 
                             result.Add(new Change<TObject, TKey>(ChangeReason.Add, u.Key, u.Current, position));
                         }
@@ -120,10 +121,10 @@ namespace DynamicData.Cache.Internal
                         {
                             var previous = new KeyValuePair<TKey, TObject>(u.Key, u.Previous.Value);
                             var old = GetCurrentPosition(previous);
-                            _list.RemoveAt(old);
+                            _list = _list.RemoveAt(old);
 
                             var newposition = GetInsertPositionBinary(current);
-                            _list.Insert(newposition, current);
+                            _list = _list.Insert(newposition, current);
 
                             result.Add(new Change<TObject, TKey>(ChangeReason.Update,
                                                                  u.Key,
@@ -134,7 +135,7 @@ namespace DynamicData.Cache.Internal
                     case ChangeReason.Remove:
                         {
                             var position = GetCurrentPosition(current);
-                            _list.RemoveAt(position);
+                            _list = _list.RemoveAt(position);
                             result.Add(new Change<TObject, TKey>(ChangeReason.Remove, u.Key, u.Current, position));
                         }
                         break;
@@ -155,7 +156,7 @@ namespace DynamicData.Cache.Internal
             if (evaluates.Count != 0 && _optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
             {
                 //reorder entire sequence and do not calculate moves
-                _list = _list.OrderBy(kv => kv, _comparer).ToList();
+                _list = _list.OrderBy(kv => kv, _comparer).ToImmutableList();
             }
             else
             {
@@ -175,8 +176,8 @@ namespace DynamicData.Cache.Internal
                     if (old == newposition)
                         continue;
 
-                    _list.RemoveAt(old);
-                    _list.Insert(newposition, current);
+                    _list = _list.RemoveAt(old);
+                    _list = _list.Insert(newposition, current);
                     result.Add(new Change<TObject, TKey>(u.Key, u.Current, newposition, old));
                 }
             }
@@ -186,7 +187,7 @@ namespace DynamicData.Cache.Internal
 
         public IComparer<KeyValuePair<TKey, TObject>> Comparer => _comparer;
 
-        public List<KeyValuePair<TKey, TObject>> List => _list;
+        public ImmutableList<KeyValuePair<TKey, TObject>> List => _list;
 
         private int GetCurrentPosition(KeyValuePair<TKey, TObject> item)
         {

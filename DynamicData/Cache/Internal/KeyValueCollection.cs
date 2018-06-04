@@ -2,20 +2,19 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal class KeyValueCollection<TObject, TKey> : IKeyValueCollection<TObject, TKey>
     {
-        private readonly List<KeyValuePair<TKey, TObject>> _items;
+        private readonly IReadOnlyCollection<KeyValuePair<TKey, TObject>> _items;
 
-        public KeyValueCollection(IEnumerable<KeyValuePair<TKey, TObject>> items,
+        public KeyValueCollection(IReadOnlyCollection<KeyValuePair<TKey, TObject>> items,
                                   IComparer<KeyValuePair<TKey, TObject>> comparer,
                                   SortReason sortReason,
                                   SortOptimisations optimisations)
         {
-            _items = items?.ToList() ?? throw new ArgumentNullException(nameof(items));
+            _items = items ?? throw new ArgumentNullException(nameof(items));
             Comparer = comparer;
             SortReason = sortReason;
             Optimisations = optimisations;
@@ -38,7 +37,7 @@ namespace DynamicData.Cache.Internal
 
         public int Count => _items.Count;
 
-        public KeyValuePair<TKey, TObject> this[int index] => _items[index];
+        public KeyValuePair<TKey, TObject> this[int index] => _items.ElementAt(index);
 
         public SortReason SortReason { get; }
 
