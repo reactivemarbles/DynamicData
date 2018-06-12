@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="reactiveui" Version="8.0.0" />
-    <PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
+    <PackageReference Include="reactiveui" Version="8.3.1" />
+    <PackageReference Include="System.Reactive" Version="3.1.1" />
   </ItemGroup>
 
 
