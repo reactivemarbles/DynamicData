@@ -8,7 +8,7 @@
     <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net452' or '$(TargetFramework)' == 'netcoreapp2.0'">
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 
