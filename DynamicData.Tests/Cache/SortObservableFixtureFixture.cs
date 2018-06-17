@@ -65,6 +65,7 @@ namespace DynamicData.Tests.Cache
             _comparerObservable.OnNext(desc);
             var expectedResult = people.OrderBy(p => p, desc).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
+            var movesCount = _results.Messages[0].Moves;
 
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
