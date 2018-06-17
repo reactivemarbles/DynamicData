@@ -13,7 +13,8 @@ namespace DynamicData.Cache.Internal
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TGroupKey> _groupSelectorKey;
         private readonly IObservable<Unit> _regrouper;
-
+ 
+        
         public GroupOn(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit> regrouper)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
@@ -116,7 +117,7 @@ namespace DynamicData.Cache.Internal
                                         var previous = _itemCache.Lookup(current.Key)
                                             .ValueOrThrow(() => new MissingKeyException($"{current.Key} is missing from previous value on update. Object type {typeof(TObject).FullName}, Key type {typeof(TKey).FullName}, Group key type {typeof(TGroupKey).FullName}"));
 
-                                        if (!previous.GroupKey.Equals(current.GroupKey))
+                                        if (!EqualityComparer<TGroupKey>.Default.Equals(previous.GroupKey,current.GroupKey))
                                         {
                                             _groupCache.Lookup(previous.GroupKey)
                                                 .IfHasValue(g =>
@@ -167,7 +168,8 @@ namespace DynamicData.Cache.Internal
 
                                         previous.IfHasValue(p =>
                                         {
-                                            if (p.GroupKey.Equals(current.GroupKey))
+                                            
+                                            if (EqualityComparer<TGroupKey>.Default.Equals(p.GroupKey,current.GroupKey))
                                             {
                                                 //propagate evaluates up the chain
                                                 if (!isRegrouping) groupUpdater.Refresh(current.Key);
@@ -220,11 +222,8 @@ namespace DynamicData.Cache.Internal
                 return Tuple.Create(newcache, true);
             }
 
-            private struct ChangeWithGroup : IEquatable<ChangeWithGroup>
+            private readonly struct ChangeWithGroup : IEquatable<ChangeWithGroup>
             {
-                /// <summary>
-                ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
-                /// </summary>
                 public ChangeWithGroup(Change<TObject, TKey> change, Func<TObject, TGroupKey> keySelector)
                 {
                     GroupKey = keySelector(change.Current);
@@ -245,13 +244,13 @@ namespace DynamicData.Cache.Internal
 
                 public bool Equals(ChangeWithGroup other)
                 {
-                    return Key.Equals(other.Key);
+                    return EqualityComparer<TKey>.Default.Equals(Key, other.Key);
                 }
 
                 public override bool Equals(object obj)
                 {
                     if (ReferenceEquals(null, obj)) return false;
-                    return obj is ChangeWithGroup && Equals((ChangeWithGroup)obj);
+                    return obj is ChangeWithGroup @group && Equals(@group);
                 }
 
                 public override int GetHashCode()
@@ -271,12 +270,6 @@ namespace DynamicData.Cache.Internal
 
                 #endregion
 
-                /// <summary>
-                ///     Returns the fully qualified type name of this instance.
-                /// </summary>
-                /// <returns>
-                ///     A <see cref="T:System.String" /> containing a fully qualified type name.
-                /// </returns>
                 public override string ToString()
                 {
                     return $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";

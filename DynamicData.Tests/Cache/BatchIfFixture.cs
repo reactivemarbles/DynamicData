@@ -12,7 +12,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
     public class BatchIfFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
@@ -25,8 +24,12 @@ namespace DynamicData.Tests.Cache
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
+
+           // _results = _source.Connect().BatchIf(new BehaviorSubject<bool>(true), scheduler: _scheduler).AsAggregator();
         }
 
+
+        
         public void Dispose()
         {
             _results.Dispose();

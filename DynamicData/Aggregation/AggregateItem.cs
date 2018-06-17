@@ -5,7 +5,7 @@ namespace DynamicData.Aggregation
     /// An object representing added and removed itemsin a continous aggregation stream
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
-    public struct AggregateItem<TObject>
+    public readonly struct AggregateItem<TObject>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AggregateItem{TObject}"/> struct.

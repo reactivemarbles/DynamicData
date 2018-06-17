@@ -22,8 +22,10 @@ namespace DynamicData.List.Internal
         {
             return Observable.Create<IChangeSet<T>>(observer =>
                     {
+                        var locker = new object();
                         var items = new List<T>();
                         var subscriber = _source
+                            .Synchronize(locker)
                             .Do(changes => RegisterForRemoval(items, changes), observer.OnError)
                             .SubscribeSafe(observer);
 
@@ -31,7 +33,6 @@ namespace DynamicData.List.Internal
                         {
                             subscriber.Dispose();
                             items.ForEach(t => _callback(t));
-                            items.Clear();
                         });
                     });
         }

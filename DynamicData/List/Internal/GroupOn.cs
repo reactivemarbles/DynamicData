@@ -221,7 +221,7 @@ namespace DynamicData.List.Internal
             return new GroupWithAddIndicator(newcache, true);
         }
 
-        private struct GroupWithAddIndicator
+        private readonly struct GroupWithAddIndicator
         {
             public Group<TObject, TGroupKey> Group { get; }
             public bool WasCreated { get; }

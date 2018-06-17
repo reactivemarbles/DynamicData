@@ -13,7 +13,6 @@ namespace DynamicData.Experimental
 {
     internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
     {
-        private readonly IScheduler _scheduler;
         private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey>();
         private readonly IObservableCache<TObject, TKey> _source;
         private readonly object _locker = new object();
@@ -22,12 +21,11 @@ namespace DynamicData.Experimental
 
         public Watcher(IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler)
         {
-            _scheduler = scheduler;
             _source = source.AsObservableCache();
 
             var onCompletePublisher = _subscribers.Connect()
                                                   .Synchronize(_locker)
-                                                  .ObserveOn(_scheduler)
+                                                  .ObserveOn(scheduler)
                                                   .SubscribeMany((t, k) => Disposable.Create(t.OnCompleted))
                                                   .Subscribe();
 
@@ -36,7 +34,7 @@ namespace DynamicData.Experimental
                 var subscriber = _subscribers.Lookup(update.Key);
                 if (subscriber.HasValue)
                 {
-                    _scheduler.Schedule(() => subscriber.Value.OnNext(update));
+                    scheduler.Schedule(() => subscriber.Value.OnNext(update));
                 }
             }));
 

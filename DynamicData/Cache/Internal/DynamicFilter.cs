@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal
@@ -17,8 +16,8 @@ namespace DynamicData.Cache.Internal
             IObservable<Unit> refilterObservable = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _predicateChanged = predicateChanged ?? Observable.Never<Func<TObject, bool>>();
-            _refilterObservable = refilterObservable ?? Observable.Never<Unit>();
+            _predicateChanged = predicateChanged ?? throw new ArgumentNullException(nameof(predicateChanged));
+            _refilterObservable = refilterObservable;
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
@@ -27,42 +26,64 @@ namespace DynamicData.Cache.Internal
             {
                 var allData = new Cache<TObject, TKey>();
                 var filteredData = new ChangeAwareCache<TObject, TKey>();
-                var updater = new FilteredUpdater<TObject, TKey>(filteredData, x => false);
+                Func<TObject, bool> predicate = t => false;
 
                 var locker = new object();
 
-                var evaluate = _refilterObservable.
-                    Synchronize(locker)
-                    .Select(_ => Reevaluate(updater, allData.KeyValues));
-
-                var predicateChanged = _predicateChanged
+                var refresher = LatestPredicateObservable()
                     .Synchronize(locker)
-                    .Select(predicate =>
+                    .Select(p =>
                     {
-                        updater = new FilteredUpdater<TObject, TKey>(filteredData, predicate);
-                        return Reevaluate(updater, allData.KeyValues);
+                        //set the local predicate
+                        predicate = p;
+
+                        //reapply filter using all data from the cache
+                        return  filteredData.RefreshFilteredFrom(allData, predicate);
                     });
 
                 var dataChanged = _source
-                    .Finally(observer.OnCompleted)
+                   // .Finally(observer.OnCompleted)
                     .Synchronize(locker)
                     .Select(changes =>
                     {
-                        allData.Clone(changes);
-                        return updater.Update(changes);
+                        //maintain all data [required to re-apply filter]
+                        allData.Clone(changes); 
+
+                        //maintain filtered data 
+                        filteredData.FilterChanges(changes, predicate);
+
+                        //get latest changes
+                        return filteredData.CaptureChanges();
                     });
 
-                return predicateChanged.Merge(evaluate).Merge(dataChanged).NotEmpty().SubscribeSafe(observer);
+                return refresher
+                    .Merge(dataChanged)
+                    .NotEmpty()
+                    .SubscribeSafe(observer);
             });
         }
 
-        private IChangeSet<TObject, TKey> Reevaluate(FilteredUpdater<TObject, TKey> updater,
-            IEnumerable<KeyValuePair<TKey, TObject>> items)
+        private IObservable<Func<TObject, bool>> LatestPredicateObservable()
         {
-            var result = updater.Refresh(items);
-            var changes = result.Where(u => u.Reason == ChangeReason.Add || u.Reason == ChangeReason.Remove);
-            return new ChangeSet<TObject, TKey>(changes);
+            return Observable.Create<Func<TObject, bool>>(observable =>
+            {
+                Func<TObject, bool> latest = t => false;
+
+                observable.OnNext(latest);
+
+                var predicateChanged = _predicateChanged
+                    .Subscribe(predicate =>
+                    {
+                        latest = predicate;
+                        observable.OnNext(latest);
+                    });
+
+                var reapplier = _refilterObservable == null
+                    ? Disposable.Empty
+                    : _refilterObservable.Subscribe(_ => observable.OnNext(latest));
+
+                return new CompositeDisposable(predicateChanged, reapplier);
+            });
         }
     }
 }
-

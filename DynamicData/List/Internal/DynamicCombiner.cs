@@ -150,7 +150,7 @@ namespace DynamicData.List.Internal
             }
         }
 
-        private class MergeContainer
+        private sealed class MergeContainer
         {
             public ReferenceCountTracker<T> Tracker { get; } = new ReferenceCountTracker<T>();
             public IObservable<IChangeSet<T>> Source { get; }

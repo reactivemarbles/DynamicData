@@ -64,7 +64,7 @@ namespace DynamicData.ReactiveUI.Tests.Fixtures
                 parents[1].Children[0] = new Person("Replacement", 100);
                 aggregator.Data.Count.Should().Be(98);
 
-                aggregator.Data.Lookup(replacedChild.Key).HasValue.Should().BeFalse();
+                aggregator.Data.Lookup(replacedChild.Name).HasValue.Should().BeFalse();
                 aggregator.Data.Lookup("Replacement").HasValue.Should().BeTrue();
             }
         }
@@ -119,7 +119,7 @@ namespace DynamicData.ReactiveUI.Tests.Fixtures
                 parents[1].Children[0] = new Person("Replacement", 100);
                 aggregator.Data.Count.Should().Be(98);
 
-                aggregator.Data.Lookup(replacedChild.Key).HasValue.Should().BeFalse();
+                aggregator.Data.Lookup(replacedChild.Name).HasValue.Should().BeFalse();
                 aggregator.Data.Lookup("Replacement").HasValue.Should().BeTrue();
             }
         }

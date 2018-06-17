@@ -1,20 +1,24 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard1.1;net45;net46</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="reactiveui" Version="8.0.0-alpha0069" />
+    <PackageReference Include="reactiveui" Version="8.3.1" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
 
   <PropertyGroup>
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
     <Title>Dynamic Data / Reactive UI intergration</Title>
-    <PackageLicenseUrl>http://opensource.org/licenses/MS-PL</PackageLicenseUrl>
+    <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/RolandPheasant/DynamicData</PackageProjectUrl>
     <Description>
 Make reactive ui even more powerful by integrating with dynamic data and making use of it's numerious operators.
@@ -23,10 +27,12 @@ Dynamic data provides an observable cache and an observable list with at least 5
     <Summary>
       Integrate dynamic data observable collections with ReactiveUI
     </Summary>
-    <Copyright>Copyright Roland Pheasant 2011-2017</Copyright>
+    <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
     <Tags>DynamicData ReactiveUI Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</Tags>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/RolandPheasant/DynamicData</RepositoryUrl>
     <PackageTags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</PackageTags>
   </PropertyGroup>
+
+
 </Project>

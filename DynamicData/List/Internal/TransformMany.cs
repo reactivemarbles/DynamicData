@@ -95,11 +95,22 @@ namespace DynamicData.List.Internal
                     .MergeMany(x => x.Changes)
                     .Synchronize(outerLock);
 
-                var allChanges = intial.Merge(subsequent).Select(changes =>
+                var init = intial.Select(changes =>
                 {
                     result.Clone(changes);
                     return result.CaptureChanges();
                 });
+
+                var subseq = subsequent
+                    .RemoveIndex()
+                    .Select(changes =>
+                {
+                    result.Clone(changes);
+                    return result.CaptureChanges();
+                });
+
+
+                var allChanges = init.Merge(subseq);
 
                 return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect());
             });
@@ -196,4 +207,6 @@ namespace DynamicData.List.Internal
             }
         }
     }
+
+
 }

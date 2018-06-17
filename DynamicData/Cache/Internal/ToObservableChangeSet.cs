@@ -10,7 +10,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class ToObservableChangeSet<TObject,TKey>
+    internal class ToObservableChangeSet<TObject, TKey>
     {
         private readonly IObservable<IEnumerable<TObject>> _source;
         private readonly Func<TObject, TKey> _keySelector;
@@ -23,7 +23,7 @@ namespace DynamicData.Cache.Internal
             Func<TObject, TimeSpan?> expireAfter,
             int limitSizeTo,
             IScheduler scheduler = null)
-            : this(source.Select(t=>new [] {t}), keySelector, expireAfter, limitSizeTo, scheduler)
+            : this(source.Select(t => new[] { t }), keySelector, expireAfter, limitSizeTo, scheduler)
         {
         }
 
@@ -110,14 +110,14 @@ namespace DynamicData.Cache.Internal
 
         }
 
-        private ExpirableItem<TObject,TKey> CreateExpirableItem(TObject item,TKey key, ref long orderItemWasAdded)
+        private ExpirableItem<TObject, TKey> CreateExpirableItem(TObject item, TKey key, ref long orderItemWasAdded)
         {
             //check whether expiry has been set for any items
             var dateTime = _scheduler.Now.DateTime;
             var removeAt = _expireAfter?.Invoke(item);
             var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;
 
-            return new ExpirableItem<TObject,TKey>(item, key, expireAt, Interlocked.Increment(ref orderItemWasAdded));
+            return new ExpirableItem<TObject, TKey>(item, key, expireAt, Interlocked.Increment(ref orderItemWasAdded));
         }
     }
 }

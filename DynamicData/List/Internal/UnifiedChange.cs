@@ -4,7 +4,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    internal struct UnifiedChange<T> : IEquatable<UnifiedChange<T>>
+    internal readonly struct UnifiedChange<T> : IEquatable<UnifiedChange<T>>
     {
         public ListChangeReason Reason { get; }
         public T Current { get; }

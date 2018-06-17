@@ -36,7 +36,7 @@ namespace DynamicData.ReactiveUI
         {
             Clone(changes);
 
-            if (changes.Count > _resetThreshold || !_loaded)
+            if (changes.Count - changes.Refreshes > _resetThreshold || !_loaded)
             {
                 _loaded = true;
                 using (_target.SuppressChangeNotifications())

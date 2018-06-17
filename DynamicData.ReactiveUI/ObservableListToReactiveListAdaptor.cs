@@ -26,13 +26,10 @@ namespace DynamicData.ReactiveUI
         }
 
 
-        /// <summary>
-        /// Maintains the specified collection from the changes
-        /// </summary>
-        /// <param name="changes">The changes.</param>
+        /// <inheritdoc />
         public void Adapt(IChangeSet<TObject> changes)
         {
-            if (changes.Count > _resetThreshold || !_loaded)
+            if (changes.Count - changes.Refreshes  > _resetThreshold || !_loaded)
             {
                 using (_target.SuppressChangeNotifications())
                 {

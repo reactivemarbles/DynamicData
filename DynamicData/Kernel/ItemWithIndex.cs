@@ -7,7 +7,7 @@ namespace DynamicData.Kernel
     /// Container for an item and it's index from a list
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public struct ItemWithIndex<T> : IEquatable<ItemWithIndex<T>>
+    public readonly struct ItemWithIndex<T> : IEquatable<ItemWithIndex<T>>
     {
         /// <summary>
         /// Gets the item.

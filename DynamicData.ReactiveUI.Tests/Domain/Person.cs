@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
+using DynamicData.Binding;
 
 namespace DynamicData.ReactiveUI.Tests.Domain
 {
-    public class Person : IKey<string>, IEquatable<Person>
+    public class Person :AbstractNotifyPropertyChanged, IEquatable<Person>
     {
-        private readonly string _name;
         private int _age;
-        private readonly string _gender;
-
 
 
         public Person(string firstname, string lastname, int age, string gender = "F")
@@ -18,39 +16,27 @@ namespace DynamicData.ReactiveUI.Tests.Domain
 
         public Person(string name, int age, string gender = "F")
         {
-            _name = name;
+            Name = name;
             _age = age;
-            _gender = gender;
+            Gender = gender;
 
         }
-
-
-        public string Name
-        {
-            get { return _name; }
-        }
-
-        public string Gender
-        {
-            get { return _gender; }
-        }
-
+        
+        public string Name { get; }
+        public string Gender { get; }
 
         public int Age
         {
-            get { return _age; }
-            set { _age = value; }
+            get => _age;
+            set => SetAndRaise(ref _age, value);
         }
 
-        public string Key
-        {
-            get { return _name; }
-        }
+     
 
 
         public override string ToString()
         {
-            return string.Format("{0}. {1}", this.Name, this.Age);
+            return $"{Name}. {Age}";
         }
 
         #region Equality Members
@@ -72,7 +58,7 @@ namespace DynamicData.ReactiveUI.Tests.Domain
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(_gender, other._gender) && _age == other._age;
+            return string.Equals(Gender, other.Gender) && _age == other._age;
         }
 
         public override bool Equals(object obj)
@@ -87,7 +73,7 @@ namespace DynamicData.ReactiveUI.Tests.Domain
         {
             unchecked
             {
-                return ((_gender != null ? _gender.GetHashCode() : 0) * 397) ^ _age;
+                return ((Gender != null ? Gender.GetHashCode() : 0) * 397) ^ _age;
             }
         }
 

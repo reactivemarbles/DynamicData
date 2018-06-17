@@ -8,7 +8,7 @@ namespace DynamicData
     /// <summary>
     ///   Container to describe a single change to a cache
     /// </summary>
-    public struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
+    public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     {
         /// <summary>
         /// The unique key of the item which has changed
@@ -138,11 +138,7 @@ namespace DynamicData
             return !left.Equals(right);
         }
 
-        /// <summary>
-        ///  Determines whether the specified object, is equal to this instance.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool Equals(Change<TObject, TKey> other)
         {
             return EqualityComparer<TKey>.Default.Equals(Key, other.Key) 
@@ -153,25 +149,14 @@ namespace DynamicData
                 && PreviousIndex == other.PreviousIndex;
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Change<TObject, TKey> && Equals((Change<TObject, TKey>) obj);
         }
 
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -188,12 +173,7 @@ namespace DynamicData
 
         #endregion
 
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"{Reason}, Key: {Key}, Current: {Current}, Previous: {Previous}";

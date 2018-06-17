@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive.Linq;
 
@@ -71,7 +72,7 @@ namespace DynamicData.Cache.Internal
                 var previous = _current;
                 var virualised = _all.Skip(_parameters.StartIndex)
                                      .Take(_parameters.Size)
-                                     .ToList();
+                                     .ToImmutableList();
 
                 _current = new KeyValueCollection<TObject, TKey>(virualised, _all.Comparer, updates?.SortedItems.SortReason ?? SortReason.DataChanged, _all.Optimisations);
 

@@ -5,10 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
+    <PackageReference Include="System.Reactive" Version="3.1.1" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' or '$(TargetFramework)' == 'net46'">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' or '$(TargetFramework)' == 'net46' or '$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 
@@ -16,18 +17,22 @@
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
     <Title>Dynamic Data</Title>
-    <PackageLicenseUrl>http://opensource.org/licenses/MS-PL</PackageLicenseUrl>
+    <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/RolandPheasant/DynamicData</PackageProjectUrl>
     <Description>
 Bring the power of Rx to collections using Dynamic Data.
 Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
       Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
 </Description>
-    <Copyright>Copyright Roland Pheasant 2011-2017</Copyright>
+    <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
     <Tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</Tags>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/RolandPheasant/DynamicData</RepositoryUrl>
     <PackageTags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
 

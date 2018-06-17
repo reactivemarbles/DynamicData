@@ -5,25 +5,24 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <Copyright>Copyright Roland Pheasant 2011-2017</Copyright>
+    <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)'=='net452'">
+  <PropertyGroup Condition="'$(TargetFramework)'=='net452' or '$(TargetFramework)' == 'netcoreapp2.0'">
     <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Playground\**" />
-    <EmbeddedResource Remove="Playground\**" />
-    <None Remove="Playground\**" />
-  </ItemGroup>
+
+  <PropertyGroup>
+    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Reactive" Version="[3.1.1,4)" />
+    <PackageReference Include="System.Reactive" Version="3.1.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,9 +33,5 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
     <PackageReference Include="FluentAssertions" Version="4.19.3" />
     <PackageReference Include="Microsoft.Reactive.Testing" Version="[3.1.1,4)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Playground\" />
   </ItemGroup>
 </Project>

@@ -88,16 +88,43 @@ namespace DynamicData
                     }
                     else
                     {
-                        //is this best? or replace + move?
-                        source.RemoveAt(change.PreviousIndex);
-                        source.Insert(change.CurrentIndex, change.Current);
+                        if (change.PreviousIndex == -1)
+                        {
+                            source.Remove(change.Previous.Value);
+                        }
+                        else
+                        {
+                            //is this best? or replace + move?
+                            source.RemoveAt(change.PreviousIndex);
+                        }
+
+                        if (change.CurrentIndex == -1)
+                        {
+                            source.Add(change.Current);
+                        }
+                        else
+                        {
+                            source.Insert(change.CurrentIndex, change.Current);
+                        }
+
+
                     }
 
                     break;
                 }
                 case ListChangeReason.Refresh:
                 {
-                    changeAware?.RefreshAt(item.Item.CurrentIndex);
+                    if (changeAware != null)
+                    {
+                        changeAware.RefreshAt(item.Item.CurrentIndex);
+                        }
+
+                    else
+                    {
+                        source.RemoveAt(item.Item.CurrentIndex);
+                        source.Insert(item.Item.CurrentIndex, item.Item.Current);
+                    }
+
                     break;
                 }
                 case ListChangeReason.Remove:

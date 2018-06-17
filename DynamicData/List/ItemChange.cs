@@ -9,7 +9,7 @@ namespace DynamicData
     /// Container to describe a single change to a cache
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public struct ItemChange<T> : IEquatable<ItemChange<T>>
+    public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     {
         /// <summary>
         /// An empty change

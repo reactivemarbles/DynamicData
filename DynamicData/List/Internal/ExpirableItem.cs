@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace DynamicData.List.Internal
 {
+    
     internal sealed class ExpirableItem<TObject> : IEquatable<ExpirableItem<TObject>>
     {
         public TObject Item { get; }
@@ -29,7 +30,7 @@ namespace DynamicData.List.Internal
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is ExpirableItem<TObject> && Equals((ExpirableItem<TObject>)obj);
+            return obj is ExpirableItem<TObject> item && Equals(item);
         }
 
         public override int GetHashCode()

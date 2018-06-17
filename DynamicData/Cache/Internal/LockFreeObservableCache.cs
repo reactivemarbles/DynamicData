@@ -67,27 +67,14 @@ namespace DynamicData.Cache.Internal
         /// <returns></returns>
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null)
         {
-            return Observable.Create<IChangeSet<TObject, TKey>>
-            (
-                observer =>
-                {
-                    if (predicate == null)
-                    {
-                        return Observable.Return(_innerCache.GetInitialUpdates())
-                            .Concat(_changes)
-                            .SubscribeSafe(observer);
-                    }
+            return Observable.Defer(() =>
+            {
+                var initial = _innerCache.GetInitialUpdates(predicate);
+                var changes = Observable.Return(initial).Concat(_changes);
 
-                    var updater = new FilteredUpdater<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), predicate);
-                    var filtered = updater.Update(_innerCache.GetInitialUpdates(predicate));
-                    if (filtered.Count != 0)
-                        observer.OnNext(filtered);
-
-                    return _changes
-                        .Select(updater.Update)
-                        .NotEmpty()
-                        .SubscribeSafe(observer);
-                });
+                return (predicate == null ? changes : changes.Filter(predicate))
+                    .NotEmpty();
+            });
         }
 
         /// <summary>

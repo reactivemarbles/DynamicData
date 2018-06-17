@@ -103,19 +103,19 @@ namespace DynamicData
         public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null)
         {
             return Observable.Create<IChangeSet<T>>(observer =>
-                    {
-                        lock (_locker)
-                        {
-                            var initial = GetInitialUpdates(predicate);
-                            if (initial.TotalChanges > 0) observer.OnNext(initial);
-                            var source = _changes.Finally(observer.OnCompleted);
+            {
+                lock (_locker)
+                {
+                    var initial = GetInitialUpdates(predicate);
+                    if (initial.TotalChanges > 0) observer.OnNext(initial);
+                    var source = _changes.Finally(observer.OnCompleted);
 
-                            if (predicate != null)
-                                source = source.Filter(predicate);
+                    if (predicate != null)
+                        source = source.Filter(predicate);
 
-                            return source.SubscribeSafe(observer);
-                        }
-                    });
+                    return source.SubscribeSafe(observer);
+                }
+            });
         }
 
         private IChangeSet<T> GetInitialUpdates(Func<T, bool> predicate = null)

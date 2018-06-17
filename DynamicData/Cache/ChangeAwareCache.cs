@@ -19,52 +19,29 @@ namespace DynamicData
 
         private Dictionary<TKey, TObject> _data;
 
-        /// <summary>
-        /// Gets the count.
-        /// </summary>
+        /// <inheritdoc />
         public int Count => _data.Count;
-        
-        /// <summary>
-        /// Gets the items together with their keys
-        /// </summary>
-        /// <value>
-        /// The key values.
-        /// </value>
+
+        /// <inheritdoc />
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
       
-        /// <summary>
-        /// Gets the items.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<TObject> Items => _data.Values;
 
 
-        /// <summary>
-        /// Gets the keys.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<TKey> Keys => _data.Keys;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChangeAwareCache{TObject, TKey}"/> class.
-        /// </summary>
+        /// <inheritdoc />
         public ChangeAwareCache()
         {
             _data = new Dictionary<TKey, TObject>();
         }
 
-        /// <summary>
-        /// Lookup a single item using the specified key.
-        /// </summary>
-        /// <remarks>
-        /// Fast indexed lookup
-        /// </remarks>
-        /// <param name="key">The key.</param>
+        /// <inheritdoc />
         public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
-        /// <summary>
-        /// Adds or updates the item using the specified key
-        /// </summary>
-        /// <param name="item">The item.</param>
-        /// <param name="key">The key.</param>
+        /// <inheritdoc />
         public void AddOrUpdate(TObject item, TKey key)
         {
             _changes.Add(_data.TryGetValue(key, out var existingItem)
@@ -84,10 +61,6 @@ namespace DynamicData
         }
 
         /// <inheritdoc />
-        /// <summary>
-        /// Removes the item matching the specified key.
-        /// </summary>
-        /// <param name="key">The key.</param>
         public void Remove(TKey key)
         {
             if (_data.TryGetValue(key, out var existingItem))
@@ -129,30 +102,22 @@ namespace DynamicData
         }
 
 
-        /// <summary>
-        /// Clears all items
-        /// </summary>
-        public void Clear()
+        /// <inheritdoc />
+       public void Clear()
         {
             var toremove = _data.Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
             _changes.AddRange(toremove);
             _data.Clear();
         }
 
-        /// <summary>
-        /// Clones the cache from the specified changes
-        /// </summary>
-        /// <param name="changes">The changes.</param>
+        /// <inheritdoc />
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
 
             //for efficiency resize dictionary to initial batch size
             if (_data.Count == 0)
-            {
                 _data = new Dictionary<TKey, TObject>(changes.Count);
-                _changes.Capacity = changes.Count;
-            }
 
             foreach (var change in changes)
             {

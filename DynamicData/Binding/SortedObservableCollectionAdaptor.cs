@@ -41,7 +41,7 @@ namespace DynamicData.Binding
                     break;
 
                 case SortReason.DataChanged:
-                    if (changes.Count > _refreshThreshold)
+                    if (changes.Count - changes.Refreshes >  _refreshThreshold)
                     {
                         using (collection.SuspendNotifications())
                         {
