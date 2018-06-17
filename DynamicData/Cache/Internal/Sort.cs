@@ -208,7 +208,7 @@ namespace DynamicData.Cache.Internal
 
                 if (sortReason == SortReason.Reorder && changeSet.Count == 0) return null;
 
-                _sorted = new KeyValueCollection<TObject, TKey>(_calculator.List, _comparer, sortReason, _optimisations);
+                _sorted = new KeyValueCollection<TObject, TKey>((IReadOnlyCollection<KeyValuePair<TKey, TObject>>)_calculator.List, _comparer, sortReason, _optimisations);
                 return new SortedChangeSet<TObject, TKey>(_sorted, changeSet);
             }
         }
