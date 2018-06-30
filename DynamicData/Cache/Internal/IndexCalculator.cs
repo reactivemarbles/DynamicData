@@ -112,11 +112,10 @@ namespace DynamicData.Cache.Internal
             var changesByReason = reducedChanges.GroupBy(c => c.Reason).ToDictionary(x => x.Key, x => x.AsEnumerable());
 
             var result = new List<Change<TObject, TKey>>(reducedChanges.Count);
-            var refreshes = changesByReason.GetOrEmpty(ChangeReason.Refresh);
-            result.AddRange(refreshes);
 
+            var refreshes = changesByReason.GetOrEmpty(ChangeReason.Refresh);
             var removals = changesByReason.GetOrEmpty(ChangeReason.Remove);
-            var updateChanges = changesByReason.GetOrEmpty(ChangeReason.Update).OrderBy(r => new KeyValuePair<TKey, TObject>(r.Key, r.Current), _comparer);
+            var updateChanges = changesByReason.GetOrEmpty(ChangeReason.Update).Concat(refreshes).OrderBy(r => new KeyValuePair<TKey, TObject>(r.Key, r.Current), _comparer);
 
             var keysToBeRemoved = updateChanges.Concat(removals).ToDictionary(x => x.Key, x => x);
             var updatePreviousValues = new Dictionary<KeyValuePair<TKey, TObject>, IndexAndNode<KeyValuePair<TKey, TObject>>>();
@@ -135,18 +134,17 @@ namespace DynamicData.Cache.Internal
                         if(toBeRemoved.Reason == ChangeReason.Remove)
                         {
                             result.Add(new Change<TObject, TKey>(ChangeReason.Remove, toBeRemoved.Key, toBeRemoved.Current, index));
-                            node = node.Next;
-                            _list.Remove(nodeCopy);
                         } else
                         {
                             var kvp = new KeyValuePair<TKey, TObject>(node.Value.Key, toBeRemoved.Current);
                             updatePreviousValues[kvp] = IndexAndNode.Create(index, node);
                             index++;
-
-                            node = node.Next;
                         }
 
+                        node = node.Next;
+                        _list.Remove(nodeCopy);
                         keysToBeRemoved.Remove(nodeCopy.Value.Key);
+
                         if (!keysToBeRemoved.Any()) break;
                     }
                     else {
@@ -182,16 +180,15 @@ namespace DynamicData.Cache.Internal
 
                         var nodeToAdd = new LinkedListNode<KeyValuePair<TKey, TObject>>(kvp);
                         _list.AddBefore(node, nodeToAdd);
-                        _list.Remove(previous.Node);
 
                         if(previousIndex == index)
                         {
-                            result.Add(new Change<TObject, TKey>(ChangeReason.Update, kvp.Key, kvp.Value, previousValue.Value, index, previousIndex));
+                            result.Add(new Change<TObject, TKey>(nodeToBeUpdated.Reason, kvp.Key, kvp.Value, previousValue.Value, index, previousIndex));
                         } else
                         {
                             alreadyAddedNodes.Add(kvp);
                             result.Add(new Change<TObject, TKey>(kvp.Key, kvp.Value, index, previousIndex));
-                            result.Add(new Change<TObject, TKey>(ChangeReason.Update, kvp.Key, kvp.Value, previousValue.Value, index, index));
+                            result.Add(new Change<TObject, TKey>(nodeToBeUpdated.Reason, kvp.Key, kvp.Value, previousValue.Value, index, index));
                         }
 
                         node = nodeToAdd;
@@ -210,11 +207,16 @@ namespace DynamicData.Cache.Internal
                     var previousIndex = previous.Index;
                     var previousValue = previous.Node.Value;
 
-                    _list.Remove(previous.Node);
-                    _list.AddLast(kvp);
+                    if(index == -1)
+                    {
+                        result.Add(new Change<TObject, TKey>(nodeToBeUpdated.Reason, kvp.Key, kvp.Value, previousValue.Value, 0, 0));
+                    } else
+                    {
+                        result.Add(new Change<TObject, TKey>(kvp.Key, kvp.Value, index, previousIndex));
+                        result.Add(new Change<TObject, TKey>(nodeToBeUpdated.Reason, kvp.Key, kvp.Value, previousValue.Value, index, index));
+                    }
 
-                    result.Add(new Change<TObject, TKey>(kvp.Key, kvp.Value, index, previousIndex));
-                    result.Add(new Change<TObject, TKey>(ChangeReason.Update, kvp.Key, kvp.Value, previousValue.Value, index, index));
+                    _list.AddLast(kvp);
                 }
             }
 
