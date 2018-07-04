@@ -18,14 +18,14 @@ namespace DynamicData.Cache.Internal
             _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
         }
 
-        public IObservable<IDistinctChangeSet<TValue>> Run()
+        public IObservable<DistinctChangeSet<TValue>> Run()
         {
             return _source.Select(Calculate).Where(updates => updates.Count != 0);
         }
 
-        private IDistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> changes)
+        private DistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> changes)
         {
-            var result = new List<Change<TValue, TValue>>();
+            var result = new DistinctChangeSet<TValue>();
 
             void AddAction(TValue value) => _valueCounters.Lookup(value)
                 .IfHasValue(count => _valueCounters[value] = count + 1)
@@ -50,7 +50,8 @@ namespace DynamicData.Cache.Internal
                 result.Add(new Change<TValue, TValue>(ChangeReason.Remove, value, value));
             }
 
-            foreach (var change in changes)
+            var enumerable = changes.ToConcreteType();
+            foreach (var change in enumerable)
             {
                 var key = change.Key;
                 switch (change.Reason)
@@ -83,7 +84,7 @@ namespace DynamicData.Cache.Internal
                         }
                 }
             }
-            return new DistinctChangeSet<TValue>(result);
+            return result;
         }
     }
 }

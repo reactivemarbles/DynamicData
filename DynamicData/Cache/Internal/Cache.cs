@@ -6,7 +6,7 @@ namespace DynamicData.Cache.Internal
 {
     internal class Cache<TObject, TKey> : ICache<TObject, TKey>
     {
-        private Dictionary<TKey, TObject> _data;
+        private readonly Dictionary<TKey, TObject> _data;
 
         public int Count => _data.Count;
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
@@ -20,23 +20,21 @@ namespace DynamicData.Cache.Internal
             _data = capacity > 1 ? new Dictionary<TKey, TObject>(capacity) : new Dictionary<TKey, TObject>();
         }
 
-        public Cache(IDictionary<TKey, TObject> dictionary)
+        public Cache(Dictionary<TKey, TObject> data)
         {
-            _data = new Dictionary<TKey, TObject>(dictionary);
+            _data = data;
         }
 
         public Cache<TObject, TKey> Clone()
         {
-            return _data== null ? new Cache<TObject, TKey>() : new Cache<TObject, TKey>(_data);
+            return _data== null 
+                ? new Cache<TObject, TKey>() 
+                : new Cache<TObject, TKey>(new Dictionary<TKey, TObject>(_data));
         }
 
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
-
-            //for efficiency resize dictionary to initial batch size
-            if (_data.Count == 0)
-                _data = new Dictionary<TKey, TObject>(changes.Count);
 
             foreach (var item in changes)
             {
@@ -65,6 +63,21 @@ namespace DynamicData.Cache.Internal
             _data[key] = item;
         }
 
+        public void Remove(IEnumerable<TKey> keys)
+        {
+            if (keys is IList<TKey> list)
+            {
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    Remove(item);
+            }
+            else
+            {
+                foreach (var key in keys)
+                   Remove(key);
+            }
+        }
+
         public void Remove(TKey key)
         {
             if (_data.ContainsKey(key))
@@ -74,6 +87,31 @@ namespace DynamicData.Cache.Internal
         public void Clear()
         {
             _data.Clear();
+        }
+
+        /// <summary>
+        /// Sends a signal for operators to recalculate it's state 
+        /// </summary>
+        public void Refresh()
+        {
+
+        }
+
+        /// <summary>
+        /// Refreshes the items matching the specified keys
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        public void Refresh(IEnumerable<TKey> keys)
+        {
+
+        }
+
+        /// <summary>
+        /// Refreshes the item matching the specified key
+        /// </summary>
+        public void Refresh(TKey key)
+        {
+
         }
     }
 }

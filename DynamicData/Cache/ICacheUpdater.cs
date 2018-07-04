@@ -102,7 +102,14 @@ namespace DynamicData
         /// <summary>
         /// Updates using changes using the specified changeset
         /// </summary>
+        [Obsolete("Use Clone()")]
         void Update(IChangeSet<TObject, TKey> changes);
+
+
+        /// <summary>
+        /// Clones the change set to the cache
+        /// </summary>
+        void Clone(IChangeSet<TObject, TKey> changes);
 
         /// <summary>
         /// Clears all items from the underlying cache.

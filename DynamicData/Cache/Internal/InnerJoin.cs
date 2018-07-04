@@ -42,7 +42,7 @@ namespace DynamicData.Cache.Internal
                     {
                         joinedCache.Edit(innerCache =>
                         {
-                            changes.ForEach(change =>
+                            foreach (var change in changes.ToConcreteType())
                             {
                                 var left = change.Current;
                                 var right = rightCache.Lookup(change.Key);
@@ -51,17 +51,18 @@ namespace DynamicData.Cache.Internal
                                 {
                                     case ChangeReason.Add:
                                     case ChangeReason.Update:
+                                    {
+                                        if (right.HasValue)
                                         {
-                                            if (right.HasValue)
-                                            {
-                                                innerCache.AddOrUpdate(_resultSelector(change.Key, left, right.Value), change.Key);
-                                            }
-                                            else
-                                            {
-                                                innerCache.Remove(change.Key);
-                                            }
-                                            break;
+                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left, right.Value), change.Key);
                                         }
+                                        else
+                                        {
+                                            innerCache.Remove(change.Key);
+                                        }
+
+                                        break;
+                                    }
 
                                     case ChangeReason.Remove:
                                         innerCache.Remove(change.Key);
@@ -71,7 +72,7 @@ namespace DynamicData.Cache.Internal
                                         innerCache.Refresh(change.Key);
                                         break;
                                 }
-                            });
+                            }
                         });
                     });
 
@@ -80,7 +81,7 @@ namespace DynamicData.Cache.Internal
                     {
                         joinedCache.Edit(innerCache =>
                         {
-                            changes.ForEach(change =>
+                            foreach (var change in changes.ToConcreteType())
                             {
                                 var right = change.Current;
                                 var left = leftCache.Lookup(change.Key);
@@ -89,28 +90,29 @@ namespace DynamicData.Cache.Internal
                                 {
                                     case ChangeReason.Add:
                                     case ChangeReason.Update:
+                                    {
+                                        if (left.HasValue)
                                         {
-                                            if (left.HasValue)
-                                            {
-                                                innerCache.AddOrUpdate(_resultSelector(change.Key, left.Value, right), change.Key);
-                                            }
-                                            else
-                                            {
-                                                innerCache.Remove(change.Key);
-                                            }
+                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left.Value, right), change.Key);
                                         }
+                                        else
+                                        {
+                                            innerCache.Remove(change.Key);
+                                        }
+                                    }
                                         break;
                                     case ChangeReason.Remove:
-                                        {
-                                            innerCache.Remove(change.Key); ;
-                                        }
+                                    {
+                                        innerCache.Remove(change.Key);
+                                        ;
+                                    }
                                         break;
                                     case ChangeReason.Refresh:
                                         //propagate upstream
                                         innerCache.Refresh(change.Key);
                                         break;
                                 }
-                            });
+                            }
                         });
                     });
 

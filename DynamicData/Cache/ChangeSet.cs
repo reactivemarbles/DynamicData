@@ -1,108 +1,67 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Annotations;
-using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
+    internal static class CacheChangeSetEx
+    {
+        /// <summary>
+        /// IChangeSet is flawed because it automatically means allocations when enumerating.
+        /// This extension is a crazy hack to cast to the concrete changeset which means we no longer allocate
+        /// as changset now inherits from List which has allocation free enumerations. 
+        ///
+        /// IChangeSet will be removed in V7 and instead Changesets will be used directly
+        ///
+        /// In the mean time I am banking that no-one has implemented a custom change set - personally I think it is very unlikely
+        /// </summary>
+        public static ChangeSet<TObject, TKey> ToConcreteType<TObject, TKey>(this IChangeSet<TObject, TKey> changeset) => (ChangeSet<TObject, TKey>)changeset;
+    }
+
+
     /// <summary>
     /// A collection of changes
     /// </summary>
-    public class ChangeSet<TObject, TKey> : IChangeSet<TObject, TKey>
+    public class ChangeSet<TObject, TKey> : List<Change<TObject, TKey>>, IChangeSet<TObject, TKey>
     {
-        private List<Change<TObject, TKey>> Items { get; } 
-
         /// <summary>
         /// An empty change set
         /// </summary>
-        public static readonly IChangeSet<TObject, TKey> Empty = new ChangeSet<TObject, TKey>();
+        public static readonly ChangeSet<TObject, TKey> Empty = new ChangeSet<TObject, TKey>();
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.
-        /// </summary>
+        /// <inheritdoc />
         public ChangeSet()
         {
-            Items = new List<Change<TObject, TKey>>();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.
-        /// </summary>
-        /// <param name="items">The items.</param>
-        public ChangeSet([NotNull] IEnumerable<Change<TObject, TKey>> items)
-        {
-            if (items == null) throw new ArgumentNullException(nameof(items));
-            Items = new List<Change<TObject, TKey>>(items);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.
-        /// </summary>
-        /// <param name="reason">The reason.</param>
-        /// <param name="key">The key.</param>
-        /// <param name="current">The current.</param>
-        public ChangeSet(ChangeReason reason, TKey key, TObject current)
-            : this(reason, key, current, Optional.None<TObject>())
+        /// <inheritdoc />
+        public ChangeSet(IEnumerable<Change<TObject, TKey>> collection) 
+            : base(collection)
         {
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.
-        /// </summary>
-        /// <param name="reason">The reason.</param>
-        /// <param name="key">The key.</param>
-        /// <param name="current">The current.</param>
-        /// <param name="previous">The previous.</param>
-        private ChangeSet(ChangeReason reason, TKey key, TObject current, Optional<TObject> previous)
+        /// <inheritdoc />
+        public ChangeSet(int capacity) : base(capacity)
         {
-            Items = new List<Change<TObject, TKey>>
-            {
-                new Change<TObject, TKey>(reason, key, current, previous)
-            };
         }
+        
+        /// <inheritdoc />
+        public int Adds => this.Count(c => c.Reason == ChangeReason.Add);
 
         /// <inheritdoc />
-        public int Capacity
-        {
-            get => Items.Capacity;
-            set => Items.Capacity = value;
-        }
+        public int Updates => this.Count(c => c.Reason == ChangeReason.Update);
 
         /// <inheritdoc />
-        public int Count => Items.Count;
+        public int Removes => this.Count(c => c.Reason == ChangeReason.Remove);
 
         /// <inheritdoc />
-        public int Adds => Items.Count(c => c.Reason == ChangeReason.Add);
+        public int Refreshes => this.Count(c => c.Reason == ChangeReason.Refresh);
 
         /// <inheritdoc />
-        public int Updates => Items.Count(c => c.Reason == ChangeReason.Update);
+        public int Evaluates => this.Count(c => c.Reason == ChangeReason.Refresh);
 
         /// <inheritdoc />
-        public int Removes => Items.Count(c => c.Reason == ChangeReason.Remove);
-
-        /// <inheritdoc />
-        public int Refreshes => Items.Count(c => c.Reason == ChangeReason.Refresh);
-
-        /// <inheritdoc />
-        public int Evaluates => Items.Count(c => c.Reason == ChangeReason.Refresh);
-
-        /// <inheritdoc />
-        public int Moves => Items.Count(c => c.Reason == ChangeReason.Moved);
-
-
-        /// <inheritdoc />
-        public IEnumerator<Change<TObject, TKey>> GetEnumerator()
-        {
-            return Items.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        public int Moves => this.Count(c => c.Reason == ChangeReason.Moved);
 
 
         /// <inheritdoc />

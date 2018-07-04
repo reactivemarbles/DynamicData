@@ -2208,7 +2208,9 @@ namespace DynamicData
                                                                                           TObject item, TKey key)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.StartWith(new ChangeSet<TObject, TKey>(ChangeReason.Add, key, item));
+
+            var change = new Change<TObject, TKey>(ChangeReason.Add, key, item);
+            return source.StartWith(new ChangeSet<TObject, TKey>{change});
         }
 
         #endregion
@@ -3713,7 +3715,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detination == null) throw new ArgumentNullException(nameof(detination));
 
-            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+            return source.Subscribe(changes => detination.Edit(updater => updater.Clone(changes)));
         }
 
         /// <summary>
@@ -3732,7 +3734,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detination == null) throw new ArgumentNullException(nameof(detination));
 
-            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+            return source.Subscribe(changes => detination.Edit(updater => updater.Clone(changes)));
         }
 
         /// <summary>
@@ -4354,7 +4356,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detination == null) throw new ArgumentNullException(nameof(detination));
 
-            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+            return source.Subscribe(changes => detination.Edit(updater => updater.Clone(changes)));
         }
 
         #endregion

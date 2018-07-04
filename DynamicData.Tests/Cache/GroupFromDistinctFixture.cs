@@ -8,8 +8,8 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
-    public class GroupFromDistinctFixture: IDisposable
+
+    public class GroupFromDistinctFixture : IDisposable
     {
         private readonly ISourceCache<Person, string> _personCache;
         private readonly ISourceCache<PersonEmployment, PersonEmpKey> _employmentCache;
@@ -31,7 +31,7 @@ namespace DynamicData.Tests.Cache
         {
             const int numberOfPeople = 1000;
             var random = new Random();
-            var companies = new List<string> { "Company A", "Company B", "Company C" };
+            var companies = new List<string> {"Company A", "Company B", "Company C"};
 
             //create 100 people
             var people = Enumerable.Range(1, numberOfPeople).Select(i => new Person($"Person{i}", i)).ToArray();
@@ -45,9 +45,9 @@ namespace DynamicData.Tests.Cache
 
             // Cache results
             var allpeopleWithEmpHistory = _employmentCache.Connect()
-                                                          .Group(e => e.Name, _personCache.Connect().DistinctValues(p => p.Name))
-                                                          .Transform(x => new PersonWithEmployment(x))
-                                                          .AsObservableCache();
+                .Group(e => e.Name, _personCache.Connect().DistinctValues(p => p.Name))
+                .Transform(x => new PersonWithEmployment(x))
+                .AsObservableCache();
 
             _personCache.AddOrUpdate(people);
             _employmentCache.AddOrUpdate(emphistory);
@@ -57,8 +57,9 @@ namespace DynamicData.Tests.Cache
 
             //check grouped items have the same key as the parent
             allpeopleWithEmpHistory.Items.ForEach
-                (p => { p.EmpoymentData.Items.All(emph => emph.Name == p.Person).Should().BeTrue(); }
-                );
+            (
+                p => { p.EmpoymentData.Items.All(emph => emph.Name == p.Person).Should().BeTrue(); }
+            );
 
             _personCache.Edit(updater => updater.Remove("Person1"));
             allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople - 1);

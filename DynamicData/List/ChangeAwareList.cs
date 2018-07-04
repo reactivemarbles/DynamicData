@@ -12,9 +12,8 @@ namespace DynamicData
     /// 
     /// Used for creating custom operators
     /// </summary>
-    /// <seealso cref="DynamicData.Kernel.ISupportsCapcity" />
     /// <seealso cref="DynamicData.IExtendedList{T}" />
-    public class ChangeAwareList<T> : ISupportsCapcity, IExtendedList<T>
+    public class ChangeAwareList<T>:  IExtendedList<T>
     {
         private readonly List<T> _innerList;
         private List<Change<T>> _changes = new List<Change<T>>();
@@ -27,14 +26,18 @@ namespace DynamicData
             _innerList = capacity > 0 ? new List<T>(capacity) : new List<T>();
         }
 
+
         /// <summary>
         /// Create a change aware list with the specified items
         /// </summary>
         public ChangeAwareList(IEnumerable<T> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
+
             _innerList = new List<T>(items);
-            _changes.Add(new Change<T>(ListChangeReason.AddRange, items));
+
+            if (_innerList.Any())
+                _changes.Add(new Change<T>(ListChangeReason.AddRange, items));
         }
 
         /// <summary>

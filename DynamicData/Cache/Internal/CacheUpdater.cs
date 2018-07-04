@@ -7,12 +7,19 @@ namespace DynamicData.Cache.Internal
 {
     internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     {
-        private readonly ChangeAwareCache<TObject, TKey> _cache;
-        private readonly IKeySelector<TObject, TKey> _keySelector;
+        private readonly ICache<TObject, TKey> _cache;
+        private readonly Func<TObject, TKey> _keySelector;
 
-        public CacheUpdater(ChangeAwareCache<TObject, TKey> cache, IKeySelector<TObject, TKey> keySelector = null)
+        public CacheUpdater(ICache<TObject, TKey> cache, Func<TObject, TKey> keySelector = null)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _keySelector = keySelector;
+        }
+        
+        public CacheUpdater(Dictionary<TKey, TObject> data, Func<TObject, TKey> keySelector = null)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            _cache = new Cache<TObject, TKey>(data);
             _keySelector = keySelector;
         }
 
@@ -40,8 +47,19 @@ namespace DynamicData.Cache.Internal
             if (items == null) throw new ArgumentNullException(nameof(items));
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
-
-            items.ForEach(AddOrUpdate);
+ 
+            if (items is IList<TObject> list)
+            {
+                //zero allocation enumerator
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    _cache.AddOrUpdate(item, _keySelector(item));
+            }
+            else
+            {
+                foreach (var item in items)
+                    _cache.AddOrUpdate(item, _keySelector(item));
+            }
         }
 
         public void AddOrUpdate(TObject item)
@@ -49,7 +67,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            var key = _keySelector.GetKey(item);
+            var key = _keySelector(item);
             _cache.AddOrUpdate(item, key);
         }
 
@@ -58,7 +76,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            var key = _keySelector.GetKey(item);
+            var key = _keySelector(item);
             var oldItem = _cache.Lookup(key);
             if (oldItem.HasValue)
             {
@@ -75,7 +93,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            return _keySelector.GetKey(item);
+            return _keySelector(item);
         }
 
 
@@ -84,12 +102,23 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            return items.Select(t => new KeyValuePair<TKey, TObject>(_keySelector.GetKey(t), t));
+            return items.Select(t => new KeyValuePair<TKey, TObject>(_keySelector(t), t));
         }
 
         public void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> itemsPairs)
         {
-            itemsPairs.ForEach(AddOrUpdate);
+            if (itemsPairs is IList<KeyValuePair<TKey, TObject>> list)
+            {
+                //zero allocation enumerator
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    _cache.AddOrUpdate(item.Value, item.Key);
+            }
+            else
+            {
+                foreach (var item in itemsPairs)
+                    _cache.AddOrUpdate(item.Value, item.Key);
+            }
         }
 
         public void AddOrUpdate(KeyValuePair<TKey, TObject> item)
@@ -110,13 +139,36 @@ namespace DynamicData.Cache.Internal
         public void Refresh(IEnumerable<TObject> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
-            items.ForEach(Refresh);
+
+            if (items is IList<TObject> list)
+            {
+                //zero allocation enumerator
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    Refresh(item);
+            }
+            else
+            {
+                foreach (var item in items)
+                    Refresh(item);
+            }
         }
 
         public void Refresh(IEnumerable<TKey> keys)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
-            keys.ForEach(Refresh);
+            if (keys is IList<TKey> list)
+            {
+                //zero allocation enumerator
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    Refresh(item);
+            }
+            else
+            {
+                foreach (var key in keys)
+                    Refresh(key);
+            }
         }
 
         public void Refresh(TObject item)
@@ -124,7 +176,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            var key = _keySelector.GetKey(item);
+            var key = _keySelector(item);
             _cache.Refresh(key);
         }
 
@@ -157,19 +209,42 @@ namespace DynamicData.Cache.Internal
         public void Remove(IEnumerable<TObject> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
-            items.ForEach(Remove);
+
+            if (items is IList<TObject> list)
+            {
+                //zero allocation enumerator
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    Remove(item);
+            }
+            else
+            {
+                foreach (var item in items)
+                    Remove(item);
+            }
         }
 
         public void Remove(IEnumerable<TKey> keys)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
-            keys.ForEach(Remove);
+            if (keys is IList<TKey> list)
+            {
+                //zero allocation enumerator
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var key in enumerable)
+                    Remove(key);
+            }
+            else
+            {
+                foreach (var key in keys)
+                    Remove(key);
+            }
         }
 
         public void RemoveKeys(IEnumerable<TKey> keys)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
-            keys.ForEach(RemoveKey);
+            _cache.Remove(keys);
         }
 
         public void Remove(TObject item)
@@ -177,7 +252,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            var key = _keySelector.GetKey(item);
+            var key = _keySelector(item);
             _cache.Remove(key);
         }
 
@@ -186,7 +261,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            TKey key = _keySelector.GetKey(item);
+            TKey key = _keySelector(item);
             return Lookup(key);
         }
 
@@ -202,7 +277,20 @@ namespace DynamicData.Cache.Internal
 
         public void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
-            items.ForEach(Remove);
+            if (items == null) throw new ArgumentNullException(nameof(items));
+
+            if (items is IList<TObject> list)
+            {
+                //zero allocation enumerator
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var key in enumerable)
+                    Remove(key);
+            }
+            else
+            {
+                foreach (var key in items)
+                    Remove(key);
+            }
         }
 
         public void Remove(KeyValuePair<TKey, TObject> item)
@@ -217,15 +305,15 @@ namespace DynamicData.Cache.Internal
 
         public int Count => _cache.Count;
 
-
         public void Update(IChangeSet<TObject, TKey> changes)
         {
             _cache.Clone(changes);
         }
 
-        public IChangeSet<TObject, TKey> AsChangeSet()
+        
+        public void Clone(IChangeSet<TObject, TKey> changes)
         {
-            return _cache.CaptureChanges();
+            _cache.Clone(changes);
         }
     }
 }

@@ -2,3 +2,4 @@
 
 [assembly: InternalsVisibleTo("DynamicData.Tests")]
 [assembly: InternalsVisibleTo("DynamicData.ReactiveUI")]
+[assembly: InternalsVisibleTo("DynamicData.Profile")]

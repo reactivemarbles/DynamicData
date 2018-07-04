@@ -9,6 +9,9 @@ namespace DynamicData.Cache.Internal
             Cache<TObject, TKey> allData,
             Func<TObject, bool> predicate)
         {
+            if (allData.Count == 0)
+                return ChangeSet<TObject, TKey>.Empty;
+
             foreach (var kvp in allData.KeyValues)
             {
                 var exisiting = filtered.Lookup(kvp.Key);
@@ -17,7 +20,7 @@ namespace DynamicData.Cache.Internal
                 if (matches)
                 {
                     if (!exisiting.HasValue)
-                        filtered.AddOrUpdate(kvp.Value, kvp.Key);
+                        filtered.Add(kvp.Value, kvp.Key);
                 }
                 else
                 {
@@ -32,21 +35,25 @@ namespace DynamicData.Cache.Internal
             IChangeSet<TObject, TKey> changes,
             Func<TObject, bool> predicate)
         {
-            foreach (var change in changes)
+
+            var concreteType = changes.ToConcreteType();
+            foreach (var change in concreteType)
             {
                 var key = change.Key;
                 switch (change.Reason)
                 {
                     case ChangeReason.Add:
                     {
-                        if (predicate(change.Current))
-                            cache.AddOrUpdate(change.Current, key);
+                        var current = change.Current;
+                        if (predicate(current))
+                            cache.Add(current, key);
                     }
                         break;
                     case ChangeReason.Update:
                     {
-                        if (predicate(change.Current))
-                            cache.AddOrUpdate(change.Current, key);
+                        var current = change.Current;
+                        if (predicate(current))
+                            cache.AddOrUpdate(current, key);
                         else
                             cache.Remove(key);
                     }
@@ -74,6 +81,5 @@ namespace DynamicData.Cache.Internal
                 }
             }
         }
-
     }
 }
