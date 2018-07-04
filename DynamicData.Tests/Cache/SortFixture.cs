@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
+using System.Threading;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
@@ -25,7 +26,7 @@ namespace DynamicData.Tests.Cache
 
         public SortFixtureWithReorder()
         {
-            _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
+            _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
 
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new SortedChangeSetAggregator<Person, string>
@@ -559,7 +560,7 @@ namespace DynamicData.Tests.Cache
 
         public SortFixture()
         {
-            _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
+            _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p=>p.Name);
 
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new SortedChangeSetAggregator<Person, string>
@@ -954,8 +955,6 @@ namespace DynamicData.Tests.Cache
 
                 updater.AddOrUpdate(new Person(toupdate.Name, toupdate.Age + 50));
 
-                updater.AddOrUpdate(_generator.Take(2));
-
                 updater.Remove(people[7]);
             });
 
@@ -1011,7 +1010,37 @@ namespace DynamicData.Tests.Cache
             var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
 
             adaptor.Adapt(_results.Messages.Last(), list);
+            var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
+            list.ShouldAllBeEquivalentTo(shouldbe);
+        }
 
+        [Fact]
+        public void BatchUpdateShiftingIndicies()
+        {
+            var testData = new[] {
+                    new Person("A", 3),
+                    new Person("B", 5),
+                    new Person("C", 7),
+                    new Person("D", 8),
+                    new Person("E", 10),
+                    new Person("F", 12),
+                    new Person("G", 14)
+                };
+            _source.AddOrUpdate(testData);
+            var list = new ObservableCollectionExtended<Person>(testData.OrderBy(p => p, _comparer));
+
+            var toUpdate1 = testData[0];
+            var toUpdate2 = testData[3];
+
+            _source.Edit(updater =>
+            {
+                updater.AddOrUpdate(new Person(toUpdate1.Name, 6));
+                updater.AddOrUpdate(new Person(toUpdate2.Name, 2));
+            });
+
+            var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
+
+            adaptor.Adapt(_results.Messages.Last(), list);
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
             list.ShouldAllBeEquivalentTo(shouldbe);
         }
