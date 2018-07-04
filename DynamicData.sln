@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicData.ReactiveUI", "D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicData.ReactiveUI.Tests", "DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj", "{9F0897D7-B92A-4162-AEA5-C143614C5904}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicData.Profile", "DynamicData.Profile\DynamicData.Profile.csproj", "{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,13 +92,29 @@ Global
 		{9F0897D7-B92A-4162-AEA5-C143614C5904}.Release|x64.Build.0 = Release|Any CPU
 		{9F0897D7-B92A-4162-AEA5-C143614C5904}.Release|x86.ActiveCfg = Release|Any CPU
 		{9F0897D7-B92A-4162-AEA5-C143614C5904}.Release|x86.Build.0 = Release|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Debug|x64.Build.0 = Debug|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Debug|x86.Build.0 = Debug|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Release|x64.ActiveCfg = Release|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Release|x64.Build.0 = Release|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Release|x86.ActiveCfg = Release|Any CPU
+		{7A1B3B5B-50A0-491F-BC2F-513299DEE82D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {0EE40675-7518-4DB5-9C2E-E80BF725CEB9}
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35;packages\Unity.Interception.2.1.505.2\lib\NET35
+		SolutionGuid = {0EE40675-7518-4DB5-9C2E-E80BF725CEB9}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = TwentyEight8.Reactive.vsmdi

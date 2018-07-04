@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
@@ -40,8 +41,18 @@ namespace DynamicData.Cache.Internal
             if (items == null) throw new ArgumentNullException(nameof(items));
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
-
-            items.ForEach(AddOrUpdate);
+ 
+            if (items is IList<TObject> list)
+            {
+                //zero allocation enumerator
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    _cache.AddOrUpdate(item, _keySelector.GetKey(item));
+            }
+            else
+            {
+                items.ForEach(AddOrUpdate);
+            }
         }
 
         public void AddOrUpdate(TObject item)

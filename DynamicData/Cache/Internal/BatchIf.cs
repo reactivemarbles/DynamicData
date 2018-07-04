@@ -36,7 +36,7 @@ namespace DynamicData.Cache.Internal
             (
                 observer =>
                 {
-                    var result = new ChangeAwareCache<TObject, TKey>();
+                    var localCache = new ChangeAwareCache<TObject, TKey>();
                     var locker = new object();
                     var paused = _intialPauseState;
                     var timeoutDisposer = new SerialDisposable();
@@ -45,8 +45,9 @@ namespace DynamicData.Cache.Internal
                     void ResumeAction()
                     {
                         //publish changes (if there are any)
-                        var changes = result.CaptureChanges();
+                        var changes = localCache.CaptureChanges();
                         if (changes.Count > 0) observer.OnNext(changes);
+                        localCache = new ChangeAwareCache<TObject, TKey>();
                     }
 
                     IDisposable IntervalFunction()
@@ -67,7 +68,6 @@ namespace DynamicData.Cache.Internal
                         intervalTimerDisposer.Disposable = IntervalFunction();
 
                     var pausedHander = _pauseIfTrueSelector
-                      // .StartWith(initalp)
                         .Synchronize(locker)
                         .Subscribe(p =>
                         {
@@ -96,11 +96,11 @@ namespace DynamicData.Cache.Internal
                         .Synchronize(locker)
                         .Subscribe(changes =>
                         {
-                            result.Clone(changes);
+                            localCache.Clone(changes);
 
                             //publish if not paused
                             if (!paused)
-                                observer.OnNext(result.CaptureChanges());
+                                ResumeAction();
                         });
 
                     return new CompositeDisposable(publisher, pausedHander, timeoutDisposer, intervalTimerDisposer);

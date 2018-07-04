@@ -15,7 +15,7 @@ namespace DynamicData
     /// <seealso cref="DynamicData.ICache{TObject, TKey}" />
     public sealed class ChangeAwareCache<TObject, TKey>: ICache<TObject, TKey>
     {
-        private List<Change<TObject, TKey>> _changes = new List<Change<TObject, TKey>>();
+        private List<Change<TObject, TKey>> _changes;
 
         private Dictionary<TKey, TObject> _data;
 
@@ -41,9 +41,14 @@ namespace DynamicData
         /// <inheritdoc />
         public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
+
+
+
         /// <inheritdoc />
         public void AddOrUpdate(TObject item, TKey key)
         {
+            EnsureChangesIsNonNull();
+
             _changes.Add(_data.TryGetValue(key, out var existingItem)
                 ? new Change<TObject, TKey>(ChangeReason.Update, key, item, existingItem)
                 : new Change<TObject, TKey>(ChangeReason.Add, key, item));
@@ -57,6 +62,7 @@ namespace DynamicData
         /// <param name="keys">The keys.</param>
         public void Remove(IEnumerable<TKey> keys)
         {
+            EnsureChangesIsNonNull();
             keys.ForEach(Remove);
         }
 
@@ -65,6 +71,7 @@ namespace DynamicData
         {
             if (_data.TryGetValue(key, out var existingItem))
             {
+                EnsureChangesIsNonNull();
                 _changes.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existingItem));
                 _data.Remove(key);
             }
@@ -76,6 +83,7 @@ namespace DynamicData
         /// </summary>
         public void Refresh(IEnumerable<TKey> keys)
         {
+            EnsureChangesIsNonNull();
             keys.ForEach(Refresh);
         }
 
@@ -84,7 +92,7 @@ namespace DynamicData
         /// </summary>
         public void Refresh()
         {
-            _changes.Capacity = _data.Count + _changes.Count;
+            EnsureChangesIsNonNull(_data.Count);
             _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
         }
 
@@ -95,8 +103,10 @@ namespace DynamicData
         /// <param name="key">The key.</param>
         public void Refresh(TKey key)
         {
+          
             if (_data.TryGetValue(key, out var existingItem))
             {
+                EnsureChangesIsNonNull();
                 _changes.Add(new Change<TObject, TKey>(ChangeReason.Refresh, key, existingItem));
             }
         }
@@ -105,10 +115,13 @@ namespace DynamicData
         /// <inheritdoc />
        public void Clear()
         {
+            EnsureChangesIsNonNull(_data.Count);
+
             var toremove = _data.Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
             _changes.AddRange(toremove);
             _data.Clear();
         }
+
 
         /// <inheritdoc />
         public void Clone(IChangeSet<TObject, TKey> changes)
@@ -118,6 +131,8 @@ namespace DynamicData
             //for efficiency resize dictionary to initial batch size
             if (_data.Count == 0)
                 _data = new Dictionary<TKey, TObject>(changes.Count);
+
+            EnsureChangesIsNonNull(changes.Count);
 
             foreach (var change in changes)
             {
@@ -137,13 +152,21 @@ namespace DynamicData
             }
         }
 
+        private void EnsureChangesIsNonNull(int capacity=-1)
+        {
+            if (_changes == null)
+                _changes = capacity > 0 ? new List<Change<TObject, TKey>>(capacity) : new List<Change<TObject, TKey>>();
+        }
+
         /// <summary>
         /// Create a changeset from recorded changes and clears known changes.
         /// </summary>
         public ChangeSet<TObject, TKey> CaptureChanges()
         {
-            var copy = new ChangeSet<TObject, TKey>(_changes);
-            _changes = new List<Change<TObject, TKey>>();
+            if (_changes == null) return ChangeSet<TObject, TKey>.Empty;
+
+             var copy = new ChangeSet<TObject, TKey>(_changes);
+            _changes = null;
             return copy;
         }
     }

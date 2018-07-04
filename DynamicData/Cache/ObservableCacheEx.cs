@@ -2189,7 +2189,9 @@ namespace DynamicData
                                                                                           TObject item, TKey key)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.StartWith(new ChangeSet<TObject, TKey>(ChangeReason.Add, key, item));
+
+            var change = new Change<TObject, TKey>(ChangeReason.Add, key, item);
+            return source.StartWith(new ChangeSet<TObject, TKey>{change});
         }
 
         #endregion
