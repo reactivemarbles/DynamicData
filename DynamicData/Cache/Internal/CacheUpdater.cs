@@ -8,9 +8,9 @@ namespace DynamicData.Cache.Internal
     internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     {
         private readonly ChangeAwareCache<TObject, TKey> _cache;
-        private readonly IKeySelector<TObject, TKey> _keySelector;
+        private readonly Func<TObject, TKey> _keySelector;
 
-        public CacheUpdater(ChangeAwareCache<TObject, TKey> cache, IKeySelector<TObject, TKey> keySelector = null)
+        public CacheUpdater(ChangeAwareCache<TObject, TKey> cache, Func<TObject, TKey> keySelector = null)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _keySelector = keySelector;
@@ -46,7 +46,7 @@ namespace DynamicData.Cache.Internal
                 //zero allocation enumerator
                 var enumerable = EnumerableIList.Create(list);
                 foreach (var item in enumerable)
-                    _cache.AddOrUpdate(item, _keySelector.GetKey(item));
+                    _cache.AddOrUpdate(item, _keySelector(item));
             }
             else
             {
@@ -59,7 +59,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            var key = _keySelector.GetKey(item);
+            var key = _keySelector(item);
             _cache.AddOrUpdate(item, key);
         }
 
@@ -68,7 +68,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            var key = _keySelector.GetKey(item);
+            var key = _keySelector(item);
             var oldItem = _cache.Lookup(key);
             if (oldItem.HasValue)
             {
@@ -85,7 +85,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            return _keySelector.GetKey(item);
+            return _keySelector(item);
         }
 
 
@@ -94,7 +94,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            return items.Select(t => new KeyValuePair<TKey, TObject>(_keySelector.GetKey(t), t));
+            return items.Select(t => new KeyValuePair<TKey, TObject>(_keySelector(t), t));
         }
 
         public void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> itemsPairs)
@@ -134,7 +134,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            var key = _keySelector.GetKey(item);
+            var key = _keySelector(item);
             _cache.Refresh(key);
         }
 
@@ -187,7 +187,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            var key = _keySelector.GetKey(item);
+            var key = _keySelector(item);
             _cache.Remove(key);
         }
 
@@ -196,7 +196,7 @@ namespace DynamicData.Cache.Internal
             if (_keySelector == null)
                 throw new KeySelectorException("A key selector must be specified");
 
-            TKey key = _keySelector.GetKey(item);
+            TKey key = _keySelector(item);
             return Lookup(key);
         }
 

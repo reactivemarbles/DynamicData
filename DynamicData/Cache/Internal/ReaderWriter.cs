@@ -10,13 +10,10 @@ namespace DynamicData.Cache.Internal
         private readonly ChangeAwareCache<TObject, TKey> _cache = new ChangeAwareCache<TObject, TKey>();
         private readonly object _locker = new object();
         private readonly CacheUpdater<TObject, TKey> _updater;
-
-
+        
         public ReaderWriter(Func<TObject, TKey> keySelector = null)
         {
-            _updater = keySelector == null
-                ? new CacheUpdater<TObject, TKey>(_cache)
-                : new CacheUpdater<TObject, TKey>(_cache, new KeySelector<TObject, TKey>(keySelector));
+            _updater = new CacheUpdater<TObject, TKey>(_cache, keySelector);
         }
 
         #region Writers
@@ -62,6 +59,21 @@ namespace DynamicData.Cache.Internal
         #endregion
 
         #region Accessors
+
+        public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
+        {
+            if (filter == null)
+            {
+                var changes = new ChangeSet<TObject, TKey>(_cache.Count);
+                foreach (var kvp in _cache.KeyValues)
+                    changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
+
+                return changes;
+
+            }
+            return new ChangeSet<TObject, TKey>(KeyValues.Where(kv => filter(kv.Value)).Select(i => new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value)));
+        }
+
 
         public IEnumerable<TKey> Keys
         {

@@ -1,4 +1,5 @@
 using System;
+using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
@@ -32,7 +33,8 @@ namespace DynamicData.Cache.Internal
             IChangeSet<TObject, TKey> changes,
             Func<TObject, bool> predicate)
         {
-            foreach (var change in changes)
+            var enumerator = changes.ToEnumerableChangeSet();
+            foreach (var change in enumerator)
             {
                 var key = change.Key;
                 switch (change.Reason)

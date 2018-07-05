@@ -21,7 +21,7 @@ namespace DynamicData
 
         /// <inheritdoc />
         public ChangeSet(IEnumerable<Change<TObject, TKey>> collection) 
-            : base(collection.ToList())
+            : base(collection)
         {
         }
 

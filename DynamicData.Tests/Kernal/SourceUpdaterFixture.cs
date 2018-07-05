@@ -16,7 +16,7 @@ namespace DynamicData.Tests.Kernal
         public  SourceUpdaterFixture()
         {
             _cache = new ChangeAwareCache<Person, string>();
-            _updater = new CacheUpdater<Person, string>(_cache, new KeySelector<Person, string>(p => p.Name));
+            _updater = new CacheUpdater<Person, string>(_cache, p => p.Name);
         }
 
         [Fact]

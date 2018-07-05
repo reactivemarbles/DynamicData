@@ -13,11 +13,12 @@ namespace DynamicData
         /// </summary>
         None = 0,
 
-        [Obsolete]
+
         /// <summary>
         /// Specify this option if the comparer used for sorting compares immutable fields only.
         /// In which case index changes can be calculated using BinarySearch rather than the expensive IndexOf
         /// </summary>
+        [Obsolete]
         ComparesImmutableValuesOnly = 1,
 
         /// <summary>
@@ -26,10 +27,11 @@ namespace DynamicData
         /// </summary>
         IgnoreEvaluates = 2,
 
-        [Obsolete]
+
         /// <summary>
         /// The insert at end then sort entire set.  This can be the best algorthm for large datasets with many changes
         /// </summary>
+        [Obsolete]
         InsertAtEndThenSort = 3
     }
 }

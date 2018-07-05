@@ -1,16 +1,21 @@
 ﻿// Copyright (c) Ben A Adams. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root (on link below) for license information.
 
-//Lifted from here https://github.com/benaadams/Ben.Enumerable. Many thanks to the genius.
+//Lifted from here https://github.com/benaadams/Ben.Enumerable. Many thanks to the genius of the man.
 
 using System.Collections;
 using System.Collections.Generic;
 
 namespace DynamicData.Kernel
 {
+ 
     internal static class EnumerableIList
     {
+        public static EnumerableIList<Change<TObject, TKey>> ToEnumerableChangeSet<TObject, TKey>(this IChangeSet<TObject, TKey> changeset) => Create(changeset);
+
         public static EnumerableIList<T> Create<T>(IList<T> list) => new EnumerableIList<T>(list);
+
+        public static EnumerableIList<Change<TObject, TKey>> Create<TObject, TKey>(IChangeSet<TObject, TKey> changeset) => Create((IList<Change<TObject, TKey>>)changeset);
     }
 
 
