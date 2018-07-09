@@ -7,53 +7,75 @@ namespace DynamicData.Cache.Internal
 {
     internal sealed class ReaderWriter<TObject, TKey> 
     {
-        private readonly ChangeAwareCache<TObject, TKey> _cache = new ChangeAwareCache<TObject, TKey>();
+        private readonly Func<TObject, TKey> _keySelector;
+        private readonly ChangeAwareCache<TObject, TKey> _changeAwareCache ;
+        private readonly Dictionary<TKey,TObject> _data = new Dictionary<TKey, TObject>();
+
         private readonly object _locker = new object();
-        private readonly CacheUpdater<TObject, TKey> _updater;
-        
+
         public ReaderWriter(Func<TObject, TKey> keySelector = null)
         {
-            _updater = new CacheUpdater<TObject, TKey>(_cache, keySelector);
+            _keySelector = keySelector;
+            _changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
         }
 
         #region Writers
 
-        public IChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes)
+        public ChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes, bool notifyChanges)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
-            IChangeSet<TObject, TKey> result;
+            ChangeSet<TObject, TKey> result;
             lock (_locker)
             {
-                    _updater.Update(changes);
-                    result = _updater.AsChangeSet();
-
+                
+                if (notifyChanges)
+                {
+                    _changeAwareCache.Clone(changes);
+                    result = _changeAwareCache.CaptureChanges();
+                }
+                else
+                {
+                    _data.Clone(changes);
+                    result = ChangeSet<TObject, TKey>.Empty;
+                }
             }
             return result;
         }
 
-        public IChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction)
+        public IChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, bool notifyChanges)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
-            IChangeSet<TObject, TKey> result;
+            ChangeSet<TObject, TKey> result;
             lock (_locker)
             {
-                updateAction(_updater);
-                result = _updater.AsChangeSet();
+                var updater = CreateUpdater(notifyChanges);
+                updateAction(updater);
+                result = _changeAwareCache.CaptureChanges();
             }
             return result;
         }
 
-        public IChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction)
+
+        public IChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, bool notifyChanges)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
-            IChangeSet<TObject, TKey> result;
+            ChangeSet<TObject, TKey> result;
             lock (_locker)
             {
-                updateAction(_updater);
-                result = _updater.AsChangeSet();
+                var updater = CreateUpdater(notifyChanges);
+                updateAction(updater);
+                result = _changeAwareCache.CaptureChanges();
             }
             return result;
+        }
+
+
+        private CacheUpdater<TObject, TKey> CreateUpdater(bool notifyChanges)
+        {
+            return notifyChanges 
+                ? new CacheUpdater<TObject, TKey>(_changeAwareCache, _keySelector) 
+                : new CacheUpdater<TObject, TKey>(_data, _keySelector);
         }
 
         #endregion
@@ -62,18 +84,25 @@ namespace DynamicData.Cache.Internal
 
         public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
         {
-            if (filter == null)
+
+            // ReSharper disable once InconsistentlySynchronizedField [called within lock from consumer]
+            var dictionary = _data;
+
+            if (dictionary.Count == 0)
+                return new ChangeSet<TObject, TKey>();
+
+
+            var changes = filter == null
+                    ? new ChangeSet<TObject, TKey>(dictionary.Count)
+                    : new ChangeSet<TObject, TKey>();
+
+            foreach (var kvp in dictionary)
             {
-                var changes = new ChangeSet<TObject, TKey>(_cache.Count);
-                foreach (var kvp in _cache.KeyValues)
+                if (filter == null || filter(kvp.Value))
                     changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
-
-                return changes;
-
             }
-            return new ChangeSet<TObject, TKey>(KeyValues.Where(kv => filter(kv.Value)).Select(i => new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value)));
+            return changes;
         }
-
 
         public IEnumerable<TKey> Keys
         {
@@ -81,7 +110,7 @@ namespace DynamicData.Cache.Internal
             {
                 IEnumerable<TKey> result;
                 lock (_locker)
-                    result = _cache.Keys.ToArray();
+                    result = _data.Keys.ToArray();
 
                 return result;
             }
@@ -93,7 +122,7 @@ namespace DynamicData.Cache.Internal
             {
                 IEnumerable<KeyValuePair<TKey, TObject>> result;
                 lock (_locker)
-                    result = _cache.KeyValues.ToArray();
+                    result = _data.ToArray();
 
                 return result;
             }
@@ -105,7 +134,7 @@ namespace DynamicData.Cache.Internal
             {
                 IEnumerable<TObject> result;
                 lock (_locker)
-                    result = _cache.Items.ToArray();
+                    result = _data.Values.ToArray();
 
                 return result;
             }
@@ -115,12 +144,22 @@ namespace DynamicData.Cache.Internal
         {
             Optional<TObject> result;
             lock (_locker)
-                result= _cache.Lookup(key);
+                result= _data.Lookup(key);
    
             return result;
         }
 
-        public int Count => _cache.Count;
+        public int Count
+        {
+            get
+            {
+                int count;
+                lock (_locker)
+                    count = _data.Count;
+
+                return count;
+            }
+        }
 
         #endregion
     }

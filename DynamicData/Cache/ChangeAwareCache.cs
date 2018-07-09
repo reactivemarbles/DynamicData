@@ -13,9 +13,11 @@ namespace DynamicData
     /// Used for creating custom operators
     /// </summary>
     /// <seealso cref="DynamicData.ICache{TObject, TKey}" />
-    public sealed class ChangeAwareCache<TObject, TKey>: ICache<TObject, TKey>
+    public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     {
-        private List<Change<TObject, TKey>> _changes;
+        private readonly bool _allowDictionaryResize = true;
+
+        private ChangeSet<TObject, TKey> _changes;
 
         private Dictionary<TKey, TObject> _data;
 
@@ -24,11 +26,10 @@ namespace DynamicData
 
         /// <inheritdoc />
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
-      
+
         /// <inheritdoc />
         public IEnumerable<TObject> Items => _data.Values;
-
-
+        
         /// <inheritdoc />
         public IEnumerable<TKey> Keys => _data.Keys;
 
@@ -38,16 +39,30 @@ namespace DynamicData
             _data = new Dictionary<TKey, TObject>();
         }
 
+        /// <summary>Initializes a new instance of the <see cref="T:System.Object"></see> class.</summary>
+        public ChangeAwareCache(Dictionary<TKey, TObject> data)
+        {
+            _data = data;
+            _allowDictionaryResize = false;
+        }
+
         /// <inheritdoc />
         public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
-
-
+        /// <summary>
+        /// Adds the item to the cache without checking whether there is an existing value in the cache
+        /// </summary>
+        public void Add(TObject item, TKey key)
+        {
+            EnsureInitialised();
+            _changes.Add(new Change<TObject, TKey>(ChangeReason.Add, key, item));
+            _data.Add(key, item);
+        }
 
         /// <inheritdoc />
         public void AddOrUpdate(TObject item, TKey key)
         {
-            EnsureChangesIsNonNull();
+            EnsureInitialised();
 
             _changes.Add(_data.TryGetValue(key, out var existingItem)
                 ? new Change<TObject, TKey>(ChangeReason.Update, key, item, existingItem)
@@ -62,7 +77,7 @@ namespace DynamicData
         /// <param name="keys">The keys.</param>
         public void Remove(IEnumerable<TKey> keys)
         {
-            EnsureChangesIsNonNull();
+            EnsureInitialised();
             keys.ForEach(Remove);
         }
 
@@ -71,7 +86,7 @@ namespace DynamicData
         {
             if (_data.TryGetValue(key, out var existingItem))
             {
-                EnsureChangesIsNonNull();
+                EnsureInitialised();
                 _changes.Add(new Change<TObject, TKey>(ChangeReason.Remove, key, existingItem));
                 _data.Remove(key);
             }
@@ -83,7 +98,7 @@ namespace DynamicData
         /// </summary>
         public void Refresh(IEnumerable<TKey> keys)
         {
-            EnsureChangesIsNonNull();
+            EnsureInitialised();
             keys.ForEach(Refresh);
         }
 
@@ -92,7 +107,7 @@ namespace DynamicData
         /// </summary>
         public void Refresh()
         {
-            EnsureChangesIsNonNull(_data.Count);
+            EnsureInitialised(_data.Count);
             _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
         }
 
@@ -103,19 +118,19 @@ namespace DynamicData
         /// <param name="key">The key.</param>
         public void Refresh(TKey key)
         {
-          
+
             if (_data.TryGetValue(key, out var existingItem))
             {
-                EnsureChangesIsNonNull();
+                EnsureInitialised();
                 _changes.Add(new Change<TObject, TKey>(ChangeReason.Refresh, key, existingItem));
             }
         }
 
 
         /// <inheritdoc />
-       public void Clear()
+        public void Clear()
         {
-            EnsureChangesIsNonNull(_data.Count);
+            EnsureInitialised(_data.Count);
 
             var toremove = _data.Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
             _changes.AddRange(toremove);
@@ -128,11 +143,7 @@ namespace DynamicData
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
 
-            //for efficiency resize dictionary to initial batch size
-            if (_data.Count == 0)
-                _data = new Dictionary<TKey, TObject>(changes.Count);
-
-            EnsureChangesIsNonNull(changes.Count);
+            EnsureInitialised(changes.Count, true);
 
             foreach (var change in changes)
             {
@@ -152,10 +163,16 @@ namespace DynamicData
             }
         }
 
-        private void EnsureChangesIsNonNull(int capacity=-1)
+        private void EnsureInitialised(int capacity = -1, bool resizeDictionary = false)
         {
             if (_changes == null)
-                _changes = capacity > 0 ? new List<Change<TObject, TKey>>(capacity) : new List<Change<TObject, TKey>>();
+                _changes = capacity > 0 ? new ChangeSet<TObject, TKey>(capacity) : new ChangeSet<TObject, TKey>();
+
+            if (_allowDictionaryResize && resizeDictionary && _data != null && _data.Count == 0 && capacity > 0)
+                _data = new Dictionary<TKey, TObject>(capacity);
+
+            if (_data == null)
+                _data = capacity > 0 ? new Dictionary<TKey, TObject>(capacity) : new Dictionary<TKey, TObject>();
         }
 
         /// <summary>
@@ -165,9 +182,10 @@ namespace DynamicData
         {
             if (_changes == null) return ChangeSet<TObject, TKey>.Empty;
 
-             var copy = new ChangeSet<TObject, TKey>(_changes);
+            var copy = _changes;
             _changes = null;
             return copy;
         }
+
     }
 }

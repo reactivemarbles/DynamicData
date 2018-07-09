@@ -12,7 +12,7 @@ namespace DynamicData
 {
     internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>, ICollectionSubject
     {
-        private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
+        private readonly Subject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
         private readonly ReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _cleanUp;
@@ -25,7 +25,7 @@ namespace DynamicData
 
             var loader = source
                 .Synchronize(_locker)
-                .Select(_readerWriter.Write)
+                .Select(changes => _readerWriter.Write(changes, _changes.HasObservers))
                 .Finally(_changes.OnCompleted)
                 .Subscribe(InvokeNext,_changes.OnError);
 
@@ -55,7 +55,7 @@ namespace DynamicData
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             lock (_writeLock)
             {
-                InvokeNext(_readerWriter.Write(updateAction));
+                InvokeNext(_readerWriter.Write(updateAction, _changes.HasObservers));
             }
         }
 
@@ -64,7 +64,7 @@ namespace DynamicData
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             lock (_writeLock)
             {
-                InvokeNext(_readerWriter.Write(updateAction));
+                InvokeNext(_readerWriter.Write(updateAction, _changes.HasObservers));
             }
         }
 

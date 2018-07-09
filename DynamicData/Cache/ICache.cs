@@ -1,4 +1,6 @@
 // ReSharper disable once CheckNamespace
+using System.Collections.Generic;
+
 namespace DynamicData
 {
     /// <summary>
@@ -35,5 +37,21 @@ namespace DynamicData
         /// Clears all items
         /// </summary>
         void Clear();
+
+        /// <summary>
+        /// Sends a signal for operators to recalculate it's state 
+        /// </summary>
+        void Refresh();
+
+        /// <summary>
+        /// Refreshes the items matching the specified keys
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        void Refresh(IEnumerable<TKey> keys);
+
+        /// <summary>
+        /// Refreshes the item matching the specified key
+        /// </summary>
+        void Refresh(TKey key);
     }
 }

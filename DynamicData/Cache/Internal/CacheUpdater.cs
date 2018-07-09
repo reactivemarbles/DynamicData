@@ -5,14 +5,28 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
+    internal class ChangeAwareCacheUpdater
+    {
+
+    }
+
+
     internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     {
-        private readonly ChangeAwareCache<TObject, TKey> _cache;
+        private readonly ICache<TObject, TKey> _cache;
         private readonly Func<TObject, TKey> _keySelector;
 
-        public CacheUpdater(ChangeAwareCache<TObject, TKey> cache, Func<TObject, TKey> keySelector = null)
+        public CacheUpdater(ICache<TObject, TKey> cache, Func<TObject, TKey> keySelector = null)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _keySelector = keySelector;
+        }
+
+
+        public CacheUpdater(Dictionary<TKey, TObject> data, Func<TObject, TKey> keySelector = null)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            _cache = new Cache<TObject, TKey>(data);
             _keySelector = keySelector;
         }
 
@@ -227,15 +241,15 @@ namespace DynamicData.Cache.Internal
 
         public int Count => _cache.Count;
 
-
         public void Update(IChangeSet<TObject, TKey> changes)
         {
             _cache.Clone(changes);
         }
 
-        public IChangeSet<TObject, TKey> AsChangeSet()
+        
+        public void Clone(IChangeSet<TObject, TKey> changes)
         {
-            return _cache.CaptureChanges();
+            _cache.Clone(changes);
         }
     }
 }

@@ -45,7 +45,7 @@ namespace DynamicData.Cache.Internal
                                 {
                                     //dodgy cast but fine as a groups is always a ManagedGroup;
                                     var group = (ManagedGroup<TObject, TKey, TGroupKey>)child.Value;
-                                    result.Update(updater => updater.Update(group.GetInitialUpdates()));
+                                    result.Update(updater => updater.Clone(group.GetInitialUpdates()));
                                 }
                                 return result;
                             })
@@ -59,7 +59,7 @@ namespace DynamicData.Cache.Internal
                                 var groupToUpdate = parentGroups.Lookup(x.Key);
                                 if (groupToUpdate.HasValue)
                                 {
-                                    groupToUpdate.Value.Update(updater => updater.Update(updates));
+                                    groupToUpdate.Value.Update(updater => updater.Clone(updates));
                                 }
                             }))
                             .DisposeMany()

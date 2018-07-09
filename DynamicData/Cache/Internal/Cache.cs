@@ -20,14 +20,16 @@ namespace DynamicData.Cache.Internal
             _data = capacity > 1 ? new Dictionary<TKey, TObject>(capacity) : new Dictionary<TKey, TObject>();
         }
 
-        public Cache(IDictionary<TKey, TObject> dictionary)
+        public Cache(Dictionary<TKey, TObject> data)
         {
-            _data = new Dictionary<TKey, TObject>(dictionary);
+            _data = data;
         }
 
         public Cache<TObject, TKey> Clone()
         {
-            return _data== null ? new Cache<TObject, TKey>() : new Cache<TObject, TKey>(_data);
+            return _data== null 
+                ? new Cache<TObject, TKey>() 
+                : new Cache<TObject, TKey>(new Dictionary<TKey, TObject>(_data));
         }
 
         public void Clone(IChangeSet<TObject, TKey> changes)
@@ -74,6 +76,31 @@ namespace DynamicData.Cache.Internal
         public void Clear()
         {
             _data.Clear();
+        }
+
+        /// <summary>
+        /// Sends a signal for operators to recalculate it's state 
+        /// </summary>
+        public void Refresh()
+        {
+
+        }
+
+        /// <summary>
+        /// Refreshes the items matching the specified keys
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        public void Refresh(IEnumerable<TKey> keys)
+        {
+
+        }
+
+        /// <summary>
+        /// Refreshes the item matching the specified key
+        /// </summary>
+        public void Refresh(TKey key)
+        {
+
         }
     }
 }

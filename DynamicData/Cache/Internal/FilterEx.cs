@@ -18,7 +18,7 @@ namespace DynamicData.Cache.Internal
                 if (matches)
                 {
                     if (!exisiting.HasValue)
-                        filtered.AddOrUpdate(kvp.Value, kvp.Key);
+                        filtered.Add(kvp.Value, kvp.Key);
                 }
                 else
                 {
@@ -41,14 +41,16 @@ namespace DynamicData.Cache.Internal
                 {
                     case ChangeReason.Add:
                     {
-                        if (predicate(change.Current))
-                            cache.AddOrUpdate(change.Current, key);
+                        var current = change.Current;
+                        if (predicate(current))
+                            cache.Add(current, key);
                     }
                         break;
                     case ChangeReason.Update:
                     {
-                        if (predicate(change.Current))
-                            cache.AddOrUpdate(change.Current, key);
+                        var current = change.Current;
+                        if (predicate(current))
+                            cache.AddOrUpdate(current, key);
                         else
                             cache.Remove(key);
                     }
