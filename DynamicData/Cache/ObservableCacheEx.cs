@@ -3850,6 +3850,32 @@ namespace DynamicData
 
         #endregion
 
+        #region Populate changeset from standard enumerable
+
+        /// <summary>
+        /// Converts the enumerable to an observable changeset
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="keySelector">The key selector.</param>
+        /// <returns>An observable changeset</returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// keySelector</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IEnumerable<TObject> source,
+                                                                                                  Func<TObject, TKey> keySelector)
+            => Observable.Defer<IChangeSet<TObject, TKey>>(() =>
+            {
+                if (source == null) throw new ArgumentNullException(nameof(source));
+                if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+
+                var changes = source.Select(x => new Change<TObject, TKey>(ChangeReason.Add, keySelector(x), x));
+                var changeSet = new ChangeSet<TObject, TKey>(changes);
+                return Observable.Return(changeSet);
+            });
+
+        #endregion
+
         #region Size / time limiters
 
         /// <summary>

@@ -16,13 +16,17 @@ namespace DynamicData.Tests.Cache
         private readonly IDisposable _disposable;
         private readonly List<Person> _target;
 
+        private readonly Person _person1 = new Person("One", 1);
+        private readonly Person _person2 = new Person("Two", 2);
+        private readonly Person _person3 = new Person("Three", 3);
+
         public ToObservableChangeSetFixture()
         {
             _scheduler = new TestScheduler();
             _observable = _scheduler.CreateColdObservable(
-                OnNext(1, new Person("One", 1)),
-                OnNext(2, new Person("Two", 2)),
-                OnNext(3, new Person("Three", 3)));
+                OnNext(1, _person1),
+                OnNext(2, _person2),
+                OnNext(3, _person3));
 
             _target = new List<Person>();
 
@@ -43,6 +47,16 @@ namespace DynamicData.Tests.Cache
 
             _target.Count.Should().Be(2, "Should be 2 item in target collection because of size limit");
         }
+
+        [Fact]
+        public void CanConvertToObservableChangeSet()
+        {
+            var source = new[] { _person1, _person2, _person3 };
+            var changeSet = source.ToObservableChangeSet<Person, int>(x => x.Age)
+                                  .AsObservableCache();
+            changeSet.Items.ShouldBeEquivalentTo(source);
+        }
+
         public void Dispose()
         {
             _disposable.Dispose();

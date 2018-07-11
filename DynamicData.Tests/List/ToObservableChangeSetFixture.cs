@@ -53,5 +53,14 @@ namespace DynamicData.Tests.List
 
             _target.ShouldAllBeEquivalentTo(expected);
         }
+
+        [Fact]
+        public void CanConvertToObservableChangeSet()
+        {
+            var source = new[] { _person1, _person2, _person3 };
+            var changeSet = source.ToObservableChangeSet()
+                                  .AsObservableList();
+            changeSet.Items.ShouldBeEquivalentTo(source);
+        }
     }
 }
