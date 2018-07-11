@@ -48,15 +48,6 @@ namespace DynamicData.Tests.Cache
             _target.Count.Should().Be(2, "Should be 2 item in target collection because of size limit");
         }
 
-        [Fact]
-        public void CanConvertToObservableChangeSet()
-        {
-            var source = new[] { _person1, _person2, _person3 };
-            var changeSet = source.ToObservableChangeSet<Person, int>(x => x.Age)
-                                  .AsObservableCache();
-            changeSet.Items.ShouldBeEquivalentTo(source);
-        }
-
         public void Dispose()
         {
             _disposable.Dispose();

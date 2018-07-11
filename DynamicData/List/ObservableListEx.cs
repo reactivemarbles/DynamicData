@@ -182,27 +182,6 @@ namespace DynamicData
 
         #endregion
 
-        #region Populate change set from standard enumerable
-
-        /// <summary>
-        /// Converts the enumerable to an observable changeset
-        /// </summary>
-        /// <typeparam name="T">The type of the object.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>An observable change set</returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
-        public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IEnumerable<T> source)
-            => Observable.Defer<IChangeSet<T>>(() =>
-            {
-                if(source == null) throw new ArgumentNullException(nameof(source));
-
-                var change = new Change<T>(ListChangeReason.AddRange, source);
-                var changeSet = new ChangeSet<T>(new[] { change });
-                return Observable.Return(changeSet);
-            });
-
-        #endregion
-
         #region Auto Refresh
 
         /// <summary>
