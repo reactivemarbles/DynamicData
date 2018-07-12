@@ -1478,7 +1478,8 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (reapplyFilter == null) throw new ArgumentNullException(nameof(reapplyFilter));
-            return new DynamicFilter<TObject, TKey>(source, null, reapplyFilter).Run();
+            var empty = Observable.Empty<Func<TObject, bool>>();
+            return new DynamicFilter<TObject, TKey>(source, empty, reapplyFilter).Run();
         }
 
 
