@@ -12,9 +12,8 @@ namespace DynamicData
     /// 
     /// Used for creating custom operators
     /// </summary>
-    /// <seealso cref="DynamicData.Kernel.ISupportsCapcity" />
     /// <seealso cref="DynamicData.IExtendedList{T}" />
-    public class ChangeAwareList<T> : ISupportsCapcity, IExtendedList<T>
+    public class ChangeAwareList<T>:  IExtendedList<T>
     {
         private readonly List<T> _innerList;
         private List<Change<T>> _changes = new List<Change<T>>();

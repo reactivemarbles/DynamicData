@@ -43,7 +43,8 @@ namespace DynamicData
             var list = items as List<Change<T>> ?? items.ToList();
 
             Items = list;
-            Items.ForEach(change => Add(change, true));
+            foreach (var change in list)
+                Add(change, true);
         }
 
         /// <summary>
