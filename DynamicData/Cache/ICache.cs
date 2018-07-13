@@ -32,7 +32,12 @@ namespace DynamicData
         /// </summary>
         /// <param name="key">The key.</param>
         void Remove(TKey key);
-       
+
+        /// <summary>
+        /// Removes all items matching the specified keys
+        /// </summary>
+        void Remove(IEnumerable<TKey> keys);
+
         /// <summary>
         /// Clears all items
         /// </summary>

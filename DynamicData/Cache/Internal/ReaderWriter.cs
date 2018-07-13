@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -10,7 +9,7 @@ namespace DynamicData.Cache.Internal
         private readonly Func<TObject, TKey> _keySelector;
         private readonly ChangeAwareCache<TObject, TKey> _changeAwareCache ;
         private readonly Dictionary<TKey,TObject> _data = new Dictionary<TKey, TObject>();
-
+        
         private readonly object _locker = new object();
 
         public ReaderWriter(Func<TObject, TKey> keySelector = null)
@@ -42,7 +41,7 @@ namespace DynamicData.Cache.Internal
             return result;
         }
 
-        public IChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, bool notifyChanges)
+        public ChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, bool notifyChanges)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             ChangeSet<TObject, TKey> result;
@@ -56,7 +55,7 @@ namespace DynamicData.Cache.Internal
         }
 
 
-        public IChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, bool notifyChanges)
+        public ChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, bool notifyChanges)
         {
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
@@ -69,8 +68,7 @@ namespace DynamicData.Cache.Internal
             }
             return result;
         }
-
-
+        
         private CacheUpdater<TObject, TKey> CreateUpdater(bool notifyChanges)
         {
             return notifyChanges 
@@ -81,16 +79,14 @@ namespace DynamicData.Cache.Internal
         #endregion
 
         #region Accessors
-
+        
         public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
         {
-
             // ReSharper disable once InconsistentlySynchronizedField [called within lock from consumer]
             var dictionary = _data;
 
             if (dictionary.Count == 0)
-                return new ChangeSet<TObject, TKey>();
-
+                return ChangeSet<TObject, TKey>.Empty;
 
             var changes = filter == null
                     ? new ChangeSet<TObject, TKey>(dictionary.Count)
@@ -104,38 +100,49 @@ namespace DynamicData.Cache.Internal
             return changes;
         }
 
-        public IEnumerable<TKey> Keys
+        public TKey[] Keys
         {
             get
             {
-                IEnumerable<TKey> result;
+                TKey[] result;
                 lock (_locker)
-                    result = _data.Keys.ToArray();
-
+                {
+                    result = new TKey[_data.Count];
+                    _data.Keys.CopyTo(result, 0);
+                }
                 return result;
             }
         }
 
-        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues
+        public KeyValuePair<TKey, TObject>[] KeyValues
         {
             get
             {
-                IEnumerable<KeyValuePair<TKey, TObject>> result;
+                KeyValuePair<TKey, TObject>[] result;
                 lock (_locker)
-                    result = _data.ToArray();
-
+                {
+                    result = new KeyValuePair<TKey, TObject>[_data.Count];
+                    int i = 0;
+                    foreach (var kvp in _data)
+                    {
+                        result[i] = kvp;
+                        i++;
+                    }
+                }
                 return result;
             }
         }
 
-        public IEnumerable<TObject> Items
+        public TObject[] Items
         {
             get
             {
-                IEnumerable<TObject> result;
+                TObject[] result;
                 lock (_locker)
-                    result = _data.Values.ToArray();
-
+                {
+                    result = new TObject[_data.Count];
+                    _data.Values.CopyTo(result, 0);
+                }
                 return result;
             }
         }

@@ -34,7 +34,7 @@ namespace DynamicData
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
             _innerList = new List<T>(items);
-            _changes.Add(new Change<T>(ListChangeReason.AddRange, items));
+            _changes.Add(new Change<T>(ListChangeReason.AddRange, _innerList));
         }
 
         /// <summary>

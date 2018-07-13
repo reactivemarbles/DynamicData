@@ -29,9 +29,7 @@ namespace DynamicData
         public ChangeSet(int capacity) : base(capacity)
         {
         }
-
-
-
+        
         /// <inheritdoc />
         public int Adds => this.Count(c => c.Reason == ChangeReason.Add);
 

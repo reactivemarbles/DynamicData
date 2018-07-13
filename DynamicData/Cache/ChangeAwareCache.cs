@@ -13,7 +13,7 @@ namespace DynamicData
     /// Used for creating custom operators
     /// </summary>
     /// <seealso cref="DynamicData.ICache{TObject, TKey}" />
-    public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
+    public sealed class  ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     {
         private readonly bool _allowDictionaryResize = true;
 
@@ -78,7 +78,16 @@ namespace DynamicData
         public void Remove(IEnumerable<TKey> keys)
         {
             EnsureInitialised();
-            keys.ForEach(Remove);
+            if (keys is IList<TKey> list)
+            {
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    Remove(item);
+            }
+            else
+            {
+                keys.ForEach(Remove);
+            }
         }
 
         /// <inheritdoc />
@@ -93,13 +102,24 @@ namespace DynamicData
         }
 
 
+
         /// <summary>
         /// Raises an evaluate change for the specified keys
         /// </summary>
         public void Refresh(IEnumerable<TKey> keys)
         {
             EnsureInitialised();
-            keys.ForEach(Refresh);
+
+            if (keys is IList<TKey> list)
+            {
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    Refresh(item);
+            }
+            else
+            {
+                keys.ForEach(Refresh);
+            }
         }
 
         /// <summary>
@@ -118,7 +138,6 @@ namespace DynamicData
         /// <param name="key">The key.</param>
         public void Refresh(TKey key)
         {
-
             if (_data.TryGetValue(key, out var existingItem))
             {
                 EnsureInitialised();
@@ -136,8 +155,7 @@ namespace DynamicData
             _changes.AddRange(toremove);
             _data.Clear();
         }
-
-
+        
         /// <inheritdoc />
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
@@ -145,7 +163,8 @@ namespace DynamicData
 
             EnsureInitialised(changes.Count, true);
 
-            foreach (var change in changes)
+            var enumerable = changes.ToEnumerableChangeSet();
+            foreach (var change in enumerable)
             {
                 switch (change.Reason)
                 {

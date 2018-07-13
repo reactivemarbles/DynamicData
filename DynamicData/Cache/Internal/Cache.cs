@@ -67,6 +67,20 @@ namespace DynamicData.Cache.Internal
             _data[key] = item;
         }
 
+        public void Remove(IEnumerable<TKey> keys)
+        {
+            if (keys is IList<TKey> list)
+            {
+                var enumerable = EnumerableIList.Create(list);
+                foreach (var item in enumerable)
+                    Remove(item);
+            }
+            else
+            {
+                keys.ForEach(Remove);
+            }
+        }
+
         public void Remove(TKey key)
         {
             if (_data.ContainsKey(key))

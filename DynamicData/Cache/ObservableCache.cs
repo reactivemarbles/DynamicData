@@ -12,10 +12,11 @@ namespace DynamicData
 {
     internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>, ICollectionSubject
     {
-        private readonly Subject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
+        private readonly Subject<ChangeSet<TObject, TKey>> _changes = new Subject<ChangeSet<TObject, TKey>>();
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
         private readonly ReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _cleanUp;
+
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
 
@@ -68,7 +69,7 @@ namespace DynamicData
             }
         }
 
-        private void InvokeNext(IChangeSet<TObject, TKey> changes)
+        private void InvokeNext(ChangeSet<TObject, TKey> changes)
         {
             lock (_locker)
             {
@@ -96,9 +97,11 @@ namespace DynamicData
 
                         return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
                         {
-                            foreach (var match in changes.Where(update => EqualityComparer<TKey>.Default.Equals(update.Key,key)))
+                            foreach (var change in changes)
                             {
-                                observer.OnNext(match);
+                                var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
+                                if (match)
+                                    observer.OnNext(change);
                             }
                         });
                     }
@@ -119,7 +122,7 @@ namespace DynamicData
             });
         }
 
-        internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null) => _readerWriter.GetInitialUpdates(filter);
+        internal ChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null) => _readerWriter.GetInitialUpdates(filter);
 
         public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
 

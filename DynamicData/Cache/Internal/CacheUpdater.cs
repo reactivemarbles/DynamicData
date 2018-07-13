@@ -5,12 +5,6 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class ChangeAwareCacheUpdater
-    {
-
-    }
-
-
     internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     {
         private readonly ICache<TObject, TKey> _cache;
@@ -21,8 +15,7 @@ namespace DynamicData.Cache.Internal
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _keySelector = keySelector;
         }
-
-
+        
         public CacheUpdater(Dictionary<TKey, TObject> data, Func<TObject, TKey> keySelector = null)
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
@@ -187,13 +180,13 @@ namespace DynamicData.Cache.Internal
         public void Remove(IEnumerable<TKey> keys)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
-            keys.ForEach(Remove);
+            _cache.Remove(keys);
         }
 
         public void RemoveKeys(IEnumerable<TKey> keys)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
-            keys.ForEach(RemoveKey);
+            _cache.Remove(keys);
         }
 
         public void Remove(TObject item)
