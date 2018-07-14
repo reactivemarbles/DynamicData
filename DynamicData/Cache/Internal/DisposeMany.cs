@@ -6,12 +6,12 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class OnItemRemoved<TObject, TKey>
+    internal class DisposeMany<TObject, TKey>
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Action<TObject> _removeAction;
 
-        public OnItemRemoved([NotNull] IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
+        public DisposeMany([NotNull] IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _removeAction = removeAction ?? throw new ArgumentNullException(nameof(removeAction));
