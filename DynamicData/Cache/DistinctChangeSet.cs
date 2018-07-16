@@ -9,5 +9,13 @@ namespace DynamicData
             : base(items)
         {
         }
+
+        public DistinctChangeSet()
+        {
+        }
+
+        public DistinctChangeSet(int capacity) : base(capacity)
+        {
+        }
     }
 }

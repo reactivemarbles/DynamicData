@@ -6,7 +6,7 @@ namespace DynamicData.Cache.Internal
 {
     internal class Cache<TObject, TKey> : ICache<TObject, TKey>
     {
-        private Dictionary<TKey, TObject> _data;
+        private readonly Dictionary<TKey, TObject> _data;
 
         public int Count => _data.Count;
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
@@ -35,10 +35,6 @@ namespace DynamicData.Cache.Internal
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
-
-            //for efficiency resize dictionary to initial batch size
-            if (_data.Count == 0)
-                _data = new Dictionary<TKey, TObject>(changes.Count);
 
             foreach (var item in changes)
             {

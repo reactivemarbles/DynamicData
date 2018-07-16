@@ -33,7 +33,7 @@ namespace DynamicData.Cache.Internal
             IChangeSet<TObject, TKey> changes,
             Func<TObject, bool> predicate)
         {
-            var enumerator = changes.ToEnumerableChangeSet();
+            var enumerator = changes.ToFastEnumerable();
             foreach (var change in enumerator)
             {
                 var key = change.Key;

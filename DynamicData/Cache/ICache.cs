@@ -17,7 +17,7 @@ namespace DynamicData
         /// Clones the cache from the specified changes
         /// </summary>
         /// <param name="changes">The changes.</param>
-        void Clone(IChangeSet<TObject, TKey> changes);
+        void  Clone(IChangeSet<TObject, TKey> changes);
        
         /// <summary>
         /// Adds or updates the item using the specified key

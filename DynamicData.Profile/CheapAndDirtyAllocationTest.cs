@@ -21,16 +21,15 @@ namespace DynamicData.Profile
             IChangeSet<Person, string> changes = new ChangeSet<Person, string>(iList);
 
             // Act
-            //var eIList = EnumerableIList.Create(iList);
+            var eIList = EnumerableIList.Create(changes);
             var startAllocs = GC.GetAllocatedBytesForCurrentThread();
 
             // Assert
             var i = 0;
-            //foreach (var item in eIList)
-            //{
-            //    i++;
-            //}
-            changes.ForEach(p=>i++);
+            foreach (var item in eIList)
+            {
+                i++;
+            }
 
             var endAllocs = GC.GetAllocatedBytesForCurrentThread();
             var diff = endAllocs - startAllocs;
@@ -97,12 +96,12 @@ namespace DynamicData.Profile
             IList<int> iList = new[] { 1, 2, 3, 4, 5, 6, 7 }.ToImmutableArray();
 
             // Act
-          //  EnumerableIList<int> eIList = EnumerableIList.Create(iList);
+          EnumerableIList<int> eIList = EnumerableIList.Create(iList);
             var startAllocs = GC.GetAllocatedBytesForCurrentThread();
 
             // Assert
             var i = 0;
-            foreach (var item in iList)
+            foreach (var item in eIList)
             {
                 i++;
             }
