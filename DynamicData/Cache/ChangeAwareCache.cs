@@ -20,7 +20,7 @@ namespace DynamicData
         private Dictionary<TKey, TObject> _data;
 
         /// <inheritdoc />
-        public int Count => _data.Count;
+        public int Count => _data?.Count ?? 0;
 
         /// <inheritdoc />
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data ?? Enumerable.Empty<KeyValuePair<TKey, TObject>>();
@@ -73,15 +73,18 @@ namespace DynamicData
         /// <param name="keys">The keys.</param>
         public void Remove(IEnumerable<TKey> keys)
         {
-            EnsureInitialised();
+            if (_data == null) return;
+       ;
             if (keys is IList<TKey> list)
             {
+                EnsureInitialised(list.Count);
                 var enumerable = EnumerableIList.Create(list);
                 foreach (var item in enumerable)
                     Remove(item);
             }
             else
             {
+                EnsureInitialised();
                 keys.ForEach(Remove);
             }
         }
@@ -145,6 +148,8 @@ namespace DynamicData
         /// <inheritdoc />
         public void Clear()
         {
+            if (_data == null) return;
+
             EnsureInitialised(_data.Count);
 
             var toremove = _data.Select(kvp => new Change<TObject, TKey>(ChangeReason.Remove, kvp.Key, kvp.Value));
