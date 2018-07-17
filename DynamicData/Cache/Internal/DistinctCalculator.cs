@@ -50,7 +50,7 @@ namespace DynamicData.Cache.Internal
                 result.Add(new Change<TValue, TValue>(ChangeReason.Remove, value, value));
             }
 
-            var enumerable = changes.ToFastEnumerable();
+            var enumerable = changes.ToConcreteType();
             foreach (var change in enumerable)
             {
                 var key = change.Key;

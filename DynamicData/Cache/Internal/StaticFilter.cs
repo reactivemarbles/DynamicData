@@ -16,8 +16,10 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-            return _source.Scan(new ChangeAwareCache<TObject, TKey>(), (cache, changes) =>
+            return _source.Scan((ChangeAwareCache<TObject, TKey>)null, (cache, changes) =>
                 {
+                    if (cache == null)
+                        cache = new ChangeAwareCache<TObject, TKey>(changes.Count);
                     cache.FilterChanges(changes, _filter);
                     return cache;
                 })

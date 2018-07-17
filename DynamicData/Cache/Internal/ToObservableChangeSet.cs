@@ -52,7 +52,18 @@ namespace DynamicData.Cache.Internal
                 {
                     return _source.Scan(new ChangeAwareCache<TObject, TKey>(), (state, latest) =>
                         {
-                            latest.ForEach(t => state.AddOrUpdate(t, _keySelector(t)));
+                            if (latest is IList<TObject> list)
+                            {
+                                //zero allocation enumerator
+                                var enumerable = EnumerableIList.Create(list);
+                                foreach (var item in enumerable)
+                                    state.AddOrUpdate(item, _keySelector(item));
+                            }
+                            else
+                            {
+                                foreach (var item in latest)
+                                    state.AddOrUpdate(item, _keySelector(item));
+                            }
                             return state;
                         })
                         .Select(state => state.CaptureChanges())
@@ -67,7 +78,8 @@ namespace DynamicData.Cache.Internal
                         {
                             var key = _keySelector(t);
                             return CreateExpirableItem(t, key, ref orderItemWasAdded);
-                        }).ForEach(ei => cache.AddOrUpdate(ei, ei.Key));
+                        })
+                        .ForEach(ei => cache.AddOrUpdate(ei, ei.Key));
 
                         if (_limitSizeTo > 0 && state.Count > _limitSizeTo)
                         {

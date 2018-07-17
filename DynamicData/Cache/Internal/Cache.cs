@@ -73,7 +73,8 @@ namespace DynamicData.Cache.Internal
             }
             else
             {
-                keys.ForEach(Remove);
+                foreach (var key in keys)
+                   Remove(key);
             }
         }
 

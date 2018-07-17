@@ -18,15 +18,14 @@ namespace DynamicData.Profile
                 .Select(p => new Change<Person,string>(ChangeReason.Add, p.Name,p))
                 .ToList();
 
-            IChangeSet<Person, string> changes = new ChangeSet<Person, string>(iList);
+            ChangeSet<Person, string> changes = new ChangeSet<Person, string>(iList);
 
-            // Act
-            var eIList = EnumerableIList.Create(changes);
+
             var startAllocs = GC.GetAllocatedBytesForCurrentThread();
 
             // Assert
             var i = 0;
-            foreach (var item in eIList)
+            foreach (var item in changes)
             {
                 i++;
             }
@@ -88,6 +87,8 @@ namespace DynamicData.Profile
             Assert.Equal(startAllocs, endAllocs);
             Assert.Equal(iList.Count, i);
         }
+
+
 
         [Fact]
         public void WithAllocations()

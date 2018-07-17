@@ -9,13 +9,12 @@ using System.Collections.Generic;
 namespace DynamicData.Kernel
 {
  
+
+   
     internal static class EnumerableIList
     {
    
         public static EnumerableIList<T> Create<T>(IList<T> list) => new EnumerableIList<T>(list);
-
-        public static EnumerableIList<Change<TObject, TKey>> ToFastEnumerable<TObject, TKey>(this IChangeSet<TObject, TKey> changeset) => Create(changeset);
-
         public static EnumerableIList<Change<TObject, TKey>> Create<TObject, TKey>(IChangeSet<TObject, TKey> changeset) => Create((IList<Change<TObject, TKey>>)changeset);
     }
 

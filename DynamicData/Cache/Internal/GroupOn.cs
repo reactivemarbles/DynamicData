@@ -207,6 +207,8 @@ namespace DynamicData.Cache.Internal
                     };
 
                 });
+
+
                 return new GroupChangeSet<TObject, TKey, TGroupKey>(result);
             }
 
