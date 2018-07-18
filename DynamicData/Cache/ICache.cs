@@ -1,7 +1,6 @@
-
+// ReSharper disable once CheckNamespace
 using System.Collections.Generic;
 
-// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>

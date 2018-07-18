@@ -42,7 +42,7 @@ namespace DynamicData.Cache.Internal
                     {
                         joinedCache.Edit(innerCache =>
                         {
-                            foreach (var change in changes.ToConcreteType())
+                            changes.ForEach(change =>
                             {
                                 switch (change.Reason)
                                 {
@@ -62,7 +62,7 @@ namespace DynamicData.Cache.Internal
                                         innerCache.Refresh(change.Key);
                                         break;
                                 }
-                            }
+                            });
                         });
                     });
 
@@ -71,7 +71,7 @@ namespace DynamicData.Cache.Internal
                     {
                         joinedCache.Edit(innerCache =>
                         {
-                            foreach (var change in changes.ToConcreteType())
+                            changes.ForEach(change =>
                             {
                                 var right = change.Current;
                                 var left = leftCache.Lookup(change.Key);
@@ -80,42 +80,42 @@ namespace DynamicData.Cache.Internal
                                 {
                                     case ChangeReason.Add:
                                     case ChangeReason.Update:
-                                    {
-                                        if (left.HasValue)
                                         {
-                                            //Update with left and right value
-                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left.Value, right),
-                                                change.Key);
+                                            if (left.HasValue)
+                                            {
+                                                //Update with left and right value
+                                                innerCache.AddOrUpdate(_resultSelector(change.Key, left.Value, right),
+                                                    change.Key);
+                                            }
+                                            else
+                                            {
+                                                //remove if it is already in the cache
+                                                innerCache.Remove(change.Key);
+                                            }
                                         }
-                                        else
-                                        {
-                                            //remove if it is already in the cache
-                                            innerCache.Remove(change.Key);
-                                        }
-                                    }
                                         break;
                                     case ChangeReason.Remove:
-                                    {
-                                        if (left.HasValue)
                                         {
-                                            //Update with no right value
-                                            innerCache.AddOrUpdate(
-                                                _resultSelector(change.Key, left.Value, Optional<TRight>.None),
-                                                change.Key);
+                                            if (left.HasValue)
+                                            {
+                                                //Update with no right value
+                                                innerCache.AddOrUpdate(
+                                                    _resultSelector(change.Key, left.Value, Optional<TRight>.None),
+                                                    change.Key);
+                                            }
+                                            else
+                                            {
+                                                //remove if it is already in the cache
+                                                innerCache.Remove(change.Key);
+                                            }
                                         }
-                                        else
-                                        {
-                                            //remove if it is already in the cache
-                                            innerCache.Remove(change.Key);
-                                        }
-                                    }
                                         break;
                                     case ChangeReason.Refresh:
                                         //propagate upstream
                                         innerCache.Refresh(change.Key);
                                         break;
                                 }
-                            }
+                            });
                         });
                     });
 

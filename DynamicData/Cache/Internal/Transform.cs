@@ -24,13 +24,9 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TDestination, TKey>> Run()
         {
-            return _source.Scan((ChangeAwareCache<TDestination, TKey>)null, (cache, changes) =>
+            return _source.Scan(new ChangeAwareCache<TDestination, TKey>(), (cache, changes) =>
                 {
-                    if (cache == null)
-                        cache = new ChangeAwareCache<TDestination, TKey>(changes.Count);
-
-                    var concreteType = changes.ToConcreteType();
-                    foreach (var change in concreteType)
+                    foreach (var change in changes)
                     {
                         switch (change.Reason)
                         {

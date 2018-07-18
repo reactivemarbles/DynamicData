@@ -91,26 +91,13 @@ namespace DynamicData.Cache.Internal
 
         private void UpdateResultList(ChangeAwareCache<TObject, TKey> target, MergeContainer[] sourceLists, IChangeSet<TObject, TKey> changes)
         {
-            foreach (var change in changes.ToConcreteType())
-                ProcessItem(target, sourceLists, change.Current, change.Key);
+            changes.ForEach(change => { ProcessItem(target, sourceLists, change.Current, change.Key); });
         }
 
         private void ProcessChanges(ChangeAwareCache<TObject, TKey> target, MergeContainer[] sourceLists, IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
             //check whether the item should be removed from the list (or in the case of And, added)
-
-            if (items is IList<KeyValuePair<TKey, TObject>> list)
-            {
-                //zero allocation enumerator
-                var enumerable = EnumerableIList.Create(list);
-                foreach (var item in enumerable)
-                    ProcessItem(target, sourceLists, item.Value, item.Key);
-            }
-            else
-            {
-                foreach (var item in items)
-                    ProcessItem(target, sourceLists, item.Value, item.Key);
-            }
+            items.ForEach(item => { ProcessItem(target, sourceLists, item.Value, item.Key); });
         }
 
         private void ProcessItem(ChangeAwareCache<TObject, TKey> target, MergeContainer[] sourceLists, TObject item, TKey key)

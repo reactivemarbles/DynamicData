@@ -42,6 +42,7 @@ namespace DynamicData.Cache.Internal
                     });
 
                 var dataChanged = _source
+                   // .Finally(observer.OnCompleted)
                     .Synchronize(locker)
                     .Select(changes =>
                     {

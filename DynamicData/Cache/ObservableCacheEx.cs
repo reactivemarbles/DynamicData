@@ -133,12 +133,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (action == null) throw new ArgumentNullException(nameof(action));
-            return source.Do(changes =>
-            {
-                var concrete = changes.ToConcreteType();
-                foreach (var change in concrete)
-                    action(change);
-            });
+            return source.Do(changes => changes.ForEach(action));
         }
 
 
@@ -435,14 +430,11 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
-            return source.Do(changes =>
-            {
-                foreach (var change in changes.ToConcreteType())
+            return source.Do(changes => changes.Where(c => c.Reason == ChangeReason.Update)
+                .ForEach(c =>
                 {
-                    if (change.Reason == ChangeReason.Update)
-                        updateAction(change.Current, change.Previous.Value);
-                }
-            });
+                    updateAction(c.Current, c.Previous.Value);
+                }));
         }
 
         /// <summary>

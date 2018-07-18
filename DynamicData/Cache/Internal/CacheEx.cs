@@ -17,7 +17,7 @@ namespace DynamicData.Cache.Internal
 
         public static ImmutableList<TObject> Clone<TKey, TObject>(this ImmutableList<TObject> souce, IChangeSet<TObject, TKey> changes)
         {
-            var enumerator = changes.ToConcreteType();
+            var enumerator = changes.ToFastEnumerable();
             var result = souce;
             foreach (var change in enumerator)
             {
@@ -41,7 +41,7 @@ namespace DynamicData.Cache.Internal
 
         public static void Clone<TKey, TObject>(this IDictionary<TKey, TObject> souce, IChangeSet<TObject, TKey> changes)
         {
-            var enumerable = changes.ToConcreteType();
+            var enumerable = changes.ToFastEnumerable();
             foreach (var item in enumerable)
             {
                 switch (item.Reason)

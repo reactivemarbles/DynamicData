@@ -57,8 +57,7 @@ namespace DynamicData.Cache.Internal
             }
             else
             {
-                foreach (var item in items)
-                    _cache.AddOrUpdate(item, _keySelector(item));
+                items.ForEach(AddOrUpdate);
             }
         }
 
@@ -107,18 +106,7 @@ namespace DynamicData.Cache.Internal
 
         public void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> itemsPairs)
         {
-            if (itemsPairs is IList<KeyValuePair<TKey, TObject>> list)
-            {
-                //zero allocation enumerator
-                var enumerable = EnumerableIList.Create(list);
-                foreach (var item in enumerable)
-                    _cache.AddOrUpdate(item.Value, item.Key);
-            }
-            else
-            {
-                foreach (var item in itemsPairs)
-                    _cache.AddOrUpdate(item.Value, item.Key);
-            }
+            itemsPairs.ForEach(AddOrUpdate);
         }
 
         public void AddOrUpdate(KeyValuePair<TKey, TObject> item)
@@ -139,36 +127,13 @@ namespace DynamicData.Cache.Internal
         public void Refresh(IEnumerable<TObject> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
-
-            if (items is IList<TObject> list)
-            {
-                //zero allocation enumerator
-                var enumerable = EnumerableIList.Create(list);
-                foreach (var item in enumerable)
-                    Refresh(item);
-            }
-            else
-            {
-                foreach (var item in items)
-                    Refresh(item);
-            }
+            items.ForEach(Refresh);
         }
 
         public void Refresh(IEnumerable<TKey> keys)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
-            if (keys is IList<TKey> list)
-            {
-                //zero allocation enumerator
-                var enumerable = EnumerableIList.Create(list);
-                foreach (var item in enumerable)
-                    Refresh(item);
-            }
-            else
-            {
-                foreach (var key in keys)
-                    Refresh(key);
-            }
+            keys.ForEach(Refresh);
         }
 
         public void Refresh(TObject item)
@@ -209,36 +174,13 @@ namespace DynamicData.Cache.Internal
         public void Remove(IEnumerable<TObject> items)
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
-
-            if (items is IList<TObject> list)
-            {
-                //zero allocation enumerator
-                var enumerable = EnumerableIList.Create(list);
-                foreach (var item in enumerable)
-                    Remove(item);
-            }
-            else
-            {
-                foreach (var item in items)
-                    Remove(item);
-            }
+            items.ForEach(Remove);
         }
 
         public void Remove(IEnumerable<TKey> keys)
         {
             if (keys == null) throw new ArgumentNullException(nameof(keys));
-            if (keys is IList<TKey> list)
-            {
-                //zero allocation enumerator
-                var enumerable = EnumerableIList.Create(list);
-                foreach (var key in enumerable)
-                    Remove(key);
-            }
-            else
-            {
-                foreach (var key in keys)
-                    Remove(key);
-            }
+            _cache.Remove(keys);
         }
 
         public void RemoveKeys(IEnumerable<TKey> keys)
@@ -277,20 +219,7 @@ namespace DynamicData.Cache.Internal
 
         public void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
-            if (items == null) throw new ArgumentNullException(nameof(items));
-
-            if (items is IList<TObject> list)
-            {
-                //zero allocation enumerator
-                var enumerable = EnumerableIList.Create(list);
-                foreach (var key in enumerable)
-                    Remove(key);
-            }
-            else
-            {
-                foreach (var key in items)
-                    Remove(key);
-            }
+            items.ForEach(Remove);
         }
 
         public void Remove(KeyValuePair<TKey, TObject> item)

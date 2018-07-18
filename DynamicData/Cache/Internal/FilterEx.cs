@@ -1,4 +1,5 @@
 using System;
+using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
@@ -9,9 +10,6 @@ namespace DynamicData.Cache.Internal
             Cache<TObject, TKey> allData,
             Func<TObject, bool> predicate)
         {
-            if (allData.Count == 0)
-                return ChangeSet<TObject, TKey>.Empty;
-
             foreach (var kvp in allData.KeyValues)
             {
                 var exisiting = filtered.Lookup(kvp.Key);
@@ -35,9 +33,8 @@ namespace DynamicData.Cache.Internal
             IChangeSet<TObject, TKey> changes,
             Func<TObject, bool> predicate)
         {
-
-            var concreteType = changes.ToConcreteType();
-            foreach (var change in concreteType)
+            var enumerator = changes.ToFastEnumerable();
+            foreach (var change in enumerator)
             {
                 var key = change.Key;
                 switch (change.Reason)
@@ -81,5 +78,6 @@ namespace DynamicData.Cache.Internal
                 }
             }
         }
+
     }
 }

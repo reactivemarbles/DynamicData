@@ -20,12 +20,10 @@ namespace DynamicData.Cache.Internal
             if (_itemChangedTrigger == null)
             {
                 return _source
-                    .Scan((Cache<TObject, TKey>)null, (cache, changes) =>
+                    .Scan(new Cache<TObject, TKey>(), (list, changes) =>
                     {
-                        if (cache == null)
-                            cache = new Cache<TObject, TKey>(changes.Count);
-                        cache.Clone(changes);
-                        return cache;
+                        list.Clone(changes);
+                        return list;
                     }).Select(list => new AnonymousQuery<TObject, TKey>(list));
             }
 

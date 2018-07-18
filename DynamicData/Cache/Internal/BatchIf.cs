@@ -30,9 +30,9 @@ namespace DynamicData.Cache.Internal
             _scheduler = scheduler ?? Scheduler.Default;
         }
 
-        public IObservable<ChangeSet<TObject, TKey>> Run()
+        public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-            return Observable.Create<ChangeSet<TObject, TKey>>
+            return Observable.Create<IChangeSet<TObject, TKey>>
             (
                 observer =>
                 {

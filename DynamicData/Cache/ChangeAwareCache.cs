@@ -36,12 +36,6 @@ namespace DynamicData
         {
         }
 
-        /// <inheritdoc />
-        public ChangeAwareCache(int capacity)
-        {
-            EnsureInitialised(capacity);
-        }
-
         /// <summary>Initializes a new instance of the <see cref="T:System.Object"></see> class.</summary>
         public ChangeAwareCache(Dictionary<TKey, TObject> data)
         {
@@ -91,16 +85,13 @@ namespace DynamicData
             else
             {
                 EnsureInitialised();
-                foreach (var key in keys)
-                    Remove(key);
+                keys.ForEach(Remove);
             }
         }
 
         /// <inheritdoc />
         public void Remove(TKey key)
         {
-            if (_data == null) return;
-
             if (_data.TryGetValue(key, out var existingItem))
             {
                 EnsureInitialised();
@@ -120,14 +111,13 @@ namespace DynamicData
             {
                 EnsureInitialised(list.Count);
                 var enumerable = EnumerableIList.Create(list);
-                foreach (var key in enumerable)
-                    Refresh(key);
+                foreach (var item in enumerable)
+                    Refresh(item);
             }
             else
             {
                 EnsureInitialised();
-                foreach (var key in keys)
-                    Refresh(key);
+                keys.ForEach(Refresh);
             }
         }
 
@@ -174,7 +164,7 @@ namespace DynamicData
 
             EnsureInitialised(changes.Count);
 
-            var enumerable = changes.ToConcreteType();
+            var enumerable = changes.ToFastEnumerable();
             foreach (var change in enumerable)
             {
                 switch (change.Reason)

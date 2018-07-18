@@ -41,7 +41,7 @@ namespace DynamicData.Cache.Internal
                     {
                         joinedCache.Edit(innerCache =>
                         {
-                            foreach (var change in changes.ToConcreteType())
+                            changes.ForEach(change =>
                             {
                                 var left = change.Current;
                                 var right = rightCache.Lookup(change.Key);
@@ -70,7 +70,7 @@ namespace DynamicData.Cache.Internal
                                         innerCache.Refresh(change.Key);
                                         break;
                                 }
-                            }
+                            });
                         });
                     });
 
@@ -79,7 +79,7 @@ namespace DynamicData.Cache.Internal
                     {
                         joinedCache.Edit(innerCache =>
                         {
-                            foreach (var change in changes.ToConcreteType())
+                            changes.ForEach(change =>
                             {
                                 var right = change.Current;
                                 var left = leftCache.Lookup(change.Key);
@@ -111,7 +111,7 @@ namespace DynamicData.Cache.Internal
                                         innerCache.Refresh(change.Key);
                                         break;
                                 }
-                            }
+                            });
                         });
                     });
 
