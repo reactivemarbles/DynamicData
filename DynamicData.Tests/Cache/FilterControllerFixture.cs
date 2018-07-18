@@ -48,6 +48,20 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
+        public void ReapplyFilterDoesntThrow()
+        {
+            using (var source = new SourceCache<Person, string>(p => p.Key))
+            {
+                source.AddOrUpdate(Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray());
+
+                var ex = Record.Exception(() => source.Connect()
+                    .Filter(Observable.Return(Unit.Default))
+                    .AsObservableCache());
+                Assert.Null(ex);
+            }
+        }
+
+        [Fact]
         public void RepeatedApply()
         {
             using (var source = new SourceCache<Person, string>(p => p.Key))
