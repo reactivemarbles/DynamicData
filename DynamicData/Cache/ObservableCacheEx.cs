@@ -394,24 +394,6 @@ namespace DynamicData
             return new SubscribeMany<TObject, TKey>(source, subscriptionFactory).Run();
         }
 
-        
-        /// <summary>
-        /// Callback for each item as and when it is being added to the stream
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="addAction">The add action.</param>
-        /// <returns></returns>
-        public static IObservable<IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Action<TObject> addAction)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (addAction == null) throw new ArgumentNullException(nameof(addAction));
-
-            return source.Do(changes => changes.Where(c => c.Reason == ChangeReason.Add)
-                                               .ForEach(c => addAction(c.Current)));
-        }
-
         /// <summary>
         /// Callback for each item as and when it is being removed from the stream
         /// </summary>
@@ -430,8 +412,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (removeAction == null) throw new ArgumentNullException(nameof(removeAction));
 
-            return source.Do(changes => changes.Where(c => c.Reason == ChangeReason.Remove)
-                                               .ForEach(c => removeAction(c.Current)));
+            return new OnItemRemoved<TObject, TKey>(source, removeAction).Run();
         }
 
         /// <summary>
@@ -450,7 +431,10 @@ namespace DynamicData
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
             return source.Do(changes => changes.Where(c => c.Reason == ChangeReason.Update)
-                                               .ForEach(c => updateAction(c.Current, c.Previous.Value)));
+                .ForEach(c =>
+                {
+                    updateAction(c.Current, c.Previous.Value);
+                }));
         }
 
         /// <summary>
@@ -468,13 +452,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            return new DisposeMany<TObject, TKey>(source, t =>
-                {
-                    var d = t as IDisposable;
-                    d?.Dispose();
-                })
-                .Run();
+            return source.OnItemRemoved(t =>
+            {
+                var d = t as IDisposable;
+                d?.Dispose();
+            });
         }
 
         /// <summary>
@@ -1496,8 +1478,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (reapplyFilter == null) throw new ArgumentNullException(nameof(reapplyFilter));
-            var empty = Observable.Empty<Func<TObject, bool>>();
-            return new DynamicFilter<TObject, TKey>(source, empty, reapplyFilter).Run();
+            return new DynamicFilter<TObject, TKey>(source, null, reapplyFilter).Run();
         }
 
 
@@ -2208,7 +2189,9 @@ namespace DynamicData
                                                                                           TObject item, TKey key)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.StartWith(new ChangeSet<TObject, TKey>(ChangeReason.Add, key, item));
+
+            var change = new Change<TObject, TKey>(ChangeReason.Add, key, item);
+            return source.StartWith(new ChangeSet<TObject, TKey>{change});
         }
 
         #endregion
@@ -3713,7 +3696,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detination == null) throw new ArgumentNullException(nameof(detination));
 
-            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+            return source.Subscribe(changes => detination.Edit(updater => updater.Clone(changes)));
         }
 
         /// <summary>
@@ -3732,7 +3715,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detination == null) throw new ArgumentNullException(nameof(detination));
 
-            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+            return source.Subscribe(changes => detination.Edit(updater => updater.Clone(changes)));
         }
 
         /// <summary>
@@ -4354,7 +4337,7 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (detination == null) throw new ArgumentNullException(nameof(detination));
 
-            return source.Subscribe(changes => detination.Edit(updater => updater.Update(changes)));
+            return source.Subscribe(changes => detination.Edit(updater => updater.Clone(changes)));
         }
 
         #endregion

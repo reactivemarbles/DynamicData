@@ -16,7 +16,7 @@ namespace DynamicData.Tests.Kernal
         public  SourceUpdaterFixture()
         {
             _cache = new ChangeAwareCache<Person, string>();
-            _updater = new CacheUpdater<Person, string>(_cache, new KeySelector<Person, string>(p => p.Name));
+            _updater = new CacheUpdater<Person, string>(_cache, p => p.Name);
         }
 
         [Fact]
@@ -24,7 +24,7 @@ namespace DynamicData.Tests.Kernal
         {
             var person = new Person("Adult1", 50);
             _updater.AddOrUpdate(person);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Lookup("Adult1").Value.Should().Be(person);
             _cache.Count.Should().Be(1);
@@ -38,7 +38,7 @@ namespace DynamicData.Tests.Kernal
             const string key = "Adult1";
 
             _updater.Remove(key);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0);
             updates.Count.Should().Be(0, "Should be 0 updates");
@@ -49,7 +49,7 @@ namespace DynamicData.Tests.Kernal
         {
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
             _updater.AddOrUpdate(people);
-            var updates = _updater.AsChangeSet();
+            var updates = _cache.CaptureChanges();
 
 
             _cache.Items.ToArray().ShouldAllBeEquivalentTo(people);
@@ -64,7 +64,7 @@ namespace DynamicData.Tests.Kernal
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
             _updater.AddOrUpdate(people);
             _updater.Remove(people);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0, "Everything should be removed");
             100.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 100 adds");
@@ -78,7 +78,7 @@ namespace DynamicData.Tests.Kernal
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name1", i)).ToArray();
             _updater.AddOrUpdate(people);
 
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Lookup("Name1").Value.Age.Should().Be(100);
             _cache.Count.Should().Be(1, "Successive updates should replace cache value");
@@ -95,7 +95,7 @@ namespace DynamicData.Tests.Kernal
             var person = new Person(key, 50);
             _updater.AddOrUpdate(person);
             _updater.Remove(person);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0);
             1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 add");
@@ -112,7 +112,7 @@ namespace DynamicData.Tests.Kernal
             var updated = new Person(key, 51);
             _updater.AddOrUpdate(newperson);
             _updater.AddOrUpdate(updated);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Lookup(key).Value.Should().Be(updated);
             _cache.Count.Should().Be(1);
@@ -127,7 +127,7 @@ namespace DynamicData.Tests.Kernal
             Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
             _updater.AddOrUpdate(people);
             _updater.Clear();
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0, "Everything should be removed");
             100.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 100 adds");

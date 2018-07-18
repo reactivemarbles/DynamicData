@@ -106,9 +106,7 @@ namespace DynamicData.Kernel
         internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
         {
             foreach (var item in source)
-            {
                 action(item);
-            }
         }
 
         internal static void ForEach<TObject>(this IEnumerable<TObject> source, Action<TObject, int> action)

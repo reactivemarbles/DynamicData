@@ -1,4 +1,5 @@
 using System;
+using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
@@ -17,7 +18,7 @@ namespace DynamicData.Cache.Internal
                 if (matches)
                 {
                     if (!exisiting.HasValue)
-                        filtered.AddOrUpdate(kvp.Value, kvp.Key);
+                        filtered.Add(kvp.Value, kvp.Key);
                 }
                 else
                 {
@@ -32,21 +33,24 @@ namespace DynamicData.Cache.Internal
             IChangeSet<TObject, TKey> changes,
             Func<TObject, bool> predicate)
         {
-            foreach (var change in changes)
+            var enumerator = changes.ToFastEnumerable();
+            foreach (var change in enumerator)
             {
                 var key = change.Key;
                 switch (change.Reason)
                 {
                     case ChangeReason.Add:
                     {
-                        if (predicate(change.Current))
-                            cache.AddOrUpdate(change.Current, key);
+                        var current = change.Current;
+                        if (predicate(current))
+                            cache.Add(current, key);
                     }
                         break;
                     case ChangeReason.Update:
                     {
-                        if (predicate(change.Current))
-                            cache.AddOrUpdate(change.Current, key);
+                        var current = change.Current;
+                        if (predicate(current))
+                            cache.AddOrUpdate(current, key);
                         else
                             cache.Remove(key);
                     }

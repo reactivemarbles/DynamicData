@@ -26,7 +26,7 @@ namespace DynamicData.Tests.Kernal
         {
             var person = new Person("Adult1", 50);
             _updater.AddOrUpdate(person, "Adult1");
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Lookup("Adult1").Value.Should().Be(person);
             _cache.Count.Should().Be(1);
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Kernal
             const string key = "Adult1";
 
             _updater.Remove(key);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0);
             updates.Count.Should().Be(0, "Should be 0 updates");
@@ -54,7 +54,7 @@ namespace DynamicData.Tests.Kernal
             var person = new Person(key, 50);
             _updater.AddOrUpdate(person, key);
             _updater.Remove(key);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0);
             1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 add");
@@ -71,7 +71,7 @@ namespace DynamicData.Tests.Kernal
             var updated = new Person(key, 51);
             _updater.AddOrUpdate(newperson, key);
             _updater.AddOrUpdate(updated, key);
-            IChangeSet<Person, string> updates = _updater.AsChangeSet();
+            IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Lookup(key).Value.Should().Be(updated);
             _cache.Count.Should().Be(1);

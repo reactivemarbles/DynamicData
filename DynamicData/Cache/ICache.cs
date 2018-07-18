@@ -1,4 +1,6 @@
 // ReSharper disable once CheckNamespace
+using System.Collections.Generic;
+
 namespace DynamicData
 {
     /// <summary>
@@ -15,7 +17,7 @@ namespace DynamicData
         /// Clones the cache from the specified changes
         /// </summary>
         /// <param name="changes">The changes.</param>
-        void Clone(IChangeSet<TObject, TKey> changes);
+        void  Clone(IChangeSet<TObject, TKey> changes);
        
         /// <summary>
         /// Adds or updates the item using the specified key
@@ -30,10 +32,31 @@ namespace DynamicData
         /// </summary>
         /// <param name="key">The key.</param>
         void Remove(TKey key);
-       
+
+        /// <summary>
+        /// Removes all items matching the specified keys
+        /// </summary>
+        void Remove(IEnumerable<TKey> keys);
+
         /// <summary>
         /// Clears all items
         /// </summary>
         void Clear();
+
+        /// <summary>
+        /// Sends a signal for operators to recalculate it's state 
+        /// </summary>
+        void Refresh();
+
+        /// <summary>
+        /// Refreshes the items matching the specified keys
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        void Refresh(IEnumerable<TKey> keys);
+
+        /// <summary>
+        /// Refreshes the item matching the specified key
+        /// </summary>
+        void Refresh(TKey key);
     }
 }
