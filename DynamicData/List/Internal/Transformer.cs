@@ -153,11 +153,11 @@ namespace DynamicData.List.Internal
 
                             if (hasIndex)
                             {
-                                transformed.RemoveAt(item.Item.CurrentIndex);
+                                transformed.RemoveAt(change.CurrentIndex);
                             }
                             else
                             {
-                                var toremove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, t));
+                                var toremove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
 
                                 if (toremove != null)
                                     transformed.Remove(toremove);
@@ -173,7 +173,7 @@ namespace DynamicData.List.Internal
                             }
                             else
                             {
-                                var toremove = transformed.Where(t => ReferenceEquals(t.Source, t));
+                                var toremove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current)));
                                 transformed.RemoveMany(toremove);
                             }
 

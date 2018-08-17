@@ -58,6 +58,23 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
+        public void RemoveWithoutIndex()
+        {
+            const string key = "Adult1";
+            var person = new Person(key, 50);
+
+            var results = _source.Connect().RemoveIndex().Transform(_transformFactory).AsAggregator();
+
+            _source.Add(person);
+            _source.Remove(person);
+
+            results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            results.Messages[0].Adds.Should().Be(1, "Should be 1 addes");
+            results.Messages[1].Removes.Should().Be(1, "Should be 1 removes");
+            results.Data.Count.Should().Be(0, "Should be nothing cached");
+        }
+
+        [Fact]
         public void Update()
         {
             const string key = "Adult1";
