@@ -95,5 +95,23 @@ namespace DynamicData.Tests.List
             _results.Messages.First().Adds.Should().Be(1, "First message should be an add");
             _results.Messages.Skip(1).First().Count.Should().Be(2, "Second messsage should be an add an a remove");
         }
+
+        [Fact]
+        public void AddingRemovedItem()
+        {
+            var person = new Person("A", 20);
+
+            _source.Add(person);
+            _source.Remove(person);
+            _source.Add(person);
+
+            _results.Messages.Count.Should().Be(3, "Should be 2 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+
+            _results.Data.Items.ShouldAllBeEquivalentTo(new[] { 20 });
+            _results.Messages.ElementAt(0).Adds.Should().Be(1, "First message should be an add");
+            _results.Messages.ElementAt(1).Removes.Should().Be(1, "Second message should be a remove");
+            _results.Messages.ElementAt(2).Adds.Should().Be(1, "Third message should be an add");
+        }
     }
 }
