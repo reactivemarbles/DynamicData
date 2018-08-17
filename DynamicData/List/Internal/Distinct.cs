@@ -60,6 +60,7 @@ namespace DynamicData.List.Internal
 
                 //if there are none, then remove and notify
                 result.Remove(value);
+                values.Remove(value);
             }
 
             foreach (var change in changes)
