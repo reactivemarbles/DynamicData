@@ -2,7 +2,7 @@
 namespace DynamicData
 {
     /// <summary>
-    /// Base interface represeting a set of changed
+    /// Base interface representing a set of changes
     /// </summary>
     public interface IChangeSet
     {
