@@ -18,7 +18,6 @@ namespace DynamicData
         /// Specify this option if the comparer used for sorting compares immutable fields only.
         /// In which case index changes can be calculated using BinarySearch rather than the expensive IndexOf
         /// </summary>
-        [Obsolete]
         ComparesImmutableValuesOnly = 1,
 
         /// <summary>

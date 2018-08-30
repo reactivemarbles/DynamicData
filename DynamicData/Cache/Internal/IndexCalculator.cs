@@ -1,5 +1,3 @@
-using DynamicData.Kernel;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,7 +12,7 @@ namespace DynamicData.Cache.Internal
     internal sealed class IndexCalculator<TObject, TKey>
     {
         private KeyValueComparer<TObject, TKey> _comparer;
-        private LinkedList<KeyValuePair<TKey, TObject>> _list;
+        private List<KeyValuePair<TKey, TObject>> _list;
 
         private readonly SortOptimisations _optimisations;
 
@@ -25,18 +23,7 @@ namespace DynamicData.Cache.Internal
         {
             _comparer = comparer;
             _optimisations = optimisations;
-            _list = new LinkedList<KeyValuePair<TKey, TObject>>();
-        }
-
-        public IEnumerable<Change<TObject, TKey>> ReduceChanges(IEnumerable<Change<TObject, TKey>> input)
-        {
-            return input
-                .GroupBy(kvp=>kvp.Key)
-                .Select(g => {
-                    return g.Aggregate(Optional<Change<TObject, TKey>>.None, (acc, kvp) => ChangesReducer.Reduce(acc, kvp));
-                })
-                .Where(x=>x.HasValue)
-                .Select(x=>x.Value);
+            _list = new List<KeyValuePair<TKey, TObject>>();
         }
 
         /// <summary>
@@ -48,7 +35,7 @@ namespace DynamicData.Cache.Internal
         {
             //for the first batch of changes may have arrived before the comparer was set.
             //therefore infer the first batch of changes from the cache
-            _list = new LinkedList<KeyValuePair<TKey, TObject>>(cache.KeyValues.OrderBy(kv => kv, _comparer));
+            _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
             var initialItems = _list.Select((t, index) => new Change<TObject, TKey>(ChangeReason.Add, t.Key, t.Value, index));
             return new ChangeSet<TObject, TKey>(initialItems);
         }
@@ -60,7 +47,7 @@ namespace DynamicData.Cache.Internal
         /// <returns></returns>
         public void Reset(ChangeAwareCache<TObject, TKey> cache)
         {
-            _list = new LinkedList<KeyValuePair<TKey, TObject>>(cache.KeyValues.OrderBy(kv => kv, _comparer));
+            _list = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
         }
 
         public IChangeSet<TObject, TKey> ChangeComparer(KeyValueComparer<TObject, TKey> comparer)
@@ -76,27 +63,30 @@ namespace DynamicData.Cache.Internal
             if (_optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
             {
                 //reorder entire sequence and do not calculate moves
-                _list = new LinkedList<KeyValuePair<TKey, TObject>>(_list.OrderBy(kv => kv, _comparer));
+                _list = _list.OrderBy(kv => kv, _comparer).ToList();
             }
             else
             {
-                var sorted = _list.OrderBy(t => t, _comparer).Select((item, i) => Tuple.Create(item, i)).ToList();
-                var oldByKey = _list.Select((item, i) => Tuple.Create(item, i)).ToDictionary(x => x.Item1.Key, x => x.Item2);
-
+                int index = -1;
+                var sorted = _list.OrderBy(t => t, _comparer).ToList();
                 foreach (var item in sorted)
                 {
-                    var currentItem = item.Item1;
-                    var currentIndex = item.Item2;
+                    KeyValuePair<TKey, TObject> current = item;
+                    index++;
 
-                    var previousIndex = oldByKey[currentItem.Key];
-
-                    if (currentIndex != previousIndex)
+                    //Cannot use binary search as Resort is implicit of a mutable change
+                    KeyValuePair<TKey, TObject> existing = _list[index];
+                    var areequal = EqualityComparer<TKey>.Default.Equals(current.Key, existing.Key);
+                    if (areequal)
                     {
-                        result.Add(new Change<TObject, TKey>(currentItem.Key, currentItem.Value, currentIndex, previousIndex));
+                        continue;
                     }
-                }
+                    var old = _list.IndexOf(current);
+                    _list.RemoveAt(old);
+                    _list.Insert(index, current);
 
-                _list = new LinkedList<KeyValuePair<TKey, TObject>>(sorted.Select(s => s.Item1));
+                    result.Add(new Change<TObject, TKey>(current.Key, current.Value, index, old));
+                }
             }
 
             return new ChangeSet<TObject, TKey>(result);
@@ -108,150 +98,86 @@ namespace DynamicData.Cache.Internal
         /// <returns></returns>
         public IChangeSet<TObject, TKey> Calculate(IChangeSet<TObject, TKey> changes)
         {
-            var reducedChanges = ReduceChanges(changes).ToList();
-            var changesByReason = reducedChanges.GroupBy(c => c.Reason).ToDictionary(x => x.Key, x => x.AsEnumerable());
+            var result = new List<Change<TObject, TKey>>(changes.Count);
+            var refreshes = new List<Change<TObject, TKey>>(changes.Refreshes);
 
-            var result = new List<Change<TObject, TKey>>(reducedChanges.Count);
-
-            var refreshes = changesByReason.GetOrEmpty(ChangeReason.Refresh);
-            var removals = changesByReason.GetOrEmpty(ChangeReason.Remove);
-            var updateChanges = changesByReason.GetOrEmpty(ChangeReason.Update).Concat(refreshes).OrderBy(r => new KeyValuePair<TKey, TObject>(r.Key, r.Current), _comparer);
-
-            var keysToBeRemoved = updateChanges.Concat(removals).ToDictionary(x => x.Key, x => x);
-            var updatePreviousValues = new Dictionary<KeyValuePair<TKey, TObject>, IndexAndNode<KeyValuePair<TKey, TObject>>>();
-
-            if (keysToBeRemoved.Any())
+            foreach (var u in changes)
             {
-                var index = 0;
-                var node = _list.First;
-                while (node != null)
-                {
-                    if (keysToBeRemoved.ContainsKey(node.Value.Key))
-                    {
-                        var toBeRemoved = keysToBeRemoved[node.Value.Key];
+                var current = new KeyValuePair<TKey, TObject>(u.Key, u.Current);
 
-                        var nodeCopy = node;
-                        if(toBeRemoved.Reason == ChangeReason.Remove)
+                switch (u.Reason)
+                {
+                    case ChangeReason.Add:
                         {
-                            result.Add(new Change<TObject, TKey>(ChangeReason.Remove, toBeRemoved.Key, toBeRemoved.Current, index));
-                        } else
-                        {
-                            var kvp = new KeyValuePair<TKey, TObject>(node.Value.Key, toBeRemoved.Current);
-                            updatePreviousValues[kvp] = IndexAndNode.Create(index, node);
-                            index++;
+                            var position = GetInsertPositionBinary(current);
+                            _list.Insert(position, current);
+
+                            result.Add(new Change<TObject, TKey>(ChangeReason.Add, u.Key, u.Current, position));
                         }
+                        break;
 
-                        node = node.Next;
-                        _list.Remove(nodeCopy);
-                        keysToBeRemoved.Remove(nodeCopy.Value.Key);
-
-                        if (!keysToBeRemoved.Any()) break;
-                    }
-                    else {
-                        node = node.Next;
-                        index++;
-                    }
-               }
-            }
-
-            var updates = new Queue<Change<TObject, TKey>>(updateChanges);
-            if (updates.Any())
-            {
-                var index = -1;
-                var node = _list.First;
-
-                var alreadyAddedNodes = new SortedSet<KeyValuePair<TKey, TObject>>(_comparer);
-                var nodeToBeUpdated = updates.Peek();
-                var kvp = new KeyValuePair<TKey, TObject>(nodeToBeUpdated.Key, nodeToBeUpdated.Current);
-                while (node != null)
-                {
-                    index++;
-                    var shouldInsertElement = _comparer.Compare(node.Value, kvp) >= 0;
-                    if (shouldInsertElement)
-                    {
-                        var previous = updatePreviousValues[kvp];
-
-                        // Previous node index is shifter by count of already added nodes
-                        // which are less than the one we are about to insert
-                        var indexOffset = alreadyAddedNodes.TakeWhile(kv => _comparer.Compare(kvp, node.Value) < 0).Count();
-
-                        var previousIndex = previous.Index + indexOffset;
-                        var previousValue = previous.Node.Value;
-
-                        var nodeToAdd = new LinkedListNode<KeyValuePair<TKey, TObject>>(kvp);
-                        _list.AddBefore(node, nodeToAdd);
-
-                        if(previousIndex == index)
+                    case ChangeReason.Update:
                         {
-                            result.Add(new Change<TObject, TKey>(nodeToBeUpdated.Reason, kvp.Key, kvp.Value, previousValue.Value, index, previousIndex));
-                        } else
-                        {
-                            alreadyAddedNodes.Add(kvp);
-                            result.Add(new Change<TObject, TKey>(kvp.Key, kvp.Value, index, previousIndex));
-                            result.Add(new Change<TObject, TKey>(nodeToBeUpdated.Reason, kvp.Key, kvp.Value, previousValue.Value, index, index));
+                            var previous = new KeyValuePair<TKey, TObject>(u.Key, u.Previous.Value);
+                            var old = GetCurrentPosition(previous);
+                            _list.RemoveAt(old);
+
+                            var newposition = GetInsertPositionBinary(current);
+                            _list.Insert(newposition, current);
+
+                            result.Add(new Change<TObject, TKey>(ChangeReason.Update,
+                                                                 u.Key,
+                                                                 u.Current, u.Previous, newposition, old));
                         }
+                        break;
 
-                        node = nodeToAdd;
-                        updates.Dequeue();
-                        if (!updates.Any()) break;
-                        
-                        nodeToBeUpdated = updates.Peek();
-                        kvp = new KeyValuePair<TKey, TObject>(nodeToBeUpdated.Key, nodeToBeUpdated.Current);
-                    } 
-                    node = node.Next;
-                }
+                    case ChangeReason.Remove:
+                        {
+                            var position = GetCurrentPosition(current);
+                            _list.RemoveAt(position);
+                            result.Add(new Change<TObject, TKey>(ChangeReason.Remove, u.Key, u.Current, position));
+                        }
+                        break;
 
-                if(updates.Any())
-                {
-                    var previous = updatePreviousValues[kvp];
-                    var previousIndex = previous.Index;
-                    var previousValue = previous.Node.Value;
-
-                    if(index == -1)
-                    {
-                        result.Add(new Change<TObject, TKey>(nodeToBeUpdated.Reason, kvp.Key, kvp.Value, previousValue.Value, 0, 0));
-                    } else
-                    {
-                        result.Add(new Change<TObject, TKey>(kvp.Key, kvp.Value, index, previousIndex));
-                        result.Add(new Change<TObject, TKey>(nodeToBeUpdated.Reason, kvp.Key, kvp.Value, previousValue.Value, index, index));
-                    }
-
-                    _list.AddLast(kvp);
+                    case ChangeReason.Refresh:
+                        {
+                            refreshes.Add(u);
+                            result.Add(u);
+                        }
+                        break;
                 }
             }
 
-            var adds = new Queue<Change<TObject, TKey>>(changesByReason.GetOrEmpty(ChangeReason.Add).OrderBy(r => r.CurrentIndex));
-            if (adds.Any())
+            //for evaluates, check whether the change forces a new position
+            var evaluates = refreshes.OrderByDescending(x => new KeyValuePair<TKey, TObject>(x.Key, x.Current), _comparer)
+                                   .ToList();
+
+            if (evaluates.Count != 0 && _optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
             {
-                var index = -1;
-                var node = _list.First;
-                var nodeToBeAdded = adds.Peek();
-                var kvp = new KeyValuePair<TKey, TObject>(nodeToBeAdded.Key, nodeToBeAdded.Current);
-                while (node != null)
+                //reorder entire sequence and do not calculate moves
+                _list = _list.OrderBy(kv => kv, _comparer).ToList();
+            }
+            else
+            {
+                //calculate moves.  Very expensive operation
+                //TODO: Try and make this better
+                foreach (var u in evaluates)
                 {
-                    index++;
-                    var shouldInsert = _comparer.Compare(node.Value, kvp) > 0;
-                    if (shouldInsert)
-                    {
-                        var nodeToAdd = new LinkedListNode<KeyValuePair<TKey, TObject>>(kvp);
-                        _list.AddBefore(node, nodeToAdd);
-                        result.Add(new Change<TObject, TKey>(ChangeReason.Add, nodeToBeAdded.Key, nodeToBeAdded.Current, index));
+                    var current = new KeyValuePair<TKey, TObject>(u.Key, u.Current);
+                    var old = _list.IndexOf(current);
+                    if (old == -1) continue;
 
-                        node = nodeToAdd;
+                    int newposition = GetInsertPositionLinear(_list, current);
 
-                        adds.Dequeue();
-                        if (!adds.Any()) break;
-                        
-                        nodeToBeAdded = adds.Peek();
-                        kvp = new KeyValuePair<TKey, TObject>(nodeToBeAdded.Key, nodeToBeAdded.Current);
-                    }
-                    node = node.Next;
-                }
+                    if (old < newposition)
+                        newposition--;
 
-                if(adds.Any())
-                {
-                    _list.AddLast(kvp);
-                    result.Add(new Change<TObject, TKey>(ChangeReason.Add, nodeToBeAdded.Key, nodeToBeAdded.Current, index));
+                    if (old == newposition)
+                        continue;
+
+                    _list.RemoveAt(old);
+                    _list.Insert(newposition, current);
+                    result.Add(new Change<TObject, TKey>(u.Key, u.Current, newposition, old));
                 }
             }
 
@@ -260,8 +186,57 @@ namespace DynamicData.Cache.Internal
 
         public IComparer<KeyValuePair<TKey, TObject>> Comparer => _comparer;
 
-        public LinkedList<KeyValuePair<TKey, TObject>> List => _list;
+        public List<KeyValuePair<TKey, TObject>> List => _list;
 
-     
+        private int GetCurrentPosition(KeyValuePair<TKey, TObject> item)
+        {
+            int index;
+
+            if (_optimisations.HasFlag(SortOptimisations.ComparesImmutableValuesOnly))
+            {
+                index = _list.BinarySearch(item, _comparer);
+
+                if (index < 0)
+                    throw new SortException("Current position cannot be found.  Ensure the comparer includes a unique value, or do not specify ComparesImmutableValuesOnly");
+            }
+            else
+            {
+                index = _list.IndexOf(item);
+
+                if (index < 0)
+                    throw new SortException("Current position cannot be found. The item is not in the collection");
+            }
+            return index;
+        }
+
+        private int GetInsertPositionLinear(IList<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (_comparer.Compare(item, list[i]) < 0)
+                {
+                    return i;
+                }
+            }
+            return _list.Count;
+        }
+
+        private int GetInsertPositionBinary(KeyValuePair<TKey, TObject> item)
+        {
+            int index = _list.BinarySearch(item, _comparer);
+
+            if (index > 0)
+            {
+                var indx = (int)index;
+                index = _list.BinarySearch(indx - 1, _list.Count - indx, item, _comparer);
+                if (index > 0)
+                {
+                    return indx;
+                }
+            }
+
+            int insertIndex = ~index;
+            return insertIndex;
+        }
     }
 }

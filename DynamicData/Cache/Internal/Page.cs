@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
@@ -79,7 +78,7 @@ namespace DynamicData.Cache.Internal
 
                 var paged = _all.Skip(skip)
                     .Take(_request.Size)
-                    .ToImmutableList();
+                    .ToList();
 
                 _current = new KeyValueCollection<TObject, TKey>(paged, _all.Comparer, updates?.SortedItems.SortReason ?? SortReason.DataChanged, _all.Optimisations);
 

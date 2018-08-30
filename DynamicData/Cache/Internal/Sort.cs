@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 
@@ -185,7 +186,7 @@ namespace DynamicData.Cache.Internal
                             else
                             {
                                 sortReason = SortReason.Reorder;
-                                changeSet =_calculator.Reorder();
+                                changeSet = _calculator.Reorder();
                             }
                         }
                         break;
@@ -208,7 +209,7 @@ namespace DynamicData.Cache.Internal
 
                 if (sortReason == SortReason.Reorder && changeSet.Count == 0) return null;
 
-                _sorted = new KeyValueCollection<TObject, TKey>((IReadOnlyCollection<KeyValuePair<TKey, TObject>>)_calculator.List, _comparer, sortReason, _optimisations);
+                _sorted = new KeyValueCollection<TObject, TKey>(_calculator.List.ToList(), _comparer, sortReason, _optimisations);
                 return new SortedChangeSet<TObject, TKey>(_sorted, changeSet);
             }
         }
