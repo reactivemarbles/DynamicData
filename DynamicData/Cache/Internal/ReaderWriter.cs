@@ -82,22 +82,27 @@ namespace DynamicData.Cache.Internal
         
         public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
         {
-            // ReSharper disable once InconsistentlySynchronizedField [called within lock from consumer]
-            var dictionary = _data;
+            ChangeSet<TObject, TKey> result;
+            lock (this)
+            {
+                var dictionary = _data;
 
-            if (dictionary.Count == 0)
-                return ChangeSet<TObject, TKey>.Empty;
+                if (dictionary.Count == 0)
+                    return ChangeSet<TObject, TKey>.Empty;
 
-            var changes = filter == null
+                var changes = filter == null
                     ? new ChangeSet<TObject, TKey>(dictionary.Count)
                     : new ChangeSet<TObject, TKey>();
 
-            foreach (var kvp in dictionary)
-            {
-                if (filter == null || filter(kvp.Value))
-                    changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
+                foreach (var kvp in dictionary)
+                {
+                    if (filter == null || filter(kvp.Value))
+                        changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
+                }
+
+                result = changes;
             }
-            return changes;
+            return result;
         }
 
         public TKey[] Keys
