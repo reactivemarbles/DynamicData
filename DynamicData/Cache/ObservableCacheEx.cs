@@ -3738,7 +3738,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Populate a cache from an obserable stream.
+        /// Populate a cache from an observable stream.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -3757,7 +3757,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Populate a cache from an obserable stream.
+        /// Populate a cache from an observable stream.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
