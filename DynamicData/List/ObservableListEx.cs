@@ -816,7 +816,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Groups the source on the value returned by group selector factory.  The groupings contains an inner obserable list.
+        ///  Groups the source on the value returned by group selector factory.  The groupings contains an inner observable list.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TGroup">The type of the group.</typeparam>
@@ -868,7 +868,7 @@ namespace DynamicData
 
 
         /// <summary>
-        /// Groups the source using the property specified by the property selector.  The resulting groupings contains an inner obserable list.
+        /// Groups the source using the property specified by the property selector.  The resulting groupings contains an inner observable list.
         /// Groups are re-applied when the property value changed.
         /// When there are likely to be a large number of group property changes specify a throttle to improve performance
         /// </summary>
