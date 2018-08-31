@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -11,19 +10,10 @@ namespace DynamicData.Binding
     /// <typeparam name="T"></typeparam>
     public interface IObservableCollection<T> : INotifyCollectionChanged,
                                                 INotifyPropertyChanged,
-                                                IList<T>
+                                                IList<T>,
+                                                INotifyCollectionChangedSuspender
     {
-        /// <summary>
-        /// Suspends notifications. When disposed, a reset notification is fired
-        /// </summary>
-        /// <returns></returns>
-        IDisposable SuspendNotifications();
-
-        /// <summary>
-        /// Suspends count notifications
-        /// </summary>
-        /// <returns></returns>
-        IDisposable SuspendCount();
+  
 
         /// <summary>
         /// Moves the item at the specified index to a new location in the collection.
