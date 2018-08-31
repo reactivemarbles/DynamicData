@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,26 +14,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Authors>Roland Pheasant</Authors>
-    <Owners>Roland Pheasant</Owners>
     <Title>Dynamic Data</Title>
-    <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/RolandPheasant/DynamicData</PackageProjectUrl>
     <Description>
 Bring the power of Rx to collections using Dynamic Data.
 Dynamic Data is a comprehensive caching and data manipulation solution which introduces domain centric observable collections.
       Linq extensions enable dynamic filtering, sorting, grouping, transforms, binding, pagination, data virtualisation, expiration, disposal management plus more.
 </Description>
-    <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
-    <Tags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</Tags>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <RepositoryUrl>https://github.com/RolandPheasant/DynamicData</RepositoryUrl>
-    <PackageTags>DynamicData Dynamic Data Rx Reactive Observable Cache Binding ObservableCache ObservableList ObservableCollection Collection Linq</PackageTags>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <LangVersion>7.2</LangVersion>
-  </PropertyGroup>
-
 
 </Project>

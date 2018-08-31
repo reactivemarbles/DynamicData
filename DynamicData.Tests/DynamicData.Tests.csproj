@@ -3,18 +3,9 @@
     <TargetFrameworks>netcoreapp2.1;net46</TargetFrameworks>
     <NoWarn>$(NoWarn);CS0618</NoWarn>
   </PropertyGroup>
-  
-  <PropertyGroup>
-    <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
-  </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='net46' or '$(TargetFramework)' == 'netcoreapp2.1'">
     <DefineConstants>P_LINQ</DefineConstants>
-  </PropertyGroup>
-
-
-  <PropertyGroup>
-    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
