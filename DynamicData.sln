@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".other", ".other", "{DFCC45F8-251C-4D78-AF9B-15C1EDF0E603}"
 	ProjectSection(SolutionItems) = preProject
 		appveyor.yml = appveyor.yml
+		Directory.Build.props = Directory.Build.props
 		NuGet.Config = NuGet.Config
 		README.md = README.md
 		ReleaseNotes.md = ReleaseNotes.md
@@ -112,5 +113,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2495D109-BD85-4568-9B27-06D36E6EF562}
 	EndGlobalSection
 EndGlobal

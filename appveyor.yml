@@ -18,30 +18,19 @@
   nuget:
     disable_publish_on_pr: true
   build_script:
-  - cmd: >-
+  - cmd: |
       dotnet --info
-
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
-      
-      dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols --include-source /p:Version=%APPVEYOR_BUILD_VERSION%
- 
-      dotnet pack DynamicData.ReactiveUI\DynamicData.ReactiveUI.csproj --configuration Release --no-build --include-symbols --include-source /p:Version=%APPVEYOR_BUILD_VERSION%
-
+      dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build /p:Version=%APPVEYOR_BUILD_VERSION%
+      dotnet pack DynamicData.ReactiveUI\DynamicData.ReactiveUI.csproj --configuration Release --no-build /p:Version=%APPVEYOR_BUILD_VERSION%
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
-      
-      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
-
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.nupkg
-
-      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
 
   test: off
   test_script:
-  - cmd: >-
+  - cmd: |
       cd %APPVEYOR_BUILD_FOLDER%
-
       dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
-
       dotnet test DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build
 
   deploy:
@@ -73,9 +62,8 @@
     account_feed: true
     disable_publish_on_pr: true
   before_build:
-  - cmd: >-
+  - cmd: |
       appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-
       nuget restore DynamicData.sln
   build:
     project: DynamicData.sln
@@ -84,9 +72,8 @@
     include_nuget_references: true
     verbosity: minimal
   after_build:
-  - cmd: >-
+  - cmd: |
       7z a DynamicData.zip %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\*.*
-
       appveyor PushArtifact DynamicData.zip
   test: off
  # test_script:
@@ -126,30 +113,18 @@
     disable_publish_on_pr: true
   
   build_script:
-  - cmd: >-
+  - cmd: |
       dotnet --info
-
       dotnet build DynamicData.sln --configuration Release /p:Version=%APPVEYOR_BUILD_VERSION%
-      
-      dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build --include-symbols --include-source /p:Version=%APPVEYOR_BUILD_VERSION%
-      
-      dotnet pack DynamicData.ReactiveUI\DynamicData.ReactiveUI.csproj --configuration Release --no-build --include-symbols --include-source /p:Version=%APPVEYOR_BUILD_VERSION%
-
+      dotnet pack DynamicData\DynamicData.csproj --configuration Release --no-build /p:Version=%APPVEYOR_BUILD_VERSION%
+      dotnet pack DynamicData.ReactiveUI\DynamicData.ReactiveUI.csproj --configuration Release --no-build /p:Version=%APPVEYOR_BUILD_VERSION%
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
-      
-      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
-
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.nupkg
-
-      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.symbols.nupkg
-
 
   test: off
   # Hangs indefinitely and I do not know why as the same command works locally
   test_script:
-  - cmd: >-
+  - cmd: |
       cd %APPVEYOR_BUILD_FOLDER%
-
       dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
-
       dotnet test DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build
