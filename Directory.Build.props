@@ -4,6 +4,7 @@
   <PropertyGroup>
     <LangVersion>7.2</LangVersion>
     <DefaultItemExcludes>$(DefaultItemExcludes);*.DotSettings;*.ncrunchproject</DefaultItemExcludes>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
 
   <PropertyGroup>
