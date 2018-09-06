@@ -4,7 +4,7 @@
   <PropertyGroup>
     <LangVersion>7.2</LangVersion>
     <DefaultItemExcludes>$(DefaultItemExcludes);*.DotSettings;*.ncrunchproject</DefaultItemExcludes>
-    <DebugType>portable</DebugType>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -15,7 +15,6 @@
     <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
     <PackageTags>DynamicData;Dynamic;Data;Rx;Reactive;Observable;Cache;Binding;ObservableCache;ObservableList;ObservableCollection;Collection;Linq</PackageTags>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
