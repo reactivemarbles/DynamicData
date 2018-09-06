@@ -3,6 +3,8 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DynamicData.Cache.Internal
 {
@@ -11,21 +13,21 @@ namespace DynamicData.Cache.Internal
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly IObservable<bool> _pauseIfTrueSelector;
         private readonly TimeSpan? _timeOut;
-        private readonly bool _intialPauseState;
+        private readonly bool _initialPauseState;
         private readonly IObservable<Unit> _intervalTimer;
         private readonly IScheduler _scheduler;
 
         public BatchIf(IObservable<IChangeSet<TObject, TKey>> source,
                        IObservable<bool> pauseIfTrueSelector,
                         TimeSpan? timeOut,
-                       bool intialPauseState = false,
+                       bool initialPauseState = false,
                         IObservable<Unit> intervalTimer =null,
                        IScheduler scheduler = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
             _timeOut = timeOut;
-            _intialPauseState = intialPauseState;
+            _initialPauseState = initialPauseState;
             _intervalTimer = intervalTimer;
             _scheduler = scheduler ?? Scheduler.Default;
         }
@@ -36,18 +38,23 @@ namespace DynamicData.Cache.Internal
             (
                 observer =>
                 {
-                    var localCache = new ChangeAwareCache<TObject, TKey>();
+                    var batchedChanges = new List<IChangeSet<TObject, TKey>>();
                     var locker = new object();
-                    var paused = _intialPauseState;
+                    var paused = _initialPauseState;
                     var timeoutDisposer = new SerialDisposable();
                     var intervalTimerDisposer = new SerialDisposable();
 
                     void ResumeAction()
                     {
-                        //publish changes (if there are any)
-                        var changes = localCache.CaptureChanges();
-                        if (changes.Count > 0) observer.OnNext(changes);
-                        localCache = new ChangeAwareCache<TObject, TKey>();
+                        if (batchedChanges.Count == 0) return;
+
+                        var resultingBatch = new ChangeSet<TObject, TKey>(batchedChanges.Select(cs=>cs.Count).Sum());
+                        foreach (var cs in batchedChanges)
+                        {
+                            resultingBatch.AddRange(cs);
+                        }
+                        observer.OnNext(resultingBatch);
+                        batchedChanges.Clear();
                     }
 
                     IDisposable IntervalFunction()
@@ -67,7 +74,7 @@ namespace DynamicData.Cache.Internal
                     if (_intervalTimer != null)
                         intervalTimerDisposer.Disposable = IntervalFunction();
 
-                    var pausedHander = _pauseIfTrueSelector
+                    var pausedHandler = _pauseIfTrueSelector
                         .Synchronize(locker)
                         .Subscribe(p =>
                         {
@@ -96,14 +103,14 @@ namespace DynamicData.Cache.Internal
                         .Synchronize(locker)
                         .Subscribe(changes =>
                         {
-                            localCache.Clone(changes);
+                            batchedChanges.Add(changes);
 
                             //publish if not paused
                             if (!paused)
                                 ResumeAction();
                         });
 
-                    return new CompositeDisposable(publisher, pausedHander, timeoutDisposer, intervalTimerDisposer);
+                    return new CompositeDisposable(publisher, pausedHandler, timeoutDisposer, intervalTimerDisposer);
                 }
             );
         }
