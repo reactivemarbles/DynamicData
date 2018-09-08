@@ -12,6 +12,7 @@
     <Owners>Roland Pheasant</Owners>
     <PackageLicenseUrl>http://opensource.org/licenses/MIT</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/RolandPheasant/DynamicData</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/RolandPheasant/DynamicData/blob/master/ReleaseNotes.md</PackageReleaseNotes>
     <Copyright>Copyright Roland Pheasant 2011-2018</Copyright>
     <PackageTags>DynamicData;Dynamic;Data;Rx;Reactive;Observable;Cache;Binding;ObservableCache;ObservableList;ObservableCollection;Collection;Linq</PackageTags>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

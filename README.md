@@ -13,13 +13,13 @@ ReadOnlyObservableCollection<TradeProxy> list;
 
 var myTradeCache = new SourceCache<Trade, long>(trade => trade.Id);
 var myOperation = myTradeCache.Connect() 
-					.Filter(trade=>trade.Status == TradeStatus.Live) 
-					.Transform(trade => new TradeProxy(trade))
-					.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
-					.ObserveOnDispatcher()
-					.Bind(out list) 
-					.DisposeMany()
-					.Subscribe()
+				.Filter(trade=>trade.Status == TradeStatus.Live) 
+				.Transform(trade => new TradeProxy(trade))
+				.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
+				.ObserveOnDispatcher()
+				.Bind(out list) 
+				.DisposeMany()
+				.Subscribe()
 ```
 The magic is that as  ```myTradeCache``` is maintained the target observable collection looks after itself.
 
@@ -27,14 +27,16 @@ This is a simple example to show how using Dynamic Data's collections and operat
 
 ### Some links
 
-- [![Join the chat at https://gitter.im/RolandPheasant/DynamicData](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/RolandPheasant/DynamicData?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 - [![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)](http://www.nuget.org/packages/DynamicData/)	
 - [![Build status](https://ci.appveyor.com/api/projects/status/jnq3kagdkp5xtqi5?svg=true)](https://ci.appveyor.com/project/RolandPheasant/dynamicdata-dpbpa)
 - Downloading the latest release of Dynamic Data from [Dynamic Data on nuget](https://www.nuget.org/packages/DynamicData/) 
-- Sample wpf project trading project [Dynamic Trader](https://github.com/RolandPheasant/Dynamic.Trader)
+- Sample WPF project trading project [Dynamic Trader](https://github.com/RolandPheasant/Dynamic.Trader)
 - Various unit tested examples of many different operators [Snippets](https://github.com/RolandPheasant/DynamicData.Snippets)
-- Blog at  http://dynamic-data.org/
-- You can contact me on twitter  [@RolandPheasant](https://twitter.com/RolandPheasant) or email at [roland@dynamic-data.org]
+- Blog at  http://dynamic-data.org/ [Sorry but this is hopelessly out of date]
+
+### Get in touch 
+
+If you have any questions, want to get involved or would simply like to keep abreast of developments, you are welcome to join the slack community [ReactiveX Slack](https://reactivex.slack.com). I am also available [@RolandPheasant](https://twitter.com/RolandPheasant) 
 
 ## Create Dynamic Data Collections
 
