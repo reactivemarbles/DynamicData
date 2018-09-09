@@ -13,21 +13,21 @@ ReadOnlyObservableCollection<TradeProxy> list;
 
 var myTradeCache = new SourceCache<Trade, long>(trade => trade.Id);
 var myOperation = myTradeCache.Connect() 
-				.Filter(trade=>trade.Status == TradeStatus.Live) 
-				.Transform(trade => new TradeProxy(trade))
-				.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
-				.ObserveOnDispatcher()
-				.Bind(out list) 
-				.DisposeMany()
-				.Subscribe()
+		.Filter(trade=>trade.Status == TradeStatus.Live) 
+		.Transform(trade => new TradeProxy(trade))
+		.Sort(SortExpressionComparer<TradeProxy>.Descending(t => t.Timestamp))
+		.ObserveOnDispatcher()
+		.Bind(out list) 
+		.DisposeMany()
+		.Subscribe()
 ```
 The magic is that as  ```myTradeCache``` is maintained the target observable collection looks after itself.
 
 This is a simple example to show how using Dynamic Data's collections and operators make in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
 
-[![NuGet Stats](https://img.shields.io/nuget/v/DynamicData.svg)](https://www.nuget.org/packages/DynamicData) [![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)](http://www.nuget.org/packages/DynamicData/) ![Build status](https://ci.appveyor.com/api/projects/status/jnq3kagdkp5xtqi5?svg=true)
+[![NuGet Stats](https://img.shields.io/nuget/v/DynamicData.svg)](https://www.nuget.org/packages/DynamicData) ![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg) [![Build status](https://ci.appveyor.com/api/projects/status/jnq3kagdkp5xtqi5?svg=true)](https://ci.appveyor.com/project/RolandPheasant/dynamicdata-dpbpa)
 
-### Sample Projects
+### Sample Projects 
 
 - Sample WPF project trading project [Dynamic Trader](https://github.com/RolandPheasant/Dynamic.Trader)
 - Various unit tested examples of many different operators [Snippets](https://github.com/RolandPheasant/DynamicData.Snippets)
