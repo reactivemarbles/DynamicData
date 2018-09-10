@@ -17,17 +17,17 @@ namespace DynamicData
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="alltems"></param>
+        /// <param name="allItems"></param>
         /// <param name="equalityComparer">The equality comparer used to determine whether an item has changed</param>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static void EditDiff<T>([NotNull] this ISourceList<T> source,
-            [NotNull] IEnumerable<T> alltems,
+            [NotNull] IEnumerable<T> allItems,
             IEqualityComparer<T> equalityComparer = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (alltems == null) throw new ArgumentNullException(nameof(alltems));
+            if (allItems == null) throw new ArgumentNullException(nameof(allItems));
             var editDiff = new EditDiff<T>(source, equalityComparer);
-            editDiff.Edit(alltems);
+            editDiff.Edit(allItems);
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Removes the element at the spedified index
+        /// Removes the element at the specified index
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
@@ -158,7 +158,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Replaces the specified original with the destinaton object
+        /// Replaces the specified original with the destination object
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>

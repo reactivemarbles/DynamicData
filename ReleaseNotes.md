@@ -1,3 +1,7 @@
+### v 6.5.1
+
+Fix locking error in SourceCache internals [#153](https://github.com/RolandPheasant/DynamicData/issues/153)
+
 ### v 6.5.0
 
 Memory and performance improvements for the observable cache, which has been achieved by reducing the number of allocations when maintaining state and when creating change sets.
