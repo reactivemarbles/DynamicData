@@ -83,7 +83,7 @@ namespace DynamicData.Cache.Internal
         public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
         {
             ChangeSet<TObject, TKey> result;
-            lock (this)
+            lock (_locker)
             {
                 var dictionary = _data;
 
