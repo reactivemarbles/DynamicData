@@ -1,4 +1,5 @@
 using System;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
@@ -14,6 +15,5 @@ namespace DynamicData
         /// </summary>
         /// <param name="updateAction">The update action.</param>
         void Edit(Action<IExtendedList<T>> updateAction);
-
     }
 }
