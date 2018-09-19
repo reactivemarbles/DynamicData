@@ -27,6 +27,8 @@ This is a simple example to show how using Dynamic Data's collections and operat
 
 [![NuGet Stats](https://img.shields.io/nuget/v/DynamicData.svg)](https://www.nuget.org/packages/DynamicData) ![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg) [![Build status](https://ci.appveyor.com/api/projects/status/jnq3kagdkp5xtqi5?svg=true)](https://ci.appveyor.com/project/RolandPheasant/dynamicdata-dpbpa)
 
+[![](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/images/0)](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/links/0)[![](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/images/1)](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/links/1)[![](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/images/2)](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/links/2)[![](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/images/3)](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/links/3)[![](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/images/4)](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/links/4)[![](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/images/5)](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/links/5)[![](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/images/6)](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/links/6)[![](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/images/7)](https://sourcerer.io/fame/gwenaelp/gwenaelp/DynamicData/links/7)
+
 ### Sample Projects 
 
 - Sample WPF project trading project [Dynamic Trader](https://github.com/RolandPheasant/Dynamic.Trader)
