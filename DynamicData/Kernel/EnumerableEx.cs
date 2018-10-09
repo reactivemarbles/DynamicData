@@ -124,10 +124,14 @@ namespace DynamicData.Kernel
             return source ?? Enumerable.Empty<T>();
         }
 
-        internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
-        {
-            return new HashSet<T>(source);
-        }
+        #if (!WINDOWS_UWP)
+
+            internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
+            {
+                return new HashSet<T>(source);
+            }
+
+        #endif
 
         internal static IEnumerable<T> EnumerateOne<T>(this T source)
         {
