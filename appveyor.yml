@@ -124,5 +124,5 @@
   test_script:
   - cmd: |
       cd %APPVEYOR_BUILD_FOLDER%
-      dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build
-      dotnet test DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build
+      dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build --no-restore
+      dotnet test DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build --no-restore

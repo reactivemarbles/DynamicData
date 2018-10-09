@@ -1226,7 +1226,7 @@ namespace DynamicData
             if (reasons.Length == 0)
                 throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
 
-            var matches = reasons.ToHashSet();
+            var matches = new HashSet<ListChangeReason>(reasons); 
             return source.Select(changes =>
             {
                 var filtered = changes.Where(change => matches.Contains(change.Reason)).YieldWithoutIndex();
@@ -1248,7 +1248,7 @@ namespace DynamicData
             if (reasons.Length == 0)
                 throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
 
-            var matches = reasons.ToHashSet();
+            var matches =  new HashSet<ListChangeReason>(reasons);
             return source.Select(updates =>
             {
                 var filtered = updates.Where(u => !matches.Contains(u.Reason)).YieldWithoutIndex();
