@@ -115,7 +115,7 @@
   build_script:
   - cmd: |
       dotnet --info
-      msbuild /restore /t:pack /p:Configuration=Release /p:version=%APPVEYOR_BUILD_VERSION% DynamicData.sln
+      msbuild /restore  /p:Configuration=Release /p:version=%APPVEYOR_BUILD_VERSION% -verbosity:minimal DynamicData.sln
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.nupkg
 
