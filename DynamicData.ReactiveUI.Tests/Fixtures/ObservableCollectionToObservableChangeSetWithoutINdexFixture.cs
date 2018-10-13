@@ -3,6 +3,7 @@ using System.Linq;
 using DynamicData.ReactiveUI.Tests.Domain;
 using DynamicData.Tests;
 using ReactiveUI;
+using ReactiveUI.Legacy;
 using Xunit;
 
 namespace DynamicData.ReactiveUI.Tests.Fixtures

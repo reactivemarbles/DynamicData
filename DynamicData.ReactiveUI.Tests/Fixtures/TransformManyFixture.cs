@@ -8,6 +8,7 @@ using DynamicData.ReactiveUI.Tests.Domain;
 using DynamicData.Tests;
 using FluentAssertions;
 using ReactiveUI;
+using ReactiveUI.Legacy;
 using Xunit;
 
 namespace DynamicData.ReactiveUI.Tests.Fixtures

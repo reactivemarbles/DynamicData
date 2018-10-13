@@ -1,5 +1,3 @@
-#if P_LINQ
-
 using System;
 using System.Linq;
 using DynamicData.PLinq;
@@ -195,4 +193,4 @@ namespace DynamicData.Tests.Cache
         }
     }
 }
-#endif
+

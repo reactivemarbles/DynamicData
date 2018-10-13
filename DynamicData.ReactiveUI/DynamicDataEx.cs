@@ -5,7 +5,7 @@ using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Cache.Internal;
 using DynamicData.List.Internal;
-using ReactiveUI;
+using ReactiveUI.Legacy;
 
 namespace DynamicData.ReactiveUI
 {

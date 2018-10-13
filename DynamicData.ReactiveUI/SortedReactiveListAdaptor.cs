@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq;
 using ReactiveUI;
+using ReactiveUI.Legacy;
 
 namespace DynamicData.ReactiveUI
 {
     /// <summary>
-    /// Adaptor used to populate a <see cref="ReactiveList{TObject}"/> from an observable sortedchangeset.
+    /// Adaptor used to populate a <see cref="ReactiveList{T}"/> from an observable sortedchangeset.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>

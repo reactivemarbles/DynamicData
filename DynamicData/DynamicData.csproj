@@ -9,10 +9,6 @@
     <PackageReference Include="System.Reactive" Version="4.0.0" />
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net46' or '$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>P_LINQ</DefineConstants>
-  </PropertyGroup>
-
   <PropertyGroup>
     <Title>Dynamic Data</Title>
     <Description>
