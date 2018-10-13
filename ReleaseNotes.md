@@ -1,7 +1,7 @@
 ### v 6.6.0
 
 Upgraded DynamicData.ReactiveUI to use minimum version of ReactiveUI v9.0.1. 
-This effectively marks this project as obsolete as it provides apaptors for ReactiveList which is no longer supported by the ReactiveUI team.
+This effectively marks DynamicData.ReactiveUI as obsolete as it provides apaptors for ReactiveList which is no longer supported by the ReactiveUI team.
 
 Support for UWP [#161](https://github.com/RolandPheasant/DynamicData/issues/161)
 
