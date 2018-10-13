@@ -25,8 +25,7 @@ namespace DynamicData.Cache.Internal
 
             var removes = previousItems.Except(currentItems, keyComparer).ToList();
             var adds = currentItems.Except(previousItems, keyComparer).ToList();
-            var inbothKeys = previousItems.Intersect(currentItems, keyComparer)
-                                          .Select(x => x.Key).ToHashSet();
+            var inbothKeys = new HashSet<TKey>(previousItems.Intersect(currentItems, keyComparer).Select(x => x.Key)); 
 
             var result = new List<Change<TObject, TKey>>();
             foreach (var remove in removes)

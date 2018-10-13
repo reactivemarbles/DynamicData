@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using DynamicData.Tests;
-using ReactiveUI;
+using ReactiveUI.Legacy;
 using Xunit;
 using FluentAssertions;
 

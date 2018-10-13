@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Binding;
 using ReactiveUI;
+using ReactiveUI.Legacy;
 
 namespace DynamicData.ReactiveUI
 {

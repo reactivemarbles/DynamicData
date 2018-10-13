@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <NoWarn>$(NoWarn);CS0618</NoWarn>

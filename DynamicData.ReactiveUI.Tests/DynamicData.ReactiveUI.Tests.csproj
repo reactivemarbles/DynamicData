@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net461</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="reactiveui" Version="8.4.1" />
+    <PackageReference Include="reactiveui" Version="9.0.1" />
     <PackageReference Include="System.Reactive" Version="4.0.0" />
   </ItemGroup>
 
