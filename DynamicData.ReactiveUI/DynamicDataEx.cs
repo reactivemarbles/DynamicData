@@ -9,6 +9,7 @@ using ReactiveUI.Legacy;
 
 namespace DynamicData.ReactiveUI
 {
+
     /// <summary>
     /// Integration methods between dynamic data and reactive list
     /// </summary>

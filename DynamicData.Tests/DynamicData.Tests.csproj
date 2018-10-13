@@ -1,11 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net46</TargetFrameworks>
     <NoWarn>$(NoWarn);CS0618</NoWarn>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net46' or '$(TargetFramework)' == 'netcoreapp2.1'">
-    <DefineConstants>P_LINQ</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
