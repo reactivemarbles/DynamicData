@@ -50,6 +50,28 @@ namespace DynamicData.List.Internal
         {
         }
 
+        private static ReadOnlyObservableCollection<TDestination> CreateCollectionFromList(IObservableList<TDestination> list)
+        {
+            ReadOnlyObservableCollection<TDestination> result = null;
+            list.Connect().Bind(out result).Subscribe();
+            return result;
+        }
+
+        public TransformMany(IObservable<IChangeSet<TSource>> source,
+            Func<TSource, IObservableList<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+            : this(source, s => CreateCollectionFromList(manyselector(s)), equalityComparer, t => Observable.Defer(() =>
+            {
+                var subsequentChanges = manyselector(t).Connect();
+
+                if (manyselector(t).Count > 0)
+                    return subsequentChanges;
+
+                return Observable.Return(ChangeSet<TDestination>.Empty)
+                    .Concat(subsequentChanges);
+            }))
+        {
+        }
 
         public TransformMany([NotNull] IObservable<IChangeSet<TSource>> source,
             [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector,
