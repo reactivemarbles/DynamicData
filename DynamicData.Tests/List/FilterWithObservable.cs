@@ -79,6 +79,36 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
+        public void RemoveFiltered()
+        {
+            var person = new Person("P1", 1);
+
+            _source.Add(person);
+            _results.Data.Count.Should().Be(0, "Should be 0 people in the cache");
+            _filter.OnNext(p => p.Age >= 1);
+            _results.Data.Count.Should().Be(1, "Should be 1 people in the cache");
+
+            _source.Remove(person);
+
+            _results.Data.Count.Should().Be(0, "Should be 0 people in the cache");
+        }
+
+        [Fact]
+        public void RemoveFilteredRange()
+        {
+            var people = Enumerable.Range(1, 10).Select(i => new Person("P" + i, i)).ToArray();
+
+            _source.AddRange(people);
+            _results.Data.Count.Should().Be(0, "Should be 0 people in the cache");
+            _filter.OnNext(p => p.Age > 5);
+            _results.Data.Count.Should().Be(5, "Should be 5 people in the cache");
+
+            _source.RemoveRange(5, 5);
+
+            _results.Data.Count.Should().Be(0, "Should be 0 people in the cache");
+        }
+
+        [Fact]
         public void ChainFilters()
         {
             var filter2 = new BehaviorSubject<Func<Person, bool>>(person1 => person1.Age > 20);
