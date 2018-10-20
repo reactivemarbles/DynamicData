@@ -168,14 +168,12 @@ namespace DynamicData.List.Internal
                     }
                     case ListChangeReason.Remove:
                     {
-                        var change = item.Item;
-                        if (change.Current.IsMatch)
-                            filtered.Remove(change.Current);
+                        filtered.Remove(item.Item.Current);
                         break;
                     }
                     case ListChangeReason.RemoveRange:
                     {
-                        filtered.RemoveMany(item.Range.Where(t => t.IsMatch));
+                        filtered.RemoveMany(item.Range);
                         break;
                     }
                     case ListChangeReason.Clear:
