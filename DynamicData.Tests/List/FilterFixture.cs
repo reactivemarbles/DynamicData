@@ -224,5 +224,18 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0, "Should nothing cached");
         }
 
+        [Fact]
+        public void AddSubscribeRemove()
+        {
+            var people = Enumerable.Range(1, 100).Select(l => new Person("Name" + l, l)).ToArray();
+            var source = new SourceList<Person>();
+            source.AddRange(people);
+
+            var results = source.Connect(x => x.Age > 20).AsAggregator();
+            source.RemoveMany(people.Where(x => x.Age % 2 == 0));
+
+            results.Data.Count.Should().Be(40, "Should be 40 cached");
+        }
+
     }
 }
