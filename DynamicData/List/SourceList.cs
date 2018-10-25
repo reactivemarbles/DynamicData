@@ -106,7 +106,7 @@ namespace DynamicData
             {
                 lock (_locker)
                 {
-                    var initial = GetInitialUpdates();
+                    var initial = new ChangeSet<T>(new[] {new Change<T>(ListChangeReason.AddRange, _readerWriter.Items)});
                     if (initial.TotalChanges > 0) observer.OnNext(initial);
                     var source = _changes.Finally(observer.OnCompleted);
 
@@ -119,16 +119,6 @@ namespace DynamicData
 
             return observable;
         }
-
-        private IChangeSet<T> GetInitialUpdates(Func<T, bool> predicate = null)
-        {
-            var items = predicate == null
-                ? _readerWriter.Items
-                : _readerWriter.Items.Where(predicate);
-
-            return new ChangeSet<T>(new[] {new Change<T>(ListChangeReason.AddRange, items)});
-        }
-         
 
         /// <inheritdoc />
         public void Dispose()
