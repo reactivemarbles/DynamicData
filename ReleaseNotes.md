@@ -1,3 +1,7 @@
+### v 6.6.1
+
+Fix for UWP load issue. See additonally comment on [#161](https://github.com/RolandPheasant/DynamicData/issues/161)
+
 ### v 6.6.0
 
 Upgraded DynamicData.ReactiveUI to use minimum version of ReactiveUI v9.0.1. 
