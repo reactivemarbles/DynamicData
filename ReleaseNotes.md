@@ -1,6 +1,7 @@
 ### v 6.6.1
 
 Fix for UWP load issue. See additonally comment on [#161](https://github.com/RolandPheasant/DynamicData/issues/161)
+Dynamic filter with source list not filtering correctly when item is not initially matching filter [#164](https://github.com/RolandPheasant/DynamicData/issues/164)
 
 ### v 6.6.0
 
