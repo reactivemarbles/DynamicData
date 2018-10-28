@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup Condition="$(TargetFramework.StartsWith('uap'))">
-    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
+    <DefineConstants>$(DefineConstants);WINDOWS_UWP;P_LINQ</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
