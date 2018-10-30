@@ -115,7 +115,7 @@ namespace DynamicData
             });
 
             if (predicate != null)
-                observable = observable.Filter(predicate);
+                observable = new FilterStatic<T>(observable, predicate).Run();
 
             return observable;
         }
