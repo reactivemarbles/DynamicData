@@ -196,6 +196,11 @@ namespace DynamicData.List.Internal
                             yield return new Change<TDestination>(change.Reason, items);
                         }
                             break;
+
+                        case ListChangeReason.Refresh:
+                            // handle case without throwing an exception.
+                            break;
+
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
