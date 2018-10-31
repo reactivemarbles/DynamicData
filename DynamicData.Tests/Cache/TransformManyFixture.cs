@@ -1,5 +1,8 @@
 ﻿
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using DynamicData.Annotations;
 using DynamicData.Tests.Domain;
 using DynamicData.Tests.Utilities;
 using FluentAssertions;
@@ -60,6 +63,50 @@ namespace DynamicData.Tests.Cache
             _source.AddOrUpdate(mother);
             _source.Remove(mother);
             _results.Data.Count.Should().Be(0, "Should be 4 in the cache");
+        }
+
+        [Fact]
+        public void UpdatesFromRefreshDoesNotThrowException()
+        {
+            using (var source = new SourceList<INPCObject>())
+            {
+                source.Connect()
+                    .AutoRefresh(x => x.Id)
+                    .TransformMany(x => new[]{x.Id})
+                    .AsAggregator();
+
+                var inpcObject = new INPCObject() {Id = 0};
+                source.Add(inpcObject);
+
+                // This statement should not throw an exception
+                Assert.PropertyChanged(
+                    inpcObject,
+                    nameof(inpcObject.Id),
+                    () => inpcObject.Id = 1);
+            }
+        }
+
+        private class INPCObject : INotifyPropertyChanged
+        {
+            private int _id;
+
+            public int Id
+            {
+                get => _id;
+                set
+                {
+                    _id = value;
+                    OnPropertyChanged();
+                }
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            [NotifyPropertyChangedInvocator]
+            protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
     }
 }
