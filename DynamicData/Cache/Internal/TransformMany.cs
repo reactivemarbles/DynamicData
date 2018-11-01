@@ -72,8 +72,10 @@ namespace DynamicData.Cache.Internal
         {
             return _source.Transform((t, key) =>
                 {
-                    return new ManyContainer(()=> _manyselector(t).Select(m => new DestinationContainer(m, _keySelector(m))));
-                })
+                    return new ManyContainer(_manyselector(t)
+                        .Select(m => new DestinationContainer(m, _keySelector(m)))
+                        .ToList());
+                }, true)
                 .Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
         }
 
@@ -82,20 +84,17 @@ namespace DynamicData.Cache.Internal
             return Observable.Create<IChangeSet<TDestination, TDestinationKey>>(observer =>
             {
                 var result = new ChangeAwareCache<TDestination, TDestinationKey>();
-              
 
                 var transformed = _source.Transform((t, key) =>
                 {
                     //Only skip initial for first time Adds where there is isinitial data records 
                     var locker = new object();
-                    var collection = _manyselector(t);
                     var changes = _childChanges(t).Synchronize(locker).Skip(1);
-                    return new ManyContainer(() =>
+                    return new ManyContainer(_manyselector(t).Select(m =>
                     {
                         lock (locker)
-                            return collection.Select(m => new DestinationContainer(m, _keySelector(m)));
-                   
-                    }, changes);
+                            return new DestinationContainer(m, _keySelector(m));
+                    }), changes);
                 }).Publish();
 
                 var outerLock = new object();
@@ -178,14 +177,12 @@ namespace DynamicData.Cache.Internal
 
         private sealed class ManyContainer
         {
-            private readonly Func<IEnumerable<DestinationContainer>> _initial;
-
             public IObservable<IChangeSet<TDestination, TDestinationKey>> Changes { get; }
-            public IEnumerable<DestinationContainer> Destination => _initial();
+            public IEnumerable<DestinationContainer> Destination { get; }
 
-            public ManyContainer(Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>> changes = null)
+            public ManyContainer(IEnumerable<DestinationContainer> initial, IObservable<IChangeSet<TDestination, TDestinationKey>> changes = null)
             {
-                _initial = initial;
+                Destination = initial;
                 Changes = changes;
             }
         }
