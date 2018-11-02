@@ -184,9 +184,10 @@ namespace DynamicData
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
             if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
 
+            var previous = _innerList[index];
             _innerList[index] = item;
 
-            _changes.Add(new Change<T>(ListChangeReason.Refresh, item, index));
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, item, previous, index));
         }
 
         /// <summary>

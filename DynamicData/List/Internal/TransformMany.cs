@@ -67,7 +67,7 @@ namespace DynamicData.List.Internal
             if (_childChanges != null)
                 return CreateWithChangeset();
 
-            return _source.Transform(item => new ManyContainer(_manyselector(item)))
+            return _source.Transform(item => new ManyContainer(_manyselector(item).ToArray()), true)
                 .Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer))).NotEmpty();
         }
           
@@ -158,6 +158,7 @@ namespace DynamicData.List.Internal
                         }
                             break;
                         case ListChangeReason.Replace:
+                        case ListChangeReason.Refresh:
                         {
                             //this is difficult as we need to discover adds and removes (and perhaps replaced)
                             var currentItems = change.Item.Current.Destination.AsArray();
