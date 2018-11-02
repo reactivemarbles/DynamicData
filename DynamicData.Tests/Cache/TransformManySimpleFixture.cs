@@ -1,7 +1,6 @@
 ﻿using DynamicData.Tests.Domain;
 using FluentAssertions;
 using System;
-using System.Collections.Generic;
 using Xunit;
 
 namespace DynamicData.Tests.Cache
@@ -111,21 +110,6 @@ namespace DynamicData.Tests.Cache
             _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
             _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
             _results.Data.Lookup("Child5").HasValue.Should().BeTrue();
-        }
-
-        [Fact]
-        public void Refresh()
-        {
-            var relations = new List<Person> { new Person("Child1", 1) };
-            var parent = new PersonWithChildren("parent", 50, relations);
-            _source.AddOrUpdate(parent);
-
-            relations.Add(new Person("Child2", 2));
-            _source.Refresh(parent);
-
-            _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-            _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
-            _results.Data.Lookup("Child2").HasValue.Should().BeTrue();
         }
 
     }
