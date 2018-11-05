@@ -1,6 +1,6 @@
-﻿using System;
-using DynamicData.Tests.Domain;
+﻿using DynamicData.Tests.Domain;
 using FluentAssertions;
+using System;
 using Xunit;
 
 namespace DynamicData.Tests.Cache
@@ -111,5 +111,6 @@ namespace DynamicData.Tests.Cache
             _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
             _results.Data.Lookup("Child5").HasValue.Should().BeTrue();
         }
+
     }
 }

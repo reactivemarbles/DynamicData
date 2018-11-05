@@ -2225,6 +2225,80 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TDestination> transformFactory,
+            bool transformOnRefresh)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+
+            return source.Transform((current, previous, key) => transformFactory(current), transformOnRefresh);
+        }
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, TKey, TDestination> transformFactory,
+            bool transformOnRefresh)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            return source.Transform((current, previous, key) => transformFactory(current, key), transformOnRefresh);
+        }
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
+        /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
+        /// <returns>
+        /// A transformed update collection
+        /// </returns>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// transformFactory</exception>
+        public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source,
+            Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
+            bool transformOnRefresh)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+
+            return new Transform<TDestination, TSource, TKey>(source, transformFactory, transformOnRefresh: transformOnRefresh).Run();
+        }
+
+        /// <summary>
+        /// Projects each update item to a new form using the specified transform function
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="transformFactory">The transform factory.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
         /// <returns>
         /// A transformed update collection

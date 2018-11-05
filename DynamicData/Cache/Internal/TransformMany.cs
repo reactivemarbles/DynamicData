@@ -72,8 +72,11 @@ namespace DynamicData.Cache.Internal
         {
             return _source.Transform((t, key) =>
                 {
-                    return new ManyContainer(()=> _manyselector(t).Select(m => new DestinationContainer(m, _keySelector(m))));
-                })
+                    var destination = _manyselector(t)
+                        .Select(m => new DestinationContainer(m, _keySelector(m)))
+                        .ToArray();
+                    return new ManyContainer(() => destination);
+                }, true)
                 .Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
         }
 
@@ -82,7 +85,6 @@ namespace DynamicData.Cache.Internal
             return Observable.Create<IChangeSet<TDestination, TDestinationKey>>(observer =>
             {
                 var result = new ChangeAwareCache<TDestination, TDestinationKey>();
-              
 
                 var transformed = _source.Transform((t, key) =>
                 {
@@ -93,8 +95,9 @@ namespace DynamicData.Cache.Internal
                     return new ManyContainer(() =>
                     {
                         lock (locker)
-                            return collection.Select(m => new DestinationContainer(m, _keySelector(m)));
-                   
+                            return collection
+                                .Select(m => new DestinationContainer(m, _keySelector(m)))
+                                .ToArray();
                     }, changes);
                 }).Publish();
 
@@ -179,7 +182,6 @@ namespace DynamicData.Cache.Internal
         private sealed class ManyContainer
         {
             private readonly Func<IEnumerable<DestinationContainer>> _initial;
-
             public IObservable<IChangeSet<TDestination, TDestinationKey>> Changes { get; }
             public IEnumerable<DestinationContainer> Destination => _initial();
 
