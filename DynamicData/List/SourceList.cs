@@ -102,31 +102,23 @@ namespace DynamicData
         /// <inheritdoc />
         public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null)
         {
-            return Observable.Create<IChangeSet<T>>(observer =>
+            var observable = Observable.Create<IChangeSet<T>>(observer =>
             {
                 lock (_locker)
                 {
-                    var initial = GetInitialUpdates(predicate);
+                    var initial = new ChangeSet<T>(new[] {new Change<T>(ListChangeReason.AddRange, _readerWriter.Items)});
                     if (initial.TotalChanges > 0) observer.OnNext(initial);
                     var source = _changes.Finally(observer.OnCompleted);
-
-                    if (predicate != null)
-                        source = source.Filter(predicate);
 
                     return source.SubscribeSafe(observer);
                 }
             });
-        }
 
-        private IChangeSet<T> GetInitialUpdates(Func<T, bool> predicate = null)
-        {
-            var items = predicate == null
-                ? _readerWriter.Items
-                : _readerWriter.Items.Where(predicate);
+            if (predicate != null)
+                observable = new FilterStatic<T>(observable, predicate).Run();
 
-            return new ChangeSet<T>(new[] {new Change<T>(ListChangeReason.AddRange, items)});
+            return observable;
         }
-         
 
         /// <inheritdoc />
         public void Dispose()
