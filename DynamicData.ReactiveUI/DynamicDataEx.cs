@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reflection;
 using DynamicData.Annotations;
 using DynamicData.Cache.Internal;
 using DynamicData.List.Internal;
 using ReactiveUI.Legacy;
+
+#pragma warning disable CS0618 // Using legacy code.
 
 namespace DynamicData.ReactiveUI
 {
@@ -23,6 +26,7 @@ namespace DynamicData.ReactiveUI
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source,
             Func<TSource, IReadOnlyReactiveList<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
@@ -48,6 +52,7 @@ namespace DynamicData.ReactiveUI
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source,
             Func<TSource, ReactiveList<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
@@ -74,6 +79,7 @@ namespace DynamicData.ReactiveUI
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector which must be unique across all</param>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
             this IObservable<IChangeSet<TSource, TSourceKey>> source,
             Func<TSource, ReactiveList<TDestination>> manyselector,
@@ -108,6 +114,7 @@ namespace DynamicData.ReactiveUI
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="keySelector">The key selector which must be unique across all</param>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(
             this IObservable<IChangeSet<TSource, TSourceKey>> source,
             Func<TSource, IReadOnlyReactiveList<TDestination>> manyselector,
@@ -145,6 +152,7 @@ namespace DynamicData.ReactiveUI
         /// or
         /// targetCollection
         /// </exception>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] ReactiveList<T> targetCollection, int resetThreshold = 25)
         {
@@ -170,6 +178,7 @@ namespace DynamicData.ReactiveUI
         /// or
         /// target
         /// </exception>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ReactiveList<TObject> target,
             int resetThreshold = 25)
         {
@@ -190,6 +199,7 @@ namespace DynamicData.ReactiveUI
         /// <param name="updater">The updater.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             IChangeSetAdaptor<TObject, TKey> updater)
         {
@@ -242,6 +252,7 @@ namespace DynamicData.ReactiveUI
         /// or
         /// target
         /// </exception>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(
             this IObservable<ISortedChangeSet<TObject, TKey>> source, ReactiveList<TObject> target,
             int resetThreshold = 25)
@@ -262,6 +273,7 @@ namespace DynamicData.ReactiveUI
         /// <param name="updater">The updater.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
+        [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
         public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(
             this IObservable<ISortedChangeSet<TObject, TKey>> source,
             ISortedChangeSetAdaptor<TObject, TKey> updater)

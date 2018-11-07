@@ -9,6 +9,8 @@ using FluentAssertions;
 using ReactiveUI.Legacy;
 using Xunit;
 
+#pragma warning disable CS0618 // Using legacy code.
+
 namespace DynamicData.ReactiveUI.Tests.Fixtures
 {
 

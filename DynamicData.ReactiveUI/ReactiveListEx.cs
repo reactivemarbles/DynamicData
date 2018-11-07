@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Legacy;
+
+#pragma warning disable CS0618 // Using legacy code.
 
 namespace DynamicData.ReactiveUI
 {
     /// <summary>
     ///Reactive List extensions
     /// </summary>
+    [Obsolete("ReactiveList has been deprecated by the ReactiveUI team.")]
     public static class ReactiveListEx
     {
         /// <summary>
@@ -34,7 +38,7 @@ namespace DynamicData.ReactiveUI
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReactiveList<T> source)
         {
             return source.ToObservableChangeSet<ReactiveList<T>, T>();
-		}
+        }
 
         /// <summary>
         /// Clones the ReactiveList from all changes
