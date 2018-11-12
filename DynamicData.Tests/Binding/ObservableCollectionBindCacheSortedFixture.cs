@@ -96,7 +96,7 @@ namespace DynamicData.Tests.Binding
         [Fact]
         public void LargeUpdateInvokesAReset()
         {
-            //update once as intital load is always a reset
+            //update once as initial load is always a reset
             _source.AddOrUpdate(new Person("Me", 21));
 
             bool invoked = false;
@@ -113,21 +113,21 @@ namespace DynamicData.Tests.Binding
         [Fact]
         public void SmallChangeDoesNotInvokeReset()
         {
-            //update once as intital load is always a reset
+            //update once as initial load is always a reset
             _source.AddOrUpdate(new Person("Me", 21));
 
             bool invoked = false;
-            bool resetinvoked = false;
+            bool resetInvoked = false;
             _collection.CollectionChanged += (sender, e) =>
             {
                 invoked = true;
                 if (e.Action == NotifyCollectionChangedAction.Reset)
-                    resetinvoked = true;
+                    resetInvoked = true;
             };
             _source.AddOrUpdate(_generator.Take(24));
 
             invoked.Should().BeTrue();
-            resetinvoked.Should().BeFalse();
+            resetInvoked.Should().BeFalse();
         }
 
 	    [Fact]
