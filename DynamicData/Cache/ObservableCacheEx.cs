@@ -3286,6 +3286,55 @@ namespace DynamicData
             return source.Bind(target, updater);
         }
 
+
+#if SUPPORTS_BINDINGLIST
+
+        /// <summary>
+        /// Binds a clone of the observable changeset to the target observable collection
+        /// </summary>
+        /// <typeparam name="TObject">The object type</typeparam>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="bindingList">The target binding list</param>
+        /// <param name="resetThreshold">The reset threshold.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// targetCollection
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
+            [NotNull] BindingList<TObject> bindingList, int resetThreshold = 25)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (bindingList == null) throw new ArgumentNullException(nameof(bindingList));
+
+            return source.Adapt(new BindingListAdaptor<TObject, TKey>(bindingList, resetThreshold));
+        }
+
+        /// <summary>
+        /// Binds a clone of the observable changeset to the target observable collection
+        /// </summary>
+        /// <typeparam name="TObject">The object type</typeparam>
+        /// <typeparam name="TKey">The key type</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="bindingList">The target binding list</param>
+        /// <param name="resetThreshold">The reset threshold.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// targetCollection
+        /// </exception>
+        public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>([NotNull] this IObservable<ISortedChangeSet<TObject, TKey>> source,
+            [NotNull] BindingList<TObject> bindingList, int resetThreshold = 25)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (bindingList == null) throw new ArgumentNullException(nameof(bindingList));
+
+            return source.Adapt(new SortedBindingListAdaptor<TObject, TKey>(bindingList, resetThreshold));
+        }
+
+#endif
+
         #endregion
 
         #region Adaptor

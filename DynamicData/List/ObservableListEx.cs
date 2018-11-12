@@ -433,6 +433,32 @@ namespace DynamicData
             return source.Adapt(adaptor);
         }
 
+#if SUPPORTS_BINDINGLIST
+
+        /// <summary>
+        /// Binds a clone of the observable changeset to the target observable collection
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="bindingList">The target binding list</param>
+        /// <param name="resetThreshold">The reset threshold.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// targetCollection
+        /// </exception>
+        public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
+            [NotNull] BindingList<T> bindingList, int resetThreshold = 25)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (bindingList == null) throw new ArgumentNullException(nameof(bindingList));
+
+            return source.Adapt(new BindingListAdaptor<T>(bindingList, resetThreshold));
+        }
+
+#endif
+
+
         /// <summary>
         /// Injects a side effect into a changeset observable
         /// </summary>
