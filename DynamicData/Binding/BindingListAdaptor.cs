@@ -62,6 +62,8 @@ namespace DynamicData.Binding
         /// <inheritdoc />
         public void Adapt(IChangeSet<TObject, TKey> changes)
         {
+            _cache.Clone(changes);
+
             if (changes.Count - changes.Refreshes > _refreshThreshold || !_loaded)
             {
                 using (new BindingListEventsSuspender<TObject>(_list))

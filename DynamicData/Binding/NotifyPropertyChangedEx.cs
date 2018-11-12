@@ -79,7 +79,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specifed properties, including the inital value.  
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
         /// 
         /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
@@ -99,7 +99,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specifed properties, including the inital value.  
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
         /// 
         /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
@@ -127,7 +127,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specifed properties, including the inital value.  
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
         /// 
         /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
@@ -159,7 +159,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specifed properties, including the inital value.  
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
         /// 
         /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
@@ -195,7 +195,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specifed properties, including the inital value.  
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
         /// 
         /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
@@ -235,7 +235,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specifed properties, including the inital value.  
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
         /// 
         /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
