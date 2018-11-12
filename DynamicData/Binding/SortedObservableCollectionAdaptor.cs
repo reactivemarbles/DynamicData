@@ -58,7 +58,7 @@ namespace DynamicData.Binding
                     break;
 
                 case SortReason.Reorder:
-                    //Updates will only be moves, so appply logic
+                    //Updates will only be moves, so apply logic
                     using (collection.SuspendCount())
                     {
                         DoUpdate(changes, collection);

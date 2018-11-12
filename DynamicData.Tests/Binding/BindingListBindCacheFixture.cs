@@ -1,6 +1,8 @@
-﻿using System;
+﻿#if SUPPORTS_BINDINGLIST
+
+using System;
+using System.ComponentModel;
 using System.Linq;
-using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
@@ -8,16 +10,15 @@ using Xunit;
 namespace DynamicData.Tests.Binding
 {
     
-    public class BindChangeSetFixture: IDisposable
+    public class BindingListCacheFixture : IDisposable
     {
-        private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
+        private readonly BindingList<Person> _collection = new BindingList<Person>();
         private readonly ISourceCache<Person, string> _source;
         private readonly IDisposable _binder;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        public BindChangeSetFixture()
+        public BindingListCacheFixture()
         {
-            _collection = new ObservableCollectionExtended<Person>();
             _source = new SourceCache<Person, string>(p => p.Name);
             _binder = _source.Connect().Bind(_collection).Subscribe();
         }
@@ -80,3 +81,4 @@ namespace DynamicData.Tests.Binding
         }
     }
 }
+#endif

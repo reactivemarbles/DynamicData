@@ -29,7 +29,7 @@ namespace DynamicData.Tests.List
         [Fact]
         public void RemoveRandomSorts()
         {
-            //seems an odd test but belive me it catches and exception when sorting on primitives
+            //seems an odd test but believe me it catches  exceptions when sorting on primitives
             var items = Enumerable.Range(1,100).OrderBy(_=>Guid.NewGuid()).ToArray();
             _source.AddRange(items);
 

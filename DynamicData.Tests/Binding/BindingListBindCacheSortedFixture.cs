@@ -1,6 +1,8 @@
+#if SUPPORTS_BINDINGLIST
+
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
@@ -10,18 +12,18 @@ using Xunit;
 namespace DynamicData.Tests.Binding
 {
     
-    public class BindSortedChangeSetFixture: IDisposable
+    public class BindingListBindCacheSortedFixture : IDisposable
     {
-        private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
+        private readonly BindingList<Person> _collection;
         private readonly ISourceCache<Person, string> _source;
         private readonly IDisposable _binder;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name);
 
-        public BindSortedChangeSetFixture()
+        public BindingListBindCacheSortedFixture()
         {
-            _collection = new ObservableCollectionExtended<Person>();
-            _source = new SourceCache<Person, string>(p => p.Name);
+            _collection = new BindingList<Person>(); 
+             _source = new SourceCache<Person, string>(p => p.Name);
             _binder = _source.Connect()
                              .Sort(_comparer, resetThreshold: 25)
                              .Bind(_collection)
@@ -96,14 +98,14 @@ namespace DynamicData.Tests.Binding
         [Fact]
         public void LargeUpdateInvokesAReset()
         {
-            //update once as intital load is always a reset
+            //update once as initial load is always a reset
             _source.AddOrUpdate(new Person("Me", 21));
 
             bool invoked = false;
-            _collection.CollectionChanged += (sender, e) =>
+            _collection.ListChanged += (sender, e) =>
             {
                 invoked = true;
-                e.Action.Should().Be(NotifyCollectionChangedAction.Reset);
+                e.ListChangedType.Should().Be(ListChangedType.Reset);
             };
             _source.AddOrUpdate(_generator.Take(100));
 
@@ -113,21 +115,21 @@ namespace DynamicData.Tests.Binding
         [Fact]
         public void SmallChangeDoesNotInvokeReset()
         {
-            //update once as intital load is always a reset
+            //update once as initial load is always a reset
             _source.AddOrUpdate(new Person("Me", 21));
 
             bool invoked = false;
-            bool resetinvoked = false;
-            _collection.CollectionChanged += (sender, e) =>
+            bool resetInvoked = false;
+            _collection.ListChanged += (sender, e) =>
             {
                 invoked = true;
-                if (e.Action == NotifyCollectionChangedAction.Reset)
-                    resetinvoked = true;
+                if (e.ListChangedType == ListChangedType.Reset)
+                    resetInvoked = true;
             };
             _source.AddOrUpdate(_generator.Take(24));
 
             invoked.Should().BeTrue();
-            resetinvoked.Should().BeFalse();
+            resetInvoked.Should().BeFalse();
         }
 
 	    [Fact]
@@ -176,3 +178,4 @@ namespace DynamicData.Tests.Binding
 	    }
     }
 }
+#endif

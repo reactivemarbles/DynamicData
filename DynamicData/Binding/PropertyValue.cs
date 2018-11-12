@@ -34,7 +34,7 @@ namespace DynamicData.Binding
         public TObject Sender { get; }
 
         /// <summary>
-        /// Lastest observed value
+        /// Latest observed value
         /// </summary>
         public TValue Value { get; }
          
