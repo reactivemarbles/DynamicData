@@ -1,3 +1,9 @@
+### v 6.7.0
+
+Added overloads of ```Bind()``` to support binding to ```BindingList``` [#182](https://github.com/RolandPheasant/DynamicData/issues/182)
+Fix for ```TransformMany``` when a refresh event is received  [#173](https://github.com/RolandPheasant/DynamicData/pull/173)
+
+
 ### v 6.6.1
 
 Fix for UWP load issue. See additonally comment on [#161](https://github.com/RolandPheasant/DynamicData/issues/161)

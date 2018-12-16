@@ -39,7 +39,7 @@ namespace DynamicData.Binding
 
         public ObservablePropertyFactory(Expression<Func<TObject, TProperty>> expression)
         {
-            //this overload is used for shallow observations i.e. depth = 1, so no need for resubscriptons
+            //this overload is used for shallow observations i.e. depth = 1, so no need for re-subscriptions
             var member = expression.GetProperty();
             var accessor = expression.Compile();
 

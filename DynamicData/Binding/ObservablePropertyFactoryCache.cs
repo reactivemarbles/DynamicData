@@ -1,16 +1,14 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
-using DynamicData.Kernel;
 
 namespace DynamicData.Binding
 {
     internal sealed class ObservablePropertyFactoryCache
     {
-        private readonly IDictionary<string,object> _factories = new Dictionary<string, object>();
-        private readonly object _locker = new object();
+        private readonly ConcurrentDictionary<string,object> _factories = new ConcurrentDictionary<string, object>();
 
         public static readonly ObservablePropertyFactoryCache Instance = new ObservablePropertyFactoryCache();
 
@@ -23,16 +21,9 @@ namespace DynamicData.Binding
         {
             var key = expression.ToCacheKey();
 
-            // ReSharper disable once InconsistentlySynchronizedField
-            var exiting = _factories.Lookup(key);
-            if (exiting.HasValue)
-                return (ObservablePropertyFactory<TObject, TProperty>)exiting.Value;
 
-            lock (_locker)
+            var result = _factories.GetOrAdd(key, k =>
             {
-                if (_factories.ContainsKey(key))
-                    return (ObservablePropertyFactory<TObject, TProperty>) _factories[key];
-
                 ObservablePropertyFactory<TObject, TProperty> factory;
 
                 var memberChain = expression.GetMemberChain().ToArray();
@@ -46,10 +37,11 @@ namespace DynamicData.Binding
                     var accessor = expression?.Compile() ?? throw new ArgumentNullException(nameof(expression));
                     factory = new ObservablePropertyFactory<TObject, TProperty>(accessor, chain);
                 }
-
-                _factories[key] = factory;
                 return factory;
-            }
+            });
+
+
+            return (ObservablePropertyFactory<TObject, TProperty>)result;
         }
     }
 }

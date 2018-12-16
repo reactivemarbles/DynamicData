@@ -5,7 +5,7 @@ using DynamicData.Cache.Internal;
 namespace DynamicData.Binding
 {
     /// <summary>
-    /// Adaptor to relect a change set into an observable list
+    /// Adaptor to reflect a change set into an observable list
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ObservableCollectionAdaptor<T> : IChangeSetAdaptor<T>
@@ -32,7 +32,7 @@ namespace DynamicData.Binding
         /// <param name="changes">The changes.</param>
         public void Adapt(IChangeSet<T> changes)
         {
-            if (changes.TotalChanges > _refreshThreshold || !_loaded)
+            if (changes.TotalChanges - changes.Refreshes > _refreshThreshold || !_loaded)
             {
                 using (_collection.SuspendNotifications())
                 {
