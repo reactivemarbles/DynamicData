@@ -1,3 +1,7 @@
+### v 6.7.1
+
+CountChanged not working on SourceCache [#188](https://github.com/RolandPheasant/DynamicData/issues/188)
+
 ### v 6.7.0
 
 Added overloads of ```Bind()``` to support binding to ```BindingList``` [#182](https://github.com/RolandPheasant/DynamicData/issues/182)
