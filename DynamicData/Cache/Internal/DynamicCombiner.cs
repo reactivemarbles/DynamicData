@@ -11,11 +11,25 @@ namespace DynamicData.Cache.Internal
     internal sealed class DynamicCombiner<TObject, TKey>
     {
         private readonly IObservableList<IObservable<IChangeSet<TObject, TKey>>> _source;
+
+
+
+
         private readonly CombineOperator _type;
 
         public DynamicCombiner([NotNull] IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
+            _type = type;
+        }
+
+
+        public DynamicCombiner([NotNull] IObservable<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
+        {
+          //  _source = source ?? throw new ArgumentNullException(nameof(source));
+
+            var xxx = 
+
             _type = type;
         }
 
@@ -36,13 +50,15 @@ namespace DynamicData.Cache.Internal
                     .Transform(changeset => new MergeContainer(changeset))
                     .AsObservableList();
 
+                var sharedLists = sourceLists.Connect().Publish();
+
                 //merge the items back together
-                var allChanges = sourceLists.Connect()
+                var allChanges = sharedLists
                     .MergeMany(mc => mc.Source)
                     .Synchronize(locker)
                     .Subscribe(changes =>
                     {
-                        //Populate result list and chck for changes
+                        //Populate result list and check for changes
                         UpdateResultList(resultCache, sourceLists.Items.AsArray(), changes);
 
                         var notifications = resultCache.CaptureChanges();
@@ -51,7 +67,7 @@ namespace DynamicData.Cache.Internal
                     });
 
                 //when an list is removed, need to 
-                var removedItem = sourceLists.Connect()
+                var removedItem = sharedLists
                     .OnItemRemoved(mc =>
                     {
                         //Remove items if required
@@ -70,7 +86,7 @@ namespace DynamicData.Cache.Internal
                     .Subscribe();
 
                 //when an list is added or removed, need to 
-                var sourceChanged = sourceLists.Connect()
+                var sourceChanged = sharedLists
                     .WhereReasonsAre(ListChangeReason.Add, ListChangeReason.AddRange)
                     .ForEachItemChange(mc =>
                     {
@@ -85,7 +101,7 @@ namespace DynamicData.Cache.Internal
                     })
                     .Subscribe();
 
-                return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged);
+                return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, sharedLists.Connect());
             });
         }
 

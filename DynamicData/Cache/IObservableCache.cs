@@ -15,14 +15,12 @@ namespace DynamicData
         /// Returns an observable of any changes which match the specified key.  The sequence starts with the inital item in the cache (if there is one).
         /// </summary>
         /// <param name="key">The key.</param>
-        /// <returns></returns>
         IObservable<Change<TObject, TKey>> Watch(TKey key);
 
         /// <summary>
-        /// Returns a observable of cache changes preceeded with the initital cache state
+        /// Returns a filtered stream of cache changes preceded with the initial filtered state
         /// </summary>
-        /// <param name="predicate">The result will be filtered using the specfied predicate.</param>
-        /// <returns></returns>
+        /// <param name="predicate">The result will be filtered using the specified predicate.</param>
         IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null);
 
         /// <summary>

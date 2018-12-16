@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <Title>Dynamic Data / Reactive UI intergration</Title>
+    <Title>Dynamic Data / Reactive UI inte gration</Title>
     <Description>
 Make reactive ui even more powerful by integrating with dynamic data and making use of it's numerious operators.
 Dynamic data provides an observable cache and an observable list with at least 50 collection specific operators for each.

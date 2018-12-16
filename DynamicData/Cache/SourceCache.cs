@@ -30,7 +30,7 @@ namespace DynamicData
         /// <inheritdoc />
         /// <summary>
         /// Add, update and remove api via an action method. Enables the consumer to perform queries and updates
-        /// safely within the innner caches lock.
+        /// safely within the inner caches lock.
         /// The result of the action will produce appropriate notifications.
         /// </summary>
         /// <param name="updateAction">The update action.</param>
@@ -58,11 +58,7 @@ namespace DynamicData
         /// <inheritdoc />
         public IObservable<int> CountChanged => _innerCache.CountChanged;
 
-        /// <summary>
-        /// Returns a filtered stream of cache changes preceeded with the initital filtered state
-        /// </summary>
-        /// <param name="predicate">The predicate.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate)
         {
             return _innerCache.Connect(predicate);
@@ -75,7 +71,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Returns an observable of any changes which match the specified key,  preceeded with the initital cache state
+        /// Returns an observable of any changes which match the specified key,  preceded with the initial cache state
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns></returns>

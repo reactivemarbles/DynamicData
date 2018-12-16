@@ -2,7 +2,7 @@
 namespace DynamicData.Aggregation
 {
     /// <summary>
-    /// An object representing added and removed itemsin a continous aggregation stream
+    /// An object representing added and removed items in a continuous aggregation stream
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     public readonly struct AggregateItem<TObject>

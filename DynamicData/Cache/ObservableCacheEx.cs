@@ -1868,6 +1868,32 @@ namespace DynamicData
             return sources.Combine(CombineOperator.Or);
         }
 
+        //public static IObservable<IChangeSet<TDestination, TDestinationKey>> Or<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IObservableCache<TSource, TSourceKey>> source,
+        //    Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>> manyselector)
+        //{
+        //    return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
+        //}
+
+        //public static IObservable<IChangeSet<TDestination, TDestinationKey>> Or<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<ISourceCache<TSource, TSourceKey>> source,
+        //    Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>> manyselector)
+        //{
+        //    return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
+        //}
+
+        //public static IObservable<IChangeSet<TDestination, TDestinationKey>> TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source,
+        //    Func<TSource, IObservableCache<TDestination, TDestinationKey>> manyselector)
+        //{
+        //    return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
+        //}
+
+        //public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> sources)
+        //{
+        //    if (sources == null) throw new ArgumentNullException(nameof(sources));
+
+        //    return sources.Combine(CombineOperator.Or);
+        //}
+
+
         /// <summary>
         /// Dynamically apply a logical Or operator between the items in the outer observable list.
         /// Items which are in any of the sources are included in the result
@@ -2591,6 +2617,8 @@ namespace DynamicData
         {
             return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manyselector, keySelector).Run();
         }
+
+
 
 
         #endregion

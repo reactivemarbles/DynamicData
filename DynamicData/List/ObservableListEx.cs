@@ -225,7 +225,7 @@ namespace DynamicData
             TimeSpan? changeSetBuffer = null,
             TimeSpan? propertyChangeThrottle = null,
             IScheduler scheduler = null)
-            where TObject : INotifyPropertyChanged
+             where TObject : INotifyPropertyChanged
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));

@@ -6,13 +6,13 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
-    public class SourceCacheFixture: IDisposable
+
+    public class SourceCacheFixture : IDisposable
     {
         private readonly ChangeSetAggregator<Person, string> _results;
         private readonly ISourceCache<Person, string> _source;
 
-        public  SourceCacheFixture()
+        public SourceCacheFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = _source.Connect().AsAggregator();
@@ -63,7 +63,7 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
-        public void CountChangedShouldReflectContentsOfCacheInvokeUponeSubscription()
+        public void CountChangedShouldReflectContentsOfCacheInvokeUponSubscription()
         {
             var generator = new RandomPersonGenerator();
             int? result = null;
@@ -82,7 +82,7 @@ namespace DynamicData.Tests.Cache
             bool called = false;
             bool errored = false;
             bool completed = false;
-            IDisposable subscription = _source.Connect()
+            var subscription = _source.Connect()
                 .Finally(() => completed = true)
                 .Subscribe(updates => { called = true; }, ex => errored = true, () => completed = true);
             _source.AddOrUpdate(new Person("Adult1", 40));
@@ -93,6 +93,30 @@ namespace DynamicData.Tests.Cache
             errored.Should().BeFalse();
             called.Should().BeTrue();
             completed.Should().BeTrue();
+        }
+
+        [Fact]
+        public void CountChanged()
+        {
+            int count = 0;
+            int invoked = 0;
+            using (_source.CountChanged.Subscribe(c =>
+                        {
+                            count = c;
+                            invoked++;
+                        }))
+            {
+                invoked.Should().Be(1);
+                count.Should().Be(0);
+
+                _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
+                invoked.Should().Be(2);
+                count.Should().Be(100);
+
+                _source.Clear();
+                invoked.Should().Be(3);
+                count.Should().Be(0);
+            }
         }
     }
 }

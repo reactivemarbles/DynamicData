@@ -7,7 +7,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
     /// <summary>
-    /// Multipe change container
+    /// Multiple change container
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public sealed class RangeChange<T> : IEnumerable<T>
