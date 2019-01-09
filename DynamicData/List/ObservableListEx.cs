@@ -791,7 +791,21 @@ namespace DynamicData
         {
             return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer).Run();
         }
-        
+
+        /// <summary>
+        /// Flatten the nested observable list, and observe subsequent observable collection changes
+        /// </summary>
+        /// <typeparam name="TDestination">The type of the destination.</typeparam>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="manyselector">The manyselector.</param>
+        /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
+        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source,
+            Func<TSource, IObservableList<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+        {
+            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer).Run();
+        }
 
         /// <summary>
         /// Selects distinct values from the source, using the specified value selector
