@@ -50,6 +50,20 @@ namespace DynamicData.List.Internal
         {
         }
 
+        public TransformMany(IObservable<IChangeSet<TSource>> source,
+            Func<TSource, IObservableList<TDestination>> manyselector,
+            IEqualityComparer<TDestination> equalityComparer = null)
+            : this(source, s => new ManySelectorFunc(s, x => manyselector(x).Items), equalityComparer, t => Observable.Defer(() => {
+                var subsequentChanges = manyselector(t).Connect();
+
+                if (manyselector(t).Count > 0)
+                    return subsequentChanges;
+
+                return Observable.Return(ChangeSet<TDestination>.Empty)
+                    .Concat(subsequentChanges);
+            }))
+        {
+        }
 
         public TransformMany([NotNull] IObservable<IChangeSet<TSource>> source,
             [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector,
@@ -207,7 +221,20 @@ namespace DynamicData.List.Internal
                 return GetEnumerator();
             }
         }
+
+        private class ManySelectorFunc : IEnumerable<TDestination>
+        {
+            private TSource _source;
+            private Func<TSource, IEnumerable<TDestination>> _selector;
+
+            public ManySelectorFunc(TSource source, Func<TSource, IEnumerable<TDestination>> selector)
+            {
+                _source = source;
+                _selector = selector ?? throw new ArgumentNullException(nameof(selector));
+            }
+
+            public IEnumerator<TDestination> GetEnumerator() => _selector(_source).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => _selector(_source).GetEnumerator();
+        }
     }
-
-
 }
