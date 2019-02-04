@@ -25,6 +25,16 @@ namespace DynamicData.Tests.Cache
                 _changed.OnNext(value);
             }
 
+            public void CompleteObservable()
+            {
+                _changed.OnCompleted();
+            }
+
+            public void FailObservable(Exception ex)
+            {
+                _changed.OnError(ex);
+            }
+
             public IObservable<bool> Observable => _changed.AsObservable();
 
             public int Id { get; }
@@ -95,5 +105,51 @@ namespace DynamicData.Tests.Cache
             item.InvokeObservable(true);
             invoked.Should().BeFalse();
         }
+
+        [Fact]
+        public void SingleItemCompleteWillNotMergedStream()
+        {
+            var completed = false;
+            var stream =
+                _source.Connect()
+                    .MergeMany((o, key) => o.Observable)
+                    .Subscribe(
+                        _ => {},
+                        () => completed = true
+                        );
+
+            var item = new ObjectWithObservable(1);
+            _source.AddOrUpdate(item);
+
+            item.InvokeObservable(true);
+            item.CompleteObservable();
+
+            stream.Dispose();
+
+            completed.Should().BeFalse();
+        }
+
+        [Fact]
+        public void SingleItemFailWillNotFailMergedStream()
+        {
+            var failed = false;
+            var stream =
+                _source.Connect()
+                    .MergeMany((o, key) => o.Observable)
+                    .Subscribe(
+                        _ => { },
+                        ex => failed = true
+                    );
+
+            var item = new ObjectWithObservable(1);
+            _source.AddOrUpdate(item);
+
+            item.FailObservable(new Exception("Test exception"));
+
+            stream.Dispose();
+
+            failed.Should().BeFalse();
+        }
+
     }
 }
