@@ -52,9 +52,9 @@ namespace DynamicData
         public IObservable<int> CountChanged => _innnerCache.CountChanged;
 
         /// <summary>
-        /// Returns a filtered changeset of cache changes preceeded with the initial state
+        /// Returns a filtered changeset of cache changes preceded with the initial state
         /// </summary>
-        /// <param name="predicate">The precdicate.</param>
+        /// <param name="predicate">The predicate.</param>
         /// <returns></returns>
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate)
         {
@@ -62,7 +62,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Returns a observable of cache changes preceeded with the initital cache state
+        /// Returns a observable of cache changes preceded with the initial cache state
         /// </summary>
         /// <returns></returns>
         public IObservable<IChangeSet<TObject, TKey>> Connect()
@@ -70,12 +70,18 @@ namespace DynamicData
             return _innnerCache.Connect();
         }
 
-        /// <summary>
-        /// Returns an observable of any changes which match the specified key.  The sequence starts with the inital item in the cache (if there is one).
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns></returns>
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
+		/// <inheritdoc />
+        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
+        {
+	        return _innnerCache.Preview(predicate);
+        }
+
+		/// <summary>
+		/// Returns an observable of any changes which match the specified key. The sequence starts with the initial item in the cache (if there is one).
+		/// </summary>
+		/// <param name="key">The key.</param>
+		/// <returns></returns>
+		public IObservable<Change<TObject, TKey>> Watch(TKey key)
         {
             return _innnerCache.Watch(key);
         }

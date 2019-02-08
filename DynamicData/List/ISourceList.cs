@@ -8,7 +8,7 @@ namespace DynamicData
     /// as well as data access methods
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface ISourceList<T> : IObservableList<T>, ICollectionSubject
+    public interface ISourceList<T> : IObservableList<T>
     {
         /// <summary>
         /// Edit the inner list within the list's internal locking mechanism

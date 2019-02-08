@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using DynamicData.Annotations;
 using DynamicData.List.Internal;
 
@@ -17,9 +18,11 @@ namespace DynamicData
     public sealed class SourceList<T> : ISourceList<T>
     {
         private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
-        private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
-        private readonly ReaderWriter<T> _readerWriter;
-        private readonly IDisposable _cleanUp;
+        private readonly Subject<IChangeSet<T>> _changesPreview = new Subject<IChangeSet<T>>();
+        private int _editLevel = 0;
+		private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
+        private readonly ReaderWriter<T> _readerWriter = new ReaderWriter<T>();
+		private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
 
@@ -29,17 +32,18 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         public SourceList(IObservable<IChangeSet<T>> source = null)
         {
-            _readerWriter = new ReaderWriter<T>();
-
             var loader = source == null ? Disposable.Empty : LoadFromSource(source);
 
             _cleanUp = Disposable.Create(() =>
             {
-                loader.Dispose();
+				loader.Dispose();
                 OnCompleted();
                 if (_countChanged.IsValueCreated)
-                    _countChanged.Value.OnCompleted();
-            });
+                {
+	                _countChanged.Value.OnCompleted();
+				}
+                _readerWriter.Dispose();
+			});
         }
 
         private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source)
@@ -53,16 +57,50 @@ namespace DynamicData
         /// <inheritdoc />
         public void Edit([NotNull] Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+	        if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
             lock (_writeLock)
             {
-                InvokeNext(_readerWriter.Write(updateAction));
+	            IChangeSet<T> changes = null;
+
+				_editLevel++;
+
+				if (_editLevel == 1)
+				{
+					if (_changesPreview.HasObservers)
+					{
+						changes = _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview);
+					}
+					else
+					{
+						changes = _readerWriter.Write(updateAction);
+					}
+				}
+				else
+				{
+					_readerWriter.WriteNested(updateAction);
+				}
+				
+				_editLevel--;
+
+				if (_editLevel == 0)
+				{
+					InvokeNext(changes);
+				}
             }
         }
 
+        private void InvokeNextPreview(IChangeSet<T> changes)
+        {
+	        if (changes.Count == 0) return;
 
-        private void InvokeNext(IChangeSet<T> changes)
+	        lock (_locker)
+	        {
+		        _changesPreview.OnNext(changes);
+	        }
+        }
+
+		private void InvokeNext(IChangeSet<T> changes)
         {
             if (changes.Count == 0) return;
 
@@ -77,17 +115,23 @@ namespace DynamicData
 
 
         /// <inheritdoc />
-        public void OnCompleted()
+        private void OnCompleted()
         {
-            lock (_locker)
-                _changes.OnCompleted();
+	        lock (_locker)
+	        {
+		        _changesPreview.OnCompleted();
+		        _changes.OnCompleted();
+			}
         }
 
-        /// <inheritdoc />
-        public void OnError(Exception exception)
+		/// <inheritdoc />
+		private void OnError(Exception exception)
         {
-            lock (_locker)
-                _changes.OnError(exception);
+	        lock (_locker)
+	        {
+		        _changesPreview.OnError(exception);
+		        _changes.OnError(exception);
+			}
         }
 
         /// <inheritdoc />
@@ -121,7 +165,18 @@ namespace DynamicData
         }
 
         /// <inheritdoc />
-        public void Dispose()
+		public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null)
+        {
+	        IObservable<IChangeSet<T>> observable = _changesPreview;
+
+			if (predicate != null)
+				observable = new FilterStatic<T>(observable, predicate).Run();
+
+			return observable;
+		}
+
+		/// <inheritdoc />
+		public void Dispose()
         {
             _cleanUp.Dispose();
         }

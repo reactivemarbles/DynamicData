@@ -23,10 +23,17 @@ namespace DynamicData
         /// <param name="predicate">The result will be filtered using the specified predicate.</param>
         IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null);
 
-        /// <summary>
-        /// A count changed observable starting with the current count
-        /// </summary>
-        IObservable<int> CountChanged { get; }
+		/// <summary>
+		/// Returns a filtered stream of cache changes.
+		/// Unlike Connect(), the returned observable is not prepended with the caches initial items.
+		/// </summary>
+		/// <param name="predicate">The result will be filtered using the specified predicate.</param>
+		IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null);
+
+		/// <summary>
+		/// A count changed observable starting with the current count
+		/// </summary>
+		IObservable<int> CountChanged { get; }
     }
 
     /// <summary>

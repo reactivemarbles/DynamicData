@@ -394,8 +394,7 @@ namespace DynamicData
 
                 try
                 {
-                     await subscribe(list);
-                    list.OnCompleted();
+	                await subscribe(list);
                 }
                 catch (Exception e)
                 {

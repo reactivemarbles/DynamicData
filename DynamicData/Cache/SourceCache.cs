@@ -39,22 +39,6 @@ namespace DynamicData
             _innerCache.UpdateFromSource(updateAction);
         }
 
-        /// <summary>
-        /// Notifies the observer that the source list has finished sending notifications.
-        /// </summary>
-        public void OnCompleted()
-        {
-            (_innerCache as ICollectionSubject)?.OnCompleted();
-        }
-
-        /// <summary>
-        /// Notifies the observer that the source list has experienced an error condition.
-        /// </summary>
-        public void OnError(Exception exception)
-        {
-            (_innerCache as ICollectionSubject)?.OnCompleted();
-        }
-
         /// <inheritdoc />
         public IObservable<int> CountChanged => _innerCache.CountChanged;
 
@@ -70,12 +54,18 @@ namespace DynamicData
             return _innerCache.Connect();
         }
 
-        /// <summary>
-        /// Returns an observable of any changes which match the specified key,  preceded with the initial cache state
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns></returns>
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
+        /// <inheritdoc />
+		public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
+        {
+	        return _innerCache.Preview(predicate);
+        }
+
+		/// <summary>
+		/// Returns an observable of any changes which match the specified key,  preceded with the initial cache state
+		/// </summary>
+		/// <param name="key">The key.</param>
+		/// <returns></returns>
+		public IObservable<Change<TObject, TKey>> Watch(TKey key)
         {
             return _innerCache.Watch(key);
         }

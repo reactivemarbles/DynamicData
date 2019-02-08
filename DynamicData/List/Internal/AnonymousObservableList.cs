@@ -29,7 +29,12 @@ namespace DynamicData.List.Internal
             return _sourceList.Connect(predicate);
         }
 
-        public void Dispose()
+		public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null)
+		{
+			return _sourceList.Preview(predicate);
+		}
+
+		public void Dispose()
         {
             _sourceList.Dispose();
         }

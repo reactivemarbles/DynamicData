@@ -10,7 +10,7 @@ namespace DynamicData.Cache.Internal
 {
 
     /// <summary>
-    /// An observable cache which exposes an update API.  Used at the root
+    /// An observable cache which exposes an update API. Used at the root
     /// of all observable chains
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -20,7 +20,8 @@ namespace DynamicData.Cache.Internal
         private readonly ChangeAwareCache<TObject, TKey> _innerCache = new ChangeAwareCache<TObject, TKey>();
         private readonly ICacheUpdater<TObject, TKey> _updater;
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
-        private readonly ISubject<int> _countChanged = new Subject<int>();
+        private readonly ISubject<IChangeSet<TObject, TKey>> _changesPreview = new Subject<IChangeSet<TObject, TKey>>();
+		private readonly ISubject<int> _countChanged = new Subject<int>();
         private readonly IDisposable _cleanUp;
 
         /// <summary>
@@ -40,6 +41,7 @@ namespace DynamicData.Cache.Internal
             _cleanUp = Disposable.Create(() =>
             {
                 loader.Dispose();
+                _changesPreview.OnCompleted();
                 _changes.OnCompleted();
                 _countChanged.OnCompleted();
             });
@@ -61,9 +63,9 @@ namespace DynamicData.Cache.Internal
 
 
         /// <summary>
-        /// Returns a observable of cache changes preceeded with the initital cache state
+        /// Returns a observable of cache changes preceded with the initial cache state
         /// </summary>
-        /// <param name="predicate">The result will be filtered using the specfied predicate.</param>
+        /// <param name="predicate">The result will be filtered using the specified predicate.</param>
         /// <returns></returns>
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null)
         {
@@ -77,8 +79,14 @@ namespace DynamicData.Cache.Internal
             });
         }
 
+		/// <inheritdoc />
+        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
+        {
+	        return predicate == null ? _changesPreview : _changesPreview.Filter(predicate);
+		}
+
         /// <summary>
-        /// Returns an observable of any changes which match the specified key.  The sequence starts with the inital item in the cache (if there is one).
+        /// Returns an observable of any changes which match the specified key. The sequence starts with the initial item in the cache (if there is one).
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns></returns>
