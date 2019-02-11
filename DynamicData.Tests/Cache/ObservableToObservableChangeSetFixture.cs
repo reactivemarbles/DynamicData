@@ -177,7 +177,7 @@ namespace DynamicData.Tests.Cache
             results.Data.Count.Should().Be(10, "Should be 10 items in the cache");
         }
 
-       // [Fact]
+        [Fact]
         public void ExpireAfterTimeDynamicWithKey()
         {
             var scheduler = new TestScheduler();
