@@ -1459,6 +1459,43 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Converts the changeset into a fully formed sorted collection. Each change in the source results in a new sorted collection
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TSortKey">The sort key</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="sort">The sort function</param>
+        /// <param name="sortOrder">The sort order. Defaults to ascending</param>
+        /// <returns></returns>
+        public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TSortKey>(this IObservable<IChangeSet<TObject>> source,
+            Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
+        {
+            return source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending
+                ? new ReadOnlyCollectionLight<TObject>(query.OrderBy(sort))
+                : new ReadOnlyCollectionLight<TObject>(query.OrderByDescending(sort)));
+        }
+
+        /// <summary>
+        /// Converts the changeset into a fully formed sorted collection. Each change in the source results in a new sorted collection
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="comparer">The sort comparer</param>
+        /// <returns></returns>
+        public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject>(this IObservable<IChangeSet<TObject>> source,
+            IComparer<TObject> comparer)
+        {
+            return source.QueryWhenChanged(query =>
+            {
+                var items = query.AsList();
+                items.Sort(comparer);
+                return new ReadOnlyCollectionLight<TObject>(items);
+            });
+        }
+
+
+        /// <summary>
         /// Defer the subscribtion until loaded and skip initial changeset
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
