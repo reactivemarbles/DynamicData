@@ -16,7 +16,7 @@ namespace DynamicData.Tests.List
             {
                 stub.Source.AddRange(people);
 
-//                stub.Results.Messages.Count.Should().Be(1);
+                stub.Results.Messages.Count.Should().Be(1);
                 stub.Results.Data.Count.Should().Be(82);
 
                 stub.Results.Data.Items.ShouldAllBeEquivalentTo(people.Skip(18));
@@ -33,7 +33,7 @@ namespace DynamicData.Tests.List
 
                 people[20].SetAge(10);
 
-//                stub.Results.Messages.Count.Should().Be(2);
+                stub.Results.Messages.Count.Should().Be(2);
                 stub.Results.Data.Count.Should().Be(81);
             }
         }
@@ -48,7 +48,7 @@ namespace DynamicData.Tests.List
 
                 people[10].SetAge(20);
 
-//                stub.Results.Messages.Count.Should().Be(2);
+                stub.Results.Messages.Count.Should().Be(2);
                 stub.Results.Data.Count.Should().Be(83);
             }
         }
@@ -62,7 +62,7 @@ namespace DynamicData.Tests.List
                 stub.Source.AddRange(people);
 
                 people[50].SetAge(100);
-//                stub.Results.Messages.Count.Should().Be(2);
+                stub.Results.Messages.Count.Should().Be(2);
                 stub.Results.Data.Count.Should().Be(82);
             }
         }
