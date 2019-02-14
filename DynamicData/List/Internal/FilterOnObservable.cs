@@ -1,65 +1,80 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
-using DynamicData.Binding;
 
 namespace DynamicData.List.Internal
 {
-    internal class FilterOnObservable<TObject, TProperty>
+    internal class FilterOnObservable<TObject>
     {
         private readonly IObservable<IChangeSet<TObject>> _source;
-        private readonly Func<TObject,  IObservable<TProperty>> _reevaluator;
-        private readonly Func<TObject, TProperty, bool> _filter;
+        private readonly Func<TObject, IObservable<bool>> _filter;
         private readonly TimeSpan? _buffer;
         private readonly IScheduler _scheduler;
 
         public FilterOnObservable(IObservable<IChangeSet<TObject>> source,
-            Func<TObject,  IObservable<TProperty>> reevaluator,
-            Func<TObject, TProperty, bool> filter,
+            Func<TObject,  IObservable<bool>> filter,
             TimeSpan? buffer = null,
             IScheduler scheduler = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _reevaluator = reevaluator ?? throw new ArgumentNullException(nameof(reevaluator));
-            _filter = filter;
+            _filter = filter ?? throw new ArgumentNullException(nameof(filter));
             _buffer = buffer;
             _scheduler = scheduler;
         }
 
-        private class ObjWithPropValue : IEquatable<ObjWithPropValue>
+        private readonly struct ObjWithFilterValue :IEquatable<ObjWithFilterValue>
         {
-            public TObject Obj;
-            public TProperty Prop;
+            public readonly TObject Obj;
+            public readonly bool Filter;
 
-            public ObjWithPropValue(TObject obj, TProperty prop)
+            public ObjWithFilterValue(TObject obj, bool filter)
             {
                 Obj = obj;
-                Prop = prop;
+                Filter = filter;
             }
 
-            public bool Equals(ObjWithPropValue other)
+            private sealed class ObjFilterEqualityComparer : IEqualityComparer<ObjWithFilterValue>
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
-                return EqualityComparer<TObject>.Default.Equals(Obj, other.Obj);
+                public bool Equals(ObjWithFilterValue x, ObjWithFilterValue y)
+                {
+                    return EqualityComparer<TObject>.Default.Equals(x.Obj, y.Obj) && x.Filter == y.Filter;
+                }
+
+                public int GetHashCode(ObjWithFilterValue obj)
+                {
+                    unchecked
+                    {
+                        return (EqualityComparer<TObject>.Default.GetHashCode(obj.Obj) * 397) ^ obj.Filter.GetHashCode();
+                    }
+                }
             }
 
-            public override bool Equals(object obj)
+            private sealed class ObjEqualityComparer : IEqualityComparer<ObjWithFilterValue>
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
-                return Equals((ObjWithPropValue) obj);
+                public bool Equals(ObjWithFilterValue x, ObjWithFilterValue y)
+                {
+                    return EqualityComparer<TObject>.Default.Equals(x.Obj, y.Obj);
+                }
+
+                public int GetHashCode(ObjWithFilterValue obj)
+                {
+                    unchecked
+                    {
+                        return (EqualityComparer<TObject>.Default.GetHashCode(obj.Obj) * 397);
+                    }
+                }
             }
 
-            public override int GetHashCode()
+            private static IEqualityComparer<ObjWithFilterValue> ObjComparer { get; } = new ObjEqualityComparer();
+            
+            public bool Equals(ObjWithFilterValue other)
             {
-                return EqualityComparer<TObject>.Default.GetHashCode(Obj);
+                // default equality does _not_ include Filter value, as that would cause the Filter operator that is used later to fail
+                return ObjComparer.Equals(this, other);
             }
         }
 
@@ -69,20 +84,21 @@ namespace DynamicData.List.Internal
             {
                 var locker = new object();
 
-                var allItems = new List<ObjWithPropValue>();
+                var allItems = new List<ObjWithFilterValue>();
 
                 var shared = _source
                     .Synchronize(locker)
-                    .Transform(v => new ObjWithPropValue(v, default))
+                    // we default to true (include all items)
+                    .Transform(v => new ObjWithFilterValue(v, true))
                     .Clone(allItems) //clone all items so we can look up the index when a change has been made
                     .Publish();
 
                 //monitor each item observable and create change, carry the value of the observable property
-                IObservable<ObjWithPropValue> itemHasChanged = shared.MergeMany(v => _reevaluator(v.Obj)
-                    .Select(prop => new ObjWithPropValue(v.Obj, prop)));
+                IObservable<ObjWithFilterValue> itemHasChanged = shared.MergeMany(v =>
+                    _filter(v.Obj).Select(prop => new ObjWithFilterValue(v.Obj, prop)));
 
                 //create a changeset, either buffered or one item at the time
-                IObservable<IEnumerable<ObjWithPropValue>> itemsChanged;
+                IObservable<IEnumerable<ObjWithFilterValue>> itemsChanged;
                 if (_buffer == null)
                 {
                     itemsChanged = itemHasChanged.Select(t => new[] {t});
@@ -93,23 +109,25 @@ namespace DynamicData.List.Internal
                         .Where(list => list.Any());
                 }
 
-                IObservable<IChangeSet<ObjWithPropValue>> requiresRefresh = itemsChanged.Synchronize(locker)
+                IObservable<IChangeSet<ObjWithFilterValue>> requiresRefresh = itemsChanged.Synchronize(locker)
                     .Select(items =>
                     {
                         //catch all the indices of items which have been refreshed
-                        return IndexOfMany(allItems,
+                        var indexOfMany = IndexOfMany(allItems,
                             items,
                             v => v.Obj,
-                            (t, idx) => new Change<ObjWithPropValue>(ListChangeReason.Refresh, t, idx));
+                            (t, idx) => new Change<ObjWithFilterValue>(ListChangeReason.Refresh, t, idx));
+                        return indexOfMany;
                     })
-                    .Select(changes => new ChangeSet<ObjWithPropValue>(changes));
-
+                    .Select(changes => new ChangeSet<ObjWithFilterValue>(changes));
 
                 //publish refreshes and underlying changes
                 var publisher = shared
                     .Merge(requiresRefresh)
-                    .Filter(v => _filter(v.Obj, v.Prop))
+                    .Filter(v => v.Filter)
                     .Transform(v => v.Obj)
+                    // suppress refreshes from filter, avoids excessive refresh messages for no-op filter updates
+                    .SupressRefresh()
                     .SubscribeSafe(observer);
 
                 return new CompositeDisposable(publisher, shared.Connect());

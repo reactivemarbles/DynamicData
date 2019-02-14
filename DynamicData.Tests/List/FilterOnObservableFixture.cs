@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
@@ -16,8 +17,11 @@ namespace DynamicData.Tests.List
             {
                 stub.Source.AddRange(people);
 
-                stub.Results.Messages.Count.Should().Be(1);
+                // should have 100-18 left
                 stub.Results.Data.Count.Should().Be(82);
+
+                // initial addrange, refreshes to filter out < 18
+                stub.Results.Messages.Count.Should().Be(1+18);
 
                 stub.Results.Data.Items.ShouldAllBeEquivalentTo(people.Skip(18));
             }
@@ -33,8 +37,11 @@ namespace DynamicData.Tests.List
 
                 people[20].SetAge(10);
 
-                stub.Results.Messages.Count.Should().Be(2);
+                // should have 100-18-1 left
                 stub.Results.Data.Count.Should().Be(81);
+
+                // initial addrange, refreshes to filter out < 18 and then refresh for the filter change
+                stub.Results.Messages.Count.Should().Be(1+18+1);
             }
         }
 
@@ -46,10 +53,18 @@ namespace DynamicData.Tests.List
             {
                 stub.Source.AddRange(people);
 
+                // should have 100-18 left
+                stub.Results.Data.Count.Should().Be(82);
+
+                stub.Results.Messages.Count.Should().Be(1+18);
+
                 people[10].SetAge(20);
 
-                stub.Results.Messages.Count.Should().Be(2);
+                // should have 82+1 left
                 stub.Results.Data.Count.Should().Be(83);
+
+                // initial addrange, refreshes to filter out < 18 and then one refresh for the filter change
+                stub.Results.Messages.Count.Should().Be(1+18+1);
             }
         }
 
@@ -62,8 +77,9 @@ namespace DynamicData.Tests.List
                 stub.Source.AddRange(people);
 
                 people[50].SetAge(100);
-                stub.Results.Messages.Count.Should().Be(2);
                 stub.Results.Data.Count.Should().Be(82);
+                // initial addrange, refreshes to filter out < 18 and then no refresh for the no-op filter change
+                stub.Results.Messages.Count.Should().Be(1+18+0);
             }
         }
 
@@ -91,6 +107,8 @@ namespace DynamicData.Tests.List
                 stub.Source.RemoveRange(89,10);
 
                 stub.Results.Data.Count.Should().Be(72);
+                // initial addrange, refreshes to filter out < 18 and then removerange
+                stub.Results.Messages.Count.Should().Be(1+18+1);
             }
         }
 
@@ -102,7 +120,8 @@ namespace DynamicData.Tests.List
 
             public FilterPropertyStub()
             {
-                Results = new ChangeSetAggregator<PersonObs >(Source.Connect().FilterOnObservable(p => p.Age, (o, p) => p > 18));
+                Results = new ChangeSetAggregator<PersonObs>(Source.Connect()
+                    .FilterOnObservable(p => p.Age.Select(v => v > 18)));
             }
 
             public void Dispose()
