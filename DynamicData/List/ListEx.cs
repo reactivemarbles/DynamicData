@@ -566,7 +566,7 @@ namespace DynamicData
 
             var index = source.IndexOf(original);
             if (index==-1)
-                throw new ArgumentException("Cannot find index of origina item. Either it does not exist in the list or the hashcode has mutated");
+                throw new ArgumentException("Cannot find index of original item. Either it does not exist in the list or the hashcode has mutated");
             source[index] = replacewith;
         }
 
@@ -596,6 +596,30 @@ namespace DynamicData
                 source[index] = replacewith;
             }
 
+        }
+
+        /// <summary>
+        /// Replaces the specified item.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="original">The original.</param>
+        /// <param name="replacewith">The replacewith.</param>
+        /// <exception cref="System.ArgumentNullException">source
+        /// or
+        /// items</exception>
+        public static void Replace<T>(this IList<T> source, [NotNull] T original, [NotNull] T replacewith, IEqualityComparer<T> comparer)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (original == null) throw new ArgumentNullException(nameof(original));
+            if (replacewith == null) throw new ArgumentNullException(nameof(replacewith));
+            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+            var index = source.IndexOf(original);
+            if (index == -1)
+                throw new ArgumentException("Cannot find index of original item. Either it does not exist in the list or the hashcode has mutated");
+            if (comparer.Equals(source[index], replacewith))
+                source[index] = replacewith;
         }
 
         #endregion
