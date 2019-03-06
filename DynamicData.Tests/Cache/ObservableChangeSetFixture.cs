@@ -30,6 +30,20 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
+        public void LoadsAndDisposeFromObservableCache()
+        {
+            bool isDisposed = false;
+
+           var observable = ObservableChangeSet.Create<Person, string>(cache =>
+                {
+                    return () => { isDisposed = true; };
+                }, p => p.Name);
+
+            observable.AsObservableCache().Dispose();
+            isDisposed.Should().BeTrue();
+        }
+
+        [Fact]
         public void LoadsAndDisposeUsingDisposable()
         {
             bool isDisposed = false;
