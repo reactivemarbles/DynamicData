@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System.Linq;
+using BenchmarkDotNet.Attributes;
 
 namespace DynamicData.Benchmarks.List
 {
@@ -8,19 +9,11 @@ namespace DynamicData.Benchmarks.List
     public class SourceList
     {
         private  SourceList<string> _sourceList;
-        private static readonly string[] _items =  new[]
-        {
-            "Item1",
-            "Item2",
-            "Item3",
-            "Item4",
-            "Item5",
-            "Item6",
-            "Item7",
-            "Item8",
-            "Item9",
-            "Item10"
-        };
+        private string[] _items;
+
+        [Params(1, 100, 1_000, 10_000, 100_000)]
+        public int N;
+
 
         [GlobalSetup]
         public void Setup()
@@ -32,6 +25,7 @@ namespace DynamicData.Benchmarks.List
         public void SetupIteration()
         {
             _sourceList.Clear();
+            _items = Enumerable.Range(1, N).Select(i => i.ToString()).ToArray();
         }
 
         [GlobalCleanup]
@@ -40,16 +34,17 @@ namespace DynamicData.Benchmarks.List
             _sourceList = null;
         }
 
-        [Benchmark]
-        public void Add() => _sourceList.Add(_items[0]);
-        
+        //[Benchmark]
+        //public void Add()
+        //{
+        //    foreach (var item in _items)
+        //        _sourceList.Add(item);
+        //}
+
         [Benchmark]
         public void AddRange() => _sourceList.AddRange(_items);
 
         [Benchmark]
-        public void Insert() => _sourceList.Insert(0, _items[0]);
-
-        [Benchmark]
-        public void RemoveItem() => _sourceList.Remove(_items[0]);
+        public void Insert() => _sourceList.InsertRange(_items,0);
     }
 }

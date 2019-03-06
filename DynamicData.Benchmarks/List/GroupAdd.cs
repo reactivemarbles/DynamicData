@@ -11,8 +11,10 @@ namespace DynamicData.Benchmarks.List
     {
         private IDisposable _groupSubscription;
         private SourceList<int> _sourceList;
+        private int[] _items = Enumerable.Range(1,100).ToArray();
 
-        private static readonly int[] _items = Enumerable.Range(1,100).ToArray();
+        [Params(1, 100, 1_000, 10_000, 100_000)]
+        public int N;
 
         [GlobalSetup]
         public void Setup()
@@ -25,6 +27,7 @@ namespace DynamicData.Benchmarks.List
         public void SetupIteration()
         {
             _sourceList.Clear();
+            _items = Enumerable.Range(1, N).ToArray();
         }
 
         [GlobalCleanup]
@@ -35,8 +38,12 @@ namespace DynamicData.Benchmarks.List
             _sourceList = null;
         }
 
-        [Benchmark]
-        public void Add() => _sourceList.Add(_items[0]);
+        //[Benchmark]
+        //public void Add()
+        //{
+        //    foreach (var item in _items)
+        //        _sourceList.Add(item);
+        //}
 
         [Benchmark]
         public void AddRange() => _sourceList.AddRange(_items);
