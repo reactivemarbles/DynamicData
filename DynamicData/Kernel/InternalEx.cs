@@ -104,11 +104,11 @@ namespace DynamicData.Kernel
             });
         }
 
-        public static void Swap<TSwap>(ref TSwap t1, ref TSwap t2)
+        internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2)
         {
-	        TSwap temp = t1;
-	        t1 = t2;
-	        t2 = temp;
+            TSwap temp = t1;
+            t1 = t2;
+            t2 = temp;
         }
-	}
+    }
 }

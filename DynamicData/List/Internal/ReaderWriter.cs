@@ -10,128 +10,128 @@ namespace DynamicData.List.Internal
     internal sealed class ReaderWriter<T> : IDisposable
     {
         private ChangeAwareList<T> _data = new ChangeAwareList<T>();
-		private readonly TwoStageRWLock _lock = new TwoStageRWLock(LockRecursionPolicy.SupportsRecursion);
-		private bool _updateInProgress = false;
+        private readonly TwoStageRWLock _lock = new TwoStageRWLock(LockRecursionPolicy.SupportsRecursion);
+        private bool _updateInProgress = false;
 
         public IChangeSet<T> Write(IChangeSet<T> changes)
         {
             if (changes == null) throw new ArgumentNullException(nameof(changes));
             IChangeSet<T> result;
 
-			_lock.EnterWriteLock();
+            _lock.EnterWriteLock();
             try
             {
-	            _data.Clone(changes);
-	            result = _data.CaptureChanges();
+                _data.Clone(changes);
+                result = _data.CaptureChanges();
             }
             finally
             {
-				_lock.ExitWriteLock();
+                _lock.ExitWriteLock();
             }
             return result;
         }
 
         public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
         {
-	        if (updateAction == null)
-		        throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+                throw new ArgumentNullException(nameof(updateAction));
 
-	        IChangeSet<T> result;
+            IChangeSet<T> result;
 
-	        // Write straight to the list, no preview
-	        _lock.EnterWriteLock();
-	        try
-	        {
-		        _updateInProgress = true;
-		        updateAction(_data);
-		        _updateInProgress = false;
-				result = _data.CaptureChanges();
-	        }
-	        finally
-	        {
-		        _lock.ExitWriteLock();
-	        }
+            // Write straight to the list, no preview
+            _lock.EnterWriteLock();
+            try
+            {
+                _updateInProgress = true;
+                updateAction(_data);
+                _updateInProgress = false;
+                result = _data.CaptureChanges();
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
 
-	        return result;
+            return result;
         }
-		
-		public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
+        
+        public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
         {
             if (updateAction == null)
                 throw new ArgumentNullException(nameof(updateAction));
 
             if (previewHandler == null)
-	            throw new ArgumentNullException(nameof(previewHandler));
+                throw new ArgumentNullException(nameof(previewHandler));
 
-			IChangeSet<T> result;
+            IChangeSet<T> result;
 
-			// Make a copy, apply changes on the main list, perform the preview callback with the old list and swap the lists again to finalize the update.
-			_lock.EnterWriteLock();
-			try
-			{
-				ChangeAwareList<T> copy = new ChangeAwareList<T>(_data, false);
+            // Make a copy, apply changes on the main list, perform the preview callback with the old list and swap the lists again to finalize the update.
+            _lock.EnterWriteLock();
+            try
+            {
+                ChangeAwareList<T> copy = new ChangeAwareList<T>(_data, false);
 
-				_updateInProgress = true;
-				updateAction(_data);
-				_updateInProgress = false;
+                _updateInProgress = true;
+                updateAction(_data);
+                _updateInProgress = false;
 
-				result = _data.CaptureChanges();
+                result = _data.CaptureChanges();
 
-				InternalEx.Swap(ref _data, ref copy);
+                InternalEx.Swap(ref _data, ref copy);
 
-				previewHandler(result);
+                previewHandler(result);
 
-				InternalEx.Swap(ref _data, ref copy);
-			}
-			finally
-			{
-				_lock.ExitWriteLock();
-			}
+                InternalEx.Swap(ref _data, ref copy);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
 
-			return result;
+            return result;
         }
 
-		/// <summary>
-		/// Perform a recursive write operation.
-		/// Changes are added to the topmost change tracker.
-		/// Use only during an invocation of Write/WriteWithPreview.
-		/// </summary>
-		public void WriteNested(Action<IExtendedList<T>> updateAction) 
-		{
-			if (updateAction == null)
-			{
-				throw new ArgumentNullException(nameof(updateAction));
-			}
+        /// <summary>
+        /// Perform a recursive write operation.
+        /// Changes are added to the topmost change tracker.
+        /// Use only during an invocation of Write/WriteWithPreview.
+        /// </summary>
+        public void WriteNested(Action<IExtendedList<T>> updateAction) 
+        {
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
 
-			_lock.EnterWriteLock();
-			try
-			{
-				if (!_updateInProgress)
-				{
-					throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
-				}
+            _lock.EnterWriteLock();
+            try
+            {
+                if (!_updateInProgress)
+                {
+                    throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
+                }
 
-				updateAction(_data);
-			}
-			finally
-			{
-				_lock.ExitWriteLock();
-			}
-		}
+                updateAction(_data);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+        }
 
-		public IEnumerable<T> Items
+        public IEnumerable<T> Items
         {
             get
             {
                 IEnumerable<T> result;
-				_lock.EnterReadLock();
+                _lock.EnterReadLock();
                 try
                 {
-	                result = _data.ToArray();
-				}
+                    result = _data.ToArray();
+                }
                 finally
                 {
-					_lock.ExitReadLock();
+                    _lock.ExitReadLock();
                 }
                 return result;
             }
@@ -139,9 +139,9 @@ namespace DynamicData.List.Internal
 
         public int Count => _data.Count;
 
-		public void Dispose()
+        public void Dispose()
         {
-	        _lock.Dispose();
+            _lock.Dispose();
         }
     }
 }
