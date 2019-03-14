@@ -103,5 +103,12 @@ namespace DynamicData.Kernel
                 scheduleNext(next);
             });
         }
+
+        internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2)
+        {
+            TSwap temp = t1;
+            t1 = t2;
+            t2 = temp;
+        }
     }
 }

@@ -37,7 +37,26 @@ namespace DynamicData
             _innerList = new List<T>(items);
 
             if (_innerList.Any())
+            {
                 _changes.Add(new Change<T>(ListChangeReason.AddRange, items));
+            }
+        }
+
+        /// <summary>
+        /// Clone an existing ChangeAwareList
+        /// </summary>
+        /// <param name="list">The original ChangeAwareList to copy</param>
+        /// <param name="copyChanges">Should the list of changes also be copied over?</param>
+        public ChangeAwareList(ChangeAwareList<T> list, bool copyChanges)
+        {
+            if (list == null) throw new ArgumentNullException(nameof(list));
+
+            _innerList = new List<T>(list._innerList);
+
+            if (copyChanges)
+            {
+                _changes = new List<Change<T>>(list._changes);
+            }
         }
 
         /// <summary>
