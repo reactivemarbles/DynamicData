@@ -13,6 +13,7 @@ namespace DynamicData
     {
         private readonly Subject<ChangeSet<TObject, TKey>> _changes = new Subject<ChangeSet<TObject, TKey>>();
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
+        private int _editLevel = 0; // The level of recursion in editing.
         private readonly ReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _cleanUp;
 
@@ -58,7 +59,23 @@ namespace DynamicData
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             lock (_writeLock)
             {
-                InvokeNext(_readerWriter.Write(updateAction, _changes.HasObservers));
+                ChangeSet<TObject, TKey> changes = null;
+
+                _editLevel++;
+                if (_editLevel == 1)
+                {
+                    changes = _readerWriter.Write(updateAction, _changes.HasObservers);
+                }
+                else
+                {
+                    _readerWriter.WriteNested(updateAction);
+                }
+                _editLevel--;
+
+                if (_editLevel == 0)
+                {
+                    InvokeNext(changes);
+                }
             }
         }
 
@@ -67,7 +84,23 @@ namespace DynamicData
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             lock (_writeLock)
             {
-                InvokeNext(_readerWriter.Write(updateAction, _changes.HasObservers));
+                ChangeSet<TObject, TKey> changes = null;
+
+                _editLevel++;
+                if (_editLevel == 1)
+                {
+                    changes = _readerWriter.Write(updateAction, _changes.HasObservers);
+                }
+                else
+                {
+                    _readerWriter.WriteNested(updateAction);
+                }
+                _editLevel--;
+
+                if (_editLevel == 0)
+                {
+                    InvokeNext(changes);
+                }
             }
         }
 
