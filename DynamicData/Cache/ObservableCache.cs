@@ -34,7 +34,10 @@ namespace DynamicData
                 loader.Dispose();
                 _changes.OnCompleted();
                 if (_countChanged.IsValueCreated)
+                {
                     _countChanged.Value.OnCompleted();
+                }
+                _readerWriter.Dispose();
             });
         }
 
