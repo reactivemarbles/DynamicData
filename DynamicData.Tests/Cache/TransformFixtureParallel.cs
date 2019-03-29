@@ -8,7 +8,7 @@ using Xunit;
 namespace DynamicData.Tests.Cache
 {
 
-    public class TransformFixturParallel : IDisposable
+    public class TransformFixtureParallel : IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<PersonWithGender, string> _results;
@@ -19,7 +19,7 @@ namespace DynamicData.Tests.Cache
             return new PersonWithGender(p, gender);
         };
 
-        public  TransformFixturParallel()
+        public  TransformFixtureParallel()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 
