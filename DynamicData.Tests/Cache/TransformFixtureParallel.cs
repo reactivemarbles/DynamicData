@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
+using DynamicData.PLinq;
 using FluentAssertions;
 using Xunit;
 
@@ -22,7 +23,7 @@ namespace DynamicData.Tests.Cache
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 
-            var pTransform = _source.Connect().Transform(_transformFactory);
+            var pTransform = _source.Connect().Transform(_transformFactory, new ParallelisationOptions(ParallelType.Parallelise));
             _results = new ChangeSetAggregator<PersonWithGender, string>(pTransform);
         }
 
