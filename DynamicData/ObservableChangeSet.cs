@@ -394,7 +394,7 @@ namespace DynamicData
 
                 try
                 {
-	                await subscribe(list);
+                    await subscribe(list);
                 }
                 catch (Exception e)
                 {

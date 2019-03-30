@@ -13,7 +13,7 @@ namespace DynamicData.Cache.Internal
 
         private readonly object _locker = new object();
 
-		public ReaderWriter(Func<TObject, TKey> keySelector = null)
+        public ReaderWriter(Func<TObject, TKey> keySelector = null)
         {
             _keySelector = keySelector;
         }
@@ -41,7 +41,7 @@ namespace DynamicData.Cache.Internal
             return DoUpdate(updateAction, previewHandler, collectChanges);
         }
 
-		private ChangeSet<TObject, TKey> DoUpdate(Action<CacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
+        private ChangeSet<TObject, TKey> DoUpdate(Action<CacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
         {
             lock (_locker)
             {
@@ -84,10 +84,10 @@ namespace DynamicData.Cache.Internal
                     }
                 }
             }
-		}
+        }
 
-		internal void WriteNested(Action<ISourceUpdater<TObject, TKey>> updateAction)
-		{
+        internal void WriteNested(Action<ISourceUpdater<TObject, TKey>> updateAction)
+        {
             lock (_locker)
             {
                 if (_activeUpdater == null)
@@ -96,13 +96,13 @@ namespace DynamicData.Cache.Internal
                 }
                 updateAction(_activeUpdater);
             }
-		}
+        }
 
-		#endregion
+        #endregion
 
-		#region Accessors
+        #region Accessors
 
-		public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
+        public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
         {
             lock (_locker)
             {
@@ -138,7 +138,7 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-		public KeyValuePair<TKey, TObject>[] KeyValues
+        public KeyValuePair<TKey, TObject>[] KeyValues
         {
             get
             {

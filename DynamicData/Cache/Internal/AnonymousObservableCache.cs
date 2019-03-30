@@ -33,10 +33,10 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
         {
-	        return _cache.Preview(predicate);
+            return _cache.Preview(predicate);
         }
 
-		public IEnumerable<TKey> Keys => _cache.Keys;
+        public IEnumerable<TKey> Keys => _cache.Keys;
 
         public IEnumerable<TObject> Items => _cache.Items;
 

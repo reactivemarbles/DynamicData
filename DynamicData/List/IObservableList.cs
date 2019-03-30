@@ -24,10 +24,10 @@ namespace DynamicData
         /// <param name="predicate">The result will be filtered on the specified predicate.</param>
         IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null);
 
-		/// <summary>
-		/// Observe the count changes, starting with the inital items count
-		/// </summary>
-		IObservable<int> CountChanged { get; }
+        /// <summary>
+        /// Observe the count changes, starting with the inital items count
+        /// </summary>
+        IObservable<int> CountChanged { get; }
 
         /// <summary>
         /// Items enumerable

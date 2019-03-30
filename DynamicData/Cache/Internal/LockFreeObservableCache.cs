@@ -21,7 +21,7 @@ namespace DynamicData.Cache.Internal
         private readonly ICacheUpdater<TObject, TKey> _updater;
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
         private readonly ISubject<IChangeSet<TObject, TKey>> _changesPreview = new Subject<IChangeSet<TObject, TKey>>();
-		private readonly ISubject<int> _countChanged = new Subject<int>();
+        private readonly ISubject<int> _countChanged = new Subject<int>();
         private readonly IDisposable _cleanUp;
 
         /// <summary>
@@ -79,11 +79,11 @@ namespace DynamicData.Cache.Internal
             });
         }
 
-		/// <inheritdoc />
+        /// <inheritdoc />
         public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
         {
-	        return predicate == null ? _changesPreview : _changesPreview.Filter(predicate);
-		}
+            return predicate == null ? _changesPreview : _changesPreview.Filter(predicate);
+        }
 
         /// <summary>
         /// Returns an observable of any changes which match the specified key. The sequence starts with the initial item in the cache (if there is one).

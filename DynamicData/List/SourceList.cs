@@ -20,9 +20,9 @@ namespace DynamicData
         private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
         private readonly Subject<IChangeSet<T>> _changesPreview = new Subject<IChangeSet<T>>();
         private int _editLevel = 0;
-		private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
+        private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
         private readonly ReaderWriter<T> _readerWriter = new ReaderWriter<T>();
-		private readonly IDisposable _cleanUp;
+        private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
 
@@ -36,13 +36,13 @@ namespace DynamicData
 
             _cleanUp = Disposable.Create(() =>
             {
-				loader.Dispose();
+                loader.Dispose();
                 OnCompleted();
                 if (_countChanged.IsValueCreated)
                 {
-	                _countChanged.Value.OnCompleted();
-				}
-			});
+                    _countChanged.Value.OnCompleted();
+                }
+            });
         }
 
         private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source)
@@ -56,50 +56,50 @@ namespace DynamicData
         /// <inheritdoc />
         public void Edit([NotNull] Action<IExtendedList<T>> updateAction)
         {
-	        if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
             lock (_writeLock)
             {
-	            IChangeSet<T> changes = null;
+                IChangeSet<T> changes = null;
 
-				_editLevel++;
+                _editLevel++;
 
-				if (_editLevel == 1)
-				{
-					if (_changesPreview.HasObservers)
-					{
-						changes = _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview);
-					}
-					else
-					{
-						changes = _readerWriter.Write(updateAction);
-					}
-				}
-				else
-				{
-					_readerWriter.WriteNested(updateAction);
-				}
-				
-				_editLevel--;
+                if (_editLevel == 1)
+                {
+                    if (_changesPreview.HasObservers)
+                    {
+                        changes = _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview);
+                    }
+                    else
+                    {
+                        changes = _readerWriter.Write(updateAction);
+                    }
+                }
+                else
+                {
+                    _readerWriter.WriteNested(updateAction);
+                }
+                
+                _editLevel--;
 
-				if (_editLevel == 0)
-				{
-					InvokeNext(changes);
-				}
+                if (_editLevel == 0)
+                {
+                    InvokeNext(changes);
+                }
             }
         }
 
         private void InvokeNextPreview(IChangeSet<T> changes)
         {
-	        if (changes.Count == 0) return;
+            if (changes.Count == 0) return;
 
-	        lock (_locker)
-	        {
-		        _changesPreview.OnNext(changes);
-	        }
+            lock (_locker)
+            {
+                _changesPreview.OnNext(changes);
+            }
         }
 
-		private void InvokeNext(IChangeSet<T> changes)
+        private void InvokeNext(IChangeSet<T> changes)
         {
             if (changes.Count == 0) return;
 
@@ -116,21 +116,21 @@ namespace DynamicData
         /// <inheritdoc />
         private void OnCompleted()
         {
-	        lock (_locker)
-	        {
-		        _changesPreview.OnCompleted();
-		        _changes.OnCompleted();
-			}
+            lock (_locker)
+            {
+                _changesPreview.OnCompleted();
+                _changes.OnCompleted();
+            }
         }
 
-		/// <inheritdoc />
-		private void OnError(Exception exception)
+        /// <inheritdoc />
+        private void OnError(Exception exception)
         {
-	        lock (_locker)
-	        {
-		        _changesPreview.OnError(exception);
-		        _changes.OnError(exception);
-			}
+            lock (_locker)
+            {
+                _changesPreview.OnError(exception);
+                _changes.OnError(exception);
+            }
         }
 
         /// <inheritdoc />
@@ -164,18 +164,18 @@ namespace DynamicData
         }
 
         /// <inheritdoc />
-		public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null)
+        public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null)
         {
-	        IObservable<IChangeSet<T>> observable = _changesPreview;
+            IObservable<IChangeSet<T>> observable = _changesPreview;
 
-			if (predicate != null)
-				observable = new FilterStatic<T>(observable, predicate).Run();
+            if (predicate != null)
+                observable = new FilterStatic<T>(observable, predicate).Run();
 
-			return observable;
-		}
+            return observable;
+        }
 
-		/// <inheritdoc />
-		public void Dispose()
+        /// <inheritdoc />
+        public void Dispose()
         {
             _cleanUp.Dispose();
         }

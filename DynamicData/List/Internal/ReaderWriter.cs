@@ -11,7 +11,7 @@ namespace DynamicData.List.Internal
     {
         private ChangeAwareList<T> _data = new ChangeAwareList<T>();
         private readonly object _locker = new object();
-		private bool _updateInProgress = false;
+        private bool _updateInProgress = false;
 
         public IChangeSet<T> Write(IChangeSet<T> changes)
         {
@@ -28,10 +28,10 @@ namespace DynamicData.List.Internal
 
         public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
         {
-	        if (updateAction == null)
-		        throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+                throw new ArgumentNullException(nameof(updateAction));
 
-	        IChangeSet<T> result;
+            IChangeSet<T> result;
 
             // Write straight to the list, no preview
             lock (_locker)
@@ -42,18 +42,18 @@ namespace DynamicData.List.Internal
                 result = _data.CaptureChanges();
             }
 
-	        return result;
+            return result;
         }
-		
-		public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
+        
+        public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
         {
             if (updateAction == null)
                 throw new ArgumentNullException(nameof(updateAction));
 
             if (previewHandler == null)
-	            throw new ArgumentNullException(nameof(previewHandler));
+                throw new ArgumentNullException(nameof(previewHandler));
 
-			IChangeSet<T> result;
+            IChangeSet<T> result;
 
             // Make a copy, apply changes on the main list, perform the preview callback with the old list and swap the lists again to finalize the update.
             lock (_locker)
@@ -73,20 +73,20 @@ namespace DynamicData.List.Internal
                 InternalEx.Swap(ref _data, ref copy);
             }
 
-			return result;
+            return result;
         }
 
-		/// <summary>
-		/// Perform a recursive write operation.
-		/// Changes are added to the topmost change tracker.
-		/// Use only during an invocation of Write/WriteWithPreview.
-		/// </summary>
-		public void WriteNested(Action<IExtendedList<T>> updateAction) 
-		{
-			if (updateAction == null)
-			{
-				throw new ArgumentNullException(nameof(updateAction));
-			}
+        /// <summary>
+        /// Perform a recursive write operation.
+        /// Changes are added to the topmost change tracker.
+        /// Use only during an invocation of Write/WriteWithPreview.
+        /// </summary>
+        public void WriteNested(Action<IExtendedList<T>> updateAction) 
+        {
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
 
             lock (_locker)
             {
@@ -97,9 +97,9 @@ namespace DynamicData.List.Internal
 
                 updateAction(_data);
             }
-		}
+        }
 
-		public IEnumerable<T> Items
+        public IEnumerable<T> Items
         {
             get
             {

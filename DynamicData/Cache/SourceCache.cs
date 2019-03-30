@@ -55,17 +55,17 @@ namespace DynamicData
         }
 
         /// <inheritdoc />
-		public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
+        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
         {
-	        return _innerCache.Preview(predicate);
+            return _innerCache.Preview(predicate);
         }
 
-		/// <summary>
-		/// Returns an observable of any changes which match the specified key,  preceded with the initial cache state
-		/// </summary>
-		/// <param name="key">The key.</param>
-		/// <returns></returns>
-		public IObservable<Change<TObject, TKey>> Watch(TKey key)
+        /// <summary>
+        /// Returns an observable of any changes which match the specified key,  preceded with the initial cache state
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns></returns>
+        public IObservable<Change<TObject, TKey>> Watch(TKey key)
         {
             return _innerCache.Watch(key);
         }
