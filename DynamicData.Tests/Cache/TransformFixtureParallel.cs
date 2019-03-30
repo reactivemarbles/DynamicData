@@ -1,13 +1,14 @@
 using System;
 using System.Linq;
 using DynamicData.Tests.Domain;
+using DynamicData.PLinq;
 using FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
 
-    public class TransformFixturParallel : IDisposable
+    public class TransformFixtureParallel : IDisposable
     {
         private ISourceCache<Person, string> _source;
         private ChangeSetAggregator<PersonWithGender, string> _results;
@@ -18,11 +19,11 @@ namespace DynamicData.Tests.Cache
             return new PersonWithGender(p, gender);
         };
 
-        public  TransformFixturParallel()
+        public  TransformFixtureParallel()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 
-            var pTransform = _source.Connect().Transform(_transformFactory);
+            var pTransform = _source.Connect().Transform(_transformFactory, new ParallelisationOptions(ParallelType.Parallelise));
             _results = new ChangeSetAggregator<PersonWithGender, string>(pTransform);
         }
 
@@ -118,6 +119,22 @@ namespace DynamicData.Tests.Cache
             _results.Messages[0].Adds.Should().Be(100, "Should be 80 addes");
             _results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
             _results.Data.Count.Should().Be(0, "Should be nothing cached");
+        }
+
+        [Fact]
+        public void TransformToNull()
+        {
+            using (var source = new SourceCache<Person, string>(p => p.Name))
+            using (var results = new ChangeSetAggregator<PersonWithGender, string>(source.Connect()
+                .Transform((Func<Person, PersonWithGender>) (p => null),
+                    new ParallelisationOptions(ParallelType.Parallelise))))
+            {
+                source.AddOrUpdate(new Person("Adult1", 50));
+
+                results.Messages.Count.Should().Be(1, "Should be 1 updates");
+                results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+                results.Data.Items.First().Should().Be(null, "Should be same person");
+            }
         }
     }
 }
