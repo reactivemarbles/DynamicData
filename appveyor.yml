@@ -10,7 +10,7 @@
     # Disable sending usage data to Microsoft
     DOTNET_CLI_TELEMETRY_OPTOUT: true
 
-  version: 6.7.1.{build}
+  version: 6.8.0.{build}
   image: Visual Studio 2017
   configuration: Release
   install:

@@ -1199,6 +1199,43 @@ namespace DynamicData
         {
             return source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items));
         }
+        
+        /// <summary>
+        /// Converts the changeset into a fully formed sorted collection. Each change in the source results in a new sorted collection
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <typeparam name="TSortKey">The sort key</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="sort">The sort function</param>
+        /// <param name="sortOrder">The sort order. Defaults to ascending</param>
+        /// <returns></returns>
+        public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey, TSortKey>(this IObservable<IChangeSet<TObject, TKey>> source, 
+            Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
+        {
+            return source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending 
+                ? new ReadOnlyCollectionLight<TObject>(query.Items.OrderBy(sort)) 
+                : new ReadOnlyCollectionLight<TObject>(query.Items.OrderByDescending(sort)));
+        }
+
+        /// <summary>
+        /// Converts the changeset into a fully formed sorted collection. Each change in the source results in a new sorted collection
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="comparer">The sort comparer</param>
+        /// <returns></returns>
+        public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
+            IComparer<TObject> comparer)
+        {
+            return source.QueryWhenChanged(query =>
+            {
+                var items = query.Items.AsList();
+                items.Sort(comparer);
+                return new ReadOnlyCollectionLight<TObject>(items);
+            });
+        }
 
         #endregion
 
@@ -4201,6 +4238,21 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             source.Edit(updater => updater.AddOrUpdate(item));
+        }
+
+        /// <summary>
+        /// Adds or updates the cache with the specified item.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="item">The item.</param>
+        /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item</param>
+        /// <exception cref="System.ArgumentNullException">source</exception>
+        public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item, IEqualityComparer<TObject> equalityComparer)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            source.Edit(updater => updater.AddOrUpdate(item, equalityComparer));
         }
 
         /// <summary>

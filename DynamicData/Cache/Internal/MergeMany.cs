@@ -26,7 +26,14 @@ namespace DynamicData.Cache.Internal
         {
             return Observable.Create<TDestination>
             (
-                observer => _source.SubscribeMany((t, key) => _observableSelector(t, key).Subscribe(observer))
+                observer => _source.SubscribeMany(
+                        (t, key) => _observableSelector(t, key)
+                            .Subscribe(
+                                observer.OnNext,
+                                ex => {},
+                                ( ) => {}
+                                )
+                        )
                     .Subscribe(t => { }, observer.OnError));
         }
     }

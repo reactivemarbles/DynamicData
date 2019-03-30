@@ -1,3 +1,17 @@
+### v 6.8.0
+
+Update to MsBuild.Sdk.Extras v1.6.68 [#207](https://github.com/RolandPheasant/DynamicData/issues/207)
+
+Add overload for AddOrUpdate with IEqualityComparer parameter [#204](https://github.com/RolandPheasant/DynamicData/issues/204)
+
+Update to latest version of SourceLink in order to compile on mac [#203](https://github.com/RolandPheasant/DynamicData/issues/203)
+
+Add ToSortedCollection() operator for ObservableCache and ObservableList [#202](https://github.com/RolandPheasant/DynamicData/issues/202)
+
+Fix expire after bug [#196](https://github.com/RolandPheasant/DynamicData/issues/196)
+
+Add overload for TransformMany to support IObservableList [#193](https://github.com/RolandPheasant/DynamicData/issues/193)
+
 ### v 6.7.1
 
 CountChanged not working on SourceCache [#188](https://github.com/RolandPheasant/DynamicData/issues/188)
@@ -5,12 +19,14 @@ CountChanged not working on SourceCache [#188](https://github.com/RolandPheasant
 ### v 6.7.0
 
 Added overloads of ```Bind()``` to support binding to ```BindingList``` [#182](https://github.com/RolandPheasant/DynamicData/issues/182)
+
 Fix for ```TransformMany``` when a refresh event is received  [#173](https://github.com/RolandPheasant/DynamicData/pull/173)
 
 
 ### v 6.6.1
 
 Fix for UWP load issue. See additonally comment on [#161](https://github.com/RolandPheasant/DynamicData/issues/161)
+
 Dynamic filter with source list not filtering correctly when item is not initially matching filter [#164](https://github.com/RolandPheasant/DynamicData/issues/164)
 
 ### v 6.6.0

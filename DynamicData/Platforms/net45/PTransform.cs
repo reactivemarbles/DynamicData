@@ -79,7 +79,7 @@ namespace DynamicData.PLinq
                     {
                         case ChangeReason.Add:
                         case ChangeReason.Update:
-                            cache.AddOrUpdate(result.Destination.Value, result.Key);
+                            cache.AddOrUpdate(result.Destination.ValueOrDefault(), result.Key);
                             break;
 
                         case ChangeReason.Remove:

@@ -21,16 +21,22 @@ namespace DynamicData.Cache.Internal
         {
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
+                var locker = new object();
                 var cache = new Cache<TObject, TKey>();
                 var subscriber = _source
+                    .Synchronize(locker)
                     .Do(changes => RegisterForRemoval(changes, cache), observer.OnError)
                     .SubscribeSafe(observer);
 
                 return Disposable.Create(() =>
                 {
-                    cache.Items.ForEach(t => _removeAction(t));
-                    cache.Clear();
                     subscriber.Dispose();
+
+                    lock (locker)
+                    {
+                        cache.Items.ForEach(t => _removeAction(t));
+                        cache.Clear();
+                    }
                 });
             });
         }

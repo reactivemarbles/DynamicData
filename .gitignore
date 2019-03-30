@@ -293,5 +293,8 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
+**/*BenchmarkDotNet.Artifacts/results
+
 # End of https://www.gitignore.io/api/visualstudio
 DynamicData/project.lock.json
+
