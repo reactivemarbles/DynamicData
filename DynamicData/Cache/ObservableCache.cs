@@ -50,7 +50,6 @@ namespace DynamicData
                 {
 	                _countChanged.Value.OnCompleted();
 				}
-                _readerWriter.Dispose();
             });
         }
 
@@ -66,7 +65,6 @@ namespace DynamicData
                 {
 	                _countChanged.Value.OnCompleted();
 				}
-                _readerWriter.Dispose();
 			});
         }
 

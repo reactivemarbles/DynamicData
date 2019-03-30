@@ -5,13 +5,13 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal sealed class ReaderWriter<TObject, TKey> : IDisposable
+    internal sealed class ReaderWriter<TObject, TKey>
     {
         private readonly Func<TObject, TKey> _keySelector;
         private Dictionary<TKey,TObject> _data = new Dictionary<TKey, TObject>();
         private CacheUpdater<TObject, TKey> _activeUpdater = null;
 
-		private TwoStageRWLock _lock = new TwoStageRWLock(LockRecursionPolicy.SupportsRecursion);
+        private readonly object _locker = new object();
 
 		public ReaderWriter(Func<TObject, TKey> keySelector = null)
         {
@@ -43,69 +43,59 @@ namespace DynamicData.Cache.Internal
 
 		private ChangeSet<TObject, TKey> DoUpdate(Action<CacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
         {
-	        _lock.EnterWriteLock();
-	        try
-	        {
-		        if (previewHandler != null)
-		        {
-			        var copy = new Dictionary<TKey, TObject>(_data);
-			        var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
+            lock (_locker)
+            {
+                if (previewHandler != null)
+                {
+                    var copy = new Dictionary<TKey, TObject>(_data);
+                    var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
 
-			        _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
-					updateAction(_activeUpdater);
-					_activeUpdater = null;
+                    _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
+                    updateAction(_activeUpdater);
+                    _activeUpdater = null;
 
-					var changes = changeAwareCache.CaptureChanges();
-			        
-					InternalEx.Swap(ref copy, ref _data);
-			        previewHandler(changes);
-			        InternalEx.Swap(ref copy, ref _data);
-					
-			        return changes;
-		        }
-		        else
-		        {
-			        if (collectChanges)
-			        {
-				        var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
+                    var changes = changeAwareCache.CaptureChanges();
 
-				        _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
-						updateAction(_activeUpdater);
-						_activeUpdater = null;
+                    InternalEx.Swap(ref copy, ref _data);
+                    previewHandler(changes);
+                    InternalEx.Swap(ref copy, ref _data);
 
-						return changeAwareCache.CaptureChanges();
-			        }
-			        else
-			        {
-				        _activeUpdater = new CacheUpdater<TObject, TKey>(_data, _keySelector);
-				        updateAction(_activeUpdater);
-				        _activeUpdater = null;
+                    return changes;
+                }
+                else
+                {
+                    if (collectChanges)
+                    {
+                        var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
 
-						return ChangeSet<TObject, TKey>.Empty;
-			        }
-		        }
-	        }
-	        finally
-	        {
-		        _lock.ExitWriteLock();
-	        }
+                        _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
+                        updateAction(_activeUpdater);
+                        _activeUpdater = null;
+
+                        return changeAwareCache.CaptureChanges();
+                    }
+                    else
+                    {
+                        _activeUpdater = new CacheUpdater<TObject, TKey>(_data, _keySelector);
+                        updateAction(_activeUpdater);
+                        _activeUpdater = null;
+
+                        return ChangeSet<TObject, TKey>.Empty;
+                    }
+                }
+            }
 		}
 
 		internal void WriteNested(Action<ISourceUpdater<TObject, TKey>> updateAction)
 		{
-			_lock.EnterWriteLock();
-			try
-			{
-				if (_activeUpdater == null)
-				{
-					throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
-				}
-				updateAction(_activeUpdater);
-			}
-			finally
-			{
-				_lock.ExitWriteLock();
-			}
+            lock (_locker)
+            {
+                if (_activeUpdater == null)
+                {
+                    throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
+                }
+                updateAction(_activeUpdater);
+            }
 		}
 
 		#endregion
@@ -114,50 +104,37 @@ namespace DynamicData.Cache.Internal
 
 		public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
         {
-            ChangeSet<TObject, TKey> result;
-            _lock.EnterReadLock();
-            try
+            lock (_locker)
             {
-				var dictionary = _data;
+                var dictionary = _data;
 
-				if (dictionary.Count == 0)
-					return ChangeSet<TObject, TKey>.Empty;
+                if (dictionary.Count == 0)
+                    return ChangeSet<TObject, TKey>.Empty;
 
-				var changes = filter == null
-					? new ChangeSet<TObject, TKey>(dictionary.Count)
-					: new ChangeSet<TObject, TKey>();
+                var changes = filter == null
+                    ? new ChangeSet<TObject, TKey>(dictionary.Count)
+                    : new ChangeSet<TObject, TKey>();
 
-				foreach (var kvp in dictionary)
-				{
-					if (filter == null || filter(kvp.Value))
-						changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
-				}
+                foreach (var kvp in dictionary)
+                {
+                    if (filter == null || filter(kvp.Value))
+                        changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
+                }
 
-				result = changes;
-			}
-            finally
-            {
-	            _lock.ExitReadLock();
+                return changes;
             }
-            return result;
         }
 
         public TKey[] Keys
         {
             get
             {
-                TKey[] result;
-				_lock.EnterReadLock();
-				try
-				{
-					result = new TKey[_data.Count];
+                lock (_locker)
+                {
+                    TKey[] result = new TKey[_data.Count];
                     _data.Keys.CopyTo(result, 0);
-				}
-				finally
-				{
-					_lock.ExitReadLock();
-				}
-				return result;
+                    return result;
+                }
             }
         }
 
@@ -165,23 +142,18 @@ namespace DynamicData.Cache.Internal
         {
             get
             {
-                KeyValuePair<TKey, TObject>[] result;
-				_lock.EnterReadLock();
-				try
-				{
-					result = new KeyValuePair<TKey, TObject>[_data.Count];
+                lock (_locker)
+                {
+                    KeyValuePair<TKey, TObject>[] result = new KeyValuePair<TKey, TObject>[_data.Count];
                     int i = 0;
                     foreach (var kvp in _data)
                     {
                         result[i] = kvp;
                         i++;
                     }
+
+                    return result;
                 }
-				finally
-				{
-					_lock.ExitReadLock();
-				}
-				return result;
             }
         }
 
@@ -189,61 +161,34 @@ namespace DynamicData.Cache.Internal
         {
             get
             {
-                TObject[] result;
-				_lock.EnterReadLock();
-				try
-				{
-					result = new TObject[_data.Count];
+                lock (_locker)
+                {
+                    TObject[] result = new TObject[_data.Count];
                     _data.Values.CopyTo(result, 0);
-				}
-				finally
-				{
-					_lock.ExitReadLock();
-				}
-				return result;
+                    return result;
+                }
             }
         }
 
         public Optional<TObject> Lookup(TKey key)
         {
-            Optional<TObject> result;
-			_lock.EnterReadLock();
-			try
-			{
-				result = _data.Lookup(key);
-			}
-			finally
-			{
-				_lock.ExitReadLock();
-			}
-
-			return result;
+            lock (_locker)
+            {
+                return _data.Lookup(key);
+            }
         }
 
         public int Count
         {
             get
             {
-                int count;
-				_lock.EnterReadLock();
-				try
-				{
-					count = _data.Count;
-				}
-				finally
-				{
-					_lock.ExitReadLock();
-				}
-
-				return count;
+                lock (_locker)
+                {
+                    return _data.Count;
+                }
             }
         }
 
         #endregion
-
-        public void Dispose()
-        {
-	        _lock.Dispose();
-        }
     }
 }
