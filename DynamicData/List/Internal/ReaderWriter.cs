@@ -7,10 +7,10 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    internal sealed class ReaderWriter<T> : IDisposable
+    internal sealed class ReaderWriter<T>
     {
         private ChangeAwareList<T> _data = new ChangeAwareList<T>();
-        private readonly TwoStageRWLock _lock = new TwoStageRWLock(LockRecursionPolicy.SupportsRecursion);
+        private readonly object _locker = new object();
         private bool _updateInProgress = false;
 
         public IChangeSet<T> Write(IChangeSet<T> changes)
@@ -18,15 +18,10 @@ namespace DynamicData.List.Internal
             if (changes == null) throw new ArgumentNullException(nameof(changes));
             IChangeSet<T> result;
 
-            _lock.EnterWriteLock();
-            try
+            lock (_locker)
             {
                 _data.Clone(changes);
                 result = _data.CaptureChanges();
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
             }
             return result;
         }
@@ -39,17 +34,12 @@ namespace DynamicData.List.Internal
             IChangeSet<T> result;
 
             // Write straight to the list, no preview
-            _lock.EnterWriteLock();
-            try
+            lock (_locker)
             {
                 _updateInProgress = true;
                 updateAction(_data);
                 _updateInProgress = false;
                 result = _data.CaptureChanges();
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
             }
 
             return result;
@@ -66,8 +56,7 @@ namespace DynamicData.List.Internal
             IChangeSet<T> result;
 
             // Make a copy, apply changes on the main list, perform the preview callback with the old list and swap the lists again to finalize the update.
-            _lock.EnterWriteLock();
-            try
+            lock (_locker)
             {
                 ChangeAwareList<T> copy = new ChangeAwareList<T>(_data, false);
 
@@ -82,10 +71,6 @@ namespace DynamicData.List.Internal
                 previewHandler(result);
 
                 InternalEx.Swap(ref _data, ref copy);
-            }
-            finally
-            {
-                _lock.ExitWriteLock();
             }
 
             return result;
@@ -103,8 +88,7 @@ namespace DynamicData.List.Internal
                 throw new ArgumentNullException(nameof(updateAction));
             }
 
-            _lock.EnterWriteLock();
-            try
+            lock (_locker)
             {
                 if (!_updateInProgress)
                 {
@@ -113,35 +97,19 @@ namespace DynamicData.List.Internal
 
                 updateAction(_data);
             }
-            finally
-            {
-                _lock.ExitWriteLock();
-            }
         }
 
         public IEnumerable<T> Items
         {
             get
             {
-                IEnumerable<T> result;
-                _lock.EnterReadLock();
-                try
+                lock (_locker)
                 {
-                    result = _data.ToArray();
+                    return _data.ToArray();
                 }
-                finally
-                {
-                    _lock.ExitReadLock();
-                }
-                return result;
             }
         }
 
         public int Count => _data.Count;
-
-        public void Dispose()
-        {
-            _lock.Dispose();
-        }
     }
 }

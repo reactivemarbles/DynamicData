@@ -39,12 +39,11 @@ namespace DynamicData.Cache.Internal
                 var allNodes = allData.Connect()
                                       .Synchronize(locker)
                                       .Transform((t, v) => new Node<TObject, TKey>(t, v))
-                                      .DisposeMany()
                                       .AsObservableCache();
 
                 //as nodes change, maintain parent and children
                 var parentSetter = allNodes.Connect()
-                                           .Subscribe(changes =>
+                                           .Do(changes =>
                                            {
                                                var grouped = changes.GroupBy(c => _pivotOn(c.Current.Item));
 
@@ -159,7 +158,9 @@ namespace DynamicData.Cache.Internal
                                                }
 
                                                refilterObservable.OnNext(Unit.Default);
-                                           });
+                                           })
+                                           .DisposeMany()
+                                           .Subscribe();
 
                 var filter = _predicateChanged.Synchronize(locker).CombineLatest(refilterObservable, (predicate, _) => predicate);
                 var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);

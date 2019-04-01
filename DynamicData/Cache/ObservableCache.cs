@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
-    internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>, ICollectionSubject
+    internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
         private readonly Subject<ChangeSet<TObject, TKey>> _changes = new Subject<ChangeSet<TObject, TKey>>();
+        private readonly Subject<ChangeSet<TObject, TKey>> _changesPreview = new Subject<ChangeSet<TObject, TKey>>();
+        private int _editLevel = 0; // The level of recursion in editing.
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
         private readonly ReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _cleanUp;
@@ -25,16 +28,28 @@ namespace DynamicData
 
             var loader = source
                 .Synchronize(_locker)
-                .Select(changes => _readerWriter.Write(changes, _changes.HasObservers))
+                .Finally(_changesPreview.OnCompleted)
                 .Finally(_changes.OnCompleted)
-                .Subscribe(InvokeNext,_changes.OnError);
+                .Subscribe(changeset =>
+                {
+                    var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+                    var changes = _readerWriter.Write(changeset, previewHandler, _changes.HasObservers);
+                    InvokeNext(changes);
+                }, ex =>
+                {
+                    _changesPreview.OnError(ex);
+                    _changes.OnError(ex);
+                });
 
             _cleanUp = Disposable.Create(() =>
             {
                 loader.Dispose();
                 _changes.OnCompleted();
+                _changesPreview.OnCompleted();
                 if (_countChanged.IsValueCreated)
+                {
                     _countChanged.Value.OnCompleted();
+                }
             });
         }
 
@@ -45,8 +60,11 @@ namespace DynamicData
             _cleanUp = Disposable.Create(() =>
             {
                 _changes.OnCompleted();
+                _changesPreview.OnCompleted();
                 if (_countChanged.IsValueCreated)
+                {
                     _countChanged.Value.OnCompleted();
+                }
             });
         }
 
@@ -55,7 +73,24 @@ namespace DynamicData
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             lock (_writeLock)
             {
-                InvokeNext(_readerWriter.Write(updateAction, _changes.HasObservers));
+                ChangeSet<TObject, TKey> changes = null;
+                
+                _editLevel++;
+                if (_editLevel == 1)
+                {
+                    var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+                    changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+                }
+                else
+                {
+                    _readerWriter.WriteNested(updateAction);
+                }
+                _editLevel--;
+
+                if (_editLevel == 0)
+                {
+                    InvokeNext(changes);
+                }
             }
         }
 
@@ -64,7 +99,33 @@ namespace DynamicData
             if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
             lock (_writeLock)
             {
-                InvokeNext(_readerWriter.Write(updateAction, _changes.HasObservers));
+                ChangeSet<TObject, TKey> changes = null;
+
+                _editLevel++;
+                if (_editLevel == 1)
+                {
+                    var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
+                    changes = _readerWriter.Write(updateAction, previewHandler, _changes.HasObservers);
+                }
+                else
+                {
+                    _readerWriter.WriteNested(updateAction);
+                }
+                _editLevel--;
+
+                if (_editLevel == 0)
+                {
+                    InvokeNext(changes);
+                }
+            }
+        }
+
+        private void InvokePreview(ChangeSet<TObject, TKey> changes)
+        {
+            lock (_locker)
+            {
+                if (changes.Count != 0)
+                    _changesPreview.OnNext(changes);
             }
         }
 
@@ -121,6 +182,11 @@ namespace DynamicData
             });
         }
 
+        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
+        {
+            return predicate == null ? _changesPreview : _changesPreview.Filter(predicate);
+        }
+
         internal ChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool> filter = null) => _readerWriter.GetInitialUpdates(filter);
 
         public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
@@ -136,18 +202,6 @@ namespace DynamicData
         public void Dispose()
         {
             _cleanUp.Dispose();
-        }
-
-        void ICollectionSubject.OnCompleted()
-        {
-            lock (_locker)
-                _changes.OnCompleted();
-        }
-        
-        void ICollectionSubject.OnError(Exception exception)
-        {
-            lock (_locker)
-                _changes.OnError(exception);
         }
     }
 }

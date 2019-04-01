@@ -8,7 +8,7 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public interface ISourceCache<TObject, TKey> : IObservableCache<TObject, TKey>, ICollectionSubject
+    public interface ISourceCache<TObject, TKey> : IObservableCache<TObject, TKey>
     {
         /// <summary>
         /// Action to apply a batch update to a cache. Multiple update methods can be invoked within a single batch operation.
