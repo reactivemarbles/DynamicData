@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading;
 using DynamicData.Annotations;
 using DynamicData.List.Internal;
 
@@ -19,12 +17,13 @@ namespace DynamicData
     {
         private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
         private readonly Subject<IChangeSet<T>> _changesPreview = new Subject<IChangeSet<T>>();
-        private int _editLevel = 0;
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
         private readonly ReaderWriter<T> _readerWriter = new ReaderWriter<T>();
         private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
+
+        private int _editLevel = 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SourceList{T}"/> class.
@@ -113,7 +112,6 @@ namespace DynamicData
         }
 
 
-        /// <inheritdoc />
         private void OnCompleted()
         {
             lock (_locker)
@@ -123,7 +121,6 @@ namespace DynamicData
             }
         }
 
-        /// <inheritdoc />
         private void OnError(Exception exception)
         {
             lock (_locker)

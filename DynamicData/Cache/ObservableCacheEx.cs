@@ -12,7 +12,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using DynamicData.Annotations;
 using DynamicData.Binding;
-using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 

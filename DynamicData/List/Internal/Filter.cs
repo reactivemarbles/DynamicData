@@ -62,7 +62,7 @@ namespace DynamicData.List.Internal
                 }
 
                 /*
-                 * Apply the transform operator so 'IsMatch' state can be evalutated and captured one time only
+                 * Apply the transform operator so 'IsMatch' state can be evaluated and captured one time only
                  * This is to eliminate the need to re-apply the predicate when determining whether an item was previously matched,
                  * which is essential when we have mutable state
                  */
@@ -284,10 +284,7 @@ namespace DynamicData.List.Internal
 
             #endregion
 
-            public override string ToString()
-            {
-                return $"{Item}, (was {IsMatch} is {WasMatch}";
-            }
+            public override string ToString() => $"{Item}, (was {IsMatch} is {WasMatch}";
         }
     }
 }

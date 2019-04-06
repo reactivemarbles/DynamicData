@@ -33,7 +33,7 @@ namespace DynamicData.Cache.Internal
                         var result = sizeLimiter.Change(changes);
 
                         var removes = result.Where(c => c.Reason == ChangeReason.Remove);
-                        root.Edit(updater => removes.ForEach(c => updater.Remove((TKey)c.Key)));
+                        root.Edit(updater => removes.ForEach(c => updater.Remove(c.Key)));
                         return result;
                     })
                     .Finally(observer.OnCompleted)

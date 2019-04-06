@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -8,15 +7,12 @@ namespace DynamicData.Cache.Internal
     internal sealed class ReaderWriter<TObject, TKey>
     {
         private readonly Func<TObject, TKey> _keySelector;
-        private Dictionary<TKey,TObject> _data = new Dictionary<TKey, TObject>();
-        private CacheUpdater<TObject, TKey> _activeUpdater = null;
+        private Dictionary<TKey,TObject> _data = new Dictionary<TKey, TObject>(); //could do with priming this on first time load
+        private CacheUpdater<TObject, TKey> _activeUpdater;
 
         private readonly object _locker = new object();
 
-        public ReaderWriter(Func<TObject, TKey> keySelector = null)
-        {
-            _keySelector = keySelector;
-        }
+        public ReaderWriter(Func<TObject, TKey> keySelector = null) => _keySelector = keySelector;
 
         #region Writers
 
@@ -173,9 +169,7 @@ namespace DynamicData.Cache.Internal
         public Optional<TObject> Lookup(TKey key)
         {
             lock (_locker)
-            {
                 return _data.Lookup(key);
-            }
         }
 
         public int Count
@@ -183,9 +177,7 @@ namespace DynamicData.Cache.Internal
             get
             {
                 lock (_locker)
-                {
                     return _data.Count;
-                }
             }
         }
 

@@ -14,17 +14,17 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservable<IChangeSet<TSource, TSourceKey>> _source;
         private readonly Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>> _childChanges;
-        private readonly Func<TSource, IEnumerable<TDestination>> _manyselector;
+        private readonly Func<TSource, IEnumerable<TDestination>> _manySelector;
         private readonly Func<TDestination, TDestinationKey> _keySelector;
 
         public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, ReadOnlyObservableCollection<TDestination>> manyselector,
+            Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector,
             Func<TDestination, TDestinationKey> keySelector)
-            : this(source, manyselector, keySelector, t => Observable.Defer(() =>
+            : this(source, manySelector, keySelector, t => Observable.Defer(() =>
             {
-                var subsequentChanges = manyselector(t).ToObservableChangeSet(keySelector);
+                var subsequentChanges = manySelector(t).ToObservableChangeSet(keySelector);
 
-                if (manyselector(t).Count > 0)
+                if (manySelector(t).Count > 0)
                     return subsequentChanges;
 
                 return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
@@ -35,13 +35,13 @@ namespace DynamicData.Cache.Internal
         }
 
         public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, ObservableCollection<TDestination>> manyselector,
+            Func<TSource, ObservableCollection<TDestination>> manySelector,
             Func<TDestination, TDestinationKey> keySelector)
-            :this(source, manyselector, keySelector, t => Observable.Defer(() =>
+            :this(source, manySelector, keySelector, t => Observable.Defer(() =>
             {
-                var subsequentChanges = manyselector(t).ToObservableChangeSet(keySelector);
+                var subsequentChanges = manySelector(t).ToObservableChangeSet(keySelector);
 
-                if (manyselector(t).Count > 0)
+                if (manySelector(t).Count > 0)
                     return subsequentChanges;
 
                 return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
@@ -51,12 +51,12 @@ namespace DynamicData.Cache.Internal
         }
 
         public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source,
-            Func<TSource, IEnumerable<TDestination>> manyselector,
+            Func<TSource, IEnumerable<TDestination>> manySelector,
             Func<TDestination, TDestinationKey> keySelector,
             Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>> childChanges = null)
         {
             _source = source;
-            _manyselector = manyselector;
+            _manySelector = manySelector;
             _keySelector = keySelector;
             _childChanges = childChanges;
         }
@@ -72,7 +72,7 @@ namespace DynamicData.Cache.Internal
         {
             return _source.Transform((t, key) =>
                 {
-                    var destination = _manyselector(t)
+                    var destination = _manySelector(t)
                         .Select(m => new DestinationContainer(m, _keySelector(m)))
                         .ToArray();
                     return new ManyContainer(() => destination);
@@ -88,9 +88,9 @@ namespace DynamicData.Cache.Internal
 
                 var transformed = _source.Transform((t, key) =>
                 {
-                    //Only skip initial for first time Adds where there is isinitial data records 
+                    //Only skip initial for first time Adds where there is initial data records 
                     var locker = new object();
-                    var collection = _manyselector(t);
+                    var collection = _manySelector(t);
                     var changes = _childChanges(t).Synchronize(locker).Skip(1);
                     return new ManyContainer(() =>
                     {
@@ -102,7 +102,7 @@ namespace DynamicData.Cache.Internal
                 }).Publish();
 
                 var outerLock = new object();
-                var intial = transformed
+                var initial = transformed
                     .Synchronize(outerLock)
                     .Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
 
@@ -110,7 +110,7 @@ namespace DynamicData.Cache.Internal
                     .MergeMany(x => x.Changes)
                     .Synchronize(outerLock);
 
-                var allChanges = intial.Merge(subsequent).Select(changes =>
+                var allChanges = initial.Merge(subsequent).Select(changes =>
                 {
                     result.Clone(changes);
                     return result.CaptureChanges();

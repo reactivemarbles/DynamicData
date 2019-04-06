@@ -1,7 +1,6 @@
 using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
@@ -104,7 +103,6 @@ namespace DynamicData.Cache.Internal
                                     case ChangeReason.Remove:
                                     {
                                         innerCache.Remove(change.Key);
-                                        ;
                                     }
                                         break;
                                     case ChangeReason.Refresh:

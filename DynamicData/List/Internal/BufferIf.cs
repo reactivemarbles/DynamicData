@@ -12,16 +12,16 @@ namespace DynamicData.List.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<bool> _pauseIfTrueSelector;
-        private readonly bool _intialPauseState;
+        private readonly bool _initialPauseState;
         private readonly TimeSpan _timeOut;
         private readonly IScheduler _scheduler;
 
         public BufferIf([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<bool> pauseIfTrueSelector,
-                        bool intialPauseState = false, TimeSpan? timeOut = null, IScheduler scheduler = null)
+                        bool initialPauseState = false, TimeSpan? timeOut = null, IScheduler scheduler = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _pauseIfTrueSelector = pauseIfTrueSelector ?? throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-            _intialPauseState = intialPauseState;
+            _initialPauseState = initialPauseState;
             _timeOut = timeOut ?? TimeSpan.Zero;
             _scheduler = scheduler ?? Scheduler.Default;
         }
@@ -33,12 +33,12 @@ namespace DynamicData.List.Internal
                     observer =>
                     {
                         var locker = new object();
-                        var paused = _intialPauseState;
+                        var paused = _initialPauseState;
                         var buffer = new List<Change<T>>();
                         var timeoutSubscriber = new SerialDisposable();
                         var timeoutSubject = new Subject<bool>();
 
-                        var bufferSelector = Observable.Return(_intialPauseState)
+                        var bufferSelector = Observable.Return(_initialPauseState)
                                                        .Concat(_pauseIfTrueSelector.Merge(timeoutSubject))
                                                        .ObserveOn(_scheduler)
                                                        .Synchronize(locker)

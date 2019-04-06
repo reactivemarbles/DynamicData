@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Reactive.Linq;
 
 namespace DynamicData.Aggregation
 {

@@ -388,7 +388,6 @@ namespace DynamicData.Aggregation
                                   (current, item) => new Avg<long>(current.Count + 1, current.Sum + item),
                                   (current, item) => new Avg<long>(current.Count - 1, current.Sum - item),
                                   values => values.Sum / (double)values.Count);
-            ;
         }
 
         /// <summary>
@@ -424,7 +423,6 @@ namespace DynamicData.Aggregation
                                   (current, item) => new Avg<double>(current.Count + 1, current.Sum + item),
                                   (current, item) => new Avg<double>(current.Count - 1, current.Sum - item),
                                   values => values.Sum / (double)values.Count);
-            ;
         }
 
         /// <summary>
@@ -435,7 +433,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull] Func<T, double?> valueSelector, double emptyValue = 0)
         {
@@ -483,7 +481,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<float> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                                 [NotNull] Func<T, float> valueSelector, float emptyValue = 0)
@@ -493,7 +491,6 @@ namespace DynamicData.Aggregation
                                   (current, item) => new Avg<float>(current.Count + 1, current.Sum + item),
                                   (current, item) => new Avg<float>(current.Count - 1, current.Sum - item),
                                   values => values.Sum / values.Count);
-            ;
         }
 
         /// <summary>
@@ -504,7 +501,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<float> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull] Func<T, float?> valueSelector, float emptyValue = 0)
         {

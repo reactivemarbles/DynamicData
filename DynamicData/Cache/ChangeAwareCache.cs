@@ -80,7 +80,7 @@ namespace DynamicData
         public void Remove(IEnumerable<TKey> keys)
         {
             if (_data == null) return;
-       ;
+
             if (keys is IList<TKey> list)
             {
                 EnsureInitialised(list.Count);
@@ -207,7 +207,8 @@ namespace DynamicData
         /// </summary>
         public ChangeSet<TObject, TKey> CaptureChanges()
         {
-            if (_changes == null) return ChangeSet<TObject, TKey>.Empty;
+            if (_changes == null || _changes.Count==0)
+                return ChangeSet<TObject, TKey>.Empty;
 
             var copy = _changes;
             _changes = null;

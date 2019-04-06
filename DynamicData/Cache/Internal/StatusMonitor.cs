@@ -43,7 +43,7 @@ namespace DynamicData.Cache.Internal
                     statusSubject.OnNext(status);
                 }
 
-                var monitor = _source.Subscribe(_ => Updated(), Error, (Action) Completion);
+                var monitor = _source.Subscribe(_ => Updated(), Error, Completion);
 
                 var subscriber = statusSubject
                     .StartWith(status)

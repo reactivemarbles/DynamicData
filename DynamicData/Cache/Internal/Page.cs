@@ -33,7 +33,7 @@ namespace DynamicData.Cache.Internal
         {
             private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
             private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
-            private IPageRequest _request = null;
+            private IPageRequest _request;
             private readonly FilteredIndexCalculator<TObject, TKey> _changedCalculator = new FilteredIndexCalculator<TObject, TKey>();
             private bool _isLoaded;
 

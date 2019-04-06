@@ -71,7 +71,7 @@ namespace DynamicData.Binding
         /// <returns></returns>
         public IDisposable SuspendCount()
         {
-            var count = this.Count;
+            var count = Count;
             _suspendCount = true;
             return Disposable.Create(() =>
             {

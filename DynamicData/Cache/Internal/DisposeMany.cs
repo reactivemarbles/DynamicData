@@ -48,9 +48,11 @@ namespace DynamicData.Cache.Internal
                 switch (change.Reason)
                 {
                     case ChangeReason.Update:
+                        // ReSharper disable once InconsistentlySynchronizedField
                         change.Previous.IfHasValue(t => _removeAction(t));
                         break;
                     case ChangeReason.Remove:
+                        // ReSharper disable once InconsistentlySynchronizedField
                         _removeAction(change.Current);
                         break;
                 }

@@ -129,7 +129,7 @@ namespace DynamicData.Cache.Internal
                                                 });
 
                                             _itemCache[current.Key] = current;
-                                        };
+                                        }
                                         break;
                                     }
                                 case ChangeReason.Remove:
@@ -204,8 +204,7 @@ namespace DynamicData.Cache.Internal
                     {
                         _groupCache.RemoveIfContained(group.Key);
                         result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key, groupCache));
-                    };
-
+                    }
                 });
 
 

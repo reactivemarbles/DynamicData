@@ -95,11 +95,7 @@ namespace DynamicData.Diagnostics
 
         #region Equality members
 
-        /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool Equals(ChangeStatistics other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -107,27 +103,16 @@ namespace DynamicData.Diagnostics
             return Adds == other.Adds && Updates == other.Updates && Removes == other.Removes && Refreshes == other.Refreshes && Moves == other.Moves && Count == other.Count && Index == other.Index && LastUpdated.Equals(other.LastUpdated);
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((ChangeStatistics)obj);
         }
 
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -144,27 +129,16 @@ namespace DynamicData.Diagnostics
             }
         }
 
-        /// <summary>
-        /// Implements the operator ==.
-        /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
-        /// <returns>
-        /// The result of the operator.
-        /// </returns>
+
+#pragma warning disable 1591
+
         public static bool operator ==(ChangeStatistics left, ChangeStatistics right)
+
         {
             return Equals(left, right);
         }
 
-        /// <summary>
-        /// Implements the operator !=.
-        /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
-        /// <returns>
-        /// The result of the operator.
-        /// </returns>
+
         public static bool operator !=(ChangeStatistics left, ChangeStatistics right)
         {
             return !Equals(left, right);
@@ -172,22 +146,12 @@ namespace DynamicData.Diagnostics
 
         #endregion
 
-        #region Formatting Members
-
-        /// <summary>
-        ///     Returns a <see cref="T:System.String" /> that represents the current <see cref="T:System.Object" />.
-        /// </summary>
-        /// <returns>
-        ///     A <see cref="T:System.String" /> that represents the current <see cref="T:System.Object" />.
-        /// </returns>
+        /// <inheritdoc />
         public override string ToString()
         {
-            return
-                string.Format(
-                    "CurrentIndex: {0}, Adds: {1}, Updates: {2}, Removes: {3}, Refreshes: {4}, Count: {5}, Timestamp: {6}",
-                    Index, Adds, Updates, Removes, Refreshes, Count, LastUpdated);
+            return $"CurrentIndex: {Index}, Adds: {Adds}, Updates: {Updates}, Removes: {Removes}, Refreshes: {Refreshes}, Count: {Count}, Timestamp: {LastUpdated}";
         }
 
-        #endregion
+
     }
 }

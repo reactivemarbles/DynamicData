@@ -5,18 +5,19 @@ using System.Reactive;
 
 namespace DynamicData.Binding
 {
-    [DebuggerDisplay("ObservablePropertyPart<{_expresson}>")]
+    [DebuggerDisplay("ObservablePropertyPart<{_expression}>")]
     internal sealed class ObservablePropertyPart
     {
-        private readonly MemberExpression _expresson;
+        // ReSharper disable once NotAccessedField.Local
+        private readonly MemberExpression _expression;
         public Func<object, IObservable<Unit>> Factory { get; }
         public Func<object, object> Accessor { get; }
 
-        public ObservablePropertyPart(MemberExpression expresson)
+        public ObservablePropertyPart(MemberExpression expression)
         {
-            _expresson = expresson;
-            Factory = expresson.CreatePropertyChangedFactory();
-            Accessor = expresson.CreateValueAccessor();
+            _expression = expression;
+            Factory = expression.CreatePropertyChangedFactory();
+            Accessor = expression.CreateValueAccessor();
         }
     }
 }

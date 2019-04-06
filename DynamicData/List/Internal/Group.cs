@@ -5,19 +5,13 @@ namespace DynamicData.List.Internal
 {
     internal class Group<TObject, TGroup> : IGroup<TObject, TGroup>, IDisposable, IEquatable<Group<TObject, TGroup>>
     {
-        public TGroup GroupKey { get; }
-        public IObservableList<TObject> List => Source;
         private ISourceList<TObject> Source { get; } = new SourceList<TObject>();
 
-        public Group(TGroup groupKey)
-        {
-            GroupKey = groupKey;
-        }
+        public TGroup GroupKey { get; }
+        public IObservableList<TObject> List => Source;
+        public Group(TGroup groupKey) => GroupKey = groupKey;
 
-        public void Edit(Action<IList<TObject>> editAction)
-        {
-            Source.Edit(editAction);
-        }
+        public void Edit(Action<IList<TObject>> editAction) => Source.Edit(editAction);
 
         #region Equality
 
@@ -53,14 +47,8 @@ namespace DynamicData.List.Internal
 
         #endregion
 
-        public override string ToString()
-        {
-            return $"Group of {GroupKey} ({List.Count} records)";
-        }
+        public override string ToString() => $"Group of {GroupKey} ({List.Count} records)";
 
-        public void Dispose()
-        {
-            Source.Dispose();
-        }
+        public void Dispose() => Source.Dispose();
     }
 }

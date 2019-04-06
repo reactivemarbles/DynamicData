@@ -163,7 +163,7 @@ namespace DynamicData.Tests.Binding
 
       //  [Fact]
       //  [Trait("Manual run for benchmarking","xx")]
-        public void StressIt()
+        private void StressIt()
         {
             var list = new SourceList<ClassA>();
             var items = Enumerable.Range(1, 10_000)

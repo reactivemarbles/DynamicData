@@ -9,8 +9,8 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly object _locker = new object();
-        private int _refCount = 0;
-        private IObservableCache<TObject, TKey> _cache = null;
+        private int _refCount;
+        private IObservableCache<TObject, TKey> _cache;
 
         public RefCount([NotNull] IObservable<IChangeSet<TObject, TKey>> source)
         {

@@ -1,13 +1,8 @@
-﻿
-// ReSharper disable once CheckNamespace
-
-using System;
-
-// ReSharper disable once CheckNamespace
+﻿// ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    ///  The reason for an individual change.  
+    ///  The reason for an individual change.
     /// 
     /// Used to signal consumers of any changes to the underlying cache
     /// </summary>

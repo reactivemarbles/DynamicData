@@ -160,12 +160,12 @@ namespace DynamicData.List.Internal
                                 {
                                     //1. Check whether item was in the group and should not be now (or vice versa)
                                     var currentItem = change.Current.Item;
-                                    var previousGroup = change.Current.PrevousGroup.Value;
+                                    var previousGroup = change.Current.PreviousGroup.Value;
 
                                     //check whether an item changing has resulted in a different group
                                     if (previousGroup.Equals(currentGroup))
                                     {
-                                        // Propagate refresh eventt
+                                        // Propagate refresh event
                                         var cal = (ChangeAwareList<TObject>) list;
                                         cal.Refresh(currentItem);
                                     }
@@ -238,13 +238,13 @@ namespace DynamicData.List.Internal
         {
             public TObject Item { get; }
             public TGroupKey Group { get; set; }
-            public Optional<TGroupKey> PrevousGroup { get; }
+            public Optional<TGroupKey> PreviousGroup { get; }
 
-            public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> prevousGroup)
+            public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup)
             {
                 Item = item;
                 Group = group;
-                PrevousGroup = prevousGroup;
+                PreviousGroup = previousGroup;
             }
 
             #region Equality 
@@ -288,16 +288,8 @@ namespace DynamicData.List.Internal
 
             #endregion
 
-            /// <summary>
-            /// Returns a <see cref="System.String" /> that represents this instance.
-            /// </summary>
-            /// <returns>
-            /// A <see cref="System.String" /> that represents this instance.
-            /// </returns>
-            public override string ToString()
-            {
-                return $"{Item} ({Group})";
-            }
+
+            public override string ToString() => $"{Item} ({Group})";
         }
     }
 }

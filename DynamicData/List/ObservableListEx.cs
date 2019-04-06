@@ -1500,7 +1500,6 @@ namespace DynamicData
         /// Converts the changeset into a fully formed sorted collection. Each change in the source results in a new sorted collection
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="comparer">The sort comparer</param>
         /// <returns></returns>

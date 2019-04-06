@@ -214,9 +214,7 @@ namespace DynamicData.Cache.Internal
             for (var i = 0; i < list.Count; i++)
             {
                 if (_comparer.Compare(item, list[i]) < 0)
-                {
                     return i;
-                }
             }
             return _list.Count;
         }
@@ -227,12 +225,9 @@ namespace DynamicData.Cache.Internal
 
             if (index > 0)
             {
-                var indx = (int)index;
+                var indx = index;
                 index = _list.BinarySearch(indx - 1, _list.Count - indx, item, _comparer);
-                if (index > 0)
-                {
-                    return indx;
-                }
+                if (index > 0) return indx;
             }
 
             int insertIndex = ~index;

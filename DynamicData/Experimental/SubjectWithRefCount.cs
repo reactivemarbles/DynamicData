@@ -12,7 +12,7 @@ namespace DynamicData.Experimental
     internal class SubjectWithRefCount<T> : ISubjectWithRefCount<T>
     {
         private readonly ISubject<T> _subject;
-        private int _refCount = 0;
+        private int _refCount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:System.Object"/> class.

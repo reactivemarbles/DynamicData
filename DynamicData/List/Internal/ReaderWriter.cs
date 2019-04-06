@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Disposables;
-using System.Threading;
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
@@ -28,8 +24,7 @@ namespace DynamicData.List.Internal
 
         public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null)
-                throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
 
             IChangeSet<T> result;
 
@@ -47,11 +42,8 @@ namespace DynamicData.List.Internal
         
         public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
         {
-            if (updateAction == null)
-                throw new ArgumentNullException(nameof(updateAction));
-
-            if (previewHandler == null)
-                throw new ArgumentNullException(nameof(previewHandler));
+            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (previewHandler == null) throw new ArgumentNullException(nameof(previewHandler));
 
             IChangeSet<T> result;
 
@@ -84,9 +76,7 @@ namespace DynamicData.List.Internal
         public void WriteNested(Action<IExtendedList<T>> updateAction) 
         {
             if (updateAction == null)
-            {
                 throw new ArgumentNullException(nameof(updateAction));
-            }
 
             lock (_locker)
             {
@@ -99,17 +89,26 @@ namespace DynamicData.List.Internal
             }
         }
 
-        public IEnumerable<T> Items
+        public T[] Items
         {
             get
             {
                 lock (_locker)
                 {
-                    return _data.ToArray();
+                    var result = new T[_data.Count];
+                    _data.CopyTo(result, 0);
+                    return result;
                 }
             }
         }
 
-        public int Count => _data.Count;
+        public int Count
+        {
+            get
+            {
+                lock (_locker)
+                    return _data.Count;
+            }
+        }
     }
 }

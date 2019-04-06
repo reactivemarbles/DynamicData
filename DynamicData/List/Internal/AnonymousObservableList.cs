@@ -24,19 +24,10 @@ namespace DynamicData.List.Internal
 
         public int Count => _sourceList.Count;
 
-        public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null)
-        {
-            return _sourceList.Connect(predicate);
-        }
+        public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null) => _sourceList.Connect(predicate);
 
-        public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null)
-        {
-            return _sourceList.Preview(predicate);
-        }
-
-        public void Dispose()
-        {
-            _sourceList.Dispose();
-        }
+        public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null) => _sourceList.Preview(predicate);
+        
+        public void Dispose() => _sourceList.Dispose();
     }
 }

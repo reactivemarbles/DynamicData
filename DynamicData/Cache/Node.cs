@@ -72,7 +72,7 @@ namespace DynamicData
         public bool IsRoot => !Parent.HasValue;
 
         /// <summary>
-        /// Gets the depth i.e. how many degrees of seperation from the parent
+        /// Gets the depth i.e. how many degrees of separation from the parent
         ///  </summary>
         public int Depth
         {
@@ -118,7 +118,7 @@ namespace DynamicData
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((Node<TObject, TKey>)obj);
         }
 

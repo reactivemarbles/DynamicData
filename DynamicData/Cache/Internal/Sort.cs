@@ -76,8 +76,8 @@ namespace DynamicData.Cache.Internal
 
             private KeyValueComparer<TObject, TKey> _comparer;
             private IKeyValueCollection<TObject, TKey> _sorted = new KeyValueCollection<TObject, TKey>();
-            private bool _haveReceivedData = false;
-            private bool _initialised = false;
+            private bool _haveReceivedData ;
+            private bool _initialised;
             private IndexCalculator<TObject, TKey> _calculator;
 
             public Sorter(SortOptimisations optimisations,

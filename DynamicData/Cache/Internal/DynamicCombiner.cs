@@ -24,14 +24,6 @@ namespace DynamicData.Cache.Internal
         }
 
 
-        public DynamicCombiner([NotNull] IObservable<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
-        {
-          //  _source = source ?? throw new ArgumentNullException(nameof(source));
-
-            var xxx = 
-
-            _type = type;
-        }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {

@@ -601,25 +601,25 @@ namespace DynamicData
         /// <summary>
         /// Replaces the specified item.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="original">The original.</param>
-        /// <param name="replacewith">The replacewith.</param>
+        /// <param name="original">The item which is to be replaced. If not in the list and argument exception will be thrown</param>
+        /// <param name="replaceWith">The new item</param>
+        /// <param name="comparer">The equality comparer to be used to find the original item in the list</param>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// items</exception>
-        public static void Replace<T>(this IList<T> source, [NotNull] T original, [NotNull] T replacewith, IEqualityComparer<T> comparer)
+        public static void Replace<T>(this IList<T> source, [NotNull] T original, [NotNull] T replaceWith, IEqualityComparer<T> comparer)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (original == null) throw new ArgumentNullException(nameof(original));
-            if (replacewith == null) throw new ArgumentNullException(nameof(replacewith));
+            if (replaceWith == null) throw new ArgumentNullException(nameof(replaceWith));
             if (comparer == null) throw new ArgumentNullException(nameof(comparer));
 
             var index = source.IndexOf(original);
             if (index == -1)
                 throw new ArgumentException("Cannot find index of original item. Either it does not exist in the list or the hashcode has mutated");
-            if (comparer.Equals(source[index], replacewith))
-                source[index] = replacewith;
+            if (comparer.Equals(source[index], replaceWith))
+                source[index] = replaceWith;
         }
 
         #endregion

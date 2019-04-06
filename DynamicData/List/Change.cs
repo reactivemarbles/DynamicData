@@ -67,7 +67,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Construtor for ChangeReason.Move
+        /// Constructor for ChangeReason.Move
         /// </summary>
         /// <param name="current">The current.</param>
         /// <param name="currentIndex">The CurrentIndex.</param>
@@ -153,31 +153,11 @@ namespace DynamicData
             }
         }
 
-        /// <summary>
-        /// Implements the operator ==.
-        /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
-        /// <returns>
-        /// The result of the operator.
-        /// </returns>
-        public static bool operator ==(Change<T> left, Change<T> right)
-        {
-            return Equals(left, right);
-        }
+        /// <inheritdoc />
+        public static bool operator ==(Change<T> left, Change<T> right) => Equals(left, right);
 
-        /// <summary>
-        /// Implements the operator !=.
-        /// </summary>
-        /// <param name="left">The left.</param>
-        /// <param name="right">The right.</param>
-        /// <returns>
-        /// The result of the operator.
-        /// </returns>
-        public static bool operator !=(Change<T> left, Change<T> right)
-        {
-            return !Equals(left, right);
-        }
+        /// <inheritdoc />
+        public static bool operator !=(Change<T> left, Change<T> right) => !Equals(left, right);
 
         #endregion
 

@@ -68,7 +68,7 @@ namespace DynamicData.Cache.Internal
                 if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
                 {
                     var destination = await _transformFactory(change.Current, change.Previous, change.Key);
-                    return new TransformResult(change, new TransformedItemContainer(change.Key, change.Current, destination));
+                    return new TransformResult(change, new TransformedItemContainer(change.Current, destination));
                 }
                 return new TransformResult(change);
             }
@@ -153,15 +153,13 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-        private sealed class TransformedItemContainer
+        private readonly struct TransformedItemContainer
         {
-            public TKey Key { get; }
             public TSource Source { get; }
             public TDestination Destination { get; }
 
-            public TransformedItemContainer(TKey key, TSource source, TDestination destination)
+            public TransformedItemContainer(TSource source, TDestination destination)
             {
-                Key = key;
                 Source = source;
                 Destination = destination;
             }

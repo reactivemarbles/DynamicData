@@ -28,85 +28,36 @@ namespace DynamicData
         #region Delegated Members
 
         /// <inheritdoc />
-        /// <summary>
-        /// Add, update and remove api via an action method. Enables the consumer to perform queries and updates
-        /// safely within the inner caches lock.
-        /// The result of the action will produce appropriate notifications.
-        /// </summary>
-        /// <param name="updateAction">The update action.</param>
-        public void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction)
-        {
-            _innerCache.UpdateFromSource(updateAction);
-        }
+        public void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction) => _innerCache.UpdateFromSource(updateAction);
 
         /// <inheritdoc />
         public IObservable<int> CountChanged => _innerCache.CountChanged;
 
         /// <inheritdoc />
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate)
-        {
-            return _innerCache.Connect(predicate);
-        }
-
-        /// <returns></returns>
-        public IObservable<IChangeSet<TObject, TKey>> Connect()
-        {
-            return _innerCache.Connect();
-        }
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null) => _innerCache.Connect(predicate);
+        /// <inheritdoc />
+        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null) => _innerCache.Preview(predicate);
 
         /// <inheritdoc />
-        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
-        {
-            return _innerCache.Preview(predicate);
-        }
+        public IObservable<Change<TObject, TKey>> Watch(TKey key) => _innerCache.Watch(key);
 
-        /// <summary>
-        /// Returns an observable of any changes which match the specified key,  preceded with the initial cache state
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns></returns>
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
-        {
-            return _innerCache.Watch(key);
-        }
-
-        /// <summary>
-        /// The total count of cached items
-        /// </summary>
+        /// <inheritdoc />
         public int Count => _innerCache.Count;
 
-        /// <summary>
-        /// Gets the Items
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<TObject> Items => _innerCache.Items;
 
-        /// <summary>
-        /// Gets the key value pairs
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
 
-        /// <summary>
-        /// Gets the keys
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<TKey> Keys => _innerCache.Keys;
 
-        /// <summary>
-        /// Lookup a single item using the specified key.
-        /// </summary>
-        /// <remarks>
-        /// Fast indexed lookup
-        /// </remarks>
-        /// <param name="key">The key.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
-        /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
-        /// </summary>
-        public void Dispose()
-        {
-            _innerCache.Dispose();
-        }
+        /// <inheritdoc />
+        public void Dispose() => _innerCache.Dispose();
 
         #endregion
     }

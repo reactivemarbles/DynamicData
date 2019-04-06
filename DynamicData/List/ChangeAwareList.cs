@@ -64,6 +64,9 @@ namespace DynamicData
         /// </summary>
         public IChangeSet<T> CaptureChanges()
         {
+            if (_changes.Count == 0)
+                return ChangeSet<T>.Empty;
+
             var copy = new ChangeSet<T>(_changes);
            
             //we can infer this is a Clear

@@ -134,29 +134,18 @@ namespace DynamicData.List.Internal
             });
         }
 
-        /// <summary>
-        /// Finds the index of many items as specified in the secondary enumerable.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TResult">The type of the result.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="itemsToFind">The items to find.</param>
-        /// <param name="objectPropertyFunc">Object property to join on</param>
-        /// <param name="resultSelector">The result selector</param>
-        /// <returns>A result as specified by the result selector</returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static IEnumerable<TResult> IndexOfMany<TObject, TObjectProp, TResult>(
-            [NotNull] IEnumerable<TObject> source, [NotNull] IEnumerable<TObject> itemsToFind,
-            Func<TObject, TObjectProp> objectPropertyFunc, [NotNull] Func<TObject, int, TResult> resultSelector)
+
+        private static IEnumerable<TResult> IndexOfMany<TObj, TObjectProp, TResult>(IEnumerable<TObj> source,
+            IEnumerable<TObj> itemsToFind,
+            Func<TObj, TObjectProp> objectPropertyFunc, 
+            Func<TObj, int, TResult> resultSelector)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (itemsToFind == null) throw new ArgumentNullException(nameof(itemsToFind));
             if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
 
             var indexed = source.Select((element, index) => new { Element = element, Index = index });
-            return itemsToFind
-                .Join(indexed, left => objectPropertyFunc(left), right => objectPropertyFunc(right.Element),
+            return itemsToFind.Join(indexed, objectPropertyFunc, right => objectPropertyFunc(right.Element),
                     (left, right) => resultSelector(left, right.Index));
         }
     }

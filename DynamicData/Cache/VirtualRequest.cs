@@ -63,46 +63,27 @@ namespace DynamicData
             }
         }
 
-        private static readonly IEqualityComparer<IVirtualRequest> s_startIndexSizeComparerInstance = new StartIndexSizeEqualityComparer();
-
         /// <summary>
         /// Gets the start index size comparer.
         /// </summary>
         /// <value>
         /// The start index size comparer.
         /// </value>
-        public static IEqualityComparer<IVirtualRequest> StartIndexSizeComparer { get { return s_startIndexSizeComparerInstance; } }
+        public static IEqualityComparer<IVirtualRequest> StartIndexSizeComparer { get; } = new StartIndexSizeEqualityComparer();
 
-        /// <summary>
-        ///     Indicates whether the current object is equal to another object of the same type.
-        /// </summary>
-        /// <returns>
-        ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
-        /// </returns>
-        /// <param name="other">An object to compare with this object.</param>
+        /// <inheritdoc />
         public bool Equals(IVirtualRequest other)
         {
-            return s_startIndexSizeComparerInstance.Equals(this, other);
+            return StartIndexSizeComparer.Equals(this, other);
         }
 
-        /// <summary>
-        ///     Determines whether the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />.
-        /// </summary>
-        /// <returns>
-        ///     true if the specified object  is equal to the current object; otherwise, false.
-        /// </returns>
-        /// <param name="obj">The object to compare with the current object. </param>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             return Equals((IVirtualRequest)obj);
         }
 
-        /// <summary>
-        ///     Serves as a hash function for a particular type.
-        /// </summary>
-        /// <returns>
-        ///     A hash code for the current <see cref="T:System.Object" />.
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -113,15 +94,7 @@ namespace DynamicData
 
         #endregion
 
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"StartIndex: {StartIndex}, Size: {Size}";
-        }
+        /// <inheritdoc />
+        public override string ToString() => $"StartIndex: {StartIndex}, Size: {Size}";
     }
 }

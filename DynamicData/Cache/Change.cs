@@ -52,12 +52,12 @@ namespace DynamicData
         /// <param name="current">The current.</param>
         /// <param name="index">The index.</param>
         public Change(ChangeReason reason, TKey key, TObject current, int index = -1)
-            : this(reason, key, current, Optional.None<TObject>(), index, -1)
+            : this(reason, key, current, Optional.None<TObject>(), index)
         {
         }
 
         /// <summary>
-        /// Construtor for ChangeReason.Move
+        /// Constructor for ChangeReason.Move
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="current">The current.</param>
@@ -110,14 +110,10 @@ namespace DynamicData
             PreviousIndex = previousIndex;
 
             if (reason == ChangeReason.Add && previous.HasValue)
-            {
                 throw new ArgumentException("For ChangeReason.Add, a previous value cannot be specified");
-            }
 
             if (reason == ChangeReason.Update && !previous.HasValue)
-            {
                 throw new ArgumentException("For ChangeReason.Change, must supply previous value");
-            }
         }
 
         #region Equality

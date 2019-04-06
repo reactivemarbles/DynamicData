@@ -112,7 +112,7 @@ namespace DynamicData
             }
         }
 
-        private static readonly IEqualityComparer<IPageRequest> s_pageSizeComparerInstance = new PageSizeEqualityComparer();
+        private static readonly IEqualityComparer<IPageRequest> _pageSizeComparerInstance = new PageSizeEqualityComparer();
 
         /// <summary>
         /// Gets the default comparer.
@@ -120,7 +120,7 @@ namespace DynamicData
         /// <value>
         /// The default comparer.
         /// </value>
-        public IEqualityComparer<IPageRequest> DefaultComparer => s_pageSizeComparerInstance;
+        public IEqualityComparer<IPageRequest> DefaultComparer => _pageSizeComparerInstance;
 
         #endregion
 

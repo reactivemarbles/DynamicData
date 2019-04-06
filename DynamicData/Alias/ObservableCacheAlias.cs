@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq.Expressions;
-using System.Reactive;
+ using System.Reactive;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
 

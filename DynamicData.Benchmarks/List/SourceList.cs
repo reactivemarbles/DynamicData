@@ -16,10 +16,7 @@ namespace DynamicData.Benchmarks.List
 
 
         [GlobalSetup]
-        public void Setup()
-        {
-            _sourceList = new SourceList<string>();
-        }
+        public void Setup() => _sourceList = new SourceList<string>();
 
         [IterationSetup]
         public void SetupIteration()
@@ -29,17 +26,8 @@ namespace DynamicData.Benchmarks.List
         }
 
         [GlobalCleanup]
-        public void Teardown()
-        {
-            _sourceList = null;
-        }
+        public void Teardown() => _sourceList = null;
 
-        //[Benchmark]
-        //public void Add()
-        //{
-        //    foreach (var item in _items)
-        //        _sourceList.Add(item);
-        //}
 
         [Benchmark]
         public void AddRange() => _sourceList.AddRange(_items);

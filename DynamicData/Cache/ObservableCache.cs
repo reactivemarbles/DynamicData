@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
@@ -14,22 +13,24 @@ namespace DynamicData
     {
         private readonly Subject<ChangeSet<TObject, TKey>> _changes = new Subject<ChangeSet<TObject, TKey>>();
         private readonly Subject<ChangeSet<TObject, TKey>> _changesPreview = new Subject<ChangeSet<TObject, TKey>>();
-        private int _editLevel = 0; // The level of recursion in editing.
         private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
         private readonly ReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _cleanUp;
-
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
+
+        private int _editLevel; // The level of recursion in editing.
 
         public ObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
         {
             _readerWriter = new ReaderWriter<TObject, TKey>();
 
-            var loader = source
-                .Synchronize(_locker)
-                .Finally(_changesPreview.OnCompleted)
-                .Finally(_changes.OnCompleted)
+            var loader = source.Synchronize(_locker)
+                .Finally(()=>
+                {
+                    _changes.OnCompleted();
+                    _changesPreview.OnCompleted();
+                })
                 .Subscribe(changeset =>
                 {
                     var previewHandler = _changesPreview.HasObservers ? (Action<ChangeSet<TObject, TKey>>)InvokePreview : null;
@@ -199,9 +200,6 @@ namespace DynamicData
 
         public int Count => _readerWriter.Count;
 
-        public void Dispose()
-        {
-            _cleanUp.Dispose();
-        }
+        public void Dispose() => _cleanUp.Dispose();
     }
 }

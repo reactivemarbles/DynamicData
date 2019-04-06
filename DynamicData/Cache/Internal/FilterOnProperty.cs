@@ -2,7 +2,6 @@ using System;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal
 {
