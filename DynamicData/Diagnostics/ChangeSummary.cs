@@ -51,25 +51,12 @@ namespace DynamicData.Diagnostics
 
         #region Equality members
 
-        /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
-        public bool Equals(ChangeSummary other)
+        private bool Equals(ChangeSummary other)
         {
             return _index == other._index && Equals(Latest, other.Latest) && Equals(Overall, other.Overall);
         }
 
-        /// <summary>
-        ///     Determines whether the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />.
-        /// </summary>
-        /// <returns>
-        ///     true if the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />; otherwise, false.
-        /// </returns>
-        /// <param name="obj">
-        ///     The <see cref="T:System.Object" /> to compare with the current <see cref="T:System.Object" />.
-        /// </param>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -78,12 +65,7 @@ namespace DynamicData.Diagnostics
             return Equals((ChangeSummary)obj);
         }
 
-        /// <summary>
-        ///     Serves as a hash function for a particular type.
-        /// </summary>
-        /// <returns>
-        ///     A hash code for the current <see cref="T:System.Object" />.
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -97,15 +79,7 @@ namespace DynamicData.Diagnostics
 
         #endregion
 
-        /// <summary>
-        ///     Returns a <see cref="T:System.String" /> that represents the current <see cref="T:System.Object" />.
-        /// </summary>
-        /// <returns>
-        ///     A <see cref="T:System.String" /> that represents the current <see cref="T:System.Object" />.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"CurrentIndex: {_index}, Latest Count: {Latest.Count}, Overall Count: {Overall.Count}";
-        }
+        /// <inheritdoc />
+        public override string ToString() => $"CurrentIndex: {_index}, Latest Count: {Latest.Count}, Overall Count: {Overall.Count}";
     }
 }

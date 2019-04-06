@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Threading;
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
@@ -113,11 +112,11 @@ namespace DynamicData.Tests.Cache
 
         public class ViewModel
         {
-            public string Name { get; set; }
+            public string Name { get; }
 
             public ViewModel(string name)
             {
-                this.Name = name;
+                Name = name;
             }
 
             public class Comparer : IComparer<ViewModel>

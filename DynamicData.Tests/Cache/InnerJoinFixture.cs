@@ -187,7 +187,7 @@ namespace DynamicData.Tests.Cache
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((Device)obj);
             }
 
@@ -239,7 +239,7 @@ namespace DynamicData.Tests.Cache
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((DeviceMetaData)obj);
             }
 
@@ -296,7 +296,7 @@ namespace DynamicData.Tests.Cache
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((DeviceWithMetadata)obj);
             }
 

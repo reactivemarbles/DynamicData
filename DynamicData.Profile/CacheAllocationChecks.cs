@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 using Xunit;
-using DynamicData.Cache.Internal;
 
 namespace DynamicData.Profile
 {

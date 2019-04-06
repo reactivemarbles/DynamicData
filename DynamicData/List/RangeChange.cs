@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -21,12 +20,6 @@ namespace DynamicData
         {
             Index = index;
             _items = items.AsList();
-        }
-
-        /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
-        private RangeChange()
-        {
-            _items = new List<T>();
         }
 
         /// <summary>
@@ -93,9 +86,6 @@ namespace DynamicData
         /// <returns>
         /// A <see cref="System.String" /> that represents this instance.
         /// </returns>
-        public override string ToString()
-        {
-            return $"Range<{typeof(T).Name}>. Count={Count}";
-        }
+        public override string ToString() => $"Range<{typeof(T).Name}>. Count={Count}";
     }
 }

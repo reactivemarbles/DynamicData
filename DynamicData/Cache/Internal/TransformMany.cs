@@ -73,6 +73,7 @@ namespace DynamicData.Cache.Internal
             return _source.Transform((t, key) =>
                 {
                     var destination = _manySelector(t)
+                        // ReSharper disable once InconsistentlySynchronizedField
                         .Select(m => new DestinationContainer(m, _keySelector(m)))
                         .ToArray();
                     return new ManyContainer(() => destination);

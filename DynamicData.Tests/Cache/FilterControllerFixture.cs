@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Cache
         public  FilterControllerFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
-            _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20); ;
+            _filter = new BehaviorSubject<Func<Person, bool>>(p => p.Age > 20);
             _results = new ChangeSetAggregator<Person, string>(_source.Connect().Filter(_filter));
         }
 

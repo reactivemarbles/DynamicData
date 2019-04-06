@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
@@ -10,6 +11,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
+    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
     internal sealed class ExpireAfter<T>
     {
         private readonly ISourceList<T> _sourceList;
@@ -64,21 +66,23 @@ namespace DynamicData.List.Internal
                     }
                 }
 
-                var removalSubscripion = new SingleAssignmentDisposable();
+                var removalSubscription = new SingleAssignmentDisposable();
                 if (_pollingInterval.HasValue)
                 {
                     // use polling
-                    removalSubscripion.Disposable = _scheduler.ScheduleRecurringAction(_pollingInterval.Value, RemovalAction);
+                    // ReSharper disable once InconsistentlySynchronizedField
+                    removalSubscription.Disposable = _scheduler.ScheduleRecurringAction(_pollingInterval.Value, RemovalAction);
                 }
                 else
                 {
                     //create a timer for each distinct time
-                    removalSubscripion.Disposable = autoRemover.Connect()
+                    removalSubscription.Disposable = autoRemover.Connect()
                                                                .DistinctValues(ei => ei.ExpireAt)
                                                                .SubscribeMany(datetime =>
                                                                {
-                                                                   //  Console.WriteLine("Set expiry for {0}. Now={1}", datetime, DateTime.Now);
-                                                                   var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
+                                                                   // ReSharper disable once InconsistentlySynchronizedField
+                                                                    var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
+                                                                    // ReSharper disable once InconsistentlySynchronizedField
                                                                    return Observable.Timer(expireAt, _scheduler)
                                                                                     .Take(1)
                                                                                     .Subscribe(_ => RemovalAction());
@@ -87,7 +91,7 @@ namespace DynamicData.List.Internal
                 }
                 return Disposable.Create(() =>
                 {
-                    removalSubscripion.Dispose();
+                    removalSubscription.Dispose();
                     autoRemover.Dispose();
                 });
             });

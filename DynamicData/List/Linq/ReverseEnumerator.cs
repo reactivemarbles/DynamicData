@@ -5,7 +5,7 @@ namespace DynamicData.List.Linq
 {
     internal class Reverser<T>
     {
-        private int _length = 0;
+        private int _length;
 
         public IEnumerable<Change<T>> Reverse(IChangeSet<T> changes)
         {

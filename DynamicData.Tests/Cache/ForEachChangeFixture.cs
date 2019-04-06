@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using Xunit;
 using System;

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-using DynamicData.Tests.Playground;
 using FluentAssertions;
 using Xunit;
 
@@ -124,14 +123,14 @@ namespace DynamicData.Tests.Cache
             public int Value
             {
                 get => _value;
-                set => this.SetAndRaise(ref _value, value);
+                set => SetAndRaise(ref _value, value);
             }
 
             public string _description_;
             public string Description
             {
                 get => _description_;
-                set => this.SetAndRaise(ref _description_, value);
+                set => SetAndRaise(ref _description_, value);
             }
         }
 

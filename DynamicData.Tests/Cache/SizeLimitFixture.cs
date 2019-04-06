@@ -89,7 +89,6 @@ namespace DynamicData.Tests.Cache
         {
             // Initialise();
             Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
-            ;
         }
 
         [Fact]

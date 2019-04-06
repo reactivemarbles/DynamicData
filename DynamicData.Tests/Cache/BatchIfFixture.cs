@@ -1,10 +1,6 @@
 using System;
-using System.Collections.ObjectModel;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading;
-using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;

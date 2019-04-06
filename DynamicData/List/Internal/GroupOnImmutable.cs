@@ -14,16 +14,16 @@ namespace DynamicData.List.Internal
     {
         private readonly IObservable<IChangeSet<TObject>> _source;
         private readonly Func<TObject, TGroupKey> _groupSelector;
-        private readonly IObservable<Unit> _regrouper;
+        private readonly IObservable<Unit> _reGrouper;
 
-        public GroupOnImmutable([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector, IObservable<Unit> regrouper)
+        public GroupOnImmutable([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector, IObservable<Unit> reGrouper)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
-            _regrouper = regrouper;
+            _reGrouper = reGrouper;
         }
 
-        public IObservable<IChangeSet<List.IGrouping<TObject, TGroupKey>>> Run()
+        public IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> Run()
         {
             return Observable.Create<IChangeSet<IGrouping<TObject, TGroupKey>>>(observer =>
             {
@@ -35,9 +35,9 @@ namespace DynamicData.List.Internal
 
                 //capture the grouping up front which has the benefit that the group key is only selected once
                 var itemsWithGroup = _source
-                    .Transform<TObject, ItemWithGroupKey>((t, previous, idx) =>
+                    .Transform<TObject, ItemWithGroupKey>((t, previous) =>
                     {
-                        return new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group), idx);
+                        return new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group));
                     }, true);
 
                 var locker = new object();
@@ -48,18 +48,18 @@ namespace DynamicData.List.Internal
                 var grouper = shared
                     .Select(changes => Process(groupings, groupCache, changes));
 
-                IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> regrouper;
-                if (_regrouper == null)
+                IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> reGrouper;
+                if (_reGrouper == null)
                 {
-                    regrouper = Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>();
+                    reGrouper = Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>();
                 }
                 else
                 {
-                    regrouper = _regrouper.Synchronize(locker)
+                    reGrouper = _reGrouper.Synchronize(locker)
                         .CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
                 }
 
-                var publisher = grouper.Merge(regrouper)
+                var publisher = grouper.Merge(reGrouper)
                     .NotEmpty()
                     .SubscribeSafe(observer);
 
@@ -134,7 +134,7 @@ namespace DynamicData.List.Internal
                         case ListChangeReason.Refresh:
                         {
                             var previousItem = change.Current.Item;
-                            var previousGroup = change.Current.PrevousGroup.Value;
+                            var previousGroup = change.Current.PreviousGroup.Value;
                             var currentItem = change.Current.Item;
 
                             //check whether an item changing has resulted in a different group
@@ -273,15 +273,13 @@ namespace DynamicData.List.Internal
         {
             public TObject Item { get; }
             public TGroupKey Group { get; set; }
-            public Optional<TGroupKey> PrevousGroup { get; }
-            public int Index { get; }
-
-            public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> prevousGroup, int index)
+            public Optional<TGroupKey> PreviousGroup { get; }
+            
+            public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup)
             {
                 Item = item;
                 Group = group;
-                PrevousGroup = prevousGroup;
-                Index = index;
+                PreviousGroup = previousGroup;
             }
 
             #region Equality 
@@ -305,19 +303,11 @@ namespace DynamicData.List.Internal
                 return EqualityComparer<TObject>.Default.GetHashCode(Item);
             }
 
-            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.List.Internal.GroupOn`2.ItemWithGroupKey" /> objects are equal.</summary>
-            /// <param name="left">The first value to compare.</param>
-            /// <param name="right">The second value to compare.</param>
-            /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
             public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right)
             {
                 return Equals(left, right);
             }
 
-            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.List.Internal.GroupOn`2.ItemWithGroupKey" /> objects have different values.</summary>
-            /// <param name="left">The first value to compare.</param>
-            /// <param name="right">The second value to compare.</param>
-            /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
             public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right)
             {
                 return !Equals(left, right);
@@ -325,12 +315,6 @@ namespace DynamicData.List.Internal
 
             #endregion
 
-            /// <summary>
-            /// Returns a <see cref="System.String" /> that represents this instance.
-            /// </summary>
-            /// <returns>
-            /// A <see cref="System.String" /> that represents this instance.
-            /// </returns>
             public override string ToString()
             {
                 return $"{Item} ({Group})";

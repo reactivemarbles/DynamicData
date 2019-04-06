@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
-using DynamicData.Cache.Internal;
 using FluentAssertions;
 using Xunit;
 
@@ -276,7 +275,7 @@ namespace DynamicData.Tests.Cache
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
+                if (obj.GetType() != GetType()) return false;
                 return Equals((EmployeeDto)obj);
             }
 

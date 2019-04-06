@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
-using  DynamicData;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;

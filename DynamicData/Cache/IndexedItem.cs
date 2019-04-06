@@ -43,24 +43,14 @@ namespace DynamicData
 
         #region Equality
 
-        /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
-        public bool Equals(IndexedItem<TObject, TKey> other)
+
+        private bool Equals(IndexedItem<TObject, TKey> other)
         {
             return EqualityComparer<TKey>.Default.Equals(Key, other.Key) &&
                    EqualityComparer<TObject>.Default.Equals(Value, other.Value) && Index == other.Index;
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
-        /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
-        /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
-        /// </returns>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -69,12 +59,7 @@ namespace DynamicData
             return Equals((IndexedItem<TObject, TKey>)obj);
         }
 
-        /// <summary>
-        /// Returns a hash code for this instance.
-        /// </summary>
-        /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -88,15 +73,7 @@ namespace DynamicData
 
         #endregion
 
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"Value: {Value}, Key: {Key}, CurrentIndex: {Index}";
-        }
+        /// <inheritdoc />
+        public override string ToString() => $"Value: {Value}, Key: {Key}, CurrentIndex: {Index}";
     }
 }

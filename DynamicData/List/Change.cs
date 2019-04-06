@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
+#pragma warning disable 1591
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
@@ -42,7 +43,7 @@ namespace DynamicData
         /// <param name="current">The current.</param>
         /// <param name="index">The index.</param>
         public Change(ListChangeReason reason, T current, int index = -1)
-            : this(reason, current, Optional.None<T>(), index, -1)
+            : this(reason, current, Optional.None<T>(), index)
         {
         }
 
@@ -137,7 +138,7 @@ namespace DynamicData
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((Change<T>)obj);
         }
 
@@ -153,10 +154,10 @@ namespace DynamicData
             }
         }
 
-        /// <inheritdoc />
+
         public static bool operator ==(Change<T> left, Change<T> right) => Equals(left, right);
 
-        /// <inheritdoc />
+
         public static bool operator !=(Change<T> left, Change<T> right) => !Equals(left, right);
 
         #endregion

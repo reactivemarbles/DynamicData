@@ -8,8 +8,8 @@ namespace DynamicData.List.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly object _locker = new object();
-        private int _refCount = 0;
-        private IObservableList<T> _list = null;
+        private int _refCount;
+        private IObservableList<T> _list;
 
         public RefCount(IObservable<IChangeSet<T>> source)
         {

@@ -7,7 +7,7 @@ namespace DynamicData.List.Internal
     {
         private ChangeAwareList<T> _data = new ChangeAwareList<T>();
         private readonly object _locker = new object();
-        private bool _updateInProgress = false;
+        private bool _updateInProgress;
 
         public IChangeSet<T> Write(IChangeSet<T> changes)
         {

@@ -8,7 +8,6 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using DynamicData.Annotations;
 using DynamicData.Binding;
@@ -156,7 +155,7 @@ namespace DynamicData
             Func<T, TimeSpan?> expireAfter,
             IScheduler scheduler = null)
         {
-            return ToObservableChangeSet<T>(source, expireAfter, 0, scheduler);
+            return ToObservableChangeSet(source, expireAfter, 0, scheduler);
         }
 
         /// <summary>

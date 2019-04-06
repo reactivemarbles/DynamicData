@@ -53,7 +53,7 @@ namespace DynamicData.Tests.Cache
 
             var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
                .ToObservableChangeSet(p => p.Key)
-                .Subscribe((changes) => { }, ex => error = ex);;
+                .Subscribe((changes) => { }, ex => error = ex);
 
             error.Should().NotBeNull();
         }
@@ -76,7 +76,7 @@ namespace DynamicData.Tests.Cache
                 .ToObservableChangeSet(p => p.Key)
                 .AsObservableCache()
                 .Connect()
-                .Subscribe(changes => { }, ex => error = ex); ;
+                .Subscribe(changes => { }, ex => error = ex);
 
             //var subscribed = data.Connect()
             //    

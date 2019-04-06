@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+#pragma warning disable 1591
 
 namespace DynamicData.Kernel
 {
@@ -122,13 +123,13 @@ namespace DynamicData.Kernel
 
         #region Equality members
 
-        /// <inheritdoc />
+
         public static bool operator ==(Optional<T> left, Optional<T> right)
         {
             return left.Equals(right);
         }
 
-        /// <inheritdoc />
+
         public static bool operator !=(Optional<T> left, Optional<T> right)
         {
             return !left.Equals(right);

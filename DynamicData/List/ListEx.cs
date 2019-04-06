@@ -304,7 +304,7 @@ namespace DynamicData
         /// <returns></returns>
         public static int IndexOf<T>(this IEnumerable<T> source, T item)
         {
-            return IndexOf<T>(source, item, EqualityComparer<T>.Default);
+            return IndexOf(source, item, EqualityComparer<T>.Default);
         }
 
         /// <summary>

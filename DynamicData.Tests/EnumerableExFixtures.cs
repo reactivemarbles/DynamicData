@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;

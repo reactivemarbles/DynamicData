@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;
 using Xunit;
 
-namespace DynamicData.Tests.Playground
+namespace DynamicData.Tests.List
 {
-
-
     public class BufferInitialFixture
     {
         private static readonly ICollection<Person> People = Enumerable.Range(1, 10_000).Select(i => new Person(i.ToString(), i)).ToList();

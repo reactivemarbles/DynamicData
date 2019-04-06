@@ -1602,7 +1602,8 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> UpdateIndex<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
             where TObject : IIndexAware
         {
-            return source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index }).ForEach(u => u.update.Value.Index = u.index));
+            return source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index })
+                .ForEach(u => u.update.Value.Index = u.index));
         }
 
         /// <summary>

@@ -68,14 +68,12 @@ namespace DynamicData
                 case ListChangeReason.Add:
                     _adds++;
                     break;
-                    ;
                 case ListChangeReason.AddRange:
                     _adds = _adds + item.Range.Count;
                     break;
                 case ListChangeReason.Replace:
                     _replaced++;
                     break;
-                    ;
                 case ListChangeReason.Remove:
                     _removes++;
                     break;

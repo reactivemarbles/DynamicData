@@ -37,7 +37,6 @@ namespace DynamicData
         public bool Equals(PagedChangeSet<TObject, TKey> other)
         {
             return SortedItems.SequenceEqual(other.SortedItems);
-            // return Equals(this.SortedItems, other.SortedItems);
         }
 
         public override bool Equals(object obj)

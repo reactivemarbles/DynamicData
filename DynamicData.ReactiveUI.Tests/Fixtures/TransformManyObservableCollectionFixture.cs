@@ -3,7 +3,6 @@ using System.Linq;
 using DynamicData.ReactiveUI.Tests.Domain;
 using DynamicData.Tests;
 using FluentAssertions;
-using ReactiveUI;
 using ReactiveUI.Legacy;
 using Xunit;
 

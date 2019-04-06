@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
 using FluentAssertions;

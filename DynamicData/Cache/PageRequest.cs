@@ -50,23 +50,13 @@ namespace DynamicData
 
         #region Equality members
 
-        /// <summary>
-        /// Equalses the specified other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public bool Equals(IPageRequest other)
         {
             return DefaultComparer.Equals(this, other);
         }
 
-        /// <summary>
-        /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
-        /// </summary>
-        /// <returns>
-        /// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
-        /// </returns>
-        /// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. </param>
+        /// <inheritdoc />
         public override bool Equals(object obj)
         {
             if (!(obj is IPageRequest))
@@ -74,12 +64,7 @@ namespace DynamicData
             return Equals((IPageRequest)obj);
         }
 
-        /// <summary>
-        /// Serves as a hash function for a particular type. 
-        /// </summary>
-        /// <returns>
-        /// A hash code for the current <see cref="T:System.Object"/>.
-        /// </returns>
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked
@@ -124,15 +109,7 @@ namespace DynamicData
 
         #endregion
 
-        /// <summary>
-        /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"Page: {Page}, Size: {Size}";
-        }
+        /// <inheritdoc />
+        public override string ToString() => $"Page: {Page}, Size: {Size}";
     }
 }

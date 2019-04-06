@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reactive.Subjects;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Microsoft.Reactive.Testing;

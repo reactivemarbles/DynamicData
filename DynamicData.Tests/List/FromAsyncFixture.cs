@@ -54,7 +54,7 @@ namespace DynamicData.Tests.List
 
             var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
                 .ToObservableChangeSet()
-                .Subscribe((changes) => { }, ex => error = ex);;
+                .Subscribe((changes) => { }, ex => error = ex);
 
             error.Should().NotBeNull();
         }

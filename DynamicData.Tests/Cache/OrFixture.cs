@@ -17,7 +17,7 @@ namespace DynamicData.Tests.Cache
     }
 
     
-    public class OrCollectionFixture : OrFixtureBase
+    public sealed class OrCollectionFixture : OrFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
         {

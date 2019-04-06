@@ -23,7 +23,7 @@ namespace DynamicData
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
 
-        private int _editLevel = 0;
+        private int _editLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SourceList{T}"/> class.

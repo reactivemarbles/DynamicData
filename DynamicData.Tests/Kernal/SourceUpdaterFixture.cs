@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using DynamicData.Cache.Internal;
 using DynamicData.Tests.Domain;
@@ -7,7 +6,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
-    
     public class SourceUpdaterFixture
     {
         private readonly ChangeAwareCache<Person, string> _cache;

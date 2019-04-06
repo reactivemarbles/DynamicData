@@ -53,12 +53,12 @@ namespace DynamicData.Tests.Cache
             _employmentCache.AddOrUpdate(emphistory);
 
             allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople);
-            allpeopleWithEmpHistory.Items.SelectMany(d => d.EmpoymentData.Items).Count().Should().Be(emphistory.Count);
+            allpeopleWithEmpHistory.Items.SelectMany(d => d.EmploymentData.Items).Count().Should().Be(emphistory.Count);
 
             //check grouped items have the same key as the parent
             allpeopleWithEmpHistory.Items.ForEach
             (
-                p => { p.EmpoymentData.Items.All(emph => emph.Name == p.Person).Should().BeTrue(); }
+                p => { p.EmploymentData.Items.All(emph => emph.Name == p.Person).Should().BeTrue(); }
             );
 
             _personCache.Edit(updater => updater.Remove("Person1"));

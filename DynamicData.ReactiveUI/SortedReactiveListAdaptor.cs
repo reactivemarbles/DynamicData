@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using ReactiveUI;
 using ReactiveUI.Legacy;
 
 #pragma warning disable CS0618 // Using legacy code.
@@ -8,7 +7,7 @@ using ReactiveUI.Legacy;
 namespace DynamicData.ReactiveUI
 {
     /// <summary>
-    /// Adaptor used to populate a <see cref="ReactiveList{T}"/> from an observable sortedchangeset.
+    /// Adaptor used to populate a <see cref="ReactiveList{T}"/> from an observable sorted changeset.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>

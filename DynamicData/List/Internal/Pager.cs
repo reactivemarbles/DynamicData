@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
-using DynamicData.Operators;
 
 namespace DynamicData.List.Internal
 {
@@ -37,11 +36,11 @@ namespace DynamicData.List.Internal
                         return CheckParametersAndPage(all, paged, request);
                     });
 
-                var datachanged = _source
+                var dataChanged = _source
                     .Synchronize(locker)
                     .Select(changes => Page(all, paged, parameters, changes));
 
-                return requestStream.Merge(datachanged)
+                return requestStream.Merge(dataChanged)
                     .Where(changes => changes != null && changes.Count != 0)
                     .SubscribeSafe(observer);
             });

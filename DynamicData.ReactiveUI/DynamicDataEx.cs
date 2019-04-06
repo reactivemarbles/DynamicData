@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Reflection;
 using DynamicData.Annotations;
 using DynamicData.Cache.Internal;
 using DynamicData.List.Internal;
@@ -101,7 +100,7 @@ namespace DynamicData.ReactiveUI
 
                     return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
                         .Concat(subsequentChanges);
-                })).Run(); ;
+                })).Run();
         }
 
         /// <summary>
@@ -136,7 +135,7 @@ namespace DynamicData.ReactiveUI
 
                     return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
                         .Concat(subsequentChanges);
-                })).Run(); ;
+                })).Run();
         }
 
         /// <summary>

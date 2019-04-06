@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Annotations;
 
 namespace DynamicData.List.Internal
 {
@@ -35,22 +34,6 @@ namespace DynamicData.List.Internal
             {
                 Obj = obj;
                 Filter = filter;
-            }
-
-            private sealed class ObjFilterEqualityComparer : IEqualityComparer<ObjWithFilterValue>
-            {
-                public bool Equals(ObjWithFilterValue x, ObjWithFilterValue y)
-                {
-                    return EqualityComparer<TObject>.Default.Equals(x.Obj, y.Obj) && x.Filter == y.Filter;
-                }
-
-                public int GetHashCode(ObjWithFilterValue obj)
-                {
-                    unchecked
-                    {
-                        return (EqualityComparer<TObject>.Default.GetHashCode(obj.Obj) * 397) ^ obj.Filter.GetHashCode();
-                    }
-                }
             }
 
             private sealed class ObjEqualityComparer : IEqualityComparer<ObjWithFilterValue>

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 using FluentAssertions;
 using Xunit;
 
@@ -26,7 +24,7 @@ namespace DynamicData.Tests
                 .AsObservableList();
 
             obsListDerived.Count.Should().Be(3);
-            obsListDerived.Items.Should().BeEquivalentTo(new[] {i1, i2, i3});
+            obsListDerived.Items.Should().BeEquivalentTo(new [] {i1, i2, i3});
 
             i1.Name = "X2";
             obsListDerived.Count.Should().Be(2);
@@ -58,8 +56,8 @@ namespace DynamicData.Tests
 
         public Item(string name)
         {
-            this.Id = Guid.NewGuid();
-            this.Name = name;
+            Id = Guid.NewGuid();
+            Name = name;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

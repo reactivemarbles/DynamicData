@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Domain
             {
                 return true;
             }
-            return Equals(other.Name, this.Name) && other.Age == this.Age && Equals(other.Gender, this.Gender);
+            return Equals(other.Name, Name) && other.Age == Age && Equals(other.Gender, Gender);
         }
 
         public override bool Equals(object obj)
@@ -64,9 +64,9 @@ namespace DynamicData.Tests.Domain
         {
             unchecked
             {
-                int result = (this.Name != null ? this.Name.GetHashCode() : 0);
-                result = (result * 397) ^ this.Age;
-                result = (result * 397) ^ (this.Gender != null ? this.Gender.GetHashCode() : 0);
+                int result = (Name != null ? Name.GetHashCode() : 0);
+                result = (result * 397) ^ Age;
+                result = (result * 397) ^ (Gender != null ? Gender.GetHashCode() : 0);
                 return result;
             }
         }
@@ -75,7 +75,7 @@ namespace DynamicData.Tests.Domain
 
         public override string ToString()
         {
-            return string.Format("{0}. {1} ({2})", this.Name, this.Age, this.Gender);
+            return $"{this.Name}. {this.Age} ({Gender})";
         }
     }
 }

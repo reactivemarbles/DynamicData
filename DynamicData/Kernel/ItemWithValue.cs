@@ -25,8 +25,7 @@ namespace DynamicData.Kernel
         /// </summary>
         /// <param name="item">The item.</param>
         /// <param name="value">The Value.</param>
-        /// <param name="idx"></param>
-        public ItemWithValue(TObject item, TValue value, int idx = -1)
+        public ItemWithValue(TObject item, TValue value)
         {
             Item = item;
             Value = value;
@@ -84,15 +83,7 @@ namespace DynamicData.Kernel
 
         #endregion
 
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"{Item} ({Value})";
-        }
+        /// <inheritdoc />
+        public override string ToString() => $"{Item} ({Value})";
     }
 }

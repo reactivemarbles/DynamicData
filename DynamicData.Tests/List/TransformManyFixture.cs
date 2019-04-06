@@ -212,13 +212,13 @@ namespace DynamicData.Tests.List
         {
             public TourProvider(string name, IEnumerable<Tour> tours)
             {
-                this.Name = name;
+                Name = name;
 
                 if (tours != null)
-                    this.Tours.AddRange(tours);
+                    Tours.AddRange(tours);
             }
 
-            public string Name { get; set; }
+            public string Name { get; }
 
             public ObservableCollection<Tour> Tours { get; } = new ObservableCollection<Tour>();
         }

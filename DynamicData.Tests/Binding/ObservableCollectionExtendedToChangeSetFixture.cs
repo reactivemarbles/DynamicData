@@ -1,6 +1,5 @@
 using System;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Linq;
 using DynamicData.Binding;
 using FluentAssertions;
@@ -94,12 +93,12 @@ namespace DynamicData.Tests.Binding
         //    resetNotification.Adds.Should().Be(10);
         //}
 
-        private class TestObservableCollection<T> : ObservableCollection<T>
-        {
-            public void Reset()
-            {
-                this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-            }
-        }
+        //private class TestObservableCollection<T> : ObservableCollection<T>
+        //{
+        //    public void Reset()
+        //    {
+        //        this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        //    }
+        //}
     }
 }

@@ -5,7 +5,6 @@ using System.Linq;
 using DynamicData.Binding;
 using DynamicData.ReactiveUI.Tests.Domain;
 using FluentAssertions;
-using ReactiveUI;
 using ReactiveUI.Legacy;
 using Xunit;
 

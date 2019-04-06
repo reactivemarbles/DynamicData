@@ -34,11 +34,13 @@ namespace DynamicData
         {
             if (items == null) throw new ArgumentNullException(nameof(items));
 
-            _innerList = new List<T>(items);
+            var list = items.ToList();
+
+            _innerList = new List<T>(list);
 
             if (_innerList.Any())
             {
-                _changes.Add(new Change<T>(ListChangeReason.AddRange, items));
+                _changes.Add(new Change<T>(ListChangeReason.AddRange, list));
             }
         }
 

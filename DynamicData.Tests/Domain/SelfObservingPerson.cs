@@ -1,10 +1,5 @@
-﻿#region
-
-using System;
+﻿using System;
 using System.Reactive.Linq;
-using DynamicData.Kernel;
-
-#endregion
 
 namespace DynamicData.Tests.Domain
 {

@@ -1,10 +1,8 @@
-using System;
 using FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
     public class MergeManyChangeSetsFixture
     {
         [Fact]

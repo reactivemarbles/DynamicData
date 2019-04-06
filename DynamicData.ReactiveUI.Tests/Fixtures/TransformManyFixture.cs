@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.ReactiveUI.Tests.Domain;
 using DynamicData.Tests;
 using FluentAssertions;
-using ReactiveUI;
 using ReactiveUI.Legacy;
 using Xunit;
 

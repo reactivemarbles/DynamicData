@@ -2,7 +2,6 @@
 using System.Linq;
 using DynamicData.ReactiveUI.Tests.Domain;
 using FluentAssertions;
-using ReactiveUI;
 using ReactiveUI.Legacy;
 using Xunit;
 
@@ -17,7 +16,6 @@ namespace DynamicData.ReactiveUI.Tests.Fixtures
         private readonly IDisposable _binder;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly ReactiveList<Person> _collection;
-
 
         public BindChangeSetFixture()
         {

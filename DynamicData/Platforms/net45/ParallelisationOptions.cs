@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 #if P_LINQ
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
@@ -5,6 +7,7 @@ namespace DynamicData.PLinq
     /// <summary>
     /// Options to specify parallelisation of stream operations.  Only applicable for .Net4 and .Net45 builds 
     /// </summary>
+    [SuppressMessage("ReSharper", "CommentTypo")]
     public class ParallelisationOptions
     {
         /// <summary>
@@ -29,17 +32,11 @@ namespace DynamicData.PLinq
         /// <summary>
         /// Gets the type.
         /// </summary>
-        /// <value>
-        /// The type.
-        /// </value>
         public ParallelType Type { get; }
 
         /// <summary>
         /// Gets the threshold.
         /// </summary>
-        /// <value>
-        /// The threshold.
-        /// </value>
         public int Threshold { get; } = 0;
     }
 }
