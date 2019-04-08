@@ -15,7 +15,6 @@ namespace DynamicData.Tests
     {
         private readonly IDisposable _disposer;
         private readonly IList<IChangeSet<TObject>> _messages = new List<IChangeSet<TObject>>();
-        private ChangeSummary _summary = ChangeSummary.Empty;
         private Exception _error;
 
         /// <summary>
@@ -29,21 +28,18 @@ namespace DynamicData.Tests
             Data = published.AsObservableList();
 
             var results = published.Subscribe(updates => _messages.Add(updates), ex => _error = ex);
-            var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
             var connected = published.Connect();
-
-
+            
             _disposer = Disposable.Create(() =>
             {
                 Data.Dispose();
                 connected.Dispose();
-                summariser.Dispose();
                 results.Dispose();
             });
         }
 
         /// <summary>
-        /// A clone of the daata
+        /// A clone of the data
         /// </summary>
         public IObservableList<TObject> Data { get; }
 
@@ -52,19 +48,8 @@ namespace DynamicData.Tests
         /// </summary>
         public IList<IChangeSet<TObject>> Messages => _messages;
 
-        /// <summary>
-        /// Gets or sets the summary.
-        /// </summary>
-        public ChangeSummary Summary => _summary;
 
-        /// <summary>
-        /// Gets or sets the error.
-        /// </summary>
-        public Exception Error => _error;
-
-        /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
-        /// </summary>
+        /// <inheritdoc />
         public void Dispose()
         {
             _disposer.Dispose();

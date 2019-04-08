@@ -122,5 +122,31 @@ namespace DynamicData.Tests.List
             // Cleanup
             aggregator.Dispose();
         }
+
+        [Fact]
+        public void FormNewListFromChanges()
+        {
+            _source.Clear();
+
+
+            _source.AddRange(Enumerable.Range(1,100));
+
+            // Collect preview messages about even numbers only
+            var aggregator = _source.Preview(i => i % 2 == 0).AsAggregator();
+
+            _source.RemoveAt(10);
+            _source.RemoveRange(10,5);
+            // Trigger changes
+            _source.Add(1);
+            _source.Add(2);
+
+            Assert.True(aggregator.Messages.Count == 1);
+            Assert.True(aggregator.Messages[0].Count == 1);
+            Assert.True(aggregator.Messages[0].First().Item.Current == 2);
+            Assert.True(aggregator.Messages[0].First().Reason == ListChangeReason.Add);
+
+            // Cleanup
+            aggregator.Dispose();
+        }
     }
 }
