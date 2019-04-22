@@ -1,3 +1,7 @@
+### v 6.9.1
+
+Fix for transform on refresh overload for source list[#220](https://github.com/RolandPheasant/DynamicData/issues/220).
+
 ### v 6.9.0
 
 Introduction of `Preview` operator which applies to soure cache and source list [#218](https://github.com/RolandPheasant/DynamicData/issues/218). There is a detailed explanation of [in the preview wiki](https://github.com/RolandPheasant/DynamicData/wiki/Preview-observable)
