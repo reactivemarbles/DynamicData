@@ -693,7 +693,7 @@ namespace DynamicData
         /// <typeparam name="TSource">The type of the source.</typeparam>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="transformFactory">The transform fuunction</param>
+        /// <param name="transformFactory">The transform function</param>
         /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received</param>
         /// <returns>A an observable changeset of the transformed object</returns>
         /// <exception cref="System.ArgumentNullException">

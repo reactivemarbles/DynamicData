@@ -114,7 +114,7 @@ namespace DynamicData.Tests.List
                 items[60].Age = 160;
                 results.Data.Count.Should().Be(51);
                 results.Messages.Count.Should().Be(5);
-                results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+                results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
 
                 //remove an item and check no change is fired
                 var toRemove = items[65];
@@ -132,7 +132,7 @@ namespace DynamicData.Tests.List
 
 
 
-                results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+                results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
             }
         }
         
@@ -283,7 +283,7 @@ namespace DynamicData.Tests.List
                 items[2].Age = 13;
                 changes.Should().NotBeNull();
                 changes.Count.Should().Be(1);
-                changes.First().Reason.Should().Be(ListChangeReason.Refresh);
+                changes.First().Reason.Should().Be(ListChangeReason.Replace);
                 changes.First().Item.Current.Should().BeSameAs(items[2]);
             }
         }
@@ -340,7 +340,7 @@ namespace DynamicData.Tests.List
                 items[2].Age = 13;
                 CheckContent();
 
-                results.Messages.Count.Should().Be(4); 
+                results.Messages.Count.Should().Be(5); 
             }
         }
 
@@ -448,5 +448,32 @@ namespace DynamicData.Tests.List
                 return Id;
             }
         }
+
+        [Fact]
+        public void RefreshTransformAsList()
+        {
+            SourceList<Example> list = new SourceList<Example>();
+            var valueList = list.Connect()
+                .AutoRefresh(e => e.Value)
+                .Transform(e => e.Value, true)
+                .AsObservableList();
+
+            var obj = new Example { Value = 0 };
+            list.Add(obj);
+            obj.Value = 1;
+            valueList.Items.First().Should().Be(1);
+        }
+
+        private class Example : AbstractNotifyPropertyChanged
+        {
+            private int _value;
+
+            public int Value
+            {
+                get => _value;
+                set => SetAndRaise(ref _value, value);
+            }
+        }
+
     }
 }

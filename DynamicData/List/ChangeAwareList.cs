@@ -188,7 +188,6 @@ namespace DynamicData
         /// 
         /// This is to notify downstream operators to refresh
         /// </summary>
-        /// <returns>Ifthe item is in the list, returns true</returns>
         public void RefreshAt(int index)
         {
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
@@ -202,7 +201,7 @@ namespace DynamicData
         /// 
         /// This is to notify downstream operators to refresh
         /// </summary>
-        /// <returns>Ifthe item is in the list, returns true</returns>
+        /// <returns>If the item is in the list, returns true</returns>
         public void Refresh(T item, int index)
         {
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
@@ -218,7 +217,7 @@ namespace DynamicData
         /// Add a Refresh change for specified index to the list of changes.
         ///  This is to notify downstream operators to refresh.
         /// </summary>
-        /// <returns>Ifthe item is in the list, returns true</returns>
+        /// <returns>If the item is in the list, returns true</returns>
         public bool Refresh(T item)
         {
             var index = IndexOf(item);
@@ -314,7 +313,6 @@ namespace DynamicData
         /// <summary>
         /// Remove the item which is at the specified index
         /// </summary>
-        /// <param name="index"></param>
         protected void RemoveItem(int index)
         {
             var item = _innerList[index];
@@ -324,8 +322,6 @@ namespace DynamicData
         /// <summary>
         /// Removes the item from the specified index - intended for internal use only
         /// </summary>
-        /// <param name="index"></param>
-        /// <param name="item"></param>
         protected virtual void RemoveItem(int index, T item)
         {
             if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
@@ -536,8 +532,7 @@ namespace DynamicData
         }
 
 
-        /// <summary>Returns an enumerator that iterates through the collection.</summary>
-        /// <returns>An enumerator that can be used to iterate through the collection.</returns>
+        /// <inheritdoc />
         public IEnumerator<T> GetEnumerator()
         {
             return _innerList.GetEnumerator();

@@ -130,11 +130,6 @@ namespace DynamicData
         public int Refreshes => _refreshes;
 
         /// <summary>
-        ///     Gets the number of requeries
-        /// </summary>
-        public int Evaluates => 0;
-
-        /// <summary>
         ///     Gets the number of moves
         /// </summary>
         public int Moves => _moves;

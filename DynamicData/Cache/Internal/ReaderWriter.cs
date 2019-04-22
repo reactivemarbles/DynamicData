@@ -58,27 +58,23 @@ namespace DynamicData.Cache.Internal
 
                     return changes;
                 }
-                else
+
+                if (collectChanges)
                 {
-                    if (collectChanges)
-                    {
-                        var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
+                    var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
 
-                        _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
-                        updateAction(_activeUpdater);
-                        _activeUpdater = null;
+                    _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
+                    updateAction(_activeUpdater);
+                    _activeUpdater = null;
 
-                        return changeAwareCache.CaptureChanges();
-                    }
-                    else
-                    {
-                        _activeUpdater = new CacheUpdater<TObject, TKey>(_data, _keySelector);
-                        updateAction(_activeUpdater);
-                        _activeUpdater = null;
-
-                        return ChangeSet<TObject, TKey>.Empty;
-                    }
+                    return changeAwareCache.CaptureChanges();
                 }
+
+                _activeUpdater = new CacheUpdater<TObject, TKey>(_data, _keySelector);
+                updateAction(_activeUpdater);
+                _activeUpdater = null;
+
+                return ChangeSet<TObject, TKey>.Empty;
             }
         }
 

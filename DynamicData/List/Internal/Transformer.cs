@@ -117,11 +117,11 @@ namespace DynamicData.List.Internal
                     {
                         if (_transformOnRefresh)
                         {
+                            var change = item.Item;
+                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                            var refreshed = _containerFactory(change.Current, previous, change.CurrentIndex);
 
-                           var change = item.Item;
-                           Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
-                           var refreshed = _containerFactory(change.Current, previous, change.CurrentIndex);
-                           transformed.Refresh(refreshed, item.Item.CurrentIndex);
+                            transformed[change.CurrentIndex] = refreshed;
                         }
                         else
                         {
@@ -157,10 +157,10 @@ namespace DynamicData.List.Internal
                             }
                             else
                             {
-                                var toremove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
+                                var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
 
-                                if (toremove != null)
-                                    transformed.Remove(toremove);
+                                if (toRemove != null)
+                                    transformed.Remove(toRemove);
                             }
 
                             break;
@@ -173,8 +173,8 @@ namespace DynamicData.List.Internal
                             }
                             else
                             {
-                                var toremove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current)));
-                                transformed.RemoveMany(toremove);
+                                var toRemove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current)));
+                                transformed.RemoveMany(toRemove);
                             }
 
                             break;

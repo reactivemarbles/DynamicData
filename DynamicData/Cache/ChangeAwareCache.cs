@@ -166,7 +166,7 @@ namespace DynamicData
             _changes.AddRange(toremove);
             _data.Clear();
         }
-        
+
         /// <inheritdoc />
         public void Clone(IChangeSet<TObject, TKey> changes)
         {

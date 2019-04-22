@@ -9,7 +9,7 @@ namespace DynamicData
         /// <summary>
         /// IChangeSet is flawed because it automatically means allocations when enumerating.
         /// This extension is a crazy hack to cast to the concrete changeset which means we no longer allocate
-        /// as  changset now inherits from List which has allocation free enumerations. 
+        /// as  change set now inherits from List which has allocation free enumerations. 
         ///
         /// IChangeSet will be removed in V7 and instead Change sets will be used directly
         ///
@@ -56,9 +56,6 @@ namespace DynamicData
 
         /// <inheritdoc />
         public int Refreshes => this.Count(c => c.Reason == ChangeReason.Refresh);
-
-        /// <inheritdoc />
-        public int Evaluates => this.Count(c => c.Reason == ChangeReason.Refresh);
 
         /// <inheritdoc />
         public int Moves => this.Count(c => c.Reason == ChangeReason.Moved);
