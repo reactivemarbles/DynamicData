@@ -9,7 +9,6 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
     public class AutoRefreshFixture
     {
         [Fact]
@@ -21,7 +20,54 @@ namespace DynamicData.Tests.List
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(p=>p.Age).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p => p.Age).AsAggregator())
+            {
+                list.AddRange(items);
+
+                results.Data.Count.Should().Be(100);
+                results.Messages.Count.Should().Be(1);
+
+                items[0].Age = 10;
+                results.Data.Count.Should().Be(100);
+                results.Messages.Count.Should().Be(2);
+
+                results.Messages[1].First().Reason.Should().Be(ListChangeReason.Refresh);
+
+                //remove an item and check no change is fired
+                var toRemove = items[1];
+                list.Remove(toRemove);
+                results.Data.Count.Should().Be(99);
+                results.Messages.Count.Should().Be(3);
+                toRemove.Age = 100;
+                results.Messages.Count.Should().Be(3);
+
+                //add it back in and check it updates
+                list.Add(toRemove);
+                results.Messages.Count.Should().Be(4);
+                toRemove.Age = 101;
+                results.Messages.Count.Should().Be(5);
+
+                results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+            }
+        }
+
+        [Fact]
+        public void AutoRefreshAllExcept()
+        {
+            var items = Enumerable.Range(1, 100)
+                .Select(i => new Person("Person" + i, 1))
+                .ToArray();
+
+            //result should only be true when all items are set to true
+            using (var list = new SourceList<Person>())
+            using (var results = list.Connect()
+                .AutoRefreshAllExcept(propertiesToIgnore: new string[]
+                {
+                    nameof(Person.ParentName),
+                    nameof(Person.Gender),
+                    nameof(Person.Key),
+                    nameof(Person.Name),
+                }).AsAggregator())
             {
                 list.AddRange(items);
 
@@ -63,13 +109,13 @@ namespace DynamicData.Tests.List
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(p=>p.Age, TimeSpan.FromSeconds(1),scheduler: scheduler).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p => p.Age, TimeSpan.FromSeconds(1), scheduler: scheduler).AsAggregator())
             {
                 list.AddRange(items);
 
                 results.Data.Count.Should().Be(100);
                 results.Messages.Count.Should().Be(1);
-                
+
                 //update 50 records
                 items.Skip(50)
                     .ForEach(p => p.Age = p.Age + 1);
@@ -91,7 +137,7 @@ namespace DynamicData.Tests.List
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(p=>p.Age).Filter(p=>p.Age>50).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p => p.Age).Filter(p => p.Age > 50).AsAggregator())
             {
                 list.AddRange(items);
 
@@ -130,12 +176,10 @@ namespace DynamicData.Tests.List
                 toRemove.Age = 101;
                 results.Messages.Count.Should().Be(8);
 
-
-
                 results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
             }
         }
-        
+
         [Fact]
         public void AutoRefreshTransform()
         {
@@ -146,8 +190,8 @@ namespace DynamicData.Tests.List
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(p=>p.Age)
-                .Transform((p,idx) => new TransformedPerson(p,idx))
+                .AutoRefresh(p => p.Age)
+                .Transform((p, idx) => new TransformedPerson(p, idx))
                 .AsAggregator())
             {
                 list.AddRange(items);
@@ -175,7 +219,7 @@ namespace DynamicData.Tests.List
         {
             var items = Enumerable.Range(1, 100)
                 .Select(i => new Person("Person" + i, i))
-                .OrderByDescending(p=>p.Age)
+                .OrderByDescending(p => p.Age)
                 .ToArray();
 
             var comparer = SortExpressionComparer<Person>.Ascending(p => p.Age);
@@ -184,10 +228,9 @@ namespace DynamicData.Tests.List
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
                 .AutoRefresh(p => p.Age)
-                .Sort(SortExpressionComparer<Person>.Ascending(p=>p.Age))
+                .Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))
                 .AsAggregator())
             {
-
                 void CheckOrder()
                 {
                     var sorted = items.OrderBy(p => p, comparer).ToArray();
@@ -237,9 +280,9 @@ namespace DynamicData.Tests.List
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
                 .AutoRefresh(p => p.Age)
-                .GroupOn(p=>p.Age % 10)
+                .GroupOn(p => p.Age % 10)
                 .AsAggregator())
-            {          
+            {
                 void CheckContent()
                 {
                     foreach (var grouping in items.GroupBy(p => p.Age % 10))
@@ -272,7 +315,6 @@ namespace DynamicData.Tests.List
                 items[1].Age = 1;
                 results.Data.Count.Should().Be(10);
                 CheckContent();
-
 
                 var groupOf3 = results.Data.Items.ElementAt(2);
 
@@ -340,10 +382,9 @@ namespace DynamicData.Tests.List
                 items[2].Age = 13;
                 CheckContent();
 
-                results.Messages.Count.Should().Be(5); 
+                results.Messages.Count.Should().Be(5);
             }
         }
-
 
         [Fact]
         public void AutoRefreshDistinct()
@@ -376,7 +417,9 @@ namespace DynamicData.Tests.List
         private class TransformedPerson
         {
             public Person Person { get; }
+
             public int Index { get; }
+
             public DateTime TimeStamp { get; } = DateTime.Now;
 
             public TransformedPerson(Person person, int index)
@@ -474,6 +517,5 @@ namespace DynamicData.Tests.List
                 set => SetAndRaise(ref _value, value);
             }
         }
-
     }
 }

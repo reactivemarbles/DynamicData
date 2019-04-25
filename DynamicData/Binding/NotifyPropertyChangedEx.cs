@@ -13,7 +13,7 @@ namespace DynamicData.Binding
     public static class NotifyPropertyChangedEx
     {
         /// <summary>
-        /// Notifies when any any property on the object has changed
+        /// Notifies when any property on the object has changed
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -34,6 +34,26 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
+        /// Notifies when any property except <paramref name="propertiesToIgnore"/> on the object has changed
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertiesToIgnore">specify properties to ignore, or omit to monitor all property changes</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
+        public static IObservable<TObject> WhenAnyPropertyChangedExcept<TObject>([NotNull] this TObject source, params string[] propertiesToIgnore)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
+                (
+                    handler => source.PropertyChanged += handler,
+                    handler => source.PropertyChanged -= handler
+                )
+                .Where(x => propertiesToIgnore == null || propertiesToIgnore.Length == 0 || !propertiesToIgnore.Contains(x.EventArgs.PropertyName))
+                .Select(x => source);
+        }
+
+        /// <summary>
         /// Observes property changes for the specified property, starting with the current value
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -41,14 +61,14 @@ namespace DynamicData.Binding
         /// <param name="source">The source.</param>
         /// <param name="propertyAccessor">The property to observe</param>
         /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value</param>
-        /// <param name="fallbackValue"> A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
+        /// <param name="fallbackValue"> A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
-        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>([NotNull] this TObject source, 
-            Expression<Func<TObject, TProperty>> propertyAccessor, 
-            bool notifyOnInitialValue = true, 
+        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>([NotNull] this TObject source,
+            Expression<Func<TObject, TProperty>> propertyAccessor,
+            bool notifyOnInitialValue = true,
             Func<TProperty> fallbackValue = null)
             where TObject : INotifyPropertyChanged
         {
@@ -66,8 +86,8 @@ namespace DynamicData.Binding
         /// <param name="source">The source.</param>
         /// <param name="propertyAccessor">The property to observe</param>
         /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value</param>
-        /// <param name="fallbackValue"> A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
+        /// <param name="fallbackValue"> A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.</param>
         public static IObservable<TProperty> WhenValueChanged<TObject, TProperty>([NotNull] this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty> fallbackValue = null)
             where TObject : INotifyPropertyChanged
@@ -79,15 +99,15 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
-        /// 
-        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.
+        ///
+        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
         public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1>([NotNull] this TObject source,
             Expression<Func<TObject, TProperty1>> p1,
-            Func<TObject, TProperty1,  TResult> resultSelector,
+            Func<TObject, TProperty1, TResult> resultSelector,
             Func<TProperty1> p1Fallback = null)
             where TObject : INotifyPropertyChanged
         {
@@ -99,15 +119,15 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
-        /// 
-        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.
+        ///
+        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2>([NotNull] this TObject source, 
+        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2>([NotNull] this TObject source,
             Expression<Func<TObject, TProperty1>> p1,
-            Expression<Func<TObject, TProperty2>> p2, 
+            Expression<Func<TObject, TProperty2>> p2,
             Func<TObject, TProperty1, TProperty2, TResult> resultSelector,
             Func<TProperty1> p1Fallback = null,
             Func<TProperty2> p2Fallback = null)
@@ -127,10 +147,10 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
-        /// 
-        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.
+        ///
+        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
         public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3>([NotNull] this TObject source,
@@ -159,10 +179,10 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
-        /// 
-        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.
+        ///
+        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
         public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4>([NotNull] this TObject source,
@@ -195,10 +215,10 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
-        /// 
-        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.
+        ///
+        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
         public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5>([NotNull] this TObject source,
@@ -235,10 +255,10 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Produces an observable based on the combined values of the specified properties, including the initial value.  
-        /// 
-        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable. 
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
+        /// Produces an observable based on the combined values of the specified properties, including the initial value.
+        ///
+        /// ** A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
         public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5, TProperty6>([NotNull] this TObject source,
@@ -274,10 +294,9 @@ namespace DynamicData.Binding
                 source.WhenChanged(p4, true, p4Fallback),
                 source.WhenChanged(p5, true, p5Fallback),
                 source.WhenChanged(p6, true, p6Fallback),
-                (v1, v2, v3, v4, v5,v6) => resultSelector(source, v1, v2, v3, v4, v5, v6)
+                (v1, v2, v3, v4, v5, v6) => resultSelector(source, v1, v2, v3, v4, v5, v6)
             );
         }
-
 
         internal static IObservable<TProperty> WhenChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true, Func<TProperty> fallbackValue = null)
             where TObject : INotifyPropertyChanged
@@ -300,6 +319,5 @@ namespace DynamicData.Binding
             var factory = ObservablePropertyFactoryCache.Instance.GetFactory(expression);
             return (t, initial) => factory.Create(t, initial);
         }
-
     }
 }

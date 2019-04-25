@@ -179,7 +179,7 @@ namespace DynamicData
             return new ToObservableChangeSet<T>(source, expireAfter, limitSizeTo, scheduler).Run();
         }
 
-        #endregion
+        #endregion Populate change set from standard rx observable
 
         #region Auto Refresh
 
@@ -188,7 +188,7 @@ namespace DynamicData
         /// </summary>
         /// <param name="source">The source observable</param>
         /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
-        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations</param>
         /// <param name="scheduler">The scheduler</param>
         /// <returns>An observable change set with additional refresh changes</returns>
         public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source,
@@ -206,7 +206,6 @@ namespace DynamicData
 
                 return t.WhenAnyPropertyChanged()
                     .Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
-
             }, changeSetBuffer, scheduler);
         }
 
@@ -216,7 +215,7 @@ namespace DynamicData
         /// <param name="source">The source observable</param>
         /// <param name="propertyAccessor">Specify a property to observe changes. When it changes a Refresh is invoked</param>
         /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
-        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations</param>
         /// <param name="scheduler">The scheduler</param>
         /// <returns>An observable change set with additional refresh changes</returns>
         public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source,
@@ -234,9 +233,36 @@ namespace DynamicData
                 if (propertyChangeThrottle == null)
                     return t.WhenPropertyChanged(propertyAccessor, false);
 
-                return t.WhenPropertyChanged(propertyAccessor,false)
+                return t.WhenPropertyChanged(propertyAccessor, false)
                     .Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
+            }, changeSetBuffer, scheduler);
+        }
 
+        /// <summary>
+        /// Automatically refresh downstream operators when any property except <paramref name="propertiesToIgnore"/> changes.
+        /// </summary>
+        /// <param name="source">The source observable</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations</param>
+        /// <param name="scheduler">The scheduler</param>
+        /// <param name="propertiesToIgnore">specify properties to ignore, or omit to monitor all property changes</param>
+        /// <returns>An observable change set with additional refresh changes</returns>
+        public static IObservable<IChangeSet<TObject>> AutoRefreshAllExcept<TObject>(this IObservable<IChangeSet<TObject>> source,
+            TimeSpan? changeSetBuffer = null,
+            TimeSpan? propertyChangeThrottle = null,
+            IScheduler scheduler = null,
+            params string[] propertiesToIgnore)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return source.AutoRefreshOnObservable(t =>
+            {
+                if (propertyChangeThrottle == null)
+                    return t.WhenAnyPropertyChangedExcept(propertiesToIgnore);
+
+                return t.WhenAnyPropertyChanged()
+                    .Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
             }, changeSetBuffer, scheduler);
         }
 
@@ -258,7 +284,6 @@ namespace DynamicData
             return new AutoRefresh<TObject, TAny>(source, reevaluator, changeSetBuffer, scheduler).Run();
         }
 
-
         /// <summary>
         /// Supress  refresh notifications
         /// </summary>
@@ -269,14 +294,13 @@ namespace DynamicData
             return source.WhereReasonsAreNot(ListChangeReason.Refresh);
         }
 
-
-        #endregion
+        #endregion Auto Refresh
 
         #region Conversion
 
         /// <summary>
         /// Removes the index from all changes.
-        /// 
+        ///
         /// NB: This operator has been introduced as a temporary fix for creating an Or operator using merge many.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
@@ -312,7 +336,7 @@ namespace DynamicData
 
         /// <summary>
         /// Convert the object using the sepcified conversion function.
-        /// 
+        ///
         /// This is a lighter equivalent of Transform and is designed to be used with non-disposable objects
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -331,8 +355,6 @@ namespace DynamicData
             if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
             return source.Select(changes => changes.Transform(conversionFactory));
         }
-
-
 
         /// <summary>
         /// Cast the underlying type of an object. Use before a Cast function
@@ -360,12 +382,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination>> Cast<TDestination>([NotNull] this IObservable<IChangeSet<object>> source)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.Select(changes => changes.Transform(t=>(TDestination)t));
+            return source.Select(changes => changes.Transform(t => (TDestination)t));
         }
 
         /// <summary>
         /// Cast the changes to another form
-        /// 
+        ///
         /// Alas, I had to add the converter due to type inference issues. The converter can be avoided by CastToObject() first
         /// </summary>
         /// <typeparam name="TSource">The type of the object.</typeparam>
@@ -383,7 +405,7 @@ namespace DynamicData
             return source.Select(changes => changes.Transform(conversionFactory));
         }
 
-        #endregion
+        #endregion Conversion
 
         #region Binding
 
@@ -457,7 +479,6 @@ namespace DynamicData
 
 #endif
 
-
         /// <summary>
         /// Injects a side effect into a changeset observable
         /// </summary>
@@ -476,7 +497,6 @@ namespace DynamicData
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (adaptor == null) throw new ArgumentNullException(nameof(adaptor));
 
-
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var locker = new object();
@@ -490,7 +510,7 @@ namespace DynamicData
             });
         }
 
-        #endregion
+        #endregion Binding
 
         #region Populate into an observable list
 
@@ -557,7 +577,7 @@ namespace DynamicData
             return new RefCount<T>(source).Run();
         }
 
-        #endregion
+        #endregion Populate into an observable list
 
         #region Core List Operators
 
@@ -595,11 +615,10 @@ namespace DynamicData
             return new Filter<T>(source, predicate, filterPolicy).Run();
         }
 
-
         /// <summary>
         /// Filters source on the specified property using the specified predicate.
-        /// 
-        /// The filter will automatically reapply when a property changes 
+        ///
+        /// The filter will automatically reapply when a property changes
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TProperty">The type of the property.</typeparam>
@@ -626,8 +645,8 @@ namespace DynamicData
 
         /// <summary>
         /// Filters source on the specified observable property using the specified predicate.
-        /// 
-        /// The filter will automatically reapply when a property changes 
+        ///
+        /// The filter will automatically reapply when a property changes
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -678,7 +697,7 @@ namespace DynamicData
         /// or
         /// valueSelector
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, 
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source,
             Func<TSource, TDestination> transformFactory,
             bool transformOnRefresh = false)
         {
@@ -701,19 +720,19 @@ namespace DynamicData
         /// or
         /// valueSelector
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, 
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source,
             Func<TSource, int, TDestination> transformFactory,
             bool transformOnRefresh = false)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
 
-            return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t,idx),transformOnRefresh);
+            return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t, idx), transformOnRefresh);
         }
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function.
-        /// 
+        ///
         /// *** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails
         /// </summary>
         /// <typeparam name="TSource">The type of the source.</typeparam>
@@ -739,7 +758,7 @@ namespace DynamicData
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
-        /// 
+        ///
         /// *** Annoyingly when using this overload you will have to explicy specify the generic type arguments as type inference fails
         /// </summary>
         /// <typeparam name="TSource">The type of the source.</typeparam>
@@ -761,7 +780,6 @@ namespace DynamicData
 
             return new Transformer<TSource, TDestination>(source, transformFactory, transformOnRefresh).Run();
         }
-
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
@@ -799,7 +817,7 @@ namespace DynamicData
         /// or
         /// manyselector
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>( [NotNull] this IObservable<IChangeSet<TSource>> source,
+        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>([NotNull] this IObservable<IChangeSet<TSource>> source,
             [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
         {
@@ -808,7 +826,7 @@ namespace DynamicData
             return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer).Run();
         }
 
-         /// <summary>
+        /// <summary>
         /// Flatten the nested observable collection, and  observe subsequentl observable collection changes
         /// </summary>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -816,11 +834,11 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="manyselector">The manyselector.</param>
         /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children</param>
-        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>( this IObservable<IChangeSet<TSource>> source,
+        public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source,
             Func<TSource, ObservableCollection<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
         {
-            return new TransformMany<TSource, TDestination>(source,manyselector, equalityComparer).Run();
+            return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer).Run();
         }
 
         /// <summary>
@@ -926,7 +944,6 @@ namespace DynamicData
             return new GroupOnImmutable<TObject, TGroupKey>(source, groupSelectorKey, regrouper).Run();
         }
 
-
         /// <summary>
         /// Groups the source using the property specified by the property selector.  The resulting groupings contains an inner observable list.
         /// Groups are re-applied when the property value changed.
@@ -976,7 +993,7 @@ namespace DynamicData
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
-            return     new GroupOnPropertyWithImmutableState<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
+            return new GroupOnPropertyWithImmutableState<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
         }
 
         /// <summary>
@@ -1006,7 +1023,7 @@ namespace DynamicData
             return source.Do(target.Clone);
         }
 
-        #endregion
+        #endregion Core List Operators
 
         #region Sort
 
@@ -1062,7 +1079,7 @@ namespace DynamicData
             return new Sort<T>(source, null, options, resort, comparerChanged, resetThreshold).Run();
         }
 
-        #endregion
+        #endregion Sort
 
         #region Item operators
 
@@ -1086,7 +1103,7 @@ namespace DynamicData
 
         /// <summary>
         /// Provides a call back for each item change.
-        /// 
+        ///
         /// Range changes are flattened, so there is only need to check for Add, Replace, Remove and Clear
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -1147,7 +1164,7 @@ namespace DynamicData
             if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
 
             var factory = propertyAccessor.GetFactory();
-            return source.MergeMany(t => factory(t, notifyOnInitialValue).Select(pv=>pv.Value));
+            return source.MergeMany(t => factory(t, notifyOnInitialValue).Select(pv => pv.Value));
         }
 
         /// <summary>
@@ -1213,7 +1230,7 @@ namespace DynamicData
 
         /// <summary>
         /// Disposes each item when no longer required.
-        /// 
+        ///
         /// Individual items are disposed when removed or replaced. All items
         /// are disposed when the stream is disposed
         /// </summary>
@@ -1268,7 +1285,7 @@ namespace DynamicData
             return new OnBeingAdded<T>(source, addAction).Run();
         }
 
-        #endregion
+        #endregion Item operators
 
         #region Reason filtering
 
@@ -1286,7 +1303,7 @@ namespace DynamicData
             if (reasons.Length == 0)
                 throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
 
-            var matches = new HashSet<ListChangeReason>(reasons); 
+            var matches = new HashSet<ListChangeReason>(reasons);
             return source.Select(changes =>
             {
                 var filtered = changes.Where(change => matches.Contains(change.Reason)).YieldWithoutIndex();
@@ -1308,7 +1325,7 @@ namespace DynamicData
             if (reasons.Length == 0)
                 throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
 
-            var matches =  new HashSet<ListChangeReason>(reasons);
+            var matches = new HashSet<ListChangeReason>(reasons);
             return source.Select(updates =>
             {
                 var filtered = updates.Where(u => !matches.Contains(u.Reason)).YieldWithoutIndex();
@@ -1316,12 +1333,12 @@ namespace DynamicData
             }).NotEmpty();
         }
 
-        #endregion
+        #endregion Reason filtering
 
         #region Buffering
 
         /// <summary>
-        /// Buffers changes for an intial period only. After the period has elapsed, not further buffering occurs. 
+        /// Buffers changes for an intial period only. After the period has elapsed, not further buffering occurs.
         /// </summary>
         /// <param name="source">The source changeset</param>
         /// <param name="initalBuffer">The period to buffer, measure from the time that the first item arrives</param>
@@ -1513,7 +1530,6 @@ namespace DynamicData
             });
         }
 
-
         /// <summary>
         /// Defer the subscribtion until loaded and skip initial changeset
         /// </summary>
@@ -1551,7 +1567,7 @@ namespace DynamicData
             return source.Connect().DeferUntilLoaded();
         }
 
-        #endregion
+        #endregion Buffering
 
         #region Virtualisation / Paging
 
@@ -1588,7 +1604,6 @@ namespace DynamicData
             return source.Virtualise(Observable.Return(new VirtualRequest(0, numberOfItems)));
         }
 
-
         /// <summary>
         /// Applies paging to the the data source
         /// </summary>
@@ -1604,12 +1619,12 @@ namespace DynamicData
             return new Pager<T>(source, requests).Run();
         }
 
-        #endregion
+        #endregion Virtualisation / Paging
 
         #region Expiry / size limiter
 
         /// <summary>
-        /// Limits the size of the source cache to the specified limit. 
+        /// Limits the size of the source cache to the specified limit.
         /// Notifies which items have been removed from the source list.
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -1672,7 +1687,7 @@ namespace DynamicData
             return limiter.Run().Synchronize(locker).Do(source.RemoveMany);
         }
 
-        #endregion
+        #endregion Expiry / size limiter
 
         #region Logical collection operators
 
@@ -1980,7 +1995,7 @@ namespace DynamicData
             return new DynamicCombiner<T>(sources, type).Run();
         }
 
-        #endregion
+        #endregion Logical collection operators
 
         #region Switch
 
@@ -2022,8 +2037,7 @@ namespace DynamicData
             return new Switch<T>(sources).Run();
         }
 
-        #endregion
-
+        #endregion Switch
 
         #region Start with
 
@@ -2035,8 +2049,6 @@ namespace DynamicData
             return source.StartWith(ChangeSet<T>.Empty);
         }
 
-
-
-        #endregion
+        #endregion Start with
     }
 }
