@@ -1,4 +1,8 @@
 <Project>
+  <PropertyGroup>  
+    <Product>$(AssemblyName) ($(TargetFramework))</Product>
+  </PropertyGroup>
+
   <PropertyGroup Condition="$(TargetFramework.StartsWith('uap'))">
     <DefineConstants>$(DefineConstants);WINDOWS_UWP;P_LINQ</DefineConstants>
   </PropertyGroup>
