@@ -57,7 +57,11 @@ namespace DynamicData.Cache.Internal
                                                        //deal with items which have no parent
                                                        foreach (var change in group)
                                                        {
-                                                           change.Current.Parent = null;
+                                                           if (change.Reason != ChangeReason.Refresh)
+                                                           {
+                                                               change.Current.Parent = null;
+                                                           }
+
                                                            switch (change.Reason)
                                                            {
                                                                case ChangeReason.Add:
@@ -87,6 +91,18 @@ namespace DynamicData.Cache.Internal
                                                                        var children = change.Current.Children.Items;
                                                                        change.Current.Update(updater => updater.Remove(children));
                                                                        children.ForEach(child => child.Parent = null);
+
+                                                                       break;
+                                                                   }
+
+                                                               case ChangeReason.Refresh:
+                                                                   {
+                                                                       var previousParent = change.Current.Parent;
+                                                                       if (!previousParent.Equals(parent))
+                                                                       {
+                                                                           previousParent.IfHasValue(n => n.Update(u => u.Remove(change.Key)));
+                                                                           change.Current.Parent = null;
+                                                                       }
 
                                                                        break;
                                                                    }
@@ -149,6 +165,17 @@ namespace DynamicData.Cache.Internal
                                                                            change.Current.Update(u => u.Remove(children));
                                                                            children.ForEach(child => child.Parent = null);
 
+                                                                           break;
+                                                                       }
+                                                                   case ChangeReason.Refresh:
+                                                                       {
+                                                                           var previousParent = change.Current.Parent;
+                                                                           if (!previousParent.Equals(parent))
+                                                                           {
+                                                                               previousParent.IfHasValue(n => n.Update(u => u.Remove(change.Key)));
+                                                                               change.Current.Parent = p;
+                                                                               updater.AddOrUpdate(change.Current);
+                                                                           }
                                                                            break;
                                                                        }
                                                                }
