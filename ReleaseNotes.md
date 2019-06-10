@@ -1,3 +1,8 @@
+### v 6.10.0
+
+Transform to tree fixes [#230](https://github.com/RolandPheasant/DynamicData/issues/230) and [#225](https://github.com/RolandPheasant/DynamicData/issues/225).
+Use minimum version of Rx = 4.1.5. See [#229](https://github.com/RolandPheasant/DynamicData/pull/229)
+
 ### v 6.9.1
 
 Fix for transform on refresh overload for source list[#220](https://github.com/RolandPheasant/DynamicData/issues/220).
