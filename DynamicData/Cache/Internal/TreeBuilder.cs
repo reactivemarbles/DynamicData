@@ -41,6 +41,22 @@ namespace DynamicData.Cache.Internal
                                       .Transform((t, v) => new Node<TObject, TKey>(t, v))
                                       .AsObservableCache();
 
+                var groupedByPivot = allNodes.Connect()
+                                             .Synchronize(locker)
+                                             .Group(x => _pivotOn(x.Item))
+                                             .AsObservableCache();
+                
+                void UpdateChildren(Node<TObject, TKey> parentNode)
+                {
+                    var lookup = groupedByPivot.Lookup(parentNode.Key);
+                    if (lookup.HasValue)
+                    {
+                        var children = lookup.Value.Cache.Items;
+                        parentNode.Update(u => u.AddOrUpdate(children));
+                        children.ForEach(x => x.Parent = parentNode);
+                    }
+                }
+
                 //as nodes change, maintain parent and children
                 var parentSetter = allNodes.Connect()
                                            .Do(changes =>
@@ -65,6 +81,7 @@ namespace DynamicData.Cache.Internal
                                                            switch (change.Reason)
                                                            {
                                                                case ChangeReason.Add:
+                                                                   UpdateChildren(change.Current);
                                                                    break;
                                                                case ChangeReason.Update:
                                                                    {
@@ -129,6 +146,7 @@ namespace DynamicData.Cache.Internal
                                                                            // update the parent node
                                                                            node.Parent = p;
                                                                            updater.AddOrUpdate(node);
+                                                                           UpdateChildren(node);
 
                                                                            break;
                                                                        }
@@ -198,6 +216,7 @@ namespace DynamicData.Cache.Internal
                     parentSetter.Dispose();
                     allData.Dispose();
                     allNodes.Dispose();
+                    groupedByPivot.Dispose();
                     refilterObservable.OnCompleted();
                 });
             });
