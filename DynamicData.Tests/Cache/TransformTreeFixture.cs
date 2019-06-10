@@ -126,19 +126,33 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void AddMissingParent()
         {
-            var minion = new EmployeeDto(1) { BossId = 2, Name = "DogsBody" };
-            var boss = new EmployeeDto(2) { BossId = 0, Name = "Boss" };
+            var emp10 = new EmployeeDto(10) { BossId = 11, Name = "Employee10" };
+            var emp11 = new EmployeeDto(11) { BossId = 0, Name = "Employee11" };
+            var emp12 = new EmployeeDto(12) { BossId = 13, Name = "Employee12" };
+            var emp13 = new EmployeeDto(13) { BossId = 11, Name = "Employee13" };
 
-            _sourceCache.AddOrUpdate(boss);
-            _sourceCache.AddOrUpdate(minion);
+            _sourceCache.AddOrUpdate(emp10);
+            _sourceCache.AddOrUpdate(emp11);
+            _sourceCache.AddOrUpdate(emp12);
+            _sourceCache.AddOrUpdate(emp13);
 
             _result.Count.Should().Be(1);
 
-            var firstNode = _result.Items.First();
-            firstNode.Item.Should().Be(boss);
+            var emp11Node = _result.Lookup(11);
+            emp11Node.HasValue.Should().BeTrue();
+            emp11Node.Value.Children.Count.Should().Be(2);
 
-            var childNode = firstNode.Children.Items.First();
-            childNode.Item.Should().Be(minion);
+            var emp10Node = emp11Node.Value.Children.Lookup(10);
+            emp10Node.HasValue.Should().BeTrue();
+            emp10Node.Value.Children.Count.Should().Be(0);
+
+            var emp13Node = emp11Node.Value.Children.Lookup(13);
+            emp13Node.HasValue.Should().BeTrue();
+            emp13Node.Value.Children.Count.Should().Be(1);
+
+            var emp12Node = emp13Node.Value.Children.Lookup(12);
+            emp12Node.HasValue.Should().BeTrue();
+            emp12Node.Value.Children.Count.Should().Be(0);
         }
 
         [Fact]
@@ -163,19 +177,6 @@ namespace DynamicData.Tests.Cache
 
             //emp 4 must be removed from previous boss's child collection
             emp3.Children.Lookup(4).HasValue.Should().BeFalse();
-        }
-
-        [Fact]
-        public void AddParent()
-        {
-            _sourceCache.AddOrUpdate(new EmployeeDto(1) { BossId = 2, Name = "E1" });
-            _sourceCache.AddOrUpdate(new EmployeeDto(2) { BossId = 1, Name = "E2" });
-
-            //we expect the children of node 4  to be pushed up become new roots
-            _result.Count.Should().Be(1);
-
-            var firstNode = _result.Items.First();
-            firstNode.Item.Id.Should().Be(1);
         }
 
         [Fact]
