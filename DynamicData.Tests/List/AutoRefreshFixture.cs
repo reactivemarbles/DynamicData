@@ -15,12 +15,12 @@ namespace DynamicData.Tests.List
         public void AutoRefresh()
         {
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, 1))
+                .Select(i=>new Person("Person" + i, 1))
                 .ToArray();
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(p => p.Age).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p=>p.Age).AsAggregator())
             {
                 list.AddRange(items);
 
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.List
         public void AutoRefreshAllExcept()
         {
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, 1))
+                .Select(i=>new Person("Person" + i, 1))
                 .ToArray();
 
             //result should only be true when all items are set to true
@@ -104,12 +104,12 @@ namespace DynamicData.Tests.List
             var scheduler = new TestScheduler();
 
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, 1))
+                .Select(i=>new Person("Person" + i, 1))
                 .ToArray();
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(p => p.Age, TimeSpan.FromSeconds(1), scheduler: scheduler).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p=>p.Age, TimeSpan.FromSeconds(1), scheduler: scheduler).AsAggregator())
             {
                 list.AddRange(items);
 
@@ -118,7 +118,7 @@ namespace DynamicData.Tests.List
 
                 //update 50 records
                 items.Skip(50)
-                    .ForEach(p => p.Age = p.Age + 1);
+                    .ForEach(p=>p.Age = p.Age + 1);
 
                 scheduler.AdvanceBy(TimeSpan.FromSeconds(1).Ticks);
 
@@ -132,12 +132,12 @@ namespace DynamicData.Tests.List
         public void AutoRefreshFilter()
         {
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, i))
+                .Select(i=>new Person("Person" + i, i))
                 .ToArray();
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
-            using (var results = list.Connect().AutoRefresh(p => p.Age).Filter(p => p.Age > 50).AsAggregator())
+            using (var results = list.Connect().AutoRefresh(p=>p.Age).Filter(p=>p.Age > 50).AsAggregator())
             {
                 list.AddRange(items);
 
@@ -184,14 +184,14 @@ namespace DynamicData.Tests.List
         public void AutoRefreshTransform()
         {
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, i))
+                .Select(i=>new Person("Person" + i, i))
                 .ToArray();
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(p => p.Age)
-                .Transform((p, idx) => new TransformedPerson(p, idx))
+                .AutoRefresh(p=>p.Age)
+                .Transform((p, idx)=>new TransformedPerson(p, idx))
                 .AsAggregator())
             {
                 list.AddRange(items);
@@ -218,22 +218,22 @@ namespace DynamicData.Tests.List
         public void AutoRefreshSort()
         {
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, i))
-                .OrderByDescending(p => p.Age)
+                .Select(i=>new Person("Person" + i, i))
+                .OrderByDescending(p=>p.Age)
                 .ToArray();
 
-            var comparer = SortExpressionComparer<Person>.Ascending(p => p.Age);
+            var comparer = SortExpressionComparer<Person>.Ascending(p=>p.Age);
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(p => p.Age)
-                .Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))
+                .AutoRefresh(p=>p.Age)
+                .Sort(SortExpressionComparer<Person>.Ascending(p=>p.Age))
                 .AsAggregator())
             {
                 void CheckOrder()
                 {
-                    var sorted = items.OrderBy(p => p, comparer).ToArray();
+                    var sorted = items.OrderBy(p=>p, comparer).ToArray();
                     results.Data.Items.ShouldAllBeEquivalentTo(sorted);
                 }
 
@@ -273,23 +273,23 @@ namespace DynamicData.Tests.List
         public void AutoRefreshGroup()
         {
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, i))
+                .Select(i=>new Person("Person" + i, i))
                 .ToArray();
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(p => p.Age)
-                .GroupOn(p => p.Age % 10)
+                .AutoRefresh(p=>p.Age)
+                .GroupOn(p=>p.Age % 10)
                 .AsAggregator())
             {
                 void CheckContent()
                 {
-                    foreach (var grouping in items.GroupBy(p => p.Age % 10))
+                    foreach (var grouping in items.GroupBy(p=>p.Age % 10))
                     {
-                        var childGroup = results.Data.Items.Single(g => g.GroupKey == grouping.Key);
-                        var expected = grouping.OrderBy(p => p.Name);
-                        var actual = childGroup.List.Items.OrderBy(p => p.Name);
+                        var childGroup = results.Data.Items.Single(g=>g.GroupKey == grouping.Key);
+                        var expected = grouping.OrderBy(p=>p.Name);
+                        var actual = childGroup.List.Items.OrderBy(p=>p.Name);
                         actual.ShouldAllBeEquivalentTo(expected);
                     }
                 }
@@ -319,7 +319,7 @@ namespace DynamicData.Tests.List
                 var groupOf3 = results.Data.Items.ElementAt(2);
 
                 IChangeSet<Person> changes = null;
-                groupOf3.List.Connect().Subscribe(c => changes = c);
+                groupOf3.List.Connect().Subscribe(c=>changes = c);
 
                 //refresh an item which makes it belong to the same group - should then propagate a refresh
                 items[2].Age = 13;
@@ -334,23 +334,23 @@ namespace DynamicData.Tests.List
         public void AutoRefreshGroupImmutable()
         {
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, i))
+                .Select(i=>new Person("Person" + i, i))
                 .ToArray();
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(p => p.Age)
-                .GroupWithImmutableState(p => p.Age % 10)
+                .AutoRefresh(p=>p.Age)
+                .GroupWithImmutableState(p=>p.Age % 10)
                 .AsAggregator())
             {
                 void CheckContent()
                 {
-                    foreach (var grouping in items.GroupBy(p => p.Age % 10))
+                    foreach (var grouping in items.GroupBy(p=>p.Age % 10))
                     {
-                        var childGroup = results.Data.Items.Single(g => g.Key == grouping.Key);
-                        var expected = grouping.OrderBy(p => p.Name);
-                        var actual = childGroup.Items.OrderBy(p => p.Name);
+                        var childGroup = results.Data.Items.Single(g=>g.Key == grouping.Key);
+                        var expected = grouping.OrderBy(p=>p.Name);
+                        var actual = childGroup.Items.OrderBy(p=>p.Name);
                         actual.ShouldAllBeEquivalentTo(expected);
                     }
                 }
@@ -390,14 +390,14 @@ namespace DynamicData.Tests.List
         public void AutoRefreshDistinct()
         {
             var items = Enumerable.Range(1, 100)
-                .Select(i => new Person("Person" + i, i))
+                .Select(i=>new Person("Person" + i, i))
                 .ToArray();
 
             //result should only be true when all items are set to true
             using (var list = new SourceList<Person>())
             using (var results = list.Connect()
-                .AutoRefresh(p => p.Age)
-                .DistinctValues(p => p.Age / 10)
+                .AutoRefresh(p=>p.Age)
+                .DistinctValues(p=>p.Age / 10)
                 .AsAggregator())
             {
                 list.AddRange(items);
@@ -434,12 +434,12 @@ namespace DynamicData.Tests.List
         {
             //test added as v6 broke unit test in DynamicData.Snippets
             var initialItems = Enumerable.Range(1, 10)
-                .Select(i => new SelectableItem(i))
+                .Select(i=>new SelectableItem(i))
                 .ToArray();
 
             //result should only be true when all items are set to true
             using (var sourceList = new SourceList<SelectableItem>())
-            using (var sut = sourceList.Connect().AutoRefresh().Filter(si => si.IsSelected).AsObservableList())
+            using (var sut = sourceList.Connect().AutoRefresh().Filter(si=>si.IsSelected).AsObservableList())
             {
                 sourceList.AddRange(initialItems);
                 sut.Count.Should().Be(0);
@@ -469,8 +469,8 @@ namespace DynamicData.Tests.List
 
             public bool IsSelected
             {
-                get => _isSelected;
-                set => SetAndRaise(ref _isSelected, value);
+                get=>_isSelected;
+                set=>SetAndRaise(ref _isSelected, value);
             }
 
             protected bool Equals(SelectableItem other)
@@ -497,8 +497,8 @@ namespace DynamicData.Tests.List
         {
             SourceList<Example> list = new SourceList<Example>();
             var valueList = list.Connect()
-                .AutoRefresh(e => e.Value)
-                .Transform(e => e.Value, true)
+                .AutoRefresh(e=>e.Value)
+                .Transform(e=>e.Value, true)
                 .AsObservableList();
 
             var obj = new Example { Value = 0 };
@@ -513,8 +513,8 @@ namespace DynamicData.Tests.List
 
             public int Value
             {
-                get => _value;
-                set => SetAndRaise(ref _value, value);
+                get=>_value;
+                set=>SetAndRaise(ref _value, value);
             }
         }
     }
