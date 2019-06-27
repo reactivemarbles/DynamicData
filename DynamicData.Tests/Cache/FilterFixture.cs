@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
@@ -189,6 +190,25 @@ namespace DynamicData.Tests.Cache
 
             _results.Messages.Count.Should().Be(0, "Should be no updates");
             _results.Data.Count.Should().Be(0, "Should nothing cached");
+        }
+
+        [Fact]
+        public void DuplicateKeyWithMerge()
+        {
+            const string key = "Adult1";
+            var newperson = new Person(key, 30);
+
+            using (var results = _source.Connect()
+                .Merge(_source.Connect())
+                .Filter(p => p.Age > 20).AsAggregator())
+            {
+                _source.AddOrUpdate(newperson); // previously this would throw an exception
+
+                results.Messages.Count.Should().Be(2, "Should be 2 messages");
+                results.Messages[0].Adds.Should().Be(1, "Should be 1 add");
+                results.Messages[1].Updates.Should().Be(1, "Should be 1 update");
+                results.Data.Count.Should().Be(1, "Should be cached");
+            }
         }
     }
 }
