@@ -90,7 +90,13 @@ namespace DynamicData.List.Internal
                 if (shouldBeInResult)
                 {
                     if (!isInResult)
+                    {
                         resultList.Add(item);
+                    }
+                    else if (change.Reason == ListChangeReason.Refresh)
+                    {
+                        resultList.Refresh(change.Current);
+                    }
                 }
                 else
                 {
