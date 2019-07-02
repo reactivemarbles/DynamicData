@@ -30,15 +30,16 @@ namespace DynamicData.Cache.Internal
             var disposable = new CompositeDisposable();
             lock (_locker)
             {
-                foreach (var item in source)
-                {
-                    var cache = new Cache<TObject, TKey>();
-                    _sourceCaches.Add(cache);
+                var caches = Enumerable.Range(0, source.Length).Select(_ => new Cache<TObject, TKey>());
+                _sourceCaches.AddRange(caches);
 
-                    var subsription = item.Subscribe(updates => Update(cache, updates));
-                    disposable.Add(subsription);
+                foreach (var pair in source.Zip(_sourceCaches, (item, cache) => new { Item = item, Cache = cache }))
+                {
+                    var subscription = pair.Item.Subscribe(updates => Update(pair.Cache, updates));
+                    disposable.Add(subscription);
                 }
             }
+
             return disposable;
         }
 

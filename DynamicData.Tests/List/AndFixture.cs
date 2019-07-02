@@ -90,5 +90,16 @@ namespace DynamicData.Tests.List
             _source1.Clear();
             _results.Data.Count.Should().Be(0);
         }
+
+        [Fact]
+        public void StartingWithNonEmptySourceProducesNoResult()
+        {
+            _source1.Add(1);
+
+            using (var result = CreateObservable().AsAggregator())
+            {
+                result.Data.Count.Should().Be(0);
+            }
+        }
     }
 }

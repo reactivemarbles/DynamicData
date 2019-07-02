@@ -95,5 +95,18 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(1, "Cache should have no items");
             _results.Data.Items.First().Should().Be(personUpdated, "Should be updated person");
         }
+
+        [Fact]
+        public void StartingWithNonEmptySourceProducesNoResult()
+        {
+            var person = new Person("Adult", 50);
+            _source1.AddOrUpdate(person);
+
+            using (var result = CreateObservable().AsAggregator())
+            {
+                _results.Messages.Count.Should().Be(0, "Should have no updates");
+                result.Data.Count.Should().Be(0, "Cache should have no items");
+            }
+        }
     }
 }
