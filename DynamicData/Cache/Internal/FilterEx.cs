@@ -46,7 +46,7 @@ namespace DynamicData.Cache.Internal
                     {
                         var current = change.Current;
                         if (predicate(current))
-                            cache.Add(current, key);
+                            cache.AddOrUpdate(current, key);
                     }
                         break;
                     case ChangeReason.Update:

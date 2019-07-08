@@ -25,19 +25,20 @@ namespace DynamicData.List.Internal
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var disposable = new CompositeDisposable();
-                var sourceLists = new List<ReferenceCountTracker<T>>();
+
                 var resultList = new ChangeAwareListWithRefCounts<T>();
 
                 lock (_locker)
                 {
-                    foreach (var item in _source)
-                    {
-                        var list = new ReferenceCountTracker<T>();
-                        sourceLists.Add(list);
+                    var sourceLists = Enumerable.Range(0, _source.Count)
+                        .Select(_ => new ReferenceCountTracker<T>())
+                        .ToList(); 
 
-                        disposable.Add(item.Synchronize(_locker).Subscribe(changes =>
+                    foreach (var pair in _source.Zip(sourceLists, (item, list) => new { Item = item, List = list }))
+                    {
+                        disposable.Add(pair.Item.Synchronize(_locker).Subscribe(changes =>
                         {
-                            CloneSourceList(list, changes);
+                            CloneSourceList(pair.List, changes);
 
                             var notifications = UpdateResultList(changes, sourceLists, resultList);
                             if (notifications.Count != 0)
@@ -45,6 +46,7 @@ namespace DynamicData.List.Internal
                         }));
                     }
                 }
+
                 return disposable;
             });
         }
@@ -90,7 +92,13 @@ namespace DynamicData.List.Internal
                 if (shouldBeInResult)
                 {
                     if (!isInResult)
+                    {
                         resultList.Add(item);
+                    }
+                    else if (change.Reason == ListChangeReason.Refresh)
+                    {
+                        resultList.Refresh(change.Current);
+                    }
                 }
                 else
                 {

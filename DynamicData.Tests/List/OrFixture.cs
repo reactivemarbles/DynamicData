@@ -25,7 +25,27 @@ namespace DynamicData.Tests.List
         }
     }
 
-    
+    public class OrRefreshFixture
+    {
+        [Fact]
+        public void RefreshPassesThrough()
+        {
+            SourceList<Item> source1 = new SourceList<Item>();
+            source1.Add(new Item("A"));
+            SourceList<Item> source2 = new SourceList<Item>();
+            source2.Add(new Item("B"));
+            
+            var list = new List<IObservable<IChangeSet<Item>>> { source1.Connect().AutoRefresh(), source2.Connect().AutoRefresh() };
+            var results = list.Or().AsAggregator();
+            source1.Items.ElementAt(0).Name = "Test";
+
+            results.Data.Count.Should().Be(2);
+            results.Messages.Count.Should().Be(3);
+            results.Messages[2].Refreshes.Should().Be(1);
+            results.Messages[2].First().Item.Current.Should().Be(source1.Items.First());
+        }
+    }
+
     public abstract class OrFixtureBase: IDisposable
     {
         protected ISourceList<int> _source1;
