@@ -1,3 +1,10 @@
+### v 6.11.0
+
+Change aware cache crash - fixed [#234](https://github.com/RolandPheasant/DynamicData/pull/234)
+Fixed bug in And operator [#231](https://github.com/RolandPheasant/DynamicData/pull/231)
+Transform to tree issue when adding parent after child fix [#230](https://github.com/RolandPheasant/DynamicData/pull/230)
+
+
 ### v 6.10.0
 
 Transform to tree fixes [#230](https://github.com/RolandPheasant/DynamicData/issues/230) and [#225](https://github.com/RolandPheasant/DynamicData/issues/225).
