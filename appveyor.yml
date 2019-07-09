@@ -20,7 +20,7 @@
   build_script:
   - cmd: |
       dotnet --info
-      msbuild /restore  /p:Configuration=Release /p:version=%APPVEYOR_BUILD_VERSION% -verbosity:minimal DynamicData.sln
+      msbuild /restore  /p:Configuration=Release /p:version=%APPVEYOR_BUILD_VERSION% -verbosity:minimal src/DynamicData.sln
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
       appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.nupkg
 
@@ -28,8 +28,8 @@
   test_script:
   - cmd: |
       cd %APPVEYOR_BUILD_FOLDER%
-      dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build --no-restore
-      dotnet test DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build --no-restore
+      dotnet test src/DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build --no-restore
+      dotnet test src/DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build --no-restore
 
   deploy:
   - provider: NuGet
@@ -62,9 +62,9 @@
   before_build:
   - cmd: |
       appveyor DownloadFile https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-      nuget restore DynamicData.sln
+      nuget restore src/DynamicData.sln
   build:
-    project: DynamicData.sln
+    project: src/DynamicData.sln
     publish_nuget: true
     publish_nuget_symbols: true
     include_nuget_references: true
@@ -113,14 +113,14 @@
   build_script:
   - cmd: |
       dotnet --info
-      msbuild /restore  /p:Configuration=Release /p:version=%APPVEYOR_BUILD_VERSION% -verbosity:minimal DynamicData.sln
-      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
-      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.nupkg
+      msbuild /restore  /p:Configuration=Release /p:version=%APPVEYOR_BUILD_VERSION% -verbosity:minimal src/DynamicData.sln
+      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\src\DynamicData\bin\Release\DynamicData.%APPVEYOR_BUILD_VERSION%.nupkg
+      appveyor PushArtifact %APPVEYOR_BUILD_FOLDER%\src\DynamicData.ReactiveUI\bin\Release\DynamicData.ReactiveUI.%APPVEYOR_BUILD_VERSION%.nupkg
 
   test: off
   # Hangs indefinitely and I do not know why as the same command works locally
   test_script:
   - cmd: |
       cd %APPVEYOR_BUILD_FOLDER%
-      dotnet test DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build --no-restore
-      dotnet test DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build --no-restore
+      dotnet test src\DynamicData.Tests\DynamicData.Tests.csproj --configuration Release --no-build --no-restore
+      dotnet test src\DynamicData.ReactiveUI.Tests\DynamicData.ReactiveUI.Tests.csproj --configuration Release --no-build --no-restore
