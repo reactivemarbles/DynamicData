@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Reactive;
 using System.Reactive.Concurrency;
@@ -46,13 +50,17 @@ namespace DynamicData.Cache.Internal
 
                     void ResumeAction()
                     {
-                        if (batchedChanges.Count == 0) return;
+                        if (batchedChanges.Count == 0)
+                        {
+                            return;
+                        }
 
                         var resultingBatch = new ChangeSet<TObject, TKey>(batchedChanges.Select(cs=>cs.Count).Sum());
                         foreach (var cs in batchedChanges)
                         {
                             resultingBatch.AddRange(cs);
                         }
+
                         observer.OnNext(resultingBatch);
                         batchedChanges.Clear();
                     }
@@ -67,12 +75,16 @@ namespace DynamicData.Cache.Internal
                                 paused = false;
                                 ResumeAction();
                                 if (_intervalTimer!=null)
+                                {
                                     paused = true;
+                                }
                             });
                     }
 
                     if (_intervalTimer != null)
+                    {
                         intervalTimerDisposer.Disposable = IntervalFunction();
+                    }
 
                     var pausedHandler = _pauseIfTrueSelector
                         .Synchronize(locker)
@@ -82,12 +94,17 @@ namespace DynamicData.Cache.Internal
                             if (!p)
                             {
                                 //pause window has closed, so reset timer 
-                               if (_timeOut.HasValue) timeoutDisposer.Disposable = Disposable.Empty;
+                               if (_timeOut.HasValue)
+                                {
+                                    timeoutDisposer.Disposable = Disposable.Empty;
+                                }
+
                                 ResumeAction();
                             }
                             else
                             {
                                 if (_timeOut.HasValue)
+                                {
                                     timeoutDisposer.Disposable = Observable.Timer(_timeOut.Value, _scheduler)
                                         .Synchronize(locker)
                                         .Subscribe(_ =>
@@ -95,6 +112,7 @@ namespace DynamicData.Cache.Internal
                                             paused = false;
                                             ResumeAction();
                                         });
+                                }
                             }
 
                         });
@@ -107,7 +125,9 @@ namespace DynamicData.Cache.Internal
 
                             //publish if not paused
                             if (!paused)
+                            {
                                 ResumeAction();
+                            }
                         });
 
                     return new CompositeDisposable(publisher, pausedHandler, timeoutDisposer, intervalTimerDisposer);

@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,11 +26,13 @@ namespace DynamicData.Binding
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ObservableCollection<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             return ToObservableChangeSet<ObservableCollection<T>,T>(source);
         }
-
 
         /// <summary>
         /// Convert an observable collection into an observable change set
@@ -41,8 +47,15 @@ namespace DynamicData.Binding
         /// keySelector</exception>
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
 
             return ToObservableChangeSet<ObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
         }
@@ -56,7 +69,10 @@ namespace DynamicData.Binding
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReadOnlyObservableCollection<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             return ToObservableChangeSet<ReadOnlyObservableCollection<T>, T>(source);
         }
@@ -74,8 +90,15 @@ namespace DynamicData.Binding
         /// keySelector</exception>
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ReadOnlyObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
 
             return ToObservableChangeSet<ReadOnlyObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
         }
@@ -91,14 +114,19 @@ namespace DynamicData.Binding
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
             where TCollection : INotifyCollectionChanged, IEnumerable<T>
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var data = new ChangeAwareList<T>(source);
 
                 if (data.Count > 0)
+                {
                     observer.OnNext(data.CaptureChanges());
+                }
 
                 return source.ObserveCollectionChanges()
                     .Scan(data, (list, args) =>
@@ -117,8 +145,10 @@ namespace DynamicData.Binding
                                 {
                                     list.InsertRange(changes.NewItems.Cast<T>(), changes.NewStartingIndex);
                                 }
+
                                 break;
                             }
+
                             case NotifyCollectionChangedAction.Remove:
                             {
                                 if (changes.OldItems.Count == 1)
@@ -129,13 +159,16 @@ namespace DynamicData.Binding
                                 {
                                     list.RemoveRange(changes.OldStartingIndex, changes.OldItems.Count);
                                 }
+
                                 break;
                             }
+
                             case NotifyCollectionChangedAction.Replace:
                             {
                                 list[changes.NewStartingIndex] = (T) changes.NewItems[0];
                                 break;
                             }
+
                             case NotifyCollectionChangedAction.Reset:
                             {
                                 list.Clear();
@@ -149,6 +182,7 @@ namespace DynamicData.Binding
                                 break;
                             }
                         }
+
                         return list;
                     })
                     .Select(list => list.CaptureChanges())

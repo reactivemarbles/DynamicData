@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -13,8 +17,7 @@ namespace DynamicData.Cache.Internal
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TGroupKey> _groupSelectorKey;
         private readonly IObservable<Unit> _regrouper;
- 
-        
+
         public GroupOn(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit> regrouper)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
@@ -95,7 +98,9 @@ namespace DynamicData.Cache.Internal
                     var groupItem = GetCache(group.Key);
                     var groupCache = groupItem.Item1;
                     if (groupItem.Item2)
+                    {
                         result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Add, group.Key, groupCache));
+                    }
 
                     groupCache.Update(groupUpdater =>
                     {
@@ -109,6 +114,7 @@ namespace DynamicData.Cache.Internal
                                         _itemCache[current.Key] = current;
                                         break;
                                     }
+
                                 case ChangeReason.Update:
                                     {
                                         groupUpdater.AddOrUpdate(current.Item, current.Key);
@@ -123,15 +129,21 @@ namespace DynamicData.Cache.Internal
                                                 .IfHasValue(g =>
                                                 {
                                                     g.Update(u => u.Remove(current.Key));
-                                                    if (g.Count != 0) return;
+                                                    if (g.Count != 0)
+                                                    {
+                                                        return;
+                                                    }
+
                                                     _groupCache.Remove(g.Key);
                                                     result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, g));
                                                 });
 
                                             _itemCache[current.Key] = current;
                                         }
+
                                         break;
                                     }
+
                                 case ChangeReason.Remove:
                                     {
                                         var previousInSameGroup = groupUpdater.Lookup(current.Key);
@@ -145,12 +157,16 @@ namespace DynamicData.Cache.Internal
                                             var previousGroupKey = _itemCache.Lookup(current.Key)
                                                 .ValueOrThrow(() => new MissingKeyException($"{current.Key} is missing from previous value on remove. Object type {typeof(TObject).FullName}, Key type {typeof(TKey).FullName}, Group key type {typeof(TGroupKey).FullName}"))
                                                 .GroupKey;
-                                                
+
                                             _groupCache.Lookup(previousGroupKey)
                                                        .IfHasValue(g =>
                                                        {
                                                            g.Update(u => u.Remove(current.Key));
-                                                           if (g.Count != 0) return;
+                                                           if (g.Count != 0)
+                                                           {
+                                                               return;
+                                                           }
+
                                                            _groupCache.Remove(g.Key);
                                                            result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, g));
                                                        });
@@ -161,6 +177,7 @@ namespace DynamicData.Cache.Internal
 
                                         break;
                                     }
+
                                 case ChangeReason.Refresh:
                                     {
                                         //check whether the previous item was in a different group. If so remove from old group
@@ -168,11 +185,15 @@ namespace DynamicData.Cache.Internal
 
                                         previous.IfHasValue(p =>
                                         {
-                                            
+
                                             if (EqualityComparer<TGroupKey>.Default.Equals(p.GroupKey,current.GroupKey))
                                             {
                                                 //propagate evaluates up the chain
-                                                if (!isRegrouping) groupUpdater.Refresh(current.Key);
+                                                if (!isRegrouping)
+                                                {
+                                                    groupUpdater.Refresh(current.Key);
+                                                }
+
                                                 return;
                                             }
 
@@ -180,7 +201,11 @@ namespace DynamicData.Cache.Internal
                                                        .IfHasValue(g =>
                                                        {
                                                            g.Update(u => u.Remove(current.Key));
-                                                           if (g.Count != 0) return;
+                                                           if (g.Count != 0)
+                                                           {
+                                                               return;
+                                                           }
+
                                                            _groupCache.Remove(g.Key);
                                                            result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, g));
                                                        });
@@ -207,16 +232,16 @@ namespace DynamicData.Cache.Internal
                     }
                 });
 
-
                 return new GroupChangeSet<TObject, TKey, TGroupKey>(result);
             }
-
 
             private Tuple<ManagedGroup<TObject, TKey, TGroupKey>, bool> GetCache(TGroupKey key)
             {
                 var cache = _groupCache.Lookup(key);
                 if (cache.HasValue)
+                {
                     return Tuple.Create(cache.Value, false);
+                }
 
                 var newcache = new ManagedGroup<TObject, TKey, TGroupKey>(key);
                 _groupCache[key] = newcache;
@@ -250,7 +275,11 @@ namespace DynamicData.Cache.Internal
 
                 public override bool Equals(object obj)
                 {
-                    if (ReferenceEquals(null, obj)) return false;
+                    if (ReferenceEquals(null, obj))
+                    {
+                        return false;
+                    }
+
                     return obj is ChangeWithGroup @group && Equals(@group);
                 }
 

@@ -9,7 +9,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-    
+
     public class BindingLIstBindListFixture : IDisposable
     {
         private readonly BindingList<Person> _collection;

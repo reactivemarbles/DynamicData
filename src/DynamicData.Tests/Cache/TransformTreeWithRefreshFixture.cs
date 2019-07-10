@@ -99,7 +99,7 @@ namespace DynamicData.Tests.Cache
 
         private IEnumerable<EmployeeDto> CreateEmployees()
         {
-            yield return new EmployeeDto(1) 
+            yield return new EmployeeDto(1)
             {
                 BossId = 0,
                 Name = "Employee1"
@@ -176,16 +176,36 @@ namespace DynamicData.Tests.Cache
 
             public bool Equals(EmployeeDto other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return Id == other.Id;
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((EmployeeDto)obj);
             }
 

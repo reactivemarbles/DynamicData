@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class RecursiveTransformManyFixture: IDisposable
     {
         private readonly ISourceList<PersonWithRelations> _source;

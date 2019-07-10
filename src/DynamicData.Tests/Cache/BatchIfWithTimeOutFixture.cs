@@ -82,7 +82,6 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-
         public void Dispose()
         {
             _source.Dispose();

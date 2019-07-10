@@ -1,4 +1,9 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DynamicData.Cache.Internal
 {
@@ -11,6 +16,7 @@ namespace DynamicData.Cache.Internal
             _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         }
 
+        [SuppressMessage("Design", "CA1822: Member can be static", Justification = "Backwards compatibilty")]
         public Type Type => typeof(TObject);
 
         public TKey GetKey(TObject item)

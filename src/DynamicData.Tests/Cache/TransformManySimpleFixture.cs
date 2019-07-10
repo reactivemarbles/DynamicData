@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class TransformManySimpleFixture: IDisposable
     {
         private readonly ISourceCache<PersonWithChildren, string> _source;
@@ -41,7 +41,6 @@ namespace DynamicData.Tests.Cache
             _results.Data.Lookup("Child2").HasValue.Should().BeTrue();
             _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
         }
-
 
         [Fact]
         public void Remove()
@@ -90,7 +89,6 @@ namespace DynamicData.Tests.Cache
             _results.Data.Lookup("Child1").HasValue.Should().BeTrue();
             _results.Data.Lookup("Child3").HasValue.Should().BeTrue();
         }
-
 
         [Fact]
         public void UpdateWithMultipleChanges()

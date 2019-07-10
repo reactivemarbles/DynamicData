@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 #pragma warning disable 1591
 
@@ -97,6 +101,7 @@ namespace DynamicData.Kernel
                 {
                     throw new InvalidOperationException("Optional<T> has no value");
                 }
+
                 return _value;
             }
         }
@@ -108,7 +113,7 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static implicit operator Optional<T>(T value)
         {
-            return new Optional<T>(value);
+            return ToOptional(value);
         }
 
         /// <summary>
@@ -118,17 +123,25 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static explicit operator T(Optional<T> value)
         {
+            return FromOptional(value);
+        }
+
+        public static T FromOptional(Optional<T> value)
+        {
             return value.Value;
         }
 
-        #region Equality members
+        public static Optional<T> ToOptional(T value)
+        {
+            return new Optional<T>(value);
+        }
 
+        #region Equality members
 
         public static bool operator ==(Optional<T> left, Optional<T> right)
         {
             return left.Equals(right);
         }
-
 
         public static bool operator !=(Optional<T> left, Optional<T> right)
         {
@@ -138,15 +151,27 @@ namespace DynamicData.Kernel
         /// <inheritdoc />
         public bool Equals(Optional<T> other)
         {
-            if (!HasValue) return !other.HasValue;
-            if (!other.HasValue) return false;
+            if (!HasValue)
+            {
+                return !other.HasValue;
+            }
+
+            if (!other.HasValue)
+            {
+                return false;
+            }
+
             return HasValue.Equals(other.HasValue) && EqualityComparer<T>.Default.Equals(_value, other._value);
         }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
             return obj is Optional<T> && Equals((Optional<T>)obj);
         }
 

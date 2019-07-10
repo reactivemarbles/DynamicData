@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
@@ -289,8 +293,16 @@ namespace DynamicData.Aggregation
         public static IObservable<int> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                               [NotNull] Func<T, int> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0,
                                     valueSelector,
                                     (current, value) => current + value,
@@ -322,8 +334,16 @@ namespace DynamicData.Aggregation
         public static IObservable<long> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                                [NotNull] Func<T, long> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0,
                                     valueSelector,
                                     (current, value) => current + value,
@@ -339,8 +359,16 @@ namespace DynamicData.Aggregation
         /// <returns></returns>
         public static IObservable<long> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull] Func<T, long?> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0L,
                                     t => valueSelector(t).ValueOr(0),
                                     (current, value) => current + value,
@@ -357,8 +385,16 @@ namespace DynamicData.Aggregation
         public static IObservable<double> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                                  [NotNull] Func<T, double> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0,
                                     valueSelector,
                                     (current, value) => current + value,
@@ -374,8 +410,16 @@ namespace DynamicData.Aggregation
         /// <returns></returns>
         public static IObservable<double> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull] Func<T, double?> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0D,
                                     t => valueSelector(t).ValueOr(0),
                                     (current, value) => current + value,
@@ -392,8 +436,16 @@ namespace DynamicData.Aggregation
         public static IObservable<decimal> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                                   [NotNull] Func<T, decimal> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0,
                                     valueSelector,
                                     (current, value) => current + value,
@@ -409,8 +461,16 @@ namespace DynamicData.Aggregation
         /// <returns></returns>
         public static IObservable<decimal> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull] Func<T, decimal?> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0M,
                                     t => valueSelector(t).ValueOr(0),
                                     (current, value) => current + value,
@@ -427,8 +487,16 @@ namespace DynamicData.Aggregation
         public static IObservable<float> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                                 [NotNull] Func<T, float> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0,
                                     valueSelector,
                                     (current, value) => current + value,
@@ -444,8 +512,16 @@ namespace DynamicData.Aggregation
         /// <returns></returns>
         public static IObservable<float> Sum<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull] Func<T, float?> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Accumlate(0F,
                                     t => valueSelector(t).ValueOr(0),
                                     (current, value) => current + value,

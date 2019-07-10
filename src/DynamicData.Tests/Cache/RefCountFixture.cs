@@ -8,7 +8,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class RefCountFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;

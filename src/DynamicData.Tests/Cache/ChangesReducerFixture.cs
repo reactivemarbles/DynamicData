@@ -22,7 +22,6 @@ namespace DynamicData.Tests.Cache
             new Change<Person, string>(ChangeReason.Refresh, _testEntity.Key, _testEntity, _testIndex)
         };
 
-
         [Theory]
         [MemberData(nameof(ConstrainFirstValue), new object[] {ChangeReason.Refresh, new ChangeReason[] {}})]
         public void RefreshIsBeingOverridenByAnything(Change<Person,string> refresh, Change<Person, string> other)
@@ -38,7 +37,6 @@ namespace DynamicData.Tests.Cache
             var result = ChangesReducer.Reduce(other, remove);
             result.Value.Should().Be(remove);
         }
-
 
         [Theory]
         [MemberData(nameof(GetChanges))]
@@ -69,6 +67,7 @@ namespace DynamicData.Tests.Cache
 
             result.Value.Should().Be(expected);
         }
+
         [Fact]
         public void AddAndUpdateProduceAdd()
         {
@@ -110,7 +109,6 @@ namespace DynamicData.Tests.Cache
             return others.Select(other =>
                 new object[] {constrainedValue, other});
         }
-
 
         // ReSharper disable once MemberCanBePrivate.Global
         public static IEnumerable<object[]> GetChanges()

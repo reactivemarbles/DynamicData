@@ -36,10 +36,12 @@ namespace DynamicData.Tests.Domain
             {
                 return false;
             }
+
             if (ReferenceEquals(this, other))
             {
                 return true;
             }
+
             return Equals(other.Name, Name) && other.Age == Age && Equals(other.Gender, Gender);
         }
 
@@ -49,14 +51,17 @@ namespace DynamicData.Tests.Domain
             {
                 return false;
             }
+
             if (ReferenceEquals(this, obj))
             {
                 return true;
             }
+
             if (obj.GetType() != typeof(PersonWithGender))
             {
                 return false;
             }
+
             return Equals((PersonWithGender)obj);
         }
 

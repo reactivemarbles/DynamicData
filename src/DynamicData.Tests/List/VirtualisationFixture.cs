@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class VirtualisationFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;

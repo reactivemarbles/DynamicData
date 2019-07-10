@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 
 namespace DynamicData.Cache.Internal
@@ -19,7 +23,7 @@ namespace DynamicData.Cache.Internal
             _rightKeySelector = rightKeySelector ?? throw new ArgumentNullException(nameof(rightKeySelector));
             _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
         }
-        
+
         public IObservable<IChangeSet<TDestination, TLeftKey>> Run()
         {
             var rightGrouped = _right.GroupWithImmutableState(_rightKeySelector);

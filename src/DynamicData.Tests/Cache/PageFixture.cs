@@ -9,7 +9,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class PageFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;

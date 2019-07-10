@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 #if P_LINQ
 
 using System;
@@ -33,9 +37,20 @@ namespace DynamicData.PLinq
             Func<TObject, IDisposable> subscriptionFactory,
             ParallelisationOptions parallelisationOptions)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
-            if (parallelisationOptions == null) throw new ArgumentNullException(nameof(parallelisationOptions));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (subscriptionFactory == null)
+            {
+                throw new ArgumentNullException(nameof(subscriptionFactory));
+            }
+
+            if (parallelisationOptions == null)
+            {
+                throw new ArgumentNullException(nameof(parallelisationOptions));
+            }
 
             return new PSubscribeMany<TObject, TKey>(source,(t,v)=> subscriptionFactory(t),parallelisationOptions).Run();
         }
@@ -58,9 +73,20 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source,
             Func<TObject, TKey, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
-            if (parallelisationOptions == null) throw new ArgumentNullException(nameof(parallelisationOptions));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (subscriptionFactory == null)
+            {
+                throw new ArgumentNullException(nameof(subscriptionFactory));
+            }
+
+            if (parallelisationOptions == null)
+            {
+                throw new ArgumentNullException(nameof(parallelisationOptions));
+            }
 
             return new PSubscribeMany<TObject, TKey>(source, subscriptionFactory, parallelisationOptions).Run();
         }
@@ -88,9 +114,20 @@ namespace DynamicData.PLinq
             Func<TSource, TKey, TDestination> transformFactory,
             ParallelisationOptions parallelisationOptions)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-            if (parallelisationOptions == null) throw new ArgumentNullException(nameof(parallelisationOptions));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
+
+            if (parallelisationOptions == null)
+            {
+                throw new ArgumentNullException(nameof(parallelisationOptions));
+            }
 
             return new PTransform<TDestination, TSource, TKey>(source, (t, p, k) => transformFactory(t, k), parallelisationOptions).Run();
         }
@@ -141,10 +178,25 @@ namespace DynamicData.PLinq
             Action<Error<TSource, TKey>> errorHandler,
             ParallelisationOptions parallelisationOptions)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
-            if (parallelisationOptions == null) throw new ArgumentNullException(nameof(parallelisationOptions));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
+
+            if (errorHandler == null)
+            {
+                throw new ArgumentNullException(nameof(errorHandler));
+            }
+
+            if (parallelisationOptions == null)
+            {
+                throw new ArgumentNullException(nameof(parallelisationOptions));
+            }
 
             return new PTransform<TDestination, TSource, TKey>(source, (t, p, k) => transformFactory(t), parallelisationOptions, errorHandler).Run();
         }
@@ -192,8 +244,15 @@ namespace DynamicData.PLinq
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (filter == null) return source;
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (filter == null)
+            {
+                return source;
+            }
 
             return new PFilter<TObject, TKey>(source, filter, parallelisationOptions).Run();
         }

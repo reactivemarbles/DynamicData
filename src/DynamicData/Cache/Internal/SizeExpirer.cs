@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -13,7 +17,10 @@ namespace DynamicData.Cache.Internal
 
         public SizeExpirer(IObservable<IChangeSet<TObject, TKey>> source, int size)
         {
-            if (size <= 0) throw new ArgumentException("Size limit must be greater than zero");
+            if (size <= 0)
+            {
+                throw new ArgumentException("Size limit must be greater than zero");
+            }
 
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _size = size;

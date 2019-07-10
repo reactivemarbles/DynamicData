@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
  using System.Reactive;
 using DynamicData.Annotations;
@@ -23,7 +27,11 @@ namespace DynamicData.Alias
         /// <returns></returns>
         public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Filter(filter);
         }
 
@@ -38,8 +46,16 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
             [NotNull] IObservable<Func<TObject, bool>> predicateChanged)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (predicateChanged == null) throw new ArgumentNullException(nameof(predicateChanged));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (predicateChanged == null)
+            {
+                throw new ArgumentNullException(nameof(predicateChanged));
+            }
+
             return source.Filter(predicateChanged);
         }
 
@@ -56,11 +72,18 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
             [NotNull] IObservable<Unit> reapplyFilter)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (reapplyFilter == null) throw new ArgumentNullException(nameof(reapplyFilter));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (reapplyFilter == null)
+            {
+                throw new ArgumentNullException(nameof(reapplyFilter));
+            }
+
             return source.Filter(reapplyFilter);
         }
-
 
         /// <summary>
         /// Creates a filtered stream which can be dynamically filtered
@@ -75,17 +98,27 @@ namespace DynamicData.Alias
             [NotNull] IObservable<Func<TObject, bool>> predicateChanged,
             [NotNull] IObservable<Unit> reapplyFilter)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (predicateChanged == null) throw new ArgumentNullException(nameof(predicateChanged));
-            if (reapplyFilter == null) throw new ArgumentNullException(nameof(reapplyFilter));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (predicateChanged == null)
+            {
+                throw new ArgumentNullException(nameof(predicateChanged));
+            }
+
+            if (reapplyFilter == null)
+            {
+                throw new ArgumentNullException(nameof(reapplyFilter));
+            }
+
             return source.Filter(predicateChanged, reapplyFilter);
         }
-
 
         #endregion
 
         #region Transform -> Select
-
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
@@ -106,9 +139,21 @@ namespace DynamicData.Alias
                                                                                                          Func<TSource, TKey, TDestination> transformFactory,
                                                                                                          IObservable<Unit> forceTransform)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-            if (forceTransform == null) throw new ArgumentNullException(nameof(forceTransform));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
+
+            if (forceTransform == null)
+            {
+                throw new ArgumentNullException(nameof(forceTransform));
+            }
+
             return source.Transform(transformFactory, forceTransform);
         }
 
@@ -175,8 +220,15 @@ namespace DynamicData.Alias
                                                                                                          Func<TSource, TDestination> transformFactory,
                                                                                                          IObservable<Func<TSource, bool>> forceTransform = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
 
             return source.Transform(transformFactory, forceTransform);
         }
@@ -193,15 +245,22 @@ namespace DynamicData.Alias
                                                                                                         [NotNull] Func<TObject, TKey> pivotOn)
             where TObject : class
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (pivotOn == null) throw new ArgumentNullException(nameof(pivotOn));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (pivotOn == null)
+            {
+                throw new ArgumentNullException(nameof(pivotOn));
+            }
+
             return source.TransformToTree(pivotOn);
         }
 
         #endregion
 
         #region Transform many -> SelectMany
-
 
         /// <summary>
         /// Equivalent to a select many transform. To work, the key must individually identify each child. 
@@ -220,8 +279,6 @@ namespace DynamicData.Alias
         {
             return source.TransformMany(manyselector, keySelector);
         }
-
-
 
         #endregion
 
@@ -251,10 +308,25 @@ namespace DynamicData.Alias
                                                                                                              Action<Error<TSource, TKey>> errorHandler,
                                                                                                              IObservable<Unit> forceTransform)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
-            if (forceTransform == null) throw new ArgumentNullException(nameof(forceTransform));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
+
+            if (errorHandler == null)
+            {
+                throw new ArgumentNullException(nameof(errorHandler));
+            }
+
+            if (forceTransform == null)
+            {
+                throw new ArgumentNullException(nameof(forceTransform));
+            }
 
             return source.TransformSafe(transformFactory, errorHandler, forceTransform);
         }
@@ -283,9 +355,20 @@ namespace DynamicData.Alias
                                                                                                              Action<Error<TSource, TKey>> errorHandler,
                                                                                                              IObservable<Func<TSource, bool>> forceTransform = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
+
+            if (errorHandler == null)
+            {
+                throw new ArgumentNullException(nameof(errorHandler));
+            }
 
             return source.TransformSafe(transformFactory, errorHandler, forceTransform);
         }
@@ -314,9 +397,20 @@ namespace DynamicData.Alias
             Action<Error<TSource, TKey>> errorHandler,
             IObservable<Func<TSource, TKey, bool>> forceTransform = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
-            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
+
+            if (errorHandler == null)
+            {
+                throw new ArgumentNullException(nameof(errorHandler));
+            }
 
             return source.TransformSafe(transformFactory, errorHandler, forceTransform);
         }

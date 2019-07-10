@@ -6,14 +6,13 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class BatchFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
         private readonly TestScheduler _scheduler;
 
- 
         public  BatchFixture()
         {
             _scheduler = new TestScheduler();

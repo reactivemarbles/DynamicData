@@ -20,13 +20,11 @@ namespace DynamicData.Tests.Cache
                 .AsAggregator();
         }
 
-
         public void Dispose()
         {
             _people.Dispose();
             _result.Dispose();
         }
-
 
         [Fact]
         public void AddLeftOnly()
@@ -38,7 +36,6 @@ namespace DynamicData.Tests.Cache
             _people.AddOrUpdate(people);
             AssertDataIsCorrectlyFormed(people);
         }
-
 
         [Fact]
         public void AddPeopleWithParents()
@@ -120,7 +117,6 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
 
-
         [Fact]
         public void RemoveChild()
         {
@@ -142,7 +138,6 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
 
-
         private void AssertDataIsCorrectlyFormed(Person[] allPeople)
         {
             var people = allPeople.ToDictionary(p => p.Name);
@@ -158,7 +153,6 @@ namespace DynamicData.Tests.Cache
 
                 }).ToArray();
 
-
             _result.Data.Count.Should().Be(all.Length);
 
             all.ForEach(parentAndChild =>
@@ -169,18 +163,22 @@ namespace DynamicData.Tests.Cache
             });
         }
 
-
-
         private int CalculateParent(int index, int totalPeople)
         {
             if (index < 5)
+            {
                 return 11;
+            }
 
             if (index == totalPeople - 1)
+            {
                 return 1;
+            }
 
             if (index == totalPeople)
+            {
                 return 1;
+            }
 
             return index + 1;
         }

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -25,7 +29,9 @@ namespace DynamicData.Cache.Internal
                 var subsequentChanges = manySelector(t).ToObservableChangeSet(keySelector);
 
                 if (manySelector(t).Count > 0)
+                {
                     return subsequentChanges;
+                }
 
                 return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
                     .Concat(subsequentChanges);
@@ -42,7 +48,9 @@ namespace DynamicData.Cache.Internal
                 var subsequentChanges = manySelector(t).ToObservableChangeSet(keySelector);
 
                 if (manySelector(t).Count > 0)
+                {
                     return subsequentChanges;
+                }
 
                 return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty)
                     .Concat(subsequentChanges);
@@ -60,10 +68,10 @@ namespace DynamicData.Cache.Internal
             _keySelector = keySelector;
             _childChanges = childChanges;
         }
-           
+
         public IObservable<IChangeSet<TDestination, TDestinationKey>> Run()
         {
-            return _childChanges == null 
+            return _childChanges == null
                 ? Create()
                 : CreateWithChangeset();
         }
@@ -96,9 +104,11 @@ namespace DynamicData.Cache.Internal
                     return new ManyContainer(() =>
                     {
                         lock (locker)
+                        {
                             return collection
                                 .Select(m => new DestinationContainer(m, _keySelector(m)))
                                 .ToArray();
+                        }
                     }, changes);
                 }).Publish();
 
@@ -141,8 +151,11 @@ namespace DynamicData.Cache.Internal
                         case ChangeReason.Refresh:
                             {
                                 foreach (var destination in change.Current.Destination)
+                                {
                                     yield return new Change<TDestination, TDestinationKey>(change.Reason, destination.Key, destination.Item);
+                                }
                             }
+
                             break;
                         case ChangeReason.Update:
                             {
@@ -154,10 +167,14 @@ namespace DynamicData.Cache.Internal
                                 var updates = currentItems.Intersect(previousItems, DestinationContainer.KeyComparer);
 
                                 foreach (var destination in removes)
+                                {
                                     yield return new Change<TDestination, TDestinationKey>(ChangeReason.Remove, destination.Key, destination.Item);
+                                }
 
                                 foreach (var destination in adds)
+                                {
                                     yield return new Change<TDestination, TDestinationKey>(ChangeReason.Add, destination.Key, destination.Item);
+                                }
 
                                 foreach (var destination in updates)
                                 {
@@ -166,9 +183,12 @@ namespace DynamicData.Cache.Internal
 
                                     //Do not update is items are the same reference
                                     if (!ReferenceEquals(current.Item, previous.Item))
+                                    {
                                         yield return new Change<TDestination, TDestinationKey>(ChangeReason.Update, destination.Key, current.Item, previous.Item);
+                                    }
                                 }
                             }
+
                             break;
                     }
                 }
@@ -210,10 +230,26 @@ namespace DynamicData.Cache.Internal
             {
                 public bool Equals(DestinationContainer x, DestinationContainer y)
                 {
-                    if (ReferenceEquals(x, y)) return true;
-                    if (x is null) return false;
-                    if (ReferenceEquals(y, null)) return false;
-                    if (x.GetType() != y.GetType()) return false;
+                    if (ReferenceEquals(x, y))
+                    {
+                        return true;
+                    }
+
+                    if (x is null)
+                    {
+                        return false;
+                    }
+
+                    if (ReferenceEquals(y, null))
+                    {
+                        return false;
+                    }
+
+                    if (x.GetType() != y.GetType())
+                    {
+                        return false;
+                    }
+
                     return EqualityComparer<TDestinationKey>.Default.Equals(x.Key, y.Key);
                 }
 

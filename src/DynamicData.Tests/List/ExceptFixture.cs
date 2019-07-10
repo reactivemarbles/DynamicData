@@ -6,8 +6,8 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
-    public class ExceptFixture : ExceptFixtureBase 
+
+    public class ExceptFixture : ExceptFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
         {
@@ -15,7 +15,6 @@ namespace DynamicData.Tests.List
         }
     }
 
-    
     public class ExceptCollectionFixture : ExceptFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -25,7 +24,6 @@ namespace DynamicData.Tests.List
         }
     }
 
-    
     public abstract class ExceptFixtureBase :IDisposable
     {
         protected ISourceList<int> Source1;

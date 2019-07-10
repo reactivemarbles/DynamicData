@@ -9,11 +9,11 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class SortObservableFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _cache;
-        private readonly SortedChangeSetAggregator<Person, string> _results;        
+        private readonly SortedChangeSetAggregator<Person, string> _results;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly BehaviorSubject<IComparer<Person>> _comparerObservable;
         private readonly SortExpressionComparer<Person> _comparer;
@@ -128,6 +128,7 @@ namespace DynamicData.Tests.Cache
             {
                 adaptor.Adapt(message, list);
             }
+
             list.ShouldAllBeEquivalentTo(expected);
         }
 

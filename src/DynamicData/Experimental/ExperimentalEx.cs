@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Reactive.Concurrency;
 
 namespace DynamicData.Experimental
@@ -19,7 +23,11 @@ namespace DynamicData.Experimental
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IWatcher<TObject, TKey> AsWatcher<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new Watcher<TObject, TKey>(source, scheduler ?? Scheduler.Default);
         }
     }

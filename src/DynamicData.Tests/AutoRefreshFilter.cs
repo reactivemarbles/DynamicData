@@ -36,7 +36,6 @@ namespace DynamicData.Tests
         }
     }
 
-
     public class Item : INotifyPropertyChanged
     {
         public Guid Id { get; }
@@ -52,7 +51,6 @@ namespace DynamicData.Tests
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
             }
         }
-
 
         public Item(string name)
         {

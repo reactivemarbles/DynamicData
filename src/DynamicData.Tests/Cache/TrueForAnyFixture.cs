@@ -4,10 +4,9 @@ using System.Reactive.Subjects;
 using FluentAssertions;
 using Xunit;
 
-
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class TrueForAnyFixture: IDisposable
     {
         private readonly ISourceCache<ObjectWithObservable, int> _source;

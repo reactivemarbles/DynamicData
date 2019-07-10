@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Cache.Internal;
@@ -9,10 +13,8 @@ namespace DynamicData
     {
         public new static readonly IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();
 
-
         public IKeyValueCollection<TObject, TKey> SortedItems { get; }
         public IPageResponse Response { get; }
-
 
         public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
             : base(updates)
@@ -41,9 +43,20 @@ namespace DynamicData
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
 
             return Equals((PagedChangeSet<TObject, TKey>)obj);
         }

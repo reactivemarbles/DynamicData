@@ -8,7 +8,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class GroupControllerFixture: IDisposable
     {
         private enum AgeBracket
@@ -20,7 +20,11 @@ namespace DynamicData.Tests.Cache
 
         private readonly Func<Person, AgeBracket> _grouper = p =>
         {
-            if (p.Age <= 19) return AgeBracket.Under20;
+            if (p.Age <= 19)
+            {
+                return AgeBracket.Under20;
+            }
+
             return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
         };
 
@@ -28,21 +32,18 @@ namespace DynamicData.Tests.Cache
         private readonly ISubject<Unit> _refresher;
         private readonly IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
 
-
-
         public GroupControllerFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _refresher =new Subject<Unit>();
             _grouped = _source.Connect().Group(_grouper, _refresher).AsObservableCache();
         }
-        
+
         public void Dispose()
         {
             _source?.Dispose();
             _grouped?.Dispose();
         }
-
 
         [Fact]
         public void RegroupRecaluatesGroupings()
@@ -117,7 +118,10 @@ namespace DynamicData.Tests.Cache
         private bool IsContainedIn(string name, AgeBracket bracket)
         {
             var group = _grouped.Lookup(bracket);
-            if (!group.HasValue) return false;
+            if (!group.HasValue)
+            {
+                return false;
+            }
 
             return group.Value.Cache.Lookup(name).HasValue;
         }

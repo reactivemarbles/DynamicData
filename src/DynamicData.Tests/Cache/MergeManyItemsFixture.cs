@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class MergeManyItemsFixture: IDisposable
     {
         private class ObjectWithObservable

@@ -1,5 +1,10 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
@@ -16,6 +21,7 @@ namespace DynamicData
     {
         private readonly ISourceCache<Node<TObject, TKey>, TKey> _children = new SourceCache<Node<TObject, TKey>, TKey>(n => n.Key);
         private readonly IDisposable _cleanUp;
+        private bool _isDisposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Node{TObject, TKey}"/> class.
@@ -83,7 +89,10 @@ namespace DynamicData
                 do
                 {
                     if (!parent.HasValue)
+                    {
                         break;
+                    }
+
                     i++;
                     parent = parent.Value.Parent;
                 } while (true);
@@ -98,15 +107,22 @@ namespace DynamicData
 
         #region Equality
 
-
         /// <summary>Determines whether the specified object is equal to the current object.</summary>
         /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
         /// <param name="other">The object to compare with the current object. </param>
         /// <filterpriority>2</filterpriority>
         public bool Equals(Node<TObject, TKey> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return EqualityComparer<TKey>.Default.Equals(Key, other.Key);
         }
 
@@ -116,9 +132,21 @@ namespace DynamicData
         /// <filterpriority>2</filterpriority>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
             return Equals((Node<TObject, TKey>)obj);
         }
 
@@ -160,12 +188,27 @@ namespace DynamicData
             return $"{Item}{count}";
         }
 
-
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            _cleanUp.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool isDisposing)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
+            if (isDisposing)
+            {
+                _cleanUp?.Dispose();
+            }
         }
     }
 }

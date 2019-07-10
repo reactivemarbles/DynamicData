@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Diagnostics.CodeAnalysis;
 
 #if P_LINQ
@@ -27,6 +31,7 @@ namespace DynamicData.PLinq
         {
             Type = type;
             Threshold = threshold;
+            MaxDegreeOfParallisation = maxDegreeOfParallisation;
         }
 
         /// <summary>
@@ -37,7 +42,12 @@ namespace DynamicData.PLinq
         /// <summary>
         /// Gets the threshold.
         /// </summary>
-        public int Threshold { get; } = 0;
+        public int Threshold { get; }
+
+        /// <summary>
+        /// Gets the maximum degree of parallisation.
+        /// </summary>
+        public int MaxDegreeOfParallisation { get; }
     }
 }
 #endif

@@ -2,10 +2,9 @@ using System;
 using System.Threading.Tasks;
 using DynamicData.Tests.Domain;
 
-
 namespace DynamicData.Tests.List
 {
- 
+
     [Obsolete("Not obsolete - test commented out due to test run freezing on Appveyor")]
     public class TransformAsyncFixture: IDisposable
     {

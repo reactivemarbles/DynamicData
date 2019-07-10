@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -32,7 +36,7 @@ namespace DynamicData.List.Internal
                 {
                     var sourceLists = Enumerable.Range(0, _source.Count)
                         .Select(_ => new ReferenceCountTracker<T>())
-                        .ToList(); 
+                        .ToList();
 
                     foreach (var pair in _source.Zip(sourceLists, (item, list) => new { Item = item, List = list }))
                     {
@@ -42,7 +46,9 @@ namespace DynamicData.List.Internal
 
                             var notifications = UpdateResultList(changes, sourceLists, resultList);
                             if (notifications.Count != 0)
+                            {
                                 observer.OnNext(notifications);
+                            }
                         }));
                     }
                 }
@@ -51,7 +57,7 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private void CloneSourceList(ReferenceCountTracker<T> tracker, IChangeSet<T> changes)
+        private static void CloneSourceList(ReferenceCountTracker<T> tracker, IChangeSet<T> changes)
         {
             foreach (var change in changes)
             {
@@ -62,7 +68,10 @@ namespace DynamicData.List.Internal
                         break;
                     case ListChangeReason.AddRange:
                         foreach (var t in change.Range)
+                        {
                             tracker.Add(t);
+                        }
+
                         break;
                     case ListChangeReason.Replace:
                         tracker.Remove(change.Item.Previous.Value);
@@ -74,7 +83,10 @@ namespace DynamicData.List.Internal
                     case ListChangeReason.RemoveRange:
                     case ListChangeReason.Clear:
                         foreach (var t in change.Range)
+                        {
                             tracker.Remove(t);
+                        }
+
                         break;
                 }
             }
@@ -103,9 +115,12 @@ namespace DynamicData.List.Internal
                 else
                 {
                     if (isInResult)
+                    {
                         resultList.Remove(item);
+                    }
                 }
             }
+
             return resultList.CaptureChanges();
         }
 
@@ -117,22 +132,26 @@ namespace DynamicData.List.Internal
                     {
                         return sourceLists.All(s => s.Contains(item));
                     }
+
                 case CombineOperator.Or:
                     {
                         return sourceLists.Any(s => s.Contains(item));
                     }
+
                 case CombineOperator.Xor:
                     {
                         return sourceLists.Count(s => s.Contains(item)) == 1;
                     }
+
                 case CombineOperator.Except:
                     {
                         var first = sourceLists[0].Contains(item);
                         var others = sourceLists.Skip(1).Any(s => s.Contains(item));
                         return first && !others;
                     }
+
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(item));
             }
         }
     }

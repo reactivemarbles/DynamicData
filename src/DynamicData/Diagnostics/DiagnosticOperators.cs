@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Reactive.Linq;
 
 namespace DynamicData.Diagnostics
@@ -18,7 +22,11 @@ namespace DynamicData.Diagnostics
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<ChangeSummary> CollectUpdateStats<TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Scan(ChangeSummary.Empty, (seed, next) =>
             {
                 int index = seed.Overall.Index + 1;
@@ -44,7 +52,11 @@ namespace DynamicData.Diagnostics
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<ChangeSummary> CollectUpdateStats<TSource>(this IObservable<IChangeSet<TSource>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Scan(ChangeSummary.Empty, (seed, next) =>
             {
                 int index = seed.Overall.Index + 1;

@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
@@ -11,7 +15,11 @@ namespace DynamicData.Cache.Internal
 
         public DeferUntilLoaded([NotNull] IObservableCache<TObject, TKey> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             _result = source.CountChanged.Where(count => count != 0)
                 .Take(1)
                 .Select(_ => new ChangeSet<TObject, TKey>())

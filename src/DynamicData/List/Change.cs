@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
@@ -56,7 +60,9 @@ namespace DynamicData
         public Change(ListChangeReason reason, IEnumerable<T> items, int index = -1)
         {
             if (reason.GetChangeType() == ChangeType.Item)
+            {
                 throw new IndexOutOfRangeException("ListChangeReason must be a range type for a range change");
+            }
 
             //ignore this case because WhereReasonsAre removes the index 
             //if (reason== ListChangeReason.RemoveRange && index < 0)
@@ -81,10 +87,14 @@ namespace DynamicData
         public Change(T current, int currentIndex, int previousIndex)
         {
             if (currentIndex < 0)
+            {
                 throw new ArgumentException("CurrentIndex must be greater than or equal to zero");
+            }
 
             if (previousIndex < 0)
+            {
                 throw new ArgumentException("PreviousIndex must be greater than or equal to zero");
+            }
 
             Reason = ListChangeReason.Moved;
             Item = new ItemChange<T>(Reason, current, Optional.None<T>(), currentIndex, previousIndex);
@@ -109,13 +119,19 @@ namespace DynamicData
         public Change(ListChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
         {
             if (reason == ListChangeReason.Add && previous.HasValue)
+            {
                 throw new ArgumentException("For ChangeReason.Add, a previous value cannot be specified");
+            }
+
             if (reason == ListChangeReason.Replace && !previous.HasValue)
+            {
                 throw new ArgumentException("For ChangeReason.Change, must supply previous value");
+            }
 
             if (reason == ListChangeReason.Refresh && currentIndex < 0)
+            {
                 throw new ArgumentException("For ChangeReason.Refresh, must supply and index");
-
+            }
 
             Reason = reason;
             Item = new ItemChange<T>(Reason, current, previous, currentIndex, previousIndex);
@@ -128,17 +144,37 @@ namespace DynamicData
         /// <inheritdoc />
         public bool Equals(Change<T> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return Reason == other.Reason && Item.Equals(other.Item) && Equals(Range, other.Range);
         }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
             return Equals((Change<T>)obj);
         }
 
@@ -154,9 +190,7 @@ namespace DynamicData
             }
         }
 
-
         public static bool operator ==(Change<T> left, Change<T> right) => Equals(left, right);
-
 
         public static bool operator !=(Change<T> left, Change<T> right) => !Equals(left, right);
 

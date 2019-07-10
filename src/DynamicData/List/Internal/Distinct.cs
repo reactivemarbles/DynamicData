@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +13,7 @@ namespace DynamicData.List.Internal
 {
     internal sealed class Distinct<T, TValue>
     {
-        private readonly IObservable<IChangeSet<T>> _source;              
+        private readonly IObservable<IChangeSet<T>> _source;
         private readonly Func<T, TValue> _valueSelector;
 
         public Distinct([NotNull] IObservable<IChangeSet<T>> source,
@@ -38,7 +42,7 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithMatch> changes)
+        private static IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithMatch> changes)
         {
             void AddAction(TValue value) => values.Lookup(value)
                 .IfHasValue(count => values[value] = count + 1)
@@ -51,12 +55,18 @@ namespace DynamicData.List.Internal
             void RemoveAction(TValue value)
             {
                 var counter = values.Lookup(value);
-                if (!counter.HasValue) return;
+                if (!counter.HasValue)
+                {
+                    return;
+                }
 
                 //decrement counter
                 var newCount = counter.Value - 1;
                 values[value] = newCount;
-                if (newCount != 0) return;
+                if (newCount != 0)
+                {
+                    return;
+                }
 
                 //if there are none, then remove and notify
                 result.Remove(value);
@@ -74,44 +84,54 @@ namespace DynamicData.List.Internal
                             AddAction(value);
                             break;
                         }
+
                     case ListChangeReason.AddRange:
                         {
                             change.Range.Select(item => item.Value).ForEach(AddAction);
                             break;
                         }
 
-
                     case ListChangeReason.Refresh:
                     {
                         var value = change.Item.Current.Value;
                         var previous = change.Item.Current.Previous;
-                        if (value.Equals(previous)) continue;
+                        if (value.Equals(previous))
+                            {
+                                continue;
+                            }
 
-                        RemoveAction(previous);
+                            RemoveAction(previous);
                         AddAction(value);
                         break;
                         }
+
                     case ListChangeReason.Replace:
                         {
                             var value = change.Item.Current.Value;
                             var previous = change.Item.Previous.Value.Value;
-                            if (value.Equals(previous)) continue;
+                            if (value.Equals(previous))
+                            {
+                                continue;
+                            }
 
                             RemoveAction(previous);
                             AddAction(value);
                             break;
                         }
+
                     case ListChangeReason.Remove:
                         {
                             var previous = change.Item.Current.Value;
                             RemoveAction(previous);
                             break;
                         }
+
                     case ListChangeReason.RemoveRange:
                         {
                             change.Range.Select(item => item.Value).ForEach(RemoveAction);
                             break;
                         }
+
                     case ListChangeReason.Clear:
                         {
                             result.Clear();
@@ -120,6 +140,7 @@ namespace DynamicData.List.Internal
                         }
                 }
             }
+
             return result.CaptureChanges();
         }
 
@@ -140,16 +161,36 @@ namespace DynamicData.List.Internal
 
             public bool Equals(ItemWithMatch other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return EqualityComparer<T>.Default.Equals(Item, other.Item);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((ItemWithMatch)obj);
             }
 

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -8,7 +12,7 @@ using System.Threading.Tasks;
 namespace DynamicData.Kernel
 {
     /// <summary>
-    /// 
+    /// Extensions associated with times and intervals.
     /// </summary>
     public static class InternalEx
     {
@@ -31,7 +35,9 @@ namespace DynamicData.Kernel
             {
                 TimeSpan? delay = backOffStrategy(error, failureCount);
                 if (!delay.HasValue)
+                {
                     return Observable.Throw<TSource>(error);
+                }
 
                 return Observable.Timer(delay.Value).SelectMany(Retry(failureCount + 1));
             });
@@ -56,9 +62,6 @@ namespace DynamicData.Kernel
                 return Observable.FromAsync(() => factory(t)).Wait();
             });
         }
-
-
-
 
         /// <summary>
         /// Schedules a recurring action.
@@ -96,6 +99,11 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, Func<TimeSpan> interval, Action action)
         {
+            if (interval == null)
+            {
+                throw new ArgumentNullException(nameof(interval));
+            }
+
             return scheduler.Schedule(interval(), scheduleNext =>
             {
                 action();
@@ -103,7 +111,7 @@ namespace DynamicData.Kernel
                 scheduleNext(next);
             });
         }
-        
+
         internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2)
         {
             TSwap temp = t1;

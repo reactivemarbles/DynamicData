@@ -173,7 +173,6 @@ namespace DynamicData.Tests.Cache
         //    }
         //}
 
-
         //[Fact]
         //public void HandleError()
         //{
@@ -194,7 +193,6 @@ namespace DynamicData.Tests.Cache
         //        stub.Source.Connect()
         //            .Subscribe(changes => { }, ex => error = ex);
 
-
         //        error.Should().BeNull();
 
         //        stub.HandledErrors.Count.Should().Be(50);
@@ -209,7 +207,7 @@ namespace DynamicData.Tests.Cache
 
             public Func< Person, Task<PersonWithGender>> TransformFactory { get; }
 
-            public IList<Error<Person, string>> HandledErrors { get; } = new List<Error<Person, string>>(); 
+            public IList<Error<Person, string>> HandledErrors { get; } = new List<Error<Person, string>>();
 
             public TransformStub()
             {
@@ -220,11 +218,10 @@ namespace DynamicData.Tests.Cache
                 };
 
                 Results = new ChangeSetAggregator<PersonWithGender, string>
-                (   
+                (
                     Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler)
                 );
             }
-
 
             public TransformStub(Func<Person, PersonWithGender> factory)
             {

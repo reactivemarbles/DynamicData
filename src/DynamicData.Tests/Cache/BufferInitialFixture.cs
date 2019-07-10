@@ -21,13 +21,15 @@ namespace DynamicData.Tests.Cache
             using (var aggregator = cache.Connect().BufferInitial(TimeSpan.FromSeconds(1), scheduler).AsAggregator())
             {
                 foreach (var item in People)
+                {
                     cache.AddOrUpdate(item);
+                }
 
                 aggregator.Data.Count.Should().Be(0);
                 aggregator.Messages.Count.Should().Be(0);
 
                 scheduler.Start();
-                
+
                 aggregator.Data.Count.Should().Be(10_000);
                 aggregator.Messages.Count.Should().Be(1);
 

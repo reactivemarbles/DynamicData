@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,7 +30,9 @@ namespace DynamicData.List.Internal
                 var subsequentChanges = manyselector(t).ToObservableChangeSet();
 
                 if (manyselector(t).Count > 0)
+                {
                     return subsequentChanges;
+                }
 
                 return Observable.Return(ChangeSet<TDestination>.Empty)
                     .Concat(subsequentChanges);
@@ -42,7 +48,9 @@ namespace DynamicData.List.Internal
                 var subsequentChanges = manyselector(t).ToObservableChangeSet();
 
                 if (manyselector(t).Count > 0)
+                {
                     return subsequentChanges;
+                }
 
                 return Observable.Return(ChangeSet<TDestination>.Empty)
                     .Concat(subsequentChanges);
@@ -57,7 +65,9 @@ namespace DynamicData.List.Internal
                 var subsequentChanges = manyselector(t).Connect();
 
                 if (manyselector(t).Count > 0)
+                {
                     return subsequentChanges;
+                }
 
                 return Observable.Return(ChangeSet<TDestination>.Empty)
                     .Concat(subsequentChanges);
@@ -79,12 +89,14 @@ namespace DynamicData.List.Internal
         public IObservable<IChangeSet<TDestination>> Run()
         {
             if (_childChanges != null)
+            {
                 return CreateWithChangeset();
+            }
 
             return _source.Transform(item => new ManyContainer(_manyselector(item).ToArray()), true)
                 .Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer))).NotEmpty();
         }
-          
+
         private IObservable<IChangeSet<TDestination>> CreateWithChangeset()
         {
             return Observable.Create<IChangeSet<TDestination>>(observer =>
@@ -123,7 +135,6 @@ namespace DynamicData.List.Internal
                     return result.CaptureChanges();
                 });
 
-
                 var allChanges = init.Merge(subseq);
 
                 return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect());
@@ -142,6 +153,7 @@ namespace DynamicData.List.Internal
                 Changes = changes;
             }
         }
+
         //make this an instance
         private sealed class DestinationEnumerator : IEnumerable<Change<TDestination>>
         {
@@ -163,13 +175,17 @@ namespace DynamicData.List.Internal
                     {
                         case ListChangeReason.Add:
                             foreach (var destination in change.Item.Current.Destination)
+                            {
                                 yield return new Change<TDestination>(change.Reason, destination);
+                            }
+
                             break;
                         case ListChangeReason.AddRange:
                         {
                             var items = change.Range.SelectMany(m => m.Destination);
                             yield return new Change<TDestination>(change.Reason, items);
                         }
+
                             break;
                         case ListChangeReason.Replace:
                         case ListChangeReason.Refresh:
@@ -183,23 +199,34 @@ namespace DynamicData.List.Internal
 
                             //I am not sure whether it is possible to translate the original change into a replace
                             foreach (var destination in removes)
-                                yield return new Change<TDestination>(ListChangeReason.Remove, destination);
+                                {
+                                    yield return new Change<TDestination>(ListChangeReason.Remove, destination);
+                                }
 
-                            foreach (var destination in adds)
-                                yield return new Change<TDestination>(ListChangeReason.Add, destination);
-                        }
+                                foreach (var destination in adds)
+                                {
+                                    yield return new Change<TDestination>(ListChangeReason.Add, destination);
+                                }
+                            }
+
                             break;
                         case ListChangeReason.Remove:
                             foreach (var destination in change.Item.Current.Destination)
+                            {
                                 yield return new Change<TDestination>(change.Reason, destination);
+                            }
+
                             break;
                         case ListChangeReason.RemoveRange:
                         {
                             var toRemove = change.Range.SelectMany(m => m.Destination);
 
                             foreach (var destination in toRemove)
-                                yield return new Change<TDestination>(ListChangeReason.Remove, destination);
-                        }
+                                {
+                                    yield return new Change<TDestination>(ListChangeReason.Remove, destination);
+                                }
+                            }
+
                             break;
                         case ListChangeReason.Moved:
                             //do nothing as the original index has no bearing on the destination index
@@ -210,12 +237,14 @@ namespace DynamicData.List.Internal
                             var items = change.Range.SelectMany(m => m.Destination);
                             yield return new Change<TDestination>(change.Reason, items);
                         }
+
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            throw new IndexOutOfRangeException("Unknown list reason " + change);
                     }
                 }
             }
+
             IEnumerator IEnumerable.GetEnumerator()
             {
                 return GetEnumerator();

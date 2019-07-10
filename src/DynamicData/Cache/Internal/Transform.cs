@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
@@ -27,7 +31,9 @@ namespace DynamicData.Cache.Internal
             return _source.Scan((ChangeAwareCache<TDestination, TKey>)null, (cache, changes) =>
                 {
                     if (cache == null)
+                    {
                         cache = new ChangeAwareCache<TDestination, TKey>(changes.Count);
+                    }
 
                     var concreteType = changes.ToConcreteType();
                     foreach (var change in concreteType)
@@ -56,6 +62,7 @@ namespace DynamicData.Cache.Internal
                                     cache.AddOrUpdate(transformed, change.Key);
                                 }
                             }
+
                                 break;
                             case ChangeReason.Remove:
                                 cache.Remove(change.Key);
@@ -79,6 +86,7 @@ namespace DynamicData.Cache.Internal
                                 break;
                         }
                     }
+
                     return cache;
                 })
                 .Select(cache => cache.CaptureChanges())

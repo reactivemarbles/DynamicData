@@ -1,9 +1,13 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 
 namespace DynamicData.Cache.Internal
 {
-    internal sealed class ManagedGroup<TObject, TKey, TGroupKey> : IGroup<TObject, TKey, TGroupKey>
+    internal sealed class ManagedGroup<TObject, TKey, TGroupKey> : IGroup<TObject, TKey, TGroupKey>, IDisposable
     {
         private readonly IntermediateCache<TObject, TKey> _cache = new IntermediateCache<TObject, TKey>();
 
@@ -44,8 +48,16 @@ namespace DynamicData.Cache.Internal
         /// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. </param>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
             return obj is ManagedGroup<TObject, TKey, TGroupKey> && Equals((ManagedGroup<TObject, TKey, TGroupKey>)obj);
         }
 

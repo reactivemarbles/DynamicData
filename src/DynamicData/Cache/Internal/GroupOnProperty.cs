@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reactive.Concurrency;
@@ -31,10 +35,12 @@ namespace DynamicData.Cache.Internal
             {
                 // Monitor explicit property changes
                 var regrouper = shared.WhenValueChanged(_propertySelector, false).ToUnit();
-                
+
                 //add a throttle if specified
                 if (_throttle != null)
+                {
                     regrouper = regrouper.Throttle(_throttle.Value, _scheduler ?? Scheduler.Default);
+                }
 
                 // Use property changes as a trigger to re-evaluate Grouping
                 return shared.Group(_groupSelector, regrouper);

@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
@@ -55,7 +59,10 @@ namespace DynamicData
         /// <inheritdoc />
         public void Edit([NotNull] Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
 
             lock (_writeLock)
             {
@@ -78,7 +85,7 @@ namespace DynamicData
                 {
                     _readerWriter.WriteNested(updateAction);
                 }
-                
+
                 _editLevel--;
 
                 if (_editLevel == 0)
@@ -90,7 +97,10 @@ namespace DynamicData
 
         private void InvokeNextPreview(IChangeSet<T> changes)
         {
-            if (changes.Count == 0) return;
+            if (changes.Count == 0)
+            {
+                return;
+            }
 
             lock (_locker)
             {
@@ -100,17 +110,21 @@ namespace DynamicData
 
         private void InvokeNext(IChangeSet<T> changes)
         {
-            if (changes.Count == 0) return;
+            if (changes.Count == 0)
+            {
+                return;
+            }
 
             lock (_locker)
             {
                 _changes.OnNext(changes);
 
                 if (_countChanged.IsValueCreated)
+                {
                     _countChanged.Value.OnNext(_readerWriter.Count);
+                }
             }
         }
-
 
         private void OnCompleted()
         {
@@ -147,7 +161,11 @@ namespace DynamicData
                 lock (_locker)
                 {
                     var initial = new ChangeSet<T>(new[] {new Change<T>(ListChangeReason.AddRange, _readerWriter.Items)});
-                    if (initial.TotalChanges > 0) observer.OnNext(initial);
+                    if (initial.TotalChanges > 0)
+                    {
+                        observer.OnNext(initial);
+                    }
+
                     var source = _changes.Finally(observer.OnCompleted);
 
                     return source.SubscribeSafe(observer);
@@ -155,7 +173,9 @@ namespace DynamicData
             });
 
             if (predicate != null)
+            {
                 observable = new FilterStatic<T>(observable, predicate).Run();
+            }
 
             return observable;
         }
@@ -166,7 +186,9 @@ namespace DynamicData
             IObservable<IChangeSet<T>> observable = _changesPreview;
 
             if (predicate != null)
+            {
                 observable = new FilterStatic<T>(observable, predicate).Run();
+            }
 
             return observable;
         }
@@ -175,6 +197,7 @@ namespace DynamicData
         public void Dispose()
         {
             _cleanUp.Dispose();
+            _changesPreview?.Dispose();
         }
     }
 }

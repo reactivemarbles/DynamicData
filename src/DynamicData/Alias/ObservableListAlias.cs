@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using DynamicData.Annotations;
 
@@ -11,7 +15,6 @@ namespace DynamicData.Alias
     {
         #region Filter -> Where
 
-
         /// <summary>
         /// Filters the source using the specified valueSelector
         /// </summary>
@@ -22,11 +25,18 @@ namespace DynamicData.Alias
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
             return source.Filter(predicate);
         }
-
 
         /// <summary>
         /// Filters source using the specified filter observable predicate.
@@ -40,17 +50,22 @@ namespace DynamicData.Alias
         /// filterController</exception>
         public static IObservable<IChangeSet<T>> Where<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] IObservable<Func<T, bool>> predicate)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
 
             return source.Filter(predicate);
         }
 
-
         #endregion 
 
         #region Transform -> Select
-
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
@@ -67,8 +82,15 @@ namespace DynamicData.Alias
         /// </exception>
         public static IObservable<IChangeSet<TDestination>> Select<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
 
             return source.Transform(transformFactory);
         }
@@ -89,8 +111,16 @@ namespace DynamicData.Alias
         /// </exception>
         public static IObservable<IChangeSet<TDestination>> SelectMany<TDestination, TSource>([NotNull] this IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (manyselector == null) throw new ArgumentNullException(nameof(manyselector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (manyselector == null)
+            {
+                throw new ArgumentNullException(nameof(manyselector));
+            }
+
             return source.TransformMany(manyselector);
         }
 

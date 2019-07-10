@@ -7,12 +7,11 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class GroupOnPropertyWithImmutableStateFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
-
 
         public  GroupOnPropertyWithImmutableStateFixture()
         {
@@ -88,7 +87,6 @@ namespace DynamicData.Tests.List
 
             people.Take(25)
                 .ForEach(p => p.Age = 200);
-
 
             var changedCount = people.Select(p => p.Age).Distinct().Count();
             _results.Data.Count.Should().Be(changedCount);

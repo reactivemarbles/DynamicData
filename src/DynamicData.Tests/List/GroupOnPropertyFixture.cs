@@ -7,12 +7,11 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class GroupOnPropertyFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
-
 
         public  GroupOnPropertyFixture()
         {
@@ -68,7 +67,7 @@ namespace DynamicData.Tests.List
         {
             var generator = new RandomPersonGenerator();
             var people = generator.Take(1000).ToArray();
-            
+
             _source.AddRange(people);
 
             var expectedGroupCount = people.Select(p => p.Age).Distinct().Count();
@@ -88,7 +87,6 @@ namespace DynamicData.Tests.List
 
             people.Take(25)
                     .ForEach(p=>p.Age=200);
-
 
              var changedCount = people.Select(p => p.Age).Distinct().Count();
             _results.Data.Count.Should().Be(changedCount);

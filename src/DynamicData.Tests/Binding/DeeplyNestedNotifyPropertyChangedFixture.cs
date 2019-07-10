@@ -7,9 +7,8 @@ using FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.Binding
-{              
+{
 
-    
     public class DeeplyNestedNotifyPropertyChangedFixture
     {
         [Fact]
@@ -64,7 +63,7 @@ namespace DynamicData.Tests.Binding
             instance.Child.Age = 26;
             result.Should().Be(26);
             instance.Child = null;
-         
+
         }
 
         [Fact]
@@ -182,7 +181,6 @@ namespace DynamicData.Tests.Binding
                 .Do(_ => sw.Stop())
                 .Subscribe();
 
-
             items[1].Child.Age=-1;
             Console.WriteLine($"{sw.ElapsedMilliseconds}");
         }
@@ -209,16 +207,36 @@ namespace DynamicData.Tests.Binding
 
             public bool Equals(ClassA other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return string.Equals(_name, other._name) && Equals(_classB, other._classB);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((ClassA) obj);
             }
 
@@ -256,7 +274,6 @@ namespace DynamicData.Tests.Binding
             }
         }
 
-
         public class ClassB : AbstractNotifyPropertyChanged, IEquatable<ClassB>
         {
             private int _age;
@@ -271,16 +288,36 @@ namespace DynamicData.Tests.Binding
 
             public bool Equals(ClassB other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return _age == other._age;
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((ClassB) obj);
             }
 

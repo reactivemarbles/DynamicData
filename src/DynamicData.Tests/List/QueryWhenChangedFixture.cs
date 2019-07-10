@@ -5,7 +5,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class QueryWhenChangedFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;

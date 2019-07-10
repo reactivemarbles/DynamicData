@@ -10,7 +10,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class FromAsyncFixture
     {
         public TestScheduler Scheduler { get; }
@@ -80,7 +80,6 @@ namespace DynamicData.Tests.Cache
 
             //var subscribed = data.Connect()
             //    
-
 
             error.Should().NotBeNull();
         }

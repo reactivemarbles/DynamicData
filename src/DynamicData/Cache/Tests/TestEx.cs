@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData.Tests
@@ -29,7 +33,11 @@ namespace DynamicData.Tests
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static DistinctChangeSetAggregator<TValue> AsAggregator<TValue>(this IObservable<IDistinctChangeSet<TValue>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new DistinctChangeSetAggregator<TValue>(source);
         }
 
@@ -43,7 +51,11 @@ namespace DynamicData.Tests
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static SortedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new SortedChangeSetAggregator<TObject, TKey>(source);
         }
 
@@ -57,7 +69,11 @@ namespace DynamicData.Tests
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static VirtualChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IVirtualChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new VirtualChangeSetAggregator<TObject, TKey>(source);
         }
 
@@ -70,7 +86,11 @@ namespace DynamicData.Tests
         /// <returns></returns>
         public static PagedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IPagedChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new PagedChangeSetAggregator<TObject, TKey>(source);
         }
     }

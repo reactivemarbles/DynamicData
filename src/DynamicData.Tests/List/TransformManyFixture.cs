@@ -8,7 +8,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class TransformManyFixture: IDisposable
     {
         private readonly ISourceList<PersonWithRelations> _source;
@@ -53,7 +53,6 @@ namespace DynamicData.Tests.List
             var child3 = new PersonWithRelations("Child3", 8);
             var mother = new PersonWithRelations("Mother", 35, new[] {child1, child2, child3});
 
-
             _source.Add(mother);
             _source.Remove(mother);
             _results.Data.Count.Should().Be(0);
@@ -95,7 +94,6 @@ namespace DynamicData.Tests.List
             var child5 = new PersonWithRelations("Child5", 2);
             var anotherRelative1 = new PersonWithRelations("Another1", 2, new[] { child4, child5 });
 
-
             var child6 = new PersonWithRelations("Child6", 1);
             var child7 = new PersonWithRelations("Child7", 2);
             var anotherRelative2 = new PersonWithRelations("Another2", 2, new[] { child6, child7 });
@@ -128,7 +126,6 @@ namespace DynamicData.Tests.List
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] { child6, child7 });
 
         }
-
 
         [Fact]
         public void Clear()
@@ -182,7 +179,6 @@ namespace DynamicData.Tests.List
                       .TransformMany(tourProvider => tourProvider.Tours)
                       .AsObservableList();
 
-
             var tour1_1 = new Tour("Tour 1.1");
             var tour2_1 = new Tour("Tour 2.1");
             var tour2_2 = new Tour("Tour 2.2");
@@ -206,8 +202,6 @@ namespace DynamicData.Tests.List
             allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
         }
 
-
-
         public class TourProvider
         {
             public TourProvider(string name, IEnumerable<Tour> tours)
@@ -215,7 +209,9 @@ namespace DynamicData.Tests.List
                 Name = name;
 
                 if (tours != null)
+                {
                     Tours.AddRange(tours);
+                }
             }
 
             public string Name { get; }

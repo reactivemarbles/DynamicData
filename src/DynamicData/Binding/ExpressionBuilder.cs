@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -21,10 +25,13 @@ namespace DynamicData.Binding
             {
                 yield return typeof(TObject).FullName;
                 foreach (var member in members.Reverse())
+                {
                     yield return member.Member.Name;
+                }
             }
+
             return string.Join(".",GetNames());
-        }     
+        }
 
         public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(this Expression<Func<TObject, TProperty>> source)
         {
@@ -50,6 +57,7 @@ namespace DynamicData.Binding
                 {
                     yield return memberExpression;
                 }
+
                 memberExpression = memberExpression.Expression as MemberExpression;
             }
         }
@@ -59,7 +67,7 @@ namespace DynamicData.Binding
             //create an expression which accepts the parent and returns the child
             var property = source.GetProperty();
             var method = property.GetMethod;
-           
+
             //convert the parameter i.e. the declaring class to an object
             var parameter = Expression.Parameter(typeof(object));
             var converted = Expression.Convert(parameter, source.Expression.Type);
@@ -80,8 +88,15 @@ namespace DynamicData.Binding
 
             return t =>
             {
-                if (t == null) return Observable<Unit>.Never;
-                if (!inpc) return Observable.Return(Unit.Default);
+                if (t == null)
+                {
+                    return Observable<Unit>.Never;
+                }
+
+                if (!inpc)
+                {
+                    return Observable.Return(Unit.Default);
+                }
 
                 return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
                     (
@@ -93,12 +108,13 @@ namespace DynamicData.Binding
             };
         }
 
-
         internal static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
             var property = expression.GetMember() as PropertyInfo;
             if (property == null)
+            {
                 throw new ArgumentException("Not a property expression");
+            }
 
             return property;
         }
@@ -107,7 +123,9 @@ namespace DynamicData.Binding
         {
             var property = expression.Member as PropertyInfo;
             if (property == null)
+            {
                 throw new ArgumentException("Not a property expression");
+            }
 
             return property;
         }
@@ -115,7 +133,9 @@ namespace DynamicData.Binding
         internal static MemberInfo GetMember<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
             if (expression == null)
+            {
                 throw new ArgumentException("Not a property expression");
+            }
 
             return GetMemberInfo(expression);
         }
@@ -123,7 +143,9 @@ namespace DynamicData.Binding
         private static MemberInfo GetMemberInfo(LambdaExpression lambda)
         {
             if (lambda == null)
+            {
                 throw new ArgumentException("Not a property expression");
+            }
 
             MemberExpression memberExpression = null;
             if (lambda.Body.NodeType == ExpressionType.Convert)
@@ -140,7 +162,9 @@ namespace DynamicData.Binding
             }
 
             if (memberExpression == null)
+            {
                 throw new ArgumentException("Not a member access");
+            }
 
             return memberExpression.Member;
         }

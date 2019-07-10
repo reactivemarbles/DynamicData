@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.AggregationTests
 {
-    
+
     public class SumFixture: IDisposable
     {
         private readonly SourceCache<Person, string> _source;

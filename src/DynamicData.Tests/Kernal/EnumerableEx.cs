@@ -8,8 +8,15 @@ namespace DynamicData.Tests.Cache
         public static IEnumerable<TResult> PrevCurrentNextZip<T, TResult>(this IEnumerable<T> source,
                                                                           Func<T, T, T, TResult> selector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (selector == null) throw new ArgumentNullException("selector");
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");
+            }
+
+            if (selector == null)
+            {
+                throw new ArgumentNullException("selector");
+            }
 
             var enumerator = source.GetEnumerator();
             if (enumerator.MoveNext())
@@ -32,8 +39,15 @@ namespace DynamicData.Tests.Cache
         public static IEnumerable<TResult> CurrentNextZip<T, TResult>(this IEnumerable<T> source,
                                                                       Func<T, T, TResult> selector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (selector == null) throw new ArgumentNullException("selector");
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");
+            }
+
+            if (selector == null)
+            {
+                throw new ArgumentNullException("selector");
+            }
 
             var enumerator = source.GetEnumerator();
             if (enumerator.MoveNext())
@@ -54,8 +68,15 @@ namespace DynamicData.Tests.Cache
         public static IEnumerable<TResult> PrevCurrentZip<T, TResult>(this IEnumerable<T> source,
                                                                       Func<T, T, TResult> selector)
         {
-            if (source == null) throw new ArgumentNullException("source");
-            if (selector == null) throw new ArgumentNullException("selector");
+            if (source == null)
+            {
+                throw new ArgumentNullException("source");
+            }
+
+            if (selector == null)
+            {
+                throw new ArgumentNullException("selector");
+            }
 
             var enumerator = source.GetEnumerator();
             if (enumerator.MoveNext())

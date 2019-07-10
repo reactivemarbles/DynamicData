@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using DynamicData.Kernel;
 
@@ -11,7 +15,11 @@ namespace DynamicData.List.Internal
 
         public IChangeSet<T> Write(IChangeSet<T> changes)
         {
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
+
             IChangeSet<T> result;
 
             lock (_locker)
@@ -19,12 +27,16 @@ namespace DynamicData.List.Internal
                 _data.Clone(changes);
                 result = _data.CaptureChanges();
             }
+
             return result;
         }
 
         public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
 
             IChangeSet<T> result;
 
@@ -39,11 +51,18 @@ namespace DynamicData.List.Internal
 
             return result;
         }
-        
+
         public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
-            if (previewHandler == null) throw new ArgumentNullException(nameof(previewHandler));
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
+
+            if (previewHandler == null)
+            {
+                throw new ArgumentNullException(nameof(previewHandler));
+            }
 
             IChangeSet<T> result;
 
@@ -73,10 +92,12 @@ namespace DynamicData.List.Internal
         /// Changes are added to the topmost change tracker.
         /// Use only during an invocation of Write/WriteWithPreview.
         /// </summary>
-        public void WriteNested(Action<IExtendedList<T>> updateAction) 
+        public void WriteNested(Action<IExtendedList<T>> updateAction)
         {
             if (updateAction == null)
+            {
                 throw new ArgumentNullException(nameof(updateAction));
+            }
 
             lock (_locker)
             {
@@ -107,7 +128,9 @@ namespace DynamicData.List.Internal
             get
             {
                 lock (_locker)
+                {
                     return _data.Count;
+                }
             }
         }
     }

@@ -1,9 +1,12 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-
 
 namespace DynamicData.Cache.Internal
 {
@@ -50,7 +53,6 @@ namespace DynamicData.Cache.Internal
                         .Where(list => list.Any())
                         .Select(items => new ChangeSet<TObject, TKey>(items));
                 }
-
 
                 //publish refreshes and underlying changes
                 var locker = new object();

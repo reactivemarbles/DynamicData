@@ -12,7 +12,6 @@ namespace DynamicData.Tests.Cache
         private SourceCache<DeviceMetaData, string> _right;
         private ChangeSetAggregator<DeviceWithMetadata, string> _result;
 
-
         public InnerJoinFixture()
         {
             _left = new SourceCache<Device, string>(device => device.Name);
@@ -22,8 +21,6 @@ namespace DynamicData.Tests.Cache
                 .InnerJoin(_right.Connect(), meta => meta.Name, (key, device, meta) => new DeviceWithMetadata(key, device, meta))
                 .AsAggregator();
         }
-
-
 
         public void Dispose()
         {
@@ -48,7 +45,6 @@ namespace DynamicData.Tests.Cache
             _result.Data.Lookup("Device3").HasValue.Should().BeFalse();
         }
 
-
         [Fact]
         public void AddRightOnly()
         {
@@ -64,7 +60,6 @@ namespace DynamicData.Tests.Cache
             _result.Data.Lookup("Device2").HasValue.Should().BeFalse();
             _result.Data.Lookup("Device3").HasValue.Should().BeFalse();
         }
-
 
         [Fact]
         public void AddLetThenRight()
@@ -113,14 +108,12 @@ namespace DynamicData.Tests.Cache
 
             2.Should().Be(_result.Data.Count);
 
-
             _left.Remove("Device1");
             1.Should().Be(_result.Data.Count);
             _result.Data.Lookup("Device1").HasValue.Should().BeFalse();
             _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
             _result.Data.Lookup("Device3").HasValue.Should().BeFalse();
         }
-
 
         [Fact]
         public void AddRightThenLeft()
@@ -131,7 +124,6 @@ namespace DynamicData.Tests.Cache
                 innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
-
 
             _left.Edit(innerCache =>
             {
@@ -153,7 +145,6 @@ namespace DynamicData.Tests.Cache
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
 
-
             _left.Edit(innerCache =>
             {
                 innerCache.AddOrUpdate(new Device("Device1"));
@@ -163,7 +154,6 @@ namespace DynamicData.Tests.Cache
 
             3.Should().Be(_result.Data.Count);
         }
-
 
         public class Device : IEquatable<Device>
         {
@@ -178,16 +168,36 @@ namespace DynamicData.Tests.Cache
 
             public bool Equals(Device other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return string.Equals(Name, other.Name);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((Device)obj);
             }
 
@@ -230,16 +240,36 @@ namespace DynamicData.Tests.Cache
 
             public bool Equals(DeviceMetaData other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return string.Equals(Name, other.Name) && IsAutoConnect == other.IsAutoConnect;
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((DeviceMetaData)obj);
             }
 
@@ -269,7 +299,6 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-
         public class DeviceWithMetadata : IEquatable<DeviceWithMetadata>
         {
             public string Key { get; }
@@ -287,16 +316,36 @@ namespace DynamicData.Tests.Cache
 
             public bool Equals(DeviceWithMetadata other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return string.Equals(Key, other.Key);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((DeviceWithMetadata)obj);
             }
 

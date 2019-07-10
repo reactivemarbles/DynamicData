@@ -1,8 +1,11 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
-
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
@@ -79,27 +82,42 @@ namespace DynamicData
         /// <param name="keys">The keys.</param>
         public void Remove(IEnumerable<TKey> keys)
         {
-            if (_data == null) return;
+            if (keys == null)
+            {
+                throw new ArgumentNullException(nameof(keys));
+            }
+
+            if (_data == null)
+            {
+                return;
+            }
 
             if (keys is IList<TKey> list)
             {
                 EnsureInitialised(list.Count);
                 var enumerable = EnumerableIList.Create(list);
                 foreach (var item in enumerable)
+                {
                     Remove(item);
+                }
             }
             else
             {
                 EnsureInitialised();
                 foreach (var key in keys)
+                {
                     Remove(key);
+                }
             }
         }
 
         /// <inheritdoc />
         public void Remove(TKey key)
         {
-            if (_data == null) return;
+            if (_data == null)
+            {
+                return;
+            }
 
             if (_data.TryGetValue(key, out var existingItem))
             {
@@ -109,25 +127,32 @@ namespace DynamicData
             }
         }
 
-
-
         /// <summary>
         /// Raises an evaluate change for the specified keys
         /// </summary>
         public void Refresh(IEnumerable<TKey> keys)
         {
+            if (keys == null)
+            {
+                throw new ArgumentNullException(nameof(keys));
+            }
+
             if (keys is IList<TKey> list)
             {
                 EnsureInitialised(list.Count);
                 var enumerable = EnumerableIList.Create(list);
                 foreach (var key in enumerable)
+                {
                     Refresh(key);
+                }
             }
             else
             {
                 EnsureInitialised();
                 foreach (var key in keys)
+                {
                     Refresh(key);
+                }
             }
         }
 
@@ -139,7 +164,6 @@ namespace DynamicData
             EnsureInitialised(_data.Count);
             _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
         }
-
 
         /// <summary>
         /// Raises an evaluate change for the specified key
@@ -154,11 +178,13 @@ namespace DynamicData
             }
         }
 
-
         /// <inheritdoc />
         public void Clear()
         {
-            if (_data == null) return;
+            if (_data == null)
+            {
+                return;
+            }
 
             EnsureInitialised(_data.Count);
 
@@ -170,7 +196,10 @@ namespace DynamicData
         /// <inheritdoc />
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
 
             EnsureInitialised(changes.Count);
 
@@ -196,10 +225,14 @@ namespace DynamicData
         private void EnsureInitialised(int capacity = -1)
         {
             if (_changes == null)
+            {
                 _changes = capacity > 0 ? new ChangeSet<TObject, TKey>(capacity) : new ChangeSet<TObject, TKey>();
+            }
 
             if (_data == null)
+            {
                 _data = capacity > 0 ? new Dictionary<TKey, TObject>(capacity) : new Dictionary<TKey, TObject>();
+            }
         }
 
         /// <summary>
@@ -208,7 +241,9 @@ namespace DynamicData
         public ChangeSet<TObject, TKey> CaptureChanges()
         {
             if (_changes == null || _changes.Count==0)
+            {
                 return ChangeSet<TObject, TKey>.Empty;
+            }
 
             var copy = _changes;
             _changes = null;

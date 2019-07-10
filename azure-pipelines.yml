@@ -1,0 +1,23 @@
+trigger:
+- master
+- rel/*
+- preview/*
+
+pr:
+- master
+- rel/*
+- preview/*
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: ReactiveUI/ReactiveUI.Cake.Recipe
+      endpoint: reactiveui
+
+jobs:
+- template: Azure/azure-pipelines.yml@templates  # Template reference
+  parameters:
+    dotNetVersion: '3.0.100-preview6-012264'
+    runMacBuild: false
+    

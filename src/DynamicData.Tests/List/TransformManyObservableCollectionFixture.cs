@@ -6,7 +6,7 @@ using FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.List
-{    
+{
     public class TransformManyObservableCollectionFixture
     {
         [Fact]
@@ -28,7 +28,6 @@ namespace DynamicData.Tests.List
                     return parent;
                 }).ToArray();
 
-
             using (var source = new SourceList<Parent>())
             using (var aggregator = source.Connect()
                 .TransformMany(p => p.Children)
@@ -45,7 +44,6 @@ namespace DynamicData.Tests.List
                 ////remove first parent and check children have gone
                 source.RemoveAt(0);
                 aggregator.Data.Count.Should().Be(98);
-
 
                 //check items can be cleared and then added back in
                 var childrenInZero = parents[1].Children.ToArray();
@@ -84,7 +82,6 @@ namespace DynamicData.Tests.List
                     return parent;
                 }).ToArray();
 
-
             using (var source = new SourceList<Parent>())
             using (var aggregator = source.Connect()
                 .TransformMany(p => p.ChildrenReadonly)
@@ -101,7 +98,6 @@ namespace DynamicData.Tests.List
                 ////remove first parent and check children have gone
                 source.RemoveAt(0);
                 aggregator.Data.Count.Should().Be(98);
-
 
                 //check items can be cleared and then added back in
                 var childrenInZero = parents[1].Children.ToArray();
@@ -141,7 +137,6 @@ namespace DynamicData.Tests.List
                     return parent;
                 }).ToArray();
 
-
             using (var source = new SourceList<ParentDynamic>())
             using (var aggregator = source.Connect()
                 .TransformMany(p => p.ChildrenObservable)
@@ -160,7 +155,6 @@ namespace DynamicData.Tests.List
                 ////remove first parent and check children have gone
                 source.RemoveAt(0);
                 aggregator.Data.Count.Should().Be(98);
-
 
                 //check items can be cleared and then added back in
                 var childrenInZero = parents[1].Children.Items.ToArray();
@@ -252,7 +246,7 @@ namespace DynamicData.Tests.List
         {
             public ObservableCollection<Person> Children { get; }
             public ReadOnlyObservableCollection<Person> ChildrenReadonly { get; }
-            
+
             public Parent(int id, IEnumerable<Person> children)
             {
                 Children = new ObservableCollection<Person>(children);

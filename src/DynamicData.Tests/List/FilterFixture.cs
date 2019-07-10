@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class FilterFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
@@ -34,7 +34,6 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
             _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
-
 
         [Fact]
         public void ReplaceWithMatch()

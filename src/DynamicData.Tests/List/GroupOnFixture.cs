@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class GroupOnFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
@@ -17,7 +17,6 @@ namespace DynamicData.Tests.List
             _source = new SourceList<Person>();
             _results = _source.Connect().GroupOn(p => p.Age).AsAggregator();
         }
-
 
         public void Dispose()
         {

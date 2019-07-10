@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Linq;
 using System.Reactive;
@@ -31,7 +35,7 @@ namespace DynamicData.Cache.Internal
             {
                 var locker = new object();
                 var refilterObservable = new BehaviorSubject<Unit>(Unit.Default);
-                
+
                 var allData = _source.Synchronize(locker).AsObservableCache();
 
                 //for each object we need a node which provides
@@ -45,7 +49,7 @@ namespace DynamicData.Cache.Internal
                                              .Synchronize(locker)
                                              .Group(x => _pivotOn(x.Item))
                                              .AsObservableCache();
-                
+
                 void UpdateChildren(Node<TObject, TKey> parentNode)
                 {
                     var lookup = groupedByPivot.Lookup(parentNode.Key);
@@ -102,6 +106,7 @@ namespace DynamicData.Cache.Internal
 
                                                                        break;
                                                                    }
+
                                                                case ChangeReason.Remove:
                                                                    {
                                                                        //remove children and null out parent
@@ -150,6 +155,7 @@ namespace DynamicData.Cache.Internal
 
                                                                            break;
                                                                        }
+
                                                                    case ChangeReason.Update:
                                                                        {
                                                                            //copy children to the new node amd set parent
@@ -174,6 +180,7 @@ namespace DynamicData.Cache.Internal
 
                                                                            break;
                                                                        }
+
                                                                    case ChangeReason.Remove:
                                                                        {
                                                                            node.Parent = null;
@@ -185,6 +192,7 @@ namespace DynamicData.Cache.Internal
 
                                                                            break;
                                                                        }
+
                                                                    case ChangeReason.Refresh:
                                                                        {
                                                                            var previousParent = change.Current.Parent;
@@ -194,6 +202,7 @@ namespace DynamicData.Cache.Internal
                                                                                change.Current.Parent = p;
                                                                                updater.AddOrUpdate(change.Current);
                                                                            }
+
                                                                            break;
                                                                        }
                                                                }

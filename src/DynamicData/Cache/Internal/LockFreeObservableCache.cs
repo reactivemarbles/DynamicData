@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -23,6 +27,7 @@ namespace DynamicData.Cache.Internal
         private readonly ISubject<IChangeSet<TObject, TKey>> _changesPreview = new Subject<IChangeSet<TObject, TKey>>();
         private readonly ISubject<int> _countChanged = new Subject<int>();
         private readonly IDisposable _cleanUp;
+        private bool _isDisposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LockFreeObservableCache{TObject, TKey}"/> class.
@@ -61,7 +66,6 @@ namespace DynamicData.Cache.Internal
             });
         }
 
-
         /// <summary>
         /// Returns a observable of cache changes preceded with the initial cache state
         /// </summary>
@@ -98,7 +102,9 @@ namespace DynamicData.Cache.Internal
                 {
                     var initial = _innerCache.Lookup(key);
                     if (initial.HasValue)
+                    {
                         observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+                    }
 
                     return _changes.Subscribe(changes =>
                     {
@@ -117,6 +123,11 @@ namespace DynamicData.Cache.Internal
         /// <param name="editAction">The edit action.</param>
         public void Edit(Action<ICacheUpdater<TObject, TKey>> editAction)
         {
+            if (editAction == null)
+            {
+                throw new ArgumentNullException(nameof(editAction));
+            }
+
             editAction(_updater);
             _changes.OnNext(_innerCache.CaptureChanges());
         }
@@ -125,7 +136,6 @@ namespace DynamicData.Cache.Internal
         /// A count changed observable starting with the current count
         /// </summary>
         public IObservable<int> CountChanged => _countChanged.StartWith(_innerCache.Count).DistinctUntilChanged();
-
 
         /// <summary>
         /// Lookup a single item using the specified key.
@@ -160,9 +170,28 @@ namespace DynamicData.Cache.Internal
         /// </summary>
         public int Count => _innerCache.Count;
 
-        /// <summary
-        /// >Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose() => _cleanUp.Dispose();
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool isDisposing)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
+            if (isDisposing)
+            {
+                _cleanUp?.Dispose();
+            }
+        }
     }
 }

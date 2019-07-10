@@ -8,7 +8,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class TransformSafeFixture: IDisposable
     {
         private ISourceCache<Person, string> _source;
@@ -21,6 +21,7 @@ namespace DynamicData.Tests.Cache
             {
                 throw new Exception($"Cannot transform {p}");
             }
+
             string gender = p.Age % 2 == 0 ? "M" : "F";
             return new PersonWithGender(p, gender);
         };

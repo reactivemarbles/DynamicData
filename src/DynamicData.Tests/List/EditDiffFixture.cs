@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class EditDiffFixture: IDisposable
     {
         private readonly SourceList<Person> _cache;
@@ -79,7 +79,6 @@ namespace DynamicData.Tests.List
 
             _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
-
 
         [Fact]
         public void VariousChanges()

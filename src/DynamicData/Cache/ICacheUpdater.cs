@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 // ReSharper disable once CheckNamespace
@@ -104,7 +108,6 @@ namespace DynamicData
         /// </summary>
         [Obsolete("Use Clone()")]
         void Update(IChangeSet<TObject, TKey> changes);
-
 
         /// <summary>
         /// Clones the change set to the cache

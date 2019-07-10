@@ -10,11 +10,10 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class FromAsyncFixture
     {
         private TestScheduler _scheduler;
-
 
         public  FromAsyncFixture()
         {
@@ -76,7 +75,6 @@ namespace DynamicData.Tests.List
 
             var subscribed = data.Connect()
                 .Subscribe(changes => { }, ex => error = ex);
-
 
             error.Should().NotBeNull();
         }

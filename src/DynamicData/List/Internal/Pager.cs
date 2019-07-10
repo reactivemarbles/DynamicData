@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,17 +50,22 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private PageChangeSet<T> CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest request)
+        private static PageChangeSet<T> CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest request)
         {
             if (request == null || request.Page < 0 || request.Size < 1)
+            {
                 return null;
+            }
 
             return Page(all, paged, request);
         }
 
-        private PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T> changeset = null)
+        private static PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T> changeset = null)
         {
-            if (changeset != null) all.Clone(changeset);
+            if (changeset != null)
+            {
+                all.Clone(changeset);
+            }
 
             var previous = paged;
 
@@ -100,7 +109,9 @@ namespace DynamicData.List.Internal
                 var previousItem = previous[i];
 
                 if (ReferenceEquals(currentItem, previousItem))
+                {
                     continue;
+                }
 
                 var index = paged.IndexOf(currentItem);
                 paged.Move(i, index);
@@ -111,7 +122,7 @@ namespace DynamicData.List.Internal
             return new PageChangeSet<T>(changed, new PageResponse(paged.Count, page, all.Count, pages));
         }
 
-        private int CalculatePages(List<T> all, IPageRequest request)
+        private static int CalculatePages(List<T> all, IPageRequest request)
         {
             if (request.Size >= all.Count || request.Size==0)
             {
@@ -125,6 +136,7 @@ namespace DynamicData.List.Internal
             {
                 return pages;
             }
+
             return pages + 1;
         }
     }

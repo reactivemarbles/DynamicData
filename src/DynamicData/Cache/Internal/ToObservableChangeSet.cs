@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -40,7 +44,6 @@ namespace DynamicData.Cache.Internal
             _scheduler = scheduler ?? Scheduler.Default;
         }
 
-
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
@@ -57,13 +60,18 @@ namespace DynamicData.Cache.Internal
                                 //zero allocation enumerator
                                 var enumerable = EnumerableIList.Create(list);
                                 foreach (var item in enumerable)
+                                {
                                     state.AddOrUpdate(item, _keySelector(item));
+                                }
                             }
                             else
                             {
                                 foreach (var item in latest)
+                                {
                                     state.AddOrUpdate(item, _keySelector(item));
+                                }
                             }
+
                             return state;
                         })
                         .Select(state => state.CaptureChanges())
@@ -91,6 +99,7 @@ namespace DynamicData.Cache.Internal
                                 .Take(toRemove)
                                 .ForEach(ei => cache.Remove(ei.Key));
                         }
+
                         return state;
                     })
                     .Select(state => state.CaptureChanges())

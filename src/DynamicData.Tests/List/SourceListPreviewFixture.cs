@@ -7,7 +7,7 @@ namespace DynamicData.Tests.List
     public class SourceListPreviewFixture : IDisposable
     {
         private readonly ISourceList<int> _source;
-        
+
         public SourceListPreviewFixture()
         {
             _source = new SourceList<int>();
@@ -127,7 +127,6 @@ namespace DynamicData.Tests.List
         public void FormNewListFromChanges()
         {
             _source.Clear();
-
 
             _source.AddRange(Enumerable.Range(1,100));
 

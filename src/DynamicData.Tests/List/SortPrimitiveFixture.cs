@@ -45,9 +45,7 @@ namespace DynamicData.Tests.List
                 _source.Remove(i);
             }
 
-  
         }
-
 
     }
 }

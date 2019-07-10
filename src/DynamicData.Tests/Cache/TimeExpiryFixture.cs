@@ -36,10 +36,15 @@ namespace DynamicData.Tests.Cache
             TimeSpan? RemoveFunc(Person t)
             {
                 if (t.Age < 40)
+                {
                     return TimeSpan.FromSeconds(4);
+                }
 
                 if (t.Age < 80)
+                {
                     return TimeSpan.FromSeconds(7);
+                }
+
                 return null;
             }
 

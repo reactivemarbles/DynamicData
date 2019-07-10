@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +39,7 @@ namespace DynamicData.List.Internal
                     {
                         return new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p=>p.Group));
                     },true);
-                
+
                 var locker = new object();
                 var shared = itemsWithGroup.Synchronize(locker).Publish();
 
@@ -72,8 +76,11 @@ namespace DynamicData.List.Internal
             {
                 var currentGroupKey = itemWithValue.Group;
                 var newGroupKey = _groupSelector(itemWithValue.Item);
-                if (newGroupKey.Equals(currentGroupKey)) continue;
-                
+                if (newGroupKey.Equals(currentGroupKey))
+                {
+                    continue;
+                }
+
                 //remove from the old group
                 var currentGroupLookup = GetCache(groupCollection, currentGroupKey);
                 var currentGroupCache = currentGroupLookup.Group;
@@ -94,13 +101,15 @@ namespace DynamicData.List.Internal
                 newGroupCache.Edit(innerList => innerList.Add(itemWithValue.Item));
 
                 if (newGroupLookup.WasCreated)
+                {
                     result.Add(newGroupCache);
+                }
             }
 
             return result.CaptureChanges();
         }
 
-        private IChangeSet<IGroup<TObject, TGroupKey>> Process(ChangeAwareList<IGroup<TObject, TGroupKey>> result, IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection, IChangeSet<ItemWithGroupKey> changes)
+        private static IChangeSet<IGroup<TObject, TGroupKey>> Process(ChangeAwareList<IGroup<TObject, TGroupKey>> result, IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCollection, IChangeSet<ItemWithGroupKey> changes)
         {
             foreach (var grouping in changes.Unified().GroupBy(change => change.Current.Group))
             {
@@ -110,7 +119,9 @@ namespace DynamicData.List.Internal
                 var groupCache = lookup.Group;
 
                 if (lookup.WasCreated)
+                {
                     result.Add(groupCache);
+                }
 
                 //start a group edit session, so all changes are batched
                 groupCache.Edit(
@@ -126,6 +137,7 @@ namespace DynamicData.List.Internal
                                         list.Add(change.Current.Item);
                                         break;
                                     }
+
                                 case ListChangeReason.Replace:
                                     {
                                         var previousItem = change.Previous.Value.Item;
@@ -148,7 +160,11 @@ namespace DynamicData.List.Internal
                                                    .IfHasValue(g =>
                                                    {
                                                        g.Edit(oldList => oldList.Remove(previousItem));
-                                                       if (g.List.Count != 0) return;
+                                                       if (g.List.Count != 0)
+                                                       {
+                                                           return;
+                                                       }
+
                                                        groupCollection.Remove(g.GroupKey);
                                                        result.Remove(g);
                                                    });
@@ -156,6 +172,7 @@ namespace DynamicData.List.Internal
 
                                         break;
                                     }
+
                                 case ListChangeReason.Refresh:
                                 {
                                     //1. Check whether item was in the group and should not be now (or vice versa)
@@ -179,11 +196,16 @@ namespace DynamicData.List.Internal
                                             .IfHasValue(g =>
                                             {
                                                 g.Edit(oldList => oldList.Remove(currentItem));
-                                                if (g.List.Count != 0) return;
+                                                if (g.List.Count != 0)
+                                                {
+                                                    return;
+                                                }
+
                                                 groupCollection.Remove(g.GroupKey);
                                                 result.Remove(g);
                                             });
                                     }
+
                                     break;
                                 }
 
@@ -192,6 +214,7 @@ namespace DynamicData.List.Internal
                                         list.Remove(change.Current.Item);
                                         break;
                                     }
+
                                 case ListChangeReason.Clear:
                                     {
                                         list.Clear();
@@ -207,14 +230,17 @@ namespace DynamicData.List.Internal
                     result.Remove(groupCache);
                 }
             }
+
             return result.CaptureChanges();
         }
 
-        private GroupWithAddIndicator GetCache(IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCaches, TGroupKey key)
+        private static GroupWithAddIndicator GetCache(IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCaches, TGroupKey key)
         {
             var cache = groupCaches.Lookup(key);
             if (cache.HasValue)
+            {
                 return new GroupWithAddIndicator(cache.Value, false);
+            }
 
             var newcache = new Group<TObject, TGroupKey>(key);
             groupCaches[key] = newcache;
@@ -251,15 +277,31 @@ namespace DynamicData.List.Internal
 
             public bool Equals(ItemWithGroupKey other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
                 return obj is ItemWithGroupKey && Equals((ItemWithGroupKey) obj);
             }
 
@@ -287,7 +329,6 @@ namespace DynamicData.List.Internal
             }
 
             #endregion
-
 
             public override string ToString() => $"{Item} ({Group})";
         }

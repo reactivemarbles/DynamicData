@@ -21,7 +21,9 @@ namespace DynamicData.Tests.List
             using (var aggregator = cache.Connect().BufferInitial(TimeSpan.FromSeconds(1), scheduler).AsAggregator())
             {
                 foreach (var item in People)
+                {
                     cache.Add(item);
+                }
 
                 aggregator.Data.Count.Should().Be(0);
                 aggregator.Messages.Count.Should().Be(0);

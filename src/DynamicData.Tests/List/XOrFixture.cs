@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class XOrFixture : XOrFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -15,7 +15,6 @@ namespace DynamicData.Tests.List
         }
     }
 
-    
     public class XOrCollectionFixture : XOrFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -25,7 +24,6 @@ namespace DynamicData.Tests.List
         }
     }
 
-    
     public abstract class XOrFixtureBase: IDisposable
     {
         protected ISourceList<int> _source1;

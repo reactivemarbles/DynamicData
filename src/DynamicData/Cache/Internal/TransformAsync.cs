@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -22,7 +26,7 @@ namespace DynamicData.Cache.Internal
             _maximumConcurrency = maximumConcurrency;
             _forceTransform = forceTransform;
         }
-        
+
         public IObservable<IChangeSet<TDestination, TKey>> Run()
         {
             return Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
@@ -40,6 +44,7 @@ namespace DynamicData.Cache.Internal
 
                     transformer = transformer.Synchronize(locker).Merge(forced);
                 }
+
                 return transformer.SubscribeSafe(observer);
             });
         }
@@ -51,13 +56,13 @@ namespace DynamicData.Cache.Internal
                           .Select(kvp => new Change<TSource,TKey>(ChangeReason.Update,  kvp.Key, kvp.Value.Source, kvp.Value.Source))
                           .ToArray();
 
-            var transformed = await toTransform.SelectParallel(Transform, _maximumConcurrency);
+            var transformed = await toTransform.SelectParallel(Transform, _maximumConcurrency).ConfigureAwait(false);
             return ProcessUpdates(cache, transformed.ToArray());
         }
 
         private async Task<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey>  cache, IChangeSet<TSource, TKey> changes )
         {
-            var transformed = await changes.SelectParallel(Transform, _maximumConcurrency);
+            var transformed = await changes.SelectParallel(Transform, _maximumConcurrency).ConfigureAwait(false);
             return ProcessUpdates(cache, transformed.ToArray());
         }
 
@@ -67,16 +72,20 @@ namespace DynamicData.Cache.Internal
             {
                 if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
                 {
-                    var destination = await _transformFactory(change.Current, change.Previous, change.Key);
+                    var destination = await _transformFactory(change.Current, change.Previous, change.Key).ConfigureAwait(false);
                     return new TransformResult(change, new TransformedItemContainer(change.Current, destination));
                 }
+
                 return new TransformResult(change);
             }
             catch (Exception ex)
             {
                 //only handle errors if a handler has been specified
                 if (_exceptionCallback != null)
+                {
                     return new TransformResult(change, ex);
+                }
+
                 throw;
             }
         }
@@ -86,7 +95,9 @@ namespace DynamicData.Cache.Internal
             //check for errors and callback if a handler has been specified
             var errors = transformedItems.Where(t => !t.Success).ToArray();
             if (errors.Any())
+            {
                 errors.ForEach(t => _exceptionCallback(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
+            }
 
             foreach (var result in transformedItems.Where(t => t.Success))
             {
@@ -134,7 +145,6 @@ namespace DynamicData.Cache.Internal
                 Success = true;
                 Key = change.Key;
             }
-
 
             public TransformResult(Change<TSource, TKey> change)
             {

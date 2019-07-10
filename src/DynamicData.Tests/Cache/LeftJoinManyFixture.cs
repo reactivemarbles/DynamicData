@@ -12,7 +12,6 @@ namespace DynamicData.Tests.Cache
         private readonly SourceCache<Person, string> _people;
         private readonly ChangeSetAggregator<ParentAndChildren, string> _result;
 
-
         public  LeftJoinManyFixture()
         {
             _people = new SourceCache<Person, string>(p => p.Name);
@@ -22,13 +21,11 @@ namespace DynamicData.Tests.Cache
                 .AsAggregator();
         }
 
-
         public void Dispose()
         {
             _people.Dispose();
             _result.Dispose();
         }
-
 
         [Fact]
         public void AddLeftOnly()
@@ -44,7 +41,6 @@ namespace DynamicData.Tests.Cache
 
             _result.Data.Items.ForEach(pac => { pac.Count.Should().Be(0); });
         }
-
 
         [Fact]
         public void AddPeopleWithParents()
@@ -127,7 +123,6 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
 
-
         [Fact]
         public void RemoveChild()
         {
@@ -149,7 +144,6 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(updatedPeople, last.Name);
         }
 
-
         private void AssertDataIsCorrectlyFormed(Person[] expected, params string[] missingParents)
         {
             _result.Data.Count.Should().Be(expected.Length);
@@ -158,7 +152,10 @@ namespace DynamicData.Tests.Cache
             expected.GroupBy(p => p.ParentName)
                 .ForEach(grouping =>
                 {
-                    if (missingParents.Length > 0 && missingParents.Contains(grouping.Key)) return;
+                    if (missingParents.Length > 0 && missingParents.Contains(grouping.Key))
+                    {
+                        return;
+                    }
 
                     var result = _result.Data.Lookup(grouping.Key)
                         .ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
@@ -171,13 +168,19 @@ namespace DynamicData.Tests.Cache
         private int CalculateParent(int index, int totalPeople)
         {
             if (index < 5)
+            {
                 return 10;
+            }
 
             if (index == totalPeople - 1)
+            {
                 return 1;
+            }
 
             if (index == totalPeople)
+            {
                 return 1;
+            }
 
             return index + 1;
         }

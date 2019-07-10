@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class AndFixture : AndFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -15,7 +15,6 @@ namespace DynamicData.Tests.List
         }
     }
 
-    
     public class AndCollectionFixture : AndFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -25,13 +24,11 @@ namespace DynamicData.Tests.List
         }
     }
 
-    
     public abstract class AndFixtureBase: IDisposable
     {
         protected ISourceList<int> _source1;
         protected ISourceList<int> _source2;
         private readonly ChangeSetAggregator<int> _results;
-
 
         protected AndFixtureBase()
         {

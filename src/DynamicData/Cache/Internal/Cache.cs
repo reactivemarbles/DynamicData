@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
@@ -27,14 +31,17 @@ namespace DynamicData.Cache.Internal
 
         public Cache<TObject, TKey> Clone()
         {
-            return _data== null 
-                ? new Cache<TObject, TKey>() 
+            return _data== null
+                ? new Cache<TObject, TKey>()
                 : new Cache<TObject, TKey>(new Dictionary<TKey, TObject>(_data));
         }
 
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
 
             foreach (var item in changes)
             {
@@ -45,6 +52,7 @@ namespace DynamicData.Cache.Internal
                         {
                             _data[item.Key] = item.Current;
                         }
+
                         break;
                     case ChangeReason.Remove:
                         _data.Remove(item.Key);
@@ -69,19 +77,25 @@ namespace DynamicData.Cache.Internal
             {
                 var enumerable = EnumerableIList.Create(list);
                 foreach (var item in enumerable)
+                {
                     Remove(item);
+                }
             }
             else
             {
                 foreach (var key in keys)
-                   Remove(key);
+                {
+                    Remove(key);
+                }
             }
         }
 
         public void Remove(TKey key)
         {
             if (_data.ContainsKey(key))
+            {
                 _data.Remove(key);
+            }
         }
 
         public void Clear()

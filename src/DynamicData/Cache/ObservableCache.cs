@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
@@ -71,11 +75,15 @@ namespace DynamicData
 
         internal void UpdateFromIntermediate(Action<ICacheUpdater<TObject, TKey>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
+
             lock (_writeLock)
             {
                 ChangeSet<TObject, TKey> changes = null;
-                
+
                 _editLevel++;
                 if (_editLevel == 1)
                 {
@@ -86,6 +94,7 @@ namespace DynamicData
                 {
                     _readerWriter.WriteNested(updateAction);
                 }
+
                 _editLevel--;
 
                 if (_editLevel == 0)
@@ -97,7 +106,11 @@ namespace DynamicData
 
         internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
+
             lock (_writeLock)
             {
                 ChangeSet<TObject, TKey> changes = null;
@@ -112,6 +125,7 @@ namespace DynamicData
                 {
                     _readerWriter.WriteNested(updateAction);
                 }
+
                 _editLevel--;
 
                 if (_editLevel == 0)
@@ -126,7 +140,9 @@ namespace DynamicData
             lock (_locker)
             {
                 if (changes.Count != 0)
+                {
                     _changesPreview.OnNext(changes);
+                }
             }
         }
 
@@ -135,10 +151,14 @@ namespace DynamicData
             lock (_locker)
             {
                 if (changes.Count != 0)
+                {
                     _changes.OnNext(changes);
+                }
 
                 if (_countChanged.IsValueCreated)
+                {
                     _countChanged.Value.OnNext(_readerWriter.Count);
+                }
             }
         }
 
@@ -154,7 +174,9 @@ namespace DynamicData
                     {
                         var initial = _readerWriter.Lookup(key);
                         if (initial.HasValue)
+                        {
                             observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+                        }
 
                         return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
                         {
@@ -162,7 +184,9 @@ namespace DynamicData
                             {
                                 var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
                                 if (match)
+                                {
                                     observer.OnNext(change);
+                                }
                             }
                         });
                     }

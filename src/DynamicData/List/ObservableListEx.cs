@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -40,7 +44,10 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             return ToObservableChangeSet(source, null, -1, scheduler);
         }
@@ -60,8 +67,15 @@ namespace DynamicData
             Func<T, TimeSpan?> expireAfter,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (expireAfter == null) throw new ArgumentNullException(nameof(expireAfter));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (expireAfter == null)
+            {
+                throw new ArgumentNullException(nameof(expireAfter));
+            }
 
             return ToObservableChangeSet(source, expireAfter, -1, scheduler);
         }
@@ -81,7 +95,11 @@ namespace DynamicData
             int limitSizeTo,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return ToObservableChangeSet(source, null, limitSizeTo, scheduler);
         }
 
@@ -102,7 +120,11 @@ namespace DynamicData
             int limitSizeTo,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new ToObservableChangeSet<T>(source, expireAfter, limitSizeTo, scheduler).Run();
         }
 
@@ -175,7 +197,11 @@ namespace DynamicData
             int limitSizeTo,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new ToObservableChangeSet<T>(source, expireAfter, limitSizeTo, scheduler).Run();
         }
 
@@ -197,12 +223,17 @@ namespace DynamicData
             IScheduler scheduler = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             return source.AutoRefreshOnObservable(t =>
             {
                 if (propertyChangeThrottle == null)
+                {
                     return t.WhenAnyPropertyChanged();
+                }
 
                 return t.WhenAnyPropertyChanged()
                     .Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
@@ -226,13 +257,22 @@ namespace DynamicData
             IScheduler scheduler = null)
              where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertyAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(propertyAccessor));
+            }
 
             return source.AutoRefreshOnObservable(t =>
             {
                 if (propertyChangeThrottle == null)
+                {
                     return t.WhenPropertyChanged(propertyAccessor, false);
+                }
 
                 return t.WhenPropertyChanged(propertyAccessor,false)
                     .Throttle(propertyChangeThrottle.Value, scheduler ?? Scheduler.Default);
@@ -253,11 +293,18 @@ namespace DynamicData
             TimeSpan? changeSetBuffer = null,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (reevaluator == null) throw new ArgumentNullException(nameof(reevaluator));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (reevaluator == null)
+            {
+                throw new ArgumentNullException(nameof(reevaluator));
+            }
+
             return new AutoRefresh<TObject, TAny>(source, reevaluator, changeSetBuffer, scheduler).Run();
         }
-
 
         /// <summary>
         /// Supress  refresh notifications
@@ -268,7 +315,6 @@ namespace DynamicData
         {
             return source.WhereReasonsAreNot(ListChangeReason.Refresh);
         }
-
 
         #endregion
 
@@ -285,7 +331,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException"></exception>
         public static IObservable<IChangeSet<T>> RemoveIndex<T>([NotNull] this IObservable<IChangeSet<T>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Select(changes => new ChangeSet<T>(changes.YieldWithoutIndex()));
         }
 
@@ -305,8 +355,16 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> AddKey<TObject, TKey>(
             [NotNull] this IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TKey> keySelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
+
             return source.Select(changes => new ChangeSet<TObject, TKey>(new AddKeyEnumerator<TObject, TKey>(changes, keySelector)));
         }
 
@@ -327,12 +385,18 @@ namespace DynamicData
             [NotNull] this IObservable<IChangeSet<TObject>> source,
             [NotNull] Func<TObject, TDestination> conversionFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (conversionFactory == null)
+            {
+                throw new ArgumentNullException(nameof(conversionFactory));
+            }
+
             return source.Select(changes => changes.Transform(conversionFactory));
         }
-
-
 
         /// <summary>
         /// Cast the underlying type of an object. Use before a Cast function
@@ -359,7 +423,11 @@ namespace DynamicData
         /// </exception>
         public static IObservable<IChangeSet<TDestination>> Cast<TDestination>([NotNull] this IObservable<IChangeSet<object>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Select(changes => changes.Transform(t=>(TDestination)t));
         }
 
@@ -378,8 +446,16 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>([NotNull] this IObservable<IChangeSet<TSource>> source,
             [NotNull] Func<TSource, TDestination> conversionFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (conversionFactory == null)
+            {
+                throw new ArgumentNullException(nameof(conversionFactory));
+            }
+
             return source.Select(changes => changes.Transform(conversionFactory));
         }
 
@@ -403,8 +479,15 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] IObservableCollection<T> targetCollection, int resetThreshold = 25)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (targetCollection == null) throw new ArgumentNullException(nameof(targetCollection));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (targetCollection == null)
+            {
+                throw new ArgumentNullException(nameof(targetCollection));
+            }
 
             var adaptor = new ObservableCollectionAdaptor<T>(targetCollection, resetThreshold);
             return source.Adapt(adaptor);
@@ -423,7 +506,10 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
             out ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = 25)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             var target = new ObservableCollectionExtended<T>();
             var result = new ReadOnlyObservableCollection<T>(target);
@@ -449,14 +535,20 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Bind<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] BindingList<T> bindingList, int resetThreshold = 25)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (bindingList == null) throw new ArgumentNullException(nameof(bindingList));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (bindingList == null)
+            {
+                throw new ArgumentNullException(nameof(bindingList));
+            }
 
             return source.Adapt(new BindingListAdaptor<T>(bindingList, resetThreshold));
         }
 
 #endif
-
 
         /// <summary>
         /// Injects a side effect into a changeset observable
@@ -473,9 +565,15 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Adapt<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] IChangeSetAdaptor<T> adaptor)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (adaptor == null) throw new ArgumentNullException(nameof(adaptor));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
+            if (adaptor == null)
+            {
+                throw new ArgumentNullException(nameof(adaptor));
+            }
 
             return Observable.Create<IChangeSet<T>>(observer =>
             {
@@ -512,8 +610,15 @@ namespace DynamicData
         public static IDisposable PopulateInto<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] ISourceList<T> destination)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (destination == null) throw new ArgumentNullException(nameof(destination));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (destination == null)
+            {
+                throw new ArgumentNullException(nameof(destination));
+            }
 
             return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
         }
@@ -527,7 +632,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservableList<T> AsObservableList<T>([NotNull] this ISourceList<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new AnonymousObservableList<T>(source);
         }
 
@@ -540,7 +649,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservableList<T> AsObservableList<T>([NotNull] this IObservable<IChangeSet<T>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new AnonymousObservableList<T>(source);
         }
 
@@ -553,7 +666,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException"></exception>
         public static IObservable<IChangeSet<T>> RefCount<T>([NotNull] this IObservable<IChangeSet<T>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new RefCount<T>(source).Run();
         }
 
@@ -571,8 +688,16 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
             return new Filter<T>(source, predicate).Run();
         }
 
@@ -589,12 +714,18 @@ namespace DynamicData
         /// filterController</exception>
         public static IObservable<IChangeSet<T>> Filter<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
 
             return new Filter<T>(source, predicate, filterPolicy).Run();
         }
-
 
         /// <summary>
         /// Filters source on the specified property using the specified predicate.
@@ -618,9 +749,21 @@ namespace DynamicData
             TimeSpan? propertyChangedThrottle = null,
             IScheduler scheduler = null) where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertySelector == null)
+            {
+                throw new ArgumentNullException(nameof(propertySelector));
+            }
+
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
+
             return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
         }
 
@@ -642,7 +785,11 @@ namespace DynamicData
             TimeSpan? propertyChangedThrottle = null,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new FilterOnObservable<TObject>(source, objectFilterObservable, propertyChangedThrottle, scheduler).Run();
         }
 
@@ -660,7 +807,11 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Reverse<T>(this IObservable<IChangeSet<T>> source)
         {
             var reverser = new Reverser<T>();
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Select(changes => new ChangeSet<T>(reverser.Reverse(changes)));
         }
 
@@ -678,12 +829,20 @@ namespace DynamicData
         /// or
         /// valueSelector
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, 
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source,
             Func<TSource, TDestination> transformFactory,
             bool transformOnRefresh = false)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
+
             return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t), transformOnRefresh);
         }
 
@@ -701,12 +860,19 @@ namespace DynamicData
         /// or
         /// valueSelector
         /// </exception>
-        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, 
+        public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source,
             Func<TSource, int, TDestination> transformFactory,
             bool transformOnRefresh = false)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
 
             return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t,idx),transformOnRefresh);
         }
@@ -731,8 +897,15 @@ namespace DynamicData
             Func<TSource, Optional<TDestination>, TDestination> transformFactory,
             bool transformOnRefresh = false)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
 
             return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t, previous), transformOnRefresh);
         }
@@ -756,12 +929,18 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source,
             Func<TSource, Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
 
             return new Transformer<TSource, TDestination>(source, transformFactory, transformOnRefresh).Run();
         }
-
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
@@ -779,8 +958,15 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
             this IObservable<IChangeSet<TSource>> source, Func<TSource, Task<TDestination>> transformFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformFactory == null) throw new ArgumentNullException(nameof(transformFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformFactory == null)
+            {
+                throw new ArgumentNullException(nameof(transformFactory));
+            }
 
             return new TransformAsync<TSource, TDestination>(source, transformFactory).Run();
         }
@@ -803,8 +989,16 @@ namespace DynamicData
             [NotNull] Func<TSource, IEnumerable<TDestination>> manyselector,
             IEqualityComparer<TDestination> equalityComparer = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (manyselector == null) throw new ArgumentNullException(nameof(manyselector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (manyselector == null)
+            {
+                throw new ArgumentNullException(nameof(manyselector));
+            }
+
             return new TransformMany<TSource, TDestination>(source, manyselector, equalityComparer).Run();
         }
 
@@ -870,8 +1064,16 @@ namespace DynamicData
             this IObservable<IChangeSet<TObject>> source,
             Func<TObject, TValue> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return new Distinct<TObject, TValue>(source, valueSelector).Run();
         }
 
@@ -894,8 +1096,16 @@ namespace DynamicData
             this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroup> groupSelector,
             IObservable<Unit> regrouper = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelector == null) throw new ArgumentNullException(nameof(groupSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (groupSelector == null)
+            {
+                throw new ArgumentNullException(nameof(groupSelector));
+            }
+
             return new GroupOn<TObject, TGroup>(source, groupSelector, regrouper).Run();
         }
 
@@ -920,12 +1130,18 @@ namespace DynamicData
                 Func<TObject, TGroupKey> groupSelectorKey,
                 IObservable<Unit> regrouper = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (groupSelectorKey == null) throw new ArgumentNullException(nameof(groupSelectorKey));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (groupSelectorKey == null)
+            {
+                throw new ArgumentNullException(nameof(groupSelectorKey));
+            }
 
             return new GroupOnImmutable<TObject, TGroupKey>(source, groupSelectorKey, regrouper).Run();
         }
-
 
         /// <summary>
         /// Groups the source using the property specified by the property selector.  The resulting groupings contains an inner observable list.
@@ -948,8 +1164,16 @@ namespace DynamicData
             IScheduler scheduler = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertySelector == null)
+            {
+                throw new ArgumentNullException(nameof(propertySelector));
+            }
+
             return
                 new GroupOnProperty<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
         }
@@ -974,8 +1198,16 @@ namespace DynamicData
                 IScheduler scheduler = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertySelector == null) throw new ArgumentNullException(nameof(propertySelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertySelector == null)
+            {
+                throw new ArgumentNullException(nameof(propertySelector));
+            }
+
             return     new GroupOnPropertyWithImmutableState<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
         }
 
@@ -988,7 +1220,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> NotEmpty<T>(this IObservable<IChangeSet<T>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Where(s => s.Count != 0);
         }
 
@@ -1002,7 +1238,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> Clone<T>(this IObservable<IChangeSet<T>> source, IList<T> target)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Do(target.Clone);
         }
 
@@ -1031,8 +1271,15 @@ namespace DynamicData
             IObservable<IComparer<T>> comparerChanged = null,
             int resetThreshold = 50)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (comparer == null)
+            {
+                throw new ArgumentNullException(nameof(comparer));
+            }
 
             return new Sort<T>(source, comparer, options, resort, comparerChanged, resetThreshold).Run();
         }
@@ -1056,8 +1303,15 @@ namespace DynamicData
             IObservable<Unit> resort = null,
             int resetThreshold = 50)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (comparerChanged == null) throw new ArgumentNullException(nameof(comparerChanged));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (comparerChanged == null)
+            {
+                throw new ArgumentNullException(nameof(comparerChanged));
+            }
 
             return new Sort<T>(source, null, options, resort, comparerChanged, resetThreshold).Run();
         }
@@ -1079,8 +1333,16 @@ namespace DynamicData
             [NotNull] this IObservable<IChangeSet<TObject>> source,
             [NotNull] Action<Change<TObject>> action)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
             return source.Do(changes => changes.ForEach(action));
         }
 
@@ -1099,8 +1361,16 @@ namespace DynamicData
             [NotNull] this IObservable<IChangeSet<TObject>> source,
             [NotNull] Action<ItemChange<TObject>> action)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
             return source.Do(changes => changes.Flatten().ForEach(action));
         }
 
@@ -1120,8 +1390,15 @@ namespace DynamicData
             [NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] Func<T, IObservable<TDestination>> observableSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (observableSelector == null)
+            {
+                throw new ArgumentNullException(nameof(observableSelector));
+            }
 
             return new MergeMany<T, TDestination>(source, observableSelector).Run();
         }
@@ -1143,8 +1420,15 @@ namespace DynamicData
             bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertyAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(propertyAccessor));
+            }
 
             var factory = propertyAccessor.GetFactory();
             return source.MergeMany(t => factory(t, notifyOnInitialValue).Select(pv=>pv.Value));
@@ -1167,8 +1451,15 @@ namespace DynamicData
             bool notifyOnInitialValue = true)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertyAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(propertyAccessor));
+            }
 
             var factory = propertyAccessor.GetFactory();
             return source.MergeMany(t => factory(t, notifyOnInitialValue));
@@ -1186,7 +1477,11 @@ namespace DynamicData
         public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this IObservable<IChangeSet<TObject>> source, params string[] propertiesToMonitor)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.MergeMany(t => t.WhenAnyPropertyChanged(propertiesToMonitor));
         }
 
@@ -1206,8 +1501,16 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source,
             Func<T, IDisposable> subscriptionFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (subscriptionFactory == null)
+            {
+                throw new ArgumentNullException(nameof(subscriptionFactory));
+            }
+
             return new SubscribeMany<T>(source, subscriptionFactory).Run();
         }
 
@@ -1247,8 +1550,15 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> OnItemRemoved<T>(this IObservable<IChangeSet<T>> source,
             Action<T> removeAction)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (removeAction == null) throw new ArgumentNullException(nameof(removeAction));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (removeAction == null)
+            {
+                throw new ArgumentNullException(nameof(removeAction));
+            }
 
             return new OnBeingRemoved<T>(source, removeAction).Run();
         }
@@ -1263,8 +1573,16 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> OnItemAdded<T>(this IObservable<IChangeSet<T>> source,
             Action<T> addAction)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (addAction == null) throw new ArgumentNullException(nameof(addAction));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (addAction == null)
+            {
+                throw new ArgumentNullException(nameof(addAction));
+            }
+
             return new OnBeingAdded<T>(source, addAction).Run();
         }
 
@@ -1283,10 +1601,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source,
             params ListChangeReason[] reasons)
         {
-            if (reasons.Length == 0)
-                throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
+            if (reasons == null)
+            {
+                throw new ArgumentNullException(nameof(reasons));
+            }
 
-            var matches = new HashSet<ListChangeReason>(reasons); 
+            if (reasons.Length == 0)
+            {
+                throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
+            }
+
+            var matches = new HashSet<ListChangeReason>(reasons);
             return source.Select(changes =>
             {
                 var filtered = changes.Where(change => matches.Contains(change.Reason)).YieldWithoutIndex();
@@ -1305,8 +1630,15 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source,
             params ListChangeReason[] reasons)
         {
+            if (reasons == null)
+            {
+                throw new ArgumentNullException(nameof(reasons));
+            }
+
             if (reasons.Length == 0)
+            {
                 throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
+            }
 
             var matches =  new HashSet<ListChangeReason>(reasons);
             return source.Select(updates =>
@@ -1384,8 +1716,16 @@ namespace DynamicData
             bool intialPauseState = false,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (pauseIfTrueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(pauseIfTrueSelector));
+            }
+
             return BufferIf(source, pauseIfTrueSelector, intialPauseState, null, scheduler);
         }
 
@@ -1426,8 +1766,16 @@ namespace DynamicData
             TimeSpan? timeOut = null,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (pauseIfTrueSelector == null) throw new ArgumentNullException(nameof(pauseIfTrueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (pauseIfTrueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(pauseIfTrueSelector));
+            }
+
             return new BufferIf<T>(source, pauseIfTrueSelector, intialPauseState, timeOut, scheduler).Run();
         }
 
@@ -1448,8 +1796,15 @@ namespace DynamicData
             this IObservable<IChangeSet<TObject>> source,
             Func<IReadOnlyCollection<TObject>, TDestination> resultSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             return source.QueryWhenChanged().Select(resultSelector);
         }
@@ -1463,7 +1818,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IReadOnlyCollection<T>> QueryWhenChanged<T>([NotNull] this IObservable<IChangeSet<T>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new QueryWhenChanged<T>(source).Run();
         }
 
@@ -1513,7 +1872,6 @@ namespace DynamicData
             });
         }
 
-
         /// <summary>
         /// Defer the subscribtion until loaded and skip initial changeset
         /// </summary>
@@ -1523,7 +1881,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.DeferUntilLoaded().Skip(1);
         }
 
@@ -1535,7 +1897,11 @@ namespace DynamicData
         /// <returns></returns>
         public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>([NotNull] this IObservable<IChangeSet<T>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new DeferUntilLoaded<T>(source).Run();
         }
 
@@ -1547,7 +1913,11 @@ namespace DynamicData
         /// <returns></returns>
         public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Connect().DeferUntilLoaded();
         }
 
@@ -1565,8 +1935,16 @@ namespace DynamicData
         public static IObservable<IVirtualChangeSet<T>> Virtualise<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] IObservable<IVirtualRequest> requests)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (requests == null) throw new ArgumentNullException(nameof(requests));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (requests == null)
+            {
+                throw new ArgumentNullException(nameof(requests));
+            }
+
             return new Virtualiser<T>(source, requests).Run();
         }
 
@@ -1580,14 +1958,19 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Top<T>([NotNull] this IObservable<IChangeSet<T>> source,
             int numberOfItems)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             if (numberOfItems <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(numberOfItems),
                     "Number of items should be greater than zero");
+            }
 
             return source.Virtualise(Observable.Return(new VirtualRequest(0, numberOfItems)));
         }
-
 
         /// <summary>
         /// Applies paging to the the data source
@@ -1599,8 +1982,16 @@ namespace DynamicData
         public static IObservable<IChangeSet<T>> Page<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] IObservable<IPageRequest> requests)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (requests == null) throw new ArgumentNullException(nameof(requests));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (requests == null)
+            {
+                throw new ArgumentNullException(nameof(requests));
+            }
+
             return new Pager<T>(source, requests).Run();
         }
 
@@ -1623,8 +2014,15 @@ namespace DynamicData
         public static IObservable<IEnumerable<T>> LimitSizeTo<T>([NotNull] this ISourceList<T> source, int sizeLimit,
             IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (sizeLimit <= 0) throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (sizeLimit <= 0)
+            {
+                throw new ArgumentException("sizeLimit cannot be zero", nameof(sizeLimit));
+            }
 
             var locker = new object();
             var limiter = new LimitSizeTo<T>(source, sizeLimit, scheduler ?? Scheduler.Default, locker);
@@ -1662,8 +2060,15 @@ namespace DynamicData
         public static IObservable<IEnumerable<T>> ExpireAfter<T>([NotNull] this ISourceList<T> source,
             [NotNull] Func<T, TimeSpan?> timeSelector, TimeSpan? pollingInterval = null, IScheduler scheduler = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (timeSelector == null) throw new ArgumentNullException(nameof(timeSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (timeSelector == null)
+            {
+                throw new ArgumentNullException(nameof(timeSelector));
+            }
 
             var locker = new object();
             var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? Scheduler.Default,
@@ -1930,7 +2335,10 @@ namespace DynamicData
             [NotNull] this ICollection<IObservable<IChangeSet<T>>> sources,
             CombineOperator type)
         {
-            if (sources == null) throw new ArgumentNullException(nameof(sources));
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
 
             return new Combiner<T>(sources, type).Run();
         }
@@ -1939,9 +2347,20 @@ namespace DynamicData
             CombineOperator type,
             params IObservable<IChangeSet<T>>[] others)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (others == null)
+            {
+                throw new ArgumentNullException(nameof(others));
+            }
+
             if (others.Length == 0)
+            {
                 throw new ArgumentException("Must be at least one item to combine with", nameof(others));
+            }
 
             var items = source.EnumerateOne().Union(others).ToList();
             return new Combiner<T>(items, type).Run();
@@ -1950,7 +2369,10 @@ namespace DynamicData
         private static IObservable<IChangeSet<T>> Combine<T>([NotNull] this IObservableList<ISourceList<T>> sources,
             CombineOperator type)
         {
-            if (sources == null) throw new ArgumentNullException(nameof(sources));
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
 
             return Observable.Create<IChangeSet<T>>(observer =>
             {
@@ -1963,7 +2385,10 @@ namespace DynamicData
         private static IObservable<IChangeSet<T>> Combine<T>([NotNull] this IObservableList<IObservableList<T>> sources,
             CombineOperator type)
         {
-            if (sources == null) throw new ArgumentNullException(nameof(sources));
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
 
             return Observable.Create<IChangeSet<T>>(observer =>
             {
@@ -1976,7 +2401,11 @@ namespace DynamicData
         private static IObservable<IChangeSet<T>> Combine<T>(
             [NotNull] this IObservableList<IObservable<IChangeSet<T>>> sources, CombineOperator type)
         {
-            if (sources == null) throw new ArgumentNullException(nameof(sources));
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
             return new DynamicCombiner<T>(sources, type).Run();
         }
 
@@ -1999,7 +2428,11 @@ namespace DynamicData
         /// <exception cref="T:System.ArgumentNullException"><paramref name="sources" /> is null.</exception>
         public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservableList<T>> sources)
         {
-            if (sources == null) throw new ArgumentNullException(nameof(sources));
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
             return sources.Select(cache => cache.Connect()).Switch();
         }
 
@@ -2018,12 +2451,15 @@ namespace DynamicData
         /// <exception cref="T:System.ArgumentNullException"><paramref name="sources" /> is null.</exception>
         public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservable<IChangeSet<T>>> sources)
         {
-            if (sources == null) throw new ArgumentNullException(nameof(sources));
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
             return new Switch<T>(sources).Run();
         }
 
         #endregion
-
 
         #region Start with
 
@@ -2034,8 +2470,6 @@ namespace DynamicData
         {
             return source.StartWith(ChangeSet<T>.Empty);
         }
-
-
 
         #endregion
     }

@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class GroupOnPropertyFixture: IDisposable
     {
         private readonly SourceCache<Person, string> _source;
@@ -87,7 +87,6 @@ namespace DynamicData.Tests.Cache
 
             people.Take(25)
                     .ForEach(p => p.Age = 200);
-
 
             var changedCount = people.Select(p => p.Age).Distinct().Count();
             _results.Data.Count.Should().Be(changedCount);

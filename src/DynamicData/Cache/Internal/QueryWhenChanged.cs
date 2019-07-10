@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
@@ -23,7 +27,10 @@ namespace DynamicData.Cache.Internal
                     .Scan((Cache<TObject, TKey>)null, (cache, changes) =>
                     {
                         if (cache == null)
+                        {
                             cache = new Cache<TObject, TKey>(changes.Count);
+                        }
+
                         cache.Clone(changes);
                         return cache;
                     }).Select(list => new AnonymousQuery<TObject, TKey>(list));
@@ -46,7 +53,7 @@ namespace DynamicData.Cache.Internal
                         list.Clone(changes);
                         return list;
                     }).Select(list => new AnonymousQuery<TObject, TKey>(list));
-                
+
                 return sourceChanged.Merge(inlineChange);
             });
         }

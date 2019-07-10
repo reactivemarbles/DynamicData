@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -25,7 +29,7 @@ namespace DynamicData.List.Internal
             _scheduler = scheduler;
         }
 
-        private readonly struct ObjWithFilterValue :IEquatable<ObjWithFilterValue>
+        private readonly struct ObjWithFilterValue : IEquatable<ObjWithFilterValue>
         {
             public readonly TObject Obj;
             public readonly bool Filter;
@@ -53,11 +57,21 @@ namespace DynamicData.List.Internal
             }
 
             private static IEqualityComparer<ObjWithFilterValue> ObjComparer { get; } = new ObjEqualityComparer();
-            
+
             public bool Equals(ObjWithFilterValue other)
             {
                 // default equality does _not_ include Filter value, as that would cause the Filter operator that is used later to fail
                 return ObjComparer.Equals(this, other);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is ObjWithFilterValue value && Equals(value);
+            }
+
+            public override int GetHashCode()
+            {
+                return ObjComparer.GetHashCode(this);
             }
         }
 
@@ -117,15 +131,25 @@ namespace DynamicData.List.Internal
             });
         }
 
-
         private static IEnumerable<TResult> IndexOfMany<TObj, TObjectProp, TResult>(IEnumerable<TObj> source,
             IEnumerable<TObj> itemsToFind,
-            Func<TObj, TObjectProp> objectPropertyFunc, 
+            Func<TObj, TObjectProp> objectPropertyFunc,
             Func<TObj, int, TResult> resultSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (itemsToFind == null) throw new ArgumentNullException(nameof(itemsToFind));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (itemsToFind == null)
+            {
+                throw new ArgumentNullException(nameof(itemsToFind));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             var indexed = source.Select((element, index) => new { Element = element, Index = index });
             return itemsToFind.Join(indexed, objectPropertyFunc, right => objectPropertyFunc(right.Element),

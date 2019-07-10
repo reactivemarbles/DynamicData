@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class MergeManyFixture: IDisposable
     {
         private class ObjectWithObservable

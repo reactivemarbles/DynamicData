@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 
 namespace DynamicData.Binding
@@ -19,22 +23,48 @@ namespace DynamicData.Binding
         {
             foreach (var item in this)
             {
-                if (x == null && y == null) continue;
-                if (x == null) return -1;
-                if (y == null) return 1;
+                if (x == null && y == null)
+                {
+                    continue;
+                }
+
+                if (x == null)
+                {
+                    return -1;
+                }
+
+                if (y == null)
+                {
+                    return 1;
+                }
 
                 var xValue = item.Expression(x);
                 var yValue = item.Expression(y);
 
-                if (xValue == null && yValue == null) continue;
-                if (xValue == null) return -1;
-                if (yValue == null) return 1;
+                if (xValue == null && yValue == null)
+                {
+                    continue;
+                }
+
+                if (xValue == null)
+                {
+                    return -1;
+                }
+
+                if (yValue == null)
+                {
+                    return 1;
+                }
 
                 int result = xValue.CompareTo(yValue);
-                if (result == 0) continue;
+                if (result == 0)
+                {
+                    continue;
+                }
 
                 return (item.Direction == SortDirection.Ascending) ? result : -result;
             }
+
             return 0;
         }
 

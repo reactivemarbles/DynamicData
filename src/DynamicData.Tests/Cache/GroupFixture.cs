@@ -8,7 +8,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class GroupFixture: IDisposable
     {
         public  GroupFixture()
@@ -109,6 +109,7 @@ namespace DynamicData.Tests.Cache
                                                     {
                                                         update.Reason.Should().Be(ChangeReason.Add);
                                                     }
+
                                                     called = true;
                                                 });
             _source.Edit(updater =>
@@ -161,6 +162,7 @@ namespace DynamicData.Tests.Cache
                                                     {
                                                         update.Reason.Should().Be(ChangeReason.Remove);
                                                     }
+
                                                     called = true;
                                                 });
             var person = new Person("Person1", 20);
@@ -210,7 +212,6 @@ namespace DynamicData.Tests.Cache
 
           firstGroup.Entries.Count.Should().Be(2);
 
-
           subscriber.Dispose();
        }
 
@@ -238,7 +239,6 @@ namespace DynamicData.Tests.Cache
           });
 
           firstGroup.Entries.Count.Should().Be(2);
-
 
           subscriber.Dispose();
        }

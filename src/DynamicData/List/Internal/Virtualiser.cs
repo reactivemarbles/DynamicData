@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -11,7 +15,6 @@ namespace DynamicData.List.Internal
     {
         private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<IVirtualRequest> _requests;
-
 
         public Virtualiser([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IVirtualRequest> requests)
         {
@@ -49,17 +52,22 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private IChangeSet<T> CheckParamsAndVirtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request)
+        private static IChangeSet<T> CheckParamsAndVirtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request)
         {
             if (request == null || request.StartIndex < 0 || request.Size < 1)
+            {
                 return null;
+            }
 
             return Virtualise(all, virtualised, request);
         }
 
-        private IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request, IChangeSet<T> changeset = null)
+        private static IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request, IChangeSet<T> changeset = null)
         {
-            if (changeset != null) all.Clone(changeset);
+            if (changeset != null)
+            {
+                all.Clone(changeset);
+            }
 
             var previous = virtualised;
 
@@ -97,11 +105,14 @@ namespace DynamicData.List.Internal
                 var previousItem = previous[i];
 
                 if (ReferenceEquals(currentItem, previousItem))
+                {
                     continue;
+                }
 
                 var index = virtualised.IndexOf(currentItem);
                 virtualised.Move(i, index);
             }
+
             return virtualised.CaptureChanges();
         }
     }

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class DisposeManyFixture: IDisposable
     {
         private class DisposableObject : IDisposable

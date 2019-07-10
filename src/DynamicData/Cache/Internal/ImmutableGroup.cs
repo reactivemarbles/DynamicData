@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
@@ -31,15 +35,31 @@ namespace DynamicData.Cache.Internal
 
         public bool Equals(ImmutableGroup<TObject, TKey, TGroupKey> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return EqualityComparer<TGroupKey>.Default.Equals(Key, other.Key);
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
             return obj is ImmutableGroup<TObject, TKey, TGroupKey> && Equals((ImmutableGroup<TObject, TKey, TGroupKey>) obj);
         }
 

@@ -1,5 +1,11 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
@@ -25,8 +31,16 @@ namespace DynamicData
         /// <param name="size">The size.</param>
         public PageRequest(int page, int size)
         {
-            if (page < 0) throw new ArgumentException("Page must be positive");
-            if (size < 0) throw new ArgumentException("Size must be positive");
+            if (page < 0)
+            {
+                throw new ArgumentException("Page must be positive");
+            }
+
+            if (size < 0)
+            {
+                throw new ArgumentException("Size must be positive");
+            }
+
             Page = page;
             Size = size;
         }
@@ -60,7 +74,10 @@ namespace DynamicData
         public override bool Equals(object obj)
         {
             if (!(obj is IPageRequest))
+            {
                 return false;
+            }
+
             return Equals((IPageRequest)obj);
         }
 
@@ -81,10 +98,26 @@ namespace DynamicData
         {
             public bool Equals(IPageRequest x, IPageRequest y)
             {
-                if (ReferenceEquals(x, y)) return true;
-                if (ReferenceEquals(x, null)) return false;
-                if (ReferenceEquals(y, null)) return false;
-                if (x.GetType() != y.GetType()) return false;
+                if (ReferenceEquals(x, y))
+                {
+                    return true;
+                }
+
+                if (ReferenceEquals(x, null))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(y, null))
+                {
+                    return false;
+                }
+
+                if (x.GetType() != y.GetType())
+                {
+                    return false;
+                }
+
                 return x.Page == y.Page && x.Size == y.Size;
             }
 
@@ -105,6 +138,7 @@ namespace DynamicData
         /// <value>
         /// The default comparer.
         /// </value>
+        [SuppressMessage("Design", "CA1822: Member can be static", Justification = "Backwards compatibilty")]
         public IEqualityComparer<IPageRequest> DefaultComparer => _pageSizeComparerInstance;
 
         #endregion

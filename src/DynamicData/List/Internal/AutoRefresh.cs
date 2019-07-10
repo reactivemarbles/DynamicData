@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -61,7 +65,6 @@ namespace DynamicData.List.Internal
                         //catch all the indices of items which have been refreshed
                         return allItems.IndexOfMany(items, (t, idx) => new Change<TObject>(ListChangeReason.Refresh, t, idx));
                     }).Select(changes => new ChangeSet<TObject>(changes));
-
 
                 //publish refreshes and underlying changes
                 var publisher = shared

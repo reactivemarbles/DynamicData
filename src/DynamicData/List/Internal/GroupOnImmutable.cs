@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +10,6 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
 using DynamicData.Kernel;
-
 
 namespace DynamicData.List.Internal
 {
@@ -43,8 +46,6 @@ namespace DynamicData.List.Internal
                 var locker = new object();
                 var shared = itemsWithGroup.Synchronize(locker).Publish();
 
-
-
                 var grouper = shared
                     .Select(changes => Process(groupings, groupCache, changes));
 
@@ -77,12 +78,17 @@ namespace DynamicData.List.Internal
             {
                 var currentGroupKey = itemWithValue.Group;
                 var newGroupKey = _groupSelector(itemWithValue.Item);
-                if (newGroupKey.Equals(currentGroupKey)) continue;
-                
+                if (newGroupKey.Equals(currentGroupKey))
+                {
+                    continue;
+                }
+
                 //lookup group and if created, add to result set
                 var oldGrouping = GetGroup(allGroupings, currentGroupKey);
                 if (!initialStateOfGroups.ContainsKey(currentGroupKey))
+                {
                     initialStateOfGroups[currentGroupKey] = GetGroupState(oldGrouping);
+                }
 
                 //remove from the old group
                 oldGrouping.List.Remove(itemWithValue.Item);
@@ -93,14 +99,17 @@ namespace DynamicData.List.Internal
                 //add to the new group
                 var newGrouping = GetGroup(allGroupings, newGroupKey);
                 if (!initialStateOfGroups.ContainsKey(newGroupKey))
+                {
                     initialStateOfGroups[newGroupKey] = GetGroupState(newGrouping);
+                }
 
                 newGrouping.List.Add(itemWithValue.Item);
             }
+
             return CreateChangeSet(result, allGroupings, initialStateOfGroups);
         }
 
-        private IChangeSet<IGrouping<TObject, TGroupKey>> Process(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IChangeSet<ItemWithGroupKey> changes)
+        private static IChangeSet<IGrouping<TObject, TGroupKey>> Process(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IChangeSet<ItemWithGroupKey> changes)
         {
             //need to keep track of effected groups to calculate correct notifications 
             var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TGroupKey>>();
@@ -114,9 +123,10 @@ namespace DynamicData.List.Internal
                 void GetInitialState()
                 {
                     if (!initialStateOfGroups.ContainsKey(grouping.Key))
+                    {
                         initialStateOfGroups[grouping.Key] = GetGroupState(groupContainer);
+                    }
                 }
-
 
                 var listToModify = groupContainer.List;
 
@@ -131,6 +141,7 @@ namespace DynamicData.List.Internal
                             listToModify.Add(change.Current.Item);
                             break;
                         }
+
                         case ListChangeReason.Refresh:
                         {
                             var previousItem = change.Current.Item;
@@ -150,13 +161,17 @@ namespace DynamicData.List.Internal
                                     .IfHasValue(g =>
                                     {
                                         if (!initialStateOfGroups.ContainsKey(g.Key))
+                                        {
                                             initialStateOfGroups[g.Key] = GetGroupState(g.Key, g.List);
+                                        }
 
                                         g.List.Remove(previousItem);
                                     });
                             }
+
                             break;
                         }
+
                         case ListChangeReason.Replace:
                         {
                             GetInitialState();
@@ -180,19 +195,24 @@ namespace DynamicData.List.Internal
                                     .IfHasValue(g =>
                                     {
                                         if (!initialStateOfGroups.ContainsKey(g.Key))
+                                        {
                                             initialStateOfGroups[g.Key] = GetGroupState(g.Key, g.List);
+                                        }
 
                                         g.List.Remove(previousItem);
                                     });
                             }
+
                             break;
                         }
+
                         case ListChangeReason.Remove:
                         {
                             GetInitialState();
                             listToModify.Remove(change.Current.Item);
                             break;
                         }
+
                         case ListChangeReason.Clear:
                         {
                             GetInitialState();
@@ -202,10 +222,11 @@ namespace DynamicData.List.Internal
                     }
                 }
             }
+
             return CreateChangeSet(result, allGroupings, initialStateOfGroups);
         }
 
-        private IChangeSet<IGrouping<TObject, TGroupKey>> CreateChangeSet(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IDictionary<TGroupKey, IGrouping<TObject, TGroupKey>> initialStateOfGroups)
+        private static IChangeSet<IGrouping<TObject, TGroupKey>> CreateChangeSet(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IDictionary<TGroupKey, IGrouping<TObject, TGroupKey>> initialStateOfGroups)
         {
             //Now maintain target list
             foreach (var intialGroup in initialStateOfGroups)
@@ -234,27 +255,30 @@ namespace DynamicData.List.Internal
                     }
                 }
             }
+
             return result.CaptureChanges();
         }
 
-        private IGrouping<TObject,  TGroupKey> GetGroupState(GroupContainer grouping)
+        private static IGrouping<TObject,  TGroupKey> GetGroupState(GroupContainer grouping)
         {
             return new ImmutableGroup<TObject,  TGroupKey>(grouping.Key, grouping.List);
         }
 
-        private IGrouping<TObject,  TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list)
+        private static IGrouping<TObject,  TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list)
         {
             return new ImmutableGroup<TObject,  TGroupKey>(key, list);
         }
 
-        private GroupContainer GetGroup(IDictionary<TGroupKey, GroupContainer> groupCaches, TGroupKey key)
+        private static GroupContainer GetGroup(IDictionary<TGroupKey, GroupContainer> groupCaches, TGroupKey key)
         {
             var cached = groupCaches.Lookup(key);
             if (cached.HasValue)
+            {
                 return cached.Value;
+            }
 
             var newcache = new GroupContainer(key);
-            groupCaches[key] = newcache; 
+            groupCaches[key] = newcache;
             return newcache;
         }
 
@@ -274,7 +298,7 @@ namespace DynamicData.List.Internal
             public TObject Item { get; }
             public TGroupKey Group { get; set; }
             public Optional<TGroupKey> PreviousGroup { get; }
-            
+
             public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup)
             {
                 Item = item;
@@ -286,15 +310,31 @@ namespace DynamicData.List.Internal
 
             public bool Equals(ItemWithGroupKey other)
             {
-                if (other is null) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (other is null)
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
             }
 
             public override bool Equals(object obj)
             {
-                if (obj is null) return false;
-                if (ReferenceEquals(this, obj)) return true;
+                if (obj is null)
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
                 return obj is ItemWithGroupKey && Equals((ItemWithGroupKey)obj);
             }
 

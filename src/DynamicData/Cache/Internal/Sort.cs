@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,7 +29,9 @@ namespace DynamicData.Cache.Internal
             int resetThreshold = -1)
         {
             if (comparer == null && comparerChangedObservable == null)
+            {
                 throw new ArgumentException("Must specify comparer or comparerChangedObservable");
+            }
 
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _comparer = comparer;
@@ -133,7 +139,9 @@ namespace DynamicData.Cache.Internal
                     changes = _cache.CaptureChanges();
                     _haveReceivedData = true;
                     if (_comparer == null)
+                    {
                         return null;
+                    }
                 }
 
                 //if the comparer is not set, return nothing
@@ -162,17 +170,20 @@ namespace DynamicData.Cache.Internal
                             _calculator = new IndexCalculator<TObject, TKey>(_comparer, _optimisations);
                             changeSet = _calculator.Load(_cache);
                         }
+
                         break;
                     case SortReason.Reset:
                         {
                             _calculator.Reset(_cache);
                             changeSet = changes;
                         }
+
                         break;
                     case SortReason.DataChanged:
                         {
                             changeSet = _calculator.Calculate(changes);
                         }
+
                         break;
 
                     case SortReason.ComparerChanged:
@@ -189,12 +200,14 @@ namespace DynamicData.Cache.Internal
                                 changeSet = _calculator.Reorder();
                             }
                         }
+
                         break;
 
                     case SortReason.Reorder:
                         {
                             changeSet = _calculator.Reorder();
                         }
+
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(sortReason));
@@ -207,7 +220,10 @@ namespace DynamicData.Cache.Internal
                     return null;
                 }
 
-                if (sortReason == SortReason.Reorder && changeSet.Count == 0) return null;
+                if (sortReason == SortReason.Reorder && changeSet.Count == 0)
+                {
+                    return null;
+                }
 
                 _sorted = new KeyValueCollection<TObject, TKey>(_calculator.List.ToList(), _comparer, sortReason, _optimisations);
                 return new SortedChangeSet<TObject, TKey>(_sorted, changeSet);

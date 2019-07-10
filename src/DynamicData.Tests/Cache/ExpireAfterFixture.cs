@@ -7,13 +7,12 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class ExpireAfterFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
         private readonly TestScheduler _scheduler;
-
 
         public ExpireAfterFixture()
         {
@@ -34,10 +33,15 @@ namespace DynamicData.Tests.Cache
             TimeSpan? RemoveFunc(Person t)
             {
                 if (t.Age <= 40)
+                {
                     return TimeSpan.FromSeconds(5);
+                }
 
                 if (t.Age <= 80)
+                {
                     return TimeSpan.FromSeconds(7);
+                }
+
                 return null;
             }
 

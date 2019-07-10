@@ -6,11 +6,10 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class RemoveManyFixture
     {
         private readonly List<int> _list;
-
 
         public  RemoveManyFixture()
         {
