@@ -15,7 +15,7 @@
     <Copyright>Copyright (c) Roland Pheasant 2011-2019</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>http://dynamic-data.org</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_pharmacist/main.png</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_dynamic_data/main.png</PackageIconUrl>
     <PackageTags>DynamicData;Dynamic;Data;Rx;Reactive;Observable;Cache;Binding;ObservableCache;ObservableList;ObservableCollection;Collection;Linq</PackageTags>
     <PackageReleaseNotes>https://github.com/reactiveui/DynamicData/releases</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/RolandPheasant/DynamicData</RepositoryUrl>
