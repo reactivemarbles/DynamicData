@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using DynamicData.Cache.Internal;
 
@@ -8,7 +12,6 @@ namespace DynamicData
     internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IVirtualChangeSet<TObject, TKey>, IEquatable<VirtualChangeSet<TObject, TKey>>
     {
         public new static readonly IVirtualChangeSet<TObject, TKey> Empty = new VirtualChangeSet<TObject, TKey>();
-
 
         public IKeyValueCollection<TObject, TKey> SortedItems { get; }
         public IVirtualResponse Response { get; }
@@ -26,22 +29,41 @@ namespace DynamicData
             Response = new VirtualResponse(0,0,0);
         }
 
-
         #region Equality
 
         public bool Equals(VirtualChangeSet<TObject, TKey> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return Response.Equals(other.Response)
                    && Equals(SortedItems, other.SortedItems);
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
             return Equals((VirtualChangeSet<TObject, TKey>)obj);
         }
 

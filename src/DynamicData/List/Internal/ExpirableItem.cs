@@ -1,9 +1,13 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 
 namespace DynamicData.List.Internal
 {
-    
+
     internal sealed class ExpirableItem<TObject> : IEquatable<ExpirableItem<TObject>>
     {
         public TObject Item { get; }
@@ -21,15 +25,31 @@ namespace DynamicData.List.Internal
 
         public bool Equals(ExpirableItem<TObject> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return EqualityComparer<TObject>.Default.Equals(Item, other.Item) && ExpireAt.Equals(other.ExpireAt) && Index == other.Index;
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
             return obj is ExpirableItem<TObject> item && Equals(item);
         }
 

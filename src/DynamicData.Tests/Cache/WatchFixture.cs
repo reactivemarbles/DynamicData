@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class WatchFixture: IDisposable
     {
         private class DisposableObject : IDisposable

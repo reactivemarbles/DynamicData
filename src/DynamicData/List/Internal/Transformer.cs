@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +19,11 @@ namespace DynamicData.List.Internal
 
         public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
         {
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            if (factory == null)
+            {
+                throw new ArgumentNullException(nameof(factory));
+            }
+
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _transformOnRefresh = transformOnRefresh;
             _containerFactory = (item, prev, index) => new TransformedItemContainer(item, factory(item, prev, index));
@@ -32,9 +40,9 @@ namespace DynamicData.List.Internal
                 {
                     var changed = transformed.CaptureChanges();
                     return changed.Transform(container => container.Destination);
-                }); 
+                });
         }
-        
+
         private sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
         {
             public TSource Source { get; }
@@ -50,16 +58,36 @@ namespace DynamicData.List.Internal
 
             public bool Equals(TransformedItemContainer other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return EqualityComparer<TSource>.Default.Equals(Source, other.Source);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((TransformedItemContainer)obj);
             }
 
@@ -83,7 +111,10 @@ namespace DynamicData.List.Internal
 
         private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
         {
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
 
             foreach (var item in changes)
             {
@@ -101,8 +132,10 @@ namespace DynamicData.List.Internal
                                 var converted = _containerFactory(change.Current, Optional<TDestination>.None,  change.CurrentIndex);
                                 transformed.Insert(change.CurrentIndex, converted);
                             }
+
                             break;
                         }
+
                     case ListChangeReason.AddRange:
                         {
                             var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
@@ -113,6 +146,7 @@ namespace DynamicData.List.Internal
 
                             break;
                         }
+
                     case ListChangeReason.Refresh:
                     {
                         if (_transformOnRefresh)
@@ -127,15 +161,17 @@ namespace DynamicData.List.Internal
                         {
                             transformed.RefreshAt(item.Item.CurrentIndex);
                         }
+
                         break;
                     }
+
                     case ListChangeReason.Replace:
                         {
                             var change = item.Item;
                             Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                             if (change.CurrentIndex == change.PreviousIndex)
                             {
-                               
+
                                 transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
                             }
                             else
@@ -146,6 +182,7 @@ namespace DynamicData.List.Internal
 
                             break;
                         }
+
                     case ListChangeReason.Remove:
                         {
                             var change = item.Item;
@@ -160,11 +197,14 @@ namespace DynamicData.List.Internal
                                 var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
 
                                 if (toRemove != null)
+                                {
                                     transformed.Remove(toRemove);
+                                }
                             }
 
                             break;
                         }
+
                     case ListChangeReason.RemoveRange:
                         {
                             if (item.Range.Index >= 0)
@@ -179,6 +219,7 @@ namespace DynamicData.List.Internal
 
                             break;
                         }
+
                     case ListChangeReason.Clear:
                         {
                             //i.e. need to store transformed reference so we can correctly clear
@@ -187,12 +228,15 @@ namespace DynamicData.List.Internal
 
                             break;
                         }
+
                     case ListChangeReason.Moved:
                         {
                             var change = item.Item;
                             bool hasIndex = change.CurrentIndex >= 0;
                             if (!hasIndex)
+                            {
                                 throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+                            }
 
                             transformed.Move(change.PreviousIndex, change.CurrentIndex);
                             break;

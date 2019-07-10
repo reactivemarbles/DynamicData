@@ -32,7 +32,6 @@ namespace DynamicData.Tests.Cache
                     return parent;
                 }).ToArray();
 
-
             using (var source = new SourceCache<Parent, int>(x => x.Id))
             using (var aggregator = source.Connect()
                 .TransformMany(p => p.Children, c => c.Name)
@@ -49,7 +48,6 @@ namespace DynamicData.Tests.Cache
                 ////remove first parent and check children have gone
                 source.RemoveKey(1);
                 aggregator.Data.Count.Should().Be(98);
-
 
                 //check items can be cleared and then added back in
                 var childrenInZero = parents[1].Children.ToArray();
@@ -87,7 +85,6 @@ namespace DynamicData.Tests.Cache
                     return parent;
                 }).ToArray();
 
-
             using (var source = new SourceCache<Parent, int>(x => x.Id))
             using (var aggregator = source.Connect()
                 .TransformMany(p => p.ChildrenReadonly, c => c.Name)
@@ -104,7 +101,6 @@ namespace DynamicData.Tests.Cache
                 ////remove first parent and check children have gone
                 source.RemoveKey(1);
                 aggregator.Data.Count.Should().Be(98);
-
 
                 //check items can be cleared and then added back in
                 var childrenInZero = parents[1].Children.ToArray();
@@ -142,8 +138,6 @@ namespace DynamicData.Tests.Cache
                     childIndex = childIndex + 2;
                     return parent;
                 }).ToArray();
-
-
 
             var sw = new Stopwatch();
 
@@ -202,7 +196,6 @@ namespace DynamicData.Tests.Cache
                 collection.Count.Should().Be(2);
             }
         }
-
 
         private class Parent
         {

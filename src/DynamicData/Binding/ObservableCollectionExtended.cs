@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -78,7 +82,9 @@ namespace DynamicData.Binding
                 _suspendCount = false;
 
                 if (Count != count)
+                {
                     OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+                }
             });
         }
 
@@ -88,8 +94,15 @@ namespace DynamicData.Binding
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
+            if (e == null)
+            {
+                throw new ArgumentNullException(nameof(e));
+            }
+
             if (_suspendCount && e.PropertyName == "Count")
+            {
                 return;
+            }
 
             base.OnPropertyChanged(e);
         }
@@ -100,7 +113,11 @@ namespace DynamicData.Binding
         /// <param name="e">The <see cref="NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (_suspendNotifications) return;
+            if (_suspendNotifications)
+            {
+                return;
+            }
+
             base.OnCollectionChanged(e);
         }
 
@@ -112,11 +129,18 @@ namespace DynamicData.Binding
         /// <param name="items">The items.</param>
         public void Load(IEnumerable<T> items)
         {
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
             CheckReentrancy();
             Clear();
 
             foreach (var item in items)
+            {
                 Add(item);
+            }
         }
 
         #region Implementation of IExtendedList
@@ -128,8 +152,15 @@ namespace DynamicData.Binding
         /// <exception cref="T:System.ArgumentNullException"><paramref name="collection" /> is null.</exception>
         public void AddRange(IEnumerable<T> collection)
         {
+            if (collection == null)
+            {
+                throw new ArgumentNullException(nameof(collection));
+            }
+
             foreach (var item in collection)
+            {
                 Add(item);
+            }
         }
 
         /// <summary>
@@ -141,8 +172,15 @@ namespace DynamicData.Binding
         /// <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <see cref="P:System.Collections.Generic.List`1.Count" />.</exception>
         public void InsertRange(IEnumerable<T> collection, int index)
         {
+            if (collection == null)
+            {
+                throw new ArgumentNullException(nameof(collection));
+            }
+
             foreach (var item in collection)
+            {
                 InsertItem(index++, item);
+            }
         }
 
         /// <summary>
@@ -152,7 +190,9 @@ namespace DynamicData.Binding
         public void RemoveRange(int index, int count)
         {
             for (var i = 0; i < count; i++)
+            {
                 RemoveAt(index);
+            }
         }
         #endregion
     }

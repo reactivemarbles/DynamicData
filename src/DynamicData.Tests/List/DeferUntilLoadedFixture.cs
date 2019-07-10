@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class DeferAnsdSkipFixture
     {
         [Fact]

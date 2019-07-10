@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class ExceptFixture : ExceptFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -15,7 +15,6 @@ namespace DynamicData.Tests.Cache
         }
     }
 
-    
     public class ExceptCollectionFixture : ExceptFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -25,7 +24,6 @@ namespace DynamicData.Tests.Cache
         }
     }
 
-    
     public abstract class ExceptFixtureBase: IDisposable
     {
         protected ISourceCache<Person, string> _targetSource;

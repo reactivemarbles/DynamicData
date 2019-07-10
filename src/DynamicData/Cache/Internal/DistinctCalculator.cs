@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
@@ -38,12 +42,18 @@ namespace DynamicData.Cache.Internal
             void RemoveAction(TValue value)
             {
                 var counter = _valueCounters.Lookup(value);
-                if (!counter.HasValue) return;
+                if (!counter.HasValue)
+                {
+                    return;
+                }
 
                 //decrement counter
                 var newCount = counter.Value - 1;
                 _valueCounters[value] = newCount;
-                if (newCount != 0) return;
+                if (newCount != 0)
+                {
+                    return;
+                }
 
                 //if there are none, then remove and notify
                 _valueCounters.Remove(value);
@@ -63,18 +73,23 @@ namespace DynamicData.Cache.Internal
                             _itemCache[key] = value;
                             break;
                         }
+
                     case ChangeReason.Refresh:
                     case ChangeReason.Update:
                         {
                             var value = _valueSelector(change.Current);
                             var previous = _itemCache[key];
-                            if (value.Equals(previous)) continue;
+                            if (value.Equals(previous))
+                            {
+                                continue;
+                            }
 
                             RemoveAction(previous);
                             AddAction(value);
                             _itemCache[key] = value;
                             break;
                         }
+
                     case ChangeReason.Remove:
                         {
                             var previous = _itemCache[key];
@@ -84,6 +99,7 @@ namespace DynamicData.Cache.Internal
                         }
                 }
             }
+
             return result;
         }
     }

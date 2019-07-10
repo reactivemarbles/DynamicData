@@ -7,7 +7,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class CloneChangesFixture
     {
         private readonly ChangeAwareList<int> _source;
@@ -177,7 +177,9 @@ namespace DynamicData.Tests.List
             clone.CollectionChanged += (s, e) =>
             {
                 if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Move)
+                {
                     itemMoved = true;
+                }
             };
 
             clone.Clone(changes);

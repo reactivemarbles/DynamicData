@@ -69,7 +69,7 @@ namespace DynamicData.Tests.Cache
 
             friends.Add(new PersonWithFriends("Friend2", 45));
             _source.Refresh(person);
-            
+
             _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
             _results.Data.Lookup("Friend1").HasValue.Should().BeTrue();
             _results.Data.Lookup("Friend2").HasValue.Should().BeTrue();

@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using DynamicData.Annotations;
 using DynamicData.Cache.Internal;
@@ -32,6 +36,11 @@ namespace DynamicData.Binding
         /// <param name="changes">The changes.</param>
         public void Adapt(IChangeSet<T> changes)
         {
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
+
             if (changes.TotalChanges - changes.Refreshes > _refreshThreshold || !_loaded)
             {
                 using (_collection.SuspendNotifications())
@@ -75,6 +84,16 @@ namespace DynamicData.Binding
         /// <param name="collection">The collection.</param>
         public void Adapt(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
         {
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
+
+            if (collection == null)
+            {
+                throw new ArgumentNullException(nameof(collection));
+            }
+
             _cache.Clone(changes);
 
             if (changes.Count - changes.Refreshes > _refreshThreshold || !_loaded)

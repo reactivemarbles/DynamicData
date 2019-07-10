@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class XOrFixture : XOrFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -15,7 +15,6 @@ namespace DynamicData.Tests.Cache
         }
     }
 
-    
     public class  XOrCollectionFixture : XOrFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -25,7 +24,6 @@ namespace DynamicData.Tests.Cache
         }
     }
 
-    
     public abstract class XOrFixtureBase: IDisposable
     {
         protected ISourceCache<Person, string> _source1;

@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Linq;
 using System.Reactive.Linq;
@@ -51,7 +55,9 @@ namespace DynamicData.Cache.Internal
                 }
 
                 if (parameters.Size == _request.Size && parameters.Page == _request.Page)
+                {
                     return null;
+                }
 
                 _request = parameters;
 
@@ -67,8 +73,15 @@ namespace DynamicData.Cache.Internal
 
             private IPagedChangeSet<TObject, TKey> Paginate(ISortedChangeSet<TObject, TKey> updates = null)
             {
-                if (_isLoaded == false) return null;
-                if (_request == null) return null;
+                if (_isLoaded == false)
+                {
+                    return null;
+                }
+
+                if (_request == null)
+                {
+                    return null;
+                }
 
                 var previous = _current;
 
@@ -88,6 +101,7 @@ namespace DynamicData.Cache.Internal
                 {
                     return null;
                 }
+
                 var response = new PageResponse(_request.Size, _all.Count, page, pages);
 
                 return new PagedChangeSet<TObject, TKey>(_current, notifications, response);
@@ -107,6 +121,7 @@ namespace DynamicData.Cache.Internal
                 {
                     return pages;
                 }
+
                 return pages + 1;
             }
         }

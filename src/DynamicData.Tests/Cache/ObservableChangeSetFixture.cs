@@ -75,7 +75,6 @@ namespace DynamicData.Tests.Cache
             isDisposed.Should().BeTrue();
         }
 
-
         [Fact]
         public void LoadsAndDisposeUsingDisposableAsync()
         {
@@ -101,14 +100,13 @@ namespace DynamicData.Tests.Cache
             {
                 throw new Exception("Broken");
             }
-            
+
           var observable =   ObservableChangeSet.Create<Person, string>(async cache =>
             {
                 var people = await Loader();
                 cache.AddOrUpdate(people);
                 return () => { };
             }, p => p.Name);
-
 
             using (var dervived = observable.AsObservableCache())
             using (dervived.Connect().Subscribe(_ => { }, ex => error = ex ))
@@ -133,7 +131,6 @@ namespace DynamicData.Tests.Cache
                 return () => { };
             }, p => p.Name);
 
-
             using (var dervived = observable.AsObservableCache())
             using (dervived.Connect().Subscribe(_ => { }, ex => error = ex))
             {
@@ -141,8 +138,7 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-
-        private void SubscribeAndAssert<TObject,TKey>(IObservable<IChangeSet<TObject, TKey>> observableChangeset,  
+        private void SubscribeAndAssert<TObject,TKey>(IObservable<IChangeSet<TObject, TKey>> observableChangeset,
             bool expectsError = false,
             Action<IObservableCache<TObject, TKey>> checkContentAction = null)
         {
@@ -152,7 +148,7 @@ namespace DynamicData.Tests.Cache
 
             using (var cache = observableChangeset.Finally(()=> complete = true).AsObservableCache())
             using (cache.Connect().Subscribe(result => changes = result, ex => error = ex))
-            {         
+            {
                 if (!expectsError)
                 {
                     error.Should().BeNull();
@@ -164,6 +160,7 @@ namespace DynamicData.Tests.Cache
 
                 checkContentAction?.Invoke(cache);
             }
+
             complete.Should().BeTrue();
         }
     }

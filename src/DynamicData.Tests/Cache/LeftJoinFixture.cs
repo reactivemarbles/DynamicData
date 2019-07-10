@@ -22,7 +22,6 @@ namespace DynamicData.Tests.Cache
                             .AsAggregator();
         }
 
-
         public void Dispose()
         {
             _left.Dispose();
@@ -48,7 +47,6 @@ namespace DynamicData.Tests.Cache
             _result.Data.Items.All(dwm => dwm.MetaData == Optional<DeviceMetaData>.None).Should().BeTrue();
         }
 
-
         [Fact]
         public void AddRightOnly()
         {
@@ -61,7 +59,6 @@ namespace DynamicData.Tests.Cache
 
             0.Should().Be(_result.Data.Count);
         }
-
 
         [Fact]
         public void AddLetThenRight()
@@ -107,11 +104,9 @@ namespace DynamicData.Tests.Cache
             3.Should().Be(_result.Data.Count);
             2.Should().Be(_result.Data.Items.Count(dwm => dwm.MetaData != Optional<DeviceMetaData>.None));
 
-
             _left.Remove("Device1");
             _result.Data.Lookup("Device1").HasValue.Should().BeFalse();
         }
-
 
         [Fact]
         public void AddRightThenLeft()
@@ -122,7 +117,6 @@ namespace DynamicData.Tests.Cache
                 innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
-
 
             _left.Edit(innerCache =>
             {
@@ -146,7 +140,6 @@ namespace DynamicData.Tests.Cache
                 innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
             });
 
-
             _left.Edit(innerCache =>
             {
                 innerCache.AddOrUpdate(new Device("Device1"));
@@ -158,9 +151,6 @@ namespace DynamicData.Tests.Cache
 
             _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
         }
-
-
-
 
         public class Device : IEquatable<Device>
         {
@@ -175,16 +165,36 @@ namespace DynamicData.Tests.Cache
 
             public bool Equals(Device other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return string.Equals(Name, other.Name);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((Device)obj);
             }
 
@@ -227,16 +237,36 @@ namespace DynamicData.Tests.Cache
 
             public bool Equals(DeviceMetaData other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return string.Equals(Name, other.Name) && IsAutoConnect == other.IsAutoConnect;
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((DeviceMetaData)obj);
             }
 
@@ -266,7 +296,6 @@ namespace DynamicData.Tests.Cache
             }
         }
 
-
         public class DeviceWithMetadata : IEquatable<DeviceWithMetadata>
         {
             public Device Device { get; }
@@ -282,16 +311,36 @@ namespace DynamicData.Tests.Cache
 
             public bool Equals(DeviceWithMetadata other)
             {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
                 return Equals(Device, other.Device) && MetaData.Equals(other.MetaData);
             }
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((DeviceWithMetadata)obj);
             }
 

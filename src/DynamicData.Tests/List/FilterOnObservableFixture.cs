@@ -98,7 +98,6 @@ namespace DynamicData.Tests.List
             }
         }
 
-
         [Fact]
         public void RemoveRange()
         {
@@ -118,7 +117,6 @@ namespace DynamicData.Tests.List
         {
             public ISourceList<PersonObs > Source { get; } = new SourceList<PersonObs >();
             public ChangeSetAggregator<PersonObs > Results { get; }
-
 
             public FilterPropertyStub()
             {

@@ -30,7 +30,6 @@ namespace DynamicData.Tests.Domain
 
         public IEnumerable<Person> Relations { get; }
 
-
         public override string ToString()
         {
             return $"{Name}. {Age}";

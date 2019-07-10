@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Concurrent;
 using System.ComponentModel;
@@ -21,7 +25,6 @@ namespace DynamicData.Binding
         {
             var key = expression.ToCacheKey();
 
-
             var result = _factories.GetOrAdd(key, k =>
             {
                 ObservablePropertyFactory<TObject, TProperty> factory;
@@ -37,9 +40,9 @@ namespace DynamicData.Binding
                     var accessor = expression?.Compile() ?? throw new ArgumentNullException(nameof(expression));
                     factory = new ObservablePropertyFactory<TObject, TProperty>(accessor, chain);
                 }
+
                 return factory;
             });
-
 
             return (ObservablePropertyFactory<TObject, TProperty>)result;
         }

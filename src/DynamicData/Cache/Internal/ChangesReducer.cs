@@ -1,4 +1,8 @@
-﻿using System.Diagnostics.Contracts;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Diagnostics.Contracts;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -8,7 +12,11 @@ namespace DynamicData.Cache.Internal
         [Pure]
         public static Optional<Change<TObject, TKey>> Reduce<TObject, TKey>(Optional<Change<TObject, TKey>> previous, Change<TObject, TKey> next)
         {
-            if (!previous.HasValue) return next;
+            if (!previous.HasValue)
+            {
+                return next;
+            }
+
             var previousValue = previous.Value;
 
             switch (previousValue.Reason)

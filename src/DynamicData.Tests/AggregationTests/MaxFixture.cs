@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.AggregationTests
 {
-    
+
     public class MaxFixture: IDisposable
     {
         private readonly SourceCache<Person, string> _source;
@@ -81,7 +81,6 @@ namespace DynamicData.Tests.AggregationTests
             max.Should().Be(100, "Max should be 100 after inline change");
             accumulator.Dispose();
         }
-
 
     }
 }

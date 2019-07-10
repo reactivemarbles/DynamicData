@@ -95,6 +95,7 @@ namespace DynamicData.Tests.Binding
                 lastChange.Sender.Should().BeNull();
                 (-1).Should().Be(lastChange.Value);
             }
+
             person.Age = 12;
             person.Should().Be(lastChange.Sender);
             12.Should().Be(lastChange.Value);
@@ -102,7 +103,6 @@ namespace DynamicData.Tests.Binding
             person.Should().Be(lastChange.Sender);
             13.Should().Be(lastChange.Value);
         }
-
 
     }
 }

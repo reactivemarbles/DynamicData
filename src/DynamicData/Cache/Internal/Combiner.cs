@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +61,9 @@ namespace DynamicData.Cache.Internal
             }
 
             if (notifications.Count != 0)
+            {
                 _updatedCallback(notifications);
+            }
         }
 
         private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
@@ -83,7 +89,9 @@ namespace DynamicData.Cache.Internal
                                 if (contained)
                                 {
                                     if (!ReferenceEquals(update.Current, cached.Value))
+                                    {
                                         _combinedCache.AddOrUpdate(update.Current, key);
+                                    }
                                 }
                                 else
                                 {
@@ -93,9 +101,12 @@ namespace DynamicData.Cache.Internal
                             else
                             {
                                 if (contained)
+                                {
                                     _combinedCache.Remove(key);
+                                }
                             }
                         }
+
                         break;
 
                     case ChangeReason.Remove:
@@ -122,18 +133,23 @@ namespace DynamicData.Cache.Internal
                             else
                             {
                                 if (contained)
+                                {
                                     _combinedCache.Remove(key);
+                                }
                             }
                         }
+
                         break;
 
                     case ChangeReason.Refresh:
                         {
                             _combinedCache.Refresh(key);
                         }
+
                         break;
                 }
             }
+
             return _combinedCache.CaptureChanges();
         }
 
@@ -145,22 +161,26 @@ namespace DynamicData.Cache.Internal
                     {
                         return _sourceCaches.All(s => s.Lookup(key).HasValue);
                     }
+
                 case CombineOperator.Or:
                     {
                         return _sourceCaches.Any(s => s.Lookup(key).HasValue);
                     }
+
                 case CombineOperator.Xor:
                     {
                         return _sourceCaches.Count(s => s.Lookup(key).HasValue) == 1;
                     }
+
                 case CombineOperator.Except:
                     {
                         bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
                         bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
                         return first && !others;
                     }
+
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(key));
             }
         }
     }

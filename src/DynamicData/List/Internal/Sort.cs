@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
@@ -43,7 +47,9 @@ namespace DynamicData.List.Internal
                 var changed = _source.Synchronize(locker).Select(changes =>
                 {
                     if (_resetThreshold > 1)
+                    {
                         orginal.Clone(changes);
+                    }
 
                     return changes.TotalChanges > _resetThreshold && _comparer!=null ? Reset(orginal, target) : Process(target, changes);
                 });
@@ -89,6 +95,7 @@ namespace DynamicData.List.Internal
                             Insert(target, current);
                             break;
                         }
+
                     case ListChangeReason.AddRange:
                         {
                             var ordered = change.Range.OrderBy(t => t, _comparer).ToList();
@@ -100,14 +107,17 @@ namespace DynamicData.List.Internal
                             {
                                 ordered.ForEach(item => Insert(target, item));
                             }
+
                             break;
                         }
+
                     case ListChangeReason.Remove:
                     {
                         var current = change.Item.Current;
                         Remove(target, current);
                         break;
                     }
+
                     case ListChangeReason.Refresh:
                     {
                         //add to refresh list so position can be calculated
@@ -122,6 +132,7 @@ namespace DynamicData.List.Internal
                         target.Refresh(indexed.Item, indexed.Index);
                         break;
                     }
+
                     case ListChangeReason.Replace:
                         {
                             var current = change.Item.Current;
@@ -137,6 +148,7 @@ namespace DynamicData.List.Internal
                             target.RemoveMany(change.Range);
                             break;
                         }
+
                     case ListChangeReason.Clear:
                         {
                             target.Clear();
@@ -149,17 +161,25 @@ namespace DynamicData.List.Internal
             foreach (var item in refreshes)
             {
                 var old = target.IndexOf(item);
-                if (old == -1) continue;
+                if (old == -1)
+                {
+                    continue;
+                }
 
                 int newposition = GetInsertPositionLinear(target, item);
                 if (old < newposition)
-                    newposition--; 
+                {
+                    newposition--;
+                }
 
                 if (old == newposition)
+                {
                     continue;
+                }
 
                 target.Move(old, newposition);
             }
+
             return target.CaptureChanges();
         }
 
@@ -173,7 +193,10 @@ namespace DynamicData.List.Internal
 
                 var existing = target[index];
                 //if item is in the same place, 
-                if (ReferenceEquals(item, existing)) continue;
+                if (ReferenceEquals(item, existing))
+                {
+                    continue;
+                }
 
                 //Cannot use binary search as Resort is implicit of a mutable change
                 var old = target.IndexOf(item);
@@ -187,7 +210,9 @@ namespace DynamicData.List.Internal
         {
             _comparer = comparer;
             if (_resetThreshold > 0 && target.Count <= _resetThreshold)
+            {
                 return  Reorder(target);
+            }
 
             var sorted = target.OrderBy(t => t, _comparer).ToList();
             target.Clear();
@@ -227,8 +252,11 @@ namespace DynamicData.List.Internal
             for (var i = 0; i < target.Count; i++)
             {
                 if (_comparer.Compare(item, target[i]) < 0)
+                {
                     return i;
+                }
             }
+
             return target.Count;
         }
 
@@ -239,18 +267,23 @@ namespace DynamicData.List.Internal
 
             //sort is not returning uniqueness
             if (insertIndex < 0)
+            {
                 throw new SortException("Binary search has been specified, yet the sort does not yeild uniqueness");
+            }
+
             return insertIndex;
         }
 
         private int GetCurrentPosition(ChangeAwareList<T> target, T item)
         {
-            var index = _sortOptions == SortOptions.UseBinarySearch 
-                ? target.BinarySearch(item, _comparer) 
+            var index = _sortOptions == SortOptions.UseBinarySearch
+                ? target.BinarySearch(item, _comparer)
                 : target.IndexOf(item);
 
             if (index < 0)
+            {
                 throw new SortException($"Cannot find item: {typeof(T).Name} -> {item}");
+            }
 
             return index;
         }

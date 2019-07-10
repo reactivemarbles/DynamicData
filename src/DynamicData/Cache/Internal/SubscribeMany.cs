@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -11,7 +15,10 @@ namespace DynamicData.Cache.Internal
 
         public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
         {
-            if (subscriptionFactory == null) throw new ArgumentNullException(nameof(subscriptionFactory));
+            if (subscriptionFactory == null)
+            {
+                throw new ArgumentNullException(nameof(subscriptionFactory));
+            }
 
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _subscriptionFactory = (t, key) => subscriptionFactory(t);
@@ -37,7 +44,7 @@ namespace DynamicData.Cache.Internal
                             .Subscribe();
 
                         return new CompositeDisposable(
-                            subscriptions, 
+                            subscriptions,
                             published.SubscribeSafe(observer),
                             published.Connect());
                     });

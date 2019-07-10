@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class OrFixture : OrFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -15,7 +15,6 @@ namespace DynamicData.Tests.List
         }
     }
 
-    
     public class OrCollectionFixture : OrFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -34,7 +33,7 @@ namespace DynamicData.Tests.List
             source1.Add(new Item("A"));
             SourceList<Item> source2 = new SourceList<Item>();
             source2.Add(new Item("B"));
-            
+
             var list = new List<IObservable<IChangeSet<Item>>> { source1.Connect().AutoRefresh(), source2.Connect().AutoRefresh() };
             var results = list.Or().AsAggregator();
             source1.Items.ElementAt(0).Name = "Test";
@@ -51,7 +50,6 @@ namespace DynamicData.Tests.List
         protected ISourceList<int> _source1;
         protected ISourceList<int> _source2;
         private readonly ChangeSetAggregator<int> _results;
-
 
         protected OrFixtureBase()
         {

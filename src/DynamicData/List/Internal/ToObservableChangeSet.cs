@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
@@ -16,7 +20,7 @@ namespace DynamicData.List.Internal
         private readonly int _limitSizeTo;
         private readonly IScheduler _scheduler;
 
-        public ToObservableChangeSet(IObservable<T> source, 
+        public ToObservableChangeSet(IObservable<T> source,
             Func<T, TimeSpan?> expireAfter,
             int limitSizeTo,
             IScheduler scheduler = null)
@@ -35,7 +39,6 @@ namespace DynamicData.List.Internal
             _scheduler = scheduler ?? Scheduler.Default;
         }
 
-
         public IObservable<IChangeSet<T>> Run()
         {
             return Observable.Create<IChangeSet<T>>(observer =>
@@ -53,12 +56,12 @@ namespace DynamicData.List.Internal
                             {
                                 state.AddRange(items);
                             }
+
                             return state;
                         })
                         .Select(state => state.CaptureChanges())
                         .SubscribeSafe(observer);
                 }
-
 
                 long orderItemWasAdded = -1;
                 var locker = new object();
@@ -86,6 +89,7 @@ namespace DynamicData.List.Internal
                             var toRemove = state.Count - _limitSizeTo;
                             state.RemoveRange(0, toRemove);
                         }
+
                         return state;
                     })
                     .Select(state => state.CaptureChanges())
@@ -94,7 +98,7 @@ namespace DynamicData.List.Internal
                 var timeLimited = (_expireAfter == null ? Observable.Never<IChangeSet<ExpirableItem<T>>>() : sizeLimited)
                     .Filter(ei => ei.ExpireAt != DateTime.MaxValue)
                     .GroupWithImmutableState(ei => ei.ExpireAt)
-                    .MergeMany(grouping => 
+                    .MergeMany(grouping =>
                     {
                         var expireAt = grouping.Key.Subtract(_scheduler.Now.DateTime);
                         return Observable.Timer(expireAt, _scheduler).Select(_ => grouping);

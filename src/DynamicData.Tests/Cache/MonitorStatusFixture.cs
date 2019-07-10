@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class MonitorStatusFixture
     {
         [Fact]

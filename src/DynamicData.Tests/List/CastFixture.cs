@@ -5,12 +5,11 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class CastFixture: IDisposable
     {
         private readonly ISourceList<int> _source;
         private readonly ChangeSetAggregator<decimal> _results;
-
 
         public  CastFixture()
         {

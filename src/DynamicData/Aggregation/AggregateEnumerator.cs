@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Collections;
 using System.Collections.Generic;
 
@@ -23,7 +27,10 @@ namespace DynamicData.Aggregation
                         break;
                     case ListChangeReason.AddRange:
                         foreach (var item in change.Range)
+                        {
                             yield return new AggregateItem<T>(AggregateType.Add, item);
+                        }
+
                         break;
                     case ListChangeReason.Replace:
                         yield return new AggregateItem<T>(AggregateType.Remove, change.Item.Previous.Value);
@@ -35,7 +42,10 @@ namespace DynamicData.Aggregation
                     case ListChangeReason.RemoveRange:
                     case ListChangeReason.Clear:
                         foreach (var item in change.Range)
+                        {
                             yield return new AggregateItem<T>(AggregateType.Remove, item);
+                        }
+
                         break;
                 }
             }

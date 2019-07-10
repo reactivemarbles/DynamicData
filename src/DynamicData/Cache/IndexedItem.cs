@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Collections.Generic;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
@@ -43,7 +47,6 @@ namespace DynamicData
 
         #region Equality
 
-
         private bool Equals(IndexedItem<TObject, TKey> other)
         {
             return EqualityComparer<TKey>.Default.Equals(Key, other.Key) &&
@@ -53,9 +56,21 @@ namespace DynamicData
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
             return Equals((IndexedItem<TObject, TKey>)obj);
         }
 

@@ -9,14 +9,13 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class GroupImmutableFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<DynamicData.List.IGrouping<Person, int>> _results;
         private readonly ISubject<Unit> _regrouper;
 
-        
         public  GroupImmutableFixture()
         {
             _source = new SourceList<Person>();
@@ -29,7 +28,7 @@ namespace DynamicData.Tests.List
             _source.Dispose();
             _results.Dispose();
         }
-        
+
         [Fact]
         public void Add()
         {
@@ -160,7 +159,9 @@ namespace DynamicData.Tests.List
 
             //do an inline update
             foreach (var person in initialPeople)
+            {
                 person.Age = person.Age + 1;
+            }
 
             //signal operators to evaluate again
             _regrouper.OnNext();

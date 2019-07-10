@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 
@@ -37,7 +41,7 @@ namespace DynamicData.Binding
         /// Latest observed value
         /// </summary>
         public TValue Value { get; }
-         
+
         /// <summary>
         /// Flag to indicated that the value was unobtainable when observing a deeply nested struct
         /// </summary>
@@ -48,16 +52,32 @@ namespace DynamicData.Binding
         /// <inheritdoc />
         public bool Equals(PropertyValue<TObject, TValue> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return EqualityComparer<TObject>.Default.Equals(Sender, other.Sender) && EqualityComparer<TValue>.Default.Equals(Value, other.Value);
         }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
             return obj is PropertyValue<TObject, TValue> && Equals((PropertyValue<TObject, TValue>)obj);
         }
 

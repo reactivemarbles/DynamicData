@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-    
+
     public class ObservableCollectionBindListFixture: IDisposable
     {
         private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();

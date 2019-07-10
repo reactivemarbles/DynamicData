@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class DynamicOrFixture: IDisposable
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();

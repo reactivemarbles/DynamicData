@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class DistinctFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
@@ -88,7 +88,6 @@ namespace DynamicData.Tests.Cache
                 updater.AddOrUpdate(new Person("Person1", 1));
                 updater.AddOrUpdate(new Person("Person1", 1));
                 updater.AddOrUpdate(new Person("Person2", 12));
-
 
                 updater.AddOrUpdate(new Person("Person3", 13));
                 updater.AddOrUpdate(new Person("Person4", 14));

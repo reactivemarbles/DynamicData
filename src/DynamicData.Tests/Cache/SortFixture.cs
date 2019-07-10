@@ -22,7 +22,6 @@ namespace DynamicData.Tests.Cache
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly IComparer<Person> _comparer;
 
-
         public SortFixtureWithReorder()
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
@@ -39,7 +38,6 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
             _results.Dispose();
         }
-
 
         [Fact]
         public void DoesNotThrow1()
@@ -63,6 +61,7 @@ namespace DynamicData.Tests.Cache
 
             disposable.Dispose();
         }
+
         public class Data
         {
             public Data(int id, string value)
@@ -556,7 +555,6 @@ namespace DynamicData.Tests.Cache
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
         private readonly IComparer<Person> _comparer;
 
-
         public SortFixture()
         {
             _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p=>p.Name);
@@ -564,7 +562,7 @@ namespace DynamicData.Tests.Cache
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new SortedChangeSetAggregator<Person, string>
                 (
-                _source.Connect().Sort(_comparer)  
+                _source.Connect().Sort(_comparer)
                 );
         }
 
@@ -573,7 +571,6 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
             _results.Dispose();
         }
-
 
         [Fact]
         public void DoesNotThrow1()
@@ -597,6 +594,7 @@ namespace DynamicData.Tests.Cache
 
             disposable.Dispose();
         }
+
         public class Data
         {
             public Data(int id, string value)

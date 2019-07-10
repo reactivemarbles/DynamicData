@@ -1,4 +1,8 @@
-﻿using System.Linq;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Linq;
 using BenchmarkDotNet.Attributes;
 
 namespace DynamicData.Benchmarks.List
@@ -14,7 +18,6 @@ namespace DynamicData.Benchmarks.List
         [Params(1, 100, 1_000, 10_000, 100_000)]
         public int N;
 
-
         [GlobalSetup]
         public void Setup() => _sourceList = new SourceList<string>();
 
@@ -27,7 +30,6 @@ namespace DynamicData.Benchmarks.List
 
         [GlobalCleanup]
         public void Teardown() => _sourceList = null;
-
 
         [Benchmark]
         public void AddRange() => _sourceList.AddRange(_items);

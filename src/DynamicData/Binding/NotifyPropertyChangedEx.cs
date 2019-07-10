@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -23,7 +27,11 @@ namespace DynamicData.Binding
         public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this TObject source, params string[] propertiesToMonitor)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
                 (
                     handler => source.PropertyChanged += handler,
@@ -46,14 +54,21 @@ namespace DynamicData.Binding
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.</param>
         /// <returns></returns>
         /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
-        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>([NotNull] this TObject source, 
-            Expression<Func<TObject, TProperty>> propertyAccessor, 
-            bool notifyOnInitialValue = true, 
+        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>([NotNull] this TObject source,
+            Expression<Func<TObject, TProperty>> propertyAccessor,
+            bool notifyOnInitialValue = true,
             Func<TProperty> fallbackValue = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertyAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(propertyAccessor));
+            }
 
             var cache = ObservablePropertyFactoryCache.Instance.GetFactory(propertyAccessor);
             return cache.Create(source, notifyOnInitialValue)
@@ -72,8 +87,15 @@ namespace DynamicData.Binding
         public static IObservable<TProperty> WhenValueChanged<TObject, TProperty>([NotNull] this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty> fallbackValue = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (propertyAccessor == null) throw new ArgumentNullException(nameof(propertyAccessor));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertyAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(propertyAccessor));
+            }
 
             return source.WhenChanged(propertyAccessor, notifyOnInitialValue, fallbackValue);
         }
@@ -91,9 +113,20 @@ namespace DynamicData.Binding
             Func<TProperty1> p1Fallback = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (p1 == null) throw new ArgumentNullException(nameof(p1));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (p1 == null)
+            {
+                throw new ArgumentNullException(nameof(p1));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             return source.WhenChanged(p1, true, p1Fallback).Select(v => resultSelector(source, v));
         }
@@ -105,18 +138,33 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null. 
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2>([NotNull] this TObject source, 
+        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2>([NotNull] this TObject source,
             Expression<Func<TObject, TProperty1>> p1,
-            Expression<Func<TObject, TProperty2>> p2, 
+            Expression<Func<TObject, TProperty2>> p2,
             Func<TObject, TProperty1, TProperty2, TResult> resultSelector,
             Func<TProperty1> p1Fallback = null,
             Func<TProperty2> p2Fallback = null)
                 where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (p1 == null) throw new ArgumentNullException(nameof(p1));
-            if (p2 == null) throw new ArgumentNullException(nameof(p2));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (p1 == null)
+            {
+                throw new ArgumentNullException(nameof(p1));
+            }
+
+            if (p2 == null)
+            {
+                throw new ArgumentNullException(nameof(p2));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             return Observable.CombineLatest
             (
@@ -143,11 +191,30 @@ namespace DynamicData.Binding
             Func<TProperty3> p3Fallback = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (p1 == null) throw new ArgumentNullException(nameof(p1));
-            if (p2 == null) throw new ArgumentNullException(nameof(p2));
-            if (p3 == null) throw new ArgumentNullException(nameof(p3));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (p1 == null)
+            {
+                throw new ArgumentNullException(nameof(p1));
+            }
+
+            if (p2 == null)
+            {
+                throw new ArgumentNullException(nameof(p2));
+            }
+
+            if (p3 == null)
+            {
+                throw new ArgumentNullException(nameof(p3));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             return Observable.CombineLatest
             (
@@ -177,12 +244,35 @@ namespace DynamicData.Binding
             Func<TProperty4> p4Fallback = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (p1 == null) throw new ArgumentNullException(nameof(p1));
-            if (p2 == null) throw new ArgumentNullException(nameof(p2));
-            if (p3 == null) throw new ArgumentNullException(nameof(p3));
-            if (p4 == null) throw new ArgumentNullException(nameof(p4));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (p1 == null)
+            {
+                throw new ArgumentNullException(nameof(p1));
+            }
+
+            if (p2 == null)
+            {
+                throw new ArgumentNullException(nameof(p2));
+            }
+
+            if (p3 == null)
+            {
+                throw new ArgumentNullException(nameof(p3));
+            }
+
+            if (p4 == null)
+            {
+                throw new ArgumentNullException(nameof(p4));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             return Observable.CombineLatest
             (
@@ -215,13 +305,40 @@ namespace DynamicData.Binding
             Func<TProperty5> p5Fallback = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (p1 == null) throw new ArgumentNullException(nameof(p1));
-            if (p2 == null) throw new ArgumentNullException(nameof(p2));
-            if (p3 == null) throw new ArgumentNullException(nameof(p3));
-            if (p4 == null) throw new ArgumentNullException(nameof(p4));
-            if (p5 == null) throw new ArgumentNullException(nameof(p5));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (p1 == null)
+            {
+                throw new ArgumentNullException(nameof(p1));
+            }
+
+            if (p2 == null)
+            {
+                throw new ArgumentNullException(nameof(p2));
+            }
+
+            if (p3 == null)
+            {
+                throw new ArgumentNullException(nameof(p3));
+            }
+
+            if (p4 == null)
+            {
+                throw new ArgumentNullException(nameof(p4));
+            }
+
+            if (p5 == null)
+            {
+                throw new ArgumentNullException(nameof(p5));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             return Observable.CombineLatest
             (
@@ -257,14 +374,45 @@ namespace DynamicData.Binding
             Func<TProperty6> p6Fallback = null)
             where TObject : INotifyPropertyChanged
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (p1 == null) throw new ArgumentNullException(nameof(p1));
-            if (p2 == null) throw new ArgumentNullException(nameof(p2));
-            if (p3 == null) throw new ArgumentNullException(nameof(p3));
-            if (p4 == null) throw new ArgumentNullException(nameof(p4));
-            if (p5 == null) throw new ArgumentNullException(nameof(p5));
-            if (p6 == null) throw new ArgumentNullException(nameof(p6));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (p1 == null)
+            {
+                throw new ArgumentNullException(nameof(p1));
+            }
+
+            if (p2 == null)
+            {
+                throw new ArgumentNullException(nameof(p2));
+            }
+
+            if (p3 == null)
+            {
+                throw new ArgumentNullException(nameof(p3));
+            }
+
+            if (p4 == null)
+            {
+                throw new ArgumentNullException(nameof(p4));
+            }
+
+            if (p5 == null)
+            {
+                throw new ArgumentNullException(nameof(p5));
+            }
+
+            if (p6 == null)
+            {
+                throw new ArgumentNullException(nameof(p6));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             return Observable.CombineLatest
             (
@@ -278,7 +426,6 @@ namespace DynamicData.Binding
             );
         }
 
-
         internal static IObservable<TProperty> WhenChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true, Func<TProperty> fallbackValue = null)
             where TObject : INotifyPropertyChanged
         {
@@ -288,7 +435,9 @@ namespace DynamicData.Binding
                 .Select(pv =>
                 {
                     if (pv.UnobtainableValue && fallbackValue != null)
+                    {
                         return fallbackValue();
+                    }
 
                     return pv.Value;
                 });

@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using DynamicData.Annotations;
 using System;
 using System.Linq;
@@ -38,15 +42,20 @@ namespace DynamicData.List.Internal
                     {
                         var change = item.Item;
                         if (_predicate(change.Current))
-                            filtered.Add(change.Current);
-                        break;
+                            {
+                                filtered.Add(change.Current);
+                            }
+
+                            break;
                     }
+
                     case ListChangeReason.AddRange:
                     {
                         var matches = item.Range.Where(t => _predicate(t)).ToList();
                         filtered.AddRange(matches);
                         break;
                     }
+
                     case ListChangeReason.Replace:
                     {
                         var change = item.Item;
@@ -59,18 +68,22 @@ namespace DynamicData.List.Internal
                         {
                             filtered.Remove(change.Previous.Value);
                         }
+
                         break;
                     }
+
                     case ListChangeReason.Remove:
                     {
                         filtered.Remove(item.Item.Current);
                         break;
                     }
+
                     case ListChangeReason.RemoveRange:
                     {
                         filtered.RemoveMany(item.Range);
                         break;
                     }
+
                     case ListChangeReason.Clear:
                     {
                         filtered.ClearOrRemoveMany(item);

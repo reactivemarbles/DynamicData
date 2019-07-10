@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -38,6 +42,7 @@ namespace DynamicData.List.Linq
 
                             break;
                         }
+
                     case ListChangeReason.AddRange:
                         {
                             foreach (var item in change.Range)
@@ -48,6 +53,7 @@ namespace DynamicData.List.Linq
 
                             break;
                         }
+
                     case ListChangeReason.Replace:
                         {
                             //replace is a remove and add
@@ -61,6 +67,7 @@ namespace DynamicData.List.Linq
 
                             break;
                         }
+
                     case ListChangeReason.Remove:
                         {
                             var item = change.Item.Current;
@@ -69,6 +76,7 @@ namespace DynamicData.List.Linq
 
                             break;
                         }
+
                     case ListChangeReason.Clear:
                     case ListChangeReason.RemoveRange:
                         {
@@ -80,14 +88,16 @@ namespace DynamicData.List.Linq
 
                             break;
                         }
+
                     case ListChangeReason.Moved:
                         {
                             var key = _keySelector(change.Item.Current);
                             yield return new Change<TObject, TKey>(ChangeReason.Moved, key, change.Item.Current, change.Item.Previous, change.Item.CurrentIndex, change.Item.PreviousIndex);
                             break;
                         }
+
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new IndexOutOfRangeException("The changes are not of a supported type.");
                 }
             }
         }

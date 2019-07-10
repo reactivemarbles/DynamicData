@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Linq;
 using System.Reactive.Linq;
 
@@ -50,8 +54,11 @@ namespace DynamicData.Cache.Internal
                 {
                     return null;
                 }
+
                 if (parameters.Size == _parameters.Size && parameters.StartIndex == _parameters.StartIndex)
+                {
                     return null;
+                }
 
                 _parameters = parameters;
                 return Virtualise();
@@ -66,7 +73,10 @@ namespace DynamicData.Cache.Internal
 
             private IVirtualChangeSet<TObject, TKey> Virtualise(ISortedChangeSet<TObject, TKey> updates = null)
             {
-                if (_isLoaded == false) return null;
+                if (_isLoaded == false)
+                {
+                    return null;
+                }
 
                 var previous = _current;
                 var virtualised = _all.Skip(_parameters.StartIndex)

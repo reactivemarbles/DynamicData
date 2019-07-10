@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
@@ -13,7 +17,6 @@ namespace DynamicData
         /// </summary>
         None = 0,
 
-
         /// <summary>
         /// Specify this option if the comparer used for sorting compares immutable fields only.
         /// In which case index changes can be calculated using BinarySearch rather than the expensive IndexOf
@@ -26,11 +29,10 @@ namespace DynamicData
         /// </summary>
         IgnoreEvaluates = 2,
 
-
         /// <summary>
-        /// The insert at end then sort entire set.  This can be the best algorthm for large datasets with many changes
+        /// The insert at end then sort entire set.  This can be the best algorithm for large datasets with many changes
         /// </summary>
-        [Obsolete]
+        [Obsolete("This is no longer being used. Use one of the other options instead.")]
         InsertAtEndThenSort = 3
     }
 }

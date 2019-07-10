@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class TransformFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;

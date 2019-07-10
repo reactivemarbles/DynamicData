@@ -9,7 +9,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class PageFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
@@ -156,7 +156,7 @@ namespace DynamicData.Tests.List
                 pager.OnNext(new PageRequest(1, 2));
                 sut.Paged.Count.Should().Be(2);
 
-                pager.OnNext(new PageRequest(1, 4)); 
+                pager.OnNext(new PageRequest(1, 4));
                 sut.Paged.Count.Should().Be(4);
 
                 pager.OnNext(new PageRequest(2, 3));
@@ -186,6 +186,5 @@ namespace DynamicData.Tests.List
             _cleanUp.Dispose();
         }
     }
-
 
 }

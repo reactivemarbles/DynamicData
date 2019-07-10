@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 #if P_LINQ
 
 using System;
@@ -41,7 +45,6 @@ namespace DynamicData.PLinq
         {
          //   var transformed = changes.Select(ToDestination);
 
-
             var transformed = changes.ShouldParallelise(_parallelisationOptions)
                 ? changes.Parallelise(_parallelisationOptions).Select(ToDestination).ToArray()
                 : changes.Select(ToDestination).ToArray();
@@ -58,13 +61,17 @@ namespace DynamicData.PLinq
                     var destination = _transformFactory(change.Current, change.Previous, change.Key);
                     return new TransformResult(change, destination);
                 }
+
                 return new TransformResult(change);
             }
             catch (Exception ex)
             {
                 //only handle errors if a handler has been specified
                 if (_exceptionCallback != null)
+                {
                     return new TransformResult(change, ex);
+                }
+
                 throw;
             }
         }
@@ -116,7 +123,6 @@ namespace DynamicData.PLinq
                 Success = true;
                 Key = change.Key;
             }
-
 
             public TransformResult(Change<TSource, TKey> change)
                 : this()

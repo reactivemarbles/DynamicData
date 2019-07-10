@@ -7,12 +7,11 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class EditDiffFixture: IDisposable
     {
         private readonly SourceCache<Person, string> _cache;
         private readonly ChangeSetAggregator<Person, string> _result;
-
 
         public  EditDiffFixture()
         {
@@ -26,8 +25,6 @@ namespace DynamicData.Tests.Cache
             _cache.Dispose();
             _result.Dispose();
         }
-
-
 
         [Fact]
         public void New()
@@ -85,7 +82,6 @@ namespace DynamicData.Tests.Cache
 
             _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
-
 
         [Fact]
         public void VariousChanges()
@@ -161,7 +157,6 @@ namespace DynamicData.Tests.Cache
 
             _cache.Items.ShouldAllBeEquivalentTo(newList);
         }
-
 
         [Fact]
         public void VariousChanges_WithEqualityComparer()

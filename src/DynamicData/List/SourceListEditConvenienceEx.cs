@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using DynamicData.Annotations;
@@ -24,8 +28,16 @@ namespace DynamicData
             [NotNull] IEnumerable<T> allItems,
             IEqualityComparer<T> equalityComparer = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (allItems == null) throw new ArgumentNullException(nameof(allItems));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (allItems == null)
+            {
+                throw new ArgumentNullException(nameof(allItems));
+            }
+
             var editDiff = new EditDiff<T>(source, equalityComparer);
             editDiff.Edit(allItems);
         }
@@ -37,7 +49,11 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         public static void Clear<T>([NotNull] this ISourceList<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.Clear());
         }
 
@@ -49,7 +65,11 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         public static void Add<T>([NotNull] this ISourceList<T> source, T item)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.Add(item));
         }
 
@@ -62,7 +82,11 @@ namespace DynamicData
         /// <param name="index">The index.</param>
         public static void Insert<T>([NotNull] this ISourceList<T> source, int index, T item)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.Insert(index, item));
         }
 
@@ -74,7 +98,11 @@ namespace DynamicData
         /// <param name="items">The items.</param>
         public static void AddRange<T>([NotNull] this ISourceList<T> source, IEnumerable<T> items)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.AddRange(items));
         }
 
@@ -87,7 +115,11 @@ namespace DynamicData
         /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
         public static void InsertRange<T>([NotNull] this ISourceList<T> source, IEnumerable<T> items, int index)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.AddRange(items, index));
         }
 
@@ -100,7 +132,11 @@ namespace DynamicData
         public static bool Remove<T>([NotNull] this ISourceList<T> source, T item)
         {
             bool removed = false;
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => removed = list.Remove(item));
             return removed;
         }
@@ -114,7 +150,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException"></exception>
         public static void RemoveMany<T>([NotNull] this ISourceList<T> source, IEnumerable<T> itemsToRemove)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.RemoveMany(itemsToRemove));
         }
 
@@ -126,7 +166,11 @@ namespace DynamicData
         /// <param name="destination">The destination.</param>
         public static void Move<T>([NotNull] this ISourceList<T> source, int original, int destination)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.Move(original, destination));
         }
 
@@ -141,7 +185,11 @@ namespace DynamicData
         /// <exception cref="T:System.ArgumentException"><paramref name="index" /> and <paramref name="count" /> do not denote a valid range of elements in the <see cref="T:System.Collections.Generic.List`1" />.</exception>
         public static void RemoveRange<T>([NotNull] this ISourceList<T> source, int index, int count)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.RemoveRange(index, count));
         }
 
@@ -153,7 +201,11 @@ namespace DynamicData
         /// <param name="index">The index.</param>
         public static void RemoveAt<T>([NotNull] this ISourceList<T> source, int index)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.RemoveAt(index));
         }
 
@@ -166,7 +218,11 @@ namespace DynamicData
         /// <param name="destination">The destination.</param>
         public static void Replace<T>([NotNull] this ISourceList<T> source, T original, T destination)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list.Replace(original, destination));
         }
 
@@ -179,7 +235,11 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         public static void ReplaceAt<T>([NotNull] this ISourceList<T> source, int index, T item)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             source.Edit(list => list[index] = item);
         }
     }

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Annotations;
@@ -18,7 +22,9 @@ namespace DynamicData
         internal static bool MovedWithinRange<T>(this Change<T> source, int startIndex, int endIndex)
         {
             if (source.Reason != ListChangeReason.Moved)
+            {
                 return false;
+            }
 
             var current = source.Item.CurrentIndex;
             var previous = source.Item.PreviousIndex;
@@ -40,8 +46,15 @@ namespace DynamicData
         /// </exception>
         public static void Clone<T>(this IList<T> source, IChangeSet<T> changes)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
 
             foreach (var item in changes)
             {
@@ -67,18 +80,22 @@ namespace DynamicData
                     {
                         source.Add(change.Current);
                     }
+
                     break;
                 }
+
                 case ListChangeReason.AddRange:
                 {
                     source.AddOrInsertRange(item.Range, item.Range.Index);
                     break;
                 }
+
                 case ListChangeReason.Clear:
                 {
                     source.ClearOrRemoveMany(item);
                     break;
                 }
+
                 case ListChangeReason.Replace:
                 {
                     var change = item.Item;
@@ -107,11 +124,11 @@ namespace DynamicData
                             source.Insert(change.CurrentIndex, change.Current);
                         }
 
-
                     }
 
                     break;
                 }
+
                 case ListChangeReason.Refresh:
                 {
                     if (changeAware != null)
@@ -127,6 +144,7 @@ namespace DynamicData
 
                     break;
                 }
+
                 case ListChangeReason.Remove:
                 {
                     var change = item.Item;
@@ -142,6 +160,7 @@ namespace DynamicData
 
                     break;
                 }
+
                 case ListChangeReason.RemoveRange:
                 {
                     //ignore this case because WhereReasonsAre removes the index [in which case call RemoveMany]
@@ -159,14 +178,17 @@ namespace DynamicData
 
                     break;
                 }
+
                 case ListChangeReason.Moved:
                 {
                     var change = item.Item;
                     bool hasIndex = change.CurrentIndex >= 0;
                     if (!hasIndex)
-                        throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+                        {
+                            throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+                        }
 
-                    var extendedList = source as IExtendedList<T>;
+                        var extendedList = source as IExtendedList<T>;
                     var observableCollection = source as ObservableCollection<T>;
                     if (extendedList != null)
                     {
@@ -182,6 +204,7 @@ namespace DynamicData
                         source.RemoveAt(change.PreviousIndex);
                         source.Insert(change.CurrentIndex, change.Current);
                     }
+
                     break;
                 }
             }
@@ -234,6 +257,11 @@ namespace DynamicData
         /// <returns></returns>
         public static int BinarySearch<TItem>(this IList<TItem> list, TItem value, IComparer<TItem> comparer)
         {
+            if (comparer == null)
+            {
+                throw new ArgumentNullException(nameof(comparer));
+            }
+
             return list.BinarySearch(value, comparer.Compare);
         }
 
@@ -251,10 +279,14 @@ namespace DynamicData
         public static int BinarySearch<TItem, TSearch>(this IList<TItem> list, TSearch value, Func<TSearch, TItem, int> comparer)
         {
             if (list == null)
+            {
                 throw new ArgumentNullException(nameof(list));
+            }
 
             if (comparer == null)
+            {
                 throw new ArgumentNullException(nameof(comparer));
+            }
 
             int lower = 0;
             int upper = list.Count - 1;
@@ -317,17 +349,29 @@ namespace DynamicData
         /// <returns></returns>
         public static int IndexOf<T>(this IEnumerable<T> source, T item, IEqualityComparer<T> equalityComparer)
         {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (equalityComparer == null)
+            {
+                throw new ArgumentNullException(nameof(equalityComparer));
+            }
+
             int i = 0;
             foreach (var candidate in source)
             {
                 if (equalityComparer.Equals(item, candidate))
+                {
                     return i;
+                }
 
                 i++;
             }
+
             return -1;
         }
-
 
         #endregion
 
@@ -346,8 +390,15 @@ namespace DynamicData
         /// </exception>
         public static void Add<T>(this IList<T> source, IEnumerable<T> items)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
 
             items.ForEach(source.Add);
         }
@@ -365,8 +416,15 @@ namespace DynamicData
         /// </exception>
         public static void AddRange<T>(this IList<T> source, IEnumerable<T> items)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
 
             if (source is List<T>)
             {
@@ -393,8 +451,15 @@ namespace DynamicData
         /// </exception>
         public static void AddRange<T>(this IList<T> source, IEnumerable<T> items, int index)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
 
             if (source is List<T>)
             {
@@ -421,8 +486,15 @@ namespace DynamicData
         /// </exception>
         public static void AddOrInsertRange<T>(this IList<T> source, IEnumerable<T> items, int index)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
 
             if (source is List<T>)
             {
@@ -475,8 +547,15 @@ namespace DynamicData
                 across the source collection IndexOf lookups can result in very slow updates
                 (especially for subsequent operators)
             */
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (itemsToRemove == null) throw new ArgumentNullException(nameof(itemsToRemove));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (itemsToRemove == null)
+            {
+                throw new ArgumentNullException(nameof(itemsToRemove));
+            }
 
             var toRemoveArray = itemsToRemove.AsArray();
 
@@ -493,7 +572,7 @@ namespace DynamicData
             if (hasDuplicates)
             {
                 //Slow remove but safe
-                toRemoveArray.ForEach(t => source.Remove(t));
+                toRemoveArray?.ForEach(t => source.Remove(t));
             }
             else
             {
@@ -513,7 +592,10 @@ namespace DynamicData
         /// <exception cref="System.NotSupportedException">Cannot remove range</exception>
         private static void RemoveRange<T>(this IList<T> source, int index, int count)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             if (source is List<T>)
             {
@@ -542,8 +624,15 @@ namespace DynamicData
         /// </exception>
         public static void Remove<T>(this IList<T> source, IEnumerable<T> items)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
 
             items.ForEach(t => source.Remove(t));
         }
@@ -560,16 +649,29 @@ namespace DynamicData
         /// items</exception>
         public static void Replace<T>(this IList<T> source, [NotNull] T original, [NotNull] T replacewith)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (original == null) throw new ArgumentNullException(nameof(original));
-            if (replacewith == null) throw new ArgumentNullException(nameof(replacewith));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (original == null)
+            {
+                throw new ArgumentNullException(nameof(original));
+            }
+
+            if (replacewith == null)
+            {
+                throw new ArgumentNullException(nameof(replacewith));
+            }
 
             var index = source.IndexOf(original);
             if (index==-1)
+            {
                 throw new ArgumentException("Cannot find index of original item. Either it does not exist in the list or the hashcode has mutated");
+            }
+
             source[index] = replacewith;
         }
-
 
         /// <summary>
         /// Replaces the item if found, otherwise the item is added to the list
@@ -582,9 +684,20 @@ namespace DynamicData
         /// </exception>
         public static void ReplaceOrAdd<T>(this IList<T> source, [NotNull] T original, [NotNull] T replacewith)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (original == null) throw new ArgumentNullException(nameof(original));
-            if (replacewith == null) throw new ArgumentNullException(nameof(replacewith));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (original == null)
+            {
+                throw new ArgumentNullException(nameof(original));
+            }
+
+            if (replacewith == null)
+            {
+                throw new ArgumentNullException(nameof(replacewith));
+            }
 
             var index = source.IndexOf(original);
             if (index == -1)
@@ -610,16 +723,36 @@ namespace DynamicData
         /// items</exception>
         public static void Replace<T>(this IList<T> source, [NotNull] T original, [NotNull] T replaceWith, IEqualityComparer<T> comparer)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (original == null) throw new ArgumentNullException(nameof(original));
-            if (replaceWith == null) throw new ArgumentNullException(nameof(replaceWith));
-            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (original == null)
+            {
+                throw new ArgumentNullException(nameof(original));
+            }
+
+            if (replaceWith == null)
+            {
+                throw new ArgumentNullException(nameof(replaceWith));
+            }
+
+            if (comparer == null)
+            {
+                throw new ArgumentNullException(nameof(comparer));
+            }
 
             var index = source.IndexOf(original);
             if (index == -1)
+            {
                 throw new ArgumentException("Cannot find index of original item. Either it does not exist in the list or the hashcode has mutated");
+            }
+
             if (comparer.Equals(source[index], replaceWith))
+            {
                 source[index] = replaceWith;
+            }
         }
 
         #endregion

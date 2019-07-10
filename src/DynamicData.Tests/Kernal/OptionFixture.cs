@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
-    
+
     public class OptionFixture
     {
         [Fact]

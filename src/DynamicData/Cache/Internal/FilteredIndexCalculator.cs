@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
 
@@ -7,7 +11,7 @@ namespace DynamicData.Cache.Internal
     internal class FilteredIndexCalculator<TObject, TKey>
     {
         public IList<Change<TObject, TKey>> Calculate(IKeyValueCollection<TObject, TKey> currentItems,
-                                                      IKeyValueCollection<TObject, TKey> previousItems, 
+                                                      IKeyValueCollection<TObject, TKey> previousItems,
                                                       IChangeSet<TObject, TKey> sourceUpdates)
         {
             if (currentItems.SortReason == SortReason.ComparerChanged || currentItems.SortReason== SortReason.InitialLoad)
@@ -24,7 +28,7 @@ namespace DynamicData.Cache.Internal
 
             var removes = previousItems.Except(currentItems, keyComparer).ToList();
             var adds = currentItems.Except(previousItems, keyComparer).ToList();
-            var inbothKeys = new HashSet<TKey>(previousItems.Intersect(currentItems, keyComparer).Select(x => x.Key)); 
+            var inbothKeys = new HashSet<TKey>(previousItems.Intersect(currentItems, keyComparer).Select(x => x.Key));
 
             var result = new List<Change<TObject, TKey>>();
             foreach (var remove in removes)
@@ -81,10 +85,15 @@ namespace DynamicData.Cache.Internal
                     var previousindex = previousList.IndexOf(current);
                     int desiredIndex = currentItems.IndexOf(current);
 
-                    if (previousindex == desiredIndex) continue;
-                    
+                    if (previousindex == desiredIndex)
+                    {
+                        continue;
+                    }
+
                     if (desiredIndex < 0)
+                    {
                         throw new SortException("Cannot determine current index");
+                    }
 
                     previousList.RemoveAt(previousindex);
                     previousList.Insert(desiredIndex, current);
@@ -109,7 +118,10 @@ namespace DynamicData.Cache.Internal
                 var current = new KeyValuePair<TKey, TObject>(u.Key, u.Current);
                 var old = previousList.IndexOf(current);
 
-                if (old == -1) continue;
+                if (old == -1)
+                {
+                    continue;
+                }
 
                 int newposition = GetInsertPositionLinear(previousList, current, currentItems.Comparer);
 
@@ -127,10 +139,11 @@ namespace DynamicData.Cache.Internal
                 previousList.Insert(newposition, current);
                 result.Add(new Change<TObject, TKey>(u.Key, u.Current, newposition, old));
             }
+
             return result;
         }
 
-        private int GetInsertPositionLinear(IList<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item,
+        private static int GetInsertPositionLinear(IList<KeyValuePair<TKey, TObject>> list, KeyValuePair<TKey, TObject> item,
                                             IComparer<KeyValuePair<TKey, TObject>> comparer)
         {
             for (var i = 0; i < list.Count; i++)
@@ -140,6 +153,7 @@ namespace DynamicData.Cache.Internal
                     return i;
                 }
             }
+
             return list.Count;
         }
     }

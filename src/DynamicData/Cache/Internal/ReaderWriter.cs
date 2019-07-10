@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
@@ -18,21 +22,30 @@ namespace DynamicData.Cache.Internal
 
         public ChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
         {
-            if (changes == null) throw new ArgumentNullException(nameof(changes));
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
 
             return DoUpdate(updater => updater.Clone(changes), previewHandler, collectChanges);
         }
 
         public ChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
 
             return DoUpdate(updateAction, previewHandler, collectChanges);
         }
 
         public ChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
         {
-            if (updateAction == null) throw new ArgumentNullException(nameof(updateAction));
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
 
             return DoUpdate(updateAction, previewHandler, collectChanges);
         }
@@ -86,6 +99,7 @@ namespace DynamicData.Cache.Internal
                 {
                     throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
                 }
+
                 updateAction(_activeUpdater);
             }
         }
@@ -101,7 +115,9 @@ namespace DynamicData.Cache.Internal
                 var dictionary = _data;
 
                 if (dictionary.Count == 0)
+                {
                     return ChangeSet<TObject, TKey>.Empty;
+                }
 
                 var changes = filter == null
                     ? new ChangeSet<TObject, TKey>(dictionary.Count)
@@ -110,7 +126,9 @@ namespace DynamicData.Cache.Internal
                 foreach (var kvp in dictionary)
                 {
                     if (filter == null || filter(kvp.Value))
+                    {
                         changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
+                    }
                 }
 
                 return changes;
@@ -165,7 +183,9 @@ namespace DynamicData.Cache.Internal
         public Optional<TObject> Lookup(TKey key)
         {
             lock (_locker)
+            {
                 return _data.Lookup(key);
+            }
         }
 
         public int Count
@@ -173,7 +193,9 @@ namespace DynamicData.Cache.Internal
             get
             {
                 lock (_locker)
+                {
                     return _data.Count;
+                }
             }
         }
 

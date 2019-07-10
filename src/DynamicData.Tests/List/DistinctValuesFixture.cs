@@ -6,12 +6,11 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class DistinctValuesFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<int> _results;
-
 
         public  DistinctValuesFixture()
         {

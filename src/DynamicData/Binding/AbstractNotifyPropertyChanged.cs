@@ -1,6 +1,11 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using DynamicData.Annotations;
@@ -51,7 +56,11 @@ namespace DynamicData.Binding
         protected virtual void SetAndRaise<T>(ref T backingField, T newValue, IEqualityComparer<T> comparer, [CallerMemberName] string propertyName = null)
         {
             comparer = comparer ?? EqualityComparer<T>.Default;
-            if (comparer.Equals(backingField, newValue)) return;
+            if (comparer.Equals(backingField, newValue))
+            {
+                return;
+            }
+
             backingField = newValue;
             OnPropertyChanged(propertyName);
         }
@@ -62,6 +71,7 @@ namespace DynamicData.Binding
         /// <returns></returns>
         /// 
         [Obsolete("This never worked properly in the first place")]
+        [SuppressMessage("Design", "CA1822: Make static", Justification = "Backwards compatibility")]
         public IDisposable SuspendNotifications(bool invokePropertyChangeEventWhenDisposed = true)
         {
 

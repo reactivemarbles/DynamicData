@@ -34,7 +34,7 @@ namespace DynamicData.Tests.Cache
                 .Clone(_target)
                 .Subscribe();
         }
-        
+
         [Fact]
         public void ShouldLimitSizeOfBoundCollection()
         {

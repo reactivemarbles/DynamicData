@@ -12,7 +12,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class SortMutableFixture: IDisposable
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
@@ -20,7 +20,6 @@ namespace DynamicData.Tests.List
         private readonly ISubject<IComparer<Person>> _changeComparer;
         private readonly ISubject<Unit> _resort;
         private readonly ChangeSetAggregator<Person> _results;
-
 
         private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>
             .Ascending(p => p.Age)
@@ -63,7 +62,6 @@ namespace DynamicData.Tests.List
 
             var shouldbeLast = new Person("__A", 10000);
             _source.Add(shouldbeLast);
-
 
             _results.Data.Count.Should().Be(101);
 
@@ -141,14 +139,12 @@ namespace DynamicData.Tests.List
             var people = _generator.Take(10).ToList();
             _source.AddRange(people);
 
-
             people[0].Age = -1;
             people[1].Age = -10;
             people[2].Age = -12;
             people[3].Age = -5;
             people[4].Age = -7;
             people[5].Age = -6;
-
 
             var comparer = SortExpressionComparer<Person>.Descending(p => p.Age)
                 .ThenByAscending(p => p.Name);
@@ -161,7 +157,6 @@ namespace DynamicData.Tests.List
             //actualResult.(expectedResult);
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
-
 
         [Fact]
         public void RemoveManyOdds()
@@ -217,7 +212,6 @@ namespace DynamicData.Tests.List
 
             actualResult.ShouldAllBeEquivalentTo(expectedResult);
         }
-
 
         [Fact]
         public void UpdateMoreThanThreshold()

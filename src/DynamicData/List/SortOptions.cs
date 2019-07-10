@@ -1,10 +1,14 @@
 ﻿
 // ReSharper disable once CheckNamespace
+
+using System.Diagnostics.CodeAnalysis;
+
 namespace DynamicData
 {
     /// <summary>
     /// Options for sorting
     /// </summary>
+    [SuppressMessage("Design", "CA1717: Only flags should have plural names", Justification = "Backwards compatibility")]
     public enum SortOptions
     {
         /// <summary>

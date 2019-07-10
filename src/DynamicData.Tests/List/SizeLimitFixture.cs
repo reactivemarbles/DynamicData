@@ -7,7 +7,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class SizeLimitFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
@@ -15,7 +15,6 @@ namespace DynamicData.Tests.List
         private readonly TestScheduler _scheduler;
         private readonly IDisposable _sizeLimiter;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-
 
         public  SizeLimitFixture()
         {

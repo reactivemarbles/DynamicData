@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +16,6 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservableList<IObservable<IChangeSet<TObject, TKey>>> _source;
 
-
-
-
         private readonly CombineOperator _type;
 
         public DynamicCombiner([NotNull] IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
@@ -22,8 +23,6 @@ namespace DynamicData.Cache.Internal
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _type = type;
         }
-
-
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
@@ -33,7 +32,6 @@ namespace DynamicData.Cache.Internal
 
                 //this is the resulting cache which produces all notifications
                 var resultCache = new ChangeAwareCache<TObject, TKey>();
-
 
                 //Transform to a merge container. 
                 //This populates a RefTracker when the original source is subscribed to
@@ -55,7 +53,9 @@ namespace DynamicData.Cache.Internal
 
                         var notifications = resultCache.CaptureChanges();
                         if (notifications.Count != 0)
+                        {
                             observer.OnNext(notifications);
+                        }
                     });
 
                 //when an list is removed, need to 
@@ -73,7 +73,9 @@ namespace DynamicData.Cache.Internal
 
                         var notifications = resultCache.CaptureChanges();
                         if (notifications.Count != 0)
+                        {
                             observer.OnNext(notifications);
+                        }
                     })
                     .Subscribe();
 
@@ -85,11 +87,15 @@ namespace DynamicData.Cache.Internal
                         ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Current.Cache.KeyValues);
 
                         if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                        {
                             ProcessChanges(resultCache, sourceLists.Items.AsArray(), resultCache.KeyValues.ToArray());
+                        }
 
                         var notifications = resultCache.CaptureChanges();
                         if (notifications.Count != 0)
+                        {
                             observer.OnNext(notifications);
+                        }
                     })
                     .Subscribe();
 
@@ -100,7 +106,9 @@ namespace DynamicData.Cache.Internal
         private void UpdateResultList(ChangeAwareCache<TObject, TKey> target, MergeContainer[] sourceLists, IChangeSet<TObject, TKey> changes)
         {
             foreach (var change in changes.ToConcreteType())
+            {
                 ProcessItem(target, sourceLists, change.Current, change.Key);
+            }
         }
 
         private void ProcessChanges(ChangeAwareCache<TObject, TKey> target, MergeContainer[] sourceLists, IEnumerable<KeyValuePair<TKey, TObject>> items)
@@ -112,12 +120,16 @@ namespace DynamicData.Cache.Internal
                 //zero allocation enumerator
                 var enumerable = EnumerableIList.Create(list);
                 foreach (var item in enumerable)
+                {
                     ProcessItem(target, sourceLists, item.Value, item.Key);
+                }
             }
             else
             {
                 foreach (var item in items)
+                {
                     ProcessItem(target, sourceLists, item.Value, item.Key);
+                }
             }
         }
 
@@ -140,14 +152,18 @@ namespace DynamicData.Cache.Internal
             else
             {
                 if (cached.HasValue)
+                {
                     target.Remove(key);
+                }
             }
         }
 
         private bool MatchesConstraint(MergeContainer[] sources, TKey key)
         {
             if (sources.Length == 0)
+            {
                 return false;
+            }
 
             switch (_type)
             {
@@ -155,22 +171,26 @@ namespace DynamicData.Cache.Internal
                 {
                     return sources.All(s => s.Cache.Lookup(key).HasValue);
                 }
+
                 case CombineOperator.Or:
                 {
                     return sources.Any(s => s.Cache.Lookup(key).HasValue);
                 }
+
                 case CombineOperator.Xor:
                 {
                     return sources.Count(s => s.Cache.Lookup(key).HasValue) == 1;
                 }
+
                 case CombineOperator.Except:
                 {
                     bool first = sources.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
                     bool others = sources.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
                     return first && !others;
                 }
+
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(key));
             }
         }
 

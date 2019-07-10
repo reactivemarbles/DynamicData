@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -47,6 +51,7 @@ namespace DynamicData.Cache.Internal
                                     var group = (ManagedGroup<TObject, TKey, TGroupKey>)child.Value;
                                     result.Update(updater => updater.Clone(group.GetInitialUpdates()));
                                 }
+
                                 return result;
                             })
                             .DisposeMany()

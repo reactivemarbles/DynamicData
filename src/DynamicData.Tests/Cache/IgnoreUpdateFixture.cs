@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class IgnoreUpdateFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;

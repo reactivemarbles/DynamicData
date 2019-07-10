@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System.Collections.Generic;
 using System.Linq;
 
@@ -81,6 +85,7 @@ namespace DynamicData.Cache.Internal
                     {
                         continue;
                     }
+
                     var old = _list.IndexOf(current);
                     _list.RemoveAt(old);
                     _list.Insert(index, current);
@@ -114,6 +119,7 @@ namespace DynamicData.Cache.Internal
 
                             result.Add(new Change<TObject, TKey>(ChangeReason.Add, u.Key, u.Current, position));
                         }
+
                         break;
 
                     case ChangeReason.Update:
@@ -129,6 +135,7 @@ namespace DynamicData.Cache.Internal
                                                                  u.Key,
                                                                  u.Current, u.Previous, newposition, old));
                         }
+
                         break;
 
                     case ChangeReason.Remove:
@@ -137,6 +144,7 @@ namespace DynamicData.Cache.Internal
                             _list.RemoveAt(position);
                             result.Add(new Change<TObject, TKey>(ChangeReason.Remove, u.Key, u.Current, position));
                         }
+
                         break;
 
                     case ChangeReason.Refresh:
@@ -144,6 +152,7 @@ namespace DynamicData.Cache.Internal
                             refreshes.Add(u);
                             result.Add(u);
                         }
+
                         break;
                 }
             }
@@ -165,15 +174,22 @@ namespace DynamicData.Cache.Internal
                 {
                     var current = new KeyValuePair<TKey, TObject>(u.Key, u.Current);
                     var old = _list.IndexOf(current);
-                    if (old == -1) continue;
+                    if (old == -1)
+                    {
+                        continue;
+                    }
 
                     int newposition = GetInsertPositionLinear(_list, current);
 
                     if (old < newposition)
+                    {
                         newposition--;
+                    }
 
                     if (old == newposition)
+                    {
                         continue;
+                    }
 
                     _list.RemoveAt(old);
                     _list.Insert(newposition, current);
@@ -197,15 +213,20 @@ namespace DynamicData.Cache.Internal
                 index = _list.BinarySearch(item, _comparer);
 
                 if (index < 0)
+                {
                     throw new SortException("Current position cannot be found.  Ensure the comparer includes a unique value, or do not specify ComparesImmutableValuesOnly");
+                }
             }
             else
             {
                 index = _list.IndexOf(item);
 
                 if (index < 0)
+                {
                     throw new SortException("Current position cannot be found. The item is not in the collection");
+                }
             }
+
             return index;
         }
 
@@ -214,8 +235,11 @@ namespace DynamicData.Cache.Internal
             for (var i = 0; i < list.Count; i++)
             {
                 if (_comparer.Compare(item, list[i]) < 0)
+                {
                     return i;
+                }
             }
+
             return _list.Count;
         }
 
@@ -227,7 +251,10 @@ namespace DynamicData.Cache.Internal
             {
                 var indx = index;
                 index = _list.BinarySearch(indx - 1, _list.Count - indx, item, _comparer);
-                if (index > 0) return indx;
+                if (index > 0)
+                {
+                    return indx;
+                }
             }
 
             int insertIndex = ~index;

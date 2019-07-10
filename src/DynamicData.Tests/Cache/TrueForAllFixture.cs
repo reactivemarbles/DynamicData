@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class TrueForAllFixture: IDisposable
     {
         private readonly ISourceCache<ObjectWithObservable, int> _source;
@@ -71,7 +71,6 @@ namespace DynamicData.Tests.Cache
             item2.InvokeObservable(true);
             item3.InvokeObservable(true);
             valuereturned.Value.Should().Be(true, "Value should be true");
-
 
             subscribed.Dispose();
         }

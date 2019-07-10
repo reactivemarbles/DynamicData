@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
@@ -16,6 +20,7 @@ namespace DynamicData.Tests
         private readonly IDisposable _disposer;
         private ChangeSummary _summary = ChangeSummary.Empty;
         private Exception _error;
+        private bool _isDisposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistinctChangeSetAggregator{TValue}"/> class.
@@ -64,11 +69,28 @@ namespace DynamicData.Tests
         public Exception Error => _error;
 
         /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
         {
-            _disposer.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
+
+        protected virtual void Dispose(bool isDisposing)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
+            if (isDisposing)
+            {
+                _disposer?.Dispose();
+            }
+        }
+
     }
 }

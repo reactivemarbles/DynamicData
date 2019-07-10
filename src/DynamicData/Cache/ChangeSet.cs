@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System.Collections.Generic;
 using System.Linq;
 
 // ReSharper disable once CheckNamespace
@@ -18,7 +22,6 @@ namespace DynamicData
         public static ChangeSet<TObject, TKey> ToConcreteType<TObject, TKey>(this IChangeSet<TObject, TKey> changeset) => (ChangeSet<TObject, TKey>)changeset;
     }
 
-
     /// <summary>
     /// A collection of changes
     /// </summary>
@@ -35,7 +38,7 @@ namespace DynamicData
         }
 
         /// <inheritdoc />
-        public ChangeSet(IEnumerable<Change<TObject, TKey>> collection) 
+        public ChangeSet(IEnumerable<Change<TObject, TKey>> collection)
             : base(collection)
         {
         }
@@ -44,7 +47,7 @@ namespace DynamicData
         public ChangeSet(int capacity) : base(capacity)
         {
         }
-        
+
         /// <inheritdoc />
         public int Adds => this.Count(c => c.Reason == ChangeReason.Add);
 
@@ -59,7 +62,6 @@ namespace DynamicData
 
         /// <inheritdoc />
         public int Moves => this.Count(c => c.Reason == ChangeReason.Moved);
-
 
         /// <inheritdoc />
         public override string ToString()

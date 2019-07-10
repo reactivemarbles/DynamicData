@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class ChangeAwareListFixture
     {
         private ChangeAwareList<int> _list;
@@ -206,7 +206,6 @@ namespace DynamicData.Tests.List
             _list.Count.Should().Be(0);
         }
 
-
         [Fact]
         public void RefreshAt()
         {
@@ -221,7 +220,6 @@ namespace DynamicData.Tests.List
             changes.Refreshes.Should().Be(1);
             changes.First().Reason.Should().Be(ListChangeReason.Refresh);
             changes.First().Item.Current.Should().Be(1);
-
 
             Assert.Throws<ArgumentException>(() => _list.RefreshAt(-1));
             Assert.Throws<ArgumentException>(() => _list.RefreshAt(1000));
@@ -246,8 +244,6 @@ namespace DynamicData.Tests.List
             _list.Refresh(-1).Should().Be(false);
             _list.Refresh(1000).Should().Be(false);
         }
-
-
 
         [Fact]
         public void ThrowWhenRemovingItemOutsideOfBoundaries()

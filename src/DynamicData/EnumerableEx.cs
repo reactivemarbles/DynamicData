@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -31,8 +35,15 @@ namespace DynamicData
             Func<TObject, TKey> keySelector,
             bool completable = false)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
 
             return Observable.Create<IChangeSet<TObject, TKey>>(obs =>
             {
@@ -43,13 +54,13 @@ namespace DynamicData
                 {
                     obs.OnCompleted();
                 }
+
                 return Disposable.Empty;
             });
         }
 
         #endregion
 
-        
         #region Populate change set from standard enumerable
 
         /// <summary>
@@ -63,7 +74,10 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject>> AsObservableChangeSet<TObject>(this IEnumerable<TObject> source,
             bool completable = false)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
             return Observable.Create<IChangeSet<TObject>>(obs =>
             {
@@ -74,6 +88,7 @@ namespace DynamicData
                 {
                     obs.OnCompleted();
                 }
+
                 return Disposable.Empty;
             });
         }

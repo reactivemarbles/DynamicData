@@ -33,7 +33,7 @@ namespace DynamicData.Tests.List
                 .Finally(()=> complete = true)
                 .AsObservableList())
             using (myList.Connect().Subscribe(result => changes = result, ex => error = ex))
-            {         
+            {
                 if (!expectsError)
                 {
                     error.Should().BeNull();
@@ -43,6 +43,7 @@ namespace DynamicData.Tests.List
                     error.Should().NotBeNull();
                 }
             }
+
             complete.Should().BeTrue();
         }
     }

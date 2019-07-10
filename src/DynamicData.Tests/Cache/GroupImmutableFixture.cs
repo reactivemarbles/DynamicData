@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class GroupImmutableFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
@@ -24,8 +24,6 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
             _results.Dispose();
         }
-
-
 
         [Fact]
         public void Add()
@@ -159,7 +157,9 @@ namespace DynamicData.Tests.Cache
 
             //do an inline update
             foreach (var person in initialPeople)
+            {
                 person.Age = person.Age + 1;
+            }
 
             //signal operators to evaluate again
             _source.Refresh();

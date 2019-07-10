@@ -5,12 +5,11 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class ReverseFixture: IDisposable
     {
         private readonly ISourceList<int> _source;
         private readonly ChangeSetAggregator<int> _results;
-
 
         public  ReverseFixture()
         {

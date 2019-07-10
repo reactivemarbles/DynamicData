@@ -7,7 +7,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class SelectFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;

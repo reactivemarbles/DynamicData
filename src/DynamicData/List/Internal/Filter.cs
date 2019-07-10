@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +41,7 @@ namespace DynamicData.List.Internal
             return Observable.Create<IChangeSet<T>>(observer =>
             {
                 var locker = new object();
-                
+
                 Func<T, bool> predicate = t => false;
                 var all = new List<ItemWithMatch>();
                 var filtered = new ChangeAwareList<ItemWithMatch>();
@@ -78,10 +82,14 @@ namespace DynamicData.List.Internal
                     .Select(changes =>
                     {
                         //keep track of all changes if filtering on an observable
-                        if (!immutableFilter) all.Clone(changes);
+                        if (!immutableFilter)
+                        {
+                            all.Clone(changes);
+                        }
+
                         return Process(filtered, changes);
                     });
-                
+
                 return predicateChanged.Merge(filteredResult)
                             .NotEmpty()
                             .Select(changes => changes.Transform(iwm => iwm.Item)) // use convert, not transform
@@ -89,7 +97,7 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
+        private static IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
         {
             //Maintain all items as well as filtered list. This enables us to a) requery when the predicate changes b) check the previous state when Refresh is called
             foreach (var item in changes)
@@ -100,15 +108,20 @@ namespace DynamicData.List.Internal
                     {
                         var change = item.Item;
                         if (change.Current.IsMatch)
-                            filtered.Add(change.Current);
-                        break;
+                            {
+                                filtered.Add(change.Current);
+                            }
+
+                            break;
                     }
+
                     case ListChangeReason.AddRange:
                     {
                         var matches = item.Range.Where(t => t.IsMatch).ToList();
                         filtered.AddRange(matches);
                         break;
                     }
+
                     case ListChangeReason.Replace:
                     {
                         var change = item.Item;
@@ -134,10 +147,14 @@ namespace DynamicData.List.Internal
                         else
                         {
                             if (wasMatch)
-                                filtered.Remove(change.Previous.Value);
-                        }
+                                {
+                                    filtered.Remove(change.Previous.Value);
+                                }
+                            }
+
                         break;
                     }
+
                     case ListChangeReason.Refresh:
                     {
                         var change = item.Item;
@@ -162,20 +179,26 @@ namespace DynamicData.List.Internal
                         else
                         {
                             if (wasMatch)
-                                filtered.Remove(change.Current);
-                        }
+                                {
+                                    filtered.Remove(change.Current);
+                                }
+                            }
+
                         break;
                     }
+
                     case ListChangeReason.Remove:
                     {
                         filtered.Remove(item.Item.Current);
                         break;
                     }
+
                     case ListChangeReason.RemoveRange:
                     {
                         filtered.RemoveMany(item.Range);
                         break;
                     }
+
                     case ListChangeReason.Clear:
                     {
                         filtered.ClearOrRemoveMany(item);
@@ -184,12 +207,16 @@ namespace DynamicData.List.Internal
                 }
 
             }
+
             return filtered.CaptureChanges();
         }
 
         private IChangeSet<ItemWithMatch> Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
         {
-            if (all.Count == 0) return ChangeSet<ItemWithMatch>.Empty;
+            if (all.Count == 0)
+            {
+                return ChangeSet<ItemWithMatch>.Empty;
+            }
 
             if (_policy == ListFilterPolicy.ClearAndReplace)
             {
@@ -198,13 +225,13 @@ namespace DynamicData.List.Internal
                 //mark items as matched?
                 filtered.Clear();
                 filtered.AddRange(itemsWithMatch.Where(iwm => iwm.IsMatch));
-                
+
                 //reset state for all items
                 all.Clear();
                 all.AddRange(itemsWithMatch);
                 return filtered.CaptureChanges();
             }
-            
+
             var toAdd = new List<ItemWithMatch>(all.Count);
             var toRemove = new List<ItemWithMatch>(all.Count);
 
@@ -254,8 +281,16 @@ namespace DynamicData.List.Internal
 
             public override bool Equals(object obj)
             {
-                if (obj is null) return false;
-                if (obj.GetType() != GetType()) return false;
+                if (obj is null)
+                {
+                    return false;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((ItemWithMatch) obj);
             }
 

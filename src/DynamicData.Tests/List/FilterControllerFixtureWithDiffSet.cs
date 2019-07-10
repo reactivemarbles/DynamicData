@@ -7,7 +7,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class FilterControllerFixtureWithDiffSet : IDisposable
     {
         private readonly ISourceList<Person> _source;
@@ -55,6 +55,7 @@ namespace DynamicData.Tests.List
             {
                 person.Age = person.Age + 10;
             }
+
             _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(90, "Should be 90 people in the cache");
@@ -65,6 +66,7 @@ namespace DynamicData.Tests.List
             {
                 person.Age = person.Age - 10;
             }
+
             _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");

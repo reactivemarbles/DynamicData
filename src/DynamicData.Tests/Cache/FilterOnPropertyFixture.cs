@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class FilterOnPropertyFixture
     {
         [Fact]
@@ -73,7 +73,6 @@ namespace DynamicData.Tests.Cache
         {
             public ISourceCache<Person, string> Source { get; } = new SourceCache<Person, string>(p => p.Name);
             public ChangeSetAggregator<Person, string> Results { get; }
-
 
             public FilterPropertyStub()
             {

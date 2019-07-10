@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
-    
+
     public class CacheUpdaterFixture
     {
         private readonly ChangeAwareCache<Person, string> _cache;
@@ -18,8 +18,6 @@ namespace DynamicData.Tests.Kernal
             _cache = new ChangeAwareCache<Person, string>();
             _updater = new CacheUpdater<Person, string>(_cache);
         }
-
-
 
         [Fact]
         public void Add()

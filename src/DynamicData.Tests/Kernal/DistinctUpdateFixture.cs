@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
-    
+
     public class DistinctUpdateFixture
     {
         [Fact]

@@ -9,13 +9,12 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class FilterControllerFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
         private readonly ISubject<Func<Person, bool>> _filter;
-
 
         public  FilterControllerFixture()
         {
@@ -109,6 +108,7 @@ namespace DynamicData.Tests.Cache
             {
                 person.Age = person.Age + 10;
             }
+
             _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(90, "Should be 90 people in the cache");
@@ -119,13 +119,13 @@ namespace DynamicData.Tests.Cache
             {
                 person.Age = person.Age - 10;
             }
+
             _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");
             _results.Messages.Count.Should().Be(3, "Should be 3 update messages");
             _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third message");
         }
-
 
         #region Static filter tests
 

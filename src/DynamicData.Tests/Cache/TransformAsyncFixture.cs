@@ -4,7 +4,6 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using DynamicData.Tests.Domain;
 
-
 namespace DynamicData.Tests.Cache
 {
     [Obsolete("Not obsolete - test commented out due to test run freezing on Appveyor")]
@@ -168,7 +167,6 @@ namespace DynamicData.Tests.Cache
         //    }
         //}
 
-
         //[Fact]
         //public void HandleError()
         //{
@@ -185,7 +183,6 @@ namespace DynamicData.Tests.Cache
         //        Exception error = null;
         //        stub.Source.Connect()
         //            .Subscribe(changes => { }, ex => error = ex);
-
 
         //        error.Should().NotBeNull();
 
@@ -212,6 +209,7 @@ namespace DynamicData.Tests.Cache
                     Source.Connect().TransformAsync(TransformFactory)
                 );
             }
+
             public TransformStub(Func<Person, PersonWithGender> factory)
             {
                 TransformFactory = (p) =>

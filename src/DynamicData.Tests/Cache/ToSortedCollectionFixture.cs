@@ -55,7 +55,7 @@ namespace DynamicData.Tests.Cache
                     _sortedCollection.AddRange(persons);
                 })
                 .Subscribe());
-                
+
             // Insert an item with a lower sort order
             _cache.AddOrUpdate(new Person("Name", 0));
 

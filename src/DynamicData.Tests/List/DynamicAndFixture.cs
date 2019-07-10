@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class DynamicAndFixture: IDisposable
     {
         private readonly ISourceList<int> _source1;

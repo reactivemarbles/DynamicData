@@ -26,7 +26,6 @@ namespace DynamicData.Tests.Cache
                 .Subscribe(x => { }, () => _hasCompleted = true);
         }
 
-
         [Fact]
         public void ShouldReceiveUpdatesThenComplete()
         {

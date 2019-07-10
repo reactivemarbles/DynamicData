@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 
 // ReSharper disable once CheckNamespace
@@ -6,6 +10,7 @@ namespace DynamicData
     /// <summary>
     /// Thrown when an index is expected but not specified
     /// </summary>
+    [Serializable]
     public class UnspecifiedIndexException : Exception
     {
         /// <summary>
@@ -31,6 +36,11 @@ namespace DynamicData
         /// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
         public UnspecifiedIndexException(string message, Exception innerException)
             : base(message, innerException)
+        {
+        }
+
+        protected UnspecifiedIndexException(System.Runtime.Serialization.SerializationInfo serializationInfo, System.Runtime.Serialization.StreamingContext streamingContext)
+            : base(serializationInfo, streamingContext)
         {
         }
     }

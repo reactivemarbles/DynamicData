@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -39,12 +43,18 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">items</exception>
         public ChangeSet([NotNull] IEnumerable<Change<T>> items)
         {
-            if (items == null) throw new ArgumentNullException(nameof(items));
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
             var list = items as List<Change<T>> ?? items.ToList();
 
             Items = list;
             foreach (var change in list)
+            {
                 Add(change, true);
+            }
         }
 
         /// <summary>
@@ -53,6 +63,11 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         public void Add(Change<T> item)
         {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
+
             Add(item, false);
         }
 
@@ -90,9 +105,13 @@ namespace DynamicData
                     _removes = _removes + item.Range.Count;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(item));
             }
-            if (!countOnly) Items.Add(item);
+
+            if (!countOnly)
+            {
+                Items.Add(item);
+            }
         }
 
         /// <summary>
@@ -107,7 +126,7 @@ namespace DynamicData
             set => Items.Capacity = value;
         }
 
-        private List<Change<T>> Items { get; } 
+        private List<Change<T>> Items { get; }
 
         /// <summary>
         ///     Gets the number of additions

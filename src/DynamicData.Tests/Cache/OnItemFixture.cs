@@ -17,7 +17,7 @@ namespace DynamicData.Tests.Cache
                 .Subscribe();
 
             var person = new Person("A", 1);
-            
+
             source.AddOrUpdate(person);
             Assert.True(called);
         }

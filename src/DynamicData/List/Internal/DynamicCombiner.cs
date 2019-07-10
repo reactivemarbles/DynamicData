@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +48,9 @@ namespace DynamicData.List.Internal
                                                 //Populate result list and chck for changes
                                                 var notifications = UpdateResultList(sourceLists.Items.AsArray(), resultList, changes);
                                                 if (notifications.Count != 0)
+                                                {
                                                     observer.OnNext(notifications);
+                                                }
                                             });
 
                 //when an list is removed, need to 
@@ -54,14 +60,18 @@ namespace DynamicData.List.Internal
                                                  //Remove items if required
                                                  var notifications = ProcessChanges(sourceLists.Items.AsArray(), resultList, mc.Tracker.Items);
                                                  if (notifications.Count != 0)
+                                                 {
                                                      observer.OnNext(notifications);
+                                                 }
 
                                                  if (_type == CombineOperator.And || _type == CombineOperator.Except)
                                                  {
                                                      var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Tracker.Items).ToArray();
                                                      var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultList, itemsToCheck);
                                                      if (notification2.Count != 0)
+                                                     {
                                                          observer.OnNext(notification2);
+                                                     }
                                                  }
                                              })
                                              .Subscribe();
@@ -73,13 +83,17 @@ namespace DynamicData.List.Internal
                                                {
                                                    var notifications = ProcessChanges(sourceLists.Items.AsArray(), resultList, mc.Current.Tracker.Items);
                                                    if (notifications.Count != 0)
+                                                   {
                                                        observer.OnNext(notifications);
+                                                   }
 
                                                    if (_type == CombineOperator.And || _type == CombineOperator.Except)
                                                    {
                                                        var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultList, resultList.ToArray());
                                                        if (notification2.Count != 0)
+                                                       {
                                                            observer.OnNext(notification2);
+                                                       }
                                                    }
                                                })
                                                .Subscribe();
@@ -111,19 +125,25 @@ namespace DynamicData.List.Internal
             if (shouldBeInResult)
             {
                 if (!isInResult)
+                {
                     resultingList.Add(item);
+                }
             }
             else
             {
                 if (isInResult)
+                {
                     resultingList.Remove(item);
+                }
             }
         }
 
         private bool MatchesConstraint(MergeContainer[] sourceLists, T item)
         {
             if (sourceLists.Length == 0)
+            {
                 return false;
+            }
 
             switch (_type)
             {
@@ -131,22 +151,26 @@ namespace DynamicData.List.Internal
                     {
                         return sourceLists.All(s => s.Tracker.Contains(item));
                     }
+
                 case CombineOperator.Or:
                     {
                         return sourceLists.Any(s => s.Tracker.Contains(item));
                     }
+
                 case CombineOperator.Xor:
                     {
                         return sourceLists.Count(s => s.Tracker.Contains(item)) == 1;
                     }
+
                 case CombineOperator.Except:
                     {
                         var first = sourceLists[0].Tracker.Contains(item);
                         var others = sourceLists.Skip(1).Any(s => s.Tracker.Contains(item));
                         return first && !others;
                     }
+
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new IndexOutOfRangeException("Unknown CombineOperator " + _type);
             }
         }
 
@@ -171,7 +195,10 @@ namespace DynamicData.List.Internal
                             break;
                         case ListChangeReason.AddRange:
                             foreach (var t in change.Range)
+                            {
                                 Tracker.Add(t);
+                            }
+
                             break;
                         case ListChangeReason.Replace:
                             Tracker.Remove(change.Item.Previous.Value);
@@ -183,7 +210,10 @@ namespace DynamicData.List.Internal
                         case ListChangeReason.RemoveRange:
                         case ListChangeReason.Clear:
                             foreach (var t in change.Range)
+                            {
                                 Tracker.Remove(t);
+                            }
+
                             break;
                     }
                 }

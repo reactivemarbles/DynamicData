@@ -21,13 +21,11 @@ namespace DynamicData.Tests.Cache
                 .AsAggregator();
         }
 
-
         public void Dispose()
         {
             _people.Dispose();
             _result.Dispose();
         }
-
 
         [Fact]
         public void AddLeftOnly()
@@ -41,7 +39,6 @@ namespace DynamicData.Tests.Cache
             _result.Data.Count.Should().Be(1);
             _result.Data.Items.First().Parent.Should().BeNull();
         }
-
 
         [Fact]
         public void AddPeopleWithParents()
@@ -124,7 +121,6 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
 
-
         [Fact]
         public void RemoveChild()
         {
@@ -146,19 +142,20 @@ namespace DynamicData.Tests.Cache
             AssertDataIsCorrectlyFormed(updatedPeople, last.Name);
         }
 
-
         private void AssertDataIsCorrectlyFormed(Person[] allPeople, params string[] missingParents)
         {
             var grouped = allPeople.GroupBy(p => p.ParentName)
                 .Where(p => p.Any() && !missingParents.Contains(p.Key))
                 .AsArray();
 
-
             _result.Data.Count.Should().Be(grouped.Length);
 
             grouped.ForEach(grouping =>
             {
-                if (missingParents.Length > 0 && missingParents.Contains(grouping.Key)) return;
+                if (missingParents.Length > 0 && missingParents.Contains(grouping.Key))
+                {
+                    return;
+                }
 
                 var result = _result.Data.Lookup(grouping.Key)
                     .ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
@@ -168,18 +165,22 @@ namespace DynamicData.Tests.Cache
             });
         }
 
-
-
         private int CalculateParent(int index, int totalPeople)
         {
             if (index < 5)
+            {
                 return 11;
+            }
 
             if (index == totalPeople - 1)
+            {
                 return 1;
+            }
 
             if (index == totalPeople)
+            {
                 return 1;
+            }
 
             return index + 1;
         }

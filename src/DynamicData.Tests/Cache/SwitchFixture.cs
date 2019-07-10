@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class SwitchFixture: IDisposable
     {
         private readonly ISubject<ISourceCache<Person, string>> _switchable;
@@ -26,7 +26,7 @@ namespace DynamicData.Tests.Cache
             _source.Dispose();
             _results.Dispose();
         }
-        
+
         [Fact]
         public void PoulatesFirstSource()
         {
@@ -48,7 +48,7 @@ namespace DynamicData.Tests.Cache
             _switchable.OnNext(newSource);
 
             _results.Data.Count.Should().Be(0);
-            
+
             newSource.AddOrUpdate(inital);
             _results.Data.Count.Should().Be(100);
 

@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class BufferFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;

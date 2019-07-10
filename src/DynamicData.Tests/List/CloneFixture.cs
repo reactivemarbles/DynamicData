@@ -8,7 +8,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class CloneFixture: IDisposable
     {
         private readonly ICollection<Person> _collection = new Collection<Person>();
@@ -16,7 +16,6 @@ namespace DynamicData.Tests.List
 
         private readonly IDisposable _cloner;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-
 
         public  CloneFixture()
         {

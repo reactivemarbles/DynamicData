@@ -7,7 +7,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class ExpireAfterFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;
@@ -34,10 +34,15 @@ namespace DynamicData.Tests.List
             TimeSpan? RemoveFunc(Person t)
             {
                 if (t.Age <= 40)
+                {
                     return TimeSpan.FromSeconds(5);
+                }
 
                 if (t.Age <= 80)
+                {
                     return TimeSpan.FromSeconds(7);
+                }
+
                 return null;
             }
 

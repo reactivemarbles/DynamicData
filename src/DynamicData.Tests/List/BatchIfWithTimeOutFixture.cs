@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class BatchIfWithTimeOutFixture: IDisposable
     {
         private readonly ISourceList<Person> _source;

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -92,8 +96,16 @@ namespace DynamicData.Aggregation
                                                                         TResult emptyValue = default(TResult))
             where TResult : struct, IComparable<TResult>
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.Scan(default(TResult?), (state, latest) =>
             {
                 var current = state;
@@ -111,13 +123,19 @@ namespace DynamicData.Aggregation
                     {
                         int isMatched = maxOrMin == MaxOrMin.Max ? 1 : -1;
                         if (value.CompareTo(current.Value) == isMatched)
+                        {
                             current = value;
+                        }
                     }
                     else
                     {
                         //check whether the max / min has been removed. If so we need to look 
                         //up the latest from the underlying collection
-                        if (value.CompareTo(current.Value) != 0) continue;
+                        if (value.CompareTo(current.Value) != 0)
+                        {
+                            continue;
+                        }
+
                         requiresReset = true;
                         break;
                     }
@@ -137,6 +155,7 @@ namespace DynamicData.Aggregation
                             : collecton.Min(valueSelector);
                     }
                 }
+
                 return current;
             })
                          .Select(t => t ?? emptyValue)
@@ -147,7 +166,11 @@ namespace DynamicData.Aggregation
 
         private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Publish(shared =>
             {
                 var changes = shared.ForAggregation();
@@ -158,7 +181,11 @@ namespace DynamicData.Aggregation
 
         private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject>([NotNull] this IObservable<IChangeSet<TObject>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Publish(shared =>
             {
                 var changes = shared.ForAggregation();

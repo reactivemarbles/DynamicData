@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class FilterOnPropertyFixture
     {
         [Fact]
@@ -81,7 +81,6 @@ namespace DynamicData.Tests.List
             }
         }
 
-
         [Fact]
         public void RemoveRange()
         {
@@ -99,7 +98,6 @@ namespace DynamicData.Tests.List
         {
             public ISourceList<Person> Source { get; } = new SourceList<Person>();
             public ChangeSetAggregator<Person> Results { get; }
-
 
             public FilterPropertyStub()
             {

@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class FilterControllerFixtureWithClearAndReplace  : IDisposable
     {
         private readonly ISourceList<Person> _source;
@@ -50,7 +50,7 @@ namespace DynamicData.Tests.List
 
             var result = source.Connect().Filter(filter, ListFilterPolicy.ClearAndReplace).AsObservableList();
             source.AddRange(Enumerable.Range(1,250000));
-            
+
             filter.OnNext(i => true);
             filter.OnNext(i => false);
         }
@@ -68,6 +68,7 @@ namespace DynamicData.Tests.List
             {
                 person.Age = person.Age + 10;
             }
+
             _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(90);
@@ -79,6 +80,7 @@ namespace DynamicData.Tests.List
             {
                 person.Age = person.Age - 10;
             }
+
             _filter.OnNext(p => p.Age > 20);
 
             _results.Data.Count.Should().Be(80, "Should be 80 people in the cache");

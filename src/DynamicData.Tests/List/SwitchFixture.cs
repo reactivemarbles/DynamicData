@@ -7,13 +7,12 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class SwitchFixture: IDisposable
     {
         private readonly ISubject<ISourceList<int>> _switchable;
         private readonly ISourceList<int> _source;
         private readonly ChangeSetAggregator<int> _results;
-
 
         public  SwitchFixture()
         {

@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Annotations;
@@ -279,11 +283,30 @@ namespace DynamicData.Aggregation
                                                                                  [NotNull] Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction,
                                                                                  [NotNull] Func<StdDev<TValue>, TResult> resultAction)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
-            if (addAction == null) throw new ArgumentNullException(nameof(addAction));
-            if (removeAction == null) throw new ArgumentNullException(nameof(removeAction));
-            if (resultAction == null) throw new ArgumentNullException(nameof(resultAction));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
+            if (addAction == null)
+            {
+                throw new ArgumentNullException(nameof(addAction));
+            }
+
+            if (removeAction == null)
+            {
+                throw new ArgumentNullException(nameof(removeAction));
+            }
+
+            if (resultAction == null)
+            {
+                throw new ArgumentNullException(nameof(resultAction));
+            }
 
             return source.Scan(default(StdDev<TValue>), (state, changes) =>
             {

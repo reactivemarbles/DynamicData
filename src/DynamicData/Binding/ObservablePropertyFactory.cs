@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,7 +20,7 @@ namespace DynamicData.Binding
         public static readonly IObservable<T> Default = Observable.Return(default(T));
     }
 
-    internal class ObservablePropertyFactory<TObject, TProperty> 
+    internal class ObservablePropertyFactory<TObject, TProperty>
         where TObject: INotifyPropertyChanged
     {
         private readonly Func<TObject, bool, IObservable<PropertyValue<TObject, TProperty>>> _factory;
@@ -33,6 +37,7 @@ namespace DynamicData.Binding
                     valueHasChanged = Observable.Defer(() => Observable.Return(Unit.Default))
                         .Concat(valueHasChanged);
                 }
+
                 return valueHasChanged.Select(_ => GetPropertyValue(t,chain, valueAccessor));
             };
         }
@@ -56,7 +61,9 @@ namespace DynamicData.Binding
                     .Select(x => Factory());
 
                 if (!notifyInitial)
+                {
                     return propertyChanged;
+                }
 
                 var initial = Observable.Defer(() => Observable.Return(Factory()));
                 return initial.Concat(propertyChanged);
@@ -78,7 +85,10 @@ namespace DynamicData.Binding
                 value = metadata.Accessor(value);
                 yield return obs;
 
-                if (value == null) yield break;
+                if (value == null)
+                {
+                    yield break;
+                }
             }
         }
 
@@ -89,8 +99,12 @@ namespace DynamicData.Binding
             foreach (var metadata in chain.Reverse())
             {
                 value = metadata.Accessor(value);
-                if (value == null) return new PropertyValue<TObject, TProperty>(source);
+                if (value == null)
+                {
+                    return new PropertyValue<TObject, TProperty>(source);
+                }
             }
+
             return new PropertyValue<TObject, TProperty>(source, valueAccessor(source));
         }
 

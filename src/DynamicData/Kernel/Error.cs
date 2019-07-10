@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 #pragma warning disable 1591
 
@@ -38,12 +42,10 @@ namespace DynamicData.Kernel
 
         #region Equality members
 
-
         public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right)
         {
             return Equals(left, right);
         }
-
 
         public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right)
         {
@@ -53,16 +55,32 @@ namespace DynamicData.Kernel
         /// <inheritdoc />
         public bool Equals(Error<TObject, TKey> other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return EqualityComparer<TKey>.Default.Equals(Key, other.Key) && EqualityComparer<TObject>.Default.Equals(Value, other.Value) && Equals(Exception, other.Exception);
         }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
             return obj is Error<TObject, TKey> && Equals((Error<TObject, TKey>)obj);
         }
 

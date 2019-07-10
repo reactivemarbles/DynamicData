@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 
 using DynamicData.Annotations;
 
@@ -25,8 +29,16 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>([NotNull] this ISourceList<TSource> source,
                                                                                            [NotNull] Func<TSource, TDestination> conversionFactory)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (conversionFactory == null) throw new ArgumentNullException(nameof(conversionFactory));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (conversionFactory == null)
+            {
+                throw new ArgumentNullException(nameof(conversionFactory));
+            }
+
             return source.Connect().Cast(conversionFactory);
         }
     }

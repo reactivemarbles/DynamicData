@@ -8,7 +8,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class TransformFixture
     {
         [Fact]

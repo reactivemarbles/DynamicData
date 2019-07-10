@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
@@ -51,12 +55,14 @@ namespace DynamicData.Cache.Internal
 
         }
 
-        private IEnumerable<Change<TSource, TKey>> CaptureChanges(Cache<TSource, TKey>  cache, Func<TSource, TKey, bool> shouldTransform)
+        private static IEnumerable<Change<TSource, TKey>> CaptureChanges(Cache<TSource, TKey>  cache, Func<TSource, TKey, bool> shouldTransform)
         {
             foreach (var kvp in cache.KeyValues)
             {
                 if (shouldTransform(kvp.Value, kvp.Key))
+                {
                     yield return new Change<TSource, TKey>(ChangeReason.Refresh, kvp.Key,kvp.Value);
+                }
             }
         }
     }

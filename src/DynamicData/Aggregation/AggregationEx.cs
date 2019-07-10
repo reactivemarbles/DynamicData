@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Linq;
 using System.Reactive;
@@ -21,7 +25,11 @@ namespace DynamicData.Aggregation
         /// <exception cref="System.ArgumentNullException"></exception>
         public static IObservable<IAggregateChangeSet<TObject>> ForAggregation<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Select(changeset => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject, TKey>(changeset));
         }
 
@@ -34,7 +42,11 @@ namespace DynamicData.Aggregation
         /// <exception cref="System.ArgumentNullException"></exception>
         public static IObservable<IAggregateChangeSet<TObject>> ForAggregation<TObject>([NotNull] this IObservable<IChangeSet<TObject>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.Select(changeset => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject>(changeset));
         }
 
@@ -99,10 +111,25 @@ namespace DynamicData.Aggregation
                                                                          [NotNull] Func<TResult, TResult, TResult> addAction,
                                                                          [NotNull] Func<TResult, TResult, TResult> removeAction)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (accessor == null) throw new ArgumentNullException(nameof(accessor));
-            if (addAction == null) throw new ArgumentNullException(nameof(addAction));
-            if (removeAction == null) throw new ArgumentNullException(nameof(removeAction));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (accessor == null)
+            {
+                throw new ArgumentNullException(nameof(accessor));
+            }
+
+            if (addAction == null)
+            {
+                throw new ArgumentNullException(nameof(addAction));
+            }
+
+            if (removeAction == null)
+            {
+                throw new ArgumentNullException(nameof(removeAction));
+            }
 
             return source.Scan(seed, (state, changes) =>
             {

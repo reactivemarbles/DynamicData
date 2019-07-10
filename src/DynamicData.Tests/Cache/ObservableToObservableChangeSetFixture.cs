@@ -35,13 +35,8 @@ namespace DynamicData.Tests.Cache
         }
     }
 
-
-
     public class ObservableToObservableChangeSetFixture
     {
-
-  
-
 
         [Fact]
         public void OnNextFiresAdd()

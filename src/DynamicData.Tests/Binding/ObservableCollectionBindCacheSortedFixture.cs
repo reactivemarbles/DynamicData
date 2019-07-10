@@ -9,7 +9,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-    
+
     public class ObservableCollectionBindCacheSortedFixture: IDisposable
     {
         private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
@@ -122,7 +122,9 @@ namespace DynamicData.Tests.Binding
             {
                 invoked = true;
                 if (e.Action == NotifyCollectionChangedAction.Reset)
+                {
                     resetInvoked = true;
+                }
             };
             _source.AddOrUpdate(_generator.Take(24));
 
@@ -145,7 +147,6 @@ namespace DynamicData.Tests.Binding
 		    var boundList1 = new ObservableCollectionExtended<Person>();
 		    var boundList2 = new ObservableCollectionExtended<Person>();
 
-
 		    using (cache.Connect()
 			    .AutoRefresh(p => p.Age)
 			    .Sort(SortExpressionComparer<Person>.Ascending(p => p.Age))
@@ -162,7 +163,6 @@ namespace DynamicData.Tests.Binding
 
 			    importantGuy.Age = importantGuy.Age + 200;
 
-		
 			    latestSetWithoutMoves.Removes.Should().Be(1);
 			    latestSetWithoutMoves.Adds.Should().Be(1);
 			    latestSetWithoutMoves.Moves.Should().Be(0);

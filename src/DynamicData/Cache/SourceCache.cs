@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
@@ -13,6 +17,7 @@ namespace DynamicData
     public class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey>
     {
         private readonly ObservableCache<TObject, TKey> _innerCache;
+        private bool _isDisposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SourceCache{TObject, TKey}"/> class.
@@ -21,7 +26,11 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">keySelector</exception>
         public SourceCache(Func<TObject, TKey> keySelector)
         {
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
+
             _innerCache = new ObservableCache<TObject, TKey>(keySelector);
         }
 
@@ -57,7 +66,26 @@ namespace DynamicData
         public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
         /// <inheritdoc />
-        public void Dispose() => _innerCache.Dispose();
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool isDisposing)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
+            if (isDisposing)
+            {
+                _innerCache.Dispose();
+            }
+        }
 
         #endregion
     }

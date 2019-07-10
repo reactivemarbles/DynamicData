@@ -5,7 +5,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class DisposeManyFixture: IDisposable
     {
         private readonly ISourceList<DisposableObject> _source;

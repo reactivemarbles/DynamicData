@@ -24,8 +24,6 @@ namespace DynamicData.Tests.Cache
            // _results = _source.Connect().BatchIf(new BehaviorSubject<bool>(true), scheduler: _scheduler).AsAggregator();
         }
 
-
-        
         public void Dispose()
         {
             _results.Dispose();
@@ -38,7 +36,6 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void ChangesNotLostIfConsumerIsRunningOnDifferentThread()
         {
-            
 
             var producerScheduler = new TestScheduler();
             var consumerScheduler = new TestScheduler();

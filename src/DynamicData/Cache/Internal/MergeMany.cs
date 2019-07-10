@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Reactive.Linq;
 
@@ -16,7 +20,10 @@ namespace DynamicData.Cache.Internal
 
         public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
         {
-            if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+            if (observableSelector == null)
+            {
+                throw new ArgumentNullException(nameof(observableSelector));
+            }
 
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _observableSelector = (t, key) => observableSelector(t);

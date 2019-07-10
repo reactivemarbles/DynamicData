@@ -2,43 +2,65 @@
 
 <Project>
   <PropertyGroup>
-    <LangVersion>7.2</LangVersion>
-    <DefaultItemExcludes>$(DefaultItemExcludes);*.DotSettings;*.ncrunchproject</DefaultItemExcludes>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591;1701;1702;1705;VSX1000</NoWarn>
+    <Platform>AnyCPU</Platform>
+    <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
+    <IsBenchmarkProject>$(MSBuildProjectName.Contains('Benchmarks'))</IsBenchmarkProject>
     <DebugType>embedded</DebugType>
-  </PropertyGroup>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)analyzers.ruleset</CodeAnalysisRuleSet>
 
-  <PropertyGroup>
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
+    <Copyright>Copyright (c) Roland Pheasant 2011-2019</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/RolandPheasant/DynamicData</PackageProjectUrl>
-    <PackageReleaseNotes>https://github.com/RolandPheasant/DynamicData/blob/master/ReleaseNotes.md</PackageReleaseNotes>
-    <Copyright>Copyright Roland Pheasant 2011-2019</Copyright>
+    <PackageProjectUrl>http://dynamic-data.org</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_pharmacist/main.png</PackageIconUrl>
     <PackageTags>DynamicData;Dynamic;Data;Rx;Reactive;Observable;Cache;Binding;ObservableCache;ObservableList;ObservableCollection;Collection;Linq</PackageTags>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <IsPackable>false</IsPackable>
-    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <PackageReleaseNotes>https://github.com/reactiveui/DynamicData/releases</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/RolandPheasant/DynamicData</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+
+    <!-- disable sourcelink on mono, to workaround https://github.com/dotnet/sourcelink/issues/155 -->
+    <EnableSourceLink Condition=" '$(OS)' != 'Windows_NT' AND '$(MSBuildRuntimeType)' != 'Core' ">false</EnableSourceLink>
+    <EnableSourceControlManagerQueries>$(EnableSourceLink)</EnableSourceControlManagerQueries>    
+    <!-- Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl> 
+    <!-- Embed source files that are not tracked by the source control manager in the PDB -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Include PDB in the built .nupkg -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(APPVEYOR)' == 'True'">
-    <Deterministic>true</Deterministic>
-    <DeterministicSourcePaths>true</DeterministicSourcePaths>
+  <!-- MonoAndroid doesn't seem to want to allow debugging for maintainers -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
+    <DebugType>Full</DebugType>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(NCrunch)' == '1'">
-    <EnableSourceLink>false</EnableSourceLink>
-    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+  <PropertyGroup Condition="$(IsTestProject) OR $(IsBenchmarkProject)">
+    <IsPackable>false</IsPackable>
+    <CodeAnalysisRuleSet></CodeAnalysisRuleSet>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19270-01" PrivateAssets="All" />
+  
+  <ItemGroup Condition="'$(IsTestProject)' != 'true' and '$(SourceLinkEnabled)' != 'false'">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19351-01" PrivateAssets="All" /> 
   </ItemGroup>
-
-  <PropertyGroup>
+  
+   <PropertyGroup>
     <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="LICENSE" />
+  </ItemGroup>
+
+  <ItemGroup>	
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.183" PrivateAssets="all" />	
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.3" PrivateAssets="all" />
+    <PackageReference Condition="'$(OS)' == 'Windows_NT'" Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.Analyzers" Version="2.1.0" PrivateAssets="All" />
+  </ItemGroup>
 </Project>

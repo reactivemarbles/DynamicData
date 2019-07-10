@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -32,7 +36,11 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">valueSelector</exception>
         public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector)
         {
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.HasValue ? source.Value : valueSelector();
         }
 
@@ -57,9 +65,15 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">exceptionGenerator</exception>
         public static T ValueOrThrow<T>(this Optional<T> source, Func<Exception> exceptionGenerator)
         {
-            if (exceptionGenerator == null) throw new ArgumentNullException(nameof(exceptionGenerator));
+            if (exceptionGenerator == null)
+            {
+                throw new ArgumentNullException(nameof(exceptionGenerator));
+            }
+
             if (source.HasValue)
+            {
                 return source.Value;
+            }
 
             throw exceptionGenerator();
         }
@@ -80,8 +94,15 @@ namespace DynamicData.Kernel
         /// </exception>
         public static TDestination ConvertOr<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter, Func<TDestination> fallbackConverter)
         {
-            if (converter == null) throw new ArgumentNullException(nameof(converter));
-            if (fallbackConverter == null) throw new ArgumentNullException(nameof(fallbackConverter));
+            if (converter == null)
+            {
+                throw new ArgumentNullException(nameof(converter));
+            }
+
+            if (fallbackConverter == null)
+            {
+                throw new ArgumentNullException(nameof(fallbackConverter));
+            }
 
             return source.HasValue ? converter(source.Value) : fallbackConverter();
         }
@@ -97,7 +118,11 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">converter</exception>
         public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter)
         {
-            if (converter == null) throw new ArgumentNullException(nameof(converter));
+            if (converter == null)
+            {
+                throw new ArgumentNullException(nameof(converter));
+            }
+
             return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
         }
 
@@ -124,6 +149,11 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             TValue contained;
             bool result = source.TryGetValue(key, out contained);
             return result ? contained : Optional.None<TValue>();
@@ -139,6 +169,11 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static bool RemoveIfContained<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source.ContainsKey(key) && source.Remove(key);
         }
 
@@ -153,6 +188,11 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             var result = source.FirstOrDefault(selector);
             return !Equals(result, null) ? result : Optional.None<T>();
         }
@@ -166,7 +206,16 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static OptionElse IfHasValue<T>(this Optional<T> source, Action<T> action)
         {
-            if (!source.HasValue) return new OptionElse();
+            if (!source.HasValue)
+            {
+                return new OptionElse();
+            }
+
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
+
             action(source.Value);
             return OptionElse.NoAction;
         }

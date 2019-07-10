@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 
 namespace DynamicData.Cache.Internal
@@ -5,12 +9,14 @@ namespace DynamicData.Cache.Internal
     internal static class FilterEx
     {
         public static IChangeSet<TObject, TKey> RefreshFilteredFrom<TObject, TKey>(
-            this ChangeAwareCache<TObject, TKey> filtered, 
+            this ChangeAwareCache<TObject, TKey> filtered,
             Cache<TObject, TKey> allData,
             Func<TObject, bool> predicate)
         {
             if (allData.Count == 0)
+            {
                 return ChangeSet<TObject, TKey>.Empty;
+            }
 
             foreach (var kvp in allData.KeyValues)
             {
@@ -20,17 +26,22 @@ namespace DynamicData.Cache.Internal
                 if (matches)
                 {
                     if (!exisiting.HasValue)
+                    {
                         filtered.Add(kvp.Value, kvp.Key);
+                    }
                 }
                 else
                 {
                     if (exisiting.HasValue)
+                    {
                         filtered.Remove(kvp.Key);
+                    }
                 }
             }
+
             return filtered.CaptureChanges();
         }
-        
+
         public static void FilterChanges<TObject, TKey>(this ChangeAwareCache<TObject, TKey> cache,
             IChangeSet<TObject, TKey> changes,
             Func<TObject, bool> predicate)
@@ -46,17 +57,25 @@ namespace DynamicData.Cache.Internal
                     {
                         var current = change.Current;
                         if (predicate(current))
-                            cache.AddOrUpdate(current, key);
-                    }
+                            {
+                                cache.AddOrUpdate(current, key);
+                            }
+                        }
+
                         break;
                     case ChangeReason.Update:
                     {
                         var current = change.Current;
                         if (predicate(current))
-                            cache.AddOrUpdate(current, key);
-                        else
-                            cache.Remove(key);
-                    }
+                            {
+                                cache.AddOrUpdate(current, key);
+                            }
+                            else
+                            {
+                                cache.Remove(key);
+                            }
+                        }
+
                         break;
                     case ChangeReason.Remove:
                         cache.Remove(key);
@@ -67,16 +86,23 @@ namespace DynamicData.Cache.Internal
                         if (predicate(change.Current))
                         {
                             if (!exisiting.HasValue)
-                                cache.AddOrUpdate(change.Current, key);
-                            else
-                                cache.Refresh(key);
-                        }
+                                {
+                                    cache.AddOrUpdate(change.Current, key);
+                                }
+                                else
+                                {
+                                    cache.Refresh(key);
+                                }
+                            }
                         else
                         {
                             if (exisiting.HasValue)
-                                cache.Remove(key);
-                        }
+                                {
+                                    cache.Remove(key);
+                                }
+                            }
                     }
+
                         break;
                 }
             }

@@ -1,4 +1,8 @@
-﻿#if SUPPORTS_BINDINGLIST
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+#if SUPPORTS_BINDINGLIST
 
 using System;
 using System.ComponentModel;
@@ -23,10 +27,14 @@ namespace DynamicData.Binding
             _refreshThreshold = refreshThreshold;
         }
 
-
         /// <inheritdoc />
         public void Adapt(ISortedChangeSet<TObject, TKey> changes)
         {
+            if (changes == null)
+            {
+                throw new ArgumentNullException(nameof(changes));
+            }
+
             switch (changes.SortedItems.SortReason)
             {
                 case SortReason.InitialLoad:
@@ -61,10 +69,9 @@ namespace DynamicData.Binding
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(changes));
             }
         }
-
 
         private void DoUpdate(ISortedChangeSet<TObject, TKey> changes)
         {

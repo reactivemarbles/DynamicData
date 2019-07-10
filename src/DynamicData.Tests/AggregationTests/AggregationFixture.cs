@@ -6,10 +6,9 @@ using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
 
-
 namespace DynamicData.Tests.AggregationTests
 {
-    
+
     public class AggregationFixture: IDisposable
     {
         private readonly SourceCache<Person, string> _source;
@@ -29,9 +28,13 @@ namespace DynamicData.Tests.AggregationTests
                                       items.ForEach(x =>
                                       {
                                           if (x.Type == AggregateType.Add)
+                                          {
                                               current = current + x.Item.Age;
+                                          }
                                           else
+                                          {
                                               current = current - x.Item.Age;
+                                          }
                                       });
                                       return current;
                                   });

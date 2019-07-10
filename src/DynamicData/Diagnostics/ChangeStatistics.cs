@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 
 namespace DynamicData.Diagnostics
 {
@@ -98,17 +102,37 @@ namespace DynamicData.Diagnostics
         /// <inheritdoc />
         public bool Equals(ChangeStatistics other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return Adds == other.Adds && Updates == other.Updates && Removes == other.Removes && Refreshes == other.Refreshes && Moves == other.Moves && Count == other.Count && Index == other.Index && LastUpdated.Equals(other.LastUpdated);
         }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
             return Equals((ChangeStatistics)obj);
         }
 
@@ -129,7 +153,6 @@ namespace DynamicData.Diagnostics
             }
         }
 
-
 #pragma warning disable 1591
 
         public static bool operator ==(ChangeStatistics left, ChangeStatistics right)
@@ -137,7 +160,6 @@ namespace DynamicData.Diagnostics
         {
             return Equals(left, right);
         }
-
 
         public static bool operator !=(ChangeStatistics left, ChangeStatistics right)
         {
@@ -151,7 +173,6 @@ namespace DynamicData.Diagnostics
         {
             return $"CurrentIndex: {Index}, Adds: {Adds}, Updates: {Updates}, Removes: {Removes}, Refreshes: {Refreshes}, Count: {Count}, Timestamp: {LastUpdated}";
         }
-
 
     }
 }

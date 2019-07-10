@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Reactive.Concurrency;
@@ -50,9 +54,11 @@ namespace DynamicData.List.Internal
                                                       paused = true;
                                                       //add pause timeout if required
                                                       if (_timeOut != TimeSpan.Zero)
+                                                      {
                                                           timeoutSubscriber.Disposable = Observable.Timer(_timeOut, _scheduler)
                                                                                                    .Select(l => false)
                                                                                                    .SubscribeSafe(timeoutSubject);
+                                                      }
                                                   });
 
                         var resume = bufferSelector.Where(state => !state)
@@ -60,7 +66,11 @@ namespace DynamicData.List.Internal
                                                    {
                                                        paused = false;
                                                        //publish changes and clear buffer
-                                                       if (buffer.Count == 0) return;
+                                                       if (buffer.Count == 0)
+                                                       {
+                                                           return;
+                                                       }
+
                                                        observer.OnNext(new ChangeSet<T>(buffer));
                                                        buffer.Clear();
 

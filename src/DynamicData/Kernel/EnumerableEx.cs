@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +22,11 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static T[] AsArray<T>([NotNull] this IEnumerable<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source as T[] ?? source.ToArray();
         }
 
@@ -30,7 +38,11 @@ namespace DynamicData.Kernel
         /// <returns></returns>
         public static List<T> AsList<T>([NotNull] this IEnumerable<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return source as List<T> ?? source.ToList();
         }
 
@@ -47,8 +59,16 @@ namespace DynamicData.Kernel
         public static IEnumerable<T> Duplicates<T, TValue>([NotNull] this IEnumerable<T> source,
                                                            [NotNull] Func<T, TValue> valueSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (valueSelector == null) throw new ArgumentNullException(nameof(valueSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (valueSelector == null)
+            {
+                throw new ArgumentNullException(nameof(valueSelector));
+            }
+
             return source.GroupBy(valueSelector)
                          .Where(group => group.Count() > 1)
                          .SelectMany(t => t);
@@ -82,9 +102,20 @@ namespace DynamicData.Kernel
         /// </exception>
         public static IEnumerable<TResult> IndexOfMany<TObject, TResult>([NotNull] this IEnumerable<TObject> source, [NotNull] IEnumerable<TObject> itemsToFind, [NotNull] Func<TObject, int, TResult> resultSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (itemsToFind == null) throw new ArgumentNullException(nameof(itemsToFind));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (itemsToFind == null)
+            {
+                throw new ArgumentNullException(nameof(itemsToFind));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             var indexed = source.Select((element, index) => new { Element = element, Index = index });
             return itemsToFind
@@ -106,7 +137,9 @@ namespace DynamicData.Kernel
         internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
         {
             foreach (var item in source)
+            {
                 action(item);
+            }
         }
 
         internal static void ForEach<TObject>(this IEnumerable<TObject> source, Action<TObject, int> action)

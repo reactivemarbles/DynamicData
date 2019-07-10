@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 
@@ -9,7 +13,11 @@ namespace DynamicData.List.Internal
 
         public AnonymousObservableList(IObservable<IChangeSet<T>> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             _sourceList = new SourceList<T>(source);
         }
 
@@ -27,7 +35,7 @@ namespace DynamicData.List.Internal
         public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null) => _sourceList.Connect(predicate);
 
         public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null) => _sourceList.Preview(predicate);
-        
+
         public void Dispose() => _sourceList.Dispose();
     }
 }

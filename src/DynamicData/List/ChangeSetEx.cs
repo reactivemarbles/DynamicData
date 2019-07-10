@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +38,11 @@ namespace DynamicData
         /// <exception cref="ArgumentNullException">source</exception>
         internal static IEnumerable<UnifiedChange<T>> Unified<T>([NotNull] this IChangeSet<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new UnifiedChangeEnumerator<T>(source);
         }
 
@@ -47,7 +55,11 @@ namespace DynamicData
         /// <exception cref="ArgumentNullException">source</exception>
         public static IEnumerable<ItemChange<T>> Flatten<T>([NotNull] this IChangeSet<T> source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
             return new ItemChangeEnumerator<T>(source);
         }
 
@@ -73,7 +85,7 @@ namespace DynamicData
                 case ListChangeReason.Clear:
                     return ChangeType.Range;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(source));
             }
         }
 
@@ -93,8 +105,15 @@ namespace DynamicData
         public static IChangeSet<TDestination> Transform<TSource, TDestination>([NotNull] this IChangeSet<TSource> source,
                                                                                 [NotNull] Func<TSource, TDestination> transformer)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (transformer == null) throw new ArgumentNullException(nameof(transformer));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (transformer == null)
+            {
+                throw new ArgumentNullException(nameof(transformer));
+            }
 
             var changes = source.Select(change =>
             {
@@ -106,6 +125,7 @@ namespace DynamicData
                                                     change.Item.CurrentIndex,
                                                     change.Item.PreviousIndex);
                 }
+
                 return new Change<TDestination>(change.Reason, change.Range.Select(transformer), change.Range.Index);
             });
 

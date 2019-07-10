@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -31,14 +35,22 @@ namespace DynamicData.Cache.Internal
 
                 void Completion()
                 {
-                    if (status == ConnectionStatus.Errored) return;
+                    if (status == ConnectionStatus.Errored)
+                    {
+                        return;
+                    }
+
                     status = ConnectionStatus.Completed;
                     statusSubject.OnNext(status);
                 }
 
                 void Updated()
                 {
-                    if (status != ConnectionStatus.Pending) return;
+                    if (status != ConnectionStatus.Pending)
+                    {
+                        return;
+                    }
+
                     status = ConnectionStatus.Loaded;
                     statusSubject.OnNext(status);
                 }

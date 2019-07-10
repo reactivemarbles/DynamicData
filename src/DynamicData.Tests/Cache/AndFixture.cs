@@ -7,7 +7,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class AndFixture : AndFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -16,7 +16,6 @@ namespace DynamicData.Tests.Cache
         }
     }
 
-    
     public class AndCollectionFixture : AndFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -26,7 +25,6 @@ namespace DynamicData.Tests.Cache
         }
     }
 
-    
     public abstract class AndFixtureBase: IDisposable
     {
         protected ISourceCache<Person, string> _source1;

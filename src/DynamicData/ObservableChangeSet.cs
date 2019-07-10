@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
@@ -24,8 +28,16 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Action> subscribe, Func<TObject, TKey> keySelector)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
+
             return Create(cache =>
             {
                 var action = subscribe(cache);
@@ -43,8 +55,15 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, IDisposable> subscribe, Func<TObject, TKey> keySelector)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
 
             return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
             {
@@ -62,7 +81,7 @@ namespace DynamicData
 
                 return new CompositeDisposable(disposable,
                     Disposable.Create(observer.OnCompleted),
-                    cache.Connect().SubscribeSafe(observer), 
+                    cache.Connect().SubscribeSafe(observer),
                     cache);
             });
         }
@@ -77,10 +96,17 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>                                                                                                      
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
-            return Create(async (list, ct) => await subscribe(list), keySelector);
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
+
+            return Create(async (list, _) => await subscribe(list).ConfigureAwait(false), keySelector);
         }
 
         /// <summary>
@@ -93,8 +119,15 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
 
             return Observable.Create<IChangeSet<TObject, TKey>>(async (observer, ct) =>
             {
@@ -103,16 +136,16 @@ namespace DynamicData
 
                 try
                 {
-                    disposable.Disposable = await subscribe(cache, ct);
+                    disposable.Disposable = await subscribe(cache, ct).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer), 
-                    cache, 
-                    disposable, 
+                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer),
+                    cache,
+                    disposable,
                     Disposable.Create(observer.OnCompleted));
             });
         }
@@ -127,12 +160,18 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<Action>> subscribe, Func<TObject, TKey> keySelector)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
-            return Create(async (list, ct) => await subscribe(list),keySelector);
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
+
+            return Create((list, ct) => subscribe(list), keySelector);
         }
-
 
         /// <summary>
         /// Creates an observable cache from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation. 
@@ -144,8 +183,15 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task<Action>> subscribe, Func<TObject, TKey> keySelector)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
 
             return Observable.Create<IChangeSet<TObject, TKey>>(async (observer, ct) =>
             {
@@ -154,14 +200,14 @@ namespace DynamicData
 
                 try
                 {
-                    disposeAction = await subscribe(cache, ct);
+                    disposeAction = await subscribe(cache, ct).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer), 
+                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer),
                     cache, Disposable.Create(() =>
                 {
                     observer.OnCompleted();
@@ -180,8 +226,15 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task> subscribe, Func<TObject, TKey> keySelector)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
 
             return Observable.Create<IChangeSet<TObject, TKey>>(async observer =>
             {
@@ -189,7 +242,7 @@ namespace DynamicData
 
                 try
                 {
-                    await subscribe(cache);
+                    await subscribe(cache).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -197,7 +250,7 @@ namespace DynamicData
                 }
 
                 return new CompositeDisposable(cache.Connect().SubscribeSafe(observer),
-                    cache, 
+                    cache,
                     Disposable.Create(observer.OnCompleted));
             });
         }
@@ -212,8 +265,15 @@ namespace DynamicData
         /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task> subscribe, Func<TObject, TKey> keySelector)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
+
+            if (keySelector == null)
+            {
+                throw new ArgumentNullException(nameof(keySelector));
+            }
 
             return Observable.Create<IChangeSet<TObject, TKey>>(async (observer, ct) =>
             {
@@ -221,19 +281,18 @@ namespace DynamicData
 
                 try
                 {
-                    await subscribe(cache, ct);
+                    await subscribe(cache, ct).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer), 
-                    cache, 
+                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer),
+                    cache,
                     Disposable.Create(observer.OnCompleted));
             });
         }
-
 
         #endregion
 
@@ -247,7 +306,10 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Action> subscribe)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
             return Create<T>(list =>
             {
@@ -264,7 +326,10 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, IDisposable> subscribe)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
             return Observable.Create<IChangeSet<T>>(observer =>
             {
@@ -296,8 +361,12 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>                                                                                                        
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<IDisposable>> subscribe)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            return Create<T>(async (list, ct) => await subscribe(list));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
+
+            return Create<T>((list, ct) => subscribe(list));
         }
 
         /// <summary>
@@ -308,7 +377,10 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<IDisposable>> subscribe)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
             return Observable.Create<IChangeSet<T>>(async (observer, ct) =>
             {
@@ -318,7 +390,7 @@ namespace DynamicData
 
                 try
                 {
-                    disposeAction = await subscribe(list, ct);
+                    disposeAction = await subscribe(list, ct).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -341,10 +413,13 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>,  Task<Action>> subscribe)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
-            return Create<T>(async (list, ct) => await subscribe(list));
-        }
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
+            return Create<T>(async (list, ct) => await subscribe(list).ConfigureAwait(false));
+        }
 
         /// <summary>
         /// Creates an observable list from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation. 
@@ -354,7 +429,10 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<Action>> subscribe)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
             return Observable.Create<IChangeSet<T>>(async (observer, ct) =>
             {
@@ -363,7 +441,7 @@ namespace DynamicData
 
                 try
                 {
-                    disposeAction = await subscribe(list, ct);
+                    disposeAction = await subscribe(list, ct).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -386,7 +464,10 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task> subscribe)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
             return Observable.Create<IChangeSet<T>>(async observer =>
             {
@@ -394,7 +475,7 @@ namespace DynamicData
 
                 try
                 {
-                    await subscribe(list);
+                    await subscribe(list).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -413,7 +494,10 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task> subscribe)
         {
-            if (subscribe == null) throw new ArgumentNullException(nameof(subscribe));
+            if (subscribe == null)
+            {
+                throw new ArgumentNullException(nameof(subscribe));
+            }
 
             return Observable.Create<IChangeSet<T>>(async (observer, ct) =>
             {
@@ -421,7 +505,7 @@ namespace DynamicData
 
                 try
                 {
-                     await subscribe(list,ct);
+                     await subscribe(list,ct).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
@@ -431,7 +515,6 @@ namespace DynamicData
                 return new CompositeDisposable(list.Connect().SubscribeSafe(observer), list, Disposable.Create(observer.OnCompleted));
             });
         }
-
 
         #endregion
     }

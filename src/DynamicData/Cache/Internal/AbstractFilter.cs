@@ -1,3 +1,7 @@
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
@@ -36,12 +40,16 @@ namespace DynamicData.Cache.Internal
                 if (matches)
                 {
                     if (!exisiting.HasValue)
+                    {
                         return new Change<TObject, TKey>(ChangeReason.Add, kv.Key, kv.Value);
+                    }
                 }
                 else
                 {
                     if (exisiting.HasValue)
+                    {
                         return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, exisiting);
+                    }
                 }
 
                 return Optional.None<Change<TObject, TKey>>();
@@ -49,7 +57,6 @@ namespace DynamicData.Cache.Internal
 
             var result = Refresh(items, Factory);
             _cache.Clone(new ChangeSet<TObject, TKey>(result));
-
 
             return _cache.CaptureChanges();
         }
@@ -80,8 +87,11 @@ namespace DynamicData.Cache.Internal
                     case ChangeReason.Add:
                         {
                             if (matches)
+                            {
                                 _cache.AddOrUpdate(u.Current, u.Key);
+                            }
                         }
+
                         break;
                     case ChangeReason.Update:
                         {
@@ -94,6 +104,7 @@ namespace DynamicData.Cache.Internal
                                 _cache.Remove(u.Key);
                             }
                         }
+
                         break;
                     case ChangeReason.Remove:
                         _cache.Remove(u.Key);
@@ -115,15 +126,18 @@ namespace DynamicData.Cache.Internal
                             else
                             {
                                 if (exisiting.HasValue)
+                                {
                                     _cache.Remove(u.Key);
+                                }
                             }
                         }
+
                         break;
                 }
             }
+
             return _cache.CaptureChanges();
         }
-
 
         protected struct UpdateWithFilter
         {

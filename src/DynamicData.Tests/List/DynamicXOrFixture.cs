@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class DynamicXOrFixture: IDisposable
     {
         private readonly ISourceList<int> _source1;
@@ -14,7 +14,6 @@ namespace DynamicData.Tests.List
         private readonly ISourceList<IObservable<IChangeSet<int>>> _source;
 
         private readonly ChangeSetAggregator<int> _results;
-
 
         public  DynamicXOrFixture()
         {

@@ -15,7 +15,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class WatcherFixture: IDisposable
     {
         private readonly TestScheduler _scheduler = new TestScheduler();
@@ -137,6 +137,7 @@ namespace DynamicData.Tests.Cache
             {
                 update.Reason.Should().Be(ChangeReason.Add, "Change reason should be add");
             }
+
             result.Clear();
 
             _source.AddOrUpdate(new Person("Adult1", 51));
@@ -146,6 +147,7 @@ namespace DynamicData.Tests.Cache
             {
                 update.Reason.Should().Be(ChangeReason.Update, "Change reason should be add");
             }
+
             result.Clear();
 
             _source.Remove("Adult1");
@@ -155,6 +157,7 @@ namespace DynamicData.Tests.Cache
             {
                 update.Reason.Should().Be(ChangeReason.Remove, "Change reason should be add");
             }
+
             result.Clear();
 
             watch1.Dispose();

@@ -6,7 +6,7 @@ using FluentAssertions;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class ForEachChangeFixture: IDisposable
     {
         private readonly ISourceCache<Person, string> _source;

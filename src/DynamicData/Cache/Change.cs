@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using DynamicData.Kernel;
 
@@ -72,10 +76,14 @@ namespace DynamicData
             : this()
         {
             if (currentIndex < 0)
+            {
                 throw new ArgumentException("CurrentIndex must be greater than or equal to zero");
+            }
 
             if (previousIndex < 0)
+            {
                 throw new ArgumentException("PreviousIndex must be greater than or equal to zero");
+            }
 
             Current = current;
             Previous = Optional.None<TObject>();
@@ -110,10 +118,14 @@ namespace DynamicData
             PreviousIndex = previousIndex;
 
             if (reason == ChangeReason.Add && previous.HasValue)
+            {
                 throw new ArgumentException("For ChangeReason.Add, a previous value cannot be specified");
+            }
 
             if (reason == ChangeReason.Update && !previous.HasValue)
+            {
                 throw new ArgumentException("For ChangeReason.Change, must supply previous value");
+            }
         }
 
         #region Equality
@@ -137,18 +149,22 @@ namespace DynamicData
         /// <inheritdoc />
         public bool Equals(Change<TObject, TKey> other)
         {
-            return EqualityComparer<TKey>.Default.Equals(Key, other.Key) 
-                && Reason == other.Reason 
-                && EqualityComparer<TObject>.Default.Equals(Current, other.Current) 
-                && CurrentIndex == other.CurrentIndex 
-                && Previous.Equals(other.Previous) 
+            return EqualityComparer<TKey>.Default.Equals(Key, other.Key)
+                && Reason == other.Reason
+                && EqualityComparer<TObject>.Default.Equals(Current, other.Current)
+                && CurrentIndex == other.CurrentIndex
+                && Previous.Equals(other.Previous)
                 && PreviousIndex == other.PreviousIndex;
         }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
             return obj is Change<TObject, TKey> && Equals((Change<TObject, TKey>) obj);
         }
 

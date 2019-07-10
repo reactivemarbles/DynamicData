@@ -9,7 +9,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
-    
+
     public class AutoRefreshFixture
     {
         [Fact]
@@ -69,7 +69,7 @@ namespace DynamicData.Tests.List
 
                 results.Data.Count.Should().Be(100);
                 results.Messages.Count.Should().Be(1);
-                
+
                 //update 50 records
                 items.Skip(50)
                     .ForEach(p => p.Age = p.Age + 1);
@@ -130,12 +130,10 @@ namespace DynamicData.Tests.List
                 toRemove.Age = 101;
                 results.Messages.Count.Should().Be(8);
 
-
-
                 results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
             }
         }
-        
+
         [Fact]
         public void AutoRefreshTransform()
         {
@@ -239,7 +237,7 @@ namespace DynamicData.Tests.List
                 .AutoRefresh(p => p.Age)
                 .GroupOn(p=>p.Age % 10)
                 .AsAggregator())
-            {          
+            {
                 void CheckContent()
                 {
                     foreach (var grouping in items.GroupBy(p => p.Age % 10))
@@ -272,7 +270,6 @@ namespace DynamicData.Tests.List
                 items[1].Age = 1;
                 results.Data.Count.Should().Be(10);
                 CheckContent();
-
 
                 var groupOf3 = results.Data.Items.ElementAt(2);
 
@@ -340,10 +337,9 @@ namespace DynamicData.Tests.List
                 items[2].Age = 13;
                 CheckContent();
 
-                results.Messages.Count.Should().Be(5); 
+                results.Messages.Count.Should().Be(5);
             }
         }
-
 
         [Fact]
         public void AutoRefreshDistinct()
@@ -437,9 +433,21 @@ namespace DynamicData.Tests.List
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
                 return Equals((SelectableItem)obj);
             }
 

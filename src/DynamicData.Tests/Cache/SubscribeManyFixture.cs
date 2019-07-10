@@ -6,7 +6,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    
+
     public class SubscribeManyFixture: IDisposable
     {
         private class SubscribeableObject
