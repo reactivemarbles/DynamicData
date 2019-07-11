@@ -1,3 +1,14 @@
+### v 6.12.3
+
+First release done by the ReactiveUI release process. Release notes are now auto-generated. With the change to the ReactiveUI project there has been a rebranding of the logo. Roland Pheasant is still the main maintainer and copyright owner of the code.
+
+* a67d9064c6155cdd794b11a3dfc1f829ea8c7062 housekeeping: dont sign the DynamicData packages. (#249) @glennawatson 
+* e02733012f101c194cb99e83390b9761c07b21fa housekeeping: Correct PackageIconUrl @worldbeater 
+* 22ee78b648e0c557b710ef21adf0f68074edc087 Azure build script, cake script, complying with code standards (#241) @glennawatson 
+* d3facde7f2032e4acd3a264e93b1e40d60610cae Moved the NuGet icon, removed AppVeyor. @glennawatson 
+* 4e8b95ef3a8f2beb776db9a6e2360b906bebdabb Update readme with the new logo/build status. @glennawatson 
+* c0d4fb1715a3b84a419b301ec1e72dacc3dd315c Move files from base directory to /src directory (#242) @glennawatson 
+
 ### v 6.11.0
 
 Change aware cache crash - fixed [#234](https://github.com/RolandPheasant/DynamicData/pull/234)
