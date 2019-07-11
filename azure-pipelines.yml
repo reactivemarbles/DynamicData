@@ -20,4 +20,5 @@ jobs:
   parameters:
     dotNetVersion: '3.0.100-preview6-012264'
     runMacBuild: false
+    signPackages: false
     
