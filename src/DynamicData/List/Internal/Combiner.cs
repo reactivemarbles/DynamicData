@@ -97,31 +97,52 @@ namespace DynamicData.List.Internal
             //child caches have been updated before we reached this point.
             foreach (var change in changes.Flatten())
             {
-                var item = change.Current;
-                var isInResult = resultList.Contains(item);
-                var shouldBeInResult = MatchesConstraint(sourceLists, item);
+                switch (change.Reason)
+                {
+                    case ListChangeReason.Add:
+                    case ListChangeReason.Remove:
+                        UpdateItemMembership(change.Current, sourceLists, resultList);
+                        break;
 
-                if (shouldBeInResult)
-                {
-                    if (!isInResult)
-                    {
-                        resultList.Add(item);
-                    }
-                    else if (change.Reason == ListChangeReason.Refresh)
-                    {
+                    case ListChangeReason.Replace:
+                        UpdateItemMembership(change.Previous.Value, sourceLists, resultList);
+                        UpdateItemMembership(change.Current, sourceLists, resultList);
+                        break;
+
+                    // Pass through refresh changes:
+                    case ListChangeReason.Refresh:
                         resultList.Refresh(change.Current);
-                    }
-                }
-                else
-                {
-                    if (isInResult)
-                    {
-                        resultList.Remove(item);
-                    }
+                        break;
+
+                    // A move does not affect contents and so can be ignored: 
+                    case ListChangeReason.Moved:
+                        break;
+
+                    // These should not occur as they are replaced by the Flatten operator:
+                    //case ListChangeReason.AddRange:
+                    //case ListChangeReason.RemoveRange:
+                    //case ListChangeReason.Clear:
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(change.Reason), "Unsupported change type");
                 }
             }
 
             return resultList.CaptureChanges();
+        }
+
+        private void UpdateItemMembership(T item, List<ReferenceCountTracker<T>> sourceLists, ChangeAwareListWithRefCounts<T> resultList)
+        {
+            var isInResult = resultList.Contains(item);
+            var shouldBeInResult = MatchesConstraint(sourceLists, item);
+            if (shouldBeInResult && !isInResult)
+            {
+                resultList.Add(item);
+            }
+            else if (!shouldBeInResult && isInResult)
+            {
+                resultList.Remove(item);
+            }
         }
 
         private bool MatchesConstraint(List<ReferenceCountTracker<T>> sourceLists, T item)
