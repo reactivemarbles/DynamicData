@@ -45,6 +45,30 @@ namespace DynamicData.Tests.List
         }
     }
 
+    public class OrReplaceFixture
+    {
+        [Fact]
+        public void ItemIsReplaced()
+        {
+            var item1 = new Item("A");
+            var item2 = new Item("B");
+            var item1Replacement = new Item("Test");
+
+            SourceList<Item> source1 = new SourceList<Item>();
+            source1.Add(item1);
+            SourceList<Item> source2 = new SourceList<Item>();
+            source2.Add(item2);
+
+            var list = new List<IObservable<IChangeSet<Item>>> { source1.Connect(), source2.Connect() };
+            var results = list.Or().AsAggregator();
+            source1.ReplaceAt(0, item1Replacement);
+
+            results.Data.Count.Should().Be(2);
+            results.Messages.Count.Should().Be(3);
+            results.Data.Items.Should().BeEquivalentTo(item1Replacement, item2);
+        }
+    }
+
     public abstract class OrFixtureBase: IDisposable
     {
         protected ISourceList<int> _source1;
