@@ -45,7 +45,7 @@ namespace DynamicData.List.Internal
                                             .Synchronize(_locker)
                                             .Subscribe(changes =>
                                             {
-                                                //Populate result list and chck for changes
+                                                //Populate result list and check for changes
                                                 var notifications = UpdateResultList(sourceLists.Items.AsArray(), resultList, changes);
                                                 if (notifications.Count != 0)
                                                 {
@@ -53,21 +53,22 @@ namespace DynamicData.List.Internal
                                                 }
                                             });
 
-                //when an list is removed, need to 
+                //When a list is removed, update all items that were in that list
                 var removedItem = sourceLists.Connect()
                                              .OnItemRemoved(mc =>
                                              {
                                                  //Remove items if required
-                                                 var notifications = ProcessChanges(sourceLists.Items.AsArray(), resultList, mc.Tracker.Items);
+                                                 var notifications = UpdateItemSetMemberships(sourceLists.Items.AsArray(), resultList, mc.Tracker.Items);
                                                  if (notifications.Count != 0)
                                                  {
                                                      observer.OnNext(notifications);
                                                  }
 
+                                                 //On some operators, items not in the removed list can also be affected.
                                                  if (_type == CombineOperator.And || _type == CombineOperator.Except)
                                                  {
                                                      var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Tracker.Items).ToArray();
-                                                     var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultList, itemsToCheck);
+                                                     var notification2 = UpdateItemSetMemberships(sourceLists.Items.AsArray(), resultList, itemsToCheck);
                                                      if (notification2.Count != 0)
                                                      {
                                                          observer.OnNext(notification2);
@@ -76,20 +77,21 @@ namespace DynamicData.List.Internal
                                              })
                                              .Subscribe();
 
-                //when an list is added or removed, need to 
+                //When a list is added, update all items that are in that list
                 var sourceChanged = sourceLists.Connect()
                                                .WhereReasonsAre(ListChangeReason.Add, ListChangeReason.AddRange)
                                                .ForEachItemChange(mc =>
                                                {
-                                                   var notifications = ProcessChanges(sourceLists.Items.AsArray(), resultList, mc.Current.Tracker.Items);
+                                                   var notifications = UpdateItemSetMemberships(sourceLists.Items.AsArray(), resultList, mc.Current.Tracker.Items);
                                                    if (notifications.Count != 0)
                                                    {
                                                        observer.OnNext(notifications);
                                                    }
 
+                                                   //On some operators, items not in the new list can also be affected.
                                                    if (_type == CombineOperator.And || _type == CombineOperator.Except)
                                                    {
-                                                       var notification2 = ProcessChanges(sourceLists.Items.AsArray(), resultList, resultList.ToArray());
+                                                       var notification2 = UpdateItemSetMemberships(sourceLists.Items.AsArray(), resultList, resultList.ToArray());
                                                        if (notification2.Count != 0)
                                                        {
                                                            observer.OnNext(notification2);
@@ -102,39 +104,61 @@ namespace DynamicData.List.Internal
             });
         }
 
-        private IChangeSet<T> UpdateResultList(MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultingList, IChangeSet<T> changes)
+        private IChangeSet<T> UpdateResultList(MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultList, IChangeSet<T> changes)
         {
             //child caches have been updated before we reached this point.
-            changes.Flatten().ForEach(change => { ProcessItem(sourceLists, resultingList, change.Current); });
-            return resultingList.CaptureChanges();
-        }
-
-        private IChangeSet<T> ProcessChanges(MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultingList, IEnumerable<T> items)
-        {
-            //check whether the item should be removed from the list
-            items.ForEach(item => { ProcessItem(sourceLists, resultingList, item); });
-            return resultingList.CaptureChanges();
-        }
-
-        private void ProcessItem(MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultingList, T item)
-        {
-            //check whether the item should be removed from the list
-            var isInResult = resultingList.Contains(item);
-            var shouldBeInResult = MatchesConstraint(sourceLists, item);
-
-            if (shouldBeInResult)
+            foreach(var change in changes.Flatten())
             {
-                if (!isInResult)
+                switch (change.Reason)
                 {
-                    resultingList.Add(item);
+                    case ListChangeReason.Add:
+                    case ListChangeReason.Remove:
+                        UpdateItemMembership(change.Current, sourceLists, resultList);
+                        break;
+
+                    case ListChangeReason.Replace:
+                        UpdateItemMembership(change.Previous.Value, sourceLists, resultList);
+                        UpdateItemMembership(change.Current, sourceLists, resultList);
+                        break;
+
+                    // Pass through refresh changes:
+                    case ListChangeReason.Refresh:
+                        resultList.Refresh(change.Current);
+                        break;
+
+                    // A move does not affect contents and so can be ignored: 
+                    case ListChangeReason.Moved:
+                        break;
+
+                    // These should not occur as they are replaced by the Flatten operator:
+                    //case ListChangeReason.AddRange:
+                    //case ListChangeReason.RemoveRange:
+                    //case ListChangeReason.Clear:
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(change.Reason), "Unsupported change type");
                 }
             }
-            else
+            return resultList.CaptureChanges();
+        }
+
+        private IChangeSet<T> UpdateItemSetMemberships(MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultingList, IEnumerable<T> items)
+        {
+            items.ForEach(item => UpdateItemMembership(item, sourceLists, resultingList));
+            return resultingList.CaptureChanges();
+        }
+
+        private void UpdateItemMembership(T item, MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultList)
+        {
+            var isInResult = resultList.Contains(item);
+            var shouldBeInResult = MatchesConstraint(sourceLists, item);
+            if (shouldBeInResult && !isInResult)
             {
-                if (isInResult)
-                {
-                    resultingList.Remove(item);
-                }
+                resultList.Add(item);
+            }
+            else if (!shouldBeInResult && isInResult)
+            {
+                resultList.Remove(item);
             }
         }
 

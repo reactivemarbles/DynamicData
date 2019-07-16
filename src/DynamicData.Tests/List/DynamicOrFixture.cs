@@ -5,6 +5,28 @@ using Xunit;
 
 namespace DynamicData.Tests.List
 {
+    public class DynamicOrRefreshFixture
+    {
+        [Fact]
+        public void RefreshPassesThrough()
+        {
+            var source1 = new SourceList<Item>();
+            var source2 = new SourceList<Item>();
+            var source = new SourceList<IObservable<IChangeSet<Item>>>();
+            var results = source.Or().AsAggregator();
+
+            source1.Add(new Item("A"));
+            source2.Add(new Item("B"));
+            source.AddRange(new[] { source1.Connect().AutoRefresh(), source2.Connect().AutoRefresh() });
+            
+            source1.Items.ElementAt(0).Name = "Test";
+
+            results.Data.Count.Should().Be(2);
+            results.Messages.Count.Should().Be(3);
+            results.Messages[2].Refreshes.Should().Be(1);
+            results.Messages[2].First().Item.Current.Should().Be(source1.Items.First());
+        }
+    }
 
     public class DynamicOrFixture: IDisposable
     {
@@ -31,6 +53,32 @@ namespace DynamicData.Tests.List
             _source3.Dispose();
             _source.Dispose();
             _results.Dispose();
+        }
+
+        [Fact]
+        public void ItemIsReplaced()
+        {
+            _source1.Add(0);
+            _source2.Add(1);
+            _source.Add(_source1.Connect());
+            _source.Add(_source2.Connect());
+            _source1.ReplaceAt(0, 9);
+
+            _results.Data.Count.Should().Be(2);
+            _results.Messages.Count.Should().Be(3);
+            _results.Data.Items.Should().BeEquivalentTo(9, 1);
+        }
+
+        [Fact]
+        public void ClearSource()
+        {
+            _source1.Add(0);
+            _source2.Add(1);
+            _source.Add(_source1.Connect());
+            _source.Add(_source2.Connect());
+            _source.Clear();
+
+            _results.Data.Count.Should().Be(0);
         }
 
         [Fact]
