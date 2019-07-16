@@ -99,7 +99,7 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
-        public void OverlappingRangeExludesInteresct()
+        public void OverlappingRangeExcludesIntersect()
         {
             _source.Add(_source1.Connect());
             _source.Add(_source2.Connect());
