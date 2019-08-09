@@ -58,11 +58,11 @@ namespace DynamicData
 
             foreach (var item in changes)
             {
-                Clone(source,  item);
+                Clone(source,  item, changes.EqualityComparer);
             }
         }
 
-        private static void Clone<T>(this IList<T> source,  Change<T> item)
+        private static void Clone<T>(this IList<T> source,  Change<T> item, IEqualityComparer<T> equalityComparer)
         {
             var changeAware = source as ChangeAwareList<T>;
 
@@ -155,7 +155,18 @@ namespace DynamicData
                     }
                     else
                     {
-                        source.Remove(change.Current);
+                        if (equalityComparer != null)
+                        {
+                            int index = source.IndexOf(change.Current, equalityComparer);
+                            if (index > -1)
+                            {
+                                source.RemoveAt(index);
+                            }
+                        }
+                        else
+                        {
+                            source.Remove(change.Current);
+                        }
                     }
 
                     break;

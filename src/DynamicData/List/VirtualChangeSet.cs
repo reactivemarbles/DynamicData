@@ -44,6 +44,8 @@ namespace DynamicData
 
         public int Refreshes => _virtualChangeSet.Refreshes;
 
+        public IEqualityComparer<T> EqualityComparer => _virtualChangeSet.EqualityComparer;
+
         #endregion
 
         public IEnumerator<Change<T>> GetEnumerator()
