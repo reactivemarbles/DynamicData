@@ -24,7 +24,5 @@ namespace DynamicData
         /// The total count of items changed
         /// </summary>
         int TotalChanges { get; }
-
-        IEqualityComparer<TObject> EqualityComparer { get; }
     }
 }

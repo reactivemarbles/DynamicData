@@ -93,9 +93,23 @@ namespace DynamicData.List.Internal
                 return CreateWithChangeset();
             }
 
-            return _source.Transform(item => new ManyContainer(_manyselector(item).ToArray()), true)
-                .Select(changes => new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer), _equalityComparer))
-                .NotEmpty();
+            return Observable.Create<IChangeSet<TDestination>>(observer =>
+            {
+                //NB: ChangeAwareList is used internally by dd to capture changes to a list and ensure they can be replayed by subsequent operators
+                var result = new ChangeAwareList<TDestination>();
+
+                return _source.Transform(item => new ManyContainer(_manyselector(item).ToArray()), true)
+                    .Select(changes =>
+                    {
+                        var destinationChanges = new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer));
+                        result.Clone(destinationChanges, _equalityComparer);
+                        return result.CaptureChanges();
+                    })
+
+                    .NotEmpty()
+                    .SubscribeSafe(observer);
+            }
+);
         }
 
         private IObservable<IChangeSet<TDestination>> CreateWithChangeset()

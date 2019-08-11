@@ -17,7 +17,6 @@ namespace DynamicData
     /// <typeparam name="T">The type of the object.</typeparam>
     public class ChangeSet<T> : IChangeSet<T>
     {
-        private readonly IEqualityComparer<T> _equalityComparer;
         private int _adds;
         private int _removes;
         private int _replaced;
@@ -41,9 +40,8 @@ namespace DynamicData
         /// Initializes a new instance of the <see cref="ChangeSet{T}" /> class.
         /// </summary>
         /// <param name="items">The items.</param>
-        /// <param name="equalityComparer">An optional equality comparer.</param>
         /// <exception cref="System.ArgumentNullException">items</exception>
-        public ChangeSet([NotNull] IEnumerable<Change<T>> items, IEqualityComparer<T> equalityComparer = null)
+        public ChangeSet([NotNull] IEnumerable<Change<T>> items)
         {
             if (items == null)
             {
@@ -57,8 +55,6 @@ namespace DynamicData
             {
                 Add(change, true);
             }
-
-            _equalityComparer = equalityComparer;
         }
 
         /// <summary>
@@ -166,8 +162,6 @@ namespace DynamicData
         ///     The total number if individual item changes
         /// </summary>
         public int TotalChanges => Adds + Removes + Replaced + Moves;
-
-        public IEqualityComparer<T> EqualityComparer => _equalityComparer;
 
         #region Enumeration
 
