@@ -138,7 +138,7 @@ namespace DynamicData.List.Internal
 
                 var init = intial.Select(changes =>
                 {
-                    result.Clone(changes);
+                    result.Clone(changes, _equalityComparer);
                     return result.CaptureChanges();
                 });
 
@@ -146,7 +146,7 @@ namespace DynamicData.List.Internal
                     .RemoveIndex()
                     .Select(changes =>
                 {
-                    result.Clone(changes);
+                    result.Clone(changes, _equalityComparer);
                     return result.CaptureChanges();
                 });
 
