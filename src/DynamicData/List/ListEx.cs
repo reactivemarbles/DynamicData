@@ -46,6 +46,23 @@ namespace DynamicData
         /// </exception>
         public static void Clone<T>(this IList<T> source, IChangeSet<T> changes)
         {
+            Clone(source, changes, null);
+        }
+
+        /// <summary>
+        /// Clones the list from the specified change set
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="changes">The changes.</param>
+        /// <param name="equalityComparer">An equality comparer to match items in the changes.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// changes
+        /// </exception>
+        public static void Clone<T>(this IList<T> source, IChangeSet<T> changes, IEqualityComparer<T> equalityComparer)
+        {
             if (source == null)
             {
                 throw new ArgumentNullException(nameof(source));
@@ -58,11 +75,11 @@ namespace DynamicData
 
             foreach (var item in changes)
             {
-                Clone(source,  item);
+                Clone(source, item, equalityComparer ?? EqualityComparer<T>.Default);
             }
         }
 
-        private static void Clone<T>(this IList<T> source,  Change<T> item)
+        private static void Clone<T>(this IList<T> source,  Change<T> item, IEqualityComparer<T> equalityComparer)
         {
             var changeAware = source as ChangeAwareList<T>;
 
@@ -155,7 +172,18 @@ namespace DynamicData
                     }
                     else
                     {
-                        source.Remove(change.Current);
+                        if (equalityComparer != null)
+                        {
+                            int index = source.IndexOf(change.Current, equalityComparer);
+                            if (index > -1)
+                            {
+                                source.RemoveAt(index);
+                            }
+                        }
+                        else
+                        {
+                            source.Remove(change.Current);
+                        }
                     }
 
                     break;
