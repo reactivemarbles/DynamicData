@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
@@ -99,6 +100,30 @@ namespace DynamicData.Tests.Cache
             _source.Remove(new Person("Person3", 13));
 
             _results.Data.Items.ShouldAllBeEquivalentTo(new[] {1, 12, 14});
+        }
+
+        [Fact]
+        public void DuplicateKeysRefreshAfterRemove()
+        {
+            var source1 = new SourceCache<Person, string>(p => p.Name);
+            var source2 = new SourceCache<Person, string>(p => p.Name);
+
+            var person = new Person("Person2", 12);
+
+            var results = source1.Connect().Merge(source2.Connect()).DistinctValues(p => p.Age).AsAggregator();
+
+            source1.AddOrUpdate(person);
+            source2.AddOrUpdate(person);
+            source2.Remove(person);
+            source1.Refresh(person); // would previously throw KeyNotFoundException here
+
+            results.Messages.Should().HaveCount(1);
+            results.Data.Items.ShouldAllBeEquivalentTo(new[] {12});
+
+            source1.Remove(person);
+
+            results.Messages.Should().HaveCount(2);
+            results.Data.Items.Should().BeEmpty();
         }
     }
 }
