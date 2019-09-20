@@ -51,7 +51,7 @@ namespace DynamicData.Cache.Internal
             void RemoveKeyAction(TKey key)
             {
                 var counter = _keyCounters.Lookup(key);
-                if (!counter.HasValue) 
+                if (!counter.HasValue)
                 {
                     return;
                 }
@@ -59,7 +59,7 @@ namespace DynamicData.Cache.Internal
                 //decrement counter
                 var newCount = counter.Value - 1;
                 _keyCounters[key] = newCount;
-                if (newCount != 0) 
+                if (newCount != 0)
                 {
                     return;
                 }
