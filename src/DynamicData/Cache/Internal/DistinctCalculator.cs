@@ -14,6 +14,7 @@ namespace DynamicData.Cache.Internal
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TValue> _valueSelector;
         private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
+        private readonly IDictionary<TKey, int> _keyCounters = new Dictionary<TKey, int>();
         private readonly IDictionary<TKey, TValue> _itemCache = new Dictionary<TKey, TValue>();
 
         public DistinctCalculator(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
@@ -31,7 +32,15 @@ namespace DynamicData.Cache.Internal
         {
             var result = new DistinctChangeSet<TValue>();
 
-            void AddAction(TValue value) => _valueCounters.Lookup(value)
+            void AddKeyAction( TKey key, TValue value) => _keyCounters.Lookup(key)
+                .IfHasValue(count => _keyCounters[key] = count + 1)
+                .Else(() =>
+                {
+                    _keyCounters[key] = 1;
+                    _itemCache[key] = value; // add to cache
+                });
+
+            void AddValueAction( TValue value) => _valueCounters.Lookup(value)
                 .IfHasValue(count => _valueCounters[value] = count + 1)
                 .Else(() =>
                 {
@@ -39,7 +48,28 @@ namespace DynamicData.Cache.Internal
                     result.Add(new Change<TValue, TValue>(ChangeReason.Add, value, value));
                 });
 
-            void RemoveAction(TValue value)
+            void RemoveKeyAction(TKey key)
+            {
+                var counter = _keyCounters.Lookup(key);
+                if (!counter.HasValue)
+                {
+                    return;
+                }
+
+                //decrement counter
+                var newCount = counter.Value - 1;
+                _keyCounters[key] = newCount;
+                if (newCount != 0)
+                {
+                    return;
+                }
+
+                //if there are none, then remove from cache
+                _keyCounters.Remove(key);
+                _itemCache.Remove(key);
+            }
+
+            void RemoveValueAction(TValue value)
             {
                 var counter = _valueCounters.Lookup(value);
                 if (!counter.HasValue)
@@ -69,11 +99,10 @@ namespace DynamicData.Cache.Internal
                     case ChangeReason.Add:
                         {
                             var value = _valueSelector(change.Current);
-                            AddAction(value);
-                            _itemCache[key] = value;
+                            AddKeyAction(key, value);
+                            AddValueAction(value);
                             break;
                         }
-
                     case ChangeReason.Refresh:
                     case ChangeReason.Update:
                         {
@@ -84,22 +113,20 @@ namespace DynamicData.Cache.Internal
                                 continue;
                             }
 
-                            RemoveAction(previous);
-                            AddAction(value);
+                            RemoveValueAction(previous);
+                            AddValueAction(value);
                             _itemCache[key] = value;
                             break;
                         }
-
                     case ChangeReason.Remove:
                         {
                             var previous = _itemCache[key];
-                            RemoveAction(previous);
-                            _itemCache.Remove(key);
+                            RemoveKeyAction(key);
+                            RemoveValueAction(previous);
                             break;
                         }
                 }
             }
-
             return result;
         }
     }
