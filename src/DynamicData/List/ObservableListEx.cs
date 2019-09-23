@@ -1713,7 +1713,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> BufferIf<T>([NotNull] this IObservable<IChangeSet<T>> source,
             [NotNull] IObservable<bool> pauseIfTrueSelector,
-            bool intialPauseState = false,
+            bool intialPauseState,
             IScheduler scheduler = null)
         {
             if (source == null)
@@ -1742,7 +1742,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source,
             IObservable<bool> pauseIfTrueSelector,
-            TimeSpan? timeOut = null,
+            TimeSpan? timeOut,
             IScheduler scheduler = null)
         {
             return BufferIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
@@ -1762,8 +1762,8 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source,
             IObservable<bool> pauseIfTrueSelector,
-            bool intialPauseState = false,
-            TimeSpan? timeOut = null,
+            bool intialPauseState,
+            TimeSpan? timeOut,
             IScheduler scheduler = null)
         {
             if (source == null)
