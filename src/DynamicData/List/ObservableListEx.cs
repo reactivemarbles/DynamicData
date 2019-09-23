@@ -2121,6 +2121,19 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Dynamically apply a logical Or operator between the items in the outer source list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Or<T>(
+            [NotNull] this ISourceList<IObservable<IChangeSet<T>>> sources)
+        {
+            return Or((IObservableList<IObservable<IChangeSet<T>>>)sources);
+        }
+
+        /// <summary>
         /// Dynamically apply a logical Or operator between the items in the outer observable list.
         /// Items which are in any of the sources are included in the result
         /// </summary>
@@ -2184,6 +2197,19 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Dynamically apply a logical Xor operator between the items in the outer source list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> Xor<T>(
+            [NotNull] this ISourceList<IObservable<IChangeSet<T>>> sources)
+        {
+            return Xor((IObservableList<IObservable<IChangeSet<T>>>)sources);
+        }
+
+        /// <summary>
         /// Dynamically apply a logical Xor operator between the items in the outer observable list.
         /// Items which are in any of the sources are included in the result
         /// </summary>
@@ -2219,6 +2245,19 @@ namespace DynamicData
             params IObservable<IChangeSet<T>>[] others)
         {
             return source.Combine(CombineOperator.And, others);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical And operator between the items in the outer source list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<T>> And<T>(
+            [NotNull] this ISourceList<IObservable<IChangeSet<T>>> sources)
+        {
+            return And((IObservableList<IObservable<IChangeSet<T>>>)sources);
         }
 
         /// <summary>
@@ -2295,6 +2334,19 @@ namespace DynamicData
             [NotNull] this ICollection<IObservable<IChangeSet<T>>> sources)
         {
             return sources.Combine(CombineOperator.Except);
+        }
+
+        /// <summary>
+        /// Apply a logical Except operator between the collections.
+        /// Items which are in the source and not in the others are included in the result
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sources">The sources.</param>
+        /// <returns></returns>>
+        public static IObservable<IChangeSet<T>> Except<T>(
+            [NotNull] this ISourceList<IObservable<IChangeSet<T>>> sources)
+        {
+            return Except((IObservableList<IObservable<IChangeSet<T>>>)sources);
         }
 
         /// <summary>

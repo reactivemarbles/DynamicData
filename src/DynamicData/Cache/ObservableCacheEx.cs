@@ -2195,6 +2195,24 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Dynamically apply a logical And operator between the items in the outer source list.
+        /// Items which are in all of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this ISourceList<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            return And((IObservableList<IObservable<IChangeSet<TObject, TKey>>>)sources);
+        }
+
+        /// <summary>
         /// Dynamically apply a logical And operator between the items in the outer observable list.
         /// Items which are in all of the sources are included in the result
         /// </summary>
@@ -2297,6 +2315,24 @@ namespace DynamicData
             }
 
             return sources.Combine(CombineOperator.Or);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical Or operator between the items in the outer source list.
+        /// Items which are in any of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this ISourceList<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            return Or((IObservableList<IObservable<IChangeSet<TObject, TKey>>>)sources);
         }
 
         //public static IObservable<IChangeSet<TDestination, TDestinationKey>> Or<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IObservableCache<TSource, TSourceKey>> source,
@@ -2432,6 +2468,24 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Dynamically apply a logical Xor operator between the items in the outer source list.
+        /// Items which are only in one of the sources are included in the result
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this ISourceList<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            return Xor((IObservableList<IObservable<IChangeSet<TObject, TKey>>>)sources);
+        }
+
+        /// <summary>
         /// Dynamically apply a logical Xor operator between the items in the outer observable list.
         /// Items which are in any of the sources are included in the result
         /// </summary>
@@ -2536,6 +2590,24 @@ namespace DynamicData
             }
 
             return sources.Combine(CombineOperator.Except);
+        }
+
+        /// <summary>
+        /// Dynamically apply a logical Except operator between the collections 
+        /// Items from the first collection in the outer list are included unless contained in any of the other lists
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="sources">The source.</param>
+        /// <returns></returns>
+        public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this ISourceList<IObservable<IChangeSet<TObject, TKey>>> sources)
+        {
+            if (sources == null)
+            {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            return Except((IObservableList<IObservable<IChangeSet<TObject, TKey>>>)sources);
         }
 
         /// <summary>

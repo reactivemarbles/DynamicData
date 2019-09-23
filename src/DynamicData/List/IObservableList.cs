@@ -12,7 +12,7 @@ namespace DynamicData
     /// A readonly observable list, providing  observable methods
     /// as well as data access methods
     /// </summary>
-    public interface IObservableList<T> : IDisposable
+    public interface IObservableList<T> : IReadOnlyList<T>, IDisposable
     {
         /// <summary>
         /// Connect to the observable list and observe any changes
@@ -37,10 +37,5 @@ namespace DynamicData
         /// Items enumerable
         /// </summary>
         IEnumerable<T> Items { get; }
-
-        /// <summary>
-        /// Gets the count.
-        /// </summary>
-        int Count { get; }
     }
 }

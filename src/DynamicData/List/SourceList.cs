@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -26,7 +27,6 @@ namespace DynamicData
         private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
         private readonly object _writeLock = new object();
-
         private int _editLevel;
 
         /// <summary>
@@ -150,6 +150,19 @@ namespace DynamicData
         /// <inheritdoc />
         public int Count => _readerWriter.Count;
 
+        /// <inheritdoc /> 
+        public T this[int index]
+        {
+            get => _readerWriter[index];
+            set
+            {
+                this.Edit((list) =>
+                {
+                    list[index] = value;
+                });
+            }
+        }
+
         /// <inheritdoc />
         public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
 
@@ -199,5 +212,66 @@ namespace DynamicData
             _cleanUp.Dispose();
             _changesPreview?.Dispose();
         }
+
+        /// <inheritdoc /> 
+        public IEnumerator<T> GetEnumerator()
+        {
+            return this.Items.GetEnumerator();
+        }
+
+        /// <inheritdoc /> 
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+
+        /// <inheritdoc /> 
+        public int IndexOf(T item)
+        {
+            return this.IndexOf(item);
+        }
+
+        /// <inheritdoc /> 
+        public bool Contains(T item)
+        {
+            return this._readerWriter.Contains(item);
+        }
+
+        /// <inheritdoc /> 
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            this._readerWriter.CopyTo(array, arrayIndex);
+        }
+
+        #region Hidden IList Implementations 
+        bool ICollection<T>.IsReadOnly => false;
+
+        T IReadOnlyList<T>.this[int index] => this[index];
+
+        void IList<T>.Insert(int index, T item)
+        {
+            this.Insert(index, item);
+        }
+
+        void IList<T>.RemoveAt(int index)
+        {
+            this.RemoveAt(index);
+        }
+
+        void ICollection<T>.Add(T item)
+        {
+            this.Add(item);
+        }
+
+        void ICollection<T>.Clear()
+        {
+            this.Clear();
+        }
+
+        bool ICollection<T>.Remove(T item)
+        {
+            return this.Remove(item);
+        }
+        #endregion
     }
 }

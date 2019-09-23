@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace DynamicData.List.Internal
@@ -26,6 +27,8 @@ namespace DynamicData.List.Internal
             _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
         }
 
+        public T this[int index] => _sourceList[index];
+
         public IObservable<int> CountChanged => _sourceList.CountChanged;
 
         public IEnumerable<T> Items => _sourceList.Items;
@@ -37,5 +40,9 @@ namespace DynamicData.List.Internal
         public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null) => _sourceList.Preview(predicate);
 
         public void Dispose() => _sourceList.Dispose();
+
+        public IEnumerator<T> GetEnumerator() => _sourceList.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => _sourceList.GetEnumerator();
     }
 }
