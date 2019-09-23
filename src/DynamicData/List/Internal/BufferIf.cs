@@ -72,7 +72,7 @@ namespace DynamicData.List.Internal
                                                        }
 
                                                        observer.OnNext(new ChangeSet<T>(buffer));
-                                                       buffer.Clear();
+                                                       buffer = new List<Change<T>>();
 
                                                        //kill off timeout if required
                                                        timeoutSubscriber.Disposable = Disposable.Empty;
