@@ -15,14 +15,8 @@ namespace DynamicData
     /// A set of changes which has occured since the last reported change
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    public class ChangeSet<T> : IChangeSet<T>
+    public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     {
-        private int _adds;
-        private int _removes;
-        private int _replaced;
-        private int _moves;
-        private int _refreshes;
-
         /// <summary>
         /// An empty change set
         /// </summary>
@@ -33,7 +27,6 @@ namespace DynamicData
         /// </summary>
         public ChangeSet()
         {
-            Items = new List<Change<T>>();
         }
 
         /// <summary>
@@ -42,144 +35,78 @@ namespace DynamicData
         /// <param name="items">The items.</param>
         /// <exception cref="System.ArgumentNullException">items</exception>
         public ChangeSet([NotNull] IEnumerable<Change<T>> items)
+            : base(items)
         {
-            if (items == null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            var list = items as List<Change<T>> ?? items.ToList();
-
-            Items = list;
-            foreach (var change in list)
-            {
-                Add(change, true);
-            }
         }
-
-        /// <summary>
-        /// Adds the specified item.
-        /// </summary>
-        /// <param name="item">The item.</param>
-        public void Add(Change<T> item)
-        {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            Add(item, false);
-        }
-
-        /// <summary>
-        /// Adds the specified item.
-        /// </summary>
-        /// <param name="item">The item.</param>
-        /// <param name="countOnly">set to true if the item has already been added</param>
-        private void Add(Change<T> item, bool countOnly)
-        {
-            switch (item.Reason)
-            {
-                case ListChangeReason.Add:
-                    _adds++;
-                    break;
-                case ListChangeReason.AddRange:
-                    _adds = _adds + item.Range.Count;
-                    break;
-                case ListChangeReason.Replace:
-                    _replaced++;
-                    break;
-                case ListChangeReason.Remove:
-                    _removes++;
-                    break;
-                case ListChangeReason.RemoveRange:
-                    _removes = _removes + item.Range.Count;
-                    break;
-                case ListChangeReason.Refresh:
-                    _removes = _refreshes++;
-                    break;
-                case ListChangeReason.Moved:
-                    _moves++;
-                    break;
-                case ListChangeReason.Clear:
-                    _removes = _removes + item.Range.Count;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(item));
-            }
-
-            if (!countOnly)
-            {
-                Items.Add(item);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the capacity.
-        /// </summary>
-        /// <value>
-        /// The capacity.
-        /// </value>
-        public int Capacity
-        {
-            get => Items.Capacity;
-            set => Items.Capacity = value;
-        }
-
-        private List<Change<T>> Items { get; }
 
         /// <summary>
         ///     Gets the number of additions
         /// </summary>
-        public int Adds => _adds;
+        public int Adds
+        {
+            get
+            {
+                int adds = 0;
+                foreach (var item in this)
+                {
+                    switch (item.Reason)
+                    {
+                        case ListChangeReason.Add:
+                            adds++;
+                            break;
+                        case ListChangeReason.AddRange:
+                            adds += item.Range.Count;
+                            break;
+                    }
+                }
+                return adds;
+            }
+        }
 
         /// <summary>
         ///     Gets the number of updates
         /// </summary>
-        public int Replaced => _replaced;
+        public int Replaced => this.Count(c => c.Reason == ListChangeReason.Replace);
 
         /// <summary>
         ///     Gets the number of removes
         /// </summary>
-        public int Removes => _removes;
+        public int Removes
+        {
+            get
+            {
+                int removes = 0;
+                foreach (var item in this)
+                {
+                    switch (item.Reason)
+                    {
+                        case ListChangeReason.Remove:
+                            removes++;
+                            break;
+                        case ListChangeReason.RemoveRange:
+                        case ListChangeReason.Clear:
+                            removes += item.Range.Count;
+                            break;
+                    }
+                }
+                return removes;
+            }
+        }
 
         /// <summary>
         ///     Gets the number of removes
         /// </summary>
-        public int Refreshes => _refreshes;
+        public int Refreshes => this.Count(c => c.Reason == ListChangeReason.Refresh);
 
         /// <summary>
         ///     Gets the number of moves
         /// </summary>
-        public int Moves => _moves;
-
-        /// <summary>
-        ///     The total update count
-        /// </summary>
-        public int Count => Items.Count;
+        public int Moves => this.Count(c => c.Reason == ListChangeReason.Moved);
 
         /// <summary>
         ///     The total number if individual item changes
         /// </summary>
         public int TotalChanges => Adds + Removes + Replaced + Moves;
-
-        #region Enumeration
-
-        /// <summary>
-        /// Gets the enumerator.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator<Change<T>> GetEnumerator()
-        {
-            return Items.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        #endregion
 
         /// <summary>
         /// Returns a <see cref="System.String" /> that represents this instance.
