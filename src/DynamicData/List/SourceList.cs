@@ -214,64 +214,40 @@ namespace DynamicData
         }
 
         /// <inheritdoc /> 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return this.Items.GetEnumerator();
-        }
+        public IEnumerator<T> GetEnumerator() => this.Items.GetEnumerator();
 
         /// <inheritdoc /> 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
         /// <inheritdoc /> 
-        public int IndexOf(T item)
-        {
-            return this.IndexOf(item);
-        }
+        public int IndexOf(T item) => this._readerWriter.IndexOf(item);
 
         /// <inheritdoc /> 
-        public bool Contains(T item)
-        {
-            return this._readerWriter.Contains(item);
-        }
+        public bool Contains(T item) => this._readerWriter.Contains(item);
 
         /// <inheritdoc /> 
-        public void CopyTo(T[] array, int arrayIndex)
+        public void CopyTo(T[] array, int arrayIndex) => this._readerWriter.CopyTo(array, arrayIndex);
+
+        /// <inheritdoc />
+        public void Insert(int index, T item) => this.Edit(list => list.Insert(index, item));
+
+        /// <inheritdoc />
+        public void RemoveAt(int index) => this.Edit(list => list.RemoveAt(index));
+
+        /// <inheritdoc />
+        public void Add(T item) => this.Edit(list => list.Add(item));
+
+        /// <inheritdoc />
+        public void Clear() => this.Edit(list => list.Clear());
+
+        /// <inheritdoc />
+        public bool Remove(T item)
         {
-            this._readerWriter.CopyTo(array, arrayIndex);
+            bool removed = false;
+            this.Edit(list => removed = list.Remove(item));
+            return removed;
         }
 
-        #region Hidden IList Implementations 
         bool ICollection<T>.IsReadOnly => false;
-
-        T IReadOnlyList<T>.this[int index] => this[index];
-
-        void IList<T>.Insert(int index, T item)
-        {
-            this.Insert(index, item);
-        }
-
-        void IList<T>.RemoveAt(int index)
-        {
-            this.RemoveAt(index);
-        }
-
-        void ICollection<T>.Add(T item)
-        {
-            this.Add(item);
-        }
-
-        void ICollection<T>.Clear()
-        {
-            this.Clear();
-        }
-
-        bool ICollection<T>.Remove(T item)
-        {
-            return this.Remove(item);
-        }
-        #endregion
     }
 }

@@ -161,5 +161,13 @@ namespace DynamicData.List.Internal
                 _data.CopyTo(array, arrayIndex);
             }
         }
+
+        public int IndexOf(T item)
+        {
+            lock (_locker)
+            {
+                return _data.IndexOf(item);
+            }
+        }
     }
 }
