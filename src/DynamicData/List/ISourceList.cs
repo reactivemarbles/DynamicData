@@ -26,23 +26,12 @@ namespace DynamicData
         /// </summary>
         new int Count { get; }
 
-        //
-        // Summary:
-        //     Gets or sets the element at the specified index.
-        //
-        // Parameters:
-        //   index:
-        //     The zero-based index of the element to get or set.
-        //
-        // Returns:
-        //     The element at the specified index.
-        //
-        // Exceptions:
-        //   T:System.ArgumentOutOfRangeException:
-        //     index is not a valid index in the ISourceList`1.
-        //
-        //   T:System.NotSupportedException:
-        //     The property is set and the ISourceList`1 is read-only.
+        /// <summary>
+        /// Gets or sets the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to get or set.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">index is not a valid index in the ISourceList`1.</exception>
+        /// <exception cref="System.NotSupportedException">The property is set and the ISourceList`1 is read-only.</exception>
         new T this[int index] { get; set; }
     }
 }
