@@ -408,8 +408,7 @@ namespace DynamicData
         {
             return source.Select(changes =>
             {
-                var items = changes.Transform(t => (object)t);
-                return new ChangeSet<object>(items);
+                return changes.Transform(t => (object)t);
             });
         }
 

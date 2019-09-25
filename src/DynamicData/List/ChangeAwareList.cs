@@ -21,7 +21,7 @@ namespace DynamicData
     {
         private readonly object _lockObject = new object();
         private readonly List<T> _innerList;
-        private List<Change<T>> _changes = new List<Change<T>>();
+        private ChangeSet<T> _changes = new ChangeSet<T>();
 
         /// <summary>
         /// Create a change aware list with the specified capacity
@@ -67,7 +67,7 @@ namespace DynamicData
 
             if (copyChanges)
             {
-                _changes = new List<Change<T>>(list._changes);
+                _changes = new ChangeSet<T>(list._changes);
             }
         }
 
@@ -84,7 +84,7 @@ namespace DynamicData
                     return ChangeSet<T>.Empty;
                 }
 
-                returnValue = new ChangeSet<T>(_changes);
+                returnValue = _changes;
 
                 //we can infer this is a Clear
                 if (_innerList.Count == 0 && returnValue.Removes == returnValue.TotalChanges && returnValue.TotalChanges > 1)
@@ -106,7 +106,7 @@ namespace DynamicData
         {
             lock (_lockObject)
             {
-                _changes = new List<Change<T>>();
+                _changes = new ChangeSet<T>();
             }
         }
 
