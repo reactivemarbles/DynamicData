@@ -92,9 +92,9 @@ namespace DynamicData
                     var removed = returnValue.Unified().Select(u => u.Current);
                     returnValue = new ChangeSet<T> { new Change<T>(ListChangeReason.Clear, removed) };
                 }
-            }
 
-            ClearChanges();
+                ClearChanges();
+            }
 
             return returnValue;
         }
