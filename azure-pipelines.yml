@@ -18,7 +18,6 @@ resources:
 jobs:
 - template: Azure/azure-pipelines.yml@templates  # Template reference
   parameters:
-    dotNetVersion: '3.0.100-preview6-012264'
     runMacBuild: false
     signPackages: false
     
