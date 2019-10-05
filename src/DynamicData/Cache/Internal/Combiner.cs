@@ -11,7 +11,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal
 {
     /// <summary>
-    ///     Combines multiple caches using logical opertators
+    ///     Combines multiple caches using logical operators
     /// </summary>
     internal sealed class Combiner<TObject, TKey>
     {

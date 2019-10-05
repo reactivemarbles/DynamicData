@@ -9,7 +9,7 @@ namespace DynamicData
     public interface IVirtualChangeSet<T> : IChangeSet<T>
     {
         /// <summary>
-        /// The paramaters used to virtualise the stream
+        /// The parameters used to virtualise the stream
         /// </summary>
         IVirtualResponse Response { get; }
     }

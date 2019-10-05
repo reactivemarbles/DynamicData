@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -97,7 +97,7 @@ namespace DynamicData.Alias
 
         /// <summary>
         /// Equivalent to a select many transform. To work, the key must individually identify each child.
-        /// **** Assumes each child can only have one  parent - support for children with multiple parents is a work in progresss
+        /// **** Assumes each child can only have one parent - support for children with multiple parents is a work in progresses
         /// </summary>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <typeparam name="TSource">The type of the source.</typeparam>
