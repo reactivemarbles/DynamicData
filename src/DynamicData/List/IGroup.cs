@@ -2,7 +2,7 @@
 namespace DynamicData
 {
     /// <summary>
-    /// A gouping of observable lists
+    /// A grouping of observable lists
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TGroup">The type of the group.</typeparam>

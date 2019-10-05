@@ -17,7 +17,7 @@ namespace DynamicData.Cache.Internal
             return new ChangeSet<TObject, TKey>(filtered.Select(i => new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value)));
         }
 
-        public static void Clone<TKey, TObject>(this IDictionary<TKey, TObject> souce, IChangeSet<TObject, TKey> changes)
+        public static void Clone<TKey, TObject>(this IDictionary<TKey, TObject> source, IChangeSet<TObject, TKey> changes)
         {
             var enumerable = changes.ToConcreteType();
             foreach (var item in enumerable)
@@ -26,10 +26,10 @@ namespace DynamicData.Cache.Internal
                 {
                     case ChangeReason.Update:
                     case ChangeReason.Add:
-                        souce[item.Key] = item.Current;
+                        source[item.Key] = item.Current;
                         break;
                     case ChangeReason.Remove:
-                        souce.Remove(item.Key);
+                        source.Remove(item.Key);
                         break;
                 }
             }

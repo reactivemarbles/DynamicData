@@ -268,7 +268,7 @@ namespace DynamicData.List.Internal
             //sort is not returning uniqueness
             if (insertIndex < 0)
             {
-                throw new SortException("Binary search has been specified, yet the sort does not yeild uniqueness");
+                throw new SortException("Binary search has been specified, yet the sort does not yield uniqueness");
             }
 
             return insertIndex;
