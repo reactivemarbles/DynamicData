@@ -19,7 +19,7 @@ namespace DynamicData.Binding
         #region Methods
 
         /// <summary>
-        /// Convert an binding list into an observable change set
+        /// Convert a binding list into an observable change set
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -36,7 +36,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Convert an binding list into an observable change set
+        /// Convert a binding list into an observable change set
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -62,7 +62,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Convert an binding list into an observable change set
+        /// Convert a binding list into an observable change set
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <typeparam name="TCollection"></typeparam>
@@ -127,7 +127,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Observes notify collection changed args
+        /// Observes list changed args
         /// </summary>
         public static IObservable<EventPattern<ListChangedEventArgs>> ObserveCollectionChanges(this IBindingList source)
         {
