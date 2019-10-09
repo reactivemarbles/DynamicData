@@ -172,6 +172,20 @@ var myConnection = myObservableCollection.ToObservableChangeSet();
 ```
 This method is only recommended for simple queries which act only on the UI thread as `ObservableCollection` is not thread safe.
 
+### Create an Observable Change Set from an Binding List
+```cs
+var myBindingList = new BindingList<T>();
+```
+To create a cache based observable change set, call `.ToObservableChangeSet` and specify a key selector for the backing cache
+```cs
+var myConnection = myBindingList.ToObservableChangeSet(t => t.Key);
+```
+or to create a list based observable change set call `.ToObservableChangeSet` with no arguments
+```cs
+var myConnection = myBindingList.ToObservableChangeSet();
+```
+This method is only recommended for simple queries which act only on the UI thread as `ObservableCollection` is not thread safe.
+
 ### Using the ObservableChangeSet static class
 
 There is also  another way to create observable change sets, and that is to use the ```ObservableChangeSet``` static class.  This class is a facsimile of the Rx.Net ```Observable``` static class and provides an almost identical API. 
