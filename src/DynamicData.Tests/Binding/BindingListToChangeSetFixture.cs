@@ -86,6 +86,20 @@ namespace DynamicData.Tests.Binding
             resetNotification.Adds.Should().Be(10);
         }
 
+        [Fact]
+        public void RaiseListChangedEvents()
+        {
+            _collection.RaiseListChangedEvents = true;
+            _collection.Add(1);
+
+            _results.Messages.Count.Should().Be(1);
+
+            _collection.RaiseListChangedEvents = false;
+            _collection.Add(1);
+
+            _results.Messages.Count.Should().Be(1);
+        }
+
         #endregion
 
         #region Classes
