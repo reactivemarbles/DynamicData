@@ -16,8 +16,6 @@ namespace DynamicData.Binding
     /// </summary>
     public static class BindingListEx
     {
-        #region Methods
-
         /// <summary>
         /// Convert a binding list into an observable change set
         /// </summary>
@@ -136,7 +134,5 @@ namespace DynamicData.Binding
                     h => source.ListChanged += h,
                     h => source.ListChanged -= h);
         }
-
-        #endregion
     }
 }
