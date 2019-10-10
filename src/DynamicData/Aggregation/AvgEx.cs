@@ -25,7 +25,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, int> valueSelector, int emptyValue = 0)
         {
@@ -41,7 +41,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, int?> valueSelector, int emptyValue = 0)
         {
@@ -57,7 +57,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
                                                              [NotNull] Func<TObject, long> valueSelector, long emptyValue = 0)
@@ -74,7 +74,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, long?> valueSelector, long emptyValue = 0)
         {
@@ -90,7 +90,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
                                                              [NotNull] Func<TObject, double> valueSelector, double emptyValue = 0)
@@ -107,7 +107,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, double?> valueSelector, double emptyValue = 0)
         {
@@ -123,7 +123,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<decimal> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
                                                               [NotNull] Func<TObject, decimal> valueSelector, decimal emptyValue = 0)
@@ -140,7 +140,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<decimal> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, decimal?> valueSelector, decimal emptyValue = 0)
         {
@@ -156,7 +156,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<float> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source,
                                                             [NotNull] Func<TObject, float> valueSelector, float emptyValue = 0)
@@ -173,7 +173,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<float> Avg<TObject, TKey>([NotNull] this IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, float?> valueSelector, float emptyValue = 0)
         {
@@ -192,7 +192,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source,
                                                  [NotNull] Func<T, int> valueSelector, int emptyValue = 0)
@@ -208,7 +208,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] Func<T, int?> valueSelector, int emptyValue = 0)
         {
@@ -223,7 +223,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] Func<T, long> valueSelector, long emptyValue = 0)
         {
@@ -238,7 +238,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] Func<T, long?> valueSelector, long emptyValue = 0)
         {
@@ -253,7 +253,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source,
                                                  [NotNull] Func<T, double> valueSelector, double emptyValue = 0)
@@ -269,7 +269,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] Func<T, double?> valueSelector, double emptyValue = 0)
         {
@@ -284,7 +284,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<decimal> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source,
                                                   [NotNull] Func<T, decimal> valueSelector, decimal emptyValue = 0)
@@ -300,7 +300,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<decimal> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] Func<T, decimal?> valueSelector, decimal emptyValue = 0)
         {
@@ -315,7 +315,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<float> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source,
                                                 [NotNull] Func<T, float> valueSelector, float emptyValue = 0)
@@ -331,7 +331,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<float> Avg<T>([NotNull] this IObservable<IChangeSet<T>> source, [NotNull] Func<T, float?> valueSelector, float emptyValue = 0)
         {
@@ -350,7 +350,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                                  [NotNull] Func<T, int> valueSelector, int emptyValue = 0)
@@ -370,7 +370,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull] Func<T, int?> valueSelector, int emptyValue = 0)
         {
@@ -402,7 +402,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source, [NotNull] Func<T, long?> valueSelector, long emptyValue = 0)
         {
@@ -417,7 +417,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<double> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                                  [NotNull] Func<T, double> valueSelector, double emptyValue = 0)
@@ -452,7 +452,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The function which returns the value</param>
         /// <param name="emptyValue">The resulting average value when there is no data</param>
         /// <returns>
-        /// An obervable of averages
+        /// An observable of averages
         /// </returns>
         public static IObservable<decimal> Avg<T>([NotNull] this IObservable<IAggregateChangeSet<T>> source,
                                                   [NotNull] Func<T, decimal> valueSelector, decimal emptyValue = 0)
