@@ -19,7 +19,7 @@ namespace DynamicData.Aggregation
         #region Abstracted
 
         /// <summary>
-        /// Continually calculates the maximum value from the underlying data sourcce
+        /// Continually calculates the maximum value from the underlying data source
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TResult">The type of the result.</typeparam>
@@ -38,7 +38,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Continually calculates the maximum value from the underlying data sourcce
+        /// Continually calculates the maximum value from the underlying data source
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -56,7 +56,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Continually calculates the minimum value from the underlying data sourcce
+        /// Continually calculates the minimum value from the underlying data source
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TResult">The type of the result.</typeparam>
@@ -71,7 +71,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Continually calculates the minimum value from the underlying data sourcce
+        /// Continually calculates the minimum value from the underlying data source
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>

@@ -16,7 +16,7 @@ namespace DynamicData
     public interface IConnectableCache<TObject, TKey>
     {
         /// <summary>
-        /// Returns an observable of any changes which match the specified key.  The sequence starts with the inital item in the cache (if there is one).
+        /// Returns an observable of any changes which match the specified key.  The sequence starts with the initial item in the cache (if there is one).
         /// </summary>
         /// <param name="key">The key.</param>
         IObservable<Change<TObject, TKey>> Watch(TKey key);

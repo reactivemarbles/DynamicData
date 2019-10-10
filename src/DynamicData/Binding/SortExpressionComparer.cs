@@ -100,7 +100,7 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        ///  Adds an additional desccending sort expression
+        ///  Adds an additional descending sort expression
         /// </summary>
         /// <param name="expression">The expression.</param>
         /// <returns></returns>

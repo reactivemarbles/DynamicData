@@ -10,7 +10,7 @@ using DynamicData.Annotations;
 namespace DynamicData.Aggregation
 {
     /// <summary>
-    /// Extensons for calculaing standard deviation
+    /// Extensions for calculating standard deviation
     /// </summary>
     public static class StdDevEx
     {

@@ -15,7 +15,7 @@ namespace DynamicData
     public interface IPageChangeSet<T> : IChangeSet<T>
     {
         /// <summary>
-        /// The paramaters used to virtualise the stream
+        /// The parameters used to virtualise the stream
         /// </summary>
         IPageResponse Response { get; }
     }

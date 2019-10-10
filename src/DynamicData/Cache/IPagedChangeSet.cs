@@ -14,7 +14,7 @@ namespace DynamicData
     public interface IPagedChangeSet<TObject, TKey> : ISortedChangeSet<TObject, TKey>
     {
         /// <summary>
-        /// The paramaters used to virtualise the stream
+        /// The parameters used to virtualise the stream
         /// </summary>
         IPageResponse Response { get; }
     }
