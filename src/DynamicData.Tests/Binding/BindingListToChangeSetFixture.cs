@@ -9,24 +9,14 @@ namespace DynamicData.Tests.Binding
 {
     public class BindingListToChangeSetFixture : IDisposable
     {
-        #region Fields
-
         private readonly TestBindingList<int> _collection;
         private readonly ChangeSetAggregator<int> _results;
-
-        #endregion
-
-        #region Constructors
 
         public BindingListToChangeSetFixture()
         {
             _collection = new TestBindingList<int>();
             _results = _collection.ToObservableChangeSet().AsAggregator();
         }
-
-        #endregion
-
-        #region Methods
 
         public void Dispose()
         {
@@ -100,22 +90,12 @@ namespace DynamicData.Tests.Binding
             _results.Messages.Count.Should().Be(1);
         }
 
-        #endregion
-
-        #region Classes
-
         private class TestBindingList<T> : BindingList<T>
         {
-            #region Methods
-
             public void Reset()
             {
                 OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
             }
-
-            #endregion
         }
-
-        #endregion
     }
 }
