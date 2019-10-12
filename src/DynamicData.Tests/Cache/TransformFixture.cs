@@ -123,7 +123,7 @@ namespace DynamicData.Tests.Cache
                 stub.Results.Messages[0].Adds.Should().Be(100, "Should return 100 adds");
 
                 var transformed = people.Select(stub.TransformFactory).OrderBy(p => p.Age).ToArray();
-                stub.Results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(stub.Results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+                stub.Results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(transformed, "Incorrect transform result");
             }
         }
 
