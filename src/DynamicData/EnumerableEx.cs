@@ -20,8 +20,8 @@ namespace DynamicData
         #region Populate changeset from standard enumerable
 
         /// <summary>
-        /// Converts the enumerable to an observable changeset
-        /// Generates a snapshot in time based of enumerable
+        /// Converts the enumerable to an observable changeset.
+        /// Generates a snapshot in time based of enumerable.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -65,8 +65,8 @@ namespace DynamicData
         #region Populate change set from standard enumerable
 
         /// <summary>
-        /// Converts the enumerable to an observable changeset
-        /// Generates a snapshot in time based of enumerable
+        /// Converts the enumerable to an observable changeset.
+        /// Generates a snapshot in time based of enumerable.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>

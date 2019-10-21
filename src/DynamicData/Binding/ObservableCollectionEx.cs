@@ -18,8 +18,8 @@ namespace DynamicData.Binding
     public static class ObservableCollectionEx
     {
         /// <summary>
-        /// Convert an observable collection into an observable change set
-        /// Change set observes collection change events
+        /// Convert an observable collection into an observable change set.
+        /// Change set observes collection change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -36,8 +36,8 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Convert an observable collection into an observable change set
-        /// Change set observes collection change events
+        /// Convert an observable collection into an observable change set.
+        /// Change set observes collection change events.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -63,8 +63,8 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Convert the readonly observable collection into an observable change set
-        /// Change set observes collection change events
+        /// Convert the readonly observable collection into an observable change set.
+        /// Change set observes collection change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -81,8 +81,8 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Convert the readonly observable collection into an observable change set
-        /// Change set observes collection change events
+        /// Convert the readonly observable collection into an observable change set.
+        /// Change set observes collection change events.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -108,8 +108,8 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Convert an observable collection into an observable change set
-        /// Change set observes collection change events
+        /// Convert an observable collection into an observable change set.
+        /// Change set observes collection change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <typeparam name="TCollection"></typeparam>

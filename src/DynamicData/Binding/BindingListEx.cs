@@ -17,8 +17,8 @@ namespace DynamicData.Binding
     public static class BindingListEx
     {
         /// <summary>
-        /// Convert a binding list into an observable change set
-        /// Change set observes list change events
+        /// Convert a binding list into an observable change set.
+        /// Change set observes list change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -35,8 +35,8 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Convert a binding list into an observable change set
-        /// Change set observes list change events
+        /// Convert a binding list into an observable change set.
+        /// Change set observes list change events.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -62,8 +62,8 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Convert a binding list into an observable change set
-        /// Change set observes list change events
+        /// Convert a binding list into an observable change set.
+        /// Change set observes list change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <typeparam name="TCollection"></typeparam>
