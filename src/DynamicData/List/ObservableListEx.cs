@@ -33,6 +33,7 @@ namespace DynamicData
 
         /// <summary>
         /// Converts the observable to an observable changeset.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -53,7 +54,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the observable to an observable changeset, allowing time expiry to be specified
+        /// Converts the observable to an observable changeset, allowing time expiry to be specified.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -82,6 +84,7 @@ namespace DynamicData
 
         /// <summary>
         /// Converts the observable to an observable changeset, with a specified limit of how large the list can be.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -104,7 +107,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the observable to an observable changeset, allowing size and time limit to be specified
+        /// Converts the observable to an observable changeset, allowing size and time limit to be specified.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -130,6 +134,7 @@ namespace DynamicData
 
         /// <summary>
         /// Converts the observable to an observable changeset.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -145,7 +150,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the observable to an observable changeset, allowing size and time limit to be specified
+        /// Converts the observable to an observable changeset, allowing size and time limit to be specified.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -163,7 +169,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the observable to an observable changeset, allowing size to be specified
+        /// Converts the observable to an observable changeset, allowing size to be specified.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -181,7 +188,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the observable to an observable changeset, allowing size and time limit to be specified
+        /// Converts the observable to an observable changeset, allowing size and time limit to be specified.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>

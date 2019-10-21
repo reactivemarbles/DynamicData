@@ -5076,7 +5076,8 @@ namespace DynamicData
         #region Populate changetset from observables
 
         /// <summary>
-        /// Converts the observable to an observable changeset
+        /// Converts the observable to an observable changeset.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -5110,7 +5111,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the observable to an observable changeset
+        /// Converts the observable to an observable changeset.
+        /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
