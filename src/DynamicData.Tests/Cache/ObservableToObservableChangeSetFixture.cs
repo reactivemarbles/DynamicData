@@ -10,31 +10,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    public class QuickAndDirtyPerformanceMeasure
-    {
-        private static readonly Person[] _people = Enumerable.Range(1, 56_000).Select(i => new Person($"Name {i}", i)).ToArray();
-        private readonly SourceCache<Person, string> _peopleCache = new SourceCache<Person, string>(p=> p.Name);
-
-        [Fact]
-        public void AddLotsOfItems()
-        {
-            _peopleCache.AddOrUpdate(_people);
-        }
-
-        [Fact]
-        public void DoSomeStuffWithAnExtraOrdinarilySimplisticMeansOfMeasuringPerformance()
-        {
-            var mySubscriptions = _peopleCache
-                .Connect()
-                .Do(_ => { })
-                .Transform(x => x) //
-                .Do(_ => { })
-                .Subscribe();
-
-            _peopleCache.AddOrUpdate(_people);
-        }
-    }
-
     public class ObservableToObservableChangeSetFixture
     {
 
@@ -142,7 +117,7 @@ namespace DynamicData.Tests.Cache
 
             scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
 
-            results.Messages.Count.Should().Be(201, "Should be 201 messages");
+            results.Messages.Count.Should().Be(400, "Should be 400 messages");
             results.Messages.Sum(x => x.Adds).Should().Be(200, "Should be 200 adds");
             results.Messages.Sum(x => x.Removes).Should().Be(200, "Should be 200 removes");
             results.Data.Count.Should().Be(0, "Should be no data in the cache");
@@ -162,9 +137,6 @@ namespace DynamicData.Tests.Cache
 
             scheduler.AdvanceBy(TimeSpan.FromSeconds(30).Ticks);
 
-            Console.WriteLine(results.Messages.Count);
-            Console.WriteLine(results.Messages.Sum(x => x.Adds));
-            Console.WriteLine(results.Messages.Sum(x => x.Removes));
 
             results.Messages.Count.Should().Be(50, "Should be 50 messages");
             results.Messages.Sum(x => x.Adds).Should().Be(30, "Should be 30 adds");
@@ -185,10 +157,6 @@ namespace DynamicData.Tests.Cache
             var results = source.ToObservableChangeSet(p => p.Key, expireAfter: t => TimeSpan.FromSeconds(10), scheduler: scheduler).AsAggregator();
 
             scheduler.AdvanceBy(TimeSpan.FromSeconds(30).Ticks);
-
-            Console.WriteLine(results.Messages.Count);
-            Console.WriteLine(results.Messages.Sum(x => x.Adds));
-            Console.WriteLine(results.Messages.Sum(x => x.Removes));
 
             results.Messages.Count.Should().Be(50, "Should be 50 messages");
             results.Messages.Sum(x => x.Adds).Should().Be(30, "Should be 30 adds");

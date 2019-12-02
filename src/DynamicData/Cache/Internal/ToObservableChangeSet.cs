@@ -54,29 +54,29 @@ namespace DynamicData.Cache.Internal
                 if (_expireAfter == null && _limitSizeTo < 1)
                 {
                     return _source.Scan(new ChangeAwareCache<TObject, TKey>(), (state, latest) =>
+                    {
+                        if (latest is IList<TObject> list)
                         {
-                            if (latest is IList<TObject> list)
+                            //zero allocation enumerator
+                            foreach (var item in EnumerableIList.Create(list))
                             {
-                                //zero allocation enumerator
-                                var enumerable = EnumerableIList.Create(list);
-                                foreach (var item in enumerable)
-                                {
-                                    state.AddOrUpdate(item, _keySelector(item));
-                                }
+                                state.AddOrUpdate(item, _keySelector(item));
                             }
-                            else
+                        }
+                        else
+                        {
+                            foreach (var item in latest)
                             {
-                                foreach (var item in latest)
-                                {
-                                    state.AddOrUpdate(item, _keySelector(item));
-                                }
+                                state.AddOrUpdate(item, _keySelector(item));
                             }
+                        }
 
-                            return state;
-                        })
+                        return state;
+                    })
                         .Select(state => state.CaptureChanges())
                         .SubscribeSafe(observer);
                 }
+
 
                 var cache = new ChangeAwareCache<ExpirableItem<TObject, TKey>, TKey>();
                 var sizeLimited = _source.Synchronize(locker)
@@ -105,18 +105,20 @@ namespace DynamicData.Cache.Internal
                     .Select(state => state.CaptureChanges())
                     .Publish();
 
+
+
+
                 var timeLimited = (_expireAfter == null ? Observable.Never<IChangeSet<ExpirableItem<TObject, TKey>, TKey>>() : sizeLimited)
                     .Filter(ei => ei.ExpireAt != DateTime.MaxValue)
-                    .GroupWithImmutableState(ei => ei.ExpireAt)
                     .MergeMany(grouping =>
                     {
-                        var expireAt = grouping.Key.Subtract(_scheduler.Now.DateTime);
+                        var expireAt = grouping.ExpireAt.Subtract(_scheduler.Now.DateTime);
                         return Observable.Timer(expireAt, _scheduler).Select(_ => grouping);
                     })
                     .Synchronize(locker)
-                    .Select(grouping =>
+                    .Select(item =>
                     {
-                        cache.Remove(grouping.Keys);
+                        cache.Remove(item.Key);
                         return cache.CaptureChanges();
                     });
 

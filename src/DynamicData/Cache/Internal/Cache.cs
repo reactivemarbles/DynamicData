@@ -4,10 +4,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
+    [DebuggerDisplay("Cache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count Items)")]
     internal class Cache<TObject, TKey> : ICache<TObject, TKey>
     {
         private readonly Dictionary<TKey, TObject> _data;
