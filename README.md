@@ -213,7 +213,7 @@ There are several overloads ```ObservableChangeSet.Create``` which match the ove
 
 ## Consuming Observable Change Sets
 The examples below illustrate the kind of things you can achieve after creating an observable change set. 
-Now you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
+Now you can create an observable cache or an observable list, here are a few quick fire examples to illustrate the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
 #### Create a Derived List or Cache
 This example shows how you can create derived collections from an observable change set. It applies a filter to a collection, and then creates a new observable collection that only contains items from the original collection that pass the filter.
@@ -414,6 +414,6 @@ Even before Rx existed I had implemented a similar concept using old fashioned e
 ## Want to know more?
 I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links at top of document)  as I intend it to be a 'living document' and I promise it will be continually maintained. 
 
-Also if you following me on Twitter you will find out when new samples or blog posts have been updated.
+Also, if you following me on Twitter you will find out when new samples or blog posts have been updated.
 
-Additionally if you have read up to here and not pressed star then why not? Ha. A star may make me be more responsive to any requests or queries.
+Additionally, if you have read up to here and not pressed star then why not? Ha. A star may make me be more responsive to any requests or queries.
