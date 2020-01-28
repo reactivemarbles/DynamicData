@@ -58,13 +58,16 @@ namespace DynamicData.Cache.Internal
                         if (latest is IList<TObject> list)
                         {
                             //zero allocation enumerator
-                            foreach (var item in EnumerableIList.Create(list))
+                            var elist = EnumerableIList.Create(list);
+                            state.Remove(state.Keys.Except(elist.Select(_keySelector)).ToList());
+                            foreach (var item in elist)
                             {
                                 state.AddOrUpdate(item, _keySelector(item));
                             }
                         }
                         else
                         {
+                            state.Remove(state.Keys.Except(latest.Select(_keySelector)).ToList());
                             foreach (var item in latest)
                             {
                                 state.AddOrUpdate(item, _keySelector(item));
