@@ -33,6 +33,41 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
+        public void OnNextProducesAnAddAndRemoveChangeForEnumerableSource()
+        {
+            var subject = new Subject<IEnumerable<Person>>();
+            var results = subject.ToObservableChangeSet(p => p.Name).AsAggregator();
+
+            var people = new[]
+            {
+                new Person("A", 1),
+                new Person("B", 2),
+                new Person("C", 3)
+            };
+
+            subject.OnNext(people);
+
+            results.Messages.Last().Adds.Should().Be(3, "Should have added three items");
+            results.Data.Count.Should().Be(3, "Should be 3 items in the cache");
+
+            people = new[]
+            {
+                new Person("A", 3),
+                new Person("B", 4)
+            };
+
+            subject.OnNext(people);
+
+            results.Messages.Last().Adds.Should().Be(0, "Should have added no items");
+            results.Messages.Last().Updates.Should().Be(2, "Should have updated 2 items");
+            results.Messages.Last().Removes.Should().Be(1, "Should have removed 1 items");
+            results.Data.Count.Should().Be(2, "Should be 3 items in the cache");
+
+            results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            results.Data.Items.ShouldAllBeEquivalentTo(results.Data.Items, "Lists should be equivalent");
+        }
+
+        [Fact]
         public void LimitSizeTo()
         {
             var subject = new Subject<IEnumerable<Person>>();

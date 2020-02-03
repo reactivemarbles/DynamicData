@@ -21,13 +21,14 @@ namespace DynamicData.Cache.Internal
         private readonly Func<TObject, TimeSpan?> _expireAfter;
         private readonly int _limitSizeTo;
         private readonly IScheduler _scheduler;
+        private readonly bool _singleValueSource;
 
         public ToObservableChangeSet(IObservable<TObject> source,
             Func<TObject, TKey> keySelector,
             Func<TObject, TimeSpan?> expireAfter,
             int limitSizeTo,
             IScheduler scheduler = null)
-            : this(source.Select(t => new[] { t }), keySelector, expireAfter, limitSizeTo, scheduler)
+            : this(source.Select(t => new[] { t }), keySelector, expireAfter, limitSizeTo, scheduler, true)
         {
         }
 
@@ -35,13 +36,15 @@ namespace DynamicData.Cache.Internal
             [NotNull] Func<TObject, TKey> keySelector,
             Func<TObject, TimeSpan?> expireAfter,
             int limitSizeTo,
-            IScheduler scheduler = null)
+            IScheduler scheduler = null,
+            bool singleValueSource = false)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
             _expireAfter = expireAfter;
             _limitSizeTo = limitSizeTo;
             _scheduler = scheduler ?? Scheduler.Default;
+            _singleValueSource = singleValueSource;
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
@@ -58,13 +61,22 @@ namespace DynamicData.Cache.Internal
                         if (latest is IList<TObject> list)
                         {
                             //zero allocation enumerator
-                            foreach (var item in EnumerableIList.Create(list))
+                            var elist = EnumerableIList.Create(list);
+                            if (!_singleValueSource)
+                            {
+                                state.Remove(state.Keys.Except(elist.Select(_keySelector)).ToList());
+                            }
+                            foreach (var item in elist)
                             {
                                 state.AddOrUpdate(item, _keySelector(item));
                             }
                         }
                         else
                         {
+                            if (!_singleValueSource)
+                            {
+                                state.Remove(state.Keys.Except(latest.Select(_keySelector)).ToList());
+                            }
                             foreach (var item in latest)
                             {
                                 state.AddOrUpdate(item, _keySelector(item));
