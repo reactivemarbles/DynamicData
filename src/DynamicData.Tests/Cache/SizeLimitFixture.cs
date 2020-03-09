@@ -104,5 +104,34 @@ namespace DynamicData.Tests.Cache
 
             completed.Should().BeTrue();
         }
+
+        [Fact]
+        public void InvokeLimitSizeToWhenOverLimit()
+        {
+            bool removesTriggered = false;
+            var subscriber = _source.LimitSizeTo(10, _scheduler)
+                                    .Subscribe(removes =>
+                                    {
+                                        removesTriggered = true;
+                                    });
+
+            _source.AddOrUpdate(_generator.Take(10).ToArray());
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
+
+            removesTriggered.Should().BeFalse();
+
+            _source.AddOrUpdate(_generator.Take(10).ToArray());
+
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
+
+            removesTriggered.Should().BeTrue();
+
+            _results.Messages.Count.Should().Be(3, "Should be 3 updates");
+            _results.Messages[0].Adds.Should().Be(10, "Should be 10 adds in the first update");
+            _results.Messages[1].Adds.Should().Be(10, "Should be 10 adds in the second update");
+            _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
+
+            subscriber.Dispose();
+        }
     }
 }
