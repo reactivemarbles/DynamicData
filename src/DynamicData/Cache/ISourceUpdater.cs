@@ -8,12 +8,12 @@ using System.Collections.Generic;
 namespace DynamicData
 {
     /// <summary>
-    /// Api for updating  a source cache
+    /// API for updating a source cache.
     /// 
     /// Use edit to produce singular changeset.
     /// 
-    /// NB:The evaluate method is used to signal to any observing operators
-    /// to  reevaluate whether the the object still matches downstream operators.
+    /// NB: The evaluate method is used to signal to any observing operators
+    /// to reevaluate whether the the object still matches downstream operators.
     /// This is primarily targeted to inline object changes such as datetime and calculated fields.
     /// 
     /// </summary>
@@ -22,7 +22,7 @@ namespace DynamicData
     public interface ISourceUpdater<TObject, TKey> : ICacheUpdater<TObject, TKey>
     {
         /// <summary>
-        /// Clears existing values and loads the sepcified items
+        /// Clears existing values and loads the specified items.
         /// </summary>
         /// <param name="items">The items.</param>
         void Load(IEnumerable<TObject> items);
@@ -34,16 +34,16 @@ namespace DynamicData
         void AddOrUpdate(IEnumerable<TObject> items);
 
         /// <summary>
-        /// Adds or update the item, 
+        /// Adds or updates the item.
         /// </summary>
         /// <param name="item">The item.</param>
         void AddOrUpdate(TObject item);
 
         /// <summary>
-        /// Adds or update the item using a comparer 
+        /// Adds or updates the item using a comparer.
         /// </summary>
         /// <param name="item">The item.</param>
-        /// <param name="comparer">The comparer</param>
+        /// <param name="comparer">The comparer.</param>
         void AddOrUpdate(TObject item, IEqualityComparer<TObject> comparer);
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace DynamicData
         void Refresh(IEnumerable<TObject> items);
 
         /// <summary>
-        ///Refreshes the specified item
+        /// Refreshes the specified item.
         /// </summary>
         /// <param name="item">The item.</param>
         void Refresh(TObject item);
@@ -66,14 +66,14 @@ namespace DynamicData
         void Evaluate(IEnumerable<TObject> items);
 
         /// <summary>
-        ///Refreshes the specified item
+        /// Refreshes the specified item.
         /// </summary>
         /// <param name="item">The item.</param>
         [Obsolete(Constants.EvaluateIsDead)]
         void Evaluate(TObject item);
 
         /// <summary>
-        ///Removes the specified items
+        /// Removes the specified items.
         /// </summary>
         /// <param name="items">The items.</param>
         void Remove(IEnumerable<TObject> items);
