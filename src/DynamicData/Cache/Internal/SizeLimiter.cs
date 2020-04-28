@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Linq;
 using DynamicData.Kernel;
 
@@ -45,14 +46,14 @@ namespace DynamicData.Cache.Internal
             return new ChangeSet<TObject, TKey>(changed);
         }
 
-        public TKey[] CloneAndReturnExpiredOnly(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
+        public KeyValuePair<TKey, TObject>[] CloneAndReturnExpiredOnly(IChangeSet<ExpirableItem<TObject, TKey>, TKey> updates)
         {
             _cache.Clone(updates);
             _cache.CaptureChanges(); //Clear any changes
 
             return _cache.KeyValues.OrderByDescending(exp => exp.Value.Index)
                                       .Skip(_sizeLimit)
-                                      .Select(kvp => kvp.Key)
+                                      .Select(kvp => new KeyValuePair<TKey, TObject>(kvp.Key, kvp.Value.Value))
                                       .ToArray();
         }
     }

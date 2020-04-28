@@ -5182,7 +5182,18 @@ namespace DynamicData
                              .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now, Interlocked.Increment(ref orderItemWasAdded)))
                              .Select(sizeLimiter.CloneAndReturnExpiredOnly)
                              .Where(expired => expired.Length != 0)
-                             .Subscribe(source.Remove);
+                             .Subscribe(toRemove =>
+                             {
+                                 try
+                                 {
+                                     source.Remove(toRemove.Select(kv => kv.Key));
+                                     observer.OnNext(toRemove);
+                                 }
+                                 catch (Exception ex)
+                                 {
+                                     observer.OnError(ex);
+                                 }
+                             });
             });
         }
 
