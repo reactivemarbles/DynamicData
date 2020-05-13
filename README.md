@@ -266,6 +266,8 @@ The `GroupOn` operator pre-caches the specified groups according to the group se
 ```cs
 var myOperation = personChangeSet.GroupOn(person => person.Status)
 ```
+The value of the inner group is represented by an observable list for each matched group. When values matching the inner grouping are modified, it is the inner group which produces the changes.
+You can also use `GroupWithImmutableState` which will produce a grouping who's inner items are a fixed size array.
 
 #### Transformation
 The `Transform` operator allows you to map objects from the observable change set to another object
