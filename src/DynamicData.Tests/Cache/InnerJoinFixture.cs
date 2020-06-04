@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reactive;
 using DynamicData.Kernel;
 using Xunit;
 using FluentAssertions;
