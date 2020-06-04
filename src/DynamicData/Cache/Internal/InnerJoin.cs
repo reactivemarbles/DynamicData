@@ -33,8 +33,8 @@ namespace DynamicData.Cache.Internal
                 var locker = new object();
 
                 //create local backing stores
-                var leftCache = _left.Synchronize(locker).AsObservableCache(false);
-                var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
+                var leftCache = _left.Synchronize(locker).AsObservableCache();
+                var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache();
 
                 //joined is the final cache
                 var joinedCache = new LockFreeObservableCache<TDestination, TLeftKey>();
