@@ -160,10 +160,13 @@ namespace DynamicData
             {
                 lock (_locker)
                 {
-                    var initial = new ChangeSet<T>(new[] {new Change<T>(ListChangeReason.AddRange, _readerWriter.Items)});
-                    if (initial.TotalChanges > 0)
+                    if (_readerWriter.Items.Length > 0)
                     {
-                        observer.OnNext(initial);
+                        observer.OnNext(
+                            new ChangeSet<T>()
+                            {
+                                new Change<T>(ListChangeReason.AddRange, _readerWriter.Items)
+                            });
                     }
 
                     var source = _changes.Finally(observer.OnCompleted);

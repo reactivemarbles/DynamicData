@@ -101,7 +101,7 @@ namespace DynamicData.List.Internal
                 return _source.Transform(item => new ManyContainer(_manyselector(item).ToArray()), true)
                     .Select(changes =>
                     {
-                        var destinationChanges = new ChangeSet<TDestination>(new DestinationEnumerator(changes, _equalityComparer));
+                        var destinationChanges = new DestinationEnumerator(changes, _equalityComparer);
                         result.Clone(destinationChanges, _equalityComparer);
                         return result.CaptureChanges();
                     })

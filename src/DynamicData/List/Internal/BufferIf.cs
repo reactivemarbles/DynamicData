@@ -38,7 +38,7 @@ namespace DynamicData.List.Internal
                     {
                         var locker = new object();
                         var paused = _initialPauseState;
-                        var buffer = new List<Change<T>>();
+                        var buffer = new ChangeSet<T>();
                         var timeoutSubscriber = new SerialDisposable();
                         var timeoutSubject = new Subject<bool>();
 
@@ -71,8 +71,8 @@ namespace DynamicData.List.Internal
                                                            return;
                                                        }
 
-                                                       observer.OnNext(new ChangeSet<T>(buffer));
-                                                       buffer = new List<Change<T>>();
+                                                       observer.OnNext(buffer);
+                                                       buffer = new ChangeSet<T>();
 
                                                        //kill off timeout if required
                                                        timeoutSubscriber.Disposable = Disposable.Empty;
