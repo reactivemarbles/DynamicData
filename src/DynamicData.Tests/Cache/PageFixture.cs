@@ -50,7 +50,7 @@ namespace DynamicData.Tests.Cache
 
             var expectedResult = people.OrderBy(p => p, changed).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages.Last().SortedItems.ToList();
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.Cache
             var expectedResult = people.OrderBy(p => p, _comparer).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[0].SortedItems.ToList();
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -80,7 +80,7 @@ namespace DynamicData.Tests.Cache
             var expectedResult = people.OrderBy(p => p, _comparer).Skip(25).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -95,7 +95,7 @@ namespace DynamicData.Tests.Cache
             var expectedResult = people.OrderBy(p => p, _comparer).Take(50).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -110,7 +110,7 @@ namespace DynamicData.Tests.Cache
             var expectedResult = people.OrderBy(p => p, _comparer).Skip(75).Take(25).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _aggregators.Messages[1].SortedItems.ToList();
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]

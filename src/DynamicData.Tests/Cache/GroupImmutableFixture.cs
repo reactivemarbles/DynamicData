@@ -123,7 +123,7 @@ namespace DynamicData.Tests.Cache
                 .ForEach(group =>
                 {
                     var cache = _results.Data.Lookup(group.Key).Value;
-                    cache.Items.ShouldAllBeEquivalentTo(group);
+                    cache.Items.Should().BeEquivalentTo(group);
                 });
 
             var changedPeople = Enumerable.Range(1, 100)
@@ -136,7 +136,7 @@ namespace DynamicData.Tests.Cache
                 .ForEach(group =>
                 {
                     var cache = _results.Data.Lookup(group.Key).Value;
-                    cache.Items.ShouldAllBeEquivalentTo(group);
+                    cache.Items.Should().BeEquivalentTo(group);
                 });
 
             _results.Messages.Count.Should().Be(2);
@@ -168,7 +168,7 @@ namespace DynamicData.Tests.Cache
                 .ForEach(group =>
                 {
                     var cache = _results.Data.Lookup(group.Key).Value;
-                    cache.Items.ShouldAllBeEquivalentTo(group);
+                    cache.Items.Should().BeEquivalentTo(group);
 
                 });
 

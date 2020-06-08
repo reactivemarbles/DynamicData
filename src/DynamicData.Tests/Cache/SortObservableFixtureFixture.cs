@@ -51,7 +51,7 @@ namespace DynamicData.Tests.Cache
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace DynamicData.Tests.Cache
             var actualResult = _results.Messages[0].SortedItems.ToList();
             var movesCount = _results.Messages[0].Moves;
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -83,7 +83,7 @@ namespace DynamicData.Tests.Cache
             var items = _results.Messages.Last().SortedItems;
             var actualResult = items.ToList();
             var sortReason = items.SortReason;
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
             sortReason.Should().Be(SortReason.Reorder);
         }
 
@@ -100,7 +100,7 @@ namespace DynamicData.Tests.Cache
             var items = _results.Messages.Last().SortedItems;
             var actualResult = items.ToList();
             var sortReason = items.SortReason;
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
             sortReason.Should().Be(SortReason.Reset);
         }
 
@@ -120,7 +120,7 @@ namespace DynamicData.Tests.Cache
 
             var expected = people.OrderBy(t => t, _comparer).ToList();
             var actual = _results.Messages.Last().SortedItems.Select(kv => kv.Value).ToList();
-            actual.ShouldAllBeEquivalentTo(expected);
+            actual.Should().BeEquivalentTo(expected);
 
             var list = new ObservableCollectionExtended<Person>();
             var adaptor = new SortedObservableCollectionAdaptor<Person, string>();
@@ -129,7 +129,7 @@ namespace DynamicData.Tests.Cache
                 adaptor.Adapt(message, list);
             }
 
-            list.ShouldAllBeEquivalentTo(expected);
+            list.Should().BeEquivalentTo(expected);
         }
 
         [Fact]
@@ -142,7 +142,7 @@ namespace DynamicData.Tests.Cache
 
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[2].SortedItems.ToList();
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
     }
 }

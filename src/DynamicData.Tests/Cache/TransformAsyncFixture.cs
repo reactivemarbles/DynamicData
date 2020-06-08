@@ -125,7 +125,7 @@ namespace DynamicData.Tests.Cache
 
         //        var result = await Task.WhenAll(people.Select(stub.TransformFactory));
         //        var transformed = result.OrderBy(p => p.Age).ToArray();
-        //        stub.Results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(stub.Results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+        //        stub.Results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(stub.Results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
         //    }
         //}
 

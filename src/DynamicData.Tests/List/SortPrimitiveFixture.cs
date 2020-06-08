@@ -38,7 +38,7 @@ namespace DynamicData.Tests.List
             var expectedResult = items.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
 
             for (int i = 0; i < 50; i++)
             {

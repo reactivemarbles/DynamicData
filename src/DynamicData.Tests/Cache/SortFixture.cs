@@ -186,7 +186,7 @@ namespace DynamicData.Tests.Cache
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -225,7 +225,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -246,7 +246,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -267,7 +267,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -289,7 +289,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -310,7 +310,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -331,7 +331,7 @@ namespace DynamicData.Tests.Cache
             ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -353,7 +353,7 @@ namespace DynamicData.Tests.Cache
             ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -376,7 +376,7 @@ namespace DynamicData.Tests.Cache
             ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -401,7 +401,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -429,7 +429,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -453,7 +453,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -478,7 +478,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -504,7 +504,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -527,7 +527,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -544,7 +544,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
     }
 
@@ -719,7 +719,7 @@ namespace DynamicData.Tests.Cache
             var expectedResult = people.OrderBy(p => p, _comparer).Select(p => new KeyValuePair<string, Person>(p.Name, p)).ToList();
             var actualResult = _results.Messages[0].SortedItems.ToList();
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -758,7 +758,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -779,7 +779,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -800,7 +800,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -822,7 +822,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -843,7 +843,7 @@ namespace DynamicData.Tests.Cache
 
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -864,7 +864,7 @@ namespace DynamicData.Tests.Cache
             ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -886,7 +886,7 @@ namespace DynamicData.Tests.Cache
             ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -909,7 +909,7 @@ namespace DynamicData.Tests.Cache
             ReferenceEquals(update, indexedItem.Value.Value).Should().BeTrue();
             var list = _results.Messages[1].SortedItems.ToList();
             var sortedResult = list.OrderBy(p => _comparer).ToList();
-            list.ShouldAllBeEquivalentTo(sortedResult);
+            list.Should().BeEquivalentTo(sortedResult);
         }
 
         [Fact]
@@ -934,7 +934,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -960,7 +960,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -984,7 +984,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -1008,7 +1008,7 @@ namespace DynamicData.Tests.Cache
 
             adaptor.Adapt(_results.Messages.Last(), list);
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -1039,7 +1039,7 @@ namespace DynamicData.Tests.Cache
 
             adaptor.Adapt(_results.Messages.Last(), list);
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -1065,7 +1065,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -1088,7 +1088,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
 
         [Fact]
@@ -1105,7 +1105,7 @@ namespace DynamicData.Tests.Cache
             adaptor.Adapt(_results.Messages.Last(), list);
 
             var shouldbe = _results.Messages.Last().SortedItems.Select(p => p.Value).ToList();
-            list.ShouldAllBeEquivalentTo(shouldbe);
+            list.Should().BeEquivalentTo(shouldbe);
         }
     }
 }

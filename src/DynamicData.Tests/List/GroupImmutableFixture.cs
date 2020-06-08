@@ -129,7 +129,7 @@ namespace DynamicData.Tests.List
                 .ForEach(group =>
                 {
                     var grp = _results.Data.Items.First(g=> g.Key.Equals(group.Key));
-                    grp.Items.ShouldAllBeEquivalentTo(group.ToArray());
+                    grp.Items.Should().BeEquivalentTo(group.ToArray());
                 });
 
             _source.RemoveMany(initialPeople.Take(15));
@@ -139,7 +139,7 @@ namespace DynamicData.Tests.List
                 .ForEach(group =>
                 {
                     var list = _results.Data.Items.First(p => p.Key == group.Key);
-                    list.Items.ShouldAllBeEquivalentTo(group);
+                    list.Items.Should().BeEquivalentTo(group);
                 });
 
             _results.Messages.Count.Should().Be(2);
@@ -170,7 +170,7 @@ namespace DynamicData.Tests.List
                 .ForEach(groupContainer =>
                 {
                     var grouping = _results.Data.Items.First(g => g.Key == groupContainer.Key);
-                    grouping.Items.ShouldAllBeEquivalentTo(groupContainer);
+                    grouping.Items.Should().BeEquivalentTo(groupContainer);
 
                 });
 

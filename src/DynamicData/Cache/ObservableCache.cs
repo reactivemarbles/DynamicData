@@ -195,6 +195,20 @@ namespace DynamicData
 
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null)
         {
+            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            {
+                lock (_locker)
+                {
+                    observer.OnNext(GetInitialUpdates(predicate));
+
+                    var changes = (predicate == null ? _changes : _changes.Filter(predicate)).NotEmpty();
+                    return changes.SubscribeSafe(observer);
+                }
+            });
+        }
+
+        public IObservable<IChangeSet<TObject, TKey>> Connect2(Func<TObject, bool> predicate = null)
+        {
             return Observable.Defer(() =>
             {
                 lock (_locker)
@@ -206,6 +220,8 @@ namespace DynamicData
                 }
             });
         }
+
+
 
         public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
         {

@@ -28,7 +28,7 @@ namespace DynamicData.Tests.List
             changes.First().Item.Current.Should().Be(1);
 
             //assert collection
-            _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 1));
+            _list.Should().BeEquivalentTo(Enumerable.Range(1, 1));
         }
 
         [Fact]
@@ -45,7 +45,7 @@ namespace DynamicData.Tests.List
             changes.Adds.Should().Be(1);
             changes.First().Item.Current.Should().Be(2);
             //assert collection
-            _list.ShouldBeEquivalentTo(Enumerable.Range(1, 2));
+            _list.Should().BeEquivalentTo(Enumerable.Range(1, 2));
         }
 
         [Fact]
@@ -58,9 +58,9 @@ namespace DynamicData.Tests.List
             var changes = _list.CaptureChanges();
             changes.Count.Should().Be(1);
             changes.Adds.Should().Be(10);
-            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            changes.First().Range.Should().BeEquivalentTo(Enumerable.Range(1, 10));
             //assert collection
-            _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            _list.Should().BeEquivalentTo(Enumerable.Range(1, 10));
         }
 
         [Fact]
@@ -72,10 +72,10 @@ namespace DynamicData.Tests.List
             var changes = _list.CaptureChanges();
             changes.Count.Should().Be(1);
             changes.Adds.Should().Be(10);
-            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            changes.First().Range.Should().BeEquivalentTo(Enumerable.Range(1, 10));
 
             //assert collection
-            _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            _list.Should().BeEquivalentTo(Enumerable.Range(1, 10));
         }
 
         [Fact]
@@ -88,11 +88,11 @@ namespace DynamicData.Tests.List
             //assert changes
             changes.Count.Should().Be(2);
             changes.Adds.Should().Be(20);
-            changes.First().Range.ShouldBeEquivalentTo(Enumerable.Range(1, 10));
-            changes.Skip(1).First().Range.ShouldBeEquivalentTo(Enumerable.Range(11, 10));
+            changes.First().Range.Should().BeEquivalentTo(Enumerable.Range(1, 10));
+            changes.Skip(1).First().Range.Should().BeEquivalentTo(Enumerable.Range(11, 10));
 
             //assert collection
-            _list.ShouldAllBeEquivalentTo(Enumerable.Range(1, 20));
+            _list.Should().BeEquivalentTo(Enumerable.Range(1, 20));
         }
 
         [Fact]
@@ -105,14 +105,14 @@ namespace DynamicData.Tests.List
             //assert changes
             changes.Count.Should().Be(2);
             changes.Adds.Should().Be(20);
-            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
-            changes.Skip(1).First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(11, 10));
+            changes.First().Range.Should().BeEquivalentTo(Enumerable.Range(1, 10));
+            changes.Skip(1).First().Range.Should().BeEquivalentTo(Enumerable.Range(11, 10));
 
             var shouldBe = Enumerable.Range(1, 5)
                                      .Union(Enumerable.Range(11, 10))
                                      .Union(Enumerable.Range(6, 5));
             //assert collection
-            _list.ShouldAllBeEquivalentTo(shouldBe);
+            _list.Should().BeEquivalentTo(shouldBe);
         }
 
         [Fact]
@@ -144,13 +144,13 @@ namespace DynamicData.Tests.List
             var changes = _list.CaptureChanges();
             changes.Count.Should().Be(1);
             changes.Removes.Should().Be(3);
-            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(6, 3));
+            changes.First().Range.Should().BeEquivalentTo(Enumerable.Range(6, 3));
 
             //assert collection
             var shouldBe = Enumerable.Range(1, 5)
                                      .Union(Enumerable.Range(9, 2));
             //assert collection
-            _list.ShouldAllBeEquivalentTo(shouldBe);
+            _list.Should().BeEquivalentTo(shouldBe);
         }
 
         [Fact]
@@ -165,7 +165,7 @@ namespace DynamicData.Tests.List
             var changes = _list.CaptureChanges();
             changes.Count.Should().Be(1);
             changes.Removes.Should().Be(10);
-            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            changes.First().Range.Should().BeEquivalentTo(Enumerable.Range(1, 10));
 
             //assert collection
             _list.Count.Should().Be(0);
@@ -183,7 +183,7 @@ namespace DynamicData.Tests.List
             var changes = _list.CaptureChanges();
             changes.Count.Should().Be(1);
             changes.Removes.Should().Be(10);
-            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            changes.First().Range.Should().BeEquivalentTo(Enumerable.Range(1, 10));
             //assert collection
             _list.Count.Should().Be(0);
         }
@@ -200,7 +200,7 @@ namespace DynamicData.Tests.List
             var changes = _list.CaptureChanges();
             changes.Count.Should().Be(1);
             changes.Removes.Should().Be(10);
-            changes.First().Range.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            changes.First().Range.Should().BeEquivalentTo(Enumerable.Range(1, 10));
 
             //assert collection
             _list.Count.Should().Be(0);

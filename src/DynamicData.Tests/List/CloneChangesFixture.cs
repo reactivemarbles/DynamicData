@@ -28,7 +28,7 @@ namespace DynamicData.Tests.List
             _clone.Clone(changes);
 
             //assert collection
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.List
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace DynamicData.Tests.List
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -60,7 +60,7 @@ namespace DynamicData.Tests.List
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -70,7 +70,7 @@ namespace DynamicData.Tests.List
             _source.AddRange(Enumerable.Range(11, 10));
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -81,7 +81,7 @@ namespace DynamicData.Tests.List
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace DynamicData.Tests.List
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -103,7 +103,7 @@ namespace DynamicData.Tests.List
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -115,7 +115,7 @@ namespace DynamicData.Tests.List
             _source.ToArray().ForEach(i => _source.Remove(i));
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -128,7 +128,7 @@ namespace DynamicData.Tests.List
 
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -139,7 +139,7 @@ namespace DynamicData.Tests.List
             _source.RemoveMany(Enumerable.Range(1, 10));
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -150,7 +150,7 @@ namespace DynamicData.Tests.List
             _source.RemoveRange(5, 3);
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]
@@ -161,7 +161,7 @@ namespace DynamicData.Tests.List
             _source.RemoveMany(Enumerable.Range(3, 5));
             var changes = _source.CaptureChanges();
             _clone.Clone(changes);
-            _clone.ShouldAllBeEquivalentTo(_source);
+            _clone.Should().BeEquivalentTo(_source);
         }
 
         [Fact]

@@ -49,7 +49,7 @@ namespace DynamicData.Tests.Cache
             _results.Messages.Count.Should().Be(1, "Should be 1 updates");
             _results.Data.Count.Should().Be(3, "Should be 3 items in the cache");
 
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {20, 21, 22});
+            _results.Data.Items.Should().BeEquivalentTo(new[] {20, 21, 22});
             _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
@@ -94,12 +94,12 @@ namespace DynamicData.Tests.Cache
                 updater.AddOrUpdate(new Person("Person4", 14));
             });
 
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {1, 12, 13, 14});
+            _results.Data.Items.Should().BeEquivalentTo(new[] {1, 12, 13, 14});
 
             //This previously threw
             _source.Remove(new Person("Person3", 13));
 
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {1, 12, 14});
+            _results.Data.Items.Should().BeEquivalentTo(new[] {1, 12, 14});
         }
 
         [Fact]
@@ -118,7 +118,7 @@ namespace DynamicData.Tests.Cache
             source1.Refresh(person); // would previously throw KeyNotFoundException here
 
             results.Messages.Should().HaveCount(1);
-            results.Data.Items.ShouldAllBeEquivalentTo(new[] {12});
+            results.Data.Items.Should().BeEquivalentTo(new[] {12});
 
             source1.Remove(person);
 

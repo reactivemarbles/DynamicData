@@ -37,7 +37,7 @@ namespace DynamicData.Tests.Cache
             _people.AddOrUpdate(people);
 
             _result.Data.Count.Should().Be(10);
-            _result.Data.Items.Select(pac => pac.Parent).ShouldAllBeEquivalentTo(people);
+            _result.Data.Items.Select(pac => pac.Parent).Should().BeEquivalentTo(people);
 
             _result.Data.Items.ForEach(pac => { pac.Count.Should().Be(0); });
         }
@@ -147,7 +147,7 @@ namespace DynamicData.Tests.Cache
         private void AssertDataIsCorrectlyFormed(Person[] expected, params string[] missingParents)
         {
             _result.Data.Count.Should().Be(expected.Length);
-            _result.Data.Items.Select(pac => pac.Parent).ShouldAllBeEquivalentTo(expected);
+            _result.Data.Items.Select(pac => pac.Parent).Should().BeEquivalentTo(expected);
 
             expected.GroupBy(p => p.ParentName)
                 .ForEach(grouping =>
@@ -161,7 +161,7 @@ namespace DynamicData.Tests.Cache
                         .ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
 
                     var children = result.Children;
-                    children.ShouldAllBeEquivalentTo(grouping);
+                    children.Should().BeEquivalentTo(grouping);
                 });
         }
 

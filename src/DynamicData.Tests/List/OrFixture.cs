@@ -123,7 +123,7 @@ namespace DynamicData.Tests.List
             _source1.AddRange(Enumerable.Range(1, 5));
             _source2.AddRange(Enumerable.Range(6, 5));
             _results.Data.Count.Should().Be(10);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 10));
         }
 
         [Fact]
@@ -133,7 +133,7 @@ namespace DynamicData.Tests.List
             _source2.AddRange(Enumerable.Range(6, 5));
             _source1.Clear();
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(6, 5));
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
         }
     }
 }

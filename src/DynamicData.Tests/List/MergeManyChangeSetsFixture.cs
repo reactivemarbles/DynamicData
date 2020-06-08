@@ -33,13 +33,13 @@ namespace DynamicData.Tests.List
             3.Should().Be(d.Count);
             b.Add(5);
             4.Should().Be(d.Count);
-            new[] {1, 2, 3, 5}.ShouldAllBeEquivalentTo(d.Items);
+            new[] {1, 2, 3, 5}.Should().BeEquivalentTo(d.Items);
 
             b.Clear();
 
             // Fails below
             2.Should().Be(d.Count);
-            new[] {1, 2}.ShouldAllBeEquivalentTo(d.Items);
+            new[] {1, 2}.Should().BeEquivalentTo(d.Items);
         }
     }
 }

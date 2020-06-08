@@ -35,7 +35,7 @@ namespace DynamicData.Tests.List
 
             var expected = people.Take(25).ToArray();
 
-            _results.Data.Items.ShouldAllBeEquivalentTo(expected);
+            _results.Data.Items.Should().BeEquivalentTo(expected);
         }
 
         [Fact]
@@ -46,7 +46,7 @@ namespace DynamicData.Tests.List
             _requestSubject.OnNext(new VirtualRequest(25, 25));
 
             var expected = people.Skip(25).Take(25).ToArray();
-            _results.Data.Items.ShouldAllBeEquivalentTo(expected);
+            _results.Data.Items.Should().BeEquivalentTo(expected);
         }
 
         [Fact]
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.List
             var expected = people.Take(25).ToArray();
 
             _source.InsertRange(_generator.Take(100), 50);
-            _results.Data.Items.ShouldAllBeEquivalentTo(expected);
+            _results.Data.Items.Should().BeEquivalentTo(expected);
         }
 
         [Fact]
@@ -87,7 +87,7 @@ namespace DynamicData.Tests.List
             _source.RemoveAt(0);
             var expected = people.Skip(26).Take(25).ToArray();
 
-            _results.Data.Items.ShouldAllBeEquivalentTo(expected);
+            _results.Data.Items.Should().BeEquivalentTo(expected);
 
             var removedMessage = _results.Messages[2].ElementAt(0);
             var removedPerson = people.ElementAt(25);

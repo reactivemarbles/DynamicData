@@ -17,7 +17,7 @@ namespace DynamicData.Tests
             var source = new[] {_person1, _person2, _person3};
             var changeSet = source.AsObservableChangeSet(x => x.Age)
                 .AsObservableCache();
-            changeSet.Items.ShouldBeEquivalentTo(source);
+            changeSet.Items.Should().BeEquivalentTo(source);
         }
 
         [Fact]
@@ -26,7 +26,7 @@ namespace DynamicData.Tests
             var source = new[] {_person1, _person2, _person3};
             var changeSet = source.AsObservableChangeSet()
                 .AsObservableList();
-            changeSet.Items.ShouldBeEquivalentTo(source);
+            changeSet.Items.Should().BeEquivalentTo(source);
         }
 
         [Theory]
