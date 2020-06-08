@@ -159,7 +159,7 @@ namespace DynamicData.Tests.Cache
             {
                 var result = _result.Data.Lookup(parentAndChild.ParentId).ValueOr(() => null);
                 var children = result.Children;
-                children.ShouldAllBeEquivalentTo(parentAndChild.Children);
+                children.Should().BeEquivalentTo(parentAndChild.Children);
             });
         }
 

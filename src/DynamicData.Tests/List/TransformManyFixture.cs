@@ -41,7 +41,7 @@ namespace DynamicData.Tests.List
             _source.Add(mother);
 
             _results.Data.Count.Should().Be(4);
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] { child1, child2, child3, frientofchild1 });
+            _results.Data.Items.Should().BeEquivalentTo(new[] { child1, child2, child3, frientofchild1 });
         }
 
         [Fact]
@@ -76,7 +76,7 @@ namespace DynamicData.Tests.List
             _source.Replace(mother, updatedMother);
 
             _results.Data.Count.Should().Be(4);
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] { child1, child2, frientofchild1, child4 });
+            _results.Data.Items.Should().BeEquivalentTo(new[] { child1, child2, frientofchild1, child4 });
         }
 
         [Fact]
@@ -100,7 +100,7 @@ namespace DynamicData.Tests.List
 
             _source.AddRange(new[] {anotherRelative1, anotherRelative2});
             _results.Data.Count.Should().Be(8);
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] { child1, child2, child3, frientofchild1, child4, child5, child6, child7 });
+            _results.Data.Items.Should().BeEquivalentTo(new[] { child1, child2, child3, frientofchild1, child4, child5, child6, child7 });
 
         }
 
@@ -123,7 +123,7 @@ namespace DynamicData.Tests.List
 
             _source.RemoveRange(0,2);
             _results.Data.Count.Should().Be(2);
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] { child6, child7 });
+            _results.Data.Items.Should().BeEquivalentTo(new[] { child6, child7 });
 
         }
 
@@ -190,16 +190,16 @@ namespace DynamicData.Tests.List
 
             tourProviders.AddRange(new[] { tp1, tp2, tp3 });
 
-            allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2 });
+            allTours.Items.Should().BeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2 });
 
             tp3.Tours.Add(tour3_1);
-            allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
+            allTours.Items.Should().BeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
 
             tp2.Tours.Remove(tour2_1);
-            allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_2, tour3_1 });
+            allTours.Items.Should().BeEquivalentTo(new[] { tour1_1, tour2_2, tour3_1 });
 
             tp2.Tours.Add(tour2_1);
-            allTours.Items.ShouldAllBeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
+            allTours.Items.Should().BeEquivalentTo(new[] { tour1_1, tour2_1, tour2_2, tour3_1 });
         }
 
         public class TourProvider

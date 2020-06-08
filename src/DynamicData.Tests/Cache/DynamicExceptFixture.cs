@@ -91,15 +91,15 @@ namespace DynamicData.Tests.Cache
             _source.Add(_source3.Connect());
 
             _results.Data.Count.Should().Be(80);
-            _results.Data.Items.ShouldAllBeEquivalentTo(items.Skip(10).Take(80));
+            _results.Data.Items.Should().BeEquivalentTo(items.Skip(10).Take(80));
 
             _source.RemoveAt(2);
             _results.Data.Count.Should().Be(90);
-            _results.Data.Items.ShouldAllBeEquivalentTo(items.Skip(10));
+            _results.Data.Items.Should().BeEquivalentTo(items.Skip(10));
 
             _source.RemoveAt(0);
             _results.Data.Count.Should().Be(10);
-            _results.Data.Items.ShouldAllBeEquivalentTo(items.Take(10));
+            _results.Data.Items.Should().BeEquivalentTo(items.Take(10));
         }
 
         [Fact]

@@ -106,13 +106,13 @@ namespace DynamicData.Tests.Cache
             _source.Add(_source3.Connect());
 
             _results.Data.Count.Should().Be(100);
-            _results.Data.Items.ShouldAllBeEquivalentTo(items);
+            _results.Data.Items.Should().BeEquivalentTo(items);
 
             _source.RemoveAt(1);
 
             var result = items.Take(10).Union(items.Skip(20));
             _results.Data.Count.Should().Be(90);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
         }
 
         [Fact]

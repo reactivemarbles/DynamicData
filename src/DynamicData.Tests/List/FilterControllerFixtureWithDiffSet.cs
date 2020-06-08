@@ -133,7 +133,7 @@ namespace DynamicData.Tests.List
             _results.Messages[0].Adds.Should().Be(80, "Should return 80 adds");
 
             var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
-            _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(filtered, "Incorrect Filter result");
+            _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(filtered, "Incorrect Filter result");
         }
 
         [Fact]
@@ -163,7 +163,7 @@ namespace DynamicData.Tests.List
             _results.Messages.Count.Should().Be(80, "Should be 80 messages");
             _results.Data.Count.Should().Be(80, "Should be 80 in the cache");
             var filtered = people.Where(p => p.Age > 20).OrderBy(p => p.Age).ToArray();
-            _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(filtered, "Incorrect Filter result");
+            _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(filtered, "Incorrect Filter result");
         }
 
         [Fact]

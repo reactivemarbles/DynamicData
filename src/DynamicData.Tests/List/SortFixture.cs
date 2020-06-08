@@ -42,7 +42,7 @@ namespace DynamicData.Tests.List
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
 
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace DynamicData.Tests.List
 
             var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -105,7 +105,7 @@ namespace DynamicData.Tests.List
 
             var expectedResult = people.OrderBy(p => p, _comparer).Take(10);
             var actualResult = _results.Data.Items;
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -121,7 +121,7 @@ namespace DynamicData.Tests.List
 
             var expectedResult = people.OrderByDescending(p => p, _comparer).Take(10);
             var actualResult = _results.Data.Items;
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
 
         [Fact]
@@ -139,7 +139,7 @@ namespace DynamicData.Tests.List
 
             var expectedResult = people.Except(odd).OrderByDescending(p => p, _comparer).ToArray();
             var actualResult = _results.Data.Items;
-            actualResult.ShouldAllBeEquivalentTo(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
         }
     }
 }

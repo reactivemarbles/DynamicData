@@ -53,7 +53,7 @@ namespace DynamicData.Tests.List
             _source.AddRange(parents);
 
             _results.Count.Should().Be(5);
-            _results.Items.ShouldBeEquivalentTo(parents.SelectMany(p => p.Children.Take(5).Select(c => new ProjectedNestedChild(p, c))));
+            _results.Items.Should().BeEquivalentTo(parents.SelectMany(p => p.Children.Take(5).Select(c => new ProjectedNestedChild(p, c))));
         }
 
         [Fact]
@@ -81,7 +81,7 @@ namespace DynamicData.Tests.List
             //remove a parent and check children have moved
             _source.Remove(parents[0]);
             _results.Count.Should().Be(3);
-            _results.Items.ShouldBeEquivalentTo(parents.Skip(1).SelectMany(p => p.Children.Select(c => new ProjectedNestedChild(p, c))));
+            _results.Items.Should().BeEquivalentTo(parents.Skip(1).SelectMany(p => p.Children.Select(c => new ProjectedNestedChild(p, c))));
         }
 
         [Fact]
@@ -109,7 +109,7 @@ namespace DynamicData.Tests.List
             //remove a child
             parents[1].Children.Remove(children[3]);
             _results.Count.Should().Be(4);
-            _results.Items.ShouldBeEquivalentTo(parents.SelectMany(p => p.Children.Where(child => child.Name != "D").Select(c => new ProjectedNestedChild(p, c))));
+            _results.Items.Should().BeEquivalentTo(parents.SelectMany(p => p.Children.Where(child => child.Name != "D").Select(c => new ProjectedNestedChild(p, c))));
         }
 
         private class ProjectedNestedChild

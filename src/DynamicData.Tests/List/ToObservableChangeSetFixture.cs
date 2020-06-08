@@ -51,7 +51,7 @@ namespace DynamicData.Tests.List
 
             var expected = new[] {_person2, _person3};
 
-            _target.ShouldAllBeEquivalentTo(expected);
+            _target.Should().BeEquivalentTo(expected);
         }
     }
 }

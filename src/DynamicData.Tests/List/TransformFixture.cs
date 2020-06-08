@@ -100,7 +100,7 @@ namespace DynamicData.Tests.List
             _results.Messages[0].Adds.Should().Be(100, "Should return 100 adds");
 
             var transformed = people.Select(_transformFactory).OrderBy(p => p.Age).ToArray();
-            _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(transformed, "Incorrect transform result");
+            _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(transformed, "Incorrect transform result");
         }
 
         [Fact]

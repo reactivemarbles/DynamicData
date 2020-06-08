@@ -71,7 +71,7 @@ namespace DynamicData.Tests.List
             _source1.AddRange(Enumerable.Range(1, 10));
             _source2.AddRange(Enumerable.Range(6, 10));
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(6, 5));
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
         }
 
         [Fact]
@@ -97,7 +97,7 @@ namespace DynamicData.Tests.List
             var result = Enumerable.Range(1, 5).ToArray();
 
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
 
             _source2.AddRange(Enumerable.Range(6, 5));
             _results.Data.Count.Should().Be(5);
@@ -107,7 +107,7 @@ namespace DynamicData.Tests.List
 
             _source.RemoveAt(2);
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
         }
     }
 }

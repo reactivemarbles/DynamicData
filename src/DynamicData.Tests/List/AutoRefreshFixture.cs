@@ -189,7 +189,7 @@ namespace DynamicData.Tests.List
                 void CheckOrder()
                 {
                     var sorted = items.OrderBy(p => p, comparer).ToArray();
-                    results.Data.Items.ShouldAllBeEquivalentTo(sorted);
+                    results.Data.Items.Should().BeEquivalentTo(sorted);
                 }
 
                 list.AddRange(items);
@@ -245,7 +245,7 @@ namespace DynamicData.Tests.List
                         var childGroup = results.Data.Items.Single(g => g.GroupKey == grouping.Key);
                         var expected = grouping.OrderBy(p => p.Name);
                         var actual = childGroup.List.Items.OrderBy(p => p.Name);
-                        actual.ShouldAllBeEquivalentTo(expected);
+                        actual.Should().BeEquivalentTo(expected);
                     }
                 }
 
@@ -306,7 +306,7 @@ namespace DynamicData.Tests.List
                         var childGroup = results.Data.Items.Single(g => g.Key == grouping.Key);
                         var expected = grouping.OrderBy(p => p.Name);
                         var actual = childGroup.Items.OrderBy(p => p.Name);
-                        actual.ShouldAllBeEquivalentTo(expected);
+                        actual.Should().BeEquivalentTo(expected);
                     }
                 }
 

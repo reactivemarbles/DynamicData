@@ -78,7 +78,7 @@ namespace DynamicData.Tests.Cache
 
             var expected = items.Skip(100).ToArray().OrderBy(p => p.Name).ToArray();
             var actual = results.Data.Items.OrderBy(p => p.Name).ToArray();
-            expected.ShouldAllBeEquivalentTo(actual, "Only second hundred should be in the cache");
+            expected.Should().BeEquivalentTo(actual, "Only second hundred should be in the cache");
         }
 
         [Fact]

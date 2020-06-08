@@ -92,7 +92,7 @@ namespace DynamicData.Tests.List
         //    var result = await Task.WhenAll(tasks);
 
         //    var transformed = result.OrderBy(p => p.Age).ToArray();
-        //    _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+        //    _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
         //}
 
         //[Fact]

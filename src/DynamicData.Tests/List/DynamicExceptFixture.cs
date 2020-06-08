@@ -80,7 +80,7 @@ namespace DynamicData.Tests.List
             _source1.AddRange(Enumerable.Range(1, 10));
             _source2.AddRange(Enumerable.Range(6, 10));
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5));
         }
 
         [Fact]
@@ -105,7 +105,7 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
             _source2.Clear();
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5));
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5));
         }
 
         [Fact]
@@ -121,7 +121,7 @@ namespace DynamicData.Tests.List
 
             var result = Enumerable.Range(1, 5);
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
 
             _source2.Edit(innerList =>
             {
@@ -131,23 +131,23 @@ namespace DynamicData.Tests.List
 
             result = Enumerable.Range(1, 2);
             _results.Data.Count.Should().Be(2);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
 
             _source.RemoveAt(1);
             result = Enumerable.Range(1, 5);
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
 
             _source.Add(_source2.Connect());
             result = Enumerable.Range(1, 2);
             _results.Data.Count.Should().Be(2);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
 
             //remove root except
             _source.RemoveAt(0);
             result = Enumerable.Range(100, 5);
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
         }
     }
 }

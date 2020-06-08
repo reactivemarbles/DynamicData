@@ -35,7 +35,7 @@ namespace DynamicData.Tests.List
 
             _results.Data.Count.Should().Be(100);
 
-            inital.ShouldAllBeEquivalentTo(_source.Items);
+            inital.Should().BeEquivalentTo(_source.Items);
         }
 
         [Fact]
