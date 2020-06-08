@@ -30,12 +30,12 @@ namespace DynamicData.Tests.Binding
         {
             _collection.AddRange(Enumerable.Range(1, 10));
 
-            _results.Data.Items.ShouldAllBeEquivalentTo(_collection);
+            _results.Data.Items.Should().BeEquivalentTo(_collection);
             _collection.Move(5, 8);
-            _results.Data.Items.ShouldAllBeEquivalentTo(_collection);
+            _results.Data.Items.Should().BeEquivalentTo(_collection);
 
             _collection.Move(7, 1);
-            _results.Data.Items.ShouldAllBeEquivalentTo(_collection);
+            _results.Data.Items.Should().BeEquivalentTo(_collection);
         }
 
         [Fact]
@@ -57,7 +57,7 @@ namespace DynamicData.Tests.Binding
 
             _results.Data.Count.Should().Be(9);
             _results.Data.Items.Contains(3).Should().BeFalse();
-            _results.Data.Items.ShouldAllBeEquivalentTo(_collection);
+            _results.Data.Items.Should().BeEquivalentTo(_collection);
         }
 
         [Fact]
@@ -75,7 +75,7 @@ namespace DynamicData.Tests.Binding
             _collection.AddRange(Enumerable.Range(1, 10));
             _collection[8] = 20;
 
-            _results.Data.Items.ShouldBeEquivalentTo(new []{1,2,3,4,5,6,7,8,20,10});
+            _results.Data.Items.Should().BeEquivalentTo(new []{1,2,3,4,5,6,7,8,20,10});
 
         }
 
@@ -85,7 +85,7 @@ namespace DynamicData.Tests.Binding
             _collection.AddRange(Enumerable.Range(1, 10));
 
             _collection.Reset();
-            _results.Data.Items.ShouldAllBeEquivalentTo(_collection);
+            _results.Data.Items.Should().BeEquivalentTo(_collection);
 
             var resetNotification = _results.Messages.Last();
             resetNotification.Removes.Should().Be(10);

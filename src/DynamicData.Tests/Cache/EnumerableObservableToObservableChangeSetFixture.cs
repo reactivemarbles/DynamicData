@@ -29,7 +29,7 @@ namespace DynamicData.Tests.Cache
 
             results.Messages.Count.Should().Be(1, "Should be 1 updates");
             results.Data.Count.Should().Be(3, "Should be 1 item in the cache");
-            results.Data.Items.ShouldAllBeEquivalentTo(results.Data.Items, "Lists should be equivalent");
+            results.Data.Items.Should().BeEquivalentTo(results.Data.Items, "Lists should be equivalent");
         }
 
         [Fact]
@@ -64,7 +64,7 @@ namespace DynamicData.Tests.Cache
             results.Data.Count.Should().Be(2, "Should be 3 items in the cache");
 
             results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            results.Data.Items.ShouldAllBeEquivalentTo(results.Data.Items, "Lists should be equivalent");
+            results.Data.Items.Should().BeEquivalentTo(results.Data.Items, "Lists should be equivalent");
         }
 
         [Fact]
@@ -86,7 +86,7 @@ namespace DynamicData.Tests.Cache
 
             var expected = people.Skip(100).ToArray().OrderBy(p => p.Name).ToArray();
             var actual = results.Data.Items.OrderBy(p => p.Name).ToArray();
-            actual.ShouldAllBeEquivalentTo(expected, "Only second hundred should be in the cache");
+            actual.Should().BeEquivalentTo(expected, "Only second hundred should be in the cache");
         }
 
         [Fact]

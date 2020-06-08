@@ -49,7 +49,7 @@ namespace DynamicData.Tests.Kernal
             _updater.AddOrUpdate(people);
             var updates = _cache.CaptureChanges();
 
-            _cache.Items.ToArray().ShouldAllBeEquivalentTo(people);
+            _cache.Items.ToArray().Should().BeEquivalentTo(people);
             _cache.Count.Should().Be(100);
             updates.Adds.Should().Be(100);
             updates.Count.Should().Be(100);

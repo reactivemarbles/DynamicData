@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Cache
                 1.Should().Be(stub.Results.Messages.Count);
                 82.Should().Be(stub.Results.Data.Count);
 
-                stub.Results.Data.Items.ShouldAllBeEquivalentTo(people.Skip(18));
+                stub.Results.Data.Items.Should().BeEquivalentTo(people.Skip(18));
             }
         }
 

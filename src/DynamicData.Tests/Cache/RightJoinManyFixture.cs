@@ -161,7 +161,7 @@ namespace DynamicData.Tests.Cache
                     .ValueOrThrow(() => new Exception("Missing result for " + grouping.Key));
 
                 var children = result.Children;
-                children.ShouldAllBeEquivalentTo(grouping);
+                children.Should().BeEquivalentTo(grouping);
             });
         }
 

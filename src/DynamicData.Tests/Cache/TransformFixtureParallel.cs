@@ -86,7 +86,7 @@ namespace DynamicData.Tests.Cache
 
             var transformed = people.Select(_transformFactory).ToArray();
 
-            _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(transformed, "Incorrect transform result");
+            _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(transformed, "Incorrect transform result");
         }
 
         [Fact]

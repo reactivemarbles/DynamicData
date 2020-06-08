@@ -34,7 +34,7 @@ namespace DynamicData.Tests.Cache
             _cache.EditDiff(newPeople, (current, previous) => Person.AgeComparer.Equals(current, previous));
 
             _cache.Count.Should().Be(15);
-            _cache.Items.ShouldAllBeEquivalentTo(newPeople);
+            _cache.Items.Should().BeEquivalentTo(newPeople);
             var lastChange = _result.Messages.Last();
             lastChange.Adds.Should().Be(5);
         }
@@ -47,7 +47,7 @@ namespace DynamicData.Tests.Cache
             _cache.EditDiff(newPeople, (current, previous) => Person.AgeComparer.Equals(current, previous));
 
             _cache.Count.Should().Be(10);
-            _cache.Items.ShouldAllBeEquivalentTo(newPeople);
+            _cache.Items.Should().BeEquivalentTo(newPeople);
             _result.Messages.Count.Should().Be(1);
         }
 
@@ -64,7 +64,7 @@ namespace DynamicData.Tests.Cache
             lastChange.Updates.Should().Be(3);
             lastChange.Removes.Should().Be(7);
 
-            _cache.Items.ShouldAllBeEquivalentTo(newList);
+            _cache.Items.Should().BeEquivalentTo(newList);
         }
 
         [Fact]
@@ -80,7 +80,7 @@ namespace DynamicData.Tests.Cache
             lastChange.Updates.Should().Be(0);
             lastChange.Removes.Should().Be(3);
 
-            _cache.Items.ShouldAllBeEquivalentTo(newList);
+            _cache.Items.Should().BeEquivalentTo(newList);
         }
 
         [Fact]
@@ -97,7 +97,7 @@ namespace DynamicData.Tests.Cache
             lastChange.Updates.Should().Be(5);
             lastChange.Removes.Should().Be(5);
 
-            _cache.Items.ShouldAllBeEquivalentTo(newList);
+            _cache.Items.Should().BeEquivalentTo(newList);
         }
 
         [Fact]
@@ -108,7 +108,7 @@ namespace DynamicData.Tests.Cache
             _cache.EditDiff(newPeople, Person.AgeComparer);
 
             _cache.Count.Should().Be(15);
-            _cache.Items.ShouldAllBeEquivalentTo(newPeople);
+            _cache.Items.Should().BeEquivalentTo(newPeople);
             var lastChange = _result.Messages.Last();
             lastChange.Adds.Should().Be(5);
         }
@@ -121,7 +121,7 @@ namespace DynamicData.Tests.Cache
             _cache.EditDiff(newPeople, Person.AgeComparer);
 
             _cache.Count.Should().Be(10);
-            _cache.Items.ShouldAllBeEquivalentTo(newPeople);
+            _cache.Items.Should().BeEquivalentTo(newPeople);
             var lastChange = _result.Messages.Last();
             _result.Messages.Count.Should().Be(1);
         }
@@ -139,7 +139,7 @@ namespace DynamicData.Tests.Cache
             lastChange.Updates.Should().Be(3);
             lastChange.Removes.Should().Be(7);
 
-            _cache.Items.ShouldAllBeEquivalentTo(newList);
+            _cache.Items.Should().BeEquivalentTo(newList);
         }
 
         [Fact]
@@ -155,7 +155,7 @@ namespace DynamicData.Tests.Cache
             lastChange.Updates.Should().Be(0);
             lastChange.Removes.Should().Be(3);
 
-            _cache.Items.ShouldAllBeEquivalentTo(newList);
+            _cache.Items.Should().BeEquivalentTo(newList);
         }
 
         [Fact]
@@ -172,7 +172,7 @@ namespace DynamicData.Tests.Cache
             lastChange.Updates.Should().Be(5);
             lastChange.Removes.Should().Be(5);
 
-            _cache.Items.ShouldAllBeEquivalentTo(newList);
+            _cache.Items.Should().BeEquivalentTo(newList);
         }
     }
 }

@@ -71,7 +71,7 @@ namespace DynamicData.Tests.List
             _source.AddOrUpdate(people);
 
             _collection.Count.Should().Be(100, "Should be 100 items in the collection");
-            _collection.ShouldAllBeEquivalentTo(_collection, "Collections should be equivalent");
+            _collection.Should().BeEquivalentTo(_collection, "Collections should be equivalent");
         }
 
         [Fact]

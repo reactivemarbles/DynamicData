@@ -105,7 +105,7 @@ namespace DynamicData.Tests.Cache
             _source.Add(_source2.Connect());
 
             _results.Data.Count.Should().Be(10);
-            _results.Data.Items.ShouldAllBeEquivalentTo(items.Skip(10).Take(10));
+            _results.Data.Items.Should().BeEquivalentTo(items.Skip(10).Take(10));
 
             _source.Add(_source3.Connect());
             _results.Data.Count.Should().Be(0);

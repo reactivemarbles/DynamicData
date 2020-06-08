@@ -25,7 +25,7 @@ namespace DynamicData.Tests.List
                 // initial addrange, refreshes to filter out < 18
                // stub.Results.Messages.Count.Should().Be(1+18);
 
-                stub.Results.Data.Items.ShouldAllBeEquivalentTo(people.Skip(18));
+                stub.Results.Data.Items.Should().BeEquivalentTo(people.Skip(18));
             }
         }
 

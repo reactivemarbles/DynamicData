@@ -121,7 +121,7 @@ namespace DynamicData.Tests.List
             _source1.AddRange(Enumerable.Range(1, 5));
             _source2.AddRange(Enumerable.Range(6, 5));
             _results.Data.Count.Should().Be(10);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 10));
         }
 
         [Fact]
@@ -133,7 +133,7 @@ namespace DynamicData.Tests.List
             _source2.AddRange(Enumerable.Range(6, 5));
             _source1.Clear();
             _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(6, 5));
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
         }
 
         [Fact]
@@ -150,13 +150,13 @@ namespace DynamicData.Tests.List
             var result = Enumerable.Range(1, 5).Union(Enumerable.Range(6, 5)).Union(Enumerable.Range(100, 5));
 
             _results.Data.Count.Should().Be(15);
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
 
             _source.RemoveAt(1);
             _results.Data.Count.Should().Be(10);
 
             result = Enumerable.Range(1, 5).Union(Enumerable.Range(100, 5));
-            _results.Data.Items.ShouldAllBeEquivalentTo(result);
+            _results.Data.Items.Should().BeEquivalentTo(result);
         }
 
         [Fact]

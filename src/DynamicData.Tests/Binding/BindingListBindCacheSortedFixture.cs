@@ -75,7 +75,7 @@ namespace DynamicData.Tests.Binding
             _source.AddOrUpdate(people);
 
             _collection.Count.Should().Be(100, "Should be 100 items in the collection");
-            _collection.ShouldAllBeEquivalentTo(_collection, "Collections should be equivalent");
+            _collection.Should().BeEquivalentTo(_collection, "Collections should be equivalent");
         }
 
         [Fact]
@@ -92,7 +92,7 @@ namespace DynamicData.Tests.Binding
         {
             _source.AddOrUpdate(_generator.Take(100));
             var sorted = _source.Items.OrderBy(p => p, _comparer).ToList();
-            sorted.ShouldAllBeEquivalentTo(_collection.ToList());
+            sorted.Should().BeEquivalentTo(_collection.ToList());
         }
 
         [Fact]

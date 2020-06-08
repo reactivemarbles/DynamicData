@@ -47,7 +47,7 @@ namespace DynamicData.Tests.List
             _results.Messages.Count.Should().Be(1, "Should be 1 updates");
             _results.Data.Count.Should().Be(3, "Should be 3 items in the cache");
 
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {20, 21, 22});
+            _results.Data.Items.Should().BeEquivalentTo(new[] {20, 21, 22});
             _results.Data.Items.First().Should().Be(20, "Should 20");
         }
 
@@ -107,7 +107,7 @@ namespace DynamicData.Tests.List
             _results.Messages.Count.Should().Be(3, "Should be 2 updates");
             _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] { 20 });
+            _results.Data.Items.Should().BeEquivalentTo(new[] { 20 });
             _results.Messages.ElementAt(0).Adds.Should().Be(1, "First message should be an add");
             _results.Messages.ElementAt(1).Removes.Should().Be(1, "Second message should be a remove");
             _results.Messages.ElementAt(2).Adds.Should().Be(1, "Third message should be an add");

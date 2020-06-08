@@ -40,7 +40,7 @@ namespace DynamicData.Tests.List
             person.Friends = new[] {friend1, friend2};
 
             _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {friend1, friend2});
+            _results.Data.Items.Should().BeEquivalentTo(new[] {friend1, friend2});
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace DynamicData.Tests.List
             person.Age = 55;
 
             _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {friend1, friend2});
+            _results.Data.Items.Should().BeEquivalentTo(new[] {friend1, friend2});
         }
 
         [Fact]
@@ -73,7 +73,7 @@ namespace DynamicData.Tests.List
             person.Friends = new[] {friend4};
 
             _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-            _results.Data.Items.ShouldAllBeEquivalentTo(new[] {friend4, friend2});
+            _results.Data.Items.Should().BeEquivalentTo(new[] {friend4, friend2});
         }
 
     }
