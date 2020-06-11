@@ -1,8 +1,8 @@
-﻿using DynamicData.Binding;
-using FluentAssertions;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using DynamicData.Binding;
+using FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.Binding
@@ -88,6 +88,45 @@ namespace DynamicData.Tests.Binding
             _collection.Add(1);
 
             _results.Messages.Count.Should().Be(1);
+        }
+
+        [Fact]
+        public void RefreshCausesReplace()
+        {
+            // Arrange
+            var sourceCache = new SourceCache<Item, Guid>(item => item.Id);
+
+            var item1 = new Item(name: "Old Name");
+
+            sourceCache.AddOrUpdate(item1);
+
+            var collection = new TestBindingList<Item>();
+
+            var sourceCacheResults = sourceCache
+                .Connect()
+                .AutoRefresh(item => item.Name)
+                .Bind(collection)
+                .AsAggregator();
+
+            var collectionResults = collection.ToObservableChangeSet().AsAggregator();
+
+            item1.Name = "New Name";
+
+            // Source cache received add and refresh
+            sourceCacheResults.Messages.Count.Should().Be(2);
+            sourceCacheResults.Messages.First().Adds.Should().Be(1);
+            sourceCacheResults.Messages.Last().Refreshes.Should().Be(1);
+
+            // List receives add and replace instead of refresh
+            collectionResults.Messages.Count.Should().Be(2);
+            collectionResults.Messages.First().Adds.Should().Be(1);
+            collectionResults.Messages.First().Refreshes.Should().Be(0);
+            collectionResults.Messages.Last().Replaced.Should().Be(1);
+            collectionResults.Messages.Last().Refreshes.Should().Be(0);
+
+            sourceCache.Dispose();
+            sourceCacheResults.Dispose();
+            collectionResults.Dispose();
         }
 
         private class TestBindingList<T> : BindingList<T>
