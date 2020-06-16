@@ -17,7 +17,6 @@ namespace DynamicData.Binding
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="destination">The destination.</param>
         /// <returns>The <paramref name="source"/> changeset for continued chaining.</returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject>> BindToObservableList<TObject>(
@@ -51,7 +50,6 @@ namespace DynamicData.Binding
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="destination">The destination.</param>
         /// <returns>The <paramref name="source"/> changeset for continued chaining.</returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<IChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(
@@ -86,7 +84,6 @@ namespace DynamicData.Binding
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="destination">The destination.</param>
         /// <returns>The <paramref name="source"/> changeset for continued chaining.</returns>
         /// <exception cref="System.ArgumentNullException">source</exception>
         public static IObservable<ISortedChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(
