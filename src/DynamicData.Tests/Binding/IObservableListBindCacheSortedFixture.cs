@@ -16,7 +16,7 @@ namespace DynamicData.Tests.Binding
         private readonly ISourceCache<Person, string> _source;
         private readonly SortedChangeSetAggregator<Person, string> _sourceCacheNotifications;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name);
+        private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age);
 
         public IObservableListBindCacheSortedFixture()
         {
@@ -107,6 +107,41 @@ namespace DynamicData.Tests.Binding
 
             _listNotifications.Messages.Count().Should().Be(2);
             _listNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+        }
+
+        [Fact]
+        public void ListRecievesMoves()
+        {
+            var person1 = new Person("Person1", 10);
+            var person2 = new Person("Person2", 20);
+            var person3 = new Person("Person3", 30);
+
+            _source.AddOrUpdate(new Person[] { person1, person2, person3 });
+
+            // Move person 3 to the front on the line
+            person3.Age = 1; 
+
+            // 1 ChangeSet with AddRange & 1 ChangeSet with Refresh & Move
+            _listNotifications.Messages.Count().Should().Be(2);
+
+            // Assert AddRange
+            var addChangeSet = _listNotifications.Messages.First();
+            addChangeSet.First().Reason.Should().Be(ListChangeReason.AddRange);
+
+            // Assert Refresh & Move
+            var refreshAndMoveChangeSet = _listNotifications.Messages.Last();
+
+            refreshAndMoveChangeSet.Count.Should().Be(2);
+
+            var refreshChange = refreshAndMoveChangeSet.First();
+            refreshChange.Reason.Should().Be(ListChangeReason.Refresh);
+            refreshChange.Item.Current.Should().Be(person3);
+
+            var moveChange = refreshAndMoveChangeSet.Last();
+            moveChange.Reason.Should().Be(ListChangeReason.Moved);
+            moveChange.Item.Current.Should().Be(person3);
+            moveChange.Item.PreviousIndex.Should().Be(2);
+            moveChange.Item.CurrentIndex.Should().Be(0);
         }
 
         [Fact]
