@@ -58,9 +58,9 @@ namespace DynamicData
             });
         }
 
-        public ObservableCache(Func<TObject, TKey> keySelector = null)
+        public ObservableCache(Func<TObject, TKey> keySelector = null, IEqualityComparer<TKey> keyEqualityComparer = null)
         {
-            _readerWriter = new ReaderWriter<TObject, TKey>(keySelector);
+            _readerWriter = new ReaderWriter<TObject, TKey>(keySelector, keyEqualityComparer);
 
             _cleanUp = Disposable.Create(() =>
             {

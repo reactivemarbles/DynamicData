@@ -11,12 +11,19 @@ namespace DynamicData.Cache.Internal
     internal sealed class ReaderWriter<TObject, TKey>
     {
         private readonly Func<TObject, TKey> _keySelector;
-        private Dictionary<TKey,TObject> _data = new Dictionary<TKey, TObject>(); //could do with priming this on first time load
+        private Dictionary<TKey, TObject> _data;
         private CacheUpdater<TObject, TKey> _activeUpdater;
+        private readonly IEqualityComparer<TKey> _keyEqualityComparer;
 
         private readonly object _locker = new object();
 
-        public ReaderWriter(Func<TObject, TKey> keySelector = null) => _keySelector = keySelector;
+        public ReaderWriter(Func<TObject, TKey> keySelector = null, IEqualityComparer<TKey> keyEqualityComparer = null)
+        {
+            _keySelector = keySelector;
+            _keyEqualityComparer = keyEqualityComparer ?? EqualityComparer<TKey>.Default;
+            //could do with priming this on first time load
+            _data = new Dictionary<TKey, TObject>(_keyEqualityComparer);
+        }
 
         #region Writers
 
@@ -56,7 +63,7 @@ namespace DynamicData.Cache.Internal
             {
                 if (previewHandler != null)
                 {
-                    var copy = new Dictionary<TKey, TObject>(_data);
+                    var copy = new Dictionary<TKey, TObject>(_data, _keyEqualityComparer);
                     var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
 
                     _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
