@@ -42,19 +42,23 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void DefaultComparer()
         {
-            using var people = Construct(keyEqualityComparer: null);
-            Assert.True(people.Lookup(ExistingKey).HasValue);
-            Assert.False(people.Lookup(NonExistentKey).HasValue);
-            Assert.False(people.Lookup(ExistingButMismatchedKey).HasValue);
+            using (var people = Construct(keyEqualityComparer: null))
+            {
+                Assert.True(people.Lookup(ExistingKey).HasValue);
+                Assert.False(people.Lookup(NonExistentKey).HasValue);
+                Assert.False(people.Lookup(ExistingButMismatchedKey).HasValue);
+            }
         }
 
         [Fact]
         public void CustomComparer()
         {
-            using var people = Construct(keyEqualityComparer: StringComparer.OrdinalIgnoreCase);
-            Assert.True(people.Lookup(ExistingKey).HasValue);
-            Assert.False(people.Lookup(NonExistentKey).HasValue);
-            Assert.True(people.Lookup(ExistingButMismatchedKey).HasValue);
+            using (var people = Construct(keyEqualityComparer: StringComparer.OrdinalIgnoreCase))
+            {
+                Assert.True(people.Lookup(ExistingKey).HasValue);
+                Assert.False(people.Lookup(NonExistentKey).HasValue);
+                Assert.True(people.Lookup(ExistingButMismatchedKey).HasValue);
+            }
         }
 
         [Fact]
