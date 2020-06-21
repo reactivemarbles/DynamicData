@@ -32,6 +32,7 @@ namespace DynamicData
             }
 
             _innerCache = new ObservableCache<TObject, TKey>(keySelector);
+            KeySelector = keySelector;
         }
 
         #region Delegated Members
@@ -61,6 +62,8 @@ namespace DynamicData
 
         /// <inheritdoc />
         public IEnumerable<TKey> Keys => _innerCache.Keys;
+
+        public Func<TObject, TKey> KeySelector { get; }
 
         /// <inheritdoc />
         public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
