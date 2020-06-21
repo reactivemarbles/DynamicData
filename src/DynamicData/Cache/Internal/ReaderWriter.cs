@@ -21,7 +21,7 @@ namespace DynamicData.Cache.Internal
         {
             _keySelector = keySelector;
             _keyEqualityComparer = keyEqualityComparer ?? EqualityComparer<TKey>.Default;
-            //could do with priming this on first time load
+            // could do with priming this on first time load
             _data = new Dictionary<TKey, TObject>(_keyEqualityComparer);
         }
 
