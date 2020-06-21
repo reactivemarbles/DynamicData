@@ -23,7 +23,10 @@ namespace DynamicData
         /// Initializes a new instance of the <see cref="SourceCache{TObject, TKey}"/> class.
         /// </summary>
         /// <param name="keySelector">The key selector.</param>
-        /// <param name="keyEqualityComparer">The comparer to use to determine if two keys are equivalent</param>
+        /// <param name="keyEqualityComparer">
+        /// The comparer to use to determine if two keys are equivalent.
+        /// If null is provided, the default comparer will be used.
+        /// </param>
         /// <exception cref="System.ArgumentNullException">keySelector</exception>
         public SourceCache(Func<TObject, TKey> keySelector, IEqualityComparer<TKey> keyEqualityComparer = null)
         {
