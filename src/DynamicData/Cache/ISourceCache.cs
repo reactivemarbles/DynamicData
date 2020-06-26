@@ -21,5 +21,10 @@ namespace DynamicData
         /// </summary>
         /// <param name="updateAction">The update action.</param>
         void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction);
+
+        /// <summary>
+        /// Key selector used by the cache to retrieve keys from objects
+        /// </summary>
+        Func<TObject, TKey> KeySelector { get; }
     }
 }
