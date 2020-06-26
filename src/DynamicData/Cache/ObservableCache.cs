@@ -21,7 +21,6 @@ namespace DynamicData
         private readonly ReaderWriter<TObject, TKey> _readerWriter;
         private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
-        private readonly object _writeLock = new object();
 
         private int _editLevel; // The level of recursion in editing.
 
@@ -80,7 +79,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(updateAction));
             }
 
-            lock (_writeLock)
+            lock (_locker)
             {
                 ChangeSet<TObject, TKey> changes = null;
 
@@ -111,7 +110,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(updateAction));
             }
 
-            lock (_writeLock)
+            lock (_locker)
             {
                 ChangeSet<TObject, TKey> changes = null;
 
@@ -162,50 +161,53 @@ namespace DynamicData
             }
         }
 
-        public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
-
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
+        public IObservable<int> CountChanged => Observable.Create<int>(observer =>
         {
-            return Observable.Create<Change<TObject, TKey>>
-            (
-                observer =>
-                {
-                    lock (_locker)
-                    {
-                        var initial = _readerWriter.Lookup(key);
-                        if (initial.HasValue)
-                        {
-                            observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
-                        }
+            lock (_locker)
+            {
+                var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
+                return source.SubscribeSafe(observer);
+            }
+        });
 
-                        return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
+        public IObservable<Change<TObject, TKey>> Watch(TKey key) => Observable.Create<Change<TObject, TKey>>(observer =>
+        {
+            lock (_locker)
+            {
+                var initial = _readerWriter.Lookup(key);
+                if (initial.HasValue)
+                {
+                    observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+                }
+
+                return _changes.Finally(observer.OnCompleted).Subscribe(changes =>
+                {
+                    foreach (var change in changes)
+                    {
+                        var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
+                        if (match)
                         {
-                            foreach (var change in changes)
-                            {
-                                var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
-                                if (match)
-                                {
-                                    observer.OnNext(change);
-                                }
-                            }
-                        });
+                            observer.OnNext(change);
+                        }
                     }
                 });
-        }
+            }
+        });
 
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null)
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null) => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            return Observable.Defer(() =>
+            lock (_locker)
             {
-                lock (_locker)
+                var initial = GetInitialUpdates(predicate);
+                if (initial.Count != 0)
                 {
-                    var initial = GetInitialUpdates(predicate);
-                    var changes = Observable.Return(initial).Concat(_changes);
-
-                    return (predicate == null ? changes : changes.Filter(predicate)).NotEmpty();
+                    observer.OnNext(initial);
                 }
-            });
-        }
+
+                var updateSource = (predicate == null ? _changes : _changes.Filter(predicate)).NotEmpty();
+                return updateSource.SubscribeSafe(observer);
+            }
+        });
 
         public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
         {

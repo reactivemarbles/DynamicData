@@ -25,7 +25,6 @@ namespace DynamicData
         private readonly ReaderWriter<T> _readerWriter = new ReaderWriter<T>();
         private readonly IDisposable _cleanUp;
         private readonly object _locker = new object();
-        private readonly object _writeLock = new object();
 
         private int _editLevel;
 
@@ -50,7 +49,7 @@ namespace DynamicData
 
         private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source)
         {
-            return source
+            return source.Synchronize(_locker)
                 .Finally(OnCompleted)
                 .Select(_readerWriter.Write)
                 .Subscribe(InvokeNext, OnError, OnCompleted);
@@ -64,7 +63,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(updateAction));
             }
 
-            lock (_writeLock)
+            lock (_locker)
             {
                 IChangeSet<T> changes = null;
 
@@ -151,7 +150,14 @@ namespace DynamicData
         public int Count => _readerWriter.Count;
 
         /// <inheritdoc />
-        public IObservable<int> CountChanged => _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
+        public IObservable<int> CountChanged => Observable.Create<int>(observer =>
+        {
+            lock (_locker)
+            {
+                var source = _countChanged.Value.StartWith(_readerWriter.Count).DistinctUntilChanged();
+                return source.SubscribeSafe(observer);
+            }
+        });
 
         /// <inheritdoc />
         public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null)
