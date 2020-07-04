@@ -168,8 +168,7 @@ namespace DynamicData
                     if (changeAware != null)
                     {
                         changeAware.RefreshAt(item.Item.CurrentIndex);
-                        }
-
+                    }
                     else
                     {
                         source.RemoveAt(item.Item.CurrentIndex);

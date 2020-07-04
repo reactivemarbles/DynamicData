@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Binding;
 using FluentAssertions;
 using Xunit;
@@ -91,6 +92,42 @@ namespace DynamicData.Tests.Binding
             var resetNotification = _results.Messages.Last();
             resetNotification.Removes.Should().Be(10);
             resetNotification.Adds.Should().Be(10);
+        }
+
+        [Fact]
+        public void RefreshNotSupported()
+        {
+            // Arrange
+            var sourceCache = new SourceCache<Item, Guid>(item => item.Id);
+
+            var item1 = new Item(name: "Old Name");
+
+            sourceCache.AddOrUpdate(item1);
+
+            var sourceCacheResults = sourceCache
+                .Connect()
+                .AutoRefresh(item => item.Name)
+                .Bind(out var collection)
+                .AsAggregator();
+
+            var collectionResults = collection.ToObservableChangeSet().AsAggregator();
+
+            item1.Name = "New Name";
+
+            // Source cache received add and refresh
+            sourceCacheResults.Messages.Count.Should().Be(2);
+            sourceCacheResults.Messages.First().Adds.Should().Be(1);
+            sourceCacheResults.Messages.Last().Refreshes.Should().Be(1);
+
+            // Collection only receives add and NOT refresh
+            // System.Collections.Specialized.NotifyCollectionChangedAction does not have an enum to describe the same item being refreshed.
+            // https://docs.microsoft.com/en-us/dotnet/api/system.collections.specialized.notifycollectionchangedaction
+            collectionResults.Messages.Count.Should().Be(1);
+            collectionResults.Messages.First().Adds.Should().Be(1);
+
+            sourceCache.Dispose();
+            sourceCacheResults.Dispose();
+            collectionResults.Dispose();
         }
 
         private class TestObservableCollection<T> : ObservableCollection<T>

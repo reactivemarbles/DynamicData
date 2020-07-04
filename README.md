@@ -233,6 +233,8 @@ The resulting observable list, oldPeople, will only contain people who are older
 
 The same pattern can be used with SourceCache by using `.AsObservableCache()` to create derived caches.
 
+As an alternative to `.Bind(out collection)` you can use `.BindToObservableList(out observableList)` for both `SourceList` & `SourceCache`. This is useful for getting derived read-only lists from sources that use `.AutoRefresh()`, since collections do not support refresh notifications.
+
 #### Filtering
 Filter the observable change set by using the `Filter` operator
 ```cs
