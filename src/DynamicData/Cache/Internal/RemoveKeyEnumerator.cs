@@ -40,15 +40,7 @@ namespace DynamicData.Cache.Internal
                 switch (change.Reason)
                 {
                     case ChangeReason.Add:
-                        // If not sorted
-                        if (change.CurrentIndex == -1)
-                        {
-                            yield return new Change<TObject>(ListChangeReason.Add, change.Current);
-                        }
-                        else
-                        {
-                            yield return new Change<TObject>(ListChangeReason.Add, change.Current, index: change.CurrentIndex);
-                        }
+                        yield return new Change<TObject>(ListChangeReason.Add, change.Current, change.CurrentIndex);
                         break;
                     case ChangeReason.Refresh:
                         // Refresh needs an index, which we don't have in a Change<T, K> model since it's key based.
