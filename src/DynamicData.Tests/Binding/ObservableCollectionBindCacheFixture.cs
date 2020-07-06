@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -47,6 +49,25 @@ namespace DynamicData.Tests.Binding
 
             _collection.Count.Should().Be(1, "Should be 1 item in the collection");
             _collection.First().Should().Be(personUpdated, "Should be updated person");
+        }
+
+        [Fact]
+        public void UpdateToSourceSendsReplaceOnDestination()
+        {
+            var person = new Person("Adult1", 50);
+            var anotherPerson = new Person("Adult1", 51);
+            NotifyCollectionChangedAction action = default;
+            _source.AddOrUpdate(person);
+
+            using (_collection
+                .ObserveCollectionChanges()
+                .Select(x => x.EventArgs.Action)
+                .Subscribe(updateType => action = updateType))
+            {
+                _source.AddOrUpdate(anotherPerson);
+            }
+
+            action.Should().Be(NotifyCollectionChangedAction.Replace, "The notification type should be Replace");
         }
 
         [Fact]
