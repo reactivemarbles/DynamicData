@@ -127,8 +127,7 @@ namespace DynamicData.Binding
                         list.Remove(update.Current);
                         break;
                     case ChangeReason.Update:
-                        list.Remove(update.Previous.Value);
-                        list.Add(update.Current);
+                        list.Replace(update.Previous.Value, update.Current);
                         break;
                 }
             }
