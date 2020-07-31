@@ -186,5 +186,32 @@ namespace DynamicData.Tests.List
 
             itemMoved.Should().BeTrue();
         }
+
+        [Fact]
+        public void MovedItemInListLowerToHigherIsMoved()
+        {
+            _source.AddRange(Enumerable.Range(1, 10));
+            _source.Move(1, 2);
+
+            var changes = _source.CaptureChanges();
+
+            _clone.Clone(changes);
+
+            _clone.Should().BeEquivalentTo(_source);
+        }
+
+        [Fact]
+        public void MovedItemInListHigherToLowerIsMoved()
+        {
+            _source.AddRange(Enumerable.Range(1, 10));
+            _source.Move(2, 1);
+
+            var changes = _source.CaptureChanges();
+
+            _clone.Clone(changes);
+
+            _clone.Should().BeEquivalentTo(_source);
+        }
+
     }
 }
