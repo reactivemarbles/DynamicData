@@ -228,17 +228,15 @@ namespace DynamicData
                     var change = item.Item;
                     bool hasIndex = change.CurrentIndex >= 0;
                     if (!hasIndex)
-                        {
-                            throw new UnspecifiedIndexException("Cannot move as an index was not specified");
-                        }
+                    {
+                        throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+                    }
 
-                        var extendedList = source as IExtendedList<T>;
-                    var observableCollection = source as ObservableCollection<T>;
-                    if (extendedList != null)
+                    if (source is IExtendedList<T> extendedList)
                     {
                         extendedList.Move(change.PreviousIndex, change.CurrentIndex);
                     }
-                    else if (observableCollection != null)
+                    else if (source is ObservableCollection<T> observableCollection)
                     {
                         observableCollection.Move(change.PreviousIndex, change.CurrentIndex);
                     }
