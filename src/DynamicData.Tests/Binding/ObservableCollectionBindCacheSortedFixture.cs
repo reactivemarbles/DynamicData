@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -174,5 +175,61 @@ namespace DynamicData.Tests.Binding
 			    latestSetWithMoves.Adds.Should().Be(0);
 		    }
 	    }
+
+        [Fact]
+        public void UpdateToSourceSendsReplaceIfSortingIsNotAffected()
+        {
+            var person1 = new Person("Adult1", 10);
+            var person2 = new Person("Adult2", 11);
+
+            NotifyCollectionChangedAction action = default;
+            _source.AddOrUpdate(person1);
+            _source.AddOrUpdate(person2);
+
+            var person2Updated = new Person("Adult2", 12);
+
+            using (_collection
+                .ObserveCollectionChanges()
+                .Select(change => change.EventArgs.Action)
+                .Subscribe(act => action = act))
+            {
+                _source.AddOrUpdate(person2Updated);
+            }
+
+            action.Should().Be(NotifyCollectionChangedAction.Replace, "The notification type should be Replace");
+            _collection.Should().Equal(person1, person2Updated);
+        }
+
+        [Fact]
+        public void UpdateToSourceSendsRemoveAndAddIfSortingIsAffected()
+        {
+            var person1 = new Person("Adult1", 10);
+            var person2 = new Person("Adult2", 11);
+            var person2Updated = new Person("Adult2", 1);
+
+            var actions = new List<NotifyCollectionChangedAction>();
+            var collection = new ObservableCollectionExtended<Person>();
+
+            using (var source = new SourceCache<Person, string>(person => person.Name))
+            using (source.Connect()
+                .Sort(SortExpressionComparer<Person>.Ascending(person => person.Age))
+                .Bind(collection)
+                .Subscribe())
+            {
+                source.AddOrUpdate(person1);
+                source.AddOrUpdate(person2);
+
+                using (collection
+                    .ObserveCollectionChanges()
+                    .Select(change => change.EventArgs.Action)
+                    .Subscribe(act => actions.Add(act)))
+                {
+                    source.AddOrUpdate(person2Updated);
+                }
+            }
+
+            actions.Should().Equal(NotifyCollectionChangedAction.Remove, NotifyCollectionChangedAction.Add);
+            collection.Should().Equal(person2Updated, person1);
+        }
     }
 }

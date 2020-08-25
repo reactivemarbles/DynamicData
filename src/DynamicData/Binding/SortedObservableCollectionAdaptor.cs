@@ -103,8 +103,16 @@ namespace DynamicData.Binding
                         list.Move(update.PreviousIndex, update.CurrentIndex);
                         break;
                     case ChangeReason.Update:
-                        list.RemoveAt(update.PreviousIndex);
-                        list.Insert(update.CurrentIndex, update.Current);
+                        if (update.PreviousIndex != update.CurrentIndex)
+                        {
+                            list.RemoveAt(update.PreviousIndex);
+                            list.Insert(update.CurrentIndex, update.Current);
+                        }
+                        else
+                        {
+                            list.Replace(update.Previous.Value, update.Current);
+                        }
+
                         break;
                 }
             }
