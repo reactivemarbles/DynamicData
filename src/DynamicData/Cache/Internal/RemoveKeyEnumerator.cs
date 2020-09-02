@@ -73,7 +73,7 @@ namespace DynamicData.Cache.Internal
                         }
                         else
                         {
-                            yield return new Change<TObject>(ListChangeReason.Remove, change.Current, index: change.CurrentIndex);
+                            yield return new Change<TObject>(ListChangeReason.Remove, change.Previous.Value, index: change.PreviousIndex);
                             yield return new Change<TObject>(ListChangeReason.Add, change.Current, index: change.CurrentIndex);
                         }
                         break;

@@ -51,13 +51,18 @@ namespace DynamicData.Tests.Binding
         [Fact]
         public void UpdateToSourceUpdatesTheDestination()
         {
-            var person = new Person("Adult1", 50);
-            var personUpdated = new Person("Adult1", 51);
-            _source.AddOrUpdate(person);
-            _source.AddOrUpdate(personUpdated);
+            var person1 = new Person("Adult1", 20);
+            var person2 = new Person("Adult2", 30);
+            var personUpdated1 = new Person("Adult1", 40);
 
-            _list.Count.Should().Be(1, "Should be 1 item in the collection");
-            _list.Items.First().Should().Be(personUpdated, "Should be updated person");
+            _source.AddOrUpdate(person1);
+            _source.AddOrUpdate(person2);
+
+            _list.Items.Should().Equal(new Person[] { person1, person2 });
+
+            _source.AddOrUpdate(personUpdated1);
+
+            _list.Items.Should().Equal(new Person[] { person2, personUpdated1 });
         }
 
         [Fact]
