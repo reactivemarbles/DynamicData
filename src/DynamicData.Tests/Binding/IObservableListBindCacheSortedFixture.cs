@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -11,12 +13,15 @@ namespace DynamicData.Tests.Binding
 
     public class IObservableListBindCacheSortedFixture : IDisposable
     {
+        private static readonly IComparer<Person> _comparerAgeAscThanNameAsc = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
+        private static readonly IComparer<Person> _comparerNameDesc = SortExpressionComparer<Person>.Descending(p => p.Name);
+
         private readonly IObservableList<Person> _list;
         private readonly ChangeSetAggregator<Person> _listNotifications;
         private readonly ISourceCache<Person, string> _source;
         private readonly SortedChangeSetAggregator<Person, string> _sourceCacheNotifications;
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age);
+        private readonly BehaviorSubject<IComparer<Person>> _comparer = new BehaviorSubject<IComparer<Person>>(_comparerAgeAscThanNameAsc);
 
         public IObservableListBindCacheSortedFixture()
         {
@@ -24,7 +29,7 @@ namespace DynamicData.Tests.Binding
             _sourceCacheNotifications = _source
                 .Connect()
                 .AutoRefresh()
-                .Sort(_comparer, resetThreshold: 25)
+                .Sort(_comparer, resetThreshold: 10)
                 .BindToObservableList(out _list)
                 .AsAggregator();
 
@@ -36,6 +41,38 @@ namespace DynamicData.Tests.Binding
             _sourceCacheNotifications.Dispose();
             _listNotifications.Dispose();
             _source.Dispose();
+        }
+
+        [Fact]
+        public void InitialBindWithExistingData()
+        {
+            var source = new SourceCache<Person, string>(p => p.Name);
+
+            // Populate source before binding
+            var person1 = new Person("Adult1", 20);
+            var person2 = new Person("Adult2", 30);
+            source.AddOrUpdate(person2); // Add out of order to assert intial order
+            source.AddOrUpdate(person1);
+
+            var sourceCacheNotifications = source
+                .Connect()
+                .AutoRefresh()
+                .Sort(_comparer, resetThreshold: 10)
+                .BindToObservableList(out var list)
+                .AsAggregator();
+
+            var listNotifications = list.Connect().AsAggregator();
+
+            // Assert
+            listNotifications.Messages.Count().Should().Be(1);
+            listNotifications.Messages.First().First().Reason.Should().Be(ListChangeReason.AddRange);
+            list.Items.Should().Equal(new Person[] { person1, person2 });
+
+            // Clean up
+            source.Dispose();
+            sourceCacheNotifications.Dispose();
+            listNotifications.Dispose();
+            list.Dispose();
         }
 
         [Fact]
@@ -51,13 +88,18 @@ namespace DynamicData.Tests.Binding
         [Fact]
         public void UpdateToSourceUpdatesTheDestination()
         {
-            var person = new Person("Adult1", 50);
-            var personUpdated = new Person("Adult1", 51);
-            _source.AddOrUpdate(person);
-            _source.AddOrUpdate(personUpdated);
+            var person1 = new Person("Adult1", 20);
+            var person2 = new Person("Adult2", 30);
+            var personUpdated1 = new Person("Adult1", 40);
 
-            _list.Count.Should().Be(1, "Should be 1 item in the collection");
-            _list.Items.First().Should().Be(personUpdated, "Should be updated person");
+            _source.AddOrUpdate(person1);
+            _source.AddOrUpdate(person2);
+
+            _list.Items.Should().Equal(new Person[] { person1, person2 });
+
+            _source.AddOrUpdate(personUpdated1);
+
+            _list.Items.Should().Equal(new Person[] { person2, personUpdated1 });
         }
 
         [Fact]
@@ -73,11 +115,13 @@ namespace DynamicData.Tests.Binding
         [Fact]
         public void BatchAdd()
         {
-            var people = _generator.Take(100).ToList();
+            var people = _generator.Take(15).ToList();
             _source.AddOrUpdate(people);
 
-            _list.Count.Should().Be(100, "Should be 100 items in the collection");
-            _list.Should().BeEquivalentTo(_list, "Collections should be equivalent");
+            var sorted = people.OrderBy(p => p, _comparerAgeAscThanNameAsc).ToList();
+
+            _list.Count.Should().Be(15, "Should be 15 items in the collection");
+            _list.Items.Should().Equal(sorted, "Collections should be equivalent");
         }
 
         [Fact]
@@ -86,15 +130,35 @@ namespace DynamicData.Tests.Binding
             var people = _generator.Take(100).ToList();
             _source.AddOrUpdate(people);
             _source.Clear();
-            _list.Count.Should().Be(0, "Should be 100 items in the collection");
+            _list.Count.Should().Be(0, "Should be 0 items in the collection");
         }
 
         [Fact]
         public void CollectionIsInSortOrder()
         {
             _source.AddOrUpdate(_generator.Take(100));
-            var sorted = _source.Items.OrderBy(p => p, _comparer).ToList();
-            sorted.Should().BeEquivalentTo(_list.Items);
+            var sorted = _source.Items.OrderBy(p => p, _comparerAgeAscThanNameAsc).ToList();
+            sorted.Should().Equal(_list.Items);
+        }
+
+        [Fact]
+        public void Reset()
+        {
+            var people = Enumerable.Range(1, 100).Select(i => new Person("P" + i, i)).ToArray();
+
+            _source.AddOrUpdate(people);
+
+            _comparer.OnNext(_comparerNameDesc);
+
+            var sorted = people.OrderBy(p => p, _comparerNameDesc).ToList();
+
+            _list.Items.Should().Equal(sorted);
+
+            _listNotifications.Messages.Count().Should().Be(2); // Initial loading change set and a reset change due to a change over the reset threshold.
+            _listNotifications.Messages[0].First().Reason.Should().Be(ListChangeReason.AddRange);// initial loading
+            _listNotifications.Messages[1].Count.Should().Be(2);// Reset
+            _listNotifications.Messages[1].First().Reason.Should().Be(ListChangeReason.Clear); // reset
+            _listNotifications.Messages[1].Last().Reason.Should().Be(ListChangeReason.AddRange); // reset
         }
 
         [Fact]

@@ -50,7 +50,7 @@ namespace DynamicData.Cache.Internal
                         // Thus, currentIndex will not be available here where as other changes like add and remove do have indexes if coming from a sorted changeset.
 
                         // In order to properly handle a refresh and map to an index on a list, we need to use the source list (within the edit method so that it's thread safe)
-                        if (_list != null && _list.IndexOf(change.Current) is int index && index >= 0)
+                        if (_list?.IndexOf(change.Current) is int index && index >= 0)
                         {
                             yield return new Change<TObject>(ListChangeReason.Refresh, current: change.Current, index: index);
                         }
@@ -65,28 +65,11 @@ namespace DynamicData.Cache.Internal
                         yield return new Change<TObject>(change.Current, change.CurrentIndex, change.PreviousIndex);
                         break;
                     case ChangeReason.Update:
-                        // If not sorted
-                        if (change.CurrentIndex == -1)
-                        {
-                            yield return new Change<TObject>(ListChangeReason.Remove, change.Previous.Value);
-                            yield return new Change<TObject>(ListChangeReason.Add, change.Current);
-                        }
-                        else
-                        {
-                            yield return new Change<TObject>(ListChangeReason.Remove, change.Current, index: change.CurrentIndex);
-                            yield return new Change<TObject>(ListChangeReason.Add, change.Current, index: change.CurrentIndex);
-                        }
+                        yield return new Change<TObject>(ListChangeReason.Remove, change.Previous.Value, index: change.PreviousIndex);
+                        yield return new Change<TObject>(ListChangeReason.Add, change.Current, index: change.CurrentIndex);
                         break;
                     case ChangeReason.Remove:
-                        // If not sorted
-                        if (change.CurrentIndex == -1)
-                        {
-                            yield return new Change<TObject>(ListChangeReason.Remove, change.Current);
-                        }
-                        else
-                        {
-                            yield return new Change<TObject>(ListChangeReason.Remove, change.Current, index: change.CurrentIndex);
-                        }
+                        yield return new Change<TObject>(ListChangeReason.Remove, change.Current, index: change.CurrentIndex);
                         break;
                 }
             }

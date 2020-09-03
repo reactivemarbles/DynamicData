@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reactive.Linq;
 
 namespace DynamicData.Binding
@@ -102,7 +103,27 @@ namespace DynamicData.Binding
             return Observable.Create<ISortedChangeSet<TObject, TKey>>(observer =>
             {
                 return source
-                    .Do(changes => sourceList.Edit(editor => editor.Clone(changes.RemoveKey(editor))))
+                    .Do(changes =>
+                    {
+                        switch (changes.SortedItems.SortReason)
+                        {
+                            case SortReason.InitialLoad:
+                                sourceList.AddRange(changes.SortedItems.Select(kv => kv.Value));
+                                break;
+                            case SortReason.ComparerChanged:
+                            case SortReason.DataChanged:
+                            case SortReason.Reorder:
+                                sourceList.Edit(editor => editor.Clone(changes.RemoveKey(editor)));
+                                break;
+                            case SortReason.Reset:
+                                sourceList.Edit(editor =>
+                                {
+                                    editor.Clear();
+                                    editor.AddRange(changes.SortedItems.Select(kv => kv.Value));
+                                });
+                                break;
+                        }
+                    })
                     .Finally(() => sourceList.Dispose())
                     .SubscribeSafe(observer);
             });
