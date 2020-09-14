@@ -32,15 +32,14 @@ namespace DynamicData.Cache.Internal
             return Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
             {
                 var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
-
-                var transformer = _source.SelectTask(changes => DoTransform(cache, changes));
+                var transformer = _source.SelectMany(changes => DoTransform(cache, changes));
 
                 if (_forceTransform != null)
                 {
                     var locker = new object();
                     var forced = _forceTransform
                         .Synchronize(locker)
-                        .SelectTask(shouldTransform => DoTransform(cache, shouldTransform));
+                        .SelectMany(shouldTransform => DoTransform(cache, shouldTransform));
 
                     transformer = transformer.Synchronize(locker).Merge(forced);
                 }
@@ -56,14 +55,16 @@ namespace DynamicData.Cache.Internal
                           .Select(kvp => new Change<TSource,TKey>(ChangeReason.Update,  kvp.Key, kvp.Value.Source, kvp.Value.Source))
                           .ToArray();
 
-            var transformed = await toTransform.SelectParallel(Transform, _maximumConcurrency).ConfigureAwait(false);
-            return ProcessUpdates(cache, transformed.ToArray());
+            var transformed = await Task.WhenAll(toTransform.Select(Transform)).ConfigureAwait(false);
+
+            return ProcessUpdates(cache, transformed);
         }
 
         private async Task<IChangeSet<TDestination, TKey>> DoTransform(ChangeAwareCache<TransformedItemContainer, TKey>  cache, IChangeSet<TSource, TKey> changes )
         {
-            var transformed = await changes.SelectParallel(Transform, _maximumConcurrency).ConfigureAwait(false);
-            return ProcessUpdates(cache, transformed.ToArray());
+            var transformed = await Task.WhenAll(changes.Select(Transform)).ConfigureAwait(false);
+
+            return ProcessUpdates(cache, transformed);
         }
 
         private async Task<TransformResult> Transform(Change<TSource, TKey> change)
