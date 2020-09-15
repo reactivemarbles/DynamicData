@@ -70,5 +70,4 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
         directory: artifacts/report-output
-        files: ./coverage1.xml,./coverage2.xml # optional
         fail_ci_if_error: true # optional (default = false)
