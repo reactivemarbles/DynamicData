@@ -8,6 +8,7 @@ on:
 
 env:
   configuration: Release
+  productNamespacePrefix: "DynamicData"
 
 jobs:
   build:
@@ -36,7 +37,7 @@ jobs:
       with:
         setAllVars: true
 
-    - name: Install Dependencies
+    - name: Restore NuGet Packages
       run: dotnet restore
       working-directory: src
 
@@ -46,3 +47,26 @@ jobs:
     - name: Build
       run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
       working-directory: src
+
+    - name: Install Report Generator
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+    - name: Run Unit Tests
+      run: dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="../../artifacts/coverage/coverage.xml" /p:Include="[${{ env.productNamespacePrefix}}*]*" /p:Exclude="[${{ env.productNamespacePrefix}}*Tests.*]*"
+      working-directory: src
+
+    - name: Generate Coverage Report
+      run: reportgenerator -reports:"coverage.*.xml" -targetdir:report-output
+      working-directory: artifacts/coverage
+
+    - name: Generate Coverage Artifacts
+      uses: actions/upload-artifact@master
+      with:
+        name: Coverage
+        path: artifacts/coverage/report-output
+
+    - name: Upload Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        directory: artifacts/coverage
