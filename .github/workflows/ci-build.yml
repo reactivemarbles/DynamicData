@@ -8,6 +8,7 @@ on:
 
 env:
   configuration: Release
+  productNamespacePrefix: "DynamicData"
 
 jobs:
   build:
@@ -46,3 +47,24 @@ jobs:
     - name: Build
       run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
       working-directory: src
+
+    - name: Install Report Generator
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+    - name: Run Unit Tests
+      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Exclude=\"[xunit.*]*,[*]*.Migrations.*\,[${{ env.productNamespacePrefix}}*Tests.*]*" /p:CoverletOutput="../../artifacts/coverage.xml"
+      working-directory: src
+
+    - name: Generate Coverage Report
+      run: reportgenerator -reports:"coverage.*.xml" -targetdir:report-output
+      working-directory: artifacts
+
+    - name: Generate Coverage Artifacts
+      uses: actions/upload-artifact@master
+      with:
+        name: Coverage
+        path: artifacts/report-output
+
+
+    
+      
