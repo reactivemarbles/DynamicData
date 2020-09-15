@@ -70,4 +70,3 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
         directory: artifacts/report-output
-        fail_ci_if_error: true # optional (default = false)
