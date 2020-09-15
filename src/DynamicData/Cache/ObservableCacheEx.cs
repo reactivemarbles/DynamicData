@@ -3088,7 +3088,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
-        /// <param name="maximumConcurrency">The maximum concurrent tasks used to perform transforms.</param>
+        /// <param name="maximumConcurrency">***Concurrency has been disabled and will be re-implemented later.  The maximum concurrent tasks used to perform transforms.</param>
         /// <returns>
         /// A transformed update collection
         /// </returns>
@@ -3122,7 +3122,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects</param>
-        /// <param name="maximumConcurrency">The maximum concurrent tasks used to perform transforms.</param>
+        /// <param name="maximumConcurrency">***Concurrency has been disabled and will be re-implemented later. The maximum concurrent tasks used to perform transforms.</param>
         /// <returns>
         /// A transformed update collection
         /// </returns>
