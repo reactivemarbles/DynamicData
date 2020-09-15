@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading;
 using System.Threading.Tasks;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -11,7 +10,6 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    [Obsolete("Not obsolete - test commented out due to test run freezing on Appveyor")]
     public class TransformAsyncFixture
     {
         [Fact]
