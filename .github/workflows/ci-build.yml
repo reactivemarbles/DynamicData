@@ -1,0 +1,48 @@
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  configuration: Release
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+
+    - name: Install Latest NuGet
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-api-key: ${{ secrets.NuGetAPIKey }}
+        nuget-version: '5.x'
+
+    - name: NBGV
+      uses: dotnet/nbgv@master
+      with:
+        setAllVars: true
+
+    - name: Install Dependencies
+      run: dotnet restore
+      working-directory: src
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.1
+
+    - name: Build
+      run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
+      working-directory: src
