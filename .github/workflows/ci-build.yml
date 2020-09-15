@@ -52,7 +52,7 @@ jobs:
       run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
     - name: Run Unit Tests
-      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="../../artifacts/coverage.xml" '/p:Exclude="[xunit.*],[*]*.Migrations.*,[${{ env.productNamespacePrefix}}*Tests.*]*'
+      run: dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="../../artifacts/coverage.xml" '/p:Exclude="[xunit.*],[*]*.Migrations.*,[${{ env.productNamespacePrefix}}*Tests.*]*"'
       working-directory: src
 
     - name: Generate Coverage Report
