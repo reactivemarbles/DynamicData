@@ -8,7 +8,7 @@ on:
 
 env:
   configuration: Release
-  validRelease: contains(github.event.pull_request.labels.*.name, 'release') && ${{ github.event_name != 'pull_request' }}
+  validRelease: contains(github.event.pull_request.labels.*.name, 'release') && github.event.pull_request.merged == 'true'
 
 jobs:
   release:
