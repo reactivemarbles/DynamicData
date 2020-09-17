@@ -9,6 +9,8 @@ on:
 env:
   configuration: Release
   productNamespacePrefix: "DynamicData"
+  validRelease: ${{ contains(github.event.pull_request.labels.*.name, 'release') &&  }}
+
 
 jobs:
   build:
