@@ -11,8 +11,6 @@ env:
   configuration: Release
   productNamespacePrefix: "DynamicData"
   validRelease: ${{ contains(github.event.pull_request.labels.*.name, 'release') && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
-  NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
-  source-url: https://api.nuget.org/v3/index.json
 
 jobs:
   build:
@@ -79,8 +77,11 @@ jobs:
 
     - name: NuGet Push
       if: env.validRelease == 'true'
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
+        SOURCE_URL: https://api.nuget.org/v3/index.json
       run: |
-        dotnet nuget push **/*.nupkg
+        dotnet nuget push -s $SOURCE_URL -k $NUGET_AUTH_TOKEN **/*.nupkg
 
     - name: Changelog
       uses: scottbrenner/generate-changelog-action@master
