@@ -87,11 +87,11 @@ jobs:
       with:
         nuget-api-key: ${{ secrets.NUGET_API_KEY }}
         nuget-version: '5.x'
-        nuget-api-key-source: https://api.nuget.org/v3/index.json
 
     - name: NuGet Push
       if: env.validRelease == 'true'
       run: |
+        dotnet nuget add source https://api.nuget.org/v3/index.json --name github
         dotnet nuget push **/*.nupkg
 
     - name: Changelog
