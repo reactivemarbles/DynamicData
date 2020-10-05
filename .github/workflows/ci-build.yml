@@ -11,6 +11,8 @@ env:
   configuration: Release
   productNamespacePrefix: "DynamicData"
   validRelease: ${{ contains(github.event.pull_request.labels.*.name, 'release') && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
+  NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
+  source-url: https://api.nuget.org/v3/index.json
 
 jobs:
   build:
@@ -35,12 +37,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.x
-
-    - name: Install Latest NuGet
-      uses: nuget/setup-nuget@v1
-      with:
-        nuget-api-key: ${{ secrets.NuGetAPIKey }}
-        nuget-version: '5.x'
 
     - name: NBGV
       uses: dotnet/nbgv@master
@@ -81,17 +77,9 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
         directory: artifacts/coverage
 
-    - name: Install Latest NuGet
-      uses: nuget/setup-nuget@v1
-      if: env.validRelease == 'true'
-      with:
-        nuget-api-key: ${{ secrets.NUGET_API_KEY }}
-        nuget-version: '5.x'
-
     - name: NuGet Push
       if: env.validRelease == 'true'
       run: |
-        dotnet nuget add source https://api.nuget.org/v3/index.json --name github
         dotnet nuget push **/*.nupkg
 
     - name: Changelog
