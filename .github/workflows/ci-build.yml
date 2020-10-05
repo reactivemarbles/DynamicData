@@ -20,7 +20,7 @@ jobs:
     steps:
 
     - name: PR Environment
-      run: \
+      run: |
         echo Release Tag Contained - ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
         echo Pull Request - ${{ github.event_name == 'pull_request' }}
         echo GitHub Action - ${{ github.event.action == 'closed' }}
