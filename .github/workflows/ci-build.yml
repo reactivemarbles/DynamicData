@@ -83,26 +83,26 @@ jobs:
 
     - name: Install Latest NuGet
       uses: nuget/setup-nuget@v1
-      if: ${{ env.validRelease == true }}
+      if: ${{ env.validRelease == 'true' }}
       with:
         nuget-api-key: ${{ secrets.NUGET_API_KEY }}
         nuget-version: '5.x'
 
     - name: NuGet Push
-      if: ${{ env.validRelease == true }}
+      if: ${{ env.validRelease == 'true' }}
       run: |
         dotnet nuget push **/*.nupkg
 
     - name: Changelog
       uses: scottbrenner/generate-changelog-action@master
       id: changelog
-      if: ${{ env.validRelease == true }}
+      if: ${{ env.validRelease == 'true' }}
       env:
         REPO: ${{ github.repository }}
 
     - name: Create Release
       uses: actions/create-release@v1
-      if: ${{ env.validRelease == true }}
+      if: ${{ env.validRelease == 'true' }}
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
