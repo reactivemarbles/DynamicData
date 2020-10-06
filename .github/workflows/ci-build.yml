@@ -1,33 +1,21 @@
-name: .NET Core Desktop
+name: Build
 
 on:
   push:
     branches: [ main ]
   pull_request:
-    types: [opened, synchronize, reopened, closed]
     branches: [ main ]
 
 env:
   configuration: Release
   productNamespacePrefix: "DynamicData"
-  validRelease: ${{ contains(github.event.pull_request.labels.*.name, 'release') && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
-  NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
-  source-url: https://api.nuget.org/v3/index.json
 
 jobs:
   build:
-
     runs-on: windows-latest
-
+    outputs:
+      nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
     steps:
-
-    - name: PR Environment
-      run: |
-        echo Release Tag Contained - ${{ contains(github.event.pull_request.labels.*.name, 'release') }}
-        echo Pull Request - ${{ github.event_name == 'pull_request' }}
-        echo GitHub Action - ${{ github.event.action == 'closed' }}
-        echo Pull Request Merged - ${{ github.event.pull_request.merged == true }}
-
     - name: Checkout
       uses: actions/checkout@v2
       with:
@@ -39,6 +27,7 @@ jobs:
         dotnet-version: 3.1.x
 
     - name: NBGV
+      id: nbgv
       uses: dotnet/nbgv@master
       with:
         setAllVars: true
@@ -65,28 +54,48 @@ jobs:
       run: reportgenerator -reports:"coverage.*.xml" -targetdir:report-output
       working-directory: artifacts/coverage
 
-    - name: Generate Coverage Artifacts
-      uses: actions/upload-artifact@master
-      with:
-        name: Coverage
-        path: artifacts/coverage/report-output
-
     - name: Upload Code Coverage
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
         directory: artifacts/coverage
 
+    - name: Create NuGet Artifacts
+      uses: actions/upload-artifact@master
+      with:
+        name: nuget
+        path: '**/*.nupkg'
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    if: contains(github.event.pull_request.labels.*.name, 'release') && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    steps:
+    - name: Download NuGet Packages
+      uses: actions/download-artifact@v2
+      with:
+        name: nuget    
+
     - name: NuGet Push
-      if: env.validRelease == 'true'
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
         SOURCE_URL: https://api.nuget.org/v3/index.json
       run: |
         dotnet nuget push -s ${{ env.SOURCE_URL }} -k ${{ env.NUGET_AUTH_TOKEN }} **/*.nupkg
 
-    - name: Create Tag
+    - name: Changelog
+      uses: scottbrenner/generate-changelog-action@master
+      id: changelog
+      env:
+        REPO: ${{ github.repository }}
+
+    - name: Create Release
+      uses: actions/create-release@v1
       if: env.validRelease == 'true'
-      run: |
-        git tag v${{ steps.nbgv.outputs.SemVer2 }} main
-        git push
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+          tag_name: ${{ steps.nbgv.outputs.SemVer2 }}
+          release_name: ${{ steps.nbgv.outputs.SemVer2 }}
+          body: |
+            ${{ steps.changelog.outputs.changelog }}
