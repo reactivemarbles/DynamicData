@@ -34,6 +34,7 @@ jobs:
         setAllVars: true
 
     - uses: actions/cache@v1
+      name: Cache NuGet
       id: cache
       with:
         path: '~/.nuget/packages'
