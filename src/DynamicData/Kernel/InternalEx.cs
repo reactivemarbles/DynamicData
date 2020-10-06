@@ -20,7 +20,7 @@ namespace DynamicData.Kernel
         /// Retries the with back off.
         /// </summary>
         /// <remarks>
-        /// With big thanks.  I took this from 
+        /// With big thanks.  I took this from
         /// http://social.msdn.microsoft.com/Forums/en-US/af43b14e-fb00-42d4-8fb1-5c45862f7796/recursive-async-web-requestresponse-what-is-best-practice-3rd-try
         /// </remarks>
         /// <typeparam name="TSource">The type of the source.</typeparam>
@@ -60,7 +60,7 @@ namespace DynamicData.Kernel
         /// Schedules a recurring action.
         /// </summary>
         /// <remarks>
-        ///  I took this from 
+        ///  I took this from
         /// http://www.zerobugbuild.com/?p=259
         /// </remarks>
         /// <param name="scheduler">The scheduler.</param>
@@ -80,11 +80,11 @@ namespace DynamicData.Kernel
         /// Schedules a recurring action.
         /// </summary>
         /// <remarks>
-        ///  I took this from 
-        /// 
+        ///  I took this from
+        ///
         /// http://www.zerobugbuild.com/?p=259
-        /// 
-        /// and adapted it to receive 
+        ///
+        /// and adapted it to receive
         /// </remarks>
         /// <param name="scheduler">The scheduler.</param>
         /// <param name="interval">The interval.</param>

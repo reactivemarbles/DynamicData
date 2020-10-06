@@ -14,7 +14,7 @@ namespace DynamicData
     {
         /// <summary>
         /// Connects to the cache, and casts the object to the specified type
-        /// Alas, I had to add the converter due to type inference issues 
+        /// Alas, I had to add the converter due to type inference issues.
         /// </summary>
         /// <typeparam name="TSource">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>

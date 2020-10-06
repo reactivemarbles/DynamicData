@@ -15,7 +15,7 @@ namespace DynamicData.Kernel
         Pending = 0,
 
         /// <summary>
-        /// Status set to loaded when first batch of data has been received.  Remains loaded 
+        /// Status set to loaded when first batch of data has been received.  Remains loaded
         /// until the cache is disposed or faults.
         /// </summary>
         Loaded = 1,

@@ -8,7 +8,7 @@ namespace DynamicData.List.Internal
 {
     /// <summary>
     /// Ripped and adapted from https://clinq.codeplex.com/
-    /// 
+    ///
     /// Thanks dudes
     /// </summary>
     /// <typeparam name="T"></typeparam>

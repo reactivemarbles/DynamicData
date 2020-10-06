@@ -7,8 +7,8 @@ using System;
 namespace DynamicData
 {
     /// <summary>
-    /// An observable cache which exposes an update API. 
-    /// 
+    /// An observable cache which exposes an update API.
+    ///
     /// Intended to be used as a helper for creating custom operators.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>

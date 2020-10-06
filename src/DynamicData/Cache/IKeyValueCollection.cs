@@ -48,7 +48,7 @@ namespace DynamicData
         /// <summary>
         /// Gets the element at the specified index in the read-only list.
         /// </summary>
-        /// 
+        ///
         /// <returns>
         /// The element at the specified index in the read-only list.
         /// </returns>

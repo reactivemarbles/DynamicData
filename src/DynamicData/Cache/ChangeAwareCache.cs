@@ -12,8 +12,7 @@ namespace DynamicData
 {
     /// <summary>
     /// A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.
-    /// 
-    /// Used for creating custom operators
+    /// Used for creating custom operators.
     /// </summary>
     /// <seealso cref="DynamicData.ICache{TObject, TKey}" />
     public sealed class  ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>

@@ -9,8 +9,8 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
     /// <summary>
-    /// Cache designed to be used for custom operator construction. It requires no key to be specified 
-    /// but instead relies on the user specifying the key when amending data
+    /// Cache designed to be used for custom operator construction. It requires no key to be specified
+    /// but instead relies on the user specifying the key when amending data.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>

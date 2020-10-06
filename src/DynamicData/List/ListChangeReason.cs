@@ -2,9 +2,9 @@
 namespace DynamicData
 {
     /// <summary>
-    ///  The reason for an individual change to an observable list
-    /// 
-    /// Used to signal consumers of any changes to the underlying cache
+    /// The reason for an individual change to an observable list.
+    ///
+    /// Used to signal consumers of any changes to the underlying cache.
     /// </summary>
     public enum ListChangeReason
     {

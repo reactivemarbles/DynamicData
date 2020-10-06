@@ -9,13 +9,13 @@ namespace DynamicData
 {
     /// <summary>
     /// API for updating a source cache.
-    /// 
+    ///
     /// Use edit to produce singular changeset.
-    /// 
+    ///
     /// NB: The evaluate method is used to signal to any observing operators
-    /// to reevaluate whether the the object still matches downstream operators.
+    /// to reevaluate whether the object still matches downstream operators.
     /// This is primarily targeted to inline object changes such as datetime and calculated fields.
-    /// 
+    ///
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>

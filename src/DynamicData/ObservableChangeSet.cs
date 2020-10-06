@@ -19,7 +19,7 @@ namespace DynamicData
         #region Cache Create Methods
 
         /// <summary>
-        /// Creates an observable cache from a specified Subscribe method implementation. 
+        /// Creates an observable cache from a specified Subscribe method implementation.
         /// </summary>
         /// <typeparam name="TObject">The type of the elements contained in the observable cache</typeparam>
         /// <typeparam name="TKey">The type of the specified key</typeparam>
@@ -46,7 +46,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable cache from a specified Subscribe method implementation. 
+        /// Creates an observable cache from a specified Subscribe method implementation.
         /// </summary>
         /// <typeparam name="TObject">The type of the elements contained in the observable cache</typeparam>
         /// <typeparam name="TKey">The type of the specified key</typeparam>
@@ -87,13 +87,13 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable cache from a specified Subscribe method implementation. 
+        /// Creates an observable cache from a specified Subscribe method implementation.
         /// </summary>
         /// <typeparam name="TObject">The type of the elements contained in the observable cache</typeparam>
         /// <typeparam name="TKey">The type of the specified key</typeparam>
         /// <param name="subscribe">  Implementation of the resulting observable cache's Subscribe method. </param>
         /// <param name="keySelector">The key selector.</param>
-        /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>                                                                                                      
+        /// <returns>The observable cache with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
         {
             if (subscribe == null)
@@ -110,7 +110,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable cache from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation. 
+        /// Creates an observable cache from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation.
         /// </summary>
         /// <typeparam name="TObject">The type of the elements contained in the observable cache</typeparam>
         /// <typeparam name="TKey">The type of the specified key</typeparam>
@@ -151,7 +151,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable cache from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation. 
+        /// Creates an observable cache from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation.
         /// </summary>
         /// <typeparam name="TObject">The type of the elements contained in the observable cache</typeparam>
         /// <typeparam name="TKey">The type of the specified key</typeparam>
@@ -174,7 +174,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable cache from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation. 
+        /// Creates an observable cache from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation.
         /// </summary>
         /// <typeparam name="TObject">The type of the elements contained in the observable cache</typeparam>
         /// <typeparam name="TKey">The type of the specified key</typeparam>
@@ -217,7 +217,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable cache from a specified asynchronous Subscribe method. 
+        /// Creates an observable cache from a specified asynchronous Subscribe method.
         /// </summary>
         /// <typeparam name="TObject">The type of the elements contained in the observable cache</typeparam>
         /// <typeparam name="TKey">The type of the specified key</typeparam>
@@ -299,7 +299,7 @@ namespace DynamicData
         #region List Create Methods
 
         /// <summary>
-        /// Creates an observable list from a specified Subscribe method implementation. 
+        /// Creates an observable list from a specified Subscribe method implementation.
         /// </summary>
         /// <typeparam name="T">The type of the elements contained in the observable list</typeparam>
         /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
@@ -319,7 +319,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable list from a specified Subscribe method implementation. 
+        /// Creates an observable list from a specified Subscribe method implementation.
         /// </summary>
         /// <typeparam name="T">The type of the elements contained in the observable list</typeparam>
         /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
@@ -354,11 +354,11 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable list from a specified Subscribe method implementation. 
+        /// Creates an observable list from a specified Subscribe method implementation.
         /// </summary>
         /// <typeparam name="T">The type of the elements contained in the observable list</typeparam>
         /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
-        /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>                                                                                                        
+        /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<IDisposable>> subscribe)
         {
             if (subscribe == null)
@@ -370,7 +370,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable list from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation. 
+        /// Creates an observable list from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation.
         /// </summary>
         /// <typeparam name="T">The type of the elements contained in the observable list</typeparam>
         /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
@@ -406,7 +406,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable list from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation. 
+        /// Creates an observable list from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation.
         /// </summary>
         /// <typeparam name="T">The type of the elements contained in the observable list</typeparam>
         /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
@@ -422,7 +422,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable list from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation. 
+        /// Creates an observable list from a specified cancellable asynchronous Subscribe method. The CancellationToken passed to the asynchronous Subscribe method is tied to the returned disposable subscription, allowing best-effort cancellation.
         /// </summary>
         /// <typeparam name="T">The type of the elements contained in the observable list</typeparam>
         /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>
@@ -457,7 +457,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Creates an observable list from a specified asynchronous Subscribe method. 
+        /// Creates an observable list from a specified asynchronous Subscribe method.
         /// </summary>
         /// <typeparam name="T">The type of the elements contained in the observable list</typeparam>
         /// <param name="subscribe">  Implementation of the resulting observable list's Subscribe method. </param>

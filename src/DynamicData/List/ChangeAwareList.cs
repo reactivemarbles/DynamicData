@@ -13,8 +13,8 @@ namespace DynamicData
 {
     /// <summary>
     /// A list which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point the changes are cleared.
-    /// 
-    /// Used for creating custom operators
+    ///
+    /// Used for creating custom operators.
     /// </summary>
     /// <seealso cref="DynamicData.IExtendedList{T}" />
     public class ChangeAwareList<T> : IExtendedList<T>
@@ -237,8 +237,8 @@ namespace DynamicData
 
         /// <summary>
         /// Add a Refresh change of the item at the specified index to the list of changes.
-        /// 
-        /// This is to notify downstream operators to refresh
+        ///
+        /// This is to notify downstream operators to refresh.
         /// </summary>
         public void RefreshAt(int index)
         {
@@ -260,8 +260,8 @@ namespace DynamicData
 
         /// <summary>
         /// Add a Refresh change of the item at the specified index to the list of changes.
-        /// 
-        /// This is to notify downstream operators to refresh
+        ///
+        /// This is to notify downstream operators to refresh.
         /// </summary>
         /// <returns>If the item is in the list, returns true</returns>
         public void Refresh(T item, int index)
@@ -497,7 +497,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Replaces the element which is as the specified index wth the specified item 
+        /// Replaces the element which is as the specified index wth the specified item.
         /// </summary>
         protected virtual void SetItem(int index, T item)
         {
@@ -612,7 +612,7 @@ namespace DynamicData
         #region IList<T> implementation
 
         /// <summary>
-        /// Determines whether the element is in the collection 
+        /// Determines whether the element is in the collection.
         /// </summary>
         public virtual bool Contains(T item)
         {

@@ -46,7 +46,7 @@ namespace DynamicData.Kernel
         /// <summary>
         /// The default valueless optional
         /// </summary>
-        public static readonly Optional<T> None = default;
+        public static readonly Optional<T> None;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Optional{T}"/> struct.
@@ -79,7 +79,7 @@ namespace DynamicData.Kernel
         /// <summary>
         /// Gets a value indicating whether the current <see cref="T:System.Nullable`1"/> object has a value.
         /// </summary>
-        /// 
+        ///
         /// <returns>
         /// true if the current <see cref="T:System.Nullable`1"/> object has a value; false if the current <see cref="T:System.Nullable`1"/> object has no value.
         /// </returns>
@@ -88,7 +88,7 @@ namespace DynamicData.Kernel
         /// <summary>
         /// Gets the value of the current <see cref="T:System.Nullable`1"/> value.
         /// </summary>
-        /// 
+        ///
         /// <returns>
         /// The value of the current <see cref="T:System.Nullable`1"/> object if the <see cref="P:System.Nullable`1.HasValue"/> property is true. An exception is thrown if the <see cref="P:System.Nullable`1.HasValue"/> property is false.
         /// </returns>

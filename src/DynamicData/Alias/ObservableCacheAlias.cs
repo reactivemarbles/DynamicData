@@ -263,7 +263,7 @@ namespace DynamicData.Alias
         #region Transform many -> SelectMany
 
         /// <summary>
-        /// Equivalent to a select many transform. To work, the key must individually identify each child. 
+        /// Equivalent to a select many transform. To work, the key must individually identify each child.
         /// </summary>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>

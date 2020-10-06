@@ -12,7 +12,7 @@ namespace DynamicData
     public enum SortOptions
     {
         /// <summary>
-        /// No sort options are specified. 
+        /// No sort options are specified.
         /// </summary>
         None,
 

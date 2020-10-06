@@ -7,7 +7,7 @@ using System;
 namespace DynamicData.Binding
 {
     /// <summary>
-    /// Represents an observable collection where collection changed and count notifications can be suspended 
+    /// Represents an observable collection where collection changed and count notifications can be suspended.
     /// </summary>
     public interface INotifyCollectionChangedSuspender
     {

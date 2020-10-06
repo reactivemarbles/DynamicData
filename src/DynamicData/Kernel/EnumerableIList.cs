@@ -61,7 +61,7 @@ namespace DynamicData.Kernel
 
         public static implicit operator EnumerableIList<T>(T[] array) => new EnumerableIList<T>(array);
 
-        public static EnumerableIList<T> Empty = default;
+        public static EnumerableIList<T> Empty;
 
         // IList pass through
 

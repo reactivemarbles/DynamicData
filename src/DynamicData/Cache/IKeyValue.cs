@@ -21,7 +21,7 @@ namespace DynamicData
     public interface IKey<out T>
     {
         /// <summary>
-        /// The key 
+        /// The key.
         /// </summary>
         T Key { get; }
     }

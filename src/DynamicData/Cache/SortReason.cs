@@ -12,23 +12,23 @@ namespace DynamicData
         InitialLoad,
 
         /// <summary>
-        /// The comparer used to sort has changed 
+        /// The comparer used to sort has changed.
         /// </summary>
         ComparerChanged,
 
         /// <summary>
-        /// The data changed
+        /// The data changed.
         /// </summary>
         DataChanged,
 
         /// <summary>
-        /// Sorting has been reapplied
+        /// Sorting has been reapplied.
         /// </summary>
         Reorder,
 
         /// <summary>
         /// A large number of changes has been received and the reset threshold has been exceeded.
-        /// The entire set has been resorted without moves being calculated
+        /// The entire set has been resorted without moves being calculated.
         /// </summary>
         Reset
     }
