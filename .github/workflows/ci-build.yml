@@ -38,7 +38,7 @@ jobs:
       id: cache
       with:
         path: '~/.nuget/packages'
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        key: cache-${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
 
     - name: NuGet Restore
       if: steps.cache.outputs.cache-hit != 'true'
