@@ -21,7 +21,7 @@
     <RepositoryUrl>https://github.com/reactiveui/DynamicData</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
-    <RestoreLockedMode Condition=<"'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreLockedMode>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 
     <!-- Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl> 

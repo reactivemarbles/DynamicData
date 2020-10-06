@@ -41,7 +41,7 @@ jobs:
 
     - name: NuGet Restore
       if: steps.cache.outputs.cache-hit != 'true'
-      run: dotnet restore -p:ContinuousIntegrationBuild=true
+      run: dotnet restore
       working-directory: src
       
     - name: Add MSBuild to PATH
