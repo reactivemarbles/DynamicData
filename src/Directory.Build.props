@@ -21,6 +21,8 @@
     <RepositoryUrl>https://github.com/reactiveui/DynamicData</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+
     <!-- Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl> 
     <!-- Embed source files that are not tracked by the source control manager in the PDB -->

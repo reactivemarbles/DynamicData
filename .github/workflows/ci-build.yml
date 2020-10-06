@@ -32,10 +32,18 @@ jobs:
       with:
         setAllVars: true
 
-    - name: Restore NuGet Packages
+    - uses: actions/cache@v1
+      name: Cache NuGet
+      id: cache
+      with:
+        path: '~/.nuget/packages'
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+
+    - name: NuGet Restore
+      if: steps.cache.outputs.cache-hit != 'true'
       run: dotnet restore
       working-directory: src
-
+      
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.1
 
