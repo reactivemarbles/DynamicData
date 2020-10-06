@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
+    types: [opened, synchronize, reopened, closed]
     branches: [ main ]
 
 env:
@@ -32,10 +33,17 @@ jobs:
       with:
         setAllVars: true
 
-    - name: Restore NuGet Packages
-      run: dotnet restore
-      working-directory: src
+    - uses: actions/cache@v1
+      id: cache
+      with:
+        path: '~/.nuget/packages'
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
 
+    - name: NuGet Restore
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: dotnet restore -p:ContinuousIntegrationBuild=true
+      working-directory: src
+      
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.1
 
