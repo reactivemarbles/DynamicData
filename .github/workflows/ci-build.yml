@@ -95,7 +95,7 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-          tag_name: ${{ steps.nbgv.outputs.SemVer2 }}
-          release_name: ${{ steps.nbgv.outputs.SemVer2 }}
+          tag_name: ${{ needs.build.outputs.nbgv }}
+          release_name: ${{ needs.build.outputs.nbgv }}
           body: |
             ${{ steps.changelog.outputs.changelog }}
