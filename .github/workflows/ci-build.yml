@@ -33,15 +33,7 @@ jobs:
       with:
         setAllVars: true
 
-    - uses: actions/cache@v1
-      name: Cache NuGet
-      id: cache
-      with:
-        path: '~/.nuget/packages'
-        key: cache-${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-
     - name: NuGet Restore
-      if: steps.cache.outputs.cache-hit != 'true'
       run: dotnet restore
       working-directory: src
       
