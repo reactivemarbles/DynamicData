@@ -9,7 +9,7 @@ namespace DynamicData
 {
     /// <summary>
     /// A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.
-    /// 
+    ///
     /// Used for creating custom operators
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -47,7 +47,7 @@ namespace DynamicData
         void Clear();
 
         /// <summary>
-        /// Sends a signal for operators to recalculate it's state 
+        /// Sends a signal for operators to recalculate it's state.
         /// </summary>
         void Refresh();
 

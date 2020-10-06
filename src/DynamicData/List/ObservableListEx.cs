@@ -330,7 +330,7 @@ namespace DynamicData
 
         /// <summary>
         /// Removes the index from all changes.
-        /// 
+        ///
         /// NB: This operator has been introduced as a temporary fix for creating an Or operator using merge many.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
@@ -378,7 +378,7 @@ namespace DynamicData
 
         /// <summary>
         /// Convert the object using the sepcified conversion function.
-        /// 
+        ///
         /// This is a lighter equivalent of Transform and is designed to be used with non-disposable objects
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -440,7 +440,7 @@ namespace DynamicData
 
         /// <summary>
         /// Cast the changes to another form
-        /// 
+        ///
         /// Alas, I had to add the converter due to type inference issues. The converter can be avoided by CastToObject() first
         /// </summary>
         /// <typeparam name="TSource">The type of the object.</typeparam>
@@ -736,8 +736,8 @@ namespace DynamicData
 
         /// <summary>
         /// Filters source on the specified property using the specified predicate.
-        /// 
-        /// The filter will automatically reapply when a property changes 
+        ///
+        /// The filter will automatically reapply when a property changes
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TProperty">The type of the property.</typeparam>
@@ -776,8 +776,8 @@ namespace DynamicData
 
         /// <summary>
         /// Filters source on the specified observable property using the specified predicate.
-        /// 
-        /// The filter will automatically reapply when a property changes 
+        ///
+        /// The filter will automatically reapply when a property changes
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
@@ -886,7 +886,7 @@ namespace DynamicData
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function.
-        /// 
+        ///
         /// *** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails
         /// </summary>
         /// <typeparam name="TSource">The type of the source.</typeparam>
@@ -919,7 +919,7 @@ namespace DynamicData
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function
-        /// 
+        ///
         /// *** Annoyingly when using this overload you will have to explicy specify the generic type arguments as type inference fails
         /// </summary>
         /// <typeparam name="TSource">The type of the source.</typeparam>
@@ -1355,7 +1355,7 @@ namespace DynamicData
 
         /// <summary>
         /// Provides a call back for each item change.
-        /// 
+        ///
         /// Range changes are flattened, so there is only need to check for Add, Replace, Remove and Clear
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -1523,7 +1523,7 @@ namespace DynamicData
 
         /// <summary>
         /// Disposes each item when no longer required.
-        /// 
+        ///
         /// Individual items are disposed when removed or replaced. All items
         /// are disposed when the stream is disposed
         /// </summary>
@@ -1660,7 +1660,7 @@ namespace DynamicData
         #region Buffering
 
         /// <summary>
-        /// Buffers changes for an intial period only. After the period has elapsed, not further buffering occurs. 
+        /// Buffers changes for an intial period only. After the period has elapsed, not further buffering occurs.
         /// </summary>
         /// <param name="source">The source changeset</param>
         /// <param name="initalBuffer">The period to buffer, measure from the time that the first item arrives</param>
@@ -2007,7 +2007,7 @@ namespace DynamicData
         #region Expiry / size limiter
 
         /// <summary>
-        /// Limits the size of the source cache to the specified limit. 
+        /// Limits the size of the source cache to the specified limit.
         /// Notifies which items have been removed from the source list.
         /// </summary>
         /// <typeparam name="T"></typeparam>

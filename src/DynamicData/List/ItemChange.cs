@@ -18,7 +18,7 @@ namespace DynamicData
         /// <summary>
         /// An empty change
         /// </summary>
-        public static readonly ItemChange<T> Empty = new ItemChange<T>();
+        public static readonly ItemChange<T> Empty;
 
         /// <summary>
         /// The reason for the change
@@ -37,14 +37,14 @@ namespace DynamicData
 
         /// <summary>
         /// The previous change.
-        /// 
+        ///
         /// This is only when Reason==ChangeReason.Replace.
         /// </summary>
         public Optional<T> Previous { get; }
 
         /// <summary>
         /// The previous index.
-        /// 
+        ///
         /// This is only when Reason==ChangeReason.Replace or ChangeReason.Move.
         /// </summary>
         public int PreviousIndex { get; }
@@ -126,7 +126,7 @@ namespace DynamicData
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {

@@ -66,18 +66,18 @@ namespace DynamicData
             Clone(source, (IEnumerable<Change<T>>)changes, equalityComparer);
         }
 
-        /// <summary> 
-        /// Clones the list from the specified enumerable of changes 
-        /// </summary> 
-        /// <typeparam name="T"></typeparam> 
-        /// <param name="source">The source.</param> 
-        /// <param name="changes">The changes.</param> 
-        /// <param name="equalityComparer">An equality comparer to match items in the changes.</param> 
-        /// <exception cref="System.ArgumentNullException"> 
-        /// source 
-        /// or 
-        /// changes 
-        /// </exception> 
+        /// <summary>
+        /// Clones the list from the specified enumerable of changes
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="changes">The changes.</param>
+        /// <param name="equalityComparer">An equality comparer to match items in the changes.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// source
+        /// or
+        /// changes
+        /// </exception>
         public static void Clone<T>(this IList<T> source, IEnumerable<Change<T>> changes, IEqualityComparer<T> equalityComparer)
         {
             if (source == null)

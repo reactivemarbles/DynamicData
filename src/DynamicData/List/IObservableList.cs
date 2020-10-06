@@ -16,7 +16,7 @@ namespace DynamicData
     {
         /// <summary>
         /// Connect to the observable list and observe any changes
-        /// starting with the list's initial items. 
+        /// starting with the list's initial items.
         /// </summary>
         /// <param name="predicate">The result will be filtered on the specified predicate.</param>
         IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null);

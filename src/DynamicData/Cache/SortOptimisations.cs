@@ -24,7 +24,7 @@ namespace DynamicData
         ComparesImmutableValuesOnly = 1,
 
         /// <summary>
-        /// Ignores moves because of evaluates.  
+        /// Ignores moves because of evaluates.
         /// Use for virtualisatiom or pagination
         /// </summary>
         IgnoreEvaluates = 2,

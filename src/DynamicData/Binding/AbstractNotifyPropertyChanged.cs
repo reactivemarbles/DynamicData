@@ -68,8 +68,7 @@ namespace DynamicData.Binding
         /// <summary>
         /// Suspends notifications. When disposed, a reset notification is fired
         /// </summary>
-        /// <returns></returns>
-        /// 
+        /// <returns>A disposable to indicate to stop suspending the notifications.</returns>
         [Obsolete("This never worked properly in the first place")]
         [SuppressMessage("Design", "CA1822: Make static", Justification = "Backwards compatibility")]
         public IDisposable SuspendNotifications(bool invokePropertyChangeEventWhenDisposed = true)

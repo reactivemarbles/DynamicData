@@ -9,7 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace DynamicData.PLinq
 {
     /// <summary>
-    /// Options to specify parallelisation of stream operations.  Only applicable for .Net4 and .Net45 builds 
+    /// Options to specify parallelisation of stream operations.  Only applicable for .Net4 and .Net45 builds.
     /// </summary>
     [SuppressMessage("ReSharper", "CommentTypo")]
     public class ParallelisationOptions

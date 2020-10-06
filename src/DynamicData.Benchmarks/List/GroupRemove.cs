@@ -5,10 +5,11 @@
 using System;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 
 namespace DynamicData.Benchmarks.List
 {
-    [CoreJob]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [MemoryDiagnoser]
     [MarkdownExporterAttribute.GitHub]
     public class GroupRemove

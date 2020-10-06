@@ -11,8 +11,7 @@ using DynamicData.Annotations;
 namespace DynamicData.Aggregation
 {
     /// <summary>
-    /// Maximum and minimum value extensions
-    /// 
+    /// Maximum and minimum value extensions.
     /// </summary>
     public static class MaxEx
     {

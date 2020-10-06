@@ -3,7 +3,7 @@ namespace DynamicData
 {
     /// <summary>
     ///  The reason for an individual change.
-    /// 
+    ///
     /// Used to signal consumers of any changes to the underlying cache
     /// </summary>
     public enum ChangeReason

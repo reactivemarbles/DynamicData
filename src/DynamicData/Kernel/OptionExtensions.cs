@@ -198,12 +198,12 @@ namespace DynamicData.Kernel
         }
 
         /// <summary>
-        /// Invokes the specified action when 
+        /// Invokes the specified action when.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source">The source.</param>
         /// <param name="action">The action.</param>
-        /// <returns></returns>
+        /// <returns>The optional else extension.</returns>
         public static OptionElse IfHasValue<T>(this Optional<T> source, Action<T> action)
         {
             if (!source.HasValue)

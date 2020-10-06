@@ -51,7 +51,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Applies an accumulator when items are added to and removed from specified stream,  
+        /// Applies an accumulator when items are added to and removed from specified stream,
         /// starting with the initial seed
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -72,7 +72,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Applies an accumulator when items are added to and removed from specified stream,  
+        /// Applies an accumulator when items are added to and removed from specified stream,
         /// starting with the initial seed
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -94,7 +94,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Applies an accumulator when items are added to and removed from specified stream,  
+        /// Applies an accumulator when items are added to and removed from specified stream,
         /// starting with the initial seed
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -142,7 +142,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Used to invalidate an aggregating stream. Used when there has been an inline change 
+        /// Used to invalidate an aggregating stream. Used when there has been an inline change
         /// i.e. a property changed or meta data has changed
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -158,7 +158,7 @@ namespace DynamicData.Aggregation
         }
 
         /// <summary>
-        /// Used to invalidate an aggregating stream. Used when there has been an inline change 
+        /// Used to invalidate an aggregating stream. Used when there has been an inline change
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <typeparam name="TTrigger">The type of the trigger.</typeparam>

@@ -106,7 +106,7 @@ namespace DynamicData.Cache.Internal
         }
 
         /// <summary>
-        /// Sends a signal for operators to recalculate it's state 
+        /// Sends a signal for operators to recalculate it's state
         /// </summary>
         public void Refresh()
         {

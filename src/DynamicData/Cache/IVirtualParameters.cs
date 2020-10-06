@@ -14,7 +14,6 @@ namespace DynamicData
         /// <summary>
         /// The start index.
         /// </summary>
-        /// 
         int StartIndex { get; }
 
         /// <summary>

@@ -16,8 +16,8 @@ namespace DynamicData
     {
         /// <summary>
         /// Connects to the list, and converts the changes to another form
-        /// 
-        /// Alas, I had to add the converter due to type inference issues 
+        ///
+        /// Alas, I had to add the converter due to type inference issues.
         /// </summary>
         /// <typeparam name="TSource">The type of the object.</typeparam>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>

@@ -8,8 +8,7 @@ namespace DynamicData.Experimental
 {
     internal interface ISubjectWithRefCount<T> : ISubject<T>
     {
-        /// <summary>number of subscribers 
-        /// </summary>
+        /// <summary>number of subscribers.</summary>
         /// <value>
         /// The ref count.
         /// </value>

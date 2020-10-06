@@ -548,7 +548,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Callback when an item has been updated eg. (current, previous)=>{} 
+        /// Callback when an item has been updated eg. (current, previous)=>{}
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -575,7 +575,7 @@ namespace DynamicData
 
         /// <summary>
         /// Disposes each item when no longer required.
-        /// 
+        ///
         /// Individual items are disposed when removed or replaced. All items
         /// are disposed when the stream is disposed
         /// </summary>
@@ -973,8 +973,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Cast the object to the specified type. 
-        /// Alas, I had to add the converter due to type inference issues 
+        /// Cast the object to the specified type.
+        /// Alas, I had to add the converter due to type inference issues
         /// </summary>
         /// <typeparam name="TSource">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -999,7 +999,7 @@ namespace DynamicData
         #region Delayed Stream
 
         /// <summary>
-        /// Buffers changes for an intial period only. After the period has elapsed, not further buffering occurs. 
+        /// Buffers changes for an intial period only. After the period has elapsed, not further buffering occurs.
         /// </summary>
         /// <param name="source">The source changeset</param>
         /// <param name="initalBuffer">The period to buffer, measure from the time that the first item arrives</param>
@@ -1229,7 +1229,7 @@ namespace DynamicData
         /// <summary>
         /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
         /// the equality condition. The observable is re-evaluated whenever
-        /// 
+        ///
         /// i) The cache changes
         /// or ii) The inner observable changes
         /// </summary>
@@ -1252,7 +1252,7 @@ namespace DynamicData
         /// <summary>
         /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
         /// the equality condition. The observable is re-evaluated whenever
-        /// 
+        ///
         /// i) The cache changes
         /// or ii) The inner observable changes
         /// </summary>
@@ -1645,7 +1645,7 @@ namespace DynamicData
 
         /// <summary>
         /// Automatically removes items from the stream on the next poll after the time specified by
-        /// the time selector elapses 
+        /// the time selector elapses
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1666,7 +1666,7 @@ namespace DynamicData
 
         /// <summary>
         /// Automatically removes items from the stream on the next poll after the time specified by
-        /// the time selector elapses 
+        /// the time selector elapses
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1698,7 +1698,7 @@ namespace DynamicData
 
         /// <summary>
         /// Automatically removes items from the cache after the time specified by
-        /// the time selector elapses. 
+        /// the time selector elapses.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1721,7 +1721,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Applies a size limiter to the number of records which can be included in the 
+        /// Applies a size limiter to the number of records which can be included in the
         /// underlying cache.  When the size limit is reached the oldest items are removed.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2361,7 +2361,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Apply a logical Xor operator between the collections. 
+        /// Apply a logical Xor operator between the collections.
         /// Items which are only in one of the sources are included in the result
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2391,7 +2391,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Apply a logical Xor operator between the collections. 
+        /// Apply a logical Xor operator between the collections.
         /// Items which are only in one of the sources are included in the result
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2468,7 +2468,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically apply a logical Except operator between the collections 
+        /// Dynamically apply a logical Except operator between the collections
         /// Items from the first collection in the outer list are included unless contained in any of the other lists
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2498,7 +2498,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically apply a logical Except operator between the collections 
+        /// Dynamically apply a logical Except operator between the collections
         /// Items from the first collection in the outer list are included unless contained in any of the other lists
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2521,7 +2521,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically apply a logical Except operator between the collections 
+        /// Dynamically apply a logical Except operator between the collections
         /// Items from the first collection in the outer list are included unless contained in any of the other lists
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -3152,7 +3152,7 @@ namespace DynamicData
         #region Transform many
 
         /// <summary>
-        /// Equivalent to a select many transform. To work, the key must individually identify each child. 
+        /// Equivalent to a select many transform. To work, the key must individually identify each child.
         /// </summary>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
@@ -3621,14 +3621,14 @@ namespace DynamicData
         #region   Grouping
 
         /// <summary>
-        ///  Groups the source on the value returned by group selector factory. 
+        ///  Groups the source on the value returned by group selector factory.
         ///  A group is included for each item in the resulting group source.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="groupSelector">The group selector factory.</param> 
+        /// <param name="groupSelector">The group selector factory.</param>
         /// <param name="resultGroupSource">
         ///   A distinct stream used to determine the result
         /// </param>
@@ -3660,7 +3660,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Groups the source on the value returned by group selector factory. 
+        ///  Groups the source on the value returned by group selector factory.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -3685,7 +3685,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Groups the source on the value returned by group selector factory. 
+        ///  Groups the source on the value returned by group selector factory.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -3759,7 +3759,7 @@ namespace DynamicData
 
         /// <summary>
         /// Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.
-        /// 
+        ///
         /// When there are likely to be a large number of group property changes specify a throttle to improve performance
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -3793,7 +3793,7 @@ namespace DynamicData
 
         /// <summary>
         /// Groups the source using the property specified by the property selector. Each update produces immuatable grouping. Groups are re-applied when the property value changed.
-        /// 
+        ///
         /// When there are likely to be a large number of group property changes specify a throttle to improve performance
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -5199,7 +5199,7 @@ namespace DynamicData
 
         /// <summary>
         /// Automatically removes items from the cache after the time specified by
-        /// the time selector elapses. 
+        /// the time selector elapses.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -5218,7 +5218,7 @@ namespace DynamicData
 
         /// <summary>
         /// Automatically removes items from the cache after the time specified by
-        /// the time selector elapses. 
+        /// the time selector elapses.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -5239,7 +5239,7 @@ namespace DynamicData
 
         /// <summary>
         /// Automatically removes items from the cache after the time specified by
-        /// the time selector elapses. 
+        /// the time selector elapses.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -5421,8 +5421,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Removes the specified item from the cache. 
-        /// 
+        /// Removes the specified item from the cache.
+        ///
         /// If the item is not contained in the cache then the operation does nothing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -5479,8 +5479,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Removes the specified items from the cache. 
-        /// 
+        /// Removes the specified items from the cache.
+        ///
         /// Any items not contained in the cache are ignored
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -5499,8 +5499,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Removes the specified keys from the cache. 
-        /// 
+        /// Removes the specified keys from the cache.
+        ///
         /// Any keys not contained in the cache are ignored
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -5519,8 +5519,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Removes the specified keys from the cache. 
-        /// 
+        /// Removes the specified keys from the cache.
+        ///
         /// Any keys not contained in the cache are ignored
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -5709,8 +5709,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Removes the specified keys from the cache. 
-        /// 
+        /// Removes the specified keys from the cache.
+        ///
         /// Any keys not contained in the cache are ignored
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>

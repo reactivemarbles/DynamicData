@@ -9,7 +9,7 @@ namespace DynamicData.Cache.Internal
 {
     /// <summary>
     /// Calculates a sequential change set.
-    /// 
+    ///
     /// This enables the binding infrastructure to simply iterate the change set
     /// and apply indexed changes with no need to apply ant expensive IndexOf() operations.
     /// </summary>

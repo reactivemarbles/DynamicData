@@ -88,7 +88,7 @@ namespace DynamicData.Binding
             }
         }
 
-        private void DoUpdate(IChangeSet<TObject, TKey> changes, BindingList<TObject> list)
+        private static void DoUpdate(IChangeSet<TObject, TKey> changes, BindingList<TObject> list)
         {
             foreach (var update in changes)
             {
