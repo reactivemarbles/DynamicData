@@ -38,7 +38,7 @@ jobs:
       working-directory: src
       
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.1
+      uses: microsoft/setup-msbuild@v1.0.2
 
     - name: Build
       run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
@@ -90,10 +90,8 @@ jobs:
         dotnet nuget push -s ${{ env.SOURCE_URL }} -k ${{ env.NUGET_AUTH_TOKEN }} **/*.nupkg
 
     - name: Changelog
-      uses: glennawatson/ChangeLog@master
+      uses: glennawatson/ChangeLog@main
       id: changelog
-      env:
-        REPO: ${{ github.repository }}
 
     - name: Create Release
       uses: actions/create-release@v1
