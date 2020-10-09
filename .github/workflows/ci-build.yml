@@ -90,7 +90,7 @@ jobs:
         dotnet nuget push -s ${{ env.SOURCE_URL }} -k ${{ env.NUGET_AUTH_TOKEN }} **/*.nupkg
 
     - name: Changelog
-      uses: scottbrenner/generate-changelog-action@master
+      uses: glennawatson/ChangeLog@master
       id: changelog
       env:
         REPO: ${{ github.repository }}
@@ -104,4 +104,4 @@ jobs:
           tag_name: ${{ needs.build.outputs.nbgv }}
           release_name: ${{ needs.build.outputs.nbgv }}
           body: |
-            ${{ steps.changelog.outputs.changelog }}
+            ${{ steps.changelog.outputs.commitLog }}
