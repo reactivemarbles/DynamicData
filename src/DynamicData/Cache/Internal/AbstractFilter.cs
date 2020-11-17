@@ -1,54 +1,49 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
+        where TKey : notnull
     {
         private readonly ChangeAwareCache<TObject, TKey> _cache;
 
-        protected AbstractFilter(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool> filter)
+        protected AbstractFilter(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool>? filter)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
-            if (filter == null)
-            {
-                Filter = t => true;
-            }
-            else
-            {
-                Filter = filter;
-            }
+            Filter = filter ?? (_ => true);
         }
 
         public Func<TObject, bool> Filter { get; }
 
         public IChangeSet<TObject, TKey> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
-            //this is an internal method only so we can be sure there are no duplicate keys in the result
-            //(therefore safe to parallelise)
+            // this is an internal method only so we can be sure there are no duplicate keys in the result
+            // (therefore safe to parallelise)
             Optional<Change<TObject, TKey>> Factory(KeyValuePair<TKey, TObject> kv)
             {
-                var exisiting = _cache.Lookup(kv.Key);
+                var existing = _cache.Lookup(kv.Key);
                 var matches = Filter(kv.Value);
 
                 if (matches)
                 {
-                    if (!exisiting.HasValue)
+                    if (!existing.HasValue)
                     {
                         return new Change<TObject, TKey>(ChangeReason.Add, kv.Key, kv.Value);
                     }
                 }
                 else
                 {
-                    if (exisiting.HasValue)
+                    if (existing.HasValue)
                     {
-                        return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, exisiting);
+                        return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, existing);
                     }
                 }
 
@@ -61,8 +56,6 @@ namespace DynamicData.Cache.Internal
             return _cache.CaptureChanges();
         }
 
-        protected abstract IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
-
         public IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates)
         {
             var withfilter = GetChangesWithFilter(updates);
@@ -71,11 +64,12 @@ namespace DynamicData.Cache.Internal
 
         protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates);
 
+        protected abstract IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
+
         private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> source)
         {
-            //Have to process one item at a time as an item can be included multiple
-            //times in any batch
-
+            // Have to process one item at a time as an item can be included multiple
+            // times in any batch
             foreach (var item in source)
             {
                 var matches = item.IsMatch;
@@ -93,6 +87,7 @@ namespace DynamicData.Cache.Internal
                         }
 
                         break;
+
                     case ChangeReason.Update:
                         {
                             if (matches)
@@ -106,9 +101,11 @@ namespace DynamicData.Cache.Internal
                         }
 
                         break;
+
                     case ChangeReason.Remove:
                         _cache.Remove(u.Key);
                         break;
+
                     case ChangeReason.Refresh:
                         {
                             var exisiting = _cache.Lookup(key);
@@ -139,11 +136,14 @@ namespace DynamicData.Cache.Internal
             return _cache.CaptureChanges();
         }
 
-        protected struct UpdateWithFilter
+        protected readonly struct UpdateWithFilter
         {
             /// <summary>
-            /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+            /// Initializes a new instance of the <see cref="UpdateWithFilter"/> struct.
+            /// Initializes a new instance of the <see cref="object"/> class.
             /// </summary>
+            /// <param name="isMatch">If the filter is a match.</param>
+            /// <param name="change">The change.</param>
             public UpdateWithFilter(bool isMatch, Change<TObject, TKey> change)
             {
                 IsMatch = isMatch;
@@ -151,6 +151,7 @@ namespace DynamicData.Cache.Internal
             }
 
             public Change<TObject, TKey> Change { get; }
+
             public bool IsMatch { get; }
         }
     }

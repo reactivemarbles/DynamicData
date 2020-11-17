@@ -1,24 +1,26 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal class FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>
+        where TLeftKey : notnull
+        where TRightKey : notnull
     {
         private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left;
-        private readonly IObservable<IChangeSet<TRight, TRightKey>> _right;
-        private readonly Func<TRight, TLeftKey> _rightKeySelector;
+
         private readonly Func<TLeftKey, Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> _resultSelector;
 
-        public FullJoinMany([NotNull] IObservable<IChangeSet<TLeft, TLeftKey>> left,
-            [NotNull] IObservable<IChangeSet<TRight, TRightKey>> right,
-            [NotNull] Func<TRight, TLeftKey> rightKeySelector,
-            [NotNull] Func<TLeftKey, Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
+        private readonly IObservable<IChangeSet<TRight, TRightKey>> _right;
+
+        private readonly Func<TRight, TLeftKey> _rightKeySelector;
+
+        public FullJoinMany(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, Optional<TLeft>, IGrouping<TRight, TRightKey, TLeftKey>, TDestination> resultSelector)
         {
             _left = left ?? throw new ArgumentNullException(nameof(left));
             _right = right ?? throw new ArgumentNullException(nameof(right));
@@ -31,11 +33,7 @@ namespace DynamicData.Cache.Internal
             var emptyCache = Cache<TRight, TRightKey>.Empty;
 
             var rightGrouped = _right.GroupWithImmutableState(_rightKeySelector);
-            return _left.FullJoin(rightGrouped, grouping => grouping.Key,
-                (leftKey, left, grouping) => _resultSelector(leftKey, left, grouping.ValueOr(() =>
-                {
-                    return new ImmutableGroup<TRight, TRightKey, TLeftKey>(leftKey, emptyCache);
-                })));
+            return _left.FullJoin(rightGrouped, grouping => grouping.Key, (leftKey, left, grouping) => _resultSelector(leftKey, left, grouping.ValueOr(() => new ImmutableGroup<TRight, TRightKey, TLeftKey>(leftKey, emptyCache))));
         }
     }
 }

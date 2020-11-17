@@ -1,26 +1,45 @@
 using System;
-using System.Reactive.Linq;
-using DynamicData.Tests.Domain;
-using Xunit;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
+
+using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class RefCountFixture: IDisposable
+    public class RefCountFixture : IDisposable
     {
         private readonly ISourceList<Person> _source;
 
-        public  RefCountFixture()
+        public RefCountFixture()
         {
             _source = new SourceList<Person>();
         }
 
-        public void Dispose()
+        [Fact]
+        public void CanResubscribe()
         {
-            _source.Dispose();
+            int created = 0;
+            int disposals = 0;
+
+            //must have data so transform is invoked
+            _source.Add(new Person("Name", 10));
+
+            //Some expensive transform (or chain of operations)
+            var longChain = _source.Connect().Transform(p => p).Do(_ => created++).Finally(() => disposals++).RefCount();
+
+            var subscriber = longChain.Subscribe();
+            subscriber.Dispose();
+
+            subscriber = longChain.Subscribe();
+            subscriber.Dispose();
+
+            created.Should().Be(2);
+            disposals.Should().Be(2);
         }
 
         [Fact]
@@ -30,11 +49,7 @@ namespace DynamicData.Tests.List
             int disposals = 0;
 
             //Some expensive transform (or chain of operations)
-            var longChain = _source.Connect()
-                                   .Transform(p => p)
-                                   .Do(_ => created++)
-                                   .Finally(() => disposals++)
-                                   .RefCount();
+            var longChain = _source.Connect().Transform(p => p).Do(_ => created++).Finally(() => disposals++).RefCount();
 
             var suscriber1 = longChain.Subscribe();
             var suscriber2 = longChain.Subscribe();
@@ -49,30 +64,9 @@ namespace DynamicData.Tests.List
             disposals.Should().Be(1);
         }
 
-        [Fact]
-        public void CanResubscribe()
+        public void Dispose()
         {
-            int created = 0;
-            int disposals = 0;
-
-            //must have data so transform is invoked
-            _source.Add(new Person("Name", 10));
-
-            //Some expensive transform (or chain of operations)
-            var longChain = _source.Connect()
-                                   .Transform(p => p)
-                                   .Do(_ => created++)
-                                   .Finally(() => disposals++)
-                                   .RefCount();
-
-            var subscriber = longChain.Subscribe();
-            subscriber.Dispose();
-
-            subscriber = longChain.Subscribe();
-            subscriber.Dispose();
-
-            created.Should().Be(2);
-            disposals.Should().Be(2);
+            _source.Dispose();
         }
 
         // This test is probabilistic, it could be cool to be able to prove RefCount's thread-safety
@@ -83,15 +77,17 @@ namespace DynamicData.Tests.List
         {
             var refCount = _source.Connect().RefCount();
 
-            await Task.WhenAll(Enumerable.Range(0, 100).Select(_ =>
-                Task.Run(() =>
-                {
-                    for (int i = 0; i < 1000; ++i)
-                    {
-                        var subscription = refCount.Subscribe();
-                        subscription.Dispose();
-                    }
-                })));
+            await Task.WhenAll(
+                Enumerable.Range(0, 100).Select(
+                    _ => Task.Run(
+                        () =>
+                            {
+                                for (int i = 0; i < 1000; ++i)
+                                {
+                                    var subscription = refCount.Subscribe();
+                                    subscription.Dispose();
+                                }
+                            })));
         }
     }
 }

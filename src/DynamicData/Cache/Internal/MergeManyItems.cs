@@ -1,17 +1,20 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Reactive.Linq;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal class MergeManyItems<TObject, TKey, TDestination>
+        where TKey : notnull
     {
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TKey, IObservable<TDestination>> _observableSelector;
+
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
         public MergeManyItems(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
         {
@@ -32,13 +35,7 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<ItemWithValue<TObject, TDestination>> Run()
         {
-            return Observable.Create<ItemWithValue<TObject, TDestination>>
-                (
-                    observer => _source.SubscribeMany((t, v) => _observableSelector(t, v)
-                        .Select(z => new ItemWithValue<TObject, TDestination>(t, z))
-                        .SubscribeSafe(observer))
-                        .Subscribe()
-                );
+            return Observable.Create<ItemWithValue<TObject, TDestination>>(observer => _source.SubscribeMany((t, v) => _observableSelector(t, v).Select(z => new ItemWithValue<TObject, TDestination>(t, z)).SubscribeSafe(observer)).Subscribe());
         }
     }
 }

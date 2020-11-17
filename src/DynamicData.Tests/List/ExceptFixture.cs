@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
     public class ExceptFixture : ExceptFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -24,10 +25,12 @@ namespace DynamicData.Tests.List
         }
     }
 
-    public abstract class ExceptFixtureBase :IDisposable
+    public abstract class ExceptFixtureBase : IDisposable
     {
         protected ISourceList<int> Source1;
+
         protected ISourceList<int> Source2;
+
         private readonly ChangeSetAggregator<int> _results;
 
         protected ExceptFixtureBase()
@@ -37,37 +40,6 @@ namespace DynamicData.Tests.List
             _results = CreateObservable().AsAggregator();
         }
 
-        protected abstract IObservable<IChangeSet<int>> CreateObservable();
-
-        public void Dispose()
-        {
-            Source1.Dispose();
-            Source2.Dispose();
-            _results.Dispose();
-        }
-
-        [Fact]
-        public void IncludedWhenItemIsInOneSource()
-        {
-            Source1.Add(1);
-            _results.Data.Count.Should().Be(1);
-        }
-
-        [Fact]
-        public void NothingFromOther()
-        {
-            Source2.Add(1);
-            _results.Data.Count.Should().Be(0);
-        }
-
-        [Fact]
-        public void ExcludedWhenItemIsInTwoSources()
-        {
-            Source1.Add(1);
-            Source2.Add(1);
-            _results.Data.Count.Should().Be(0);
-        }
-
         [Fact]
         public void AddedWhenNoLongerInSecond()
         {
@@ -75,15 +47,6 @@ namespace DynamicData.Tests.List
             Source2.Add(1);
             Source2.Remove(1);
             _results.Data.Count.Should().Be(1);
-        }
-
-        [Fact]
-        public void CombineRange()
-        {
-            Source1.AddRange(Enumerable.Range(1, 10));
-            Source2.AddRange(Enumerable.Range(6, 10));
-            _results.Data.Count.Should().Be(5);
-            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5));
         }
 
         [Fact]
@@ -105,5 +68,45 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(5);
             _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5));
         }
+
+        [Fact]
+        public void CombineRange()
+        {
+            Source1.AddRange(Enumerable.Range(1, 10));
+            Source2.AddRange(Enumerable.Range(6, 10));
+            _results.Data.Count.Should().Be(5);
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5));
+        }
+
+        public void Dispose()
+        {
+            Source1.Dispose();
+            Source2.Dispose();
+            _results.Dispose();
+        }
+
+        [Fact]
+        public void ExcludedWhenItemIsInTwoSources()
+        {
+            Source1.Add(1);
+            Source2.Add(1);
+            _results.Data.Count.Should().Be(0);
+        }
+
+        [Fact]
+        public void IncludedWhenItemIsInOneSource()
+        {
+            Source1.Add(1);
+            _results.Data.Count.Should().Be(1);
+        }
+
+        [Fact]
+        public void NothingFromOther()
+        {
+            Source2.Add(1);
+            _results.Data.Count.Should().Be(0);
+        }
+
+        protected abstract IObservable<IChangeSet<int>> CreateObservable();
     }
 }

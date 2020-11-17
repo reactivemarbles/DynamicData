@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -7,13 +7,8 @@ using System.Collections.Generic;
 
 namespace DynamicData.List.Internal
 {
-
     internal sealed class ExpirableItem<TObject> : IEquatable<ExpirableItem<TObject>>
     {
-        public TObject Item { get; }
-        public DateTime ExpireAt { get; }
-        public long Index { get; }
-
         public ExpirableItem(TObject value, DateTime dateTime, long index)
         {
             Item = value;
@@ -21,9 +16,23 @@ namespace DynamicData.List.Internal
             Index = index;
         }
 
-        #region Equality members
+        public DateTime ExpireAt { get; }
 
-        public bool Equals(ExpirableItem<TObject> other)
+        public long Index { get; }
+
+        public TObject Item { get; }
+
+        public static bool operator ==(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
+        {
+            return !Equals(left, right);
+        }
+
+        public bool Equals(ExpirableItem<TObject>? other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -38,7 +47,7 @@ namespace DynamicData.List.Internal
             return EqualityComparer<TObject>.Default.Equals(Item, other.Item) && ExpireAt.Equals(other.ExpireAt) && Index == other.Index;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
@@ -57,24 +66,12 @@ namespace DynamicData.List.Internal
         {
             unchecked
             {
-                var hashCode = EqualityComparer<TObject>.Default.GetHashCode(Item);
+                var hashCode = Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
                 hashCode = (hashCode * 397) ^ ExpireAt.GetHashCode();
                 hashCode = (hashCode * 397) ^ Index.GetHashCode();
                 return hashCode;
             }
         }
-
-        public static bool operator ==(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
-        {
-            return !Equals(left, right);
-        }
-
-        #endregion
 
         public override string ToString()
         {

@@ -1,23 +1,28 @@
 ﻿using System;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
-    public class IncludeUpdateFixture: IDisposable
+    public class IncludeUpdateFixture : IDisposable
     {
-        private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
 
-        public  IncludeUpdateFixture()
+        private readonly ISourceCache<Person, string> _source;
+
+        public IncludeUpdateFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
-            _results = new ChangeSetAggregator<Person, string>
-                (
-                _source.Connect().IncludeUpdateWhen((current, previous) => current != previous)
-                );
+            _results = new ChangeSetAggregator<Person, string>(_source.Connect().IncludeUpdateWhen((current, previous) => current != previous));
+        }
+
+        public void Dispose()
+        {
+            _source.Dispose();
         }
 
         [Fact]
@@ -30,11 +35,6 @@ namespace DynamicData.Tests.Cache
 
             _results.Messages.Count.Should().Be(1, "Should be 1 updates");
             _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        }
-
-        public void Dispose()
-        {
-            _source.Dispose();
         }
     }
 }

@@ -1,23 +1,68 @@
 using System;
 using System.Linq;
+
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-    public class FullJoinManyFixture: IDisposable
+    public class FullJoinManyFixture : IDisposable
     {
         private readonly SourceCache<Person, string> _people;
+
         private readonly ChangeSetAggregator<ParentAndChildren, string> _result;
 
         public FullJoinManyFixture()
         {
             _people = new SourceCache<Person, string>(p => p.Name);
-            _result = _people.Connect()
-                .FullJoinMany(_people.Connect(), pac => pac.ParentName, (personid, person, grouping) => new ParentAndChildren(personid, person, grouping.Items.Select(p => p).ToArray()))
-                .AsAggregator();
+            _result = _people.Connect().FullJoinMany(_people.Connect(), pac => pac.ParentName, (personid, person, grouping) => new ParentAndChildren(personid, person, grouping.Items.Select(p => p).ToArray())).AsAggregator();
+        }
+
+        [Fact]
+        public void AddChild()
+        {
+            var people = Enumerable.Range(1, 10).Select(
+                i =>
+                    {
+                        string parent = "Person" + CalculateParent(i, 10);
+                        return new Person("Person" + i, i, parentName: parent);
+                    }).ToArray();
+
+            _people.AddOrUpdate(people);
+
+            var person11 = new Person("Person11", 100, parentName: "Person3");
+            _people.AddOrUpdate(person11);
+
+            var updatedPeople = people.Union(new[] { person11 }).ToArray();
+
+            AssertDataIsCorrectlyFormed(updatedPeople);
+        }
+
+        [Fact]
+        public void AddLeftOnly()
+        {
+            var people = Enumerable.Range(1, 1000).Select(i => new Person("Person" + i, i)).ToArray();
+
+            _people.AddOrUpdate(people);
+            AssertDataIsCorrectlyFormed(people);
+        }
+
+        [Fact]
+        public void AddPeopleWithParents()
+        {
+            var people = Enumerable.Range(1, 10).Select(
+                i =>
+                    {
+                        string parent = "Person" + CalculateParent(i, 10);
+                        return new Person("Person" + i, i, parentName: parent);
+                    }).ToArray();
+
+            _people.AddOrUpdate(people);
+            AssertDataIsCorrectlyFormed(people);
         }
 
         public void Dispose()
@@ -27,49 +72,21 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
-        public void AddLeftOnly()
+        public void RemoveChild()
         {
-            var people = Enumerable.Range(1, 1000)
-                .Select(i => new Person("Person" + i, i))
-                .ToArray();
-
-            _people.AddOrUpdate(people);
-            AssertDataIsCorrectlyFormed(people);
-        }
-
-        [Fact]
-        public void AddPeopleWithParents()
-        {
-            var people = Enumerable.Range(1, 10)
-                .Select(i =>
-                {
-                    string parent = "Person" + CalculateParent(i, 10);
-                    return new Person("Person" + i, i, parentName: parent);
-                })
-                .ToArray();
-
-            _people.AddOrUpdate(people);
-            AssertDataIsCorrectlyFormed(people);
-        }
-
-        [Fact]
-        public void UpdateParent()
-        {
-            var people = Enumerable.Range(1, 10)
-                .Select(i =>
-                {
-                    string parent = "Person" + CalculateParent(i, 10);
-                    return new Person("Person" + i, i, parentName: parent);
-                })
-                .ToArray();
+            var people = Enumerable.Range(1, 10).Select(
+                i =>
+                    {
+                        string parent = "Person" + CalculateParent(i, 10);
+                        return new Person("Person" + i, i, parentName: parent);
+                    }).ToArray();
 
             _people.AddOrUpdate(people);
 
-            var current10 = people.Last();
-            var person10 = new Person("Person10", 100, parentName: current10.ParentName);
-            _people.AddOrUpdate(person10);
+            var last = people.Last();
+            _people.Remove(last);
 
-            var updatedPeople = people.Take(9).Union(new[] { person10 }).ToArray();
+            var updatedPeople = people.Where(p => p.Name != last.Name).ToArray();
 
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
@@ -77,13 +94,12 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void UpdateChild()
         {
-            var people = Enumerable.Range(1, 10)
-                .Select(i =>
-                {
-                    string parent = "Person" + CalculateParent(i, 10);
-                    return new Person("Person" + i, i, parentName: parent);
-                })
-                .ToArray();
+            var people = Enumerable.Range(1, 10).Select(
+                i =>
+                    {
+                        string parent = "Person" + CalculateParent(i, 10);
+                        return new Person("Person" + i, i, parentName: parent);
+                    }).ToArray();
 
             _people.AddOrUpdate(people);
 
@@ -97,43 +113,22 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
-        public void AddChild()
+        public void UpdateParent()
         {
-            var people = Enumerable.Range(1, 10)
-                .Select(i =>
-                {
-                    string parent = "Person" + CalculateParent(i, 10);
-                    return new Person("Person" + i, i, parentName: parent);
-                })
-                .ToArray();
+            var people = Enumerable.Range(1, 10).Select(
+                i =>
+                    {
+                        string parent = "Person" + CalculateParent(i, 10);
+                        return new Person("Person" + i, i, parentName: parent);
+                    }).ToArray();
 
             _people.AddOrUpdate(people);
 
-            var person11 = new Person("Person11", 100, parentName: "Person3");
-            _people.AddOrUpdate(person11);
+            var current10 = people.Last();
+            var person10 = new Person("Person10", 100, parentName: current10.ParentName);
+            _people.AddOrUpdate(person10);
 
-            var updatedPeople = people.Union(new[] { person11 }).ToArray();
-
-            AssertDataIsCorrectlyFormed(updatedPeople);
-        }
-
-        [Fact]
-        public void RemoveChild()
-        {
-            var people = Enumerable.Range(1, 10)
-                .Select(i =>
-                {
-                    string parent = "Person" + CalculateParent(i, 10);
-                    return new Person("Person" + i, i, parentName: parent);
-                })
-                .ToArray();
-
-            _people.AddOrUpdate(people);
-
-            var last = people.Last();
-            _people.Remove(last);
-
-            var updatedPeople = people.Where(p => p.Name != last.Name).ToArray();
+            var updatedPeople = people.Take(9).Union(new[] { person10 }).ToArray();
 
             AssertDataIsCorrectlyFormed(updatedPeople);
         }
@@ -144,23 +139,29 @@ namespace DynamicData.Tests.Cache
             var parentNames = allPeople.Select(p => p.ParentName).Distinct();
             var childrenNames = allPeople.Select(p => p.Name).Distinct();
 
-            var all = parentNames.Union(childrenNames).Distinct()
-                .Select(key =>
-                {
-                    var parent = people.Lookup(key);
-                    var children = people.Values.Where(p => p.ParentName == key).ToArray();
-                    return new ParentAndChildren(key, parent, children);
-
-                }).ToArray();
+            var all = parentNames.Union(childrenNames).Distinct().Select(
+                key =>
+                    {
+                        var parent = people.Lookup(key);
+                        var children = people.Values.Where(p => p.ParentName == key).ToArray();
+                        return new ParentAndChildren(key, parent, children);
+                    }).ToArray();
 
             _result.Data.Count.Should().Be(all.Length);
 
-            all.ForEach(parentAndChild =>
-            {
-                var result = _result.Data.Lookup(parentAndChild.ParentId).ValueOr(() => null);
-                var children = result.Children;
-                children.Should().BeEquivalentTo(parentAndChild.Children);
-            });
+            all.ForEach(
+                parentAndChild =>
+                    {
+                        var result = parentAndChild.ParentId is null ? null : _result.Data.Lookup(parentAndChild.ParentId).ValueOrDefault();
+
+                        if (result is null)
+                        {
+                            throw new InvalidOperationException(nameof(result));
+                        }
+
+                        var children = result.Children;
+                        children.Should().BeEquivalentTo(parentAndChild.Children);
+                    });
         }
 
         private int CalculateParent(int index, int totalPeople)
@@ -182,6 +183,5 @@ namespace DynamicData.Tests.Cache
 
             return index + 1;
         }
-
     }
 }

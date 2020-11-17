@@ -1,8 +1,9 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
@@ -14,11 +15,12 @@ namespace DynamicData
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public interface IIntermediateCache<TObject, TKey> : IObservableCache<TObject, TKey>
+        where TKey : notnull
     {
         /// <summary>
         /// Action to apply a batch update to a cache. Multiple update methods can be invoked within a single batch operation.
         /// These operations are invoked within the cache's lock and is therefore thread safe.
-        /// The result of the action will produce a single changeset
+        /// The result of the action will produce a single changeset.
         /// </summary>
         /// <param name="updateAction">The update action.</param>
         void Edit(Action<ICacheUpdater<TObject, TKey>> updateAction);

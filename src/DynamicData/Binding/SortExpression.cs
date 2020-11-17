@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -7,9 +7,9 @@ using System;
 namespace DynamicData.Binding
 {
     /// <summary>
-    /// A value expression with sort direction
+    /// A value expression with sort direction.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type of the item.</typeparam>
     public class SortExpression<T>
     {
         /// <summary>
@@ -24,12 +24,12 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Gets or sets the direction.
+        /// Gets the direction.
         /// </summary>
         public SortDirection Direction { get; }
 
         /// <summary>
-        /// Gets or sets the expression.
+        /// Gets the expression.
         /// </summary>
         public Func<T, IComparable> Expression { get; }
     }

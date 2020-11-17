@@ -1,19 +1,23 @@
 using System;
 using System.Linq;
+
 using DynamicData.Tests.Domain;
-using Microsoft.Reactive.Testing;
-using Xunit;
+
 using FluentAssertions;
+
+using Microsoft.Reactive.Testing;
+
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class ExpireAfterFixture: IDisposable
+    public class ExpireAfterFixture : IDisposable
     {
-        private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<Person> _results;
 
         private readonly TestScheduler _scheduler;
+
+        private readonly ISourceList<Person> _source;
 
         public ExpireAfterFixture()
         {
@@ -22,10 +26,21 @@ namespace DynamicData.Tests.List
             _results = _source.Connect().AsAggregator();
         }
 
-        public void Dispose()
+        [Fact]
+        public void CanHandleABatchOfUpdates()
         {
-            _results.Dispose();
-            _source.Dispose();
+            var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
+            const int size = 100;
+            Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
+
+            _source.AddRange(items);
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(200).Ticks);
+            remover.Dispose();
+
+            _results.Data.Count.Should().Be(0, "Should be no data in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Adds.Should().Be(100, "Should be 100 adds in the first message");
+            _results.Messages[1].Removes.Should().Be(100, "Should be 100 removes in the second message");
         }
 
         [Fact]
@@ -61,19 +76,10 @@ namespace DynamicData.Tests.List
             remover.Dispose();
         }
 
-        [Fact]
-        public void ItemAddedIsExpired()
+        public void Dispose()
         {
-            var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
-
-            _source.Add(new Person("Name1", 10));
-
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(200).Ticks);
-            remover.Dispose();
-
-            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds in the first update");
-            _results.Messages[1].Removes.Should().Be(1, "Should be 1 removes in the second update");
+            _results.Dispose();
+            _source.Dispose();
         }
 
         [Fact]
@@ -98,20 +104,18 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
-        public void CanHandleABatchOfUpdates()
+        public void ItemAddedIsExpired()
         {
             var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
-            const int size = 100;
-            Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
 
-            _source.AddRange(items);
+            _source.Add(new Person("Name1", 10));
+
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(200).Ticks);
             remover.Dispose();
 
-            _results.Data.Count.Should().Be(0, "Should be no data in the cache");
             _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            _results.Messages[0].Adds.Should().Be(100, "Should be 100 adds in the first message");
-            _results.Messages[1].Removes.Should().Be(100, "Should be 100 removes in the second message");
+            _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds in the first update");
+            _results.Messages[1].Removes.Should().Be(1, "Should be 1 removes in the second update");
         }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,227 +8,222 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal class TreeBuilder<TObject, TKey>
+        where TKey : notnull
         where TObject : class
     {
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, TKey> _pivotOn;
+
         private readonly IObservable<Func<Node<TObject, TKey>, bool>> _predicateChanged;
 
-        public TreeBuilder([NotNull] IObservable<IChangeSet<TObject, TKey>> source, [NotNull] Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>> predicateChanged)
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+        public TreeBuilder(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _pivotOn = pivotOn ?? throw new ArgumentNullException(nameof(pivotOn));
             _predicateChanged = predicateChanged ?? Observable.Return(DefaultPredicate);
         }
 
-        private static readonly Func<Node<TObject, TKey>, bool> DefaultPredicate = node => node.IsRoot;
+        private static Func<Node<TObject, TKey>, bool> DefaultPredicate => node => node.IsRoot;
 
         public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run()
         {
-            return Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(observer =>
-            {
-                var locker = new object();
-                var refilterObservable = new BehaviorSubject<Unit>(Unit.Default);
-
-                var allData = _source.Synchronize(locker).AsObservableCache();
-
-                //for each object we need a node which provides
-                //a structure to set the parent and children
-                var allNodes = allData.Connect()
-                                      .Synchronize(locker)
-                                      .Transform((t, v) => new Node<TObject, TKey>(t, v))
-                                      .AsObservableCache();
-
-                var groupedByPivot = allNodes.Connect()
-                                             .Synchronize(locker)
-                                             .Group(x => _pivotOn(x.Item))
-                                             .AsObservableCache();
-
-                void UpdateChildren(Node<TObject, TKey> parentNode)
-                {
-                    var lookup = groupedByPivot.Lookup(parentNode.Key);
-                    if (lookup.HasValue)
+            return Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(
+                observer =>
                     {
-                        var children = lookup.Value.Cache.Items;
-                        parentNode.Update(u => u.AddOrUpdate(children));
-                        children.ForEach(x => x.Parent = parentNode);
-                    }
-                }
+                        var locker = new object();
+                        var reFilterObservable = new BehaviorSubject<Unit>(Unit.Default);
 
-                //as nodes change, maintain parent and children
-                var parentSetter = allNodes.Connect()
-                                           .Do(changes =>
-                                           {
-                                               var grouped = changes.GroupBy(c => _pivotOn(c.Current.Item));
+                        var allData = _source.Synchronize(locker).AsObservableCache();
 
-                                               foreach (var group in grouped)
-                                               {
-                                                   var parentKey = group.Key;
-                                                   var parent = allNodes.Lookup(parentKey);
+                        // for each object we need a node which provides
+                        // a structure to set the parent and children
+                        var allNodes = allData.Connect().Synchronize(locker).Transform((t, v) => new Node<TObject, TKey>(t, v)).AsObservableCache();
 
-                                                   if (!parent.HasValue)
-                                                   {
-                                                       //deal with items which have no parent
-                                                       foreach (var change in group)
-                                                       {
-                                                           if (change.Reason != ChangeReason.Refresh)
-                                                           {
-                                                               change.Current.Parent = null;
-                                                           }
+                        var groupedByPivot = allNodes.Connect().Synchronize(locker).Group(x => _pivotOn(x.Item)).AsObservableCache();
 
-                                                           switch (change.Reason)
-                                                           {
-                                                               case ChangeReason.Add:
-                                                                   UpdateChildren(change.Current);
-                                                                   break;
-                                                               case ChangeReason.Update:
-                                                                   {
-                                                                       //copy children to the new node amd set parent
-                                                                       var children = change.Previous.Value.Children.Items;
-                                                                       change.Current.Update(updater => updater.AddOrUpdate(children));
-                                                                       children.ForEach(child => child.Parent = change.Current);
+                        void UpdateChildren(Node<TObject, TKey> parentNode)
+                        {
+                            var lookup = groupedByPivot.Lookup(parentNode.Key);
+                            if (lookup.HasValue && lookup.Value != null)
+                            {
+                                var children = lookup.Value.Cache.Items;
+                                parentNode.Update(u => u.AddOrUpdate(children));
+                                children.ForEach(x => x.Parent = parentNode);
+                            }
+                        }
 
-                                                                       //remove from old parent if different
-                                                                       var previous = change.Previous.Value;
-                                                                       var previousParent = _pivotOn(previous.Item);
+                        // as nodes change, maintain parent and children
+                        var parentSetter = allNodes.Connect().Do(
+                            changes =>
+                                {
+                                    foreach (var group in changes.GroupBy(c => _pivotOn(c.Current.Item)))
+                                    {
+                                        var parentKey = group.Key;
+                                        var parent = allNodes.Lookup(parentKey);
 
-                                                                       if (!previousParent.Equals(previous.Key))
-                                                                       {
-                                                                           allNodes.Lookup(previousParent)
-                                                                                   .IfHasValue(n => { n.Update(u => u.Remove(change.Key)); });
-                                                                       }
+                                        if (!parent.HasValue)
+                                        {
+                                            // deal with items which have no parent
+                                            foreach (var change in group)
+                                            {
+                                                if (change.Reason != ChangeReason.Refresh)
+                                                {
+                                                    change.Current.Parent = null;
+                                                }
 
-                                                                       break;
-                                                                   }
+                                                switch (change.Reason)
+                                                {
+                                                    case ChangeReason.Add:
+                                                        UpdateChildren(change.Current);
+                                                        break;
 
-                                                               case ChangeReason.Remove:
-                                                                   {
-                                                                       //remove children and null out parent
-                                                                       var children = change.Current.Children.Items;
-                                                                       change.Current.Update(updater => updater.Remove(children));
-                                                                       children.ForEach(child => child.Parent = null);
+                                                    case ChangeReason.Update:
+                                                        {
+                                                            // copy children to the new node amd set parent
+                                                            var children = change.Previous.Value.Children.Items;
+                                                            change.Current.Update(updater => updater.AddOrUpdate(children));
+                                                            children.ForEach(child => child.Parent = change.Current);
 
-                                                                       break;
-                                                                   }
+                                                            // remove from old parent if different
+                                                            var previous = change.Previous.Value;
+                                                            var previousParent = _pivotOn(previous.Item);
 
-                                                               case ChangeReason.Refresh:
-                                                                   {
-                                                                       var previousParent = change.Current.Parent;
-                                                                       if (!previousParent.Equals(parent))
-                                                                       {
-                                                                           previousParent.IfHasValue(n => n.Update(u => u.Remove(change.Key)));
-                                                                           change.Current.Parent = null;
-                                                                       }
+                                                            if (previousParent is not null && !previousParent.Equals(previous.Key))
+                                                            {
+                                                                allNodes.Lookup(previousParent).IfHasValue(n => n.Update(u => u.Remove(change.Key)));
+                                                            }
 
-                                                                       break;
-                                                                   }
-                                                           }
-                                                       }
-                                                   }
-                                                   else
-                                                   {
-                                                       //deal with items have a parent
-                                                       parent.Value.Update(updater =>
-                                                       {
-                                                           var p = parent.Value;
+                                                            break;
+                                                        }
 
-                                                           foreach (var change in group)
-                                                           {
-                                                               var previous = change.Previous;
-                                                               var node = change.Current;
-                                                               var key = node.Key;
+                                                    case ChangeReason.Remove:
+                                                        {
+                                                            // remove children and null out parent
+                                                            var children = change.Current.Children.Items;
+                                                            change.Current.Update(updater => updater.Remove(children));
+                                                            children.ForEach(child => child.Parent = null);
 
-                                                               switch (change.Reason)
-                                                               {
-                                                                   case ChangeReason.Add:
-                                                                       {
-                                                                           // update the parent node
-                                                                           node.Parent = p;
-                                                                           updater.AddOrUpdate(node);
-                                                                           UpdateChildren(node);
+                                                            break;
+                                                        }
 
-                                                                           break;
-                                                                       }
+                                                    case ChangeReason.Refresh:
+                                                        {
+                                                            var previousParent = change.Current.Parent;
+                                                            if (!previousParent.Equals(parent))
+                                                            {
+                                                                previousParent.IfHasValue(n => n.Update(u => u.Remove(change.Key)));
+                                                                change.Current.Parent = null;
+                                                            }
 
-                                                                   case ChangeReason.Update:
-                                                                       {
-                                                                           //copy children to the new node amd set parent
-                                                                           var children = previous.Value.Children.Items;
-                                                                           change.Current.Update(u => u.AddOrUpdate(children));
-                                                                           children.ForEach(child => child.Parent = change.Current);
+                                                            break;
+                                                        }
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // deal with items have a parent
+                                            parent.Value.Update(
+                                                updater =>
+                                                    {
+                                                        var p = parent.Value;
 
-                                                                           //check whether the item has a new parent
-                                                                           var previousItem = previous.Value.Item;
-                                                                           var previousKey = previous.Value.Key;
-                                                                           var previousParent = _pivotOn(previousItem);
+                                                        foreach (var change in group)
+                                                        {
+                                                            var previous = change.Previous;
+                                                            var node = change.Current;
+                                                            var key = node.Key;
 
-                                                                           if (!previousParent.Equals(previousKey))
-                                                                           {
-                                                                               allNodes.Lookup(previousParent)
-                                                                                       .IfHasValue(n => { n.Update(u => u.Remove(key)); });
-                                                                           }
+                                                            switch (change.Reason)
+                                                            {
+                                                                case ChangeReason.Add:
+                                                                    {
+                                                                        // update the parent node
+                                                                        node.Parent = p;
+                                                                        updater.AddOrUpdate(node);
+                                                                        UpdateChildren(node);
 
-                                                                           //finally update the parent
-                                                                           node.Parent = p;
-                                                                           updater.AddOrUpdate(node);
+                                                                        break;
+                                                                    }
 
-                                                                           break;
-                                                                       }
+                                                                case ChangeReason.Update:
+                                                                    {
+                                                                        // copy children to the new node amd set parent
+                                                                        var children = previous.Value.Children.Items;
+                                                                        change.Current.Update(u => u.AddOrUpdate(children));
+                                                                        children.ForEach(child => child.Parent = change.Current);
 
-                                                                   case ChangeReason.Remove:
-                                                                       {
-                                                                           node.Parent = null;
-                                                                           updater.Remove(key);
+                                                                        // check whether the item has a new parent
+                                                                        var previousItem = previous.Value.Item;
+                                                                        var previousKey = previous.Value.Key;
+                                                                        var previousParent = _pivotOn(previousItem);
 
-                                                                           var children = node.Children.Items;
-                                                                           change.Current.Update(u => u.Remove(children));
-                                                                           children.ForEach(child => child.Parent = null);
+                                                                        if (previousParent is not null && !previousParent.Equals(previousKey))
+                                                                        {
+                                                                            allNodes.Lookup(previousParent).IfHasValue(n => n.Update(u => u.Remove(key)));
+                                                                        }
 
-                                                                           break;
-                                                                       }
+                                                                        // finally update the parent
+                                                                        node.Parent = p;
+                                                                        updater.AddOrUpdate(node);
 
-                                                                   case ChangeReason.Refresh:
-                                                                       {
-                                                                           var previousParent = change.Current.Parent;
-                                                                           if (!previousParent.Equals(parent))
-                                                                           {
-                                                                               previousParent.IfHasValue(n => n.Update(u => u.Remove(change.Key)));
-                                                                               change.Current.Parent = p;
-                                                                               updater.AddOrUpdate(change.Current);
-                                                                           }
+                                                                        break;
+                                                                    }
 
-                                                                           break;
-                                                                       }
-                                                               }
-                                                           }
-                                                       });
-                                                   }
-                                               }
+                                                                case ChangeReason.Remove:
+                                                                    {
+                                                                        node.Parent = null;
+                                                                        updater.Remove(key);
 
-                                               refilterObservable.OnNext(Unit.Default);
-                                           })
-                                           .DisposeMany()
-                                           .Subscribe();
+                                                                        var children = node.Children.Items;
+                                                                        change.Current.Update(u => u.Remove(children));
+                                                                        children.ForEach(child => child.Parent = null);
 
-                var filter = _predicateChanged.Synchronize(locker).CombineLatest(refilterObservable, (predicate, _) => predicate);
-                var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);
+                                                                        break;
+                                                                    }
 
-                return Disposable.Create(() =>
-                {
-                    result.Dispose();
-                    parentSetter.Dispose();
-                    allData.Dispose();
-                    allNodes.Dispose();
-                    groupedByPivot.Dispose();
-                    refilterObservable.OnCompleted();
-                });
-            });
+                                                                case ChangeReason.Refresh:
+                                                                    {
+                                                                        var previousParent = change.Current.Parent;
+                                                                        if (!previousParent.Equals(parent))
+                                                                        {
+                                                                            previousParent.IfHasValue(n => n.Update(u => u.Remove(change.Key)));
+                                                                            change.Current.Parent = p;
+                                                                            updater.AddOrUpdate(change.Current);
+                                                                        }
+
+                                                                        break;
+                                                                    }
+                                                            }
+                                                        }
+                                                    });
+                                        }
+                                    }
+
+                                    reFilterObservable.OnNext(Unit.Default);
+                                }).DisposeMany().Subscribe();
+
+                        var filter = _predicateChanged.Synchronize(locker).CombineLatest(reFilterObservable, (predicate, _) => predicate);
+                        var result = allNodes.Connect().Filter(filter).SubscribeSafe(observer);
+
+                        return Disposable.Create(
+                            () =>
+                                {
+                                    result.Dispose();
+                                    parentSetter.Dispose();
+                                    allData.Dispose();
+                                    allNodes.Dispose();
+                                    groupedByPivot.Dispose();
+                                    reFilterObservable.OnCompleted();
+                                });
+                    });
         }
     }
 }

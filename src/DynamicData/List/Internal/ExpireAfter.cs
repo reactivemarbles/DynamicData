@@ -1,30 +1,32 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
     internal sealed class ExpireAfter<T>
     {
-        private readonly ISourceList<T> _sourceList;
         private readonly Func<T, TimeSpan?> _expireAfter;
-        private readonly TimeSpan? _pollingInterval;
-        private readonly IScheduler _scheduler;
+
         private readonly object _locker;
 
-        public   ExpireAfter([NotNull] ISourceList<T> sourceList, [NotNull] Func<T, TimeSpan?> expireAfter, TimeSpan? pollingInterval, [NotNull] IScheduler scheduler, object locker)
+        private readonly TimeSpan? _pollingInterval;
+
+        private readonly IScheduler _scheduler;
+
+        private readonly ISourceList<T> _sourceList;
+
+        public ExpireAfter(ISourceList<T> sourceList, Func<T, TimeSpan?> expireAfter, TimeSpan? pollingInterval, IScheduler scheduler, object locker)
         {
             _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
             _expireAfter = expireAfter ?? throw new ArgumentNullException(nameof(expireAfter));
@@ -35,71 +37,65 @@ namespace DynamicData.List.Internal
 
         public IObservable<IEnumerable<T>> Run()
         {
-            return Observable.Create<IEnumerable<T>>(observer =>
-            {
-                var dateTime = _scheduler.Now.DateTime;
-                long orderItemWasAdded = -1;
-
-                var autoRemover = _sourceList.Connect()
-                                             .Synchronize(_locker)
-                                             .Do(x => dateTime = _scheduler.Now.DateTime)
-                                             .Cast(t =>
-                                             {
-                                                 var removeAt = _expireAfter(t);
-                                                 var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;
-                                                 return new ExpirableItem<T>(t, expireAt, Interlocked.Increment(ref orderItemWasAdded));
-                                             })
-                                             .AsObservableList();
-
-                void RemovalAction()
-                {
-                    try
+            return Observable.Create<IEnumerable<T>>(
+                observer =>
                     {
-                        lock (_locker)
+                        var dateTime = _scheduler.Now.DateTime;
+                        long orderItemWasAdded = -1;
+
+                        var autoRemover = _sourceList.Connect().Synchronize(_locker).Do(x => dateTime = _scheduler.Now.DateTime).Cast(
+                            t =>
+                                {
+                                    var removeAt = _expireAfter(t);
+                                    var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;
+                                    return new ExpirableItem<T>(t, expireAt, Interlocked.Increment(ref orderItemWasAdded));
+                                }).AsObservableList();
+
+                        void RemovalAction()
                         {
-                            var toRemove = autoRemover.Items.Where(ei => ei.ExpireAt <= _scheduler.Now.DateTime)
-                                .Select(ei => ei.Item)
-                                .ToList();
+                            try
+                            {
+                                lock (_locker)
+                                {
+                                    var toRemove = autoRemover.Items.Where(ei => ei.ExpireAt <= _scheduler.Now.DateTime).Select(ei => ei.Item).ToList();
 
-                            observer.OnNext(toRemove);
+                                    observer.OnNext(toRemove);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                observer.OnError(ex);
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        observer.OnError(ex);
-                    }
-                }
 
-                var removalSubscription = new SingleAssignmentDisposable();
-                if (_pollingInterval.HasValue)
-                {
-                    // use polling
-                    // ReSharper disable once InconsistentlySynchronizedField
-                    removalSubscription.Disposable = _scheduler.ScheduleRecurringAction(_pollingInterval.Value, RemovalAction);
-                }
-                else
-                {
-                    //create a timer for each distinct time
-                    removalSubscription.Disposable = autoRemover.Connect()
-                                                               .DistinctValues(ei => ei.ExpireAt)
-                                                               .SubscribeMany(datetime =>
-                                                               {
-                                                                   // ReSharper disable once InconsistentlySynchronizedField
-                                                                    var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
-                                                                    // ReSharper disable once InconsistentlySynchronizedField
-                                                                   return Observable.Timer(expireAt, _scheduler)
-                                                                                    .Take(1)
-                                                                                    .Subscribe(_ => RemovalAction());
-                                                               })
-                                                               .Subscribe();
-                }
+                        var removalSubscription = new SingleAssignmentDisposable();
+                        if (_pollingInterval.HasValue)
+                        {
+                            // use polling
+                            // ReSharper disable once InconsistentlySynchronizedField
+                            removalSubscription.Disposable = _scheduler.ScheduleRecurringAction(_pollingInterval.Value, RemovalAction);
+                        }
+                        else
+                        {
+                            // create a timer for each distinct time
+                            removalSubscription.Disposable = autoRemover.Connect().DistinctValues(ei => ei.ExpireAt).SubscribeMany(
+                                datetime =>
+                                    {
+                                        // ReSharper disable once InconsistentlySynchronizedField
+                                        var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
 
-                return Disposable.Create(() =>
-                {
-                    removalSubscription.Dispose();
-                    autoRemover.Dispose();
-                });
-            });
+                                        // ReSharper disable once InconsistentlySynchronizedField
+                                        return Observable.Timer(expireAt, _scheduler).Take(1).Subscribe(_ => RemovalAction());
+                                    }).Subscribe();
+                        }
+
+                        return Disposable.Create(
+                            () =>
+                                {
+                                    removalSubscription.Dispose();
+                                    autoRemover.Dispose();
+                                });
+                    });
         }
     }
 }

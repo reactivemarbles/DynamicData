@@ -2,42 +2,47 @@ using System;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
+
 using DynamicData.Tests.Domain;
-using Xunit;
+
 using FluentAssertions;
+
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
-    public class GroupControllerForFilteredItemsFixture: IDisposable
+    public class GroupControllerForFilteredItemsFixture : IDisposable
     {
-        private enum AgeBracket
-        {
-            Under20,
-            Adult,
-            Pensioner
-        }
-
-        private readonly Func<Person, AgeBracket> _grouper = p =>
-        {
-            if (p.Age <= 19)
-            {
-                return AgeBracket.Under20;
-            }
-
-            return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
-        };
-
-        private readonly ISourceCache<Person, string> _source;
-        private readonly ISubject<Unit> _refreshSubject = new Subject<Unit>();
         private readonly IObservableCache<IGroup<Person, string, AgeBracket>, AgeBracket> _grouped;
 
-        public  GroupControllerForFilteredItemsFixture()
+        private readonly Func<Person, AgeBracket> _grouper = p =>
+            {
+                if (p.Age <= 19)
+                {
+                    return AgeBracket.Under20;
+                }
+
+                return p.Age <= 60 ? AgeBracket.Adult : AgeBracket.Pensioner;
+            };
+
+        private readonly ISubject<Unit> _refreshSubject = new Subject<Unit>();
+
+        private readonly ISourceCache<Person, string> _source;
+
+        public GroupControllerForFilteredItemsFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 
-            _grouped = _source.Connect(p => _grouper(p) != AgeBracket.Pensioner)
-                .Group(_grouper, _refreshSubject).AsObservableCache();
+            _grouped = _source.Connect(p => _grouper(p) != AgeBracket.Pensioner).Group(_grouper, _refreshSubject).AsObservableCache();
+        }
+
+        private enum AgeBracket
+        {
+            Under20,
+
+            Adult,
+
+            Pensioner
         }
 
         public void Dispose()
@@ -82,7 +87,7 @@ namespace DynamicData.Tests.Cache
             var p2 = new Person("P2", 15);
             var p3 = new Person("P3", 30);
             var p4 = new Person("P4", 70);
-            var people = new[] {p1, p2, p3, p4};
+            var people = new[] { p1, p2, p3, p4 };
 
             _source.AddOrUpdate(people);
 
@@ -98,7 +103,7 @@ namespace DynamicData.Tests.Cache
 
             // _controller.RefreshGroup();
 
-            _source.Refresh(new[] {p1, p2, p3, p4});
+            _source.Refresh(new[] { p1, p2, p3, p4 });
 
             IsContainedIn("P1", AgeBracket.Adult).Should().BeTrue();
             IsContainedIn("P2", AgeBracket.Pensioner).Should().BeFalse();
@@ -135,6 +140,5 @@ namespace DynamicData.Tests.Cache
 
             return person.Count == 0;
         }
-
     }
 }

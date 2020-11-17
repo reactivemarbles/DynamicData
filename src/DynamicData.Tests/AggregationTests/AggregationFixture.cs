@@ -1,18 +1,21 @@
 using System;
 using System.Reactive.Linq;
+
 using DynamicData.Aggregation;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.AggregationTests
 {
-
-    public class AggregationFixture: IDisposable
+    public class AggregationFixture : IDisposable
     {
-        private readonly SourceCache<Person, string> _source;
         private readonly IObservable<int> _accumulator;
+
+        private readonly SourceCache<Person, string> _source;
 
         /// <summary>
         /// Initialises this instance.
@@ -21,28 +24,24 @@ namespace DynamicData.Tests.AggregationTests
         {
             _source = new SourceCache<Person, string>(p => p.Name);
 
-            _accumulator = _source.Connect()
-                                  .ForAggregation()
-                                  .Scan(0, (current, items) =>
-                                  {
-                                      items.ForEach(x =>
-                                      {
-                                          if (x.Type == AggregateType.Add)
-                                          {
-                                              current = current + x.Item.Age;
-                                          }
-                                          else
-                                          {
-                                              current = current - x.Item.Age;
-                                          }
-                                      });
-                                      return current;
-                                  });
-        }
-
-        public void Dispose()
-        {
-            _source.Dispose();
+            _accumulator = _source.Connect().ForAggregation().Scan(
+                0,
+                (current, items) =>
+                    {
+                        items.ForEach(
+                            x =>
+                                {
+                                    if (x.Type == AggregateType.Add)
+                                    {
+                                        current += x.Item.Age;
+                                    }
+                                    else
+                                    {
+                                        current -= x.Item.Age;
+                                    }
+                                });
+                        return current;
+                    });
         }
 
         [Fact]
@@ -51,11 +50,12 @@ namespace DynamicData.Tests.AggregationTests
             int latest = 0;
             int counter = 0;
 
-            var accumulator = _accumulator.Subscribe(value =>
-            {
-                latest = value;
-                counter++;
-            });
+            var accumulator = _accumulator.Subscribe(
+                value =>
+                    {
+                        latest = value;
+                        counter++;
+                    });
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
@@ -74,11 +74,12 @@ namespace DynamicData.Tests.AggregationTests
             int latest = 0;
             int counter = 0;
 
-            var accumulator = _accumulator.Subscribe(value =>
-            {
-                latest = value;
-                counter++;
-            });
+            var accumulator = _accumulator.Subscribe(
+                value =>
+                    {
+                        latest = value;
+                        counter++;
+                    });
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("A", 15));
@@ -86,6 +87,11 @@ namespace DynamicData.Tests.AggregationTests
             counter.Should().Be(2, "Should be 2 updates");
             latest.Should().Be(15, "Accumulated value should be 60");
             accumulator.Dispose();
+        }
+
+        public void Dispose()
+        {
+            _source.Dispose();
         }
     }
 }

@@ -1,20 +1,20 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
 using System.Linq;
+
 using DynamicData.Cache.Internal;
 using DynamicData.Operators;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>
+        where TKey : notnull
     {
-        public new static readonly IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();
-
-        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
-        public IPageResponse Response { get; }
+        public static readonly new IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();
 
         public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
             : base(updates)
@@ -29,36 +29,23 @@ namespace DynamicData
             Response = new PageResponse(0, 0, 0, 0);
         }
 
-        #region Equality Members
+        public IPageResponse Response { get; }
+
+        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
 
         /// <summary>
-        /// Equalses the specified other.
+        /// Determines if the two values equal each other.
         /// </summary>
         /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <returns>If the page change set equals the other.</returns>
         public bool Equals(PagedChangeSet<TObject, TKey> other)
         {
             return SortedItems.SequenceEqual(other.SortedItems);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((PagedChangeSet<TObject, TKey>)obj);
+            return obj is PagedChangeSet<TObject, TKey> value && Equals(value);
         }
 
         public override int GetHashCode()
@@ -66,13 +53,11 @@ namespace DynamicData
             return SortedItems?.GetHashCode() ?? 0;
         }
 
-        #endregion
-
         /// <summary>
-        /// Returns a <see cref="T:System.String"/> that represents the SortedItems <see cref="T:System.Object"/>.
+        /// Returns a <see cref="string"/> that represents the SortedItems <see cref="object"/>.
         /// </summary>
         /// <returns>
-        /// A <see cref="T:System.String"/> that represents the SortedItems <see cref="T:System.Object"/>.
+        /// A <see cref="string"/> that represents the SortedItems <see cref="object"/>.
         /// </returns>
         public override string ToString()
         {

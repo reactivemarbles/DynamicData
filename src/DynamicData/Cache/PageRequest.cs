@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -10,19 +10,21 @@ using System.Diagnostics.CodeAnalysis;
 namespace DynamicData
 {
     /// <summary>
-    /// Represents a new page request
+    /// Represents a new page request.
     /// </summary>
     public sealed class PageRequest : IPageRequest, IEquatable<IPageRequest>
     {
         /// <summary>
-        /// The default page request
+        /// The default page request.
         /// </summary>
         public static readonly IPageRequest Default = new PageRequest();
 
         /// <summary>
-        /// Represents an empty page
+        /// Represents an empty page.
         /// </summary>
         public static readonly IPageRequest Empty = new PageRequest(0, 0);
+
+        private static readonly IEqualityComparer<IPageRequest?> _pageSizeComparerInstance = new PageSizeEqualityComparer();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PageRequest"/> class.
@@ -46,39 +48,41 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// Initializes a new instance of the <see cref="PageRequest"/> class.
         /// </summary>
         public PageRequest()
         {
         }
 
         /// <summary>
-        /// The page to move to
+        /// Gets the default comparer.
+        /// </summary>
+        /// <value>
+        /// The default comparer.
+        /// </value>
+        [SuppressMessage("Design", "CA1822: Member can be static", Justification = "Backwards compatibilty")]
+        public IEqualityComparer<IPageRequest?> DefaultComparer => _pageSizeComparerInstance;
+
+        /// <summary>
+        /// Gets the page to move to.
         /// </summary>
         public int Page { get; } = 1;
 
         /// <summary>
-        /// The page size
+        /// Gets the page size.
         /// </summary>
         public int Size { get; } = 25;
 
-        #region Equality members
-
         /// <inheritdoc />
-        public bool Equals(IPageRequest other)
+        public bool Equals(IPageRequest? other)
         {
             return DefaultComparer.Equals(this, other);
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (!(obj is IPageRequest))
-            {
-                return false;
-            }
-
-            return Equals((IPageRequest)obj);
+            return obj is IPageRequest value && Equals(value);
         }
 
         /// <inheritdoc />
@@ -90,13 +94,12 @@ namespace DynamicData
             }
         }
 
-        #endregion
+        /// <inheritdoc />
+        public override string ToString() => $"Page: {Page}, Size: {Size}";
 
-        #region PageSizeEqualityComparer
-
-        private sealed class PageSizeEqualityComparer : IEqualityComparer<IPageRequest>
+        private sealed class PageSizeEqualityComparer : IEqualityComparer<IPageRequest?>
         {
-            public bool Equals(IPageRequest x, IPageRequest y)
+            public bool Equals(IPageRequest? x, IPageRequest? y)
             {
                 if (ReferenceEquals(x, y))
                 {
@@ -121,29 +124,18 @@ namespace DynamicData
                 return x.Page == y.Page && x.Size == y.Size;
             }
 
-            public int GetHashCode(IPageRequest obj)
+            public int GetHashCode(IPageRequest? obj)
             {
+                if (obj is null)
+                {
+                    return 0;
+                }
+
                 unchecked
                 {
                     return (obj.Page * 397) ^ obj.Size;
                 }
             }
         }
-
-        private static readonly IEqualityComparer<IPageRequest> _pageSizeComparerInstance = new PageSizeEqualityComparer();
-
-        /// <summary>
-        /// Gets the default comparer.
-        /// </summary>
-        /// <value>
-        /// The default comparer.
-        /// </value>
-        [SuppressMessage("Design", "CA1822: Member can be static", Justification = "Backwards compatibilty")]
-        public IEqualityComparer<IPageRequest> DefaultComparer => _pageSizeComparerInstance;
-
-        #endregion
-
-        /// <inheritdoc />
-        public override string ToString() => $"Page: {Page}, Size: {Size}";
     }
 }

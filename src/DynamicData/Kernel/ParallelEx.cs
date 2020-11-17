@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -32,21 +32,22 @@ namespace DynamicData.Kernel
             {
                 await semaphore.WaitAsync().ConfigureAwait(false);
 
-                tasks.Add(Task.Run(async () =>
-                {
-                    try
-                    {
-                        return await selector(item).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
-                }));
+                tasks.Add(
+                    Task.Run(
+                        async () =>
+                            {
+                                try
+                                {
+                                    return await selector(item).ConfigureAwait(false);
+                                }
+                                finally
+                                {
+                                    semaphore.Release();
+                                }
+                            }));
             }
 
             return await Task.WhenAll(tasks).ConfigureAwait(false);
         }
-
     }
 }

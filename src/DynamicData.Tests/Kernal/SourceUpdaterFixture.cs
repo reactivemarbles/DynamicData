@@ -1,7 +1,10 @@
 using System.Linq;
+
 using DynamicData.Cache.Internal;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Kernal
@@ -9,9 +12,10 @@ namespace DynamicData.Tests.Kernal
     public class SourceUpdaterFixture
     {
         private readonly ChangeAwareCache<Person, string> _cache;
+
         private readonly CacheUpdater<Person, string> _updater;
 
-        public  SourceUpdaterFixture()
+        public SourceUpdaterFixture()
         {
             _cache = new ChangeAwareCache<Person, string>();
             _updater = new CacheUpdater<Person, string>(_cache, p => p.Name);
@@ -137,6 +141,5 @@ namespace DynamicData.Tests.Kernal
         {
             // Assert.Throws<ArgumentNullException>(() => new SourceUpdater<Person, string>(_cache, new KeySelector<Person, string>(null)));
         }
-
     }
 }

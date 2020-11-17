@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Reactive.Linq;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
     public class SourceCacheFixture : IDisposable
     {
         private readonly ChangeSetAggregator<Person, string> _results;
+
         private readonly ISourceCache<Person, string> _source;
 
         public SourceCacheFixture()
@@ -18,27 +21,22 @@ namespace DynamicData.Tests.Cache
             _results = _source.Connect().AsAggregator();
         }
 
-        public void Dispose()
-        {
-            _source.Dispose();
-            _results.Dispose();
-        }
-
         [Fact]
         public void CanHandleABatchOfUpdates()
         {
-            _source.Edit(updater =>
-            {
-                var torequery = new Person("Adult1", 44);
+            _source.Edit(
+                updater =>
+                    {
+                        var torequery = new Person("Adult1", 44);
 
-                updater.AddOrUpdate(new Person("Adult1", 40));
-                updater.AddOrUpdate(new Person("Adult1", 41));
-                updater.AddOrUpdate(new Person("Adult1", 42));
-                updater.AddOrUpdate(new Person("Adult1", 43));
-                updater.Refresh(torequery);
-                updater.Remove(torequery);
-                updater.Refresh(torequery);
-            });
+                        updater.AddOrUpdate(new Person("Adult1", 40));
+                        updater.AddOrUpdate(new Person("Adult1", 41));
+                        updater.AddOrUpdate(new Person("Adult1", 42));
+                        updater.AddOrUpdate(new Person("Adult1", 43));
+                        updater.Refresh(torequery);
+                        updater.Remove(torequery);
+                        updater.Refresh(torequery);
+                    });
 
             _results.Summary.Overall.Count.Should().Be(6, "Should be  6 up`dates");
             _results.Messages.Count.Should().Be(1, "Should be 1 message");
@@ -51,12 +49,43 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
+        public void CountChanged()
+        {
+            int count = 0;
+            int invoked = 0;
+            using (_source.CountChanged.Subscribe(
+                c =>
+                    {
+                        count = c;
+                        invoked++;
+                    }))
+            {
+                invoked.Should().Be(1);
+                count.Should().Be(0);
+
+                _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
+                invoked.Should().Be(2);
+                count.Should().Be(100);
+
+                _source.Clear();
+                invoked.Should().Be(3);
+                count.Should().Be(0);
+            }
+        }
+
+        [Fact]
         public void CountChangedShouldAlwaysInvokeUponeSubscription()
         {
             int? result = null;
             var subscription = _source.CountChanged.Subscribe(count => result = count);
 
             result.HasValue.Should().BeTrue();
+
+            if (result is null)
+            {
+                throw new InvalidOperationException(nameof(result));
+            }
+
             result.Value.Should().Be(0, "Count should be zero");
 
             subscription.Dispose();
@@ -71,9 +100,20 @@ namespace DynamicData.Tests.Cache
 
             _source.AddOrUpdate(generator.Take(100));
 
+            if (result is null)
+            {
+                throw new InvalidOperationException(nameof(result));
+            }
+
             result.HasValue.Should().BeTrue();
             result.Value.Should().Be(100, "Count should be 100");
             subscription.Dispose();
+        }
+
+        public void Dispose()
+        {
+            _source.Dispose();
+            _results.Dispose();
         }
 
         [Fact]
@@ -82,9 +122,7 @@ namespace DynamicData.Tests.Cache
             bool called = false;
             bool errored = false;
             bool completed = false;
-            var subscription = _source.Connect()
-                .Finally(() => completed = true)
-                .Subscribe(updates => { called = true; }, ex => errored = true, () => completed = true);
+            var subscription = _source.Connect().Finally(() => completed = true).Subscribe(updates => { called = true; }, ex => errored = true, () => completed = true);
             _source.AddOrUpdate(new Person("Adult1", 40));
 
             subscription.Dispose();
@@ -93,30 +131,6 @@ namespace DynamicData.Tests.Cache
             errored.Should().BeFalse();
             called.Should().BeTrue();
             completed.Should().BeTrue();
-        }
-
-        [Fact]
-        public void CountChanged()
-        {
-            int count = 0;
-            int invoked = 0;
-            using (_source.CountChanged.Subscribe(c =>
-                        {
-                            count = c;
-                            invoked++;
-                        }))
-            {
-                invoked.Should().Be(1);
-                count.Should().Be(0);
-
-                _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
-                invoked.Should().Be(2);
-                count.Should().Be(100);
-
-                _source.Clear();
-                invoked.Should().Be(3);
-                count.Should().Be(0);
-            }
         }
     }
 }

@@ -1,25 +1,28 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
+        where TLeftKey : notnull
+        where TRightKey : notnull
     {
         private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left;
-        private readonly IObservable<IChangeSet<TRight, TRightKey>> _right;
-        private readonly Func<TRight, TLeftKey> _rightKeySelector;
+
         private readonly Func<TLeftKey, Optional<TLeft>, TRight, TDestination> _resultSelector;
 
-        public RightJoin(IObservable<IChangeSet<TLeft, TLeftKey>> left,
-            IObservable<IChangeSet<TRight, TRightKey>> right,
-            Func<TRight, TLeftKey> rightKeySelector,
-            Func<TLeftKey, Optional<TLeft>, TRight, TDestination> resultSelector)
+        private readonly IObservable<IChangeSet<TRight, TRightKey>> _right;
+
+        private readonly Func<TRight, TLeftKey> _rightKeySelector;
+
+        public RightJoin(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TLeftKey, Optional<TLeft>, TRight, TDestination> resultSelector)
         {
             _left = left ?? throw new ArgumentNullException(nameof(left));
             _right = right ?? throw new ArgumentNullException(nameof(right));
@@ -29,106 +32,107 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TDestination, TLeftKey>> Run()
         {
-            return Observable.Create<IChangeSet<TDestination, TLeftKey>>(observer =>
-            {
-                var locker = new object();
-
-                //create local backing stores
-                var leftCache = _left.Synchronize(locker).AsObservableCache(false);
-                var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
-
-                //joined is the final cache
-                var joinedCache = new LockFreeObservableCache<TDestination, TLeftKey>();
-
-                var rightLoader = rightCache.Connect()
-                    .Subscribe(changes =>
+            return Observable.Create<IChangeSet<TDestination, TLeftKey>>(
+                observer =>
                     {
-                        joinedCache.Edit(innerCache =>
-                        {
-                            foreach (var change in changes.ToConcreteType())
-                            {
-                                switch (change.Reason)
+                        var locker = new object();
+
+                        // create local backing stores
+                        var leftCache = _left.Synchronize(locker).AsObservableCache(false);
+                        var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
+
+                        // joined is the final cache
+                        var joinedCache = new LockFreeObservableCache<TDestination, TLeftKey>();
+
+                        var rightLoader = rightCache.Connect().Subscribe(
+                            changes =>
                                 {
-                                    case ChangeReason.Add:
-                                    case ChangeReason.Update:
-                                        //Update with right (and right if it is presents)
-                                        var right = change.Current;
-                                        var left = leftCache.Lookup(change.Key);
-                                        innerCache.AddOrUpdate(_resultSelector(change.Key, left, right), change.Key);
-                                        break;
-                                    case ChangeReason.Remove:
-                                        //remove from result because a right value is expected
-                                        innerCache.Remove(change.Key);
-                                        break;
-                                    case ChangeReason.Refresh:
-                                        //propagate upstream
-                                        innerCache.Refresh(change.Key);
-                                        break;
-                                }
-                            }
-                        });
-                    });
+                                    joinedCache.Edit(
+                                        innerCache =>
+                                            {
+                                                foreach (var change in changes.ToConcreteType())
+                                                {
+                                                    switch (change.Reason)
+                                                    {
+                                                        case ChangeReason.Add:
+                                                        case ChangeReason.Update:
+                                                            // Update with right (and right if it is presents)
+                                                            var right = change.Current;
+                                                            var left = leftCache.Lookup(change.Key);
+                                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left, right), change.Key);
+                                                            break;
 
-                var leftLoader = leftCache.Connect()
-                    .Subscribe(changes =>
-                    {
-                        joinedCache.Edit(innerCache =>
-                        {
-                            foreach (var change in changes.ToConcreteType())
-                            {
-                                TLeft left = change.Current;
-                                Optional<TRight> right = rightCache.Lookup(change.Key);
+                                                        case ChangeReason.Remove:
+                                                            // remove from result because a right value is expected
+                                                            innerCache.Remove(change.Key);
+                                                            break;
 
-                                switch (change.Reason)
+                                                        case ChangeReason.Refresh:
+                                                            // propagate upstream
+                                                            innerCache.Refresh(change.Key);
+                                                            break;
+                                                    }
+                                                }
+                                            });
+                                });
+
+                        var leftLoader = leftCache.Connect().Subscribe(
+                            changes =>
                                 {
-                                    case ChangeReason.Add:
-                                    case ChangeReason.Update:
-                                    {
-                                        if (right.HasValue)
-                                        {
-                                            //Update with left and right value
-                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left, right.Value), change.Key);
-                                        }
-                                        else
-                                        {
-                                            //There is no right so remove if  already in the cache
-                                            innerCache.Remove(change.Key);
-                                        }
-                                    }
+                                    joinedCache.Edit(
+                                        innerCache =>
+                                            {
+                                                foreach (var change in changes.ToConcreteType())
+                                                {
+                                                    TLeft left = change.Current;
+                                                    Optional<TRight> right = rightCache.Lookup(change.Key);
 
-                                        break;
-                                    case ChangeReason.Remove:
-                                    {
-                                        if (right.HasValue)
-                                        {
-                                            //Update with no left value
-                                            innerCache.AddOrUpdate(_resultSelector(change.Key, Optional<TLeft>.None, right.Value), change.Key);
-                                        }
-                                        else
-                                        {
-                                            //remove if it is already in the cache
-                                            innerCache.Remove(change.Key);
-                                        }
-                                    }
+                                                    switch (change.Reason)
+                                                    {
+                                                        case ChangeReason.Add:
+                                                        case ChangeReason.Update:
+                                                            {
+                                                                if (right.HasValue)
+                                                                {
+                                                                    // Update with left and right value
+                                                                    innerCache.AddOrUpdate(_resultSelector(change.Key, left, right.Value), change.Key);
+                                                                }
+                                                                else
+                                                                {
+                                                                    // There is no right so remove if  already in the cache
+                                                                    innerCache.Remove(change.Key);
+                                                                }
+                                                            }
 
-                                        break;
-                                    case ChangeReason.Refresh:
-                                        //propagate upstream
-                                        innerCache.Refresh(change.Key);
-                                        break;
-                                }
-                            }
-                        });
+                                                            break;
+
+                                                        case ChangeReason.Remove:
+                                                            {
+                                                                if (right.HasValue)
+                                                                {
+                                                                    // Update with no left value
+                                                                    innerCache.AddOrUpdate(_resultSelector(change.Key, Optional<TLeft>.None, right.Value), change.Key);
+                                                                }
+                                                                else
+                                                                {
+                                                                    // remove if it is already in the cache
+                                                                    innerCache.Remove(change.Key);
+                                                                }
+                                                            }
+
+                                                            break;
+
+                                                        case ChangeReason.Refresh:
+                                                            // propagate upstream
+                                                            innerCache.Refresh(change.Key);
+                                                            break;
+                                                    }
+                                                }
+                                            });
+                                });
+
+                        return new CompositeDisposable(joinedCache.Connect().NotEmpty().SubscribeSafe(observer), leftCache, rightCache, rightLoader, joinedCache, leftLoader);
                     });
-
-                return new CompositeDisposable(
-                    joinedCache.Connect().NotEmpty().SubscribeSafe(observer),
-                    leftCache,
-                    rightCache,
-                    rightLoader,
-                    joinedCache,
-                    leftLoader);
-            });
         }
     }
 }

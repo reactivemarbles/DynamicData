@@ -1,16 +1,20 @@
-// ReSharper disable once CheckNamespace
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 namespace DynamicData
 {
     /// <summary>
-    /// An update stream which has been grouped by a common key
+    /// An update stream which has been grouped by a common key.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <typeparam name="TGroupKey">The type of value used to group the original stream</typeparam>
+    /// <typeparam name="TGroupKey">The type of value used to group the original stream.</typeparam>
     public interface IGroup<TObject, TKey, out TGroupKey> : IKey<TGroupKey>
+        where TKey : notnull
     {
         /// <summary>
-        /// The observable for the group
+        /// Gets the observable for the group.
         /// </summary>
         /// <value>
         /// The observable.

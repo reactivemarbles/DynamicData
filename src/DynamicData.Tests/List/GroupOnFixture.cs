@@ -1,26 +1,24 @@
 using System;
 using System.Linq;
+
 using DynamicData.Tests.Domain;
-using Xunit;
+
 using FluentAssertions;
+
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class GroupOnFixture: IDisposable
+    public class GroupOnFixture : IDisposable
     {
-        private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<IGroup<Person, int>> _results;
 
-        public  GroupOnFixture()
+        private readonly ISourceList<Person> _source;
+
+        public GroupOnFixture()
         {
             _source = new SourceList<Person>();
             _results = _source.Connect().GroupOn(p => p.Age).AsAggregator();
-        }
-
-        public void Dispose()
-        {
-            _source.Dispose();
         }
 
         [Fact]
@@ -34,6 +32,21 @@ namespace DynamicData.Tests.List
 
             var firstGroup = _results.Data.Items.First().List.Items.ToArray();
             firstGroup[0].Should().Be(person, "Should be same person");
+        }
+
+        [Fact]
+        public void BigList()
+        {
+            var generator = new RandomPersonGenerator();
+            var people = generator.Take(10000).ToArray();
+            _source.AddRange(people);
+
+            Console.WriteLine();
+        }
+
+        public void Dispose()
+        {
+            _source.Dispose();
         }
 
         [Fact]
@@ -59,16 +72,6 @@ namespace DynamicData.Tests.List
 
             var firstGroup = _results.Data.Items.First().List.Items.ToArray();
             firstGroup[0].Should().Be(amended, "Should be same person");
-        }
-
-        [Fact]
-        public void BigList()
-        {
-            var generator = new RandomPersonGenerator();
-            var people = generator.Take(10000).ToArray();
-            _source.AddRange(people);
-
-            Console.WriteLine();
         }
     }
 }

@@ -1,18 +1,21 @@
-// ReSharper disable once CheckNamespace
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 namespace DynamicData
 {
     /// <summary>
-    /// Represents a new page request
+    /// Represents a new page request.
     /// </summary>
     public interface IPageRequest
     {
         /// <summary>
-        /// The page to move to
+        /// Gets the page to move to.
         /// </summary>
         int Page { get; }
 
         /// <summary>
-        /// The page size
+        /// Gets the page size.
         /// </summary>
         int Size { get; }
     }

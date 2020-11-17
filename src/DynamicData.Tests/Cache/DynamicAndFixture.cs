@@ -1,97 +1,35 @@
 using System;
 using System.Linq;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
-    public class DynamicAndFixture: IDisposable
+    public class DynamicAndFixture : IDisposable
     {
         private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
-        private readonly ISourceCache<Person, string> _source1;
-        private readonly ISourceCache<Person, string> _source2;
-        private readonly ISourceCache<Person, string> _source3;
-        private readonly ISourceList<IObservable<IChangeSet<Person, string>>> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
 
-        public  DynamicAndFixture()
+        private readonly ISourceList<IObservable<IChangeSet<Person, string>>> _source;
+
+        private readonly ISourceCache<Person, string> _source1;
+
+        private readonly ISourceCache<Person, string> _source2;
+
+        private readonly ISourceCache<Person, string> _source3;
+
+        public DynamicAndFixture()
         {
             _source1 = new SourceCache<Person, string>(p => p.Name);
             _source2 = new SourceCache<Person, string>(p => p.Name);
             _source3 = new SourceCache<Person, string>(p => p.Name);
             _source = new SourceList<IObservable<IChangeSet<Person, string>>>();
             _results = _source.And().AsAggregator();
-        }
-
-        public void Dispose()
-        {
-            _source1.Dispose();
-            _source2.Dispose();
-            _source3.Dispose();
-            _source.Dispose();
-            _results.Dispose();
-        }
-
-        [Fact]
-        public void UpdatingOneSourceOnlyProducesNoResults()
-        {
-            _source.Add(_source1.Connect());
-            _source.Add(_source2.Connect());
-
-            var person = new Person("Adult1", 50);
-            _source1.AddOrUpdate(person);
-
-            _results.Messages.Count.Should().Be(0, "Should have no updates");
-            _results.Data.Count.Should().Be(0, "Cache should have no items");
-        }
-
-        [Fact]
-        public void UpdatingBothProducesResults()
-        {
-            _source.Add(_source1.Connect());
-            _source.Add(_source2.Connect());
-
-            var person = new Person("Adult1", 50);
-            _source1.AddOrUpdate(person);
-            _source2.AddOrUpdate(person);
-            _results.Messages.Count.Should().Be(1, "Should have no updates");
-            _results.Data.Count.Should().Be(1, "Cache should have no items");
-            _results.Data.Items.First().Should().Be(person, "Should be same person");
-        }
-
-        [Fact]
-        public void RemovingFromOneRemovesFromResult()
-        {
-            _source.Add(_source1.Connect());
-            _source.Add(_source2.Connect());
-
-            var person = new Person("Adult1", 50);
-            _source1.AddOrUpdate(person);
-            _source2.AddOrUpdate(person);
-
-            _source2.Remove(person);
-            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            _results.Data.Count.Should().Be(0, "Cache should have no items");
-        }
-
-        [Fact]
-        public void UpdatingOneProducesOnlyOneUpdate()
-        {
-            _source.Add(_source1.Connect());
-            _source.Add(_source2.Connect());
-
-            var person = new Person("Adult1", 50);
-            _source1.AddOrUpdate(person);
-            _source2.AddOrUpdate(person);
-
-            var personUpdated = new Person("Adult1", 51);
-            _source2.AddOrUpdate(personUpdated);
-            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            _results.Data.Count.Should().Be(1, "Cache should have no items");
-            _results.Data.Items.First().Should().Be(personUpdated, "Should be updated person");
         }
 
         [Fact]
@@ -114,6 +52,15 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(10);
         }
 
+        public void Dispose()
+        {
+            _source1.Dispose();
+            _source2.Dispose();
+            _source3.Dispose();
+            _source.Dispose();
+            _results.Dispose();
+        }
+
         [Fact]
         public void RemoveAllLists()
         {
@@ -133,6 +80,65 @@ namespace DynamicData.Tests.Cache
             //s _source.Clear();
 
             _results.Data.Count.Should().Be(0);
+        }
+
+        [Fact]
+        public void RemovingFromOneRemovesFromResult()
+        {
+            _source.Add(_source1.Connect());
+            _source.Add(_source2.Connect());
+
+            var person = new Person("Adult1", 50);
+            _source1.AddOrUpdate(person);
+            _source2.AddOrUpdate(person);
+
+            _source2.Remove(person);
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(0, "Cache should have no items");
+        }
+
+        [Fact]
+        public void UpdatingBothProducesResults()
+        {
+            _source.Add(_source1.Connect());
+            _source.Add(_source2.Connect());
+
+            var person = new Person("Adult1", 50);
+            _source1.AddOrUpdate(person);
+            _source2.AddOrUpdate(person);
+            _results.Messages.Count.Should().Be(1, "Should have no updates");
+            _results.Data.Count.Should().Be(1, "Cache should have no items");
+            _results.Data.Items.First().Should().Be(person, "Should be same person");
+        }
+
+        [Fact]
+        public void UpdatingOneProducesOnlyOneUpdate()
+        {
+            _source.Add(_source1.Connect());
+            _source.Add(_source2.Connect());
+
+            var person = new Person("Adult1", 50);
+            _source1.AddOrUpdate(person);
+            _source2.AddOrUpdate(person);
+
+            var personUpdated = new Person("Adult1", 51);
+            _source2.AddOrUpdate(personUpdated);
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(1, "Cache should have no items");
+            _results.Data.Items.First().Should().Be(personUpdated, "Should be updated person");
+        }
+
+        [Fact]
+        public void UpdatingOneSourceOnlyProducesNoResults()
+        {
+            _source.Add(_source1.Connect());
+            _source.Add(_source2.Connect());
+
+            var person = new Person("Adult1", 50);
+            _source1.AddOrUpdate(person);
+
+            _results.Messages.Count.Should().Be(0, "Should have no updates");
+            _results.Data.Count.Should().Be(0, "Cache should have no items");
         }
     }
 }

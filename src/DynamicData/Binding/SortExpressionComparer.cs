@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,18 +8,33 @@ using System.Collections.Generic;
 namespace DynamicData.Binding
 {
     /// <summary>
-    /// Generic sort expression to help create inline sorting for the .Sort(IComparer comparer) operator
+    /// Generic sort expression to help create inline sorting for the .Sort(IComparer comparer) operator.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The item to sort against.</typeparam>
     public class SortExpressionComparer<T> : List<SortExpression<T>>, IComparer<T>
     {
         /// <summary>
-        /// Compares x and y
+        /// Create an ascending sort expression.
         /// </summary>
-        /// <param name="x">The x.</param>
-        /// <param name="y">The y.</param>
-        /// <returns></returns>
-        public int Compare(T x, T y)
+        /// <param name="expression">The expression.</param>
+        /// <returns>A comparer in ascending order.</returns>
+        public static SortExpressionComparer<T> Ascending(Func<T, IComparable> expression)
+        {
+            return new SortExpressionComparer<T> { new SortExpression<T>(expression) };
+        }
+
+        /// <summary>
+        /// Create an descending sort expression.
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <returns>A comparer in descending order.</returns>
+        public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression)
+        {
+            return new SortExpressionComparer<T> { new SortExpression<T>(expression, SortDirection.Descending) };
+        }
+
+        /// <inheritdoc/>
+        public int Compare(T? x, T? y)
         {
             foreach (var item in this)
             {
@@ -69,30 +84,10 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        /// Create an ascending sort expression
+        /// Adds an additional ascending sort expression.
         /// </summary>
         /// <param name="expression">The expression.</param>
-        /// <returns></returns>
-        public static SortExpressionComparer<T> Ascending(Func<T, IComparable> expression)
-        {
-            return new SortExpressionComparer<T> { new SortExpression<T>(expression) };
-        }
-
-        /// <summary>
-        /// Create an descending sort expression.
-        /// </summary>
-        /// <param name="expression">The expression.</param>
-        /// <returns></returns>
-        public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression)
-        {
-            return new SortExpressionComparer<T> { new SortExpression<T>(expression, SortDirection.Descending) };
-        }
-
-        /// <summary>
-        /// Adds an additional ascending sort expression
-        /// </summary>
-        /// <param name="expression">The expression.</param>
-        /// <returns></returns>
+        /// <returns>A comparer in ascending order first taking into account the comparer passed in.</returns>
         public SortExpressionComparer<T> ThenByAscending(Func<T, IComparable> expression)
         {
             Add(new SortExpression<T>(expression));
@@ -100,10 +95,10 @@ namespace DynamicData.Binding
         }
 
         /// <summary>
-        ///  Adds an additional descending sort expression
+        ///  Adds an additional descending sort expression.
         /// </summary>
         /// <param name="expression">The expression.</param>
-        /// <returns></returns>
+        /// <returns>A comparer in descending order first taking into account the comparer passed in.</returns>
         public SortExpressionComparer<T> ThenByDescending(Func<T, IComparable> expression)
         {
             Add(new SortExpression<T>(expression, SortDirection.Descending));

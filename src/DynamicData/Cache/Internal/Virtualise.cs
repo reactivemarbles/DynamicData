@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -9,12 +9,13 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal
 {
     internal sealed class Virtualise<TObject, TKey>
+        where TKey : notnull
     {
         private readonly IObservable<ISortedChangeSet<TObject, TKey>> _source;
+
         private readonly IObservable<IVirtualRequest> _virtualRequests;
 
-        public Virtualise(IObservable<ISortedChangeSet<TObject, TKey>> source,
-            IObservable<IVirtualRequest> virtualRequests)
+        public Virtualise(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _virtualRequests = virtualRequests ?? throw new ArgumentNullException(nameof(virtualRequests));
@@ -22,32 +23,41 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IVirtualChangeSet<TObject, TKey>> Run()
         {
-            return Observable.Create<IVirtualChangeSet<TObject, TKey>>(observer =>
-            {
-                var virtualiser = new Virtualiser();
-                var locker = new object();
+            return Observable.Create<IVirtualChangeSet<TObject, TKey>>(
+                observer =>
+                    {
+                        var virtualiser = new Virtualiser();
+                        var locker = new object();
 
-                var request = _virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise);
-                var datachange = _source.Synchronize(locker).Select(virtualiser.Update);
-                return request.Merge(datachange)
-                    .Where(updates => updates != null)
-                    .SubscribeSafe(observer);
-            });
+                        var request = _virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise).Where(x => x != null).Select(x => x!);
+                        var dataChange = _source.Synchronize(locker).Select(virtualiser.Update).Where(x => x != null).Select(x => x!);
+                        return request.Merge(dataChange).Where(updates => updates != null).SubscribeSafe(observer);
+                    });
         }
 
         private sealed class Virtualiser
         {
             private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
+
             private IKeyValueCollection<TObject, TKey> _current = new KeyValueCollection<TObject, TKey>();
-            private IVirtualRequest _parameters;
+
             private bool _isLoaded;
 
-            public Virtualiser(VirtualRequest request = null)
+            private IVirtualRequest _parameters;
+
+            public Virtualiser(VirtualRequest? request = null)
             {
                 _parameters = request ?? new VirtualRequest();
             }
 
-            public IVirtualChangeSet<TObject, TKey> Virtualise(IVirtualRequest parameters)
+            public IVirtualChangeSet<TObject, TKey>? Update(ISortedChangeSet<TObject, TKey> updates)
+            {
+                _isLoaded = true;
+                _all = updates.SortedItems;
+                return Virtualise(updates);
+            }
+
+            public IVirtualChangeSet<TObject, TKey>? Virtualise(IVirtualRequest? parameters)
             {
                 if (parameters == null || parameters.StartIndex < 0 || parameters.Size < 1)
                 {
@@ -63,28 +73,19 @@ namespace DynamicData.Cache.Internal
                 return Virtualise();
             }
 
-            public IVirtualChangeSet<TObject, TKey> Update(ISortedChangeSet<TObject, TKey> updates)
+            private IVirtualChangeSet<TObject, TKey>? Virtualise(ISortedChangeSet<TObject, TKey>? updates = null)
             {
-                _isLoaded = true;
-                _all = updates.SortedItems;
-                return Virtualise(updates);
-            }
-
-            private IVirtualChangeSet<TObject, TKey> Virtualise(ISortedChangeSet<TObject, TKey> updates = null)
-            {
-                if (_isLoaded == false)
+                if (!_isLoaded)
                 {
                     return null;
                 }
 
                 var previous = _current;
-                var virtualised = _all.Skip(_parameters.StartIndex)
-                                     .Take(_parameters.Size)
-                                     .ToList();
+                var virtualised = _all.Skip(_parameters.StartIndex).Take(_parameters.Size).ToList();
 
                 _current = new KeyValueCollection<TObject, TKey>(virtualised, _all.Comparer, updates?.SortedItems.SortReason ?? SortReason.DataChanged, _all.Optimisations);
 
-                ////check for changes within the current virtualised page.  Notify if there have been changes or if the overall count has changed
+                // check for changes within the current virtualised page.  Notify if there have been changes or if the overall count has changed
                 var notifications = FilteredIndexCalculator<TObject, TKey>.Calculate(_current, previous, updates);
                 if (notifications.Count == 0 && (previous.Count != _current.Count))
                 {

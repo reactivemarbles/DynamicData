@@ -1,5 +1,7 @@
 ﻿using System;
+
 using DynamicData.Tests.Domain;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
@@ -12,9 +14,7 @@ namespace DynamicData.Tests.Cache
             var called = false;
             var source = new SourceCache<Person, int>(x => x.Age);
 
-            source.Connect()
-                .OnItemAdded(_ => called = true)
-                .Subscribe();
+            source.Connect().OnItemAdded(_ => called = true).Subscribe();
 
             var person = new Person("A", 1);
 
@@ -28,9 +28,7 @@ namespace DynamicData.Tests.Cache
             var called = false;
             var source = new SourceCache<Person, int>(x => x.Age);
 
-            source.Connect()
-                .OnItemRemoved(_ => called = true)
-                .Subscribe();
+            source.Connect().OnItemRemoved(_ => called = true).Subscribe();
 
             var person = new Person("A", 1);
             source.AddOrUpdate(person);
@@ -44,9 +42,7 @@ namespace DynamicData.Tests.Cache
             var called = false;
             var source = new SourceCache<Person, int>(x => x.Age);
 
-            source.Connect()
-                .OnItemUpdated((x,y) => called = true)
-                .Subscribe();
+            source.Connect().OnItemUpdated((x, y) => called = true).Subscribe();
 
             var person = new Person("A", 1);
             source.AddOrUpdate(person);

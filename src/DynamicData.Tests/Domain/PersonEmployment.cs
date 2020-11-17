@@ -3,6 +3,7 @@ namespace DynamicData.Tests.Domain
     public struct PersonEmpKey
     {
         private readonly string _name;
+
         private readonly string _company;
 
         public PersonEmpKey(string name, string company)
@@ -22,7 +23,7 @@ namespace DynamicData.Tests.Domain
             return string.Equals(_name, other._name) && string.Equals(_company, other._company);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
@@ -43,29 +44,20 @@ namespace DynamicData.Tests.Domain
 
     public class PersonEmployment : IKey<PersonEmpKey>
     {
-        private readonly string _name;
-        private readonly string _company;
-        private readonly PersonEmpKey _key;
-
         public PersonEmployment(string name, string company)
         {
-            _name = name;
-            _company = company;
-            _key = new PersonEmpKey(this);
+            Name = name;
+            Company = company;
+            Key = new PersonEmpKey(this);
         }
 
-        public string Name => _name;
+        public string Company { get; }
 
-        public string Company => _company;
+        public PersonEmpKey Key { get; }
 
-        public PersonEmpKey Key => _key;
+        public string Name { get; }
 
-        protected bool Equals(PersonEmployment other)
-        {
-            return string.Equals(_name, other._name) && string.Equals(_company, other._company);
-        }
-
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
@@ -89,13 +81,18 @@ namespace DynamicData.Tests.Domain
         {
             unchecked
             {
-                return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ (_company != null ? _company.GetHashCode() : 0);
+                return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Company != null ? Company.GetHashCode() : 0);
             }
         }
 
         public override string ToString()
         {
-            return string.Format("Name: {0}, Company: {1}", _name, _company);
+            return string.Format("Name: {0}, Company: {1}", Name, Company);
+        }
+
+        protected bool Equals(PersonEmployment other)
+        {
+            return string.Equals(Name, other.Name) && string.Equals(Company, other.Company);
         }
     }
 }

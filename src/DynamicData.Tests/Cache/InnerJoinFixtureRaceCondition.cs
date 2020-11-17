@@ -1,18 +1,13 @@
 using System;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     public class InnerJoinFixtureRaceCondition
     {
-        public class Thing
-        {
-            public long Id { get; set; }
-            public string Name { get; set; }
-        }
-
         /// <summary>
         /// Tests to see whether we have fixed a race condition. See https://github.com/reactiveui/DynamicData/issues/364
         ///
@@ -22,23 +17,26 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void LetsSeeWhetherWeCanRandomlyHitARaceCondition()
         {
-            var ids = ObservableChangeSet.Create<long, long>(sourceCache =>
-            {
-                return Observable.Range(1, 1000000, Scheduler.Default)
-                    .Subscribe(x => sourceCache.AddOrUpdate(x));
-            }, x => x);
+            var ids = ObservableChangeSet.Create<long, long>(sourceCache => { return Observable.Range(1, 1000000, Scheduler.Default).Subscribe(x => sourceCache.AddOrUpdate(x)); }, x => x);
 
             var itemsCache = new SourceCache<Thing, long>(x => x.Id);
-            itemsCache.AddOrUpdate(new[]
-            {
-                new Thing {Id = 300, Name = "Quick"},
-                new Thing {Id = 600, Name = "Brown"},
-                new Thing {Id = 900, Name = "Fox"},
-                new Thing {Id = 1200, Name = "Hello"},
-            });
+            itemsCache.AddOrUpdate(
+                new[]
+                    {
+                        new Thing { Id = 300, Name = "Quick" },
+                        new Thing { Id = 600, Name = "Brown" },
+                        new Thing { Id = 900, Name = "Fox" },
+                        new Thing { Id = 1200, Name = "Hello" },
+                    });
 
-            ids.InnerJoin(itemsCache.Connect(), x => x.Id, (_, thing) => thing)
-                .Subscribe((z)=>{},ex=>{},()=>{});
+            ids.InnerJoin(itemsCache.Connect(), x => x.Id, (_, thing) => thing).Subscribe((z) => { }, ex => { }, () => { });
+        }
+
+        public class Thing
+        {
+            public long Id { get; set; }
+
+            public string? Name { get; set; }
         }
     }
 }

@@ -1,20 +1,23 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    /// Multiple change container
+    /// Multiple change container.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type of the item.</typeparam>
     public sealed class RangeChange<T> : IEnumerable<T>
     {
+        private readonly List<T> _items;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
         /// </summary>
@@ -27,12 +30,45 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
+        /// </summary>
+        private RangeChange()
+        {
+            _items = new List<T>();
+            Index = -1;
+        }
+
+        /// <summary>
+        /// Gets a Empty version of the RangeChange.
+        /// </summary>
+        public static RangeChange<T> Empty { get; } = new RangeChange<T>();
+
+        /// <summary>
+        ///     Gets the total update count.
+        /// </summary>
+        public int Count => _items.Count;
+
+        /// <summary>
+        /// Gets the index initial index i.e. for the initial starting point of the range insertion.
+        /// </summary>
+        /// <value>
+        /// The index.
+        /// </value>
+        public int Index { get; private set; }
+
+        /// <summary>
         /// Adds the specified item to the range.
         /// </summary>
         /// <param name="item">The item.</param>
         public void Add(T item)
         {
             _items.Add(item);
+        }
+
+        /// <inheritdoc/>
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _items.GetEnumerator();
         }
 
         /// <summary>
@@ -46,50 +82,26 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Sets the index of the starting index of the range
+        /// Sets the index of the starting index of the range.
         /// </summary>
         /// <param name="index">The index.</param>
-        /// <exception cref="System.NotImplementedException"></exception>
         public void SetStartingIndex(int index)
         {
             Index = index;
         }
 
-        private readonly List<T> _items;
-
         /// <summary>
-        ///     The total update count
+        /// Returns a <see cref="string" /> that represents this instance.
         /// </summary>
-        public int Count => _items.Count;
+        /// <returns>
+        /// A <see cref="string" /> that represents this instance.
+        /// </returns>
+        public override string ToString() => $"Range<{typeof(T).Name}>. Count={Count}";
 
-        /// <summary>
-        /// Gets the index initial index i.e. for the initial starting point of the range insertion
-        /// </summary>
-        /// <value>
-        /// The index.
-        /// </value>
-        public int Index { get; private set; }
-
-        /// <summary>
-        /// Gets the enumerator.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator<T> GetEnumerator()
-        {
-            return _items.GetEnumerator();
-        }
-
+        /// <inheritdoc/>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
-
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
-        public override string ToString() => $"Range<{typeof(T).Name}>. Count={Count}";
     }
 }

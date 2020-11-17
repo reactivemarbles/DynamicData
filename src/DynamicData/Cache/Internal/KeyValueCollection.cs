@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -13,10 +13,7 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IReadOnlyCollection<KeyValuePair<TKey, TObject>> _items;
 
-        public KeyValueCollection(IReadOnlyCollection<KeyValuePair<TKey, TObject>> items,
-                                  IComparer<KeyValuePair<TKey, TObject>> comparer,
-                                  SortReason sortReason,
-                                  SortOptimisations optimisations)
+        public KeyValueCollection(IReadOnlyCollection<KeyValuePair<TKey, TObject>> items, IComparer<KeyValuePair<TKey, TObject>> comparer, SortReason sortReason, SortOptimisations optimisations)
         {
             _items = items ?? throw new ArgumentNullException(nameof(items));
             Comparer = comparer;
@@ -32,7 +29,7 @@ namespace DynamicData.Cache.Internal
         }
 
         /// <summary>
-        /// Gets the comparer used to peform the sort
+        /// Gets the comparer used to peform the sort.
         /// </summary>
         /// <value>
         /// The comparer.
@@ -41,11 +38,11 @@ namespace DynamicData.Cache.Internal
 
         public int Count => _items.Count;
 
-        public KeyValuePair<TKey, TObject> this[int index] => _items.ElementAt(index);
+        public SortOptimisations Optimisations { get; }
 
         public SortReason SortReason { get; }
 
-        public SortOptimisations Optimisations { get; }
+        public KeyValuePair<TKey, TObject> this[int index] => _items.ElementAt(index);
 
         public IEnumerator<KeyValuePair<TKey, TObject>> GetEnumerator()
         {

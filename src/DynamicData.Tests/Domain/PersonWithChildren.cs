@@ -5,9 +5,6 @@ namespace DynamicData.Tests.Domain
 {
     public class PersonWithChildren : IKey<string>
     {
-        private readonly string _key;
-        private readonly string _name;
-
         public PersonWithChildren(string name, int age)
             : this(name, age, Enumerable.Empty<Person>())
         {
@@ -15,18 +12,23 @@ namespace DynamicData.Tests.Domain
 
         public PersonWithChildren(string name, int age, IEnumerable<Person> relations)
         {
-            _name = name;
+            Name = name;
             Age = age;
             KeyValue = Name;
             Relations = relations;
-            _key = name;
+            Key = name;
         }
-
-        public string Name => _name;
 
         public int Age { get; set; }
 
+        /// <summary>
+        ///     The key
+        /// </summary>
+        public string Key { get; }
+
         public string KeyValue { get; }
+
+        public string Name { get; }
 
         public IEnumerable<Person> Relations { get; }
 
@@ -34,14 +36,5 @@ namespace DynamicData.Tests.Domain
         {
             return $"{Name}. {Age}";
         }
-
-        #region Implementation of IKey<out string>
-
-        /// <summary>
-        ///     The key
-        /// </summary>
-        public string Key { get { return _key; } }
-
-        #endregion
     }
 }

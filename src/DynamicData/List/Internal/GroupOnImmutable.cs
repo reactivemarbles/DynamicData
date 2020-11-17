@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,18 +8,21 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
     internal sealed class GroupOnImmutable<TObject, TGroupKey>
+        where TGroupKey : notnull
     {
-        private readonly IObservable<IChangeSet<TObject>> _source;
         private readonly Func<TObject, TGroupKey> _groupSelector;
-        private readonly IObservable<Unit> _reGrouper;
 
-        public GroupOnImmutable([NotNull] IObservable<IChangeSet<TObject>> source, [NotNull] Func<TObject, TGroupKey> groupSelector, IObservable<Unit> reGrouper)
+        private readonly IObservable<Unit>? _reGrouper;
+
+        private readonly IObservable<IChangeSet<TObject>> _source;
+
+        public GroupOnImmutable(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? reGrouper)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
@@ -28,207 +31,42 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> Run()
         {
-            return Observable.Create<IChangeSet<IGrouping<TObject, TGroupKey>>>(observer =>
-            {
-                var groupings = new ChangeAwareList<IGrouping<TObject, TGroupKey>>();
-                var groupCache = new Dictionary<TGroupKey,GroupContainer>();
-
-                //var itemsWithGroup = _source
-                //    .Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)));
-
-                //capture the grouping up front which has the benefit that the group key is only selected once
-                var itemsWithGroup = _source
-                    .Transform<TObject, ItemWithGroupKey>((t, previous) =>
+            return Observable.Create<IChangeSet<IGrouping<TObject, TGroupKey>>>(
+                observer =>
                     {
-                        return new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group));
-                    }, true);
+                        var groupings = new ChangeAwareList<IGrouping<TObject, TGroupKey>>();
+                        var groupCache = new Dictionary<TGroupKey, GroupContainer>();
 
-                var locker = new object();
-                var shared = itemsWithGroup.Synchronize(locker).Publish();
+                        // var itemsWithGroup = _source
+                        //    .Transform(t => new ItemWithValue<TObject, TGroupKey>(t, _groupSelector(t)));
 
-                var grouper = shared
-                    .Select(changes => Process(groupings, groupCache, changes));
+                        // capture the grouping up front which has the benefit that the group key is only selected once
+                        var itemsWithGroup = _source.Transform<TObject, ItemWithGroupKey>((t, previous) => new ItemWithGroupKey(t, _groupSelector(t), previous.Convert(p => p.Group)), true);
 
-                IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> reGrouper;
-                if (_reGrouper == null)
-                {
-                    reGrouper = Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>();
-                }
-                else
-                {
-                    reGrouper = _reGrouper.Synchronize(locker)
-                        .CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
-                }
+                        var locker = new object();
+                        var shared = itemsWithGroup.Synchronize(locker).Publish();
 
-                var publisher = grouper.Merge(reGrouper)
-                    .NotEmpty()
-                    .SubscribeSafe(observer);
+                        var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
-                return new CompositeDisposable(publisher, shared.Connect());
-            });
-        }
-
-        private IChangeSet<IGrouping<TObject, TGroupKey>> Regroup(ChangeAwareList<IGrouping<TObject, TGroupKey>> result,
-            IDictionary<TGroupKey, GroupContainer> allGroupings,
-            IReadOnlyCollection<ItemWithGroupKey> currentItems)
-        {
-            var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TGroupKey>>();
-
-            foreach (var itemWithValue in currentItems)
-            {
-                var currentGroupKey = itemWithValue.Group;
-                var newGroupKey = _groupSelector(itemWithValue.Item);
-                if (newGroupKey.Equals(currentGroupKey))
-                {
-                    continue;
-                }
-
-                //lookup group and if created, add to result set
-                var oldGrouping = GetGroup(allGroupings, currentGroupKey);
-                if (!initialStateOfGroups.ContainsKey(currentGroupKey))
-                {
-                    initialStateOfGroups[currentGroupKey] = GetGroupState(oldGrouping);
-                }
-
-                //remove from the old group
-                oldGrouping.List.Remove(itemWithValue.Item);
-
-                //Mark the old item with the new cache group
-                itemWithValue.Group = newGroupKey;
-
-                //add to the new group
-                var newGrouping = GetGroup(allGroupings, newGroupKey);
-                if (!initialStateOfGroups.ContainsKey(newGroupKey))
-                {
-                    initialStateOfGroups[newGroupKey] = GetGroupState(newGrouping);
-                }
-
-                newGrouping.List.Add(itemWithValue.Item);
-            }
-
-            return CreateChangeSet(result, allGroupings, initialStateOfGroups);
-        }
-
-        private static IChangeSet<IGrouping<TObject, TGroupKey>> Process(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IChangeSet<ItemWithGroupKey> changes)
-        {
-            //need to keep track of effected groups to calculate correct notifications 
-            var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TGroupKey>>();
-
-            foreach (var grouping in changes.Unified().GroupBy(change => change.Current.Group))
-            {
-                //lookup group and if created, add to result set
-                var currentGroup = grouping.Key;
-                var groupContainer = GetGroup(allGroupings, currentGroup);
-
-                void GetInitialState()
-                {
-                    if (!initialStateOfGroups.ContainsKey(grouping.Key))
-                    {
-                        initialStateOfGroups[grouping.Key] = GetGroupState(groupContainer);
-                    }
-                }
-
-                var listToModify = groupContainer.List;
-
-                //iterate through the group's items and process
-                foreach (var change in grouping)
-                {
-                    switch (change.Reason)
-                    {
-                        case ListChangeReason.Add:
+                        IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> reGrouper;
+                        if (_reGrouper == null)
                         {
-                            GetInitialState();
-                            listToModify.Add(change.Current.Item);
-                            break;
+                            reGrouper = Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>();
+                        }
+                        else
+                        {
+                            reGrouper = _reGrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
                         }
 
-                        case ListChangeReason.Refresh:
-                        {
-                            var previousItem = change.Current.Item;
-                            var previousGroup = change.Current.PreviousGroup.Value;
-                            var currentItem = change.Current.Item;
+                        var publisher = grouper.Merge(reGrouper).NotEmpty().SubscribeSafe(observer);
 
-                            //check whether an item changing has resulted in a different group
-                            if (!previousGroup.Equals(currentGroup))
-                            {
-
-                                GetInitialState();
-                                //add to new group
-                                listToModify.Add(currentItem);
-
-                                //remove from old group
-                                allGroupings.Lookup(previousGroup)
-                                    .IfHasValue(g =>
-                                    {
-                                        if (!initialStateOfGroups.ContainsKey(g.Key))
-                                        {
-                                            initialStateOfGroups[g.Key] = GetGroupState(g.Key, g.List);
-                                        }
-
-                                        g.List.Remove(previousItem);
-                                    });
-                            }
-
-                            break;
-                        }
-
-                        case ListChangeReason.Replace:
-                        {
-                            GetInitialState();
-                            var previousItem = change.Previous.Value.Item;
-                            var previousGroup = change.Previous.Value.Group;
-
-                            //check whether an item changing has resulted in a different group
-                            if (previousGroup.Equals(currentGroup))
-                            {
-                                //find and replace
-                                var index = listToModify.IndexOf(previousItem);
-                                listToModify[index] = change.Current.Item;
-                            }
-                            else
-                            {
-                                //add to new group
-                                listToModify.Add(change.Current.Item);
-
-                                //remove from old group
-                                allGroupings.Lookup(previousGroup)
-                                    .IfHasValue(g =>
-                                    {
-                                        if (!initialStateOfGroups.ContainsKey(g.Key))
-                                        {
-                                            initialStateOfGroups[g.Key] = GetGroupState(g.Key, g.List);
-                                        }
-
-                                        g.List.Remove(previousItem);
-                                    });
-                            }
-
-                            break;
-                        }
-
-                        case ListChangeReason.Remove:
-                        {
-                            GetInitialState();
-                            listToModify.Remove(change.Current.Item);
-                            break;
-                        }
-
-                        case ListChangeReason.Clear:
-                        {
-                            GetInitialState();
-                            listToModify.Clear();
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return CreateChangeSet(result, allGroupings, initialStateOfGroups);
+                        return new CompositeDisposable(publisher, shared.Connect());
+                    });
         }
 
         private static IChangeSet<IGrouping<TObject, TGroupKey>> CreateChangeSet(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IDictionary<TGroupKey, IGrouping<TObject, TGroupKey>> initialStateOfGroups)
         {
-            //Now maintain target list
+            // Now maintain target list
             foreach (var intialGroup in initialStateOfGroups)
             {
                 var key = intialGroup.Key;
@@ -236,7 +74,7 @@ namespace DynamicData.List.Internal
 
                 if (current.List.Count == 0)
                 {
-                    //remove if empty
+                    // remove if empty
                     allGroupings.Remove(key);
                     result.Remove(intialGroup.Value);
                 }
@@ -245,28 +83,18 @@ namespace DynamicData.List.Internal
                     var currentState = GetGroupState(current);
                     if (intialGroup.Value.Count == 0)
                     {
-                        //an add
+                        // an add
                         result.Add(currentState);
                     }
                     else
                     {
-                        //a replace (or add if the old group has already been removed)
+                        // a replace (or add if the old group has already been removed)
                         result.Replace(intialGroup.Value, currentState);
                     }
                 }
             }
 
             return result.CaptureChanges();
-        }
-
-        private static IGrouping<TObject,  TGroupKey> GetGroupState(GroupContainer grouping)
-        {
-            return new ImmutableGroup<TObject,  TGroupKey>(grouping.Key, grouping.List);
-        }
-
-        private static IGrouping<TObject,  TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list)
-        {
-            return new ImmutableGroup<TObject,  TGroupKey>(key, list);
         }
 
         private static GroupContainer GetGroup(IDictionary<TGroupKey, GroupContainer> groupCaches, TGroupKey key)
@@ -282,23 +110,186 @@ namespace DynamicData.List.Internal
             return newcache;
         }
 
+        private static IGrouping<TObject, TGroupKey> GetGroupState(GroupContainer grouping)
+        {
+            return new ImmutableGroup<TObject, TGroupKey>(grouping.Key, grouping.List);
+        }
+
+        private static IGrouping<TObject, TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list)
+        {
+            return new ImmutableGroup<TObject, TGroupKey>(key, list);
+        }
+
+        private static IChangeSet<IGrouping<TObject, TGroupKey>> Process(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IChangeSet<ItemWithGroupKey> changes)
+        {
+            // need to keep track of effected groups to calculate correct notifications
+            var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TGroupKey>>();
+
+            foreach (var grouping in changes.Unified().GroupBy(change => change.Current.Group))
+            {
+                // lookup group and if created, add to result set
+                var currentGroup = grouping.Key;
+                var groupContainer = GetGroup(allGroupings, currentGroup);
+
+                void GetInitialState()
+                {
+                    if (!initialStateOfGroups.ContainsKey(grouping.Key))
+                    {
+                        initialStateOfGroups[grouping.Key] = GetGroupState(groupContainer);
+                    }
+                }
+
+                var listToModify = groupContainer.List;
+
+                // iterate through the group's items and process
+                foreach (var change in grouping)
+                {
+                    switch (change.Reason)
+                    {
+                        case ListChangeReason.Add:
+                            {
+                                GetInitialState();
+                                listToModify.Add(change.Current.Item);
+                                break;
+                            }
+
+                        case ListChangeReason.Refresh:
+                            {
+                                var previousItem = change.Current.Item;
+                                var previousGroup = change.Current.PreviousGroup.Value;
+                                var currentItem = change.Current.Item;
+
+                                // check whether an item changing has resulted in a different group
+                                if (previousGroup?.Equals(currentGroup) == false)
+                                {
+                                    GetInitialState();
+
+                                    // add to new group
+                                    listToModify.Add(currentItem);
+
+                                    // remove from old group
+                                    allGroupings.Lookup(previousGroup).IfHasValue(
+                                        g =>
+                                            {
+                                                if (!initialStateOfGroups.ContainsKey(g.Key))
+                                                {
+                                                    initialStateOfGroups[g.Key] = GetGroupState(g.Key, g.List);
+                                                }
+
+                                                g.List.Remove(previousItem);
+                                            });
+                                }
+
+                                break;
+                            }
+
+                        case ListChangeReason.Replace:
+                            {
+                                GetInitialState();
+                                var previousItem = change.Previous.Value.Item;
+                                var previousGroup = change.Previous.Value.Group;
+
+                                // check whether an item changing has resulted in a different group
+                                if (previousGroup.Equals(currentGroup))
+                                {
+                                    // find and replace
+                                    var index = listToModify.IndexOf(previousItem);
+                                    listToModify[index] = change.Current.Item;
+                                }
+                                else
+                                {
+                                    // add to new group
+                                    listToModify.Add(change.Current.Item);
+
+                                    // remove from old group
+                                    allGroupings.Lookup(previousGroup).IfHasValue(
+                                        g =>
+                                            {
+                                                if (!initialStateOfGroups.ContainsKey(g.Key))
+                                                {
+                                                    initialStateOfGroups[g.Key] = GetGroupState(g.Key, g.List);
+                                                }
+
+                                                g.List.Remove(previousItem);
+                                            });
+                                }
+
+                                break;
+                            }
+
+                        case ListChangeReason.Remove:
+                            {
+                                GetInitialState();
+                                listToModify.Remove(change.Current.Item);
+                                break;
+                            }
+
+                        case ListChangeReason.Clear:
+                            {
+                                GetInitialState();
+                                listToModify.Clear();
+                                break;
+                            }
+                    }
+                }
+            }
+
+            return CreateChangeSet(result, allGroupings, initialStateOfGroups);
+        }
+
+        private IChangeSet<IGrouping<TObject, TGroupKey>> Regroup(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IReadOnlyCollection<ItemWithGroupKey> currentItems)
+        {
+            var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TGroupKey>>();
+
+            foreach (var itemWithValue in currentItems)
+            {
+                var currentGroupKey = itemWithValue.Group;
+                var newGroupKey = _groupSelector(itemWithValue.Item);
+                if (newGroupKey.Equals(currentGroupKey))
+                {
+                    continue;
+                }
+
+                // lookup group and if created, add to result set
+                var oldGrouping = GetGroup(allGroupings, currentGroupKey);
+                if (!initialStateOfGroups.ContainsKey(currentGroupKey))
+                {
+                    initialStateOfGroups[currentGroupKey] = GetGroupState(oldGrouping);
+                }
+
+                // remove from the old group
+                oldGrouping.List.Remove(itemWithValue.Item);
+
+                // Mark the old item with the new cache group
+                itemWithValue.Group = newGroupKey;
+
+                // add to the new group
+                var newGrouping = GetGroup(allGroupings, newGroupKey);
+                if (!initialStateOfGroups.ContainsKey(newGroupKey))
+                {
+                    initialStateOfGroups[newGroupKey] = GetGroupState(newGrouping);
+                }
+
+                newGrouping.List.Add(itemWithValue.Item);
+            }
+
+            return CreateChangeSet(result, allGroupings, initialStateOfGroups);
+        }
+
         private class GroupContainer
         {
-            public IList<TObject> List { get; } = new List<TObject>();
-            public TGroupKey Key { get; }
-
             public GroupContainer(TGroupKey key)
             {
                 Key = key;
             }
+
+            public TGroupKey Key { get; }
+
+            public IList<TObject> List { get; } = new List<TObject>();
         }
 
         private sealed class ItemWithGroupKey : IEquatable<ItemWithGroupKey>
         {
-            public TObject Item { get; }
-            public TGroupKey Group { get; set; }
-            public Optional<TGroupKey> PreviousGroup { get; }
-
             public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup)
             {
                 Item = item;
@@ -306,9 +297,23 @@ namespace DynamicData.List.Internal
                 PreviousGroup = previousGroup;
             }
 
-            #region Equality 
+            public TGroupKey Group { get; set; }
 
-            public bool Equals(ItemWithGroupKey other)
+            public TObject Item { get; }
+
+            public Optional<TGroupKey> PreviousGroup { get; }
+
+            public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right)
+            {
+                return Equals(left, right);
+            }
+
+            public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right)
+            {
+                return !Equals(left, right);
+            }
+
+            public bool Equals(ItemWithGroupKey? other)
             {
                 if (other is null)
                 {
@@ -323,37 +328,15 @@ namespace DynamicData.List.Internal
                 return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
-                if (obj is null)
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, obj))
-                {
-                    return true;
-                }
-
-                return obj is ItemWithGroupKey && Equals((ItemWithGroupKey)obj);
+                return obj is ItemWithGroupKey value && Equals(value);
             }
 
             public override int GetHashCode()
             {
-                return EqualityComparer<TObject>.Default.GetHashCode(Item);
+                return Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
             }
-
-            public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right)
-            {
-                return Equals(left, right);
-            }
-
-            public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right)
-            {
-                return !Equals(left, right);
-            }
-
-            #endregion
 
             public override string ToString()
             {

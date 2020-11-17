@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests
@@ -16,31 +18,36 @@ namespace DynamicData.Tests
             var i3 = new Item("I3");
 
             var obsList = new SourceList<Item>();
-            obsList.AddRange(new[] {a0, i1, i2, i3});
+            obsList.AddRange(new[] { a0, i1, i2, i3 });
 
-            var obsListDerived = obsList.Connect()
-                .AutoRefresh(x => x.Name)
-                .Filter(x => x.Name.Contains("I"))
-                .AsObservableList();
+            var obsListDerived = obsList.Connect().AutoRefresh(x => x.Name).Filter(x => x.Name.Contains("I")).AsObservableList();
 
             obsListDerived.Count.Should().Be(3);
-            obsListDerived.Items.Should().BeEquivalentTo(new [] {i1, i2, i3});
+            obsListDerived.Items.Should().BeEquivalentTo(i1, i2, i3);
 
             i1.Name = "X2";
             obsListDerived.Count.Should().Be(2);
-            obsListDerived.Items.Should().BeEquivalentTo(new[] {i2, i3});
+            obsListDerived.Items.Should().BeEquivalentTo(i2, i3);
 
             a0.Name = "I0";
             obsListDerived.Count.Should().Be(3);
-            obsListDerived.Items.Should().BeEquivalentTo(new[] {a0, i2, i3});
+            obsListDerived.Items.Should().BeEquivalentTo(a0, i2, i3);
         }
     }
 
     public class Item : INotifyPropertyChanged
     {
-        public Guid Id { get; }
-
         private string _name;
+
+        public Item(string name)
+        {
+            Id = Guid.NewGuid();
+            _name = name;
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public Guid Id { get; }
 
         public string Name
         {
@@ -51,13 +58,5 @@ namespace DynamicData.Tests
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
             }
         }
-
-        public Item(string name)
-        {
-            Id = Guid.NewGuid();
-            Name = name;
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

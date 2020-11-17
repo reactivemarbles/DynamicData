@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,6 +6,7 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
@@ -21,54 +22,53 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<ConnectionStatus> Run()
         {
-            return Observable.Create<ConnectionStatus>(observer =>
-            {
-                var statusSubject = new Subject<ConnectionStatus>();
-                var status = ConnectionStatus.Pending;
-
-                void Error(Exception ex)
-                {
-                    status = ConnectionStatus.Errored;
-                    statusSubject.OnNext(status);
-                    observer.OnError(ex);
-                }
-
-                void Completion()
-                {
-                    if (status == ConnectionStatus.Errored)
+            return Observable.Create<ConnectionStatus>(
+                observer =>
                     {
-                        return;
-                    }
+                        var statusSubject = new Subject<ConnectionStatus>();
+                        var status = ConnectionStatus.Pending;
 
-                    status = ConnectionStatus.Completed;
-                    statusSubject.OnNext(status);
-                }
+                        void Error(Exception ex)
+                        {
+                            status = ConnectionStatus.Errored;
+                            statusSubject.OnNext(status);
+                            observer.OnError(ex);
+                        }
 
-                void Updated()
-                {
-                    if (status != ConnectionStatus.Pending)
-                    {
-                        return;
-                    }
+                        void Completion()
+                        {
+                            if (status == ConnectionStatus.Errored)
+                            {
+                                return;
+                            }
 
-                    status = ConnectionStatus.Loaded;
-                    statusSubject.OnNext(status);
-                }
+                            status = ConnectionStatus.Completed;
+                            statusSubject.OnNext(status);
+                        }
 
-                var monitor = _source.Subscribe(_ => Updated(), Error, Completion);
+                        void Updated()
+                        {
+                            if (status != ConnectionStatus.Pending)
+                            {
+                                return;
+                            }
 
-                var subscriber = statusSubject
-                    .StartWith(status)
-                    .DistinctUntilChanged()
-                    .SubscribeSafe(observer);
+                            status = ConnectionStatus.Loaded;
+                            statusSubject.OnNext(status);
+                        }
 
-                return Disposable.Create(() =>
-                {
-                    statusSubject.OnCompleted();
-                    monitor.Dispose();
-                    subscriber.Dispose();
-                });
-            });
+                        var monitor = _source.Subscribe(_ => Updated(), Error, Completion);
+
+                        var subscriber = statusSubject.StartWith(status).DistinctUntilChanged().SubscribeSafe(observer);
+
+                        return Disposable.Create(
+                            () =>
+                                {
+                                    statusSubject.OnCompleted();
+                                    monitor.Dispose();
+                                    subscriber.Dispose();
+                                });
+                    });
         }
     }
 }

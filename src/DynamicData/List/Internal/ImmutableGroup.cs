@@ -1,18 +1,17 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
-    internal sealed class ImmutableGroup<TObject,  TGroupKey> : IGrouping<TObject, TGroupKey>, IEquatable<ImmutableGroup<TObject,  TGroupKey>>
+    internal sealed class ImmutableGroup<TObject, TGroupKey> : IGrouping<TObject, TGroupKey>, IEquatable<ImmutableGroup<TObject, TGroupKey>>
     {
         private readonly IReadOnlyCollection<TObject> _items;
-
-        public TGroupKey Key { get; }
 
         internal ImmutableGroup(TGroupKey key, IList<TObject> items)
         {
@@ -21,11 +20,22 @@ namespace DynamicData.List.Internal
         }
 
         public int Count => _items.Count;
+
         public IEnumerable<TObject> Items => _items;
 
-        #region Equality
+        public TGroupKey Key { get; }
 
-        public bool Equals(ImmutableGroup<TObject, TGroupKey> other)
+        public static bool operator ==(ImmutableGroup<TObject, TGroupKey> left, ImmutableGroup<TObject, TGroupKey> right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(ImmutableGroup<TObject, TGroupKey> left, ImmutableGroup<TObject, TGroupKey> right)
+        {
+            return !Equals(left, right);
+        }
+
+        public bool Equals(ImmutableGroup<TObject, TGroupKey>? other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -40,7 +50,7 @@ namespace DynamicData.List.Internal
             return EqualityComparer<TGroupKey>.Default.Equals(Key, other.Key);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
@@ -52,25 +62,13 @@ namespace DynamicData.List.Internal
                 return true;
             }
 
-            return obj is ImmutableGroup<TObject, TGroupKey> && Equals((ImmutableGroup<TObject, TGroupKey>) obj);
+            return obj is ImmutableGroup<TObject, TGroupKey> value && Equals(value);
         }
 
         public override int GetHashCode()
         {
-            return EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
+            return Key is null ? 0 : EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
         }
-
-        public static bool operator ==(ImmutableGroup<TObject, TGroupKey> left, ImmutableGroup<TObject, TGroupKey> right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ImmutableGroup<TObject, TGroupKey> left, ImmutableGroup<TObject, TGroupKey> right)
-        {
-            return !Equals(left, right);
-        }
-
-        #endregion
 
         public override string ToString()
         {

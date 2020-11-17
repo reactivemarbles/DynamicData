@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace DynamicData
 {
     /// <summary>
-    /// Defines values used to virtualise the result set
+    /// Defines values used to virtualise the result set.
     /// </summary>
     internal sealed class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualResponse
     {
@@ -20,22 +20,22 @@ namespace DynamicData
             TotalSize = totalSize;
         }
 
+        public static IEqualityComparer<IVirtualResponse?> DefaultComparer { get; } = new TotalSizeStartIndexSizeEqualityComparer();
+
         /// <summary>
-        /// The requested size of the virtualised data
+        /// Gets the requested size of the virtualised data.
         /// </summary>
         public int Size { get; }
 
         /// <summary>
-        /// The starting index
+        /// Gets the starting index.
         /// </summary>
         public int StartIndex { get; }
 
         /// <summary>
-        /// Gets the total size of the underlying cache
+        /// Gets the total size of the underlying cache.
         /// </summary>
         public int TotalSize { get; }
-
-        #region Equality members
 
         /// <summary>
         ///     Indicates whether the current object is equal to another object of the same type.
@@ -44,28 +44,28 @@ namespace DynamicData
         ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public bool Equals(IVirtualResponse other)
+        public bool Equals(IVirtualResponse? other)
         {
-            return STotalSizeStartIndexSizeComparerInstance.Equals(this, other);
+            return DefaultComparer.Equals(this, other);
         }
 
         /// <summary>
-        ///     Determines whether the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />.
+        ///     Determines whether the specified <see cref="object" /> is equal to the current <see cref="object" />.
         /// </summary>
         /// <returns>
         ///     true if the specified object  is equal to the current object; otherwise, false.
         /// </returns>
         /// <param name="obj">The object to compare with the current object. </param>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return Equals((IVirtualResponse)obj);
+            return obj is IVirtualResponse item && Equals(item);
         }
 
         /// <summary>
         ///     Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>
-        ///     A hash code for the current <see cref="T:System.Object" />.
+        ///     A hash code for the current <see cref="object" />.
         /// </returns>
         public override int GetHashCode()
         {
@@ -78,13 +78,20 @@ namespace DynamicData
             }
         }
 
-        #endregion
-
-        #region TotalSizeStartIndexSizeEqualityComparer
-
-        private sealed class TotalSizeStartIndexSizeEqualityComparer : IEqualityComparer<IVirtualResponse>
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the current <see cref="object"/>.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="string"/> that represents the current <see cref="object"/>.
+        /// </returns>
+        public override string ToString()
         {
-            public bool Equals(IVirtualResponse x, IVirtualResponse y)
+            return $"Size: {Size}, StartIndex: {StartIndex}, TotalSize: {TotalSize}";
+        }
+
+        private sealed class TotalSizeStartIndexSizeEqualityComparer : IEqualityComparer<IVirtualResponse?>
+        {
+            public bool Equals(IVirtualResponse? x, IVirtualResponse? y)
             {
                 if (ReferenceEquals(x, y))
                 {
@@ -109,8 +116,13 @@ namespace DynamicData
                 return x.TotalSize == y.TotalSize && x.StartIndex == y.StartIndex && x.Size == y.Size;
             }
 
-            public int GetHashCode(IVirtualResponse obj)
+            public int GetHashCode(IVirtualResponse? obj)
             {
+                if (obj is null)
+                {
+                    return 0;
+                }
+
                 unchecked
                 {
                     int hashCode = obj.TotalSize;
@@ -119,23 +131,6 @@ namespace DynamicData
                     return hashCode;
                 }
             }
-        }
-
-        private static readonly IEqualityComparer<IVirtualResponse> STotalSizeStartIndexSizeComparerInstance = new TotalSizeStartIndexSizeEqualityComparer();
-
-        public static IEqualityComparer<IVirtualResponse> DefaultComparer => STotalSizeStartIndexSizeComparerInstance;
-
-        #endregion
-
-        /// <summary>
-        /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"Size: {Size}, StartIndex: {StartIndex}, TotalSize: {TotalSize}";
         }
     }
 }

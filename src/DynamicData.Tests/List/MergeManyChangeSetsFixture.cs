@@ -1,4 +1,5 @@
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
@@ -17,9 +18,7 @@ namespace DynamicData.Tests.List
             parent.Add(b);
             parent.Add(c);
 
-            var d = parent.Connect()
-                          .MergeMany(e => e.Connect().RemoveIndex())
-                          .AsObservableList();
+            var d = parent.Connect().MergeMany(e => e.Connect().RemoveIndex()).AsObservableList();
 
             0.Should().Be(d.Count);
 
@@ -33,13 +32,13 @@ namespace DynamicData.Tests.List
             3.Should().Be(d.Count);
             b.Add(5);
             4.Should().Be(d.Count);
-            new[] {1, 2, 3, 5}.Should().BeEquivalentTo(d.Items);
+            new[] { 1, 2, 3, 5 }.Should().BeEquivalentTo(d.Items);
 
             b.Clear();
 
             // Fails below
             2.Should().Be(d.Count);
-            new[] {1, 2}.Should().BeEquivalentTo(d.Items);
+            new[] { 1, 2 }.Should().BeEquivalentTo(d.Items);
         }
     }
 }

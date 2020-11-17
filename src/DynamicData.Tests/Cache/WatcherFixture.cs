@@ -5,50 +5,47 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
 using DynamicData.Experimental;
 using DynamicData.Tests.Domain;
-using Microsoft.Reactive.Testing;
-using Xunit;
 
 using FluentAssertions;
+
+using Microsoft.Reactive.Testing;
+
+using Xunit;
+
 #endregion
 
 namespace DynamicData.Tests.Cache
 {
-
-    public class WatcherFixture: IDisposable
+    public class WatcherFixture : IDisposable
     {
-        private readonly TestScheduler _scheduler = new TestScheduler();
-        private readonly ISourceCache<Person, string> _source;
-        private readonly ChangeSetAggregator<SelfObservingPerson, string> _results;
-        private readonly IWatcher<Person, string> _watcher;
-
         private readonly IDisposable _cleanUp;
 
-        public  WatcherFixture()
+        private readonly ChangeSetAggregator<SelfObservingPerson, string> _results;
+
+        private readonly TestScheduler _scheduler = new TestScheduler();
+
+        private readonly ISourceCache<Person, string> _source;
+
+        private readonly IWatcher<Person, string> _watcher;
+
+        public WatcherFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
             _watcher = _source.Connect().AsWatcher(_scheduler);
 
-            _results = new ChangeSetAggregator<SelfObservingPerson, string>
-                (
-                _source.Connect()
-                       .Transform(p => new SelfObservingPerson(_watcher.Watch(p.Key).Select(w => w.Current)))
-                       .DisposeMany()
-                );
+            _results = new ChangeSetAggregator<SelfObservingPerson, string>(_source.Connect().Transform(p => new SelfObservingPerson(_watcher.Watch(p.Key).Select(w => w.Current))).DisposeMany());
 
-            _cleanUp = Disposable.Create(() =>
-            {
-                _results.Dispose();
-                _source.Dispose();
-                _watcher.Dispose();
-            });
-        }
-
-        public void Dispose()
-        {
-            _cleanUp.Dispose();
+            _cleanUp = Disposable.Create(
+                () =>
+                    {
+                        _results.Dispose();
+                        _source.Dispose();
+                        _watcher.Dispose();
+                    });
         }
 
         [Fact]
@@ -63,6 +60,29 @@ namespace DynamicData.Tests.Cache
             var result = _results.Data.Items.First();
             result.UpdateCount.Should().Be(1, "Person should have received 1 update");
             result.Completed.Should().Be(false, "Person should have received 1 update");
+        }
+
+        public void Dispose()
+        {
+            _cleanUp.Dispose();
+        }
+
+        [Fact]
+        public void Remove()
+        {
+            var person = new Person("Adult1", 50);
+            _source.AddOrUpdate(person);
+
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
+            _source.Remove(person.Key);
+
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(11).Ticks);
+            _results.Messages.Count.Should().Be(2, "Should be 1 updates");
+            _results.Data.Count.Should().Be(0, "Should be 0 item in the cache");
+
+            var secondResult = _results.Messages[1].First();
+            secondResult.Current.UpdateCount.Should().Be(1, "Second Person should have received 1 update");
+            secondResult.Current.Completed.Should().Be(true, "Second person  should have received 1 update");
         }
 
         [Fact]
@@ -82,24 +102,6 @@ namespace DynamicData.Tests.Cache
             var secondResult = _results.Messages[1].First();
             secondResult.Previous.Value.UpdateCount.Should().Be(1, "Second Person should have received 1 update");
             secondResult.Previous.Value.Completed.Should().Be(true, "Second person  should have received 1 update");
-        }
-
-        [Fact]
-        public void Remove()
-        {
-            var person = new Person("Adult1", 50);
-            _source.AddOrUpdate(person);
-
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-            _source.Remove(person.Key);
-
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(11).Ticks);
-            _results.Messages.Count.Should().Be(2, "Should be 1 updates");
-            _results.Data.Count.Should().Be(0, "Should be 0 item in the cache");
-
-            var secondResult = _results.Messages[1].First();
-            secondResult.Current.UpdateCount.Should().Be(1, "Second Person should have received 1 update");
-            secondResult.Current.Completed.Should().Be(true, "Second person  should have received 1 update");
         }
 
         [Fact]

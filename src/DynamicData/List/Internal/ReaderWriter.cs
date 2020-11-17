@@ -1,17 +1,44 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
     internal sealed class ReaderWriter<T>
     {
-        private ChangeAwareList<T> _data = new ChangeAwareList<T>();
         private readonly object _locker = new object();
+
+        private ChangeAwareList<T> _data = new ChangeAwareList<T>();
+
         private bool _updateInProgress;
+
+        public int Count
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _data.Count;
+                }
+            }
+        }
+
+        public T[] Items
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    var result = new T[_data.Count];
+                    _data.CopyTo(result, 0);
+                    return result;
+                }
+            }
+        }
 
         public IChangeSet<T> Write(IChangeSet<T> changes)
         {
@@ -52,6 +79,30 @@ namespace DynamicData.List.Internal
             return result;
         }
 
+        /// <summary>
+        /// Perform a recursive write operation.
+        /// Changes are added to the topmost change tracker.
+        /// Use only during an invocation of Write/WriteWithPreview.
+        /// </summary>
+        /// <param name="updateAction">The action to perform on the list.</param>
+        public void WriteNested(Action<IExtendedList<T>> updateAction)
+        {
+            if (updateAction == null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
+
+            lock (_locker)
+            {
+                if (!_updateInProgress)
+                {
+                    throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
+                }
+
+                updateAction(_data);
+            }
+        }
+
         public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
         {
             if (updateAction == null)
@@ -85,53 +136,6 @@ namespace DynamicData.List.Internal
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Perform a recursive write operation.
-        /// Changes are added to the topmost change tracker.
-        /// Use only during an invocation of Write/WriteWithPreview.
-        /// </summary>
-        public void WriteNested(Action<IExtendedList<T>> updateAction)
-        {
-            if (updateAction == null)
-            {
-                throw new ArgumentNullException(nameof(updateAction));
-            }
-
-            lock (_locker)
-            {
-                if (!_updateInProgress)
-                {
-                    throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
-                }
-
-                updateAction(_data);
-            }
-        }
-
-        public T[] Items
-        {
-            get
-            {
-                lock (_locker)
-                {
-                    var result = new T[_data.Count];
-                    _data.CopyTo(result, 0);
-                    return result;
-                }
-            }
-        }
-
-        public int Count
-        {
-            get
-            {
-                lock (_locker)
-                {
-                    return _data.Count;
-                }
-            }
         }
     }
 }

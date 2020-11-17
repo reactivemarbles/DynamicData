@@ -1,27 +1,33 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if SUPPORTS_BINDINGLIST
-
 using System;
 using System.ComponentModel;
 using System.Linq;
-using DynamicData.Annotations;
 
 namespace DynamicData.Binding
 {
     /// <summary>
     /// Represents an adaptor which is used to update a binding list from
-    /// a sorted change set
+    /// a sorted change set.
     /// </summary>
+    /// <typeparam name="TObject">The type of object.</typeparam>
+    /// <typeparam name="TKey">The type of key.</typeparam>
     public class SortedBindingListAdaptor<TObject, TKey> : ISortedChangeSetAdaptor<TObject, TKey>
+        where TKey : notnull
     {
         private readonly BindingList<TObject> _list;
+
         private readonly int _refreshThreshold;
 
-        /// <inheritdoc />
-        public SortedBindingListAdaptor([NotNull] BindingList<TObject> list, int refreshThreshold = 25)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SortedBindingListAdaptor{TObject, TKey}"/> class.
+        /// </summary>
+        /// <param name="list">The source list.</param>
+        /// <param name="refreshThreshold">The threshold before a refresh is triggered.</param>
+        public SortedBindingListAdaptor(BindingList<TObject> list, int refreshThreshold = 25)
         {
             _list = list ?? throw new ArgumentNullException(nameof(list));
             _refreshThreshold = refreshThreshold;
@@ -82,13 +88,16 @@ namespace DynamicData.Binding
                     case ChangeReason.Add:
                         _list.Insert(change.CurrentIndex, change.Current);
                         break;
+
                     case ChangeReason.Remove:
                         _list.RemoveAt(change.CurrentIndex);
                         break;
+
                     case ChangeReason.Moved:
                         _list.RemoveAt(change.PreviousIndex);
                         _list.Insert(change.CurrentIndex, change.Current);
                         break;
+
                     case ChangeReason.Update:
                         _list.RemoveAt(change.PreviousIndex);
                         _list.Insert(change.CurrentIndex, change.Current);
@@ -98,4 +107,5 @@ namespace DynamicData.Binding
         }
     }
 }
+
 #endif

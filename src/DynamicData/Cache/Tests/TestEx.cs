@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,30 +8,32 @@ using System;
 namespace DynamicData.Tests
 {
     /// <summary>
-    /// Test extensions
+    /// Test extensions.
     /// </summary>
     public static class TestEx
     {
         /// <summary>
-        /// Aggregates all events and statistics for a paged changeset to help assertions when testing
+        /// Aggregates all events and statistics for a paged changeset to help assertions when testing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
+        /// <returns>The change set aggregator.</returns>
         public static ChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+            where TKey : notnull
         {
             return new ChangeSetAggregator<TObject, TKey>(source);
         }
 
         /// <summary>
-        /// Aggregates all events and statistics for a distinct changeset to help assertions when testing
+        /// Aggregates all events and statistics for a distinct changeset to help assertions when testing.
         /// </summary>
         /// <typeparam name="TValue">The type of the value.</typeparam>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
+        /// <returns>The distinct change set aggregator.</returns>
+        /// <exception cref="System.ArgumentNullException">source.</exception>
         public static DistinctChangeSetAggregator<TValue> AsAggregator<TValue>(this IObservable<IDistinctChangeSet<TValue>> source)
+            where TValue : notnull
         {
             if (source == null)
             {
@@ -42,14 +44,15 @@ namespace DynamicData.Tests
         }
 
         /// <summary>
-        /// Aggregates all events and statistics for a sorted changeset to help assertions when testing
+        /// Aggregates all events and statistics for a sorted changeset to help assertions when testing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
+        /// <returns>The sorted change set aggregator.</returns>
+        /// <exception cref="System.ArgumentNullException">source.</exception>
         public static SortedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
+            where TKey : notnull
         {
             if (source == null)
             {
@@ -60,14 +63,15 @@ namespace DynamicData.Tests
         }
 
         /// <summary>
-        ///Aggregates all events and statistics for a virtual changeset to help assertions when testing
+        /// Aggregates all events and statistics for a virtual changeset to help assertions when testing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">source</exception>
+        /// <returns>The virtual change set aggregator.</returns>
+        /// <exception cref="System.ArgumentNullException">source.</exception>
         public static VirtualChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IVirtualChangeSet<TObject, TKey>> source)
+            where TKey : notnull
         {
             if (source == null)
             {
@@ -78,13 +82,14 @@ namespace DynamicData.Tests
         }
 
         /// <summary>
-        /// Aggregates all events and statistics for a paged changeset to help assertions when testing
+        /// Aggregates all events and statistics for a paged changeset to help assertions when testing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
+        /// <returns>The paged change set aggregator.</returns>
         public static PagedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IPagedChangeSet<TObject, TKey>> source)
+            where TKey : notnull
         {
             if (source == null)
             {

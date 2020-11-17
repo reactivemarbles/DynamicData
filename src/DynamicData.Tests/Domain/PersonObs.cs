@@ -1,25 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive.Subjects;
-using DynamicData.Annotations;
 
 namespace DynamicData.Tests.Domain
 {
     public class PersonObs : IEquatable<PersonObs>
     {
-        public string ParentName { get; }
-        public string Name { get; }
-        public string Gender { get; }
-        public string Key => Name;
-        [NotNull]
         private readonly BehaviorSubject<int> _age;
 
-        public PersonObs(string firstname, string lastname, int age, string gender = "F", string parentName = null)
+        public PersonObs(string firstname, string lastname, int age, string gender = "F", string? parentName = null)
             : this(firstname + " " + lastname, age, gender, parentName)
         {
         }
 
-        public PersonObs(string name, int age, string gender = "F", string parentName = null)
+        public PersonObs(string name, int age, string gender = "F", string? parentName = null)
         {
             Name = name;
             _age = new BehaviorSubject<int>(age);
@@ -27,16 +21,31 @@ namespace DynamicData.Tests.Domain
             ParentName = parentName ?? string.Empty;
         }
 
+        public static IEqualityComparer<PersonObs> AgeComparer { get; } = new AgeEqualityComparer();
+
+        public static IEqualityComparer<PersonObs> NameAgeGenderComparer { get; } = new NameAgeGenderEqualityComparer();
+
         public IObservable<int> Age => _age;
 
-        public void SetAge(int age)
+        public string Gender { get; }
+
+        public string Key => Name;
+
+        public string Name { get; }
+
+        public string ParentName { get; }
+
+        public static bool operator ==(PersonObs left, PersonObs right)
         {
-            _age.OnNext(age);
+            return Equals(left, right);
         }
 
-        #region Equality Members
+        public static bool operator !=(PersonObs left, PersonObs right)
+        {
+            return !Equals(left, right);
+        }
 
-        public bool Equals(PersonObs other)
+        public bool Equals(PersonObs? other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -51,7 +60,7 @@ namespace DynamicData.Tests.Domain
             return string.Equals(Name, other.Name);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
@@ -76,19 +85,19 @@ namespace DynamicData.Tests.Domain
             return (Name != null ? Name.GetHashCode() : 0);
         }
 
-        public static bool operator ==(PersonObs left, PersonObs right)
+        public void SetAge(int age)
         {
-            return Equals(left, right);
+            _age.OnNext(age);
         }
 
-        public static bool operator !=(PersonObs left, PersonObs right)
+        public override string ToString()
         {
-            return !Equals(left, right);
+            return $"{Name}. {_age.Value}";
         }
 
         private sealed class AgeEqualityComparer : IEqualityComparer<PersonObs>
         {
-            public bool Equals(PersonObs x, PersonObs y)
+            public bool Equals(PersonObs? x, PersonObs? y)
             {
                 if (ReferenceEquals(x, y))
                 {
@@ -119,11 +128,9 @@ namespace DynamicData.Tests.Domain
             }
         }
 
-        public static IEqualityComparer<PersonObs> AgeComparer { get; } = new AgeEqualityComparer();
-
         private sealed class NameAgeGenderEqualityComparer : IEqualityComparer<PersonObs>
         {
-            public bool Equals(PersonObs x, PersonObs y)
+            public bool Equals(PersonObs? x, PersonObs? y)
             {
                 if (ReferenceEquals(x, y))
                 {
@@ -158,15 +165,6 @@ namespace DynamicData.Tests.Domain
                     return hashCode;
                 }
             }
-        }
-
-        public static IEqualityComparer<PersonObs> NameAgeGenderComparer { get; } = new NameAgeGenderEqualityComparer();
-
-        #endregion
-
-        public override string ToString()
-        {
-            return $"{Name}. {_age.Value}";
         }
     }
 }

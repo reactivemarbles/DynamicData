@@ -1,9 +1,10 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DynamicData.Aggregation
 {
@@ -25,6 +26,7 @@ namespace DynamicData.Aggregation
                     case ListChangeReason.Add:
                         yield return new AggregateItem<T>(AggregateType.Add, change.Item.Current);
                         break;
+
                     case ListChangeReason.AddRange:
                         foreach (var item in change.Range)
                         {
@@ -32,13 +34,16 @@ namespace DynamicData.Aggregation
                         }
 
                         break;
+
                     case ListChangeReason.Replace:
                         yield return new AggregateItem<T>(AggregateType.Remove, change.Item.Previous.Value);
                         yield return new AggregateItem<T>(AggregateType.Add, change.Item.Current);
                         break;
+
                     case ListChangeReason.Remove:
                         yield return new AggregateItem<T>(AggregateType.Remove, change.Item.Current);
                         break;
+
                     case ListChangeReason.RemoveRange:
                     case ListChangeReason.Clear:
                         foreach (var item in change.Range)
@@ -57,7 +62,9 @@ namespace DynamicData.Aggregation
         }
     }
 
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same name, different generics.")]
     internal class AggregateEnumerator<TObject, TKey> : IAggregateChangeSet<TObject>
+        where TKey : notnull
     {
         private readonly IChangeSet<TObject, TKey> _source;
 
@@ -75,13 +82,16 @@ namespace DynamicData.Aggregation
                     case ChangeReason.Add:
                         yield return new AggregateItem<TObject>(AggregateType.Add, change.Current);
                         break;
+
                     case ChangeReason.Update:
                         yield return new AggregateItem<TObject>(AggregateType.Remove, change.Previous.Value);
                         yield return new AggregateItem<TObject>(AggregateType.Add, change.Current);
                         break;
+
                     case ChangeReason.Remove:
                         yield return new AggregateItem<TObject>(AggregateType.Remove, change.Current);
                         break;
+
                     default:
                         continue;
                 }

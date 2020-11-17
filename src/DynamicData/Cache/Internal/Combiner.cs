@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,20 +6,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Disposables;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     /// <summary>
-    ///     Combines multiple caches using logical operators
+    ///     Combines multiple caches using logical operators.
     /// </summary>
     internal sealed class Combiner<TObject, TKey>
+        where TKey : notnull
     {
-        private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
         private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new ChangeAwareCache<TObject, TKey>();
 
         private readonly object _locker = new object();
+
+        private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
+
         private readonly CombineOperator _type;
+
         private readonly Action<IChangeSet<TObject, TKey>> _updatedCallback;
 
         public Combiner(CombineOperator type, Action<IChangeSet<TObject, TKey>> updatedCallback)
@@ -30,7 +35,7 @@ namespace DynamicData.Cache.Internal
 
         public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
         {
-            //subscribe
+            // subscribe
             var disposable = new CompositeDisposable();
             lock (_locker)
             {
@@ -47,16 +52,47 @@ namespace DynamicData.Cache.Internal
             return disposable;
         }
 
+        private bool MatchesConstraint(TKey key)
+        {
+            switch (_type)
+            {
+                case CombineOperator.And:
+                    {
+                        return _sourceCaches.All(s => s.Lookup(key).HasValue);
+                    }
+
+                case CombineOperator.Or:
+                    {
+                        return _sourceCaches.Any(s => s.Lookup(key).HasValue);
+                    }
+
+                case CombineOperator.Xor:
+                    {
+                        return _sourceCaches.Count(s => s.Lookup(key).HasValue) == 1;
+                    }
+
+                case CombineOperator.Except:
+                    {
+                        bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
+                        bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
+                        return first && !others;
+                    }
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(key));
+            }
+        }
+
         private void Update(Cache<TObject, TKey> cache, IChangeSet<TObject, TKey> updates)
         {
             IChangeSet<TObject, TKey> notifications;
 
             lock (_locker)
             {
-                //update cache for the individual source
+                // update cache for the individual source
                 cache.Clone(updates);
 
-                //update combined 
+                // update combined
                 notifications = UpdateCombined(updates);
             }
 
@@ -68,8 +104,7 @@ namespace DynamicData.Cache.Internal
 
         private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
         {
-            //child caches have been updated before we reached this point.
-
+            // child caches have been updated before we reached this point.
             foreach (var update in updates)
             {
                 TKey key = update.Key;
@@ -79,7 +114,7 @@ namespace DynamicData.Cache.Internal
                     case ChangeReason.Update:
                         {
                             // get the current key.
-                            //check whether the item should belong to the cache
+                            // check whether the item should belong to the cache
                             var cached = _combinedCache.Lookup(key);
                             var contained = cached.HasValue;
                             var match = MatchesConstraint(key);
@@ -117,9 +152,7 @@ namespace DynamicData.Cache.Internal
 
                             if (shouldBeIncluded)
                             {
-                                var firstOne = _sourceCaches.Select(s => s.Lookup(key))
-                                    .SelectValues()
-                                    .First();
+                                var firstOne = _sourceCaches.Select(s => s.Lookup(key)).SelectValues().First();
 
                                 if (!cached.HasValue)
                                 {
@@ -151,37 +184,6 @@ namespace DynamicData.Cache.Internal
             }
 
             return _combinedCache.CaptureChanges();
-        }
-
-        private bool MatchesConstraint(TKey key)
-        {
-            switch (_type)
-            {
-                case CombineOperator.And:
-                    {
-                        return _sourceCaches.All(s => s.Lookup(key).HasValue);
-                    }
-
-                case CombineOperator.Or:
-                    {
-                        return _sourceCaches.Any(s => s.Lookup(key).HasValue);
-                    }
-
-                case CombineOperator.Xor:
-                    {
-                        return _sourceCaches.Count(s => s.Lookup(key).HasValue) == 1;
-                    }
-
-                case CombineOperator.Except:
-                    {
-                        bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
-                        bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
-                        return first && !others;
-                    }
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(key));
-            }
         }
     }
 }

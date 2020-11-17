@@ -1,26 +1,27 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using DynamicData.Annotations;
 
 namespace DynamicData.Cache.Internal
 {
     internal class RemoveKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject>>
+        where TKey : notnull
     {
-        private readonly IChangeSet<TObject, TKey> _source;
-        private readonly IExtendedList<TObject> _list;
+        private readonly IExtendedList<TObject>? _list;
 
-        /// <summary>Converts a <see cref="Change{TObject, TKey}"/> to <see cref="ChangeSet{TObject}"/></summary>
-        /// <param name="source">The changeset with a key</param>
+        private readonly IChangeSet<TObject, TKey> _source;
+
+        /// <summary>Initializes a new instance of the <see cref="RemoveKeyEnumerator{TObject, TKey}"/> class.Converts a <see cref="Change{TObject, TKey}"/> to <see cref="ChangeSet{TObject}"/>.</summary>
+        /// <param name="source">The changeset with a key.</param>
         /// <param name="list">
         /// An optional list, if provided it allows the refresh from a key based cache to find the index for the resulting list based refresh.
         /// If not provided a refresh will dropdown to a replace which may ultimately result in a remove+add change downstream.
         /// </param>
-        public RemoveKeyEnumerator([NotNull] IChangeSet<TObject, TKey> source, [CanBeNull] IExtendedList<TObject> list = null)
+        public RemoveKeyEnumerator(IChangeSet<TObject, TKey> source, IExtendedList<TObject>? list = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _list = list;
@@ -30,9 +31,8 @@ namespace DynamicData.Cache.Internal
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>
-        /// A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.
+        /// A <see cref="IEnumerator{T}" /> that can be used to iterate through the collection.
         /// </returns>
-        /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public IEnumerator<Change<TObject>> GetEnumerator()
         {
             foreach (var change in _source)
@@ -42,6 +42,7 @@ namespace DynamicData.Cache.Internal
                     case ChangeReason.Add:
                         yield return new Change<TObject>(ListChangeReason.Add, change.Current, change.CurrentIndex);
                         break;
+
                     case ChangeReason.Refresh:
                         // Refresh needs an index, which we don't have in a Change<T, K> model since it's key based.
                         // See: DynamicData > Binding > ObservableCollectionAdaptor.cs Line 129-130
@@ -54,20 +55,24 @@ namespace DynamicData.Cache.Internal
                         {
                             yield return new Change<TObject>(ListChangeReason.Refresh, current: change.Current, index: index);
                         }
-                        // Fallback to a replace if a list is not available
                         else
                         {
+                            // Fallback to a replace if a list is not available
                             yield return new Change<TObject>(ListChangeReason.Replace, current: change.Current, previous: change.Current);
                         }
+
                         break;
+
                     case ChangeReason.Moved:
                         // Move is always sorted
                         yield return new Change<TObject>(change.Current, change.CurrentIndex, change.PreviousIndex);
                         break;
+
                     case ChangeReason.Update:
                         yield return new Change<TObject>(ListChangeReason.Remove, change.Previous.Value, index: change.PreviousIndex);
                         yield return new Change<TObject>(ListChangeReason.Add, change.Current, index: change.CurrentIndex);
                         break;
+
                     case ChangeReason.Remove:
                         yield return new Change<TObject>(ListChangeReason.Remove, change.Current, index: change.CurrentIndex);
                         break;

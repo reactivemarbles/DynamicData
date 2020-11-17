@@ -1,51 +1,15 @@
-﻿// Copyright (c) Ben A Adams. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root (on link below) for license information.
-
-//Lifted from here https://github.com/benaadams/Ben.Enumerable. Many thanks to the genius of the man.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
+// Lifted from here https://github.com/benaadams/Ben.Enumerable. Many thanks to the genius of the man.
 namespace DynamicData.Kernel
 {
-
-    internal static class EnumerableIList
-    {
-
-        public static EnumerableIList<T> Create<T>(IList<T> list) => new EnumerableIList<T>(list);
-        public static EnumerableIList<Change<TObject, TKey>> Create<TObject, TKey>(IChangeSet<TObject, TKey> changeset) => Create((IList<Change<TObject, TKey>>)changeset);
-    }
-
-    internal struct EnumeratorIList<T> : IEnumerator<T>
-    {
-        private readonly IList<T> _list;
-        private int _index;
-
-        public EnumeratorIList(IList<T> list)
-        {
-            _index = -1;
-            _list = list;
-        }
-
-        public T Current => _list[_index];
-
-        public bool MoveNext()
-        {
-            _index++;
-
-            return _index < (_list?.Count ?? 0);
-        }
-
-        public void Dispose() { }
-        object IEnumerator.Current => Current;
-        public void Reset() => _index = -1;
-    }
-
-    internal interface IEnumerableIList<T> : IEnumerable<T>
-    {
-        new EnumeratorIList<T> GetEnumerator();
-    }
-
+    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics.")]
     internal readonly struct EnumerableIList<T> : IEnumerableIList<T>, IList<T>
     {
         private readonly IList<T> _list;
@@ -55,24 +19,26 @@ namespace DynamicData.Kernel
             _list = list;
         }
 
-        public EnumeratorIList<T> GetEnumerator() => new EnumeratorIList<T>(_list);
-
-        public static implicit operator EnumerableIList<T>(List<T> list) => new EnumerableIList<T>(list);
-
-        public static implicit operator EnumerableIList<T>(T[] array) => new EnumerableIList<T>(array);
-
-        public static EnumerableIList<T> Empty;
-
-        // IList pass through
-
-        /// <inheritdoc />
-        public T this[int index] { get => _list[index]; set => _list[index] = value; }
+        public static EnumerableIList<T> Empty { get; }
 
         /// <inheritdoc />
         public int Count => _list.Count;
 
         /// <inheritdoc />
         public bool IsReadOnly => _list.IsReadOnly;
+
+        /// <inheritdoc />
+        public T this[int index]
+        {
+            get => _list[index];
+            set => _list[index] = value;
+        }
+
+        public static implicit operator EnumerableIList<T>(List<T> list) => new EnumerableIList<T>(list);
+
+        public static implicit operator EnumerableIList<T>(T[] array) => new EnumerableIList<T>(array);
+
+        public EnumeratorIList<T> GetEnumerator() => new EnumeratorIList<T>(_list);
 
         /// <inheritdoc />
         public void Add(T item) => _list.Add(item);
@@ -101,5 +67,14 @@ namespace DynamicData.Kernel
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+    }
+
+    internal static class EnumerableIList
+    {
+        public static EnumerableIList<T> Create<T>(IList<T> list) => new EnumerableIList<T>(list);
+
+        public static EnumerableIList<Change<TObject, TKey>> Create<TObject, TKey>(IChangeSet<TObject, TKey> changeset)
+                where TKey : notnull =>
+            Create((IList<Change<TObject, TKey>>)changeset);
     }
 }

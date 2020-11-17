@@ -1,26 +1,25 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Annotations;
 
 namespace DynamicData.Kernel
 {
     /// <summary>
-    /// Enumerable extensions
+    /// Enumerable extensions.
     /// </summary>
     public static class EnumerableEx
     {
         /// <summary>
-        /// Casts the enumerable to an array if it is already an array.  Otherwise call ToArray
+        /// Casts the enumerable to an array if it is already an array.  Otherwise call ToArray.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
-        public static T[] AsArray<T>([NotNull] this IEnumerable<T> source)
+        /// <returns>The array of items.</returns>
+        public static T[] AsArray<T>(this IEnumerable<T> source)
         {
             if (source == null)
             {
@@ -31,12 +30,12 @@ namespace DynamicData.Kernel
         }
 
         /// <summary>
-        /// Casts the enumerable to an array if it is already an array.  Otherwise call ToList
+        /// Casts the enumerable to an array if it is already an array.  Otherwise call ToList.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
-        public static List<T> AsList<T>([NotNull] this IEnumerable<T> source)
+        /// <returns>The list.</returns>
+        public static List<T> AsList<T>(this IEnumerable<T> source)
         {
             if (source == null)
             {
@@ -47,17 +46,14 @@ namespace DynamicData.Kernel
         }
 
         /// <summary>
-        /// Returns any duplicated values from the source
+        /// Returns any duplicated values from the source.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type of the item.</typeparam>
         /// <typeparam name="TValue">The type of the value.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="valueSelector">The value selector.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static IEnumerable<T> Duplicates<T, TValue>([NotNull] this IEnumerable<T> source,
-                                                           [NotNull] Func<T, TValue> valueSelector)
+        /// <returns>The enumerable of items.</returns>
+        public static IEnumerable<T> Duplicates<T, TValue>(this IEnumerable<T> source, Func<T, TValue> valueSelector)
         {
             if (source == null)
             {
@@ -69,21 +65,18 @@ namespace DynamicData.Kernel
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.GroupBy(valueSelector)
-                         .Where(group => group.Count() > 1)
-                         .SelectMany(t => t);
+            return source.GroupBy(valueSelector).Where(group => group.Count() > 1).SelectMany(t => t);
         }
 
         /// <summary>
         /// Finds the index of many items as specified in the secondary enumerable.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="itemsToFind">The items to find in the source enumerable</param>
+        /// <param name="itemsToFind">The items to find in the source enumerable.</param>
         /// <returns>
-        /// A result as specified by the result selector
+        /// A result as specified by the result selector.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException"></exception>
         public static IEnumerable<ItemWithIndex<T>> IndexOfMany<T>(this IEnumerable<T> source, IEnumerable<T> itemsToFind)
         {
             return source.IndexOfMany(itemsToFind, (t, idx) => new ItemWithIndex<T>(t, idx));
@@ -96,11 +89,9 @@ namespace DynamicData.Kernel
         /// <typeparam name="TResult">The type of the result.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="itemsToFind">The items to find.</param>
-        /// <param name="resultSelector">The result selector</param>
-        /// <returns>A result as specified by the result selector</returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// </exception>
-        public static IEnumerable<TResult> IndexOfMany<TObject, TResult>([NotNull] this IEnumerable<TObject> source, [NotNull] IEnumerable<TObject> itemsToFind, [NotNull] Func<TObject, int, TResult> resultSelector)
+        /// <param name="resultSelector">The result selector.</param>
+        /// <returns>A result as specified by the result selector.</returns>
+        public static IEnumerable<TResult> IndexOfMany<TObject, TResult>(this IEnumerable<TObject> source, IEnumerable<TObject> itemsToFind, Func<TObject, int, TResult> resultSelector)
         {
             if (source == null)
             {
@@ -118,20 +109,17 @@ namespace DynamicData.Kernel
             }
 
             var indexed = source.Select((element, index) => new { Element = element, Index = index });
-            return itemsToFind
-                .Join(indexed, left => left, right => right.Element, (left, right) => right)
-                .Select(x => resultSelector(x.Element, x.Index));
+            return itemsToFind.Join(indexed, left => left, right => right.Element, (left, right) => right).Select(x => resultSelector(x.Element, x.Index));
         }
 
-        /// <summary>
-        /// Returns an object with it's current index.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        internal static IEnumerable<ItemWithIndex<T>> WithIndex<T>(this IEnumerable<T> source)
+        internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source)
         {
-            return source.Select((item, index) => new ItemWithIndex<T>(item, index));
+            return source ?? Enumerable.Empty<T>();
+        }
+
+        internal static IEnumerable<T> EnumerateOne<T>(this T source)
+        {
+            yield return source;
         }
 
         internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
@@ -152,23 +140,23 @@ namespace DynamicData.Kernel
             }
         }
 
-        internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> source)
+#if !WINDOWS_UWP
+        internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
         {
-            return source ?? Enumerable.Empty<T>();
+            return new HashSet<T>(source);
         }
 
-        #if (!WINDOWS_UWP)
+#endif
 
-            internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
-            {
-                return new HashSet<T>(source);
-            }
-
-        #endif
-
-        internal static IEnumerable<T> EnumerateOne<T>(this T source)
+        /// <summary>
+        /// Returns an object with it's current index.
+        /// </summary>
+        /// <typeparam name="T">The type of the item.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns>The enumerable of items with their indexes.</returns>
+        internal static IEnumerable<ItemWithIndex<T>> WithIndex<T>(this IEnumerable<T> source)
         {
-            yield return source;
+            return source.Select((item, index) => new ItemWithIndex<T>(item, index));
         }
     }
 }

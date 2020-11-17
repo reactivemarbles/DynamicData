@@ -1,17 +1,21 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+
 using DynamicData.Binding;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-
-    public class ObservableCollectionExtendedToChangeSetFixture: IDisposable
+    public class ObservableCollectionExtendedToChangeSetFixture : IDisposable
     {
         private readonly ObservableCollectionExtended<int> _collection;
+
         private readonly ChangeSetAggregator<int> _results;
+
         private readonly ReadOnlyObservableCollection<int> _target;
 
         public ObservableCollectionExtendedToChangeSetFixture()
@@ -21,9 +25,28 @@ namespace DynamicData.Tests.Binding
             _results = _target.ToObservableChangeSet().AsAggregator();
         }
 
+        [Fact]
+        public void Add()
+        {
+            _collection.Add(1);
+
+            _results.Messages.Count.Should().Be(1);
+            _results.Data.Count.Should().Be(1);
+            _results.Data.Items.First().Should().Be(1);
+        }
+
         public void Dispose()
         {
             _results.Dispose();
+        }
+
+        [Fact]
+        public void Duplicates()
+        {
+            _collection.Add(1);
+            _collection.Add(1);
+
+            _results.Data.Count.Should().Be(2);
         }
 
         [Fact]
@@ -40,16 +63,6 @@ namespace DynamicData.Tests.Binding
         }
 
         [Fact]
-        public void Add()
-        {
-            _collection.Add(1);
-
-            _results.Messages.Count.Should().Be(1);
-            _results.Data.Count.Should().Be(1);
-            _results.Data.Items.First().Should().Be(1);
-        }
-
-        [Fact]
         public void Remove()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
@@ -62,22 +75,12 @@ namespace DynamicData.Tests.Binding
         }
 
         [Fact]
-        public void Duplicates()
-        {
-            _collection.Add(1);
-            _collection.Add(1);
-
-            _results.Data.Count.Should().Be(2);
-        }
-
-        [Fact]
         public void Replace()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
             _collection[8] = 20;
 
             _results.Data.Items.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 20, 10 });
-
         }
 
         //[Fact]

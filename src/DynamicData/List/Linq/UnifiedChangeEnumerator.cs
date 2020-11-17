@@ -1,9 +1,10 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
 using System.Collections.Generic;
+
 using DynamicData.List.Internal;
 
 namespace DynamicData.List.Linq
@@ -34,12 +35,15 @@ namespace DynamicData.List.Linq
                             case ListChangeReason.AddRange:
                                 yield return new UnifiedChange<T>(ListChangeReason.Add, item);
                                 break;
+
                             case ListChangeReason.RemoveRange:
                                 yield return new UnifiedChange<T>(ListChangeReason.Remove, item);
                                 break;
+
                             case ListChangeReason.Clear:
                                 yield return new UnifiedChange<T>(ListChangeReason.Clear, item);
                                 break;
+
                             default:
                                 yield break;
                         }

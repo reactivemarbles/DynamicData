@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,18 +6,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
     internal sealed class Distinct<T, TValue>
+        where TValue : notnull
     {
         private readonly IObservable<IChangeSet<T>> _source;
+
         private readonly Func<T, TValue> _valueSelector;
 
-        public Distinct([NotNull] IObservable<IChangeSet<T>> source,
-            [NotNull] Func<T, TValue> valueSelector)
+        public Distinct(IObservable<IChangeSet<T>> source, Func<T, TValue> valueSelector)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
@@ -25,32 +26,32 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<TValue>> Run()
         {
-            return Observable.Create<IChangeSet<TValue>>(observer =>
-            {
-                var valueCounters = new Dictionary<TValue, int>();
-                var result = new ChangeAwareList<TValue>();
-
-                return _source.Transform<T, ItemWithMatch>((t, previous,idx ) =>
+            return Observable.Create<IChangeSet<TValue>>(
+                observer =>
                     {
-                        var previousValue = previous.ConvertOr(p => p.Value, () => default(TValue));
+                        var valueCounters = new Dictionary<TValue, int>();
+                        var result = new ChangeAwareList<TValue>();
 
-                        return new ItemWithMatch(t, _valueSelector(t), previousValue);
-                    },true)
-                    .Select(changes => Process(valueCounters, result, changes))
-                    .NotEmpty()
-                    .SubscribeSafe(observer);
-            });
+                        return _source.Transform<T, ItemWithMatch>(
+                            (t, previous, idx) =>
+                                {
+                                    var previousValue = previous.ConvertOr(p => p is null ? default : p.Value, () => default);
+
+                                    return new ItemWithMatch(t, _valueSelector(t), previousValue);
+                                },
+                            true).Select(changes => Process(valueCounters, result, changes)).NotEmpty().SubscribeSafe(observer);
+                    });
         }
 
         private static IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithMatch> changes)
         {
-            void AddAction(TValue value) => values.Lookup(value)
-                .IfHasValue(count => values[value] = count + 1)
-                .Else(() =>
-                {
-                    values[value] = 1;
-                    result.Add(value);
-                });
+            void AddAction(TValue value) =>
+                values.Lookup(value).IfHasValue(count => values[value] = count + 1).Else(
+                    () =>
+                        {
+                            values[value] = 1;
+                            result.Add(value);
+                        });
 
             void RemoveAction(TValue value)
             {
@@ -60,7 +61,7 @@ namespace DynamicData.List.Internal
                     return;
                 }
 
-                //decrement counter
+                // decrement counter
                 var newCount = counter.Value - 1;
                 values[value] = newCount;
                 if (newCount != 0)
@@ -68,7 +69,7 @@ namespace DynamicData.List.Internal
                     return;
                 }
 
-                //if there are none, then remove and notify
+                // if there are none, then remove and notify
                 result.Remove(value);
                 values.Remove(value);
             }
@@ -79,7 +80,6 @@ namespace DynamicData.List.Internal
                 {
                     case ListChangeReason.Add:
                         {
-
                             var value = change.Item.Current.Value;
                             AddAction(value);
                             break;
@@ -92,17 +92,21 @@ namespace DynamicData.List.Internal
                         }
 
                     case ListChangeReason.Refresh:
-                    {
-                        var value = change.Item.Current.Value;
-                        var previous = change.Item.Current.Previous;
-                        if (value.Equals(previous))
+                        {
+                            var value = change.Item.Current.Value;
+                            var previous = change.Item.Current.Previous;
+                            if (value.Equals(previous))
                             {
                                 continue;
                             }
 
-                            RemoveAction(previous);
-                        AddAction(value);
-                        break;
+                            if (previous is not null)
+                            {
+                                RemoveAction(previous);
+                            }
+
+                            AddAction(value);
+                            break;
                         }
 
                     case ListChangeReason.Replace:
@@ -146,20 +150,38 @@ namespace DynamicData.List.Internal
 
         private sealed class ItemWithMatch : IEquatable<ItemWithMatch>
         {
-            public T Item { get; }
-            public TValue Value { get; }
-            public TValue Previous { get; }
-
-            public ItemWithMatch(T item, TValue value, TValue previousValue)
+            public ItemWithMatch(T item, TValue value, TValue? previousValue)
             {
                 Item = item;
                 Value = value;
                 Previous = previousValue;
             }
 
-            #region Equality
+            public T Item { get; }
 
-            public bool Equals(ItemWithMatch other)
+            public TValue? Previous { get; }
+
+            public TValue Value { get; }
+
+            /// <summary>Returns a value that indicates whether the values of two <see cref="Filter{T}.ItemWithMatch" /> objects are equal.</summary>
+            /// <param name="left">The first value to compare.</param>
+            /// <param name="right">The second value to compare.</param>
+            /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
+            public static bool operator ==(ItemWithMatch left, ItemWithMatch right)
+            {
+                return Equals(left, right);
+            }
+
+            /// <summary>Returns a value that indicates whether two <see cref="Filter{T}.ItemWithMatch" /> objects have different values.</summary>
+            /// <param name="left">The first value to compare.</param>
+            /// <param name="right">The second value to compare.</param>
+            /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
+            public static bool operator !=(ItemWithMatch left, ItemWithMatch right)
+            {
+                return !Equals(left, right);
+            }
+
+            public bool Equals(ItemWithMatch? other)
             {
                 if (ReferenceEquals(null, other))
                 {
@@ -174,7 +196,7 @@ namespace DynamicData.List.Internal
                 return EqualityComparer<T>.Default.Equals(Item, other.Item);
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 if (ReferenceEquals(null, obj))
                 {
@@ -196,28 +218,8 @@ namespace DynamicData.List.Internal
 
             public override int GetHashCode()
             {
-                return EqualityComparer<T>.Default.GetHashCode(Item);
+                return Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
             }
-
-            /// <summary>Returns a value that indicates whether the values of two <see cref="T:DynamicData.List.Internal.Filter`1.ItemWithMatch" /> objects are equal.</summary>
-            /// <param name="left">The first value to compare.</param>
-            /// <param name="right">The second value to compare.</param>
-            /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
-            public static bool operator ==(ItemWithMatch left, ItemWithMatch right)
-            {
-                return Equals(left, right);
-            }
-
-            /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.List.Internal.Filter`1.ItemWithMatch" /> objects have different values.</summary>
-            /// <param name="left">The first value to compare.</param>
-            /// <param name="right">The second value to compare.</param>
-            /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
-            public static bool operator !=(ItemWithMatch left, ItemWithMatch right)
-            {
-                return !Equals(left, right);
-            }
-
-            #endregion
 
             public override string ToString()
             {

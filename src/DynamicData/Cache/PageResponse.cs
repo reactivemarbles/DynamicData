@@ -1,10 +1,12 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 using DynamicData.Operators;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
@@ -18,15 +20,15 @@ namespace DynamicData
             Pages = pages;
         }
 
-        public int PageSize { get; }
+        public static IEqualityComparer<IPageResponse?> DefaultComparer { get; } = new PageResponseEqualityComparer();
 
         public int Page { get; }
 
         public int Pages { get; }
 
-        public int TotalSize { get; }
+        public int PageSize { get; }
 
-        #region Equality members
+        public int TotalSize { get; }
 
         /// <summary>
         /// Indicates whether the current object is equal to another object of the same type.
@@ -35,33 +37,38 @@ namespace DynamicData
         /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
         /// </returns>
         /// <param name="other">An object to compare with this object.</param>
-        public bool Equals(IPageResponse other)
+        public bool Equals(IPageResponse? other)
         {
             return DefaultComparer.Equals(this, other);
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>.
+        /// Determines whether the specified <see cref="object"/> is equal to the current <see cref="object"/>.
         /// </summary>
         /// <returns>
-        /// true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:System.Object"/>; otherwise, false.
+        /// true if the specified <see cref="object"/> is equal to the current <see cref="object"/>; otherwise, false.
         /// </returns>
-        /// <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:System.Object"/>. </param>
-        public override bool Equals(object obj)
+        /// <param name="obj">The <see cref="object"/> to compare with the current <see cref="object"/>. </param>
+        public override bool Equals(object? obj)
         {
-            if (!(obj is IPageResponse))
+            if (obj is null)
             {
                 return false;
             }
 
-            return Equals(obj as IPageResponse);
+            if (!(obj is IPageResponse pageResponse))
+            {
+                return false;
+            }
+
+            return Equals(pageResponse);
         }
 
         /// <summary>
         /// Serves as a hash function for a particular type.
         /// </summary>
         /// <returns>
-        /// A hash code for the current <see cref="T:System.Object"/>.
+        /// A hash code for the current <see cref="object"/>.
         /// </returns>
         public override int GetHashCode()
         {
@@ -75,13 +82,20 @@ namespace DynamicData
             }
         }
 
-        #endregion
-
-        #region PageResponseEqualityComparer
-
-        private sealed class PageResponseEqualityComparer : IEqualityComparer<IPageResponse>
+        /// <summary>
+        /// Returns a <see cref="string"/> that represents the current <see cref="object"/>.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="string"/> that represents the current <see cref="object"/>.
+        /// </returns>
+        public override string ToString()
         {
-            public bool Equals(IPageResponse x, IPageResponse y)
+            return $"Page: {Page}, PageSize: {PageSize}, Pages: {Pages}, TotalSize: {TotalSize}";
+        }
+
+        private sealed class PageResponseEqualityComparer : IEqualityComparer<IPageResponse?>
+        {
+            public bool Equals(IPageResponse? x, IPageResponse? y)
             {
                 if (ReferenceEquals(x, y))
                 {
@@ -106,8 +120,13 @@ namespace DynamicData
                 return x.PageSize == y.PageSize && x.TotalSize == y.TotalSize && x.Page == y.Page && x.Pages == y.Pages;
             }
 
-            public int GetHashCode(IPageResponse obj)
+            public int GetHashCode(IPageResponse? obj)
             {
+                if (obj is null)
+                {
+                    return 0;
+                }
+
                 unchecked
                 {
                     int hashCode = obj.PageSize;
@@ -117,21 +136,6 @@ namespace DynamicData
                     return hashCode;
                 }
             }
-        }
-
-        public static IEqualityComparer<IPageResponse> DefaultComparer { get; } = new PageResponseEqualityComparer();
-
-        #endregion
-
-        /// <summary>
-        /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="T:System.String"/> that represents the current <see cref="T:System.Object"/>.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"Page: {Page}, PageSize: {PageSize}, Pages: {Pages}, TotalSize: {TotalSize}";
         }
     }
 }

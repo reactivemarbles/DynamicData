@@ -3,19 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Microsoft.Reactive.Testing;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
     public class FromAsyncFixture
     {
         private TestScheduler _scheduler;
 
-        public  FromAsyncFixture()
+        public FromAsyncFixture()
         {
             _scheduler = new TestScheduler();
         }
@@ -25,17 +28,12 @@ namespace DynamicData.Tests.List
         {
             Task<IEnumerable<Person>> Loader()
             {
-                var items = Enumerable.Range(1, 100)
-                    .Select(i => new Person("Person" + i, 1))
-                    .ToArray()
-                    .AsEnumerable();
+                var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, 1)).ToArray().AsEnumerable();
 
                 return Task.FromResult(items);
             }
 
-            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
-                .ToObservableChangeSet()
-                .AsObservableList();
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet().AsObservableList();
 
             data.Count.Should().Be(100);
         }
@@ -49,11 +47,9 @@ namespace DynamicData.Tests.List
                 throw new Exception("Broken");
             }
 
-            Exception error = null;
+            Exception? error = null;
 
-            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
-                .ToObservableChangeSet()
-                .Subscribe((changes) => { }, ex => error = ex);
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet().Subscribe((changes) => { }, ex => error = ex);
 
             error.Should().NotBeNull();
         }
@@ -67,17 +63,13 @@ namespace DynamicData.Tests.List
                 throw new Exception("Broken");
             }
 
-            Exception error = null;
+            Exception? error = null;
 
-            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
-                .ToObservableChangeSet()
-                .AsObservableList();
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet().AsObservableList();
 
-            var subscribed = data.Connect()
-                .Subscribe(changes => { }, ex => error = ex);
+            var subscribed = data.Connect().Subscribe(changes => { }, ex => error = ex);
 
             error.Should().NotBeNull();
         }
-
     }
 }

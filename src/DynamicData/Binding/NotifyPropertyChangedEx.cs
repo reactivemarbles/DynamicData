@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -7,12 +7,11 @@ using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;
-using DynamicData.Annotations;
 
 namespace DynamicData.Binding
 {
     /// <summary>
-    /// Property changes notification
+    /// Property changes notification.
     /// </summary>
     public static class NotifyPropertyChangedEx
     {
@@ -21,10 +20,9 @@ namespace DynamicData.Binding
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="propertiesToMonitor">specify properties to Monitor, or omit to monitor all property changes</param>
+        /// <param name="propertiesToMonitor">specify properties to Monitor, or omit to monitor all property changes.</param>
         /// <returns>A observable which includes notifying on any property.</returns>
-        /// <exception cref="System.ArgumentNullException"></exception>
-        public static IObservable<TObject> WhenAnyPropertyChanged<TObject>([NotNull] this TObject source, params string[] propertiesToMonitor)
+        public static IObservable<TObject?> WhenAnyPropertyChanged<TObject>(this TObject source, params string[] propertiesToMonitor)
             where TObject : INotifyPropertyChanged
         {
             if (source == null)
@@ -32,72 +30,7 @@ namespace DynamicData.Binding
                 throw new ArgumentNullException(nameof(source));
             }
 
-            return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
-                (
-                    handler => source.PropertyChanged += handler,
-                    handler => source.PropertyChanged -= handler
-                )
-                .Where(x => propertiesToMonitor == null || propertiesToMonitor.Length == 0 || propertiesToMonitor.Contains(x.EventArgs.PropertyName))
-                .Select(x => source);
-        }
-
-        /// <summary>
-        /// Observes property changes for the specified property, starting with the current value
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TProperty">The type of the value.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="propertyAccessor">The property to observe</param>
-        /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value</param>
-        /// <param name="fallbackValue"> A fallback value may be specified to ensure a notification is received when a value is unobtainable.
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
-        /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.</param>
-        /// <returns>A observable which also notifies when the property value changes.</returns>
-        /// <exception cref="System.ArgumentNullException">propertyAccessor</exception>
-        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>([NotNull] this TObject source,
-            Expression<Func<TObject, TProperty>> propertyAccessor,
-            bool notifyOnInitialValue = true,
-            Func<TProperty> fallbackValue = null)
-            where TObject : INotifyPropertyChanged
-        {
-            if (source == null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (propertyAccessor == null)
-            {
-                throw new ArgumentNullException(nameof(propertyAccessor));
-            }
-
-            var cache = ObservablePropertyFactoryCache.Instance.GetFactory(propertyAccessor);
-            return cache.Create(source, notifyOnInitialValue)
-                .Where(pv => !pv.UnobtainableValue || (pv.UnobtainableValue && fallbackValue != null));
-        }
-
-        /// <summary>
-        /// Observes property changes for the specified property, starting with the current value
-        /// </summary>
-        /// <param name="source">The source.</param>
-        /// <param name="propertyAccessor">The property to observe</param>
-        /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value</param>
-        /// <param name="fallbackValue"> A fallback value may be specified to ensure a notification is received when a value is unobtainable.
-        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
-        /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.</param>
-        public static IObservable<TProperty> WhenValueChanged<TObject, TProperty>([NotNull] this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty> fallbackValue = null)
-            where TObject : INotifyPropertyChanged
-        {
-            if (source == null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (propertyAccessor == null)
-            {
-                throw new ArgumentNullException(nameof(propertyAccessor));
-            }
-
-            return source.WhenChanged(propertyAccessor, notifyOnInitialValue, fallbackValue);
+            return Observable.FromEventPattern<PropertyChangedEventHandler?, PropertyChangedEventArgs>(handler => source.PropertyChanged += handler, handler => source.PropertyChanged -= handler).Where(x => propertiesToMonitor == null || propertiesToMonitor.Length == 0 || propertiesToMonitor.Contains(x.EventArgs.PropertyName)).Select(x => source);
         }
 
         /// <summary>
@@ -106,10 +39,15 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1>([NotNull] this TObject source,
-            Expression<Func<TObject, TProperty1>> p1,
-            Func<TObject, TProperty1,  TResult> resultSelector,
-            Func<TProperty1> p1Fallback = null)
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <typeparam name="TProperty1">The type of the first property.</typeparam>
+        /// <param name="source">The source object.</param>
+        /// <param name="p1">An expression to the first property.</param>
+        /// <param name="resultSelector">A function which will select the result from the properties and the source.</param>
+        /// <param name="p1Fallback">Provides a fall back value for the first property in case of the property value cannot be obtained.</param>
+        /// <returns>An observable which emits the results.</returns>
+        public static IObservable<TResult?> WhenChanged<TObject, TResult, TProperty1>(this TObject source, Expression<Func<TObject, TProperty1>> p1, Func<TObject, TProperty1?, TResult> resultSelector, Func<TProperty1>? p1Fallback = null)
             where TObject : INotifyPropertyChanged
         {
             if (source == null)
@@ -136,13 +74,19 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2>([NotNull] this TObject source,
-            Expression<Func<TObject, TProperty1>> p1,
-            Expression<Func<TObject, TProperty2>> p2,
-            Func<TObject, TProperty1, TProperty2, TResult> resultSelector,
-            Func<TProperty1> p1Fallback = null,
-            Func<TProperty2> p2Fallback = null)
-                where TObject : INotifyPropertyChanged
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <typeparam name="TProperty1">The type of the first property.</typeparam>
+        /// <typeparam name="TProperty2">The type of the second property.</typeparam>
+        /// <param name="source">The source object.</param>
+        /// <param name="p1">An expression to the first property.</param>
+        /// <param name="p2">An expression to the second property.</param>
+        /// <param name="resultSelector">A function which will select the result from the properties and the source.</param>
+        /// <param name="p1Fallback">Provides a fall back value for the first property in case of the property value cannot be obtained.</param>
+        /// <param name="p2Fallback">Provides a fall back value for the second property in case of the property value cannot be obtained.</param>
+        /// <returns>An observable which emits the results.</returns>
+        public static IObservable<TResult?> WhenChanged<TObject, TResult, TProperty1, TProperty2>(this TObject source, Expression<Func<TObject, TProperty1>> p1, Expression<Func<TObject, TProperty2>> p2, Func<TObject, TProperty1?, TProperty2?, TResult> resultSelector, Func<TProperty1>? p1Fallback = null, Func<TProperty2>? p2Fallback = null)
+            where TObject : INotifyPropertyChanged
         {
             if (source == null)
             {
@@ -164,12 +108,7 @@ namespace DynamicData.Binding
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return Observable.CombineLatest
-            (
-                source.WhenChanged(p1, true, p1Fallback),
-                source.WhenChanged(p2, true, p2Fallback),
-                (v1, v2) => resultSelector(source, v1, v2)
-            );
+            return source.WhenChanged(p1, true, p1Fallback).CombineLatest(source.WhenChanged(p2, true, p2Fallback), (v1, v2) => resultSelector(source, v1, v2));
         }
 
         /// <summary>
@@ -178,14 +117,21 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3>([NotNull] this TObject source,
-            Expression<Func<TObject, TProperty1>> p1,
-            Expression<Func<TObject, TProperty2>> p2,
-            Expression<Func<TObject, TProperty3>> p3,
-            Func<TObject, TProperty1, TProperty2, TProperty3, TResult> resultSelector,
-            Func<TProperty1> p1Fallback = null,
-            Func<TProperty2> p2Fallback = null,
-            Func<TProperty3> p3Fallback = null)
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <typeparam name="TProperty1">The type of the first property.</typeparam>
+        /// <typeparam name="TProperty2">The type of the second property.</typeparam>
+        /// <typeparam name="TProperty3">The type of the third property.</typeparam>
+        /// <param name="source">The source object.</param>
+        /// <param name="p1">An expression to the first property.</param>
+        /// <param name="p2">An expression to the second property.</param>
+        /// <param name="p3">An expression to the third property.</param>
+        /// <param name="resultSelector">A function which will select the result from the properties and the source.</param>
+        /// <param name="p1Fallback">Provides a fall back value for the first property in case of the property value cannot be obtained.</param>
+        /// <param name="p2Fallback">Provides a fall back value for the second property in case of the property value cannot be obtained.</param>
+        /// <param name="p3Fallback">Provides a fall back value for the third property in case of the property value cannot be obtained.</param>
+        /// <returns>An observable which emits the results.</returns>
+        public static IObservable<TResult?> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3>(this TObject source, Expression<Func<TObject, TProperty1>> p1, Expression<Func<TObject, TProperty2>> p2, Expression<Func<TObject, TProperty3>> p3, Func<TObject, TProperty1?, TProperty2?, TProperty3?, TResult> resultSelector, Func<TProperty1>? p1Fallback = null, Func<TProperty2>? p2Fallback = null, Func<TProperty3>? p3Fallback = null)
             where TObject : INotifyPropertyChanged
         {
             if (source == null)
@@ -213,13 +159,7 @@ namespace DynamicData.Binding
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return Observable.CombineLatest
-            (
-                source.WhenChanged(p1, true, p1Fallback),
-                source.WhenChanged(p2, true, p2Fallback),
-                source.WhenChanged(p3, true, p3Fallback),
-                (v1, v2, v3) => resultSelector(source, v1, v2, v3)
-            );
+            return source.WhenChanged(p1, true, p1Fallback).CombineLatest(source.WhenChanged(p2, true, p2Fallback), source.WhenChanged(p3, true, p3Fallback), (v1, v2, v3) => resultSelector(source, v1, v2, v3));
         }
 
         /// <summary>
@@ -228,16 +168,24 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4>([NotNull] this TObject source,
-            Expression<Func<TObject, TProperty1>> p1,
-            Expression<Func<TObject, TProperty2>> p2,
-            Expression<Func<TObject, TProperty3>> p3,
-            Expression<Func<TObject, TProperty4>> p4,
-            Func<TObject, TProperty1, TProperty2, TProperty3, TProperty4, TResult> resultSelector,
-            Func<TProperty1> p1Fallback = null,
-            Func<TProperty2> p2Fallback = null,
-            Func<TProperty3> p3Fallback = null,
-            Func<TProperty4> p4Fallback = null)
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <typeparam name="TProperty1">The type of the first property.</typeparam>
+        /// <typeparam name="TProperty2">The type of the second property.</typeparam>
+        /// <typeparam name="TProperty3">The type of the third property.</typeparam>
+        /// <typeparam name="TProperty4">The type of the fourth property.</typeparam>
+        /// <param name="source">The source object.</param>
+        /// <param name="p1">An expression to the first property.</param>
+        /// <param name="p2">An expression to the second property.</param>
+        /// <param name="p3">An expression to the third property.</param>
+        /// <param name="p4">An expression to the fourth property.</param>
+        /// <param name="resultSelector">A function which will select the result from the properties and the source.</param>
+        /// <param name="p1Fallback">Provides a fall back value for the first property in case of the property value cannot be obtained.</param>
+        /// <param name="p2Fallback">Provides a fall back value for the second property in case of the property value cannot be obtained.</param>
+        /// <param name="p3Fallback">Provides a fall back value for the third property in case of the property value cannot be obtained.</param>
+        /// <param name="p4Fallback">Provides a fall back value for the fourth property in case of the property value cannot be obtained.</param>
+        /// <returns>An observable which emits the results.</returns>
+        public static IObservable<TResult?> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4>(this TObject source, Expression<Func<TObject, TProperty1>> p1, Expression<Func<TObject, TProperty2>> p2, Expression<Func<TObject, TProperty3>> p3, Expression<Func<TObject, TProperty4>> p4, Func<TObject, TProperty1?, TProperty2?, TProperty3?, TProperty4?, TResult> resultSelector, Func<TProperty1>? p1Fallback = null, Func<TProperty2>? p2Fallback = null, Func<TProperty3>? p3Fallback = null, Func<TProperty4>? p4Fallback = null)
             where TObject : INotifyPropertyChanged
         {
             if (source == null)
@@ -270,14 +218,7 @@ namespace DynamicData.Binding
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return Observable.CombineLatest
-            (
-                source.WhenChanged(p1, true, p1Fallback),
-                source.WhenChanged(p2, true, p2Fallback),
-                source.WhenChanged(p3, true, p3Fallback),
-                source.WhenChanged(p4, true, p4Fallback),
-                (v1, v2, v3, v4) => resultSelector(source, v1, v2, v3, v4)
-            );
+            return source.WhenChanged(p1, true, p1Fallback).CombineLatest(source.WhenChanged(p2, true, p2Fallback), source.WhenChanged(p3, true, p3Fallback), source.WhenChanged(p4, true, p4Fallback), (v1, v2, v3, v4) => resultSelector(source, v1, v2, v3, v4));
         }
 
         /// <summary>
@@ -286,18 +227,27 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5>([NotNull] this TObject source,
-            Expression<Func<TObject, TProperty1>> p1,
-            Expression<Func<TObject, TProperty2>> p2,
-            Expression<Func<TObject, TProperty3>> p3,
-            Expression<Func<TObject, TProperty4>> p4,
-            Expression<Func<TObject, TProperty5>> p5,
-            Func<TObject, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5, TResult> resultSelector,
-            Func<TProperty1> p1Fallback = null,
-            Func<TProperty2> p2Fallback = null,
-            Func<TProperty3> p3Fallback = null,
-            Func<TProperty4> p4Fallback = null,
-            Func<TProperty5> p5Fallback = null)
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <typeparam name="TProperty1">The type of the first property.</typeparam>
+        /// <typeparam name="TProperty2">The type of the second property.</typeparam>
+        /// <typeparam name="TProperty3">The type of the third property.</typeparam>
+        /// <typeparam name="TProperty4">The type of the fourth property.</typeparam>
+        /// <typeparam name="TProperty5">The type of the fifth property.</typeparam>
+        /// <param name="source">The source object.</param>
+        /// <param name="p1">An expression to the first property.</param>
+        /// <param name="p2">An expression to the second property.</param>
+        /// <param name="p3">An expression to the third property.</param>
+        /// <param name="p4">An expression to the fourth property.</param>
+        /// <param name="p5">An expression to the fifth property.</param>
+        /// <param name="resultSelector">A function which will select the result from the properties and the source.</param>
+        /// <param name="p1Fallback">Provides a fall back value for the first property in case of the property value cannot be obtained.</param>
+        /// <param name="p2Fallback">Provides a fall back value for the second property in case of the property value cannot be obtained.</param>
+        /// <param name="p3Fallback">Provides a fall back value for the third property in case of the property value cannot be obtained.</param>
+        /// <param name="p4Fallback">Provides a fall back value for the fourth property in case of the property value cannot be obtained.</param>
+        /// <param name="p5Fallback">Provides a fall back value for the fifth property in case of the property value cannot be obtained.</param>
+        /// <returns>An observable which emits the results.</returns>
+        public static IObservable<TResult?> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5>(this TObject source, Expression<Func<TObject, TProperty1>> p1, Expression<Func<TObject, TProperty2>> p2, Expression<Func<TObject, TProperty3>> p3, Expression<Func<TObject, TProperty4>> p4, Expression<Func<TObject, TProperty5>> p5, Func<TObject, TProperty1?, TProperty2?, TProperty3?, TProperty4?, TProperty5?, TResult> resultSelector, Func<TProperty1>? p1Fallback = null, Func<TProperty2>? p2Fallback = null, Func<TProperty3>? p3Fallback = null, Func<TProperty4>? p4Fallback = null, Func<TProperty5>? p5Fallback = null)
             where TObject : INotifyPropertyChanged
         {
             if (source == null)
@@ -335,15 +285,7 @@ namespace DynamicData.Binding
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return Observable.CombineLatest
-            (
-                source.WhenChanged(p1, true, p1Fallback),
-                source.WhenChanged(p2, true, p2Fallback),
-                source.WhenChanged(p3, true, p3Fallback),
-                source.WhenChanged(p4, true, p4Fallback),
-                source.WhenChanged(p5, true, p5Fallback),
-                (v1, v2, v3, v4, v5) => resultSelector(source, v1, v2, v3, v4, v5)
-            );
+            return source.WhenChanged(p1, true, p1Fallback).CombineLatest(source.WhenChanged(p2, true, p2Fallback), source.WhenChanged(p3, true, p3Fallback), source.WhenChanged(p4, true, p4Fallback), source.WhenChanged(p5, true, p5Fallback), (v1, v2, v3, v4, v5) => resultSelector(source, v1, v2, v3, v4, v5));
         }
 
         /// <summary>
@@ -352,20 +294,30 @@ namespace DynamicData.Binding
         /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
         /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.
         /// </summary>
-        public static IObservable<TResult> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5, TProperty6>([NotNull] this TObject source,
-            Expression<Func<TObject, TProperty1>> p1,
-            Expression<Func<TObject, TProperty2>> p2,
-            Expression<Func<TObject, TProperty3>> p3,
-            Expression<Func<TObject, TProperty4>> p4,
-            Expression<Func<TObject, TProperty5>> p5,
-            Expression<Func<TObject, TProperty6>> p6,
-            Func<TObject, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5, TProperty6, TResult> resultSelector,
-            Func<TProperty1> p1Fallback = null,
-            Func<TProperty2> p2Fallback = null,
-            Func<TProperty3> p3Fallback = null,
-            Func<TProperty4> p4Fallback = null,
-            Func<TProperty5> p5Fallback = null,
-            Func<TProperty6> p6Fallback = null)
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TResult">The type of the result.</typeparam>
+        /// <typeparam name="TProperty1">The type of the first property.</typeparam>
+        /// <typeparam name="TProperty2">The type of the second property.</typeparam>
+        /// <typeparam name="TProperty3">The type of the third property.</typeparam>
+        /// <typeparam name="TProperty4">The type of the fourth property.</typeparam>
+        /// <typeparam name="TProperty5">The type of the fifth property.</typeparam>
+        /// <typeparam name="TProperty6">The type of the sixth property.</typeparam>
+        /// <param name="source">The source object.</param>
+        /// <param name="p1">An expression to the first property.</param>
+        /// <param name="p2">An expression to the second property.</param>
+        /// <param name="p3">An expression to the third property.</param>
+        /// <param name="p4">An expression to the fourth property.</param>
+        /// <param name="p5">An expression to the fifth property.</param>
+        /// <param name="p6">An expression to the sixth property.</param>
+        /// <param name="resultSelector">A function which will select the result from the properties and the source.</param>
+        /// <param name="p1Fallback">Provides a fall back value for the first property in case of the property value cannot be obtained.</param>
+        /// <param name="p2Fallback">Provides a fall back value for the second property in case of the property value cannot be obtained.</param>
+        /// <param name="p3Fallback">Provides a fall back value for the third property in case of the property value cannot be obtained.</param>
+        /// <param name="p4Fallback">Provides a fall back value for the fourth property in case of the property value cannot be obtained.</param>
+        /// <param name="p5Fallback">Provides a fall back value for the fifth property in case of the property value cannot be obtained.</param>
+        /// <param name="p6Fallback">Provides a fall back value for the sixth property in case of the property value cannot be obtained.</param>
+        /// <returns>An observable which emits the results.</returns>
+        public static IObservable<TResult?> WhenChanged<TObject, TResult, TProperty1, TProperty2, TProperty3, TProperty4, TProperty5, TProperty6>(this TObject source, Expression<Func<TObject, TProperty1>> p1, Expression<Func<TObject, TProperty2>> p2, Expression<Func<TObject, TProperty3>> p3, Expression<Func<TObject, TProperty4>> p4, Expression<Func<TObject, TProperty5>> p5, Expression<Func<TObject, TProperty6>> p6, Func<TObject, TProperty1?, TProperty2?, TProperty3?, TProperty4?, TProperty5?, TProperty6?, TResult> resultSelector, Func<TProperty1>? p1Fallback = null, Func<TProperty2>? p2Fallback = null, Func<TProperty3>? p3Fallback = null, Func<TProperty4>? p4Fallback = null, Func<TProperty5>? p5Fallback = null, Func<TProperty6>? p6Fallback = null)
             where TObject : INotifyPropertyChanged
         {
             if (source == null)
@@ -408,33 +360,65 @@ namespace DynamicData.Binding
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return Observable.CombineLatest
-            (
-                source.WhenChanged(p1, true, p1Fallback),
-                source.WhenChanged(p2, true, p2Fallback),
-                source.WhenChanged(p3, true, p3Fallback),
-                source.WhenChanged(p4, true, p4Fallback),
-                source.WhenChanged(p5, true, p5Fallback),
-                source.WhenChanged(p6, true, p6Fallback),
-                (v1, v2, v3, v4, v5,v6) => resultSelector(source, v1, v2, v3, v4, v5, v6)
-            );
+            return source.WhenChanged(p1, true, p1Fallback).CombineLatest(source.WhenChanged(p2, true, p2Fallback), source.WhenChanged(p3, true, p3Fallback), source.WhenChanged(p4, true, p4Fallback), source.WhenChanged(p5, true, p5Fallback), source.WhenChanged(p6, true, p6Fallback), (v1, v2, v3, v4, v5, v6) => resultSelector(source, v1, v2, v3, v4, v5, v6));
         }
 
-        internal static IObservable<TProperty> WhenChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true, Func<TProperty> fallbackValue = null)
+        /// <summary>
+        /// Observes property changes for the specified property, starting with the current value.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TProperty">The type of the value.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyAccessor">The property to observe.</param>
+        /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value.</param>
+        /// <param name="fallbackValue"> A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
+        /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.</param>
+        /// <returns>A observable which also notifies when the property value changes.</returns>
+        /// <exception cref="System.ArgumentNullException">propertyAccessor.</exception>
+        public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty?>? fallbackValue = null)
             where TObject : INotifyPropertyChanged
         {
-            var factory = ObservablePropertyFactoryCache.Instance.GetFactory(expression);
-            return factory.Create(source, notifyInitial)
-                .Where(pv => !pv.UnobtainableValue || pv.UnobtainableValue && fallbackValue != null)
-                .Select(pv =>
-                {
-                    if (pv.UnobtainableValue && fallbackValue != null)
-                    {
-                        return fallbackValue();
-                    }
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
 
-                    return pv.Value;
-                });
+            if (propertyAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(propertyAccessor));
+            }
+
+            var cache = ObservablePropertyFactoryCache.Instance.GetFactory(propertyAccessor);
+            return cache.Create(source, notifyOnInitialValue).Where(pv => !pv.UnobtainableValue || (pv.UnobtainableValue && fallbackValue != null));
+        }
+
+        /// <summary>
+        /// Observes property changes for the specified property, starting with the current value.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TProperty">The type of the first property.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="propertyAccessor">The property to observe.</param>
+        /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value.</param>
+        /// <param name="fallbackValue"> A fallback value may be specified to ensure a notification is received when a value is unobtainable.
+        /// For example when observing Parent.Child.Age, if Child == null the value is unobtainable as Age is a struct and cannot be set to Null.
+        /// For an object like Parent.Child.Sibling, sibling is an object so if Child == null, the value null and obtainable and is returned as null.</param>
+        /// <returns>An observable which emits the results.</returns>
+        public static IObservable<TProperty?> WhenValueChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty>? fallbackValue = null)
+            where TObject : INotifyPropertyChanged
+        {
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (propertyAccessor == null)
+            {
+                throw new ArgumentNullException(nameof(propertyAccessor));
+            }
+
+            return source.WhenChanged(propertyAccessor, notifyOnInitialValue, fallbackValue);
         }
 
         internal static Func<TObject, bool, IObservable<PropertyValue<TObject, TProperty>>> GetFactory<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
@@ -444,5 +428,20 @@ namespace DynamicData.Binding
             return (t, initial) => factory.Create(t, initial);
         }
 
+        internal static IObservable<TProperty?> WhenChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> expression, bool notifyInitial = true, Func<TProperty?>? fallbackValue = null)
+            where TObject : INotifyPropertyChanged
+        {
+            var factory = ObservablePropertyFactoryCache.Instance.GetFactory(expression);
+            return factory.Create(source, notifyInitial).Where(pv => !pv.UnobtainableValue || (pv.UnobtainableValue && fallbackValue != null)).Select(
+                pv =>
+                    {
+                        if (pv.UnobtainableValue && fallbackValue != null)
+                        {
+                            return fallbackValue();
+                        }
+
+                        return pv.Value;
+                    });
+        }
     }
 }

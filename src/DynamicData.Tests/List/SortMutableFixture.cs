@@ -3,29 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
+
 using DynamicData.Binding;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 
-using Xunit;
 using FluentAssertions;
+
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class SortMutableFixture: IDisposable
+    public class SortMutableFixture : IDisposable
     {
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
-        private readonly ISourceList<Person> _source;
         private readonly ISubject<IComparer<Person>> _changeComparer;
+
+        private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Age).ThenByAscending(p => p.Name);
+
+        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+
         private readonly ISubject<Unit> _resort;
+
         private readonly ChangeSetAggregator<Person> _results;
 
-        private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>
-            .Ascending(p => p.Age)
-            .ThenByAscending(p => p.Name);
+        private readonly ISourceList<Person> _source;
 
-        public  SortMutableFixture()
+        public SortMutableFixture()
         {
             _source = new SourceList<Person>();
             _changeComparer = new BehaviorSubject<IComparer<Person>>(_comparer);
@@ -34,24 +37,28 @@ namespace DynamicData.Tests.List
             _results = _source.Connect().Sort(_changeComparer, resetThreshold: 25, resort: _resort).AsAggregator();
         }
 
-        public void Dispose()
-        {
-            _results.Dispose();
-            _source.Dispose();
-        }
-
         [Fact]
-        public void SortInitialBatch()
+        public void ChangeComparer()
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
 
-            _results.Data.Count.Should().Be(100);
+            var newComparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
-            var expectedResult = people.OrderBy(p => p, _comparer);
+            _changeComparer.OnNext(newComparer);
+
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
+
+            var expectedResult = people.OrderBy(p => p, newComparer);
             var actualResult = _results.Data.Items;
 
             actualResult.Should().BeEquivalentTo(expectedResult);
+        }
+
+        public void Dispose()
+        {
+            _results.Dispose();
+            _source.Dispose();
         }
 
         [Fact]
@@ -64,20 +71,6 @@ namespace DynamicData.Tests.List
             _source.Add(shouldbeLast);
 
             _results.Data.Count.Should().Be(101);
-
-            _results.Data.Items.Last().Should().Be(shouldbeLast);
-        }
-
-        [Fact]
-        public void Replace()
-        {
-            var people = _generator.Take(100).ToArray();
-            _source.AddRange(people);
-
-            var shouldbeLast = new Person("__A", 999);
-            _source.ReplaceAt(10, shouldbeLast);
-
-            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
             _results.Data.Items.Last().Should().Be(shouldbeLast);
         }
@@ -97,6 +90,24 @@ namespace DynamicData.Tests.List
             _results.Messages[1].First().Item.Current.Should().Be(toRemove, "Incorrect item removed");
 
             var expectedResult = people.OrderBy(p => p, _comparer);
+            var actualResult = _results.Data.Items;
+            actualResult.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Fact]
+        public void RemoveManyOdds()
+        {
+            var people = _generator.Take(100).ToList();
+            _source.AddRange(people);
+
+            var odd = people.Select((p, idx) => new { p, idx }).Where(x => x.idx % 2 == 1).Select(x => x.p).ToArray();
+
+            _source.RemoveMany(odd);
+
+            _results.Data.Count.Should().Be(50, "Should be 99 people in the cache");
+            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
+
+            var expectedResult = people.Except(odd).OrderByDescending(p => p, _comparer).ToArray();
             var actualResult = _results.Data.Items;
             actualResult.Should().BeEquivalentTo(expectedResult);
         }
@@ -134,46 +145,17 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
-        public void ResortOnInlineChanges()
+        public void Replace()
         {
-            var people = _generator.Take(10).ToList();
+            var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
 
-            people[0].Age = -1;
-            people[1].Age = -10;
-            people[2].Age = -12;
-            people[3].Age = -5;
-            people[4].Age = -7;
-            people[5].Age = -6;
+            var shouldbeLast = new Person("__A", 999);
+            _source.ReplaceAt(10, shouldbeLast);
 
-            var comparer = SortExpressionComparer<Person>.Descending(p => p.Age)
-                .ThenByAscending(p => p.Name);
+            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
 
-            _changeComparer.OnNext(comparer);
-
-            var expectedResult = people.OrderBy(p => p, comparer).ToArray();
-            var actualResult = _results.Data.Items.ToArray();
-
-            //actualResult.(expectedResult);
-            actualResult.Should().BeEquivalentTo(expectedResult);
-        }
-
-        [Fact]
-        public void RemoveManyOdds()
-        {
-            var people = _generator.Take(100).ToList();
-            _source.AddRange(people);
-
-            var odd = people.Select((p, idx) => new {p, idx}).Where(x => x.idx % 2 == 1).Select(x => x.p).ToArray();
-
-            _source.RemoveMany(odd);
-
-            _results.Data.Count.Should().Be(50, "Should be 99 people in the cache");
-            _results.Messages.Count.Should().Be(2, "Should be 2 update messages");
-
-            var expectedResult = people.Except(odd).OrderByDescending(p => p, _comparer).ToArray();
-            var actualResult = _results.Data.Items;
-            actualResult.Should().BeEquivalentTo(expectedResult);
+            _results.Data.Items.Last().Should().Be(shouldbeLast);
         }
 
         [Fact]
@@ -195,19 +177,38 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
-        public void ChangeComparer()
+        public void ResortOnInlineChanges()
+        {
+            var people = _generator.Take(10).ToList();
+            _source.AddRange(people);
+
+            people[0].Age = -1;
+            people[1].Age = -10;
+            people[2].Age = -12;
+            people[3].Age = -5;
+            people[4].Age = -7;
+            people[5].Age = -6;
+
+            var comparer = SortExpressionComparer<Person>.Descending(p => p.Age).ThenByAscending(p => p.Name);
+
+            _changeComparer.OnNext(comparer);
+
+            var expectedResult = people.OrderBy(p => p, comparer).ToArray();
+            var actualResult = _results.Data.Items.ToArray();
+
+            //actualResult.(expectedResult);
+            actualResult.Should().BeEquivalentTo(expectedResult);
+        }
+
+        [Fact]
+        public void SortInitialBatch()
         {
             var people = _generator.Take(100).ToArray();
             _source.AddRange(people);
 
-            var newComparer = SortExpressionComparer<Person>.Ascending(p => p.Name)
-                .ThenByAscending(p => p.Age);
+            _results.Data.Count.Should().Be(100);
 
-            _changeComparer.OnNext(newComparer);
-
-            _results.Data.Count.Should().Be(100, "Should be 100 people in the cache");
-
-            var expectedResult = people.OrderBy(p => p, newComparer);
+            var expectedResult = people.OrderBy(p => p, _comparer);
             var actualResult = _results.Data.Items;
 
             actualResult.Should().BeEquivalentTo(expectedResult);

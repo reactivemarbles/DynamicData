@@ -1,56 +1,57 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
     /// Api for updating  an intermediate cache
     ///
-    /// Use edit to produce singular changeset.
+    /// Use edit to produce singular change set.
     ///
     /// NB:The evaluate method is used to signal to any observing operators
-    /// to  reevaluate whether the the object still matches downstream operators.
+    /// to  reevaluate whether the object still matches downstream operators.
     /// This is primarily targeted to inline object changes such as datetime and calculated fields.
     ///
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public interface ICacheUpdater<TObject, TKey> : IQuery<TObject, TKey>
+        where TKey : notnull
     {
         /// <summary>
         /// Adds or updates the specified key value pairs.
         /// </summary>
+        /// <param name="keyValuePairs">The key value pairs to add or update.</param>
         void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> keyValuePairs);
 
         /// <summary>
         /// Adds or updates the specified key value pair.
         /// </summary>
+        /// <param name="item">The key value pair to add or update.</param>
         void AddOrUpdate(KeyValuePair<TKey, TObject> item);
 
         /// <summary>
         /// Adds or updates the specified item / key pair.
         /// </summary>
+        /// <param name="item">The item to add or update.</param>
+        /// <param name="key">The key to add or update.</param>
         void AddOrUpdate(TObject item, TKey key);
 
         /// <summary>
-        /// Sends a signal for operators to recalculate it's state.
+        /// Clears all items from the underlying cache.
         /// </summary>
-        void Refresh();
+        void Clear();
 
         /// <summary>
-        /// Refreshes the items matching the specified keys.
+        /// Clones the change set to the cache.
         /// </summary>
-        /// <param name="keys">The keys.</param>
-        void Refresh(IEnumerable<TKey> keys);
-
-        /// <summary>
-        /// Refreshes the item matching the specified key.
-        /// </summary>
-        void Refresh(TKey key);
+        /// <param name="changes">The changes to clone.</param>
+        void Clone(IChangeSet<TObject, TKey> changes);
 
         /// <summary>
         /// Sends a signal for operators to recalculate it's state.
@@ -68,56 +69,9 @@ namespace DynamicData
         /// <summary>
         /// Refreshes the item matching the specified key.
         /// </summary>
+        /// <param name="key">The key to evaluate.</param>
         [Obsolete(Constants.EvaluateIsDead)]
         void Evaluate(TKey key);
-
-        /// <summary>
-        ///Removes the specified keys
-        /// </summary>
-        void Remove(IEnumerable<TKey> keys);
-
-        /// <summary>
-        /// Overload of remove due to ambiguous method when TObject and TKey are of the same type.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        void RemoveKeys(IEnumerable<TKey> key);
-
-        /// <summary>
-        ///Remove the specified keys
-        /// </summary>
-        void Remove(TKey key);
-
-        /// <summary>
-        /// Overload of remove due to ambiguous method when TObject and TKey are of the same type.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        void RemoveKey(TKey key);
-
-        /// <summary>
-        /// Removes the specified  key value pairs.
-        /// </summary>
-        void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items);
-
-        /// <summary>
-        ///Removes the specified key value pair.
-        /// </summary>
-        void Remove(KeyValuePair<TKey, TObject> item);
-
-        /// <summary>
-        /// Updates using changes using the specified changeset.
-        /// </summary>
-        [Obsolete("Use Clone()")]
-        void Update(IChangeSet<TObject, TKey> changes);
-
-        /// <summary>
-        /// Clones the change set to the cache.
-        /// </summary>
-        void Clone(IChangeSet<TObject, TKey> changes);
-
-        /// <summary>
-        /// Clears all items from the underlying cache.
-        /// </summary>
-        void Clear();
 
         /// <summary>
         /// Gets the key associated with the object.
@@ -132,5 +86,65 @@ namespace DynamicData
         /// <param name="items">The items.</param>
         /// <returns>An enumeration of key value pairs of the key and the object.</returns>
         IEnumerable<KeyValuePair<TKey, TObject>> GetKeyValues(IEnumerable<TObject> items);
+
+        /// <summary>
+        /// Sends a signal for operators to recalculate it's state.
+        /// </summary>
+        void Refresh();
+
+        /// <summary>
+        /// Refreshes the items matching the specified keys.
+        /// </summary>
+        /// <param name="keys">The keys.</param>
+        void Refresh(IEnumerable<TKey> keys);
+
+        /// <summary>
+        /// Refreshes the item matching the specified key.
+        /// </summary>
+        /// <param name="key">The key to refresh.</param>
+        void Refresh(TKey key);
+
+        /// <summary>
+        /// Removes the specified keys.
+        /// </summary>
+        /// <param name="keys">The keys to remove the values for.</param>
+        void Remove(IEnumerable<TKey> keys);
+
+        /// <summary>
+        /// Remove the specified keys.
+        /// </summary>
+        /// <param name="key">The key of the item to remove.</param>
+        void Remove(TKey key);
+
+        /// <summary>
+        /// Removes the specified  key value pairs.
+        /// </summary>
+        /// <param name="items">The key value pairs to remove.</param>
+        void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items);
+
+        /// <summary>
+        /// Removes the specified key value pair.
+        /// </summary>
+        /// <param name="item">The key value pair to remove.</param>
+        void Remove(KeyValuePair<TKey, TObject> item);
+
+        /// <summary>
+        /// Overload of remove due to ambiguous method when TObject and TKey are of the same type.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        void RemoveKey(TKey key);
+
+        /// <summary>
+        /// Overload of remove due to ambiguous method when TObject and TKey are of the same type.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        void RemoveKeys(IEnumerable<TKey> key);
+
+        /// <summary>
+        /// Updates using changes using the specified changeset.
+        /// </summary>
+        /// <param name="changes">The changes to update with.</param>
+        [Obsolete("Use Clone()")]
+        void Update(IChangeSet<TObject, TKey> changes);
     }
 }

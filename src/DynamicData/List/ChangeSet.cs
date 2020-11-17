@@ -1,24 +1,21 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Annotations;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    /// A set of changes which has occured since the last reported change
+    /// A set of changes which has occured since the last reported change.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
     public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     {
         /// <summary>
-        /// An empty change set
+        /// An empty change set.
         /// </summary>
         public static readonly IChangeSet<T> Empty = new ChangeSet<T>();
 
@@ -33,14 +30,14 @@ namespace DynamicData
         /// Initializes a new instance of the <see cref="ChangeSet{T}" /> class.
         /// </summary>
         /// <param name="items">The items.</param>
-        /// <exception cref="System.ArgumentNullException">items</exception>
-        public ChangeSet([NotNull] IEnumerable<Change<T>> items)
+        /// <exception cref="System.ArgumentNullException">items.</exception>
+        public ChangeSet(IEnumerable<Change<T>> items)
             : base(items)
         {
         }
 
         /// <summary>
-        ///     Gets the number of additions
+        ///     Gets the number of additions.
         /// </summary>
         public int Adds
         {
@@ -54,22 +51,29 @@ namespace DynamicData
                         case ListChangeReason.Add:
                             adds++;
                             break;
+
                         case ListChangeReason.AddRange:
                             adds += item.Range.Count;
                             break;
                     }
                 }
+
                 return adds;
             }
         }
 
         /// <summary>
-        ///     Gets the number of updates
+        ///     Gets the number of moves.
         /// </summary>
-        public int Replaced => this.Count(c => c.Reason == ListChangeReason.Replace);
+        public int Moves => this.Count(c => c.Reason == ListChangeReason.Moved);
 
         /// <summary>
-        ///     Gets the number of removes
+        ///     Gets the number of removes.
+        /// </summary>
+        public int Refreshes => this.Count(c => c.Reason == ListChangeReason.Refresh);
+
+        /// <summary>
+        ///     Gets the number of removes.
         /// </summary>
         public int Removes
         {
@@ -83,36 +87,33 @@ namespace DynamicData
                         case ListChangeReason.Remove:
                             removes++;
                             break;
+
                         case ListChangeReason.RemoveRange:
                         case ListChangeReason.Clear:
                             removes += item.Range.Count;
                             break;
                     }
                 }
+
                 return removes;
             }
         }
 
         /// <summary>
-        ///     Gets the number of removes
+        ///     Gets the number of updates.
         /// </summary>
-        public int Refreshes => this.Count(c => c.Reason == ListChangeReason.Refresh);
+        public int Replaced => this.Count(c => c.Reason == ListChangeReason.Replace);
 
         /// <summary>
-        ///     Gets the number of moves
-        /// </summary>
-        public int Moves => this.Count(c => c.Reason == ListChangeReason.Moved);
-
-        /// <summary>
-        ///     The total number if individual item changes
+        ///     Gets the total number if individual item changes.
         /// </summary>
         public int TotalChanges => Adds + Removes + Replaced + Moves;
 
         /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// Returns a <see cref="string" /> that represents this instance.
         /// </summary>
         /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
+        /// A <see cref="string" /> that represents this instance.
         /// </returns>
         public override string ToString()
         {

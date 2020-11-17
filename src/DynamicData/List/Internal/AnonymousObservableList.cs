@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -26,16 +26,16 @@ namespace DynamicData.List.Internal
             _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
         }
 
+        public int Count => _sourceList.Count;
+
         public IObservable<int> CountChanged => _sourceList.CountChanged;
 
         public IEnumerable<T> Items => _sourceList.Items;
 
-        public int Count => _sourceList.Count;
-
-        public IObservable<IChangeSet<T>> Connect(Func<T, bool> predicate = null) => _sourceList.Connect(predicate);
-
-        public IObservable<IChangeSet<T>> Preview(Func<T, bool> predicate = null) => _sourceList.Preview(predicate);
+        public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null) => _sourceList.Connect(predicate);
 
         public void Dispose() => _sourceList.Dispose();
+
+        public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null) => _sourceList.Preview(predicate);
     }
 }
