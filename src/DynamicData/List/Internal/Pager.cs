@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -41,15 +42,21 @@ namespace DynamicData.List.Internal
                                     return CheckParametersAndPage(all, paged, request);
                                 });
 
-                        var dataChanged = _source.Synchronize(locker).Select(changes => Page(all, paged, parameters, changes));
+                        var dataChanged = _source
+                            .Synchronize(locker)
+                            .Select(changes => Page(all, paged, parameters, changes));
 
-                        return requestStream.Merge(dataChanged).Where(changes => changes != null && changes.Count != 0).Select(x => x!).SubscribeSafe(observer);
+                        return requestStream
+                            .Merge(dataChanged)
+                            .Where(changes => changes is not null && changes.Count != 0)
+                            .Select(x => x!)
+                            .SubscribeSafe(observer);
                     });
         }
 
-        private static int CalculatePages(List<T> all, IPageRequest request)
+        private static int CalculatePages(ICollection all, IPageRequest? request)
         {
-            if (request.Size >= all.Count || request.Size == 0)
+            if (request is null || request.Size >= all.Count || request.Size == 0)
             {
                 return 1;
             }
@@ -67,7 +74,7 @@ namespace DynamicData.List.Internal
 
         private static PageChangeSet<T>? CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest? request)
         {
-            if (request == null || request.Page < 0 || request.Size < 1)
+            if (request is null || request.Page < 0 || request.Size < 1)
             {
                 return null;
             }
@@ -75,14 +82,9 @@ namespace DynamicData.List.Internal
             return Page(all, paged, request);
         }
 
-        private static PageChangeSet<T>? Page(List<T> all, ChangeAwareList<T> paged, IPageRequest? request, IChangeSet<T>? changeset = null)
+        private static PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T>? changeset = null)
         {
-            if (request == null || request.Page < 0 || request.Size < 1)
-            {
-                return null;
-            }
-
-            if (changeset != null)
+            if (changeset is not null)
             {
                 all.Clone(changeset);
             }
@@ -93,23 +95,26 @@ namespace DynamicData.List.Internal
             int page = request.Page > pages ? pages : request.Page;
             int skip = request.Size * (page - 1);
 
-            var current = all.Skip(skip).Take(request.Size).ToList();
+            var current = all.Skip(skip)
+                              .Take(request.Size)
+                              .ToList();
 
             var adds = current.Except(previous);
             var removes = previous.Except(current);
 
             paged.RemoveMany(removes);
 
-            adds.ForEach(
-                t =>
-                    {
-                        var index = current.IndexOf(t);
-                        paged.Insert(index, t);
-                    });
+            adds.ForEach(t =>
+            {
+                var index = current.IndexOf(t);
+                paged.Insert(index, t);
+            });
 
             var startIndex = skip;
 
-            var moves = changeset.EmptyIfNull().Where(change => change.Reason == ListChangeReason.Moved && change.MovedWithinRange(startIndex, startIndex + request.Size));
+            var moves = changeset.EmptyIfNull()
+                                 .Where(change => change.Reason == ListChangeReason.Moved
+                                                  && change.MovedWithinRange(startIndex, startIndex + request.Size));
 
             foreach (var change in moves)
             {

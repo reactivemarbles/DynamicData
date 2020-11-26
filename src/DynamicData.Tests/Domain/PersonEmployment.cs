@@ -37,7 +37,7 @@ namespace DynamicData.Tests.Domain
         {
             unchecked
             {
-                return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ (_company != null ? _company.GetHashCode() : 0);
+                return ((_name is not null ? _name.GetHashCode() : 0) * 397) ^ (_company is not null ? _company.GetHashCode() : 0);
             }
         }
     }
@@ -81,7 +81,7 @@ namespace DynamicData.Tests.Domain
         {
             unchecked
             {
-                return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Company != null ? Company.GetHashCode() : 0);
+                return ((Name is not null ? Name.GetHashCode() : 0) * 397) ^ (Company is not null ? Company.GetHashCode() : 0);
             }
         }
 

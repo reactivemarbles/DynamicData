@@ -114,7 +114,7 @@ namespace DynamicData.Cache.Internal
                         var initial = _innerCache.GetInitialUpdates(predicate);
                         var changes = Observable.Return(initial).Concat(_changes);
 
-                        return (predicate == null ? changes : changes.Filter(predicate)).NotEmpty();
+                        return (predicate is null ? changes : changes.Filter(predicate)).NotEmpty();
                     });
         }
 
@@ -133,7 +133,7 @@ namespace DynamicData.Cache.Internal
         /// <param name="editAction">The edit action.</param>
         public void Edit(Action<ICacheUpdater<TObject, TKey>> editAction)
         {
-            if (editAction == null)
+            if (editAction is null)
             {
                 throw new ArgumentNullException(nameof(editAction));
             }
@@ -158,7 +158,7 @@ namespace DynamicData.Cache.Internal
         /// <inheritdoc />
         public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
         {
-            return predicate == null ? _changesPreview : _changesPreview.Filter(predicate);
+            return predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
         }
 
         /// <summary>

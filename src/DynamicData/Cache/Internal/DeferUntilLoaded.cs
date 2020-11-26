@@ -16,7 +16,7 @@ namespace DynamicData.Cache.Internal
 
         public DeferUntilLoaded(IObservableCache<TObject, TKey> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

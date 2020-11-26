@@ -103,7 +103,7 @@ namespace DynamicData.PLinq
             catch (Exception ex)
             {
                 // only handle errors if a handler has been specified
-                if (_exceptionCallback != null)
+                if (_exceptionCallback is not null)
                 {
                     return new TransformResult(change, ex);
                 }

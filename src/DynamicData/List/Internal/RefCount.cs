@@ -36,7 +36,7 @@ namespace DynamicData.List.Internal
                             }
                         }
 
-                        if (_list == null)
+                        if (_list is null)
                         {
                             throw new InvalidOperationException("The list is null despite having reference counting.");
                         }

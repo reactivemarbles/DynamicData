@@ -27,7 +27,7 @@ namespace DynamicData
         /// <exception cref="ArgumentNullException">source.</exception>
         public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -76,12 +76,12 @@ namespace DynamicData
         /// </exception>
         public static IChangeSet<TDestination> Transform<TSource, TDestination>(this IChangeSet<TSource> source, Func<TSource, TDestination> transformer)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformer == null)
+            if (transformer is null)
             {
                 throw new ArgumentNullException(nameof(transformer));
             }
@@ -120,7 +120,7 @@ namespace DynamicData
         /// <exception cref="ArgumentNullException">source.</exception>
         internal static IEnumerable<UnifiedChange<T>> Unified<T>(this IChangeSet<T> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

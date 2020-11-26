@@ -39,7 +39,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         public SourceList(IObservable<IChangeSet<T>>? source = null)
         {
-            var loader = source == null ? Disposable.Empty : LoadFromSource(source);
+            var loader = source is null ? Disposable.Empty : LoadFromSource(source);
 
             _cleanUp = Disposable.Create(
                 () =>
@@ -94,7 +94,7 @@ namespace DynamicData
                         }
                     });
 
-            if (predicate != null)
+            if (predicate is not null)
             {
                 observable = new FilterStatic<T>(observable, predicate).Run();
             }
@@ -112,7 +112,7 @@ namespace DynamicData
         /// <inheritdoc />
         public void Edit(Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -141,7 +141,7 @@ namespace DynamicData
 
                 _editLevel--;
 
-                if (changes != null && _editLevel == 0)
+                if (changes is not null && _editLevel == 0)
                 {
                     InvokeNext(changes);
                 }
@@ -153,7 +153,7 @@ namespace DynamicData
         {
             IObservable<IChangeSet<T>> observable = _changesPreview;
 
-            if (predicate != null)
+            if (predicate is not null)
             {
                 observable = new FilterStatic<T>(observable, predicate).Run();
             }

@@ -44,7 +44,7 @@ namespace DynamicData.List.Internal
                         var dataChanged = _source.Synchronize(locker).Select(changes => Virtualise(all, virtualised, parameters, changes));
 
                         // TODO: Remove this shared state stuff ie. _parameters
-                        return requestStream.Merge(dataChanged).Where(changes => changes != null && changes.Count != 0)
+                        return requestStream.Merge(dataChanged).Where(changes => changes is not null && changes.Count != 0)
                             .Select(x => x!)
                             .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count, parameters.StartIndex, all.Count))).SubscribeSafe(observer);
                     });
@@ -52,7 +52,7 @@ namespace DynamicData.List.Internal
 
         private static IChangeSet<T>? CheckParamsAndVirtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest? request)
         {
-            if (request == null || request.StartIndex < 0 || request.Size < 1)
+            if (request is null || request.StartIndex < 0 || request.Size < 1)
             {
                 return null;
             }
@@ -62,7 +62,7 @@ namespace DynamicData.List.Internal
 
         private static IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request, IChangeSet<T>? changeset = null)
         {
-            if (changeset != null)
+            if (changeset is not null)
             {
                 all.Clone(changeset);
             }

@@ -21,7 +21,7 @@ namespace DynamicData.List.Internal
 
         public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
         {
-            if (factory == null)
+            if (factory is null)
             {
                 throw new ArgumentNullException(nameof(factory));
             }
@@ -49,7 +49,7 @@ namespace DynamicData.List.Internal
 
         private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }

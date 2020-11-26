@@ -282,12 +282,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<int> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -316,12 +316,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<long> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -338,12 +338,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<long> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long?> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -360,12 +360,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<double> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -382,12 +382,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<double> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, double?> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -404,12 +404,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<decimal> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -426,12 +426,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<decimal> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal?> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -448,12 +448,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<float> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -470,12 +470,12 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<float> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, float?> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }

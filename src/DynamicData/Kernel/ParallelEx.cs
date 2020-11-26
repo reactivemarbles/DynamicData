@@ -15,12 +15,12 @@ namespace DynamicData.Kernel
         [SuppressMessage("Design", "CA2000: Dispose SemaphoreSlim", Justification = "Captured in lambda, can cause problems.")]
         public static async Task<IEnumerable<TDestination>> SelectParallel<TSource, TDestination>(this IEnumerable<TSource> source, Func<TSource, Task<TDestination>> selector, int maximumThreads = 5)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (selector == null)
+            if (selector is null)
             {
                 throw new ArgumentNullException(nameof(selector));
             }

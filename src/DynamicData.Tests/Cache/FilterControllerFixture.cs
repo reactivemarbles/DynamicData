@@ -224,7 +224,7 @@ namespace DynamicData.Tests.Cache
             IChangeSet<Person, string>? latestChanges = null;
             using (source.Connect().Filter(_filter).Do(changes => latestChanges = changes).AsObservableCache())
             {
-                if (latestChanges == null)
+                if (latestChanges is null)
                 {
                     throw new InvalidOperationException(nameof(latestChanges));
                 }

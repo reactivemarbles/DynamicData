@@ -264,7 +264,7 @@ namespace DynamicData.Tests.Binding
             {
                 unchecked
                 {
-                    return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ (_classB is not null ? _classB.GetHashCode() : 0);
+                    return ((_name is not null ? _name.GetHashCode() : 0) * 397) ^ (_classB is not null ? _classB.GetHashCode() : 0);
                 }
             }
 

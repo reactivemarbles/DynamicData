@@ -27,7 +27,7 @@ namespace DynamicData.Binding
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<TObject>> BindToObservableList<TObject>(this IObservable<IChangeSet<TObject>> source, out IObservableList<TObject> observableList)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -58,7 +58,7 @@ namespace DynamicData.Binding
         public static IObservable<IChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out IObservableList<TObject> observableList)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -89,7 +89,7 @@ namespace DynamicData.Binding
         public static IObservable<ISortedChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out IObservableList<TObject> observableList)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

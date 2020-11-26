@@ -29,7 +29,7 @@ namespace DynamicData.Tests.Binding
             }
             else
             {
-                lastChange.Sender.Should().BeNull();
+                lastChange.Sender.Name.Should().Be("unknown");
                 (-1).Should().Be(lastChange.Value);
             }
 
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.Binding
             }
             else
             {
-                lastChange.Sender.Should().BeNull();
+                lastChange.Sender.Name.Should().Be("unknown");
                 (-1).Should().Be(lastChange.Value);
             }
 

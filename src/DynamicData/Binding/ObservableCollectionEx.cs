@@ -37,7 +37,7 @@ namespace DynamicData.Binding
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ObservableCollection<T> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -60,12 +60,12 @@ namespace DynamicData.Binding
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -83,7 +83,7 @@ namespace DynamicData.Binding
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReadOnlyObservableCollection<T> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -106,12 +106,12 @@ namespace DynamicData.Binding
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ReadOnlyObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -131,7 +131,7 @@ namespace DynamicData.Binding
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
             where TCollection : INotifyCollectionChanged, IEnumerable<T>
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -154,7 +154,7 @@ namespace DynamicData.Binding
 
                                     switch (changes.Action)
                                     {
-                                        case NotifyCollectionChangedAction.Add when changes.NewItems != null:
+                                        case NotifyCollectionChangedAction.Add when changes.NewItems is not null:
                                             {
                                                 if (changes.NewItems.Count == 1 && changes.NewItems[0] is T item)
                                                 {
@@ -168,7 +168,7 @@ namespace DynamicData.Binding
                                                 break;
                                             }
 
-                                        case NotifyCollectionChangedAction.Remove when changes.OldItems != null:
+                                        case NotifyCollectionChangedAction.Remove when changes.OldItems is not null:
                                             {
                                                 if (changes.OldItems.Count == 1)
                                                 {

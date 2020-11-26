@@ -17,7 +17,7 @@ namespace DynamicData.Cache.Internal
 
         public int Compare(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
         {
-            if (_comparer != null)
+            if (_comparer is not null)
             {
                 int result = _comparer.Compare(x.Value, y.Value);
 

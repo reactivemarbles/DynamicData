@@ -52,7 +52,7 @@ namespace DynamicData.Cache.Internal
                         long orderItemWasAdded = -1;
                         var locker = new object();
 
-                        if (_expireAfter == null && _limitSizeTo < 1)
+                        if (_expireAfter is null && _limitSizeTo < 1)
                         {
                             return _source.Scan(
                                 new ChangeAwareCache<TObject, TKey>(),
@@ -112,7 +112,7 @@ namespace DynamicData.Cache.Internal
                                     return state;
                                 }).Select(state => state.CaptureChanges()).Publish();
 
-                        var timeLimited = (_expireAfter == null ? Observable.Never<IChangeSet<ExpirableItem<TObject, TKey>, TKey>>() : sizeLimited).Filter(ei => ei.ExpireAt != DateTime.MaxValue).MergeMany(
+                        var timeLimited = (_expireAfter is null ? Observable.Never<IChangeSet<ExpirableItem<TObject, TKey>, TKey>>() : sizeLimited).Filter(ei => ei.ExpireAt != DateTime.MaxValue).MergeMany(
                             grouping =>
                                 {
                                     var expireAt = grouping.ExpireAt.Subtract(_scheduler.Now.DateTime);

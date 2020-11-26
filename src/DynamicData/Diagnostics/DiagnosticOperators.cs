@@ -23,7 +23,7 @@ namespace DynamicData.Diagnostics
         public static IObservable<ChangeSummary> CollectUpdateStats<TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -55,7 +55,7 @@ namespace DynamicData.Diagnostics
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<ChangeSummary> CollectUpdateStats<TSource>(this IObservable<IChangeSet<TSource>> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

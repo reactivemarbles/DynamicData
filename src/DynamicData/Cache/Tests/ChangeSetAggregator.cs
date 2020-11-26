@@ -13,7 +13,7 @@ using DynamicData.Diagnostics;
 namespace DynamicData.Tests
 {
     /// <summary>
-    /// Aggregates all events and statistics for a changeset to help assertions when testing.
+    /// Aggregates all events and statistics for a change set to help assertions when testing.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>

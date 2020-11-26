@@ -44,7 +44,7 @@ namespace DynamicData.Cache.Internal
                                 case ChangeReason.Update:
                                     {
                                         TDestination transformed;
-                                        if (_exceptionCallback != null)
+                                        if (_exceptionCallback is not null)
                                         {
                                             try
                                             {
@@ -92,7 +92,7 @@ namespace DynamicData.Cache.Internal
 
                         return cache;
                     })
-                .Where(x => x != null)
+                .Where(x => x is not null)
                 .Select(cache => cache!.CaptureChanges())
                 .NotEmpty();
         }

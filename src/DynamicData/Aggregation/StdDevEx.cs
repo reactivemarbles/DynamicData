@@ -226,27 +226,27 @@ namespace DynamicData.Aggregation
 
         private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction, Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction, Func<StdDev<TValue>, TResult> resultAction)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            if (addAction == null)
+            if (addAction is null)
             {
                 throw new ArgumentNullException(nameof(addAction));
             }
 
-            if (removeAction == null)
+            if (removeAction is null)
             {
                 throw new ArgumentNullException(nameof(removeAction));
             }
 
-            if (resultAction == null)
+            if (resultAction is null)
             {
                 throw new ArgumentNullException(nameof(resultAction));
             }

@@ -28,7 +28,7 @@ namespace DynamicData.Cache.Internal
 
         public Sort(IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject>? comparer, SortOptimisations sortOptimisations = SortOptimisations.None, IObservable<IComparer<TObject>>? comparerChangedObservable = null, IObservable<Unit>? resorter = null, int resetThreshold = -1)
         {
-            if (comparer == null && comparerChangedObservable == null)
+            if (comparer is null && comparerChangedObservable is null)
             {
                 throw new ArgumentException("Must specify comparer or comparerChangedObservable");
             }
@@ -50,9 +50,9 @@ namespace DynamicData.Cache.Internal
                         var locker = new object();
 
                         // check for nulls so we can prevent a lock when not required
-                        if (_comparerChangedObservable == null && _resorter == null)
+                        if (_comparerChangedObservable is null && _resorter is null)
                         {
-                            return _source.Select(sorter.Sort).Where(result => result != null).Select(x => x!).SubscribeSafe(observer);
+                            return _source.Select(sorter.Sort).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
                         }
 
                         var comparerChanged = (_comparerChangedObservable ?? Observable.Never<IComparer<TObject>>()).Synchronize(locker).Select(sorter.Sort);
@@ -61,7 +61,7 @@ namespace DynamicData.Cache.Internal
 
                         var dataChanged = _source.Synchronize(locker).Select(sorter.Sort);
 
-                        return comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result != null).Select(x => x!).SubscribeSafe(observer);
+                        return comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
                     });
         }
 
@@ -128,7 +128,7 @@ namespace DynamicData.Cache.Internal
             /// <returns>The sorted change set.</returns>
             private ISortedChangeSet<TObject, TKey>? DoSort(SortReason sortReason, IChangeSet<TObject, TKey>? changes = null)
             {
-                if (changes != null)
+                if (changes is not null)
                 {
                     _cache.Clone(changes);
                     changes = _cache.CaptureChanges();
@@ -146,7 +146,7 @@ namespace DynamicData.Cache.Internal
                     sortReason = SortReason.InitialLoad;
                     _initialised = true;
                 }
-                else if (changes != null && (_resetThreshold > 0 && changes.Count >= _resetThreshold))
+                else if (changes is not null && (_resetThreshold > 0 && changes.Count >= _resetThreshold))
                 {
                     sortReason = SortReason.Reset;
                 }
@@ -184,7 +184,7 @@ namespace DynamicData.Cache.Internal
                                 throw new InvalidOperationException("The calculator has not been initialized");
                             }
 
-                            if (changes == null)
+                            if (changes is null)
                             {
                                 throw new InvalidOperationException("Data has been indicated as changed, but changes is null.");
                             }

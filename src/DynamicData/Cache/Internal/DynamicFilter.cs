@@ -79,7 +79,7 @@ namespace DynamicData.Cache.Internal
                                     observable.OnNext(latest);
                                 });
 
-                        var reapplier = _refilterObservable == null ? Disposable.Empty : _refilterObservable.Subscribe(_ => observable.OnNext(latest));
+                        var reapplier = _refilterObservable is null ? Disposable.Empty : _refilterObservable.Subscribe(_ => observable.OnNext(latest));
 
                         return new CompositeDisposable(predicateChanged, reapplier);
                     });

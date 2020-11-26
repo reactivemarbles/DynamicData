@@ -221,7 +221,7 @@ namespace DynamicData.Tests.Cache
 
             public override int GetHashCode()
             {
-                return (Name != null ? Name.GetHashCode() : 0);
+                return (Name is not null ? Name.GetHashCode() : 0);
             }
 
             public override string ToString()

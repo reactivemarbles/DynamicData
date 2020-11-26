@@ -154,7 +154,7 @@ namespace DynamicData.Tests.List
         {
             public bool Equals(ProjectedNestedChild? x, ProjectedNestedChild? y)
             {
-                if (x == null || y == null)
+                if (x is null || y is null)
                     return false;
 
                 return x.Child.Name == y.Child.Name;

@@ -36,7 +36,7 @@ namespace DynamicData.Binding
         /// <inheritdoc />
         public void Adapt(ISortedChangeSet<TObject, TKey> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }

@@ -25,7 +25,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Cast<TSource, TKey, TDestination>(this IObservableCache<TSource, TKey> source, Func<TSource, TDestination> converter)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

@@ -41,7 +41,7 @@ namespace DynamicData.Cache.Internal
                         var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
                         var transformer = _source.SelectMany(changes => DoTransform(cache, changes));
 
-                        if (_forceTransform != null)
+                        if (_forceTransform is not null)
                         {
                             var locker = new object();
                             var forced = _forceTransform.Synchronize(locker).SelectMany(shouldTransform => DoTransform(cache, shouldTransform));
@@ -119,7 +119,7 @@ namespace DynamicData.Cache.Internal
             catch (Exception ex)
             {
                 // only handle errors if a handler has been specified
-                if (_exceptionCallback != null)
+                if (_exceptionCallback is not null)
                 {
                     return new TransformResult(change, ex);
                 }

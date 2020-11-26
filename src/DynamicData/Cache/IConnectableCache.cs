@@ -4,6 +4,7 @@
 
 using System;
 
+// ReSharper disable CheckNamespace
 namespace DynamicData
 {
     /// <summary>

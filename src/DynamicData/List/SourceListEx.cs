@@ -24,12 +24,12 @@ namespace DynamicData
         /// <returns>An observable which emits that change set.</returns>
         public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>(this ISourceList<TSource> source, Func<TSource, TDestination> conversionFactory)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (conversionFactory == null)
+            if (conversionFactory is null)
             {
                 throw new ArgumentNullException(nameof(conversionFactory));
             }

@@ -46,12 +46,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Adapt<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IChangeSetAdaptor<TObject, TKey> adaptor)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (adaptor == null)
+            if (adaptor is null)
             {
                 throw new ArgumentNullException(nameof(adaptor));
             }
@@ -75,12 +75,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Adapt<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, ISortedChangeSetAdaptor<TObject, TKey> adaptor)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (adaptor == null)
+            if (adaptor is null)
             {
                 throw new ArgumentNullException(nameof(adaptor));
             }
@@ -99,7 +99,7 @@ namespace DynamicData
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -119,7 +119,7 @@ namespace DynamicData
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item, IEqualityComparer<TObject> equalityComparer)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -140,7 +140,7 @@ namespace DynamicData
         public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -161,12 +161,12 @@ namespace DynamicData
         public static void AddOrUpdate<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TObject item, TKey key)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (item == null)
+            if (item is null)
             {
                 throw new ArgumentNullException(nameof(item));
             }
@@ -187,12 +187,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (others == null || others.Length == 0)
+            if (others is null || others.Length == 0)
             {
                 throw new ArgumentNullException(nameof(others));
             }
@@ -215,7 +215,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -234,7 +234,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -253,7 +253,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -272,7 +272,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -291,7 +291,7 @@ namespace DynamicData
         public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservableCache<TObject, TKey> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -311,7 +311,7 @@ namespace DynamicData
         public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, bool applyLocking = true)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -338,7 +338,7 @@ namespace DynamicData
             where TKey : notnull
             where TObject : INotifyPropertyChanged
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -346,7 +346,7 @@ namespace DynamicData
             return source.AutoRefreshOnObservable(
                 (t, v) =>
                     {
-                        if (propertyChangeThrottle == null)
+                        if (propertyChangeThrottle is null)
                         {
                             return t.WhenAnyPropertyChanged();
                         }
@@ -373,7 +373,7 @@ namespace DynamicData
             where TKey : notnull
             where TObject : INotifyPropertyChanged
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -381,7 +381,7 @@ namespace DynamicData
             return source.AutoRefreshOnObservable(
                 (t, v) =>
                     {
-                        if (propertyChangeThrottle == null)
+                        if (propertyChangeThrottle is null)
                         {
                             return t.WhenPropertyChanged(propertyAccessor, false);
                         }
@@ -423,12 +423,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (reevaluator == null)
+            if (reevaluator is null)
             {
                 throw new ArgumentNullException(nameof(reevaluator));
             }
@@ -451,7 +451,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Batch<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TimeSpan timeSpan, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -528,12 +528,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, TimeSpan? timeOut = null, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (pauseIfTrueSelector == null)
+            if (pauseIfTrueSelector is null)
             {
                 throw new ArgumentNullException(nameof(pauseIfTrueSelector));
             }
@@ -572,12 +572,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (destination == null)
+            if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }
@@ -599,17 +599,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, IObservableCollectionAdaptor<TObject, TKey> updater)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (destination == null)
+            if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }
 
-            if (updater == null)
+            if (updater is null)
             {
                 throw new ArgumentNullException(nameof(updater));
             }
@@ -639,12 +639,12 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (destination == null)
+            if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }
@@ -666,17 +666,17 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, ISortedObservableCollectionAdaptor<TObject, TKey> updater)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (destination == null)
+            if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }
 
-            if (updater == null)
+            if (updater is null)
             {
                 throw new ArgumentNullException(nameof(updater));
             }
@@ -708,7 +708,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, ISortedObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -734,7 +734,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, IObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -765,12 +765,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = 25)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (bindingList == null)
+            if (bindingList is null)
             {
                 throw new ArgumentNullException(nameof(bindingList));
             }
@@ -799,12 +799,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = 25)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (bindingList == null)
+            if (bindingList is null)
             {
                 throw new ArgumentNullException(nameof(bindingList));
             }
@@ -848,7 +848,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Cast<TSource, TKey, TDestination>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> converter)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -869,12 +869,12 @@ namespace DynamicData
             where TSourceKey : notnull
             where TDestinationKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -901,12 +901,12 @@ namespace DynamicData
             where TSourceKey : notnull
             where TDestinationKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -929,7 +929,7 @@ namespace DynamicData
         public static void Clear<TObject, TKey>(this ISourceCache<TObject, TKey> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -947,7 +947,7 @@ namespace DynamicData
         public static void Clear<TObject, TKey>(this IIntermediateCache<TObject, TKey> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -965,7 +965,7 @@ namespace DynamicData
         public static void Clear<TObject, TKey>(this LockFreeObservableCache<TObject, TKey> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -984,12 +984,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Clone<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ICollection<TObject> target)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (target == null)
+            if (target is null)
             {
                 throw new ArgumentNullException(nameof(target));
             }
@@ -1038,12 +1038,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Convert<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TDestination> conversionFactory)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (conversionFactory == null)
+            if (conversionFactory is null)
             {
                 throw new ArgumentNullException(nameof(conversionFactory));
             }
@@ -1066,7 +1066,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1084,7 +1084,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> DeferUntilLoaded<TObject, TKey>(this IObservableCache<TObject, TKey> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1106,7 +1106,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1137,12 +1137,12 @@ namespace DynamicData
             where TKey : notnull
             where TValue : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -1163,17 +1163,17 @@ namespace DynamicData
         public static void EditDiff<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> allItems, IEqualityComparer<TObject> equalityComparer)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (allItems == null)
+            if (allItems is null)
             {
                 throw new ArgumentNullException(nameof(allItems));
             }
 
-            if (equalityComparer == null)
+            if (equalityComparer is null)
             {
                 throw new ArgumentNullException(nameof(equalityComparer));
             }
@@ -1194,17 +1194,17 @@ namespace DynamicData
         public static void EditDiff<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> allItems, Func<TObject, TObject, bool> areItemsEqual)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (allItems == null)
+            if (allItems is null)
             {
                 throw new ArgumentNullException(nameof(allItems));
             }
 
-            if (areItemsEqual == null)
+            if (areItemsEqual is null)
             {
                 throw new ArgumentNullException(nameof(areItemsEqual));
             }
@@ -1225,7 +1225,7 @@ namespace DynamicData
         public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1245,7 +1245,7 @@ namespace DynamicData
         public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1264,7 +1264,7 @@ namespace DynamicData
         public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1289,12 +1289,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (others == null || others.Length == 0)
+            if (others is null || others.Length == 0)
             {
                 throw new ArgumentNullException(nameof(others));
             }
@@ -1318,7 +1318,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -1337,7 +1337,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -1356,7 +1356,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -1375,7 +1375,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Except<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -1421,12 +1421,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, IScheduler scheduler)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (timeSelector == null)
+            if (timeSelector is null)
             {
                 throw new ArgumentNullException(nameof(timeSelector));
             }
@@ -1474,12 +1474,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (timeSelector == null)
+            if (timeSelector is null)
             {
                 throw new ArgumentNullException(nameof(timeSelector));
             }
@@ -1547,12 +1547,12 @@ namespace DynamicData
         public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler? scheduler)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (timeSelector == null)
+            if (timeSelector is null)
             {
                 throw new ArgumentNullException(nameof(timeSelector));
             }
@@ -1596,7 +1596,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1615,12 +1615,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (predicateChanged == null)
+            if (predicateChanged is null)
             {
                 throw new ArgumentNullException(nameof(predicateChanged));
             }
@@ -1639,12 +1639,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Unit> reapplyFilter)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (reapplyFilter == null)
+            if (reapplyFilter is null)
             {
                 throw new ArgumentNullException(nameof(reapplyFilter));
             }
@@ -1665,17 +1665,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit> reapplyFilter)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (predicateChanged == null)
+            if (predicateChanged is null)
             {
                 throw new ArgumentNullException(nameof(predicateChanged));
             }
 
-            if (reapplyFilter == null)
+            if (reapplyFilter is null)
             {
                 throw new ArgumentNullException(nameof(reapplyFilter));
             }
@@ -1702,17 +1702,17 @@ namespace DynamicData
             where TKey : notnull
             where TObject : INotifyPropertyChanged
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (propertySelector == null)
+            if (propertySelector is null)
             {
                 throw new ArgumentNullException(nameof(propertySelector));
             }
 
-            if (predicate == null)
+            if (predicate is null)
             {
                 throw new ArgumentNullException(nameof(predicate));
             }
@@ -1731,12 +1731,12 @@ namespace DynamicData
         [Obsolete("This can cause unhandled exception issues so do not use")]
         public static IObservable<T> FinallySafe<T>(this IObservable<T> source, Action finallyAction)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (finallyAction == null)
+            if (finallyAction is null)
             {
                 throw new ArgumentNullException(nameof(finallyAction));
             }
@@ -1755,7 +1755,7 @@ namespace DynamicData
         public static IObservable<Change<TObject, TKey>> Flatten<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1773,7 +1773,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> FlattenBufferResult<TObject, TKey>(this IObservable<IList<IChangeSet<TObject, TKey>>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -1792,12 +1792,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ForEachChange<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<Change<TObject, TKey>> action)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (action == null)
+            if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));
             }
@@ -1823,22 +1823,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -1864,22 +1864,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -1905,22 +1905,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -1946,22 +1946,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -1989,17 +1989,17 @@ namespace DynamicData
             where TKey : notnull
             where TGroupKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (groupSelector == null)
+            if (groupSelector is null)
             {
                 throw new ArgumentNullException(nameof(groupSelector));
             }
 
-            if (resultGroupSource == null)
+            if (resultGroupSource is null)
             {
                 throw new ArgumentNullException(nameof(resultGroupSource));
             }
@@ -2020,12 +2020,12 @@ namespace DynamicData
             where TKey : notnull
             where TGroupKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (groupSelectorKey == null)
+            if (groupSelectorKey is null)
             {
                 throw new ArgumentNullException(nameof(groupSelectorKey));
             }
@@ -2054,17 +2054,17 @@ namespace DynamicData
             where TKey : notnull
             where TGroupKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (groupSelectorKey == null)
+            if (groupSelectorKey is null)
             {
                 throw new ArgumentNullException(nameof(groupSelectorKey));
             }
 
-            if (regrouper == null)
+            if (regrouper is null)
             {
                 throw new ArgumentNullException(nameof(regrouper));
             }
@@ -2090,12 +2090,12 @@ namespace DynamicData
             where TKey : notnull
             where TGroupKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (propertySelector == null)
+            if (propertySelector is null)
             {
                 throw new ArgumentNullException(nameof(propertySelector));
             }
@@ -2121,12 +2121,12 @@ namespace DynamicData
             where TKey : notnull
             where TGroupKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (propertySelector == null)
+            if (propertySelector is null)
             {
                 throw new ArgumentNullException(nameof(propertySelector));
             }
@@ -2155,12 +2155,12 @@ namespace DynamicData
             where TKey : notnull
             where TGroupKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (groupSelectorKey == null)
+            if (groupSelectorKey is null)
             {
                 throw new ArgumentNullException(nameof(groupSelectorKey));
             }
@@ -2222,12 +2222,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> IncludeUpdateWhen<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TObject, bool> includeFunction)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (includeFunction == null)
+            if (includeFunction is null)
             {
                 throw new ArgumentNullException(nameof(includeFunction));
             }
@@ -2258,22 +2258,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -2299,22 +2299,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -2340,22 +2340,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -2381,22 +2381,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -2435,22 +2435,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -2475,22 +2475,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -2516,22 +2516,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -2557,22 +2557,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -2594,7 +2594,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, int size)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -2622,7 +2622,7 @@ namespace DynamicData
         public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this ISourceCache<TObject, TKey> source, int sizeLimit, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -2670,12 +2670,12 @@ namespace DynamicData
         public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (observableSelector == null)
+            if (observableSelector is null)
             {
                 throw new ArgumentNullException(nameof(observableSelector));
             }
@@ -2699,12 +2699,12 @@ namespace DynamicData
         public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (observableSelector == null)
+            if (observableSelector is null)
             {
                 throw new ArgumentNullException(nameof(observableSelector));
             }
@@ -2728,12 +2728,12 @@ namespace DynamicData
         public static IObservable<ItemWithValue<TObject, TDestination>> MergeManyItems<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (observableSelector == null)
+            if (observableSelector is null)
             {
                 throw new ArgumentNullException(nameof(observableSelector));
             }
@@ -2757,12 +2757,12 @@ namespace DynamicData
         public static IObservable<ItemWithValue<TObject, TDestination>> MergeManyItems<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (observableSelector == null)
+            if (observableSelector is null)
             {
                 throw new ArgumentNullException(nameof(observableSelector));
             }
@@ -2793,7 +2793,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> NotEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -2812,12 +2812,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> OnItemAdded<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> addAction)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (addAction == null)
+            if (addAction is null)
             {
                 throw new ArgumentNullException(nameof(addAction));
             }
@@ -2841,12 +2841,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (removeAction == null)
+            if (removeAction is null)
             {
                 throw new ArgumentNullException(nameof(removeAction));
             }
@@ -2865,12 +2865,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> OnItemUpdated<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject, TObject> updateAction)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -2894,12 +2894,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (others == null || others.Length == 0)
+            if (others is null || others.Length == 0)
             {
                 throw new ArgumentNullException(nameof(others));
             }
@@ -2922,7 +2922,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -2941,7 +2941,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -2960,7 +2960,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -2979,7 +2979,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Or<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -2998,12 +2998,12 @@ namespace DynamicData
         public static IObservable<IPagedChangeSet<TObject, TKey>> Page<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (pageRequests == null)
+            if (pageRequests is null)
             {
                 throw new ArgumentNullException(nameof(pageRequests));
             }
@@ -3027,7 +3027,7 @@ namespace DynamicData
         public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<IEnumerable<TObject>> observable)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3051,7 +3051,7 @@ namespace DynamicData
         public static IDisposable PopulateFrom<TObject, TKey>(this ISourceCache<TObject, TKey> source, IObservable<TObject> observable)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3075,12 +3075,12 @@ namespace DynamicData
         public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, ISourceCache<TObject, TKey> destination)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (destination == null)
+            if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }
@@ -3102,12 +3102,12 @@ namespace DynamicData
         public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> destination)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (destination == null)
+            if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }
@@ -3126,12 +3126,12 @@ namespace DynamicData
         public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, LockFreeObservableCache<TObject, TKey> destination)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (destination == null)
+            if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }
@@ -3156,12 +3156,12 @@ namespace DynamicData
         public static IObservable<TDestination> QueryWhenChanged<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<IQuery<TObject, TKey>, TDestination> resultSelector)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -3180,7 +3180,7 @@ namespace DynamicData
         public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3201,12 +3201,12 @@ namespace DynamicData
         public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> itemChangedTrigger)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (itemChangedTrigger == null)
+            if (itemChangedTrigger is null)
             {
                 throw new ArgumentNullException(nameof(itemChangedTrigger));
             }
@@ -3224,7 +3224,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> RefCount<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3243,7 +3243,7 @@ namespace DynamicData
         public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3262,7 +3262,7 @@ namespace DynamicData
         public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3280,7 +3280,7 @@ namespace DynamicData
         public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3301,7 +3301,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3321,7 +3321,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3342,7 +3342,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3363,7 +3363,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3383,7 +3383,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TKey key)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3404,7 +3404,7 @@ namespace DynamicData
         public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, IEnumerable<TKey> keys)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3425,7 +3425,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject>> RemoveKey<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3450,7 +3450,7 @@ namespace DynamicData
         public static void RemoveKey<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3470,7 +3470,7 @@ namespace DynamicData
         public static void RemoveKeys<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3495,22 +3495,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -3535,22 +3535,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -3576,22 +3576,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -3617,22 +3617,22 @@ namespace DynamicData
             where TLeftKey : notnull
             where TRightKey : notnull
         {
-            if (left == null)
+            if (left is null)
             {
                 throw new ArgumentNullException(nameof(left));
             }
 
-            if (right == null)
+            if (right is null)
             {
                 throw new ArgumentNullException(nameof(right));
             }
 
-            if (rightKeySelector == null)
+            if (rightKeySelector is null)
             {
                 throw new ArgumentNullException(nameof(rightKeySelector));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }
@@ -3651,7 +3651,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> SkipInitial<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3679,12 +3679,12 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (comparer == null)
+            if (comparer is null)
             {
                 throw new ArgumentNullException(nameof(comparer));
             }
@@ -3705,12 +3705,12 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IComparer<TObject>> comparerObservable, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (comparerObservable == null)
+            if (comparerObservable is null)
             {
                 throw new ArgumentNullException(nameof(comparerObservable));
             }
@@ -3732,12 +3732,12 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IComparer<TObject>> comparerObservable, IObservable<Unit> resorter, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (comparerObservable == null)
+            if (comparerObservable is null)
             {
                 throw new ArgumentNullException(nameof(comparerObservable));
             }
@@ -3759,12 +3759,12 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> Sort<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, IObservable<Unit> resorter, SortOptimisations sortOptimisations = SortOptimisations.None, int resetThreshold = DefaultSortResetThreshold)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (resorter == null)
+            if (resorter is null)
             {
                 throw new ArgumentNullException(nameof(resorter));
             }
@@ -3877,7 +3877,7 @@ namespace DynamicData
             where TObject : IKey<TKey>
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3897,7 +3897,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> StartWithItem<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TObject item, TKey key)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -3923,12 +3923,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (subscriptionFactory == null)
+            if (subscriptionFactory is null)
             {
                 throw new ArgumentNullException(nameof(subscriptionFactory));
             }
@@ -3953,12 +3953,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (subscriptionFactory == null)
+            if (subscriptionFactory is null)
             {
                 throw new ArgumentNullException(nameof(subscriptionFactory));
             }
@@ -3994,7 +3994,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservableCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -4017,7 +4017,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Switch<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -4056,12 +4056,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<TObject> source, Func<TObject, TKey> keySelector, Func<TObject, TimeSpan?>? expireAfter = null, int limitSizeTo = -1, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -4087,12 +4087,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, Func<TObject, TimeSpan?>? expireAfter = null, int limitSizeTo = -1, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -4113,7 +4113,7 @@ namespace DynamicData
         public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, int size)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -4140,12 +4140,12 @@ namespace DynamicData
         public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, int size)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (comparer == null)
+            if (comparer is null)
             {
                 throw new ArgumentNullException(nameof(comparer));
             }
@@ -4213,12 +4213,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, bool transformOnRefresh)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -4244,12 +4244,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, bool transformOnRefresh)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -4275,12 +4275,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, bool transformOnRefresh)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -4306,12 +4306,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Func<TSource, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -4337,12 +4337,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -4368,17 +4368,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (forceTransform != null)
+            if (forceTransform is not null)
             {
                 return new TransformWithForcedTransform<TDestination, TSource, TKey>(source, transformFactory, forceTransform).Run();
             }
@@ -4425,17 +4425,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (forceTransform == null)
+            if (forceTransform is null)
             {
                 throw new ArgumentNullException(nameof(forceTransform));
             }
@@ -4461,17 +4461,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (forceTransform == null)
+            if (forceTransform is null)
             {
                 throw new ArgumentNullException(nameof(forceTransform));
             }
@@ -4498,12 +4498,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null, int maximumConcurrency = 1)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -4530,12 +4530,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -4562,12 +4562,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -4649,17 +4649,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
@@ -4687,17 +4687,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
@@ -4725,22 +4725,22 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
 
-            if (forceTransform != null)
+            if (forceTransform is not null)
             {
                 return new TransformWithForcedTransform<TDestination, TSource, TKey>(source, transformFactory, forceTransform, errorHandler).Run();
             }
@@ -4791,17 +4791,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (forceTransform == null)
+            if (forceTransform is null)
             {
                 throw new ArgumentNullException(nameof(forceTransform));
             }
@@ -4829,17 +4829,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (forceTransform == null)
+            if (forceTransform is null)
             {
                 throw new ArgumentNullException(nameof(forceTransform));
             }
@@ -4867,17 +4867,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null, int maximumConcurrency = 1)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
@@ -4905,17 +4905,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
@@ -4943,17 +4943,17 @@ namespace DynamicData
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
@@ -4974,12 +4974,12 @@ namespace DynamicData
             where TKey : notnull
             where TObject : class
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (pivotOn == null)
+            if (pivotOn is null)
             {
                 throw new ArgumentNullException(nameof(pivotOn));
             }
@@ -4997,7 +4997,7 @@ namespace DynamicData
         public static IObservable<ISortedChangeSet<TObject, TKey>> TreatMovesAsRemoveAdd<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -5113,17 +5113,17 @@ namespace DynamicData
         public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TValue, bool> equalityCondition)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (observableSelector == null)
+            if (observableSelector is null)
             {
                 throw new ArgumentNullException(nameof(observableSelector));
             }
 
-            if (equalityCondition == null)
+            if (equalityCondition is null)
             {
                 throw new ArgumentNullException(nameof(equalityCondition));
             }
@@ -5157,12 +5157,12 @@ namespace DynamicData
         public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (virtualRequests == null)
+            if (virtualRequests is null)
             {
                 throw new ArgumentNullException(nameof(virtualRequests));
             }
@@ -5181,7 +5181,7 @@ namespace DynamicData
         public static IObservable<Change<TObject, TKey>> Watch<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -5201,7 +5201,7 @@ namespace DynamicData
         public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservableCache<TObject, TKey> source, TKey key)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -5221,7 +5221,7 @@ namespace DynamicData
         public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -5241,7 +5241,7 @@ namespace DynamicData
             where TKey : notnull
             where TObject : INotifyPropertyChanged
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -5263,12 +5263,12 @@ namespace DynamicData
             where TKey : notnull
             where TObject : INotifyPropertyChanged
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (propertyAccessor == null)
+            if (propertyAccessor is null)
             {
                 throw new ArgumentNullException(nameof(propertyAccessor));
             }
@@ -5290,12 +5290,12 @@ namespace DynamicData
             where TKey : notnull
             where TObject : INotifyPropertyChanged
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (propertyAccessor == null)
+            if (propertyAccessor is null)
             {
                 throw new ArgumentNullException(nameof(propertyAccessor));
             }
@@ -5316,7 +5316,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> WhereReasonsAre<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params ChangeReason[] reasons)
             where TKey : notnull
         {
-            if (reasons == null)
+            if (reasons is null)
             {
                 throw new ArgumentNullException(nameof(reasons));
             }
@@ -5344,7 +5344,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> WhereReasonsAreNot<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params ChangeReason[] reasons)
             where TKey : notnull
         {
-            if (reasons == null)
+            if (reasons is null)
             {
                 throw new ArgumentNullException(nameof(reasons));
             }
@@ -5376,12 +5376,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (others == null || others.Length == 0)
+            if (others is null || others.Length == 0)
             {
                 throw new ArgumentNullException(nameof(others));
             }
@@ -5405,7 +5405,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -5424,7 +5424,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -5443,7 +5443,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -5462,7 +5462,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Xor<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> sources)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -5495,7 +5495,7 @@ namespace DynamicData
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> source, CombineOperator type)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -5512,7 +5512,7 @@ namespace DynamicData
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservableList<ISourceCache<TObject, TKey>> source, CombineOperator type)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -5529,7 +5529,7 @@ namespace DynamicData
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -5540,7 +5540,7 @@ namespace DynamicData
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> sources, CombineOperator type)
             where TKey : notnull
         {
-            if (sources == null)
+            if (sources is null)
             {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -5579,7 +5579,7 @@ namespace DynamicData
         private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, CombineOperator type, params IObservable<IChangeSet<TObject, TKey>>[] combinetarget)
             where TKey : notnull
         {
-            if (combinetarget == null)
+            if (combinetarget is null)
             {
                 throw new ArgumentNullException(nameof(combinetarget));
             }

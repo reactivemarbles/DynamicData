@@ -26,7 +26,7 @@ namespace DynamicData.Cache.Internal
                 (ChangeAwareCache<TObject, TKey>?)null,
                 (cache, changes) =>
                     {
-                        if (cache == null)
+                        if (cache is null)
                         {
                             cache = new ChangeAwareCache<TObject, TKey>(changes.Count);
                         }

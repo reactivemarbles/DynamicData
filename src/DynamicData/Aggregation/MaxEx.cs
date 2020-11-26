@@ -94,12 +94,12 @@ namespace DynamicData.Aggregation
         private static IObservable<TResult> Calculate<TObject, TResult>(this IObservable<ChangesAndCollection<TObject>> source, Func<TObject, TResult> valueSelector, MaxOrMin maxOrMin, TResult emptyValue = default(TResult))
             where TResult : struct, IComparable<TResult>
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -161,7 +161,7 @@ namespace DynamicData.Aggregation
         private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -177,7 +177,7 @@ namespace DynamicData.Aggregation
 
         private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

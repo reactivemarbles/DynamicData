@@ -28,7 +28,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public IntermediateCache(IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

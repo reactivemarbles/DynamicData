@@ -42,7 +42,7 @@ namespace DynamicData.List.Internal
             return Observable.Create<IChangeSet<T>>(
                 observer =>
                     {
-                        if (_expireAfter == null && _limitSizeTo < 1)
+                        if (_expireAfter is null && _limitSizeTo < 1)
                         {
                             return _source.Scan(
                                 new ChangeAwareList<T>(),
@@ -93,7 +93,7 @@ namespace DynamicData.List.Internal
                                     return state;
                                 }).Select(state => state.CaptureChanges()).Publish();
 
-                        var timeLimited = (_expireAfter == null ? Observable.Never<IChangeSet<ExpirableItem<T>>>() : sizeLimited).Filter(ei => ei.ExpireAt != DateTime.MaxValue).GroupWithImmutableState(ei => ei.ExpireAt).MergeMany(
+                        var timeLimited = (_expireAfter is null ? Observable.Never<IChangeSet<ExpirableItem<T>>>() : sizeLimited).Filter(ei => ei.ExpireAt != DateTime.MaxValue).GroupWithImmutableState(ei => ei.ExpireAt).MergeMany(
                             grouping =>
                                 {
                                     var expireAt = grouping.Key.Subtract(_scheduler.Now.DateTime);

@@ -36,14 +36,14 @@ namespace DynamicData.Kernel
         {
             get
             {
-                if (_value != null)
+                if (_value is not null)
                 {
                     return _value;
                 }
 
                 lock (_locker)
                 {
-                    if (_value == null)
+                    if (_value is null)
                     {
                         _value = _factory();
                     }

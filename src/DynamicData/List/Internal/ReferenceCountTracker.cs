@@ -29,7 +29,7 @@ namespace DynamicData.List.Internal
         /// <param name="item">The item to add.</param>
         public bool Add(T item)
         {
-            if (item == null)
+            if (item is null)
             {
                 throw new ArgumentNullException(nameof(item));
             }
@@ -60,7 +60,7 @@ namespace DynamicData.List.Internal
         /// <param name="item">The item to remove.</param>
         public bool Remove(T item)
         {
-            if (item == null)
+            if (item is null)
             {
                 throw new ArgumentNullException(nameof(item));
             }

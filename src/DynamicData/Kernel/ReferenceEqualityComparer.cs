@@ -17,7 +17,7 @@ namespace DynamicData.Kernel
 
         public int GetHashCode(T? obj)
         {
-            return obj == null ? 0 : obj.GetHashCode();
+            return obj is null ? 0 : obj.GetHashCode();
         }
     }
 }

@@ -42,7 +42,7 @@ namespace DynamicData.List.Internal
 
         public IChangeSet<T> Write(IChangeSet<T> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
@@ -60,7 +60,7 @@ namespace DynamicData.List.Internal
 
         public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -87,7 +87,7 @@ namespace DynamicData.List.Internal
         /// <param name="updateAction">The action to perform on the list.</param>
         public void WriteNested(Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -105,12 +105,12 @@ namespace DynamicData.List.Internal
 
         public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
 
-            if (previewHandler == null)
+            if (previewHandler is null)
             {
                 throw new ArgumentNullException(nameof(previewHandler));
             }

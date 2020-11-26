@@ -46,7 +46,7 @@ namespace DynamicData.List.Internal
                         var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
                         IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> regrouper;
-                        if (_regrouper == null)
+                        if (_regrouper is null)
                         {
                             regrouper = Observable.Never<IChangeSet<IGroup<TObject, TGroupKey>>>();
                         }

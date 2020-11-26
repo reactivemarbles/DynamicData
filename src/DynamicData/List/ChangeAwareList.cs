@@ -43,7 +43,7 @@ namespace DynamicData
         /// <param name="items">The items to seed the change aware list with.</param>
         public ChangeAwareList(IEnumerable<T> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -66,7 +66,7 @@ namespace DynamicData
         /// <param name="copyChanges">Should the list of changes also be copied over?.</param>
         public ChangeAwareList(ChangeAwareList<T> list, bool copyChanges)
         {
-            if (list == null)
+            if (list is null)
             {
                 throw new ArgumentNullException(nameof(list));
             }

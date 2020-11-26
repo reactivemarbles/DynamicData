@@ -21,7 +21,7 @@ namespace DynamicData.Kernel
         /// <returns>The array of items.</returns>
         public static T[] AsArray<T>(this IEnumerable<T> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -37,7 +37,7 @@ namespace DynamicData.Kernel
         /// <returns>The list.</returns>
         public static List<T> AsList<T>(this IEnumerable<T> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -55,12 +55,12 @@ namespace DynamicData.Kernel
         /// <returns>The enumerable of items.</returns>
         public static IEnumerable<T> Duplicates<T, TValue>(this IEnumerable<T> source, Func<T, TValue> valueSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -93,17 +93,17 @@ namespace DynamicData.Kernel
         /// <returns>A result as specified by the result selector.</returns>
         public static IEnumerable<TResult> IndexOfMany<TObject, TResult>(this IEnumerable<TObject> source, IEnumerable<TObject> itemsToFind, Func<TObject, int, TResult> resultSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (itemsToFind == null)
+            if (itemsToFind is null)
             {
                 throw new ArgumentNullException(nameof(itemsToFind));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }

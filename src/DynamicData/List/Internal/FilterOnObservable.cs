@@ -47,7 +47,7 @@ namespace DynamicData.List.Internal
 
                         // create a changeset, either buffered or one item at the time
                         IObservable<IEnumerable<ObjWithFilterValue>> itemsChanged;
-                        if (_buffer == null)
+                        if (_buffer is null)
                         {
                             itemsChanged = itemHasChanged.Select(t => new[] { t });
                         }
@@ -73,17 +73,17 @@ namespace DynamicData.List.Internal
 
         private static IEnumerable<TResult> IndexOfMany<TObj, TObjectProp, TResult>(IEnumerable<TObj> source, IEnumerable<TObj> itemsToFind, Func<TObj, TObjectProp> objectPropertyFunc, Func<TObj, int, TResult> resultSelector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (itemsToFind == null)
+            if (itemsToFind is null)
             {
                 throw new ArgumentNullException(nameof(itemsToFind));
             }
 
-            if (resultSelector == null)
+            if (resultSelector is null)
             {
                 throw new ArgumentNullException(nameof(resultSelector));
             }

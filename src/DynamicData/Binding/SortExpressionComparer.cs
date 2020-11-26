@@ -38,17 +38,17 @@ namespace DynamicData.Binding
         {
             foreach (var item in this)
             {
-                if (x == null && y == null)
+                if (x is null && y is null)
                 {
                     continue;
                 }
 
-                if (x == null)
+                if (x is null)
                 {
                     return -1;
                 }
 
-                if (y == null)
+                if (y is null)
                 {
                     return 1;
                 }
@@ -56,17 +56,17 @@ namespace DynamicData.Binding
                 var xValue = item.Expression(x);
                 var yValue = item.Expression(y);
 
-                if (xValue == null && yValue == null)
+                if (xValue is null && yValue is null)
                 {
                     continue;
                 }
 
-                if (xValue == null)
+                if (xValue is null)
                 {
                     return -1;
                 }
 
-                if (yValue == null)
+                if (yValue is null)
                 {
                     return 1;
                 }

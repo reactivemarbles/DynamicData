@@ -31,30 +31,34 @@ namespace DynamicData.Cache.Internal
                     {
                         lock (_locker)
                         {
-                            if (_cache is null || (++_refCount == 1))
+                            if (++_refCount == 1)
                             {
                                 _cache = _source.AsObservableCache();
                             }
                         }
 
+                        if (_cache is null)
+                        {
+                            throw new InvalidOperationException(nameof(_cache) + " is null");
+                        }
+
                         var subscriber = _cache.Connect().SubscribeSafe(observer);
 
-                        return Disposable.Create(
-                            () =>
+                        return Disposable.Create(() =>
+                            {
+                                subscriber.Dispose();
+                                IDisposable? cacheToDispose = null;
+                                lock (_locker)
                                 {
-                                    subscriber.Dispose();
-                                    IDisposable? cacheToDispose = null;
-                                    lock (_locker)
+                                    if (--_refCount == 0)
                                     {
-                                        if (--_refCount == 0)
-                                        {
-                                            cacheToDispose = _cache;
-                                            _cache = null;
-                                        }
+                                        cacheToDispose = _cache;
+                                        _cache = null;
                                     }
+                                }
 
-                                    cacheToDispose?.Dispose();
-                                });
+                                cacheToDispose?.Dispose();
+                            });
                     });
         }
     }

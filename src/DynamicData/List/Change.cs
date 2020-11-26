@@ -195,7 +195,7 @@ namespace DynamicData
         /// <inheritdoc />
         public override string ToString()
         {
-            return Range != null ? $"{Reason}. {Range.Count} changes" : $"{Reason}. Current: {Item.Current}, Previous: {Item.Previous}";
+            return Range is not null ? $"{Reason}. {Range.Count} changes" : $"{Reason}. Current: {Item.Current}, Previous: {Item.Previous}";
         }
     }
 }

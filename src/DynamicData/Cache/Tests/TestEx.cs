@@ -35,7 +35,7 @@ namespace DynamicData.Tests
         public static DistinctChangeSetAggregator<TValue> AsAggregator<TValue>(this IObservable<IDistinctChangeSet<TValue>> source)
             where TValue : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -54,7 +54,7 @@ namespace DynamicData.Tests
         public static SortedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -73,7 +73,7 @@ namespace DynamicData.Tests
         public static VirtualChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IVirtualChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -91,7 +91,7 @@ namespace DynamicData.Tests
         public static PagedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IPagedChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

@@ -41,7 +41,7 @@ namespace DynamicData.Cache.Internal
 
                         // create a changeset, either buffered or one item at the time
                         IObservable<IChangeSet<TObject, TKey>> refreshChanges;
-                        if (_buffer == null)
+                        if (_buffer is null)
                         {
                             refreshChanges = changes.Select(c => new ChangeSet<TObject, TKey>(new[] { c }));
                         }

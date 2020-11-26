@@ -27,12 +27,12 @@ namespace DynamicData.Alias
         /// </exception>
         public static IObservable<IChangeSet<TDestination>> Select<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -51,12 +51,12 @@ namespace DynamicData.Alias
         /// <returns>An observable which emits the change set.</returns>
         public static IObservable<IChangeSet<TDestination>> SelectMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manyselector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (manyselector == null)
+            if (manyselector is null)
             {
                 throw new ArgumentNullException(nameof(manyselector));
             }
@@ -74,12 +74,12 @@ namespace DynamicData.Alias
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (predicate == null)
+            if (predicate is null)
             {
                 throw new ArgumentNullException(nameof(predicate));
             }
@@ -99,12 +99,12 @@ namespace DynamicData.Alias
         /// filterController.</exception>
         public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (predicate == null)
+            if (predicate is null)
             {
                 throw new ArgumentNullException(nameof(predicate));
             }

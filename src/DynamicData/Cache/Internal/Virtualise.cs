@@ -29,9 +29,9 @@ namespace DynamicData.Cache.Internal
                         var virtualiser = new Virtualiser();
                         var locker = new object();
 
-                        var request = _virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise).Where(x => x != null).Select(x => x!);
-                        var dataChange = _source.Synchronize(locker).Select(virtualiser.Update).Where(x => x != null).Select(x => x!);
-                        return request.Merge(dataChange).Where(updates => updates != null).SubscribeSafe(observer);
+                        var request = _virtualRequests.Synchronize(locker).Select(virtualiser.Virtualise).Where(x => x is not null).Select(x => x!);
+                        var dataChange = _source.Synchronize(locker).Select(virtualiser.Update).Where(x => x is not null).Select(x => x!);
+                        return request.Merge(dataChange).Where(updates => updates is not null).SubscribeSafe(observer);
                     });
         }
 
@@ -59,7 +59,7 @@ namespace DynamicData.Cache.Internal
 
             public IVirtualChangeSet<TObject, TKey>? Virtualise(IVirtualRequest? parameters)
             {
-                if (parameters == null || parameters.StartIndex < 0 || parameters.Size < 1)
+                if (parameters is null || parameters.StartIndex < 0 || parameters.Size < 1)
                 {
                     return null;
                 }

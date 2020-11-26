@@ -481,27 +481,27 @@ namespace DynamicData.Aggregation
 
         private static IObservable<TResult> AvgCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<Avg<TValue>, TValue, Avg<TValue>> addAction, Func<Avg<TValue>, TValue, Avg<TValue>> removeAction, Func<Avg<TValue>, TResult> resultAction)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            if (addAction == null)
+            if (addAction is null)
             {
                 throw new ArgumentNullException(nameof(addAction));
             }
 
-            if (removeAction == null)
+            if (removeAction is null)
             {
                 throw new ArgumentNullException(nameof(removeAction));
             }
 
-            if (resultAction == null)
+            if (resultAction is null)
             {
                 throw new ArgumentNullException(nameof(resultAction));
             }

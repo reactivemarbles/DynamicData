@@ -23,7 +23,7 @@ namespace DynamicData
         /// <param name="item">The item to add.</param>
         public static void Add<T>(this ISourceList<T> source, T item)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -39,7 +39,7 @@ namespace DynamicData
         /// <param name="items">The items.</param>
         public static void AddRange<T>(this ISourceList<T> source, IEnumerable<T> items)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -54,7 +54,7 @@ namespace DynamicData
         /// <param name="source">The source to clear.</param>
         public static void Clear<T>(this ISourceList<T> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -72,12 +72,12 @@ namespace DynamicData
         /// <param name="equalityComparer">The equality comparer used to determine whether an item has changed.</param>
         public static void EditDiff<T>(this ISourceList<T> source, IEnumerable<T> allItems, IEqualityComparer<T>? equalityComparer = null)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (allItems == null)
+            if (allItems is null)
             {
                 throw new ArgumentNullException(nameof(allItems));
             }
@@ -95,7 +95,7 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         public static void Insert<T>(this ISourceList<T> source, int index, T item)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -112,7 +112,7 @@ namespace DynamicData
         /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
         public static void InsertRange<T>(this ISourceList<T> source, IEnumerable<T> items, int index)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -129,7 +129,7 @@ namespace DynamicData
         /// <param name="destination">The destination.</param>
         public static void Move<T>(this ISourceList<T> source, int original, int destination)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -147,7 +147,7 @@ namespace DynamicData
         public static bool Remove<T>(this ISourceList<T> source, T item)
         {
             bool removed = false;
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -164,7 +164,7 @@ namespace DynamicData
         /// <param name="index">The index.</param>
         public static void RemoveAt<T>(this ISourceList<T> source, int index)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -180,7 +180,7 @@ namespace DynamicData
         /// <param name="itemsToRemove">The items to remove.</param>
         public static void RemoveMany<T>(this ISourceList<T> source, IEnumerable<T> itemsToRemove)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -199,7 +199,7 @@ namespace DynamicData
         /// <exception cref="ArgumentException"><paramref name="index" /> and <paramref name="count" /> do not denote a valid range of elements in the <see cref="List{T}" />.</exception>
         public static void RemoveRange<T>(this ISourceList<T> source, int index, int count)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -216,7 +216,7 @@ namespace DynamicData
         /// <param name="destination">The destination.</param>
         public static void Replace<T>(this ISourceList<T> source, T original, T destination)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -233,7 +233,7 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         public static void ReplaceAt<T>(this ISourceList<T> source, int index, T item)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

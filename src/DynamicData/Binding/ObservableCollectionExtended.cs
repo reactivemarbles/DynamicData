@@ -53,7 +53,7 @@ namespace DynamicData.Binding
         /// <exception cref="ArgumentNullException"><paramref name="collection" /> is null.</exception>
         public void AddRange(IEnumerable<T> collection)
         {
-            if (collection == null)
+            if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
@@ -73,7 +73,7 @@ namespace DynamicData.Binding
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than Count.</exception>
         public void InsertRange(IEnumerable<T> collection, int index)
         {
-            if (collection == null)
+            if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }
@@ -90,7 +90,7 @@ namespace DynamicData.Binding
         /// <param name="items">The items.</param>
         public void Load(IEnumerable<T> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -175,7 +175,7 @@ namespace DynamicData.Binding
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            if (e == null)
+            if (e is null)
             {
                 throw new ArgumentNullException(nameof(e));
             }

@@ -19,7 +19,7 @@ namespace DynamicData.List.Internal
 
         public TransformAsync(IObservable<IChangeSet<TSource>> source, Func<TSource, Task<TDestination>> factory)
         {
-            if (factory == null)
+            if (factory is null)
             {
                 throw new ArgumentNullException(nameof(factory));
             }
@@ -55,7 +55,7 @@ namespace DynamicData.List.Internal
 
         private async Task Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
@@ -163,7 +163,7 @@ namespace DynamicData.List.Internal
                             }
 
                             var collection = transformed as IExtendedList<TransformedItemContainer>;
-                            if (collection != null)
+                            if (collection is not null)
                             {
                                 collection.Move(change.PreviousIndex, change.CurrentIndex);
                             }

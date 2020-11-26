@@ -28,7 +28,7 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -54,17 +54,17 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (subscriptionFactory == null)
+            if (subscriptionFactory is null)
             {
                 throw new ArgumentNullException(nameof(subscriptionFactory));
             }
 
-            if (parallelisationOptions == null)
+            if (parallelisationOptions is null)
             {
                 throw new ArgumentNullException(nameof(parallelisationOptions));
             }
@@ -90,17 +90,17 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (subscriptionFactory == null)
+            if (subscriptionFactory is null)
             {
                 throw new ArgumentNullException(nameof(subscriptionFactory));
             }
 
-            if (parallelisationOptions == null)
+            if (parallelisationOptions is null)
             {
                 throw new ArgumentNullException(nameof(parallelisationOptions));
             }
@@ -126,17 +126,17 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (parallelisationOptions == null)
+            if (parallelisationOptions is null)
             {
                 throw new ArgumentNullException(nameof(parallelisationOptions));
             }
@@ -187,22 +187,22 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
 
-            if (parallelisationOptions == null)
+            if (parallelisationOptions is null)
             {
                 throw new ArgumentNullException(nameof(parallelisationOptions));
             }

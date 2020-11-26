@@ -48,7 +48,7 @@ namespace DynamicData.List.Internal
 
                         // create a changeset, either buffered or one item at the time
                         IObservable<IEnumerable<TObject>> itemsChanged;
-                        if (_buffer == null)
+                        if (_buffer is null)
                         {
                             itemsChanged = itemHasChanged.Select(t => new[] { t });
                         }

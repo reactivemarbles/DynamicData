@@ -51,7 +51,7 @@ namespace DynamicData.Cache.Internal
                         void UpdateChildren(Node<TObject, TKey> parentNode)
                         {
                             var lookup = groupedByPivot.Lookup(parentNode.Key);
-                            if (lookup.HasValue && lookup.Value != null)
+                            if (lookup.HasValue && lookup.Value is not null)
                             {
                                 var children = lookup.Value.Cache.Items;
                                 parentNode.Update(u => u.AddOrUpdate(children));

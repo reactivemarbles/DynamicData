@@ -26,10 +26,10 @@ namespace DynamicData.Tests.Cache
             int created = 0;
             int disposals = 0;
 
-            //must have data so transform is invoked
+            // must have data so transform is invoked
             _source.AddOrUpdate(new Person("Name", 10));
 
-            //Some expensive transform (or chain of operations)
+            // Some expensive transform (or chain of operations)
             var longChain = _source.Connect().Transform(p => p).Do(_ => created++).Finally(() => disposals++).RefCount();
 
             var subscriber = longChain.Subscribe();
@@ -48,17 +48,17 @@ namespace DynamicData.Tests.Cache
             int created = 0;
             int disposals = 0;
 
-            //Some expensive transform (or chain of operations)
+            // Some expensive transform (or chain of operations)
             var longChain = _source.Connect().Transform(p => p).Do(_ => created++).Finally(() => disposals++).RefCount();
 
-            var suscriber1 = longChain.Subscribe();
-            var suscriber2 = longChain.Subscribe();
-            var suscriber3 = longChain.Subscribe();
+            var subscriber1 = longChain.Subscribe();
+            var subscriber2 = longChain.Subscribe();
+            var subscriber3 = longChain.Subscribe();
 
             _source.AddOrUpdate(new Person("Name", 10));
-            suscriber1.Dispose();
-            suscriber2.Dispose();
-            suscriber3.Dispose();
+            subscriber1.Dispose();
+            subscriber2.Dispose();
+            subscriber3.Dispose();
 
             created.Should().Be(1);
             disposals.Should().Be(1);

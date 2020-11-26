@@ -31,12 +31,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> AsObservableChangeSet<TObject, TKey>(this IEnumerable<TObject> source, Func<TObject, TKey> keySelector, bool completable = false)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -67,7 +67,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<TObject>> AsObservableChangeSet<TObject>(this IEnumerable<TObject> source, bool completable = false)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

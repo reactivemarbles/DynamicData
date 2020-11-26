@@ -33,17 +33,17 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (forceTransform == null)
+            if (forceTransform is null)
             {
                 throw new ArgumentNullException(nameof(forceTransform));
             }
@@ -111,12 +111,12 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Func<TSource, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
@@ -164,22 +164,22 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
 
-            if (forceTransform == null)
+            if (forceTransform is null)
             {
                 throw new ArgumentNullException(nameof(forceTransform));
             }
@@ -209,17 +209,17 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
@@ -249,17 +249,17 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformFactory == null)
+            if (transformFactory is null)
             {
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            if (errorHandler == null)
+            if (errorHandler is null)
             {
                 throw new ArgumentNullException(nameof(errorHandler));
             }
@@ -304,12 +304,12 @@ namespace DynamicData.Alias
             where TKey : notnull
             where TObject : class
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (pivotOn == null)
+            if (pivotOn is null)
             {
                 throw new ArgumentNullException(nameof(pivotOn));
             }
@@ -328,7 +328,7 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -347,12 +347,12 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (predicateChanged == null)
+            if (predicateChanged is null)
             {
                 throw new ArgumentNullException(nameof(predicateChanged));
             }
@@ -371,12 +371,12 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Unit> reapplyFilter)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (reapplyFilter == null)
+            if (reapplyFilter is null)
             {
                 throw new ArgumentNullException(nameof(reapplyFilter));
             }
@@ -396,17 +396,17 @@ namespace DynamicData.Alias
         public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit> reapplyFilter)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (predicateChanged == null)
+            if (predicateChanged is null)
             {
                 throw new ArgumentNullException(nameof(predicateChanged));
             }
 
-            if (reapplyFilter == null)
+            if (reapplyFilter is null)
             {
                 throw new ArgumentNullException(nameof(reapplyFilter));
             }

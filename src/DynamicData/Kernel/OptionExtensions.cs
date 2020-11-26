@@ -24,7 +24,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">converter.</exception>
         public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter)
         {
-            if (converter == null)
+            if (converter is null)
             {
                 throw new ArgumentNullException(nameof(converter));
             }
@@ -48,12 +48,12 @@ namespace DynamicData.Kernel
         /// </exception>
         public static TDestination? ConvertOr<TSource, TDestination>(this Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
         {
-            if (converter == null)
+            if (converter is null)
             {
                 throw new ArgumentNullException(nameof(converter));
             }
 
-            if (fallbackConverter == null)
+            if (fallbackConverter is null)
             {
                 throw new ArgumentNullException(nameof(fallbackConverter));
             }
@@ -72,7 +72,7 @@ namespace DynamicData.Kernel
         /// <returns>The first value or none.</returns>
         public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -95,7 +95,7 @@ namespace DynamicData.Kernel
                 return new OptionElse();
             }
 
-            if (action == null)
+            if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));
             }
@@ -123,7 +123,7 @@ namespace DynamicData.Kernel
                 return new OptionElse();
             }
 
-            if (action == null)
+            if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));
             }
@@ -144,7 +144,7 @@ namespace DynamicData.Kernel
         /// <returns>The option of the looked up value.</returns>
         public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -163,7 +163,7 @@ namespace DynamicData.Kernel
         /// <returns>If the item was removed.</returns>
         public static bool RemoveIfContained<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -206,7 +206,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">valueSelector.</exception>
         public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector)
         {
-            if (valueSelector == null)
+            if (valueSelector is null)
             {
                 throw new ArgumentNullException(nameof(valueSelector));
             }
@@ -240,7 +240,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">exceptionGenerator.</exception>
         public static T ValueOrThrow<T>(this Optional<T> source, Func<Exception> exceptionGenerator)
         {
-            if (exceptionGenerator == null)
+            if (exceptionGenerator is null)
             {
                 throw new ArgumentNullException(nameof(exceptionGenerator));
             }

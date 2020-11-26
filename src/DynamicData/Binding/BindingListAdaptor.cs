@@ -37,7 +37,7 @@ namespace DynamicData.Binding
         /// <inheritdoc />
         public void Adapt(IChangeSet<T> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }

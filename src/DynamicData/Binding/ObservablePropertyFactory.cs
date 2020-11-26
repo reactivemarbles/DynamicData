@@ -70,7 +70,7 @@ namespace DynamicData.Binding
                 value = metadata.Accessor(value);
                 yield return obs;
 
-                if (value == null)
+                if (value is null)
                 {
                     yield break;
                 }
@@ -84,7 +84,7 @@ namespace DynamicData.Binding
             foreach (var metadata in chain.Reverse())
             {
                 value = metadata.Accessor(value);
-                if (value == null)
+                if (value is null)
                 {
                     return new PropertyValue<TObject, TProperty>(source);
                 }

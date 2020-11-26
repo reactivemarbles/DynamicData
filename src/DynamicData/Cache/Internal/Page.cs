@@ -31,7 +31,7 @@ namespace DynamicData.Cache.Internal
                         var request = _pageRequests.Synchronize(locker).Select(paginator.Paginate);
                         var datachange = _source.Synchronize(locker).Select(paginator.Update);
 
-                        return request.Merge(datachange).Where(updates => updates != null).Select(x => x!).SubscribeSafe(observer);
+                        return request.Merge(datachange).Where(updates => updates is not null).Select(x => x!).SubscribeSafe(observer);
                     });
         }
 
@@ -53,7 +53,7 @@ namespace DynamicData.Cache.Internal
 
             public IPagedChangeSet<TObject, TKey>? Paginate(IPageRequest? parameters)
             {
-                if (parameters == null || parameters.Page < 0 || parameters.Size < 1)
+                if (parameters is null || parameters.Page < 0 || parameters.Size < 1)
                 {
                     return null;
                 }
@@ -100,7 +100,7 @@ namespace DynamicData.Cache.Internal
                     return null;
                 }
 
-                if (_request == null)
+                if (_request is null)
                 {
                     return null;
                 }

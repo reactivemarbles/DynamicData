@@ -115,7 +115,7 @@ namespace DynamicData
                                 observer.OnNext(initial);
                             }
 
-                            var updateSource = (predicate == null ? _changes : _changes.Filter(predicate)).NotEmpty();
+                            var updateSource = (predicate is null ? _changes : _changes.Filter(predicate)).NotEmpty();
                             return updateSource.SubscribeSafe(observer);
                         }
                     });
@@ -126,7 +126,7 @@ namespace DynamicData
 
         public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
         {
-            return predicate == null ? _changesPreview : _changesPreview.Filter(predicate);
+            return predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
         }
 
         public IObservable<Change<TObject, TKey>> Watch(TKey key) =>
@@ -160,7 +160,7 @@ namespace DynamicData
 
         internal void UpdateFromIntermediate(Action<ICacheUpdater<TObject, TKey>> updateAction)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -182,7 +182,7 @@ namespace DynamicData
 
                 _editLevel--;
 
-                if (changes != null && _editLevel == 0)
+                if (changes is not null && _editLevel == 0)
                 {
                     InvokeNext(changes);
                 }
@@ -191,7 +191,7 @@ namespace DynamicData
 
         internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -213,7 +213,7 @@ namespace DynamicData
 
                 _editLevel--;
 
-                if (changes != null && _editLevel == 0)
+                if (changes is not null && _editLevel == 0)
                 {
                     InvokeNext(changes);
                 }

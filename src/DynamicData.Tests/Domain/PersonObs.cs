@@ -82,7 +82,7 @@ namespace DynamicData.Tests.Domain
 
         public override int GetHashCode()
         {
-            return (Name != null ? Name.GetHashCode() : 0);
+            return (Name is not null ? Name.GetHashCode() : 0);
         }
 
         public void SetAge(int age)
@@ -159,9 +159,9 @@ namespace DynamicData.Tests.Domain
             {
                 unchecked
                 {
-                    var hashCode = (obj.Name != null ? obj.Name.GetHashCode() : 0);
+                    var hashCode = (obj.Name is not null ? obj.Name.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ obj._age.Value;
-                    hashCode = (hashCode * 397) ^ (obj.Gender != null ? obj.Gender.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (obj.Gender is not null ? obj.Gender.GetHashCode() : 0);
                     return hashCode;
                 }
             }

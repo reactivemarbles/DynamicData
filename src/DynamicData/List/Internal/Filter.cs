@@ -45,7 +45,7 @@ namespace DynamicData.List.Internal
                         Func<T, bool> predicate = t => false;
                         var all = new List<ItemWithMatch>();
                         var filtered = new ChangeAwareList<ItemWithMatch>();
-                        var immutableFilter = _predicate != null;
+                        var immutableFilter = _predicate is not null;
 
                         IObservable<IChangeSet<ItemWithMatch>> predicateChanged;
 

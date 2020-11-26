@@ -22,7 +22,7 @@ namespace DynamicData.Cache.Internal
 
         public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
         {
-            if (observableSelector == null)
+            if (observableSelector is null)
             {
                 throw new ArgumentNullException(nameof(observableSelector));
             }

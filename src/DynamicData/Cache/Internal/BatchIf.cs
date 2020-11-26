@@ -72,14 +72,14 @@ namespace DynamicData.Cache.Internal
                                     {
                                         paused = false;
                                         ResumeAction();
-                                        if (_intervalTimer != null)
+                                        if (_intervalTimer is not null)
                                         {
                                             paused = true;
                                         }
                                     });
                         }
 
-                        if (_intervalTimer != null)
+                        if (_intervalTimer is not null)
                         {
                             intervalTimerDisposer.Disposable = IntervalFunction();
                         }

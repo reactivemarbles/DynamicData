@@ -84,7 +84,7 @@ namespace DynamicData.Kernel
         /// <returns>A disposable that will stop the schedule.</returns>
         public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, Func<TimeSpan> interval, Action action)
         {
-            if (interval == null)
+            if (interval is null)
             {
                 throw new ArgumentNullException(nameof(interval));
             }

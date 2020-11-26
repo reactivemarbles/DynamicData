@@ -53,7 +53,7 @@ namespace DynamicData.List.Internal
                                         orginal.Clone(changes);
                                     }
 
-                                    return changes.TotalChanges > _resetThreshold && _comparer != null ? Reset(orginal, target) : Process(target, changes);
+                                    return changes.TotalChanges > _resetThreshold && _comparer is not null ? Reset(orginal, target) : Process(target, changes);
                                 });
                         var resort = _resort.Synchronize(locker).Select(changes => Reorder(target));
                         var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
@@ -141,7 +141,7 @@ namespace DynamicData.List.Internal
 
         private IChangeSet<T> ProcessImpl(ChangeAwareList<T> target, IChangeSet<T> changes)
         {
-            if (_comparer == null)
+            if (_comparer is null)
             {
                 target.Clone(changes);
                 return target.CaptureChanges();

@@ -77,7 +77,7 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TDestination, TDestinationKey>> Run()
         {
-            return _childChanges == null ? Create() : CreateWithChangeset();
+            return _childChanges is null ? Create() : CreateWithChangeset();
         }
 
         private IObservable<IChangeSet<TDestination, TDestinationKey>> Create()
@@ -227,8 +227,8 @@ namespace DynamicData.Cache.Internal
 
                                 foreach (var destination in updates)
                                 {
-                                    var current = currentItems.First(d => d.Key != null && d.Key.Equals(destination.Key));
-                                    var previous = previousItems.First(d => d.Key != null && d.Key.Equals(destination.Key));
+                                    var current = currentItems.First(d => d.Key is not null && d.Key.Equals(destination.Key));
+                                    var previous = previousItems.First(d => d.Key is not null && d.Key.Equals(destination.Key));
 
                                     // Do not update is items are the same reference
                                     if (!ReferenceEquals(current.Item, previous.Item))

@@ -17,7 +17,7 @@ namespace DynamicData.Cache.Internal
 
         public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
         {
-            if (subscriptionFactory == null)
+            if (subscriptionFactory is null)
             {
                 throw new ArgumentNullException(nameof(subscriptionFactory));
             }

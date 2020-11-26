@@ -216,7 +216,7 @@ namespace DynamicData.Tests.List
             {
                 Name = name;
 
-                if (tours != null)
+                if (tours is not null)
                 {
                     Tours.AddRange(tours);
                 }

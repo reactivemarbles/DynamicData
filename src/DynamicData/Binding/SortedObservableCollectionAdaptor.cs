@@ -34,12 +34,12 @@ namespace DynamicData.Binding
         /// <param name="collection">The collection.</param>
         public void Adapt(ISortedChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
 
-            if (collection == null)
+            if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }

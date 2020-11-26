@@ -74,7 +74,7 @@ namespace DynamicData.Tests.Domain
 
         public override int GetHashCode()
         {
-            return (ParentId != null ? ParentId.GetHashCode() : 0);
+            return (ParentId is not null ? ParentId.GetHashCode() : 0);
         }
 
         public override string ToString()

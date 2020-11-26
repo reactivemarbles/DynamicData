@@ -16,7 +16,7 @@ namespace DynamicData.Cache.Internal
 
         public AnonymousObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

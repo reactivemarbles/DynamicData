@@ -25,7 +25,7 @@ namespace DynamicData.Cache.Internal
 
         public CacheUpdater(Dictionary<TKey, TObject> data, Func<TObject, TKey>? keySelector = null)
         {
-            if (data == null)
+            if (data is null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
@@ -44,12 +44,12 @@ namespace DynamicData.Cache.Internal
 
         public void AddOrUpdate(IEnumerable<TObject> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
 
-            if (_keySelector == null)
+            if (_keySelector is null)
             {
                 throw new KeySelectorException("A key selector must be specified");
             }
@@ -73,7 +73,7 @@ namespace DynamicData.Cache.Internal
 
         public void AddOrUpdate(TObject item)
         {
-            if (_keySelector == null)
+            if (_keySelector is null)
             {
                 throw new KeySelectorException("A key selector must be specified");
             }
@@ -84,7 +84,7 @@ namespace DynamicData.Cache.Internal
 
         public void AddOrUpdate(TObject item, IEqualityComparer<TObject> comparer)
         {
-            if (_keySelector == null)
+            if (_keySelector is null)
             {
                 throw new KeySelectorException("A key selector must be specified");
             }
@@ -167,7 +167,7 @@ namespace DynamicData.Cache.Internal
 
         public TKey GetKey(TObject item)
         {
-            if (_keySelector == null)
+            if (_keySelector is null)
             {
                 throw new KeySelectorException("A key selector must be specified");
             }
@@ -177,7 +177,7 @@ namespace DynamicData.Cache.Internal
 
         public IEnumerable<KeyValuePair<TKey, TObject>> GetKeyValues(IEnumerable<TObject> items)
         {
-            if (_keySelector == null)
+            if (_keySelector is null)
             {
                 throw new KeySelectorException("A key selector must be specified");
             }
@@ -187,7 +187,7 @@ namespace DynamicData.Cache.Internal
 
         public void Load(IEnumerable<TObject> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -204,7 +204,7 @@ namespace DynamicData.Cache.Internal
 
         public Optional<TObject> Lookup(TObject item)
         {
-            if (_keySelector == null)
+            if (_keySelector is null)
             {
                 throw new KeySelectorException("A key selector must be specified");
             }
@@ -220,7 +220,7 @@ namespace DynamicData.Cache.Internal
 
         public void Refresh(IEnumerable<TObject> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -244,7 +244,7 @@ namespace DynamicData.Cache.Internal
 
         public void Refresh(IEnumerable<TKey> keys)
         {
-            if (keys == null)
+            if (keys is null)
             {
                 throw new ArgumentNullException(nameof(keys));
             }
@@ -268,7 +268,7 @@ namespace DynamicData.Cache.Internal
 
         public void Refresh(TObject item)
         {
-            if (_keySelector == null)
+            if (_keySelector is null)
             {
                 throw new KeySelectorException("A key selector must be specified");
             }
@@ -284,7 +284,7 @@ namespace DynamicData.Cache.Internal
 
         public void Remove(IEnumerable<TObject> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -308,7 +308,7 @@ namespace DynamicData.Cache.Internal
 
         public void Remove(IEnumerable<TKey> keys)
         {
-            if (keys == null)
+            if (keys is null)
             {
                 throw new ArgumentNullException(nameof(keys));
             }
@@ -332,7 +332,7 @@ namespace DynamicData.Cache.Internal
 
         public void Remove(TObject item)
         {
-            if (_keySelector == null)
+            if (_keySelector is null)
             {
                 throw new KeySelectorException("A key selector must be specified");
             }
@@ -348,7 +348,7 @@ namespace DynamicData.Cache.Internal
 
         public void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items)
         {
-            if (items == null)
+            if (items is null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -382,7 +382,7 @@ namespace DynamicData.Cache.Internal
 
         public void RemoveKeys(IEnumerable<TKey> keys)
         {
-            if (keys == null)
+            if (keys is null)
             {
                 throw new ArgumentNullException(nameof(keys));
             }

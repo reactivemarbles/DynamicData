@@ -22,13 +22,13 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IQuery<TObject, TKey>> Run()
         {
-            if (_itemChangedTrigger == null)
+            if (_itemChangedTrigger is null)
             {
                 return _source.Scan(
                     (Cache<TObject, TKey>?)null,
                     (cache, changes) =>
                         {
-                            if (cache == null)
+                            if (cache is null)
                             {
                                 cache = new Cache<TObject, TKey>(changes.Count);
                             }

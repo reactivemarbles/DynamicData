@@ -39,7 +39,7 @@ namespace DynamicData.Binding
         /// <param name="changes">The changes.</param>
         public void Adapt(IChangeSet<T> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
@@ -91,12 +91,12 @@ namespace DynamicData.Binding
         /// <param name="collection">The collection.</param>
         public void Adapt(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
 
-            if (collection == null)
+            if (collection is null)
             {
                 throw new ArgumentNullException(nameof(collection));
             }

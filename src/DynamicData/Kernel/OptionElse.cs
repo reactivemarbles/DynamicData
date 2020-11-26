@@ -27,7 +27,7 @@ namespace DynamicData.Kernel
         /// <exception cref="System.ArgumentNullException">action.</exception>
         public void Else(Action action)
         {
-            if (action == null)
+            if (action is null)
             {
                 throw new ArgumentNullException(nameof(action));
             }

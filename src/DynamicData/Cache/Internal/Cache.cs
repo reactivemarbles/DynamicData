@@ -53,7 +53,7 @@ namespace DynamicData.Cache.Internal
 
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }

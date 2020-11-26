@@ -18,7 +18,7 @@ namespace DynamicData.Binding
         public static IEnumerable<MemberExpression> GetMembers<TObject, TProperty>(this Expression<Func<TObject, TProperty>> source)
         {
             var memberExpression = source.Body as MemberExpression;
-            while (memberExpression != null)
+            while (memberExpression is not null)
             {
                 yield return memberExpression;
                 memberExpression = memberExpression.Expression as MemberExpression;
@@ -38,7 +38,7 @@ namespace DynamicData.Binding
 
             return t =>
                 {
-                    if (t == null)
+                    if (t is null)
                     {
                         return Observable<Unit>.Never;
                     }
@@ -82,7 +82,7 @@ namespace DynamicData.Binding
 
         internal static MemberInfo GetMember<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
-            if (expression == null)
+            if (expression is null)
             {
                 throw new ArgumentException("Not a property expression");
             }
@@ -93,7 +93,7 @@ namespace DynamicData.Binding
         internal static IEnumerable<MemberExpression> GetMemberChain<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
             var memberExpression = expression.Body as MemberExpression;
-            while (memberExpression?.Expression != null)
+            while (memberExpression?.Expression is not null)
             {
                 if (memberExpression.Expression.NodeType != ExpressionType.Parameter)
                 {
@@ -112,7 +112,7 @@ namespace DynamicData.Binding
         internal static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
         {
             var property = expression.GetMember() as PropertyInfo;
-            if (property == null)
+            if (property is null)
             {
                 throw new ArgumentException("Not a property expression");
             }
@@ -123,7 +123,7 @@ namespace DynamicData.Binding
         internal static PropertyInfo GetProperty(this MemberExpression expression)
         {
             var property = expression.Member as PropertyInfo;
-            if (property == null)
+            if (property is null)
             {
                 throw new ArgumentException("Not a property expression");
             }
@@ -150,7 +150,7 @@ namespace DynamicData.Binding
 
         private static MemberInfo GetMemberInfo(LambdaExpression lambda)
         {
-            if (lambda == null)
+            if (lambda is null)
             {
                 throw new ArgumentException("Not a property expression");
             }
@@ -169,7 +169,7 @@ namespace DynamicData.Binding
                 return ((MethodCallExpression)lambda.Body).Method;
             }
 
-            if (memberExpression == null)
+            if (memberExpression is null)
             {
                 throw new ArgumentException("Not a member access");
             }

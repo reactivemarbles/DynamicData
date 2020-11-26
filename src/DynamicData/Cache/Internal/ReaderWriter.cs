@@ -89,11 +89,11 @@ namespace DynamicData.Cache.Internal
                     return ChangeSet<TObject, TKey>.Empty;
                 }
 
-                var changes = filter == null ? new ChangeSet<TObject, TKey>(dictionary.Count) : new ChangeSet<TObject, TKey>();
+                var changes = filter is null ? new ChangeSet<TObject, TKey>(dictionary.Count) : new ChangeSet<TObject, TKey>();
 
                 foreach (var kvp in dictionary)
                 {
-                    if (filter == null || filter(kvp.Value))
+                    if (filter is null || filter(kvp.Value))
                     {
                         changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
                     }
@@ -113,7 +113,7 @@ namespace DynamicData.Cache.Internal
 
         public ChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
@@ -123,7 +123,7 @@ namespace DynamicData.Cache.Internal
 
         public ChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -133,7 +133,7 @@ namespace DynamicData.Cache.Internal
 
         public ChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -145,7 +145,7 @@ namespace DynamicData.Cache.Internal
         {
             lock (_locker)
             {
-                if (_activeUpdater == null)
+                if (_activeUpdater is null)
                 {
                     throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
                 }
@@ -158,7 +158,7 @@ namespace DynamicData.Cache.Internal
         {
             lock (_locker)
             {
-                if (previewHandler != null)
+                if (previewHandler is not null)
                 {
                     var copy = new Dictionary<TKey, TObject>(_data);
                     var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);

@@ -174,7 +174,9 @@ namespace DynamicData.Tests.List
 
         public SimplePaging(IObservableList<Animal> source, IObservable<IPageRequest> pager)
         {
-            Paged = source.Connect().Page(pager).Do(changes => Console.WriteLine(changes.TotalChanges)) //added as a quick and dirty way to debug
+            Paged = source.Connect()
+                .Page(pager)
+                .Do(changes => Console.WriteLine(changes.TotalChanges)) //added as a quick and dirty way to debug
                 .AsObservableList();
 
             _cleanUp = Paged;

@@ -35,7 +35,7 @@ namespace DynamicData.Binding
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this BindingList<T> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -58,12 +58,12 @@ namespace DynamicData.Binding
         public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this BindingList<TObject> source, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -83,7 +83,7 @@ namespace DynamicData.Binding
         public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
             where TCollection : IBindingList, IEnumerable<T>
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

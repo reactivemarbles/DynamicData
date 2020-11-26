@@ -45,7 +45,7 @@ namespace DynamicData.Cache.Internal
                         var regrouper = shared.WhenValueChanged(_propertySelector, false).ToUnit();
 
                         // add a throttle if specified
-                        if (_throttle != null)
+                        if (_throttle is not null)
                         {
                             regrouper = regrouper.Throttle(_throttle.Value, _scheduler);
                         }

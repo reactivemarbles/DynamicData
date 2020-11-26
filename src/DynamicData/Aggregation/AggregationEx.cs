@@ -24,7 +24,7 @@ namespace DynamicData.Aggregation
         public static IObservable<IAggregateChangeSet<TObject>> ForAggregation<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -40,7 +40,7 @@ namespace DynamicData.Aggregation
         /// <returns>The aggregated change set.</returns>
         public static IObservable<IAggregateChangeSet<TObject>> ForAggregation<TObject>(this IObservable<IChangeSet<TObject>> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -124,22 +124,22 @@ namespace DynamicData.Aggregation
         /// <returns>An observable with the accumulated value.</returns>
         internal static IObservable<TResult> Accumlate<TObject, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (accessor == null)
+            if (accessor is null)
             {
                 throw new ArgumentNullException(nameof(accessor));
             }
 
-            if (addAction == null)
+            if (addAction is null)
             {
                 throw new ArgumentNullException(nameof(addAction));
             }
 
-            if (removeAction == null)
+            if (removeAction is null)
             {
                 throw new ArgumentNullException(nameof(removeAction));
             }

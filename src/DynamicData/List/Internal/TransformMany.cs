@@ -95,7 +95,7 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<TDestination>> Run()
         {
-            if (_childChanges != null)
+            if (_childChanges is not null)
             {
                 return CreateWithChangeset();
             }

@@ -36,12 +36,12 @@ namespace DynamicData.Tests.Utilities
 
         public static IEnumerable<T> SelectManyRecursive<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> selector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (selector == null)
+            if (selector is null)
             {
                 throw new ArgumentNullException(nameof(selector));
             }

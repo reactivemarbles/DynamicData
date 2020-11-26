@@ -13,7 +13,7 @@ namespace DynamicData.List.Internal
 
         public AnonymousObservableList(IObservable<IChangeSet<T>> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

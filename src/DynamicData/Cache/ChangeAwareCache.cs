@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using DynamicData.Cache;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -111,7 +112,7 @@ namespace DynamicData
         /// <inheritdoc />
         public void Clone(IChangeSet<TObject, TKey> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
@@ -149,7 +150,7 @@ namespace DynamicData
         /// <param name="keys">The keys to refresh.</param>
         public void Refresh(IEnumerable<TKey> keys)
         {
-            if (keys == null)
+            if (keys is null)
             {
                 throw new ArgumentNullException(nameof(keys));
             }
@@ -196,7 +197,7 @@ namespace DynamicData
         /// <param name="keys">The keys.</param>
         public void Remove(IEnumerable<TKey> keys)
         {
-            if (keys == null)
+            if (keys is null)
             {
                 throw new ArgumentNullException(nameof(keys));
             }

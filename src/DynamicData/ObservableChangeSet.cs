@@ -26,12 +26,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Action> subscribe, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -56,12 +56,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, IDisposable> subscribe, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -96,12 +96,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -120,12 +120,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task<IDisposable>> subscribe, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -160,12 +160,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task<Action>> subscribe, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -184,12 +184,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task<Action>> subscribe, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -232,12 +232,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, Task> subscribe, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -271,12 +271,12 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> Create<TObject, TKey>(Func<ISourceCache<TObject, TKey>, CancellationToken, Task> subscribe, Func<TObject, TKey> keySelector)
             where TKey : notnull
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
 
-            if (keySelector == null)
+            if (keySelector is null)
             {
                 throw new ArgumentNullException(nameof(keySelector));
             }
@@ -307,7 +307,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Action> subscribe)
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
@@ -328,7 +328,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, IDisposable> subscribe)
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
@@ -368,7 +368,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<IDisposable>> subscribe)
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
@@ -384,7 +384,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<IDisposable>> subscribe)
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
@@ -426,7 +426,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task<Action>> subscribe)
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
@@ -442,7 +442,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task<Action>> subscribe)
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
@@ -482,7 +482,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, Task> subscribe)
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
@@ -513,7 +513,7 @@ namespace DynamicData
         /// <returns>The observable list with the specified implementation for the Subscribe method.</returns>
         public static IObservable<IChangeSet<T>> Create<T>(Func<ISourceList<T>, CancellationToken, Task> subscribe)
         {
-            if (subscribe == null)
+            if (subscribe is null)
             {
                 throw new ArgumentNullException(nameof(subscribe));
             }
