@@ -11,7 +11,7 @@ namespace DynamicData.Cache.Internal
     internal class RefCount<TObject, TKey>
         where TKey : notnull
     {
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 

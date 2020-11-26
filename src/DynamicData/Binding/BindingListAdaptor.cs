@@ -66,7 +66,7 @@ namespace DynamicData.Binding
     public class BindingListAdaptor<TObject, TKey> : IChangeSetAdaptor<TObject, TKey>
         where TKey : notnull
     {
-        private readonly Cache<TObject, TKey> _cache = new Cache<TObject, TKey>();
+        private readonly Cache<TObject, TKey> _cache = new();
 
         private readonly BindingList<TObject> _list;
 

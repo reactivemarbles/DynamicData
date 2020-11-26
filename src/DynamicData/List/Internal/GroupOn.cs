@@ -45,15 +45,9 @@ namespace DynamicData.List.Internal
 
                         var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
-                        IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> regrouper;
-                        if (_regrouper is null)
-                        {
-                            regrouper = Observable.Never<IChangeSet<IGroup<TObject, TGroupKey>>>();
-                        }
-                        else
-                        {
-                            regrouper = _regrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
-                        }
+                        IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> regrouper = _regrouper is null ?
+                                                                                            Observable.Never<IChangeSet<IGroup<TObject, TGroupKey>>>() :
+                                                                                            _regrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 
                         var publisher = grouper.Merge(regrouper).DisposeMany() // dispose removes as the grouping is disposable
                             .NotEmpty().SubscribeSafe(observer);

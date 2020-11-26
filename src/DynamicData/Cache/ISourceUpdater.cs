@@ -11,7 +11,7 @@ namespace DynamicData
     /// <summary>
     /// API for updating a source cache.
     ///
-    /// Use edit to produce singular changeset.
+    /// Use edit to produce singular change set.
     ///
     /// NB: The evaluate method is used to signal to any observing operators
     /// to reevaluate whether the object still matches downstream operators.

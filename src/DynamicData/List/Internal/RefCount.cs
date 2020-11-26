@@ -10,7 +10,7 @@ namespace DynamicData.List.Internal
 {
     internal class RefCount<T>
     {
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
         private readonly IObservable<IChangeSet<T>> _source;
 

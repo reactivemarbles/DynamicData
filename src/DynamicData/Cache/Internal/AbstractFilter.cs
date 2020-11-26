@@ -58,8 +58,8 @@ namespace DynamicData.Cache.Internal
 
         public IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates)
         {
-            var withfilter = GetChangesWithFilter(updates);
-            return ProcessResult(withfilter);
+            var withFilter = GetChangesWithFilter(updates);
+            return ProcessResult(withFilter);
         }
 
         protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates);
@@ -108,10 +108,10 @@ namespace DynamicData.Cache.Internal
 
                     case ChangeReason.Refresh:
                         {
-                            var exisiting = _cache.Lookup(key);
+                            var existing = _cache.Lookup(key);
                             if (matches)
                             {
-                                if (!exisiting.HasValue)
+                                if (!existing.HasValue)
                                 {
                                     _cache.AddOrUpdate(u.Current, u.Key);
                                 }
@@ -122,7 +122,7 @@ namespace DynamicData.Cache.Internal
                             }
                             else
                             {
-                                if (exisiting.HasValue)
+                                if (existing.HasValue)
                                 {
                                     _cache.Remove(u.Key);
                                 }

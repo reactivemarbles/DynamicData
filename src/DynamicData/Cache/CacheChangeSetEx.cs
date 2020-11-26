@@ -8,16 +8,16 @@ namespace DynamicData.Cache
     {
         /// <summary>
         /// IChangeSet is flawed because it automatically means allocations when enumerating.
-        /// This extension is a crazy hack to cast to the concrete changeset which means we no longer allocate
+        /// This extension is a crazy hack to cast to the concrete change set which means we no longer allocate
         /// as  change set now inherits from List which has allocation free enumerations.
         ///
         /// IChangeSet will be removed in V7 and instead Change sets will be used directly
         ///
         /// In the mean time I am banking that no-one has implemented a custom change set - personally I think it is very unlikely.
         /// </summary>
-        /// <param name="changeset">The source change set.</param>
-        public static ChangeSet<TObject, TKey> ToConcreteType<TObject, TKey>(this IChangeSet<TObject, TKey> changeset)
+        /// <param name="changeSet">The source change set.</param>
+        public static ChangeSet<TObject, TKey> ToConcreteType<TObject, TKey>(this IChangeSet<TObject, TKey> changeSet)
                 where TKey : notnull
-            => (ChangeSet<TObject, TKey>)changeset;
+            => (ChangeSet<TObject, TKey>)changeSet;
     }
 }

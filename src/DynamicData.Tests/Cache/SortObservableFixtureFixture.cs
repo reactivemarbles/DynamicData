@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Cache
 
         private readonly BehaviorSubject<IComparer<Person>> _comparerObservable;
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly SortedChangeSetAggregator<Person, string> _results;
 

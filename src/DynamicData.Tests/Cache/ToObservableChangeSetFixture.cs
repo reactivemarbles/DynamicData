@@ -17,11 +17,11 @@ namespace DynamicData.Tests.Cache
 
         private readonly IObservable<Person> _observable;
 
-        private readonly Person _person1 = new Person("One", 1);
+        private readonly Person _person1 = new("One", 1);
 
-        private readonly Person _person2 = new Person("Two", 2);
+        private readonly Person _person2 = new("Two", 2);
 
-        private readonly Person _person3 = new Person("Three", 3);
+        private readonly Person _person3 = new("Three", 3);
 
         private readonly TestScheduler _scheduler;
 

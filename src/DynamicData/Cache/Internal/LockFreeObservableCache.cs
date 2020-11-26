@@ -30,7 +30,7 @@ namespace DynamicData.Cache.Internal
 
         private readonly ISubject<int> _countChanged = new Subject<int>();
 
-        private readonly ChangeAwareCache<TObject, TKey> _innerCache = new ChangeAwareCache<TObject, TKey>();
+        private readonly ChangeAwareCache<TObject, TKey> _innerCache = new();
 
         private readonly ICacheUpdater<TObject, TKey> _updater;
 
@@ -203,7 +203,7 @@ namespace DynamicData.Cache.Internal
 
             if (isDisposing)
             {
-                _cleanUp?.Dispose();
+                _cleanUp.Dispose();
             }
         }
     }

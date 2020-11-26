@@ -25,7 +25,7 @@ namespace DynamicData.Tests.Cache
 
         private readonly ChangeSetAggregator<SelfObservingPerson, string> _results;
 
-        private readonly TestScheduler _scheduler = new TestScheduler();
+        private readonly TestScheduler _scheduler = new();
 
         private readonly ISourceCache<Person, string> _source;
 

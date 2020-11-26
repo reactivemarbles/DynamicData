@@ -7,7 +7,7 @@ namespace DynamicData.Kernel
     /// <summary>
     /// A collection type that supports a capacity.
     /// </summary>
-    internal interface ISupportsCapcity
+    internal interface ISupportsCapacity
     {
         /// <summary>
         /// Gets or sets the capacity.

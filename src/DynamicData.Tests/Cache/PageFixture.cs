@@ -18,7 +18,7 @@ namespace DynamicData.Tests.Cache
 
         private readonly IComparer<Person> _comparer;
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly ISubject<IPageRequest> _pager;
 

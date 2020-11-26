@@ -28,10 +28,7 @@ namespace DynamicData.Cache.Internal
                     (Cache<TObject, TKey>?)null,
                     (cache, changes) =>
                         {
-                            if (cache is null)
-                            {
-                                cache = new Cache<TObject, TKey>(changes.Count);
-                            }
+                            cache ??= new Cache<TObject, TKey>(changes.Count);
 
                             cache.Clone(changes);
                             return cache;

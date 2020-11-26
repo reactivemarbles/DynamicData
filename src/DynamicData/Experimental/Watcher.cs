@@ -17,19 +17,19 @@ namespace DynamicData.Experimental
     {
         private readonly IDisposable _disposer;
 
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
         private readonly IObservableCache<TObject, TKey> _source;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-        private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey>();
+        private readonly IntermediateCache<SubjectWithRefCount<Change<TObject, TKey>>, TKey> _subscribers = new();
 
         public Watcher(IObservable<IChangeSet<TObject, TKey>> source, IScheduler scheduler)
         {
             _source = source.AsObservableCache();
 
-            var onCompletePublisher = _subscribers.Connect().Synchronize(_locker).ObserveOn(scheduler).SubscribeMany((t, k) => Disposable.Create(t.OnCompleted)).Subscribe();
+            var onCompletePublisher = _subscribers.Connect().Synchronize(_locker).ObserveOn(scheduler).SubscribeMany((t, _) => Disposable.Create(t.OnCompleted)).Subscribe();
 
             var sourceSubscriber = source.Synchronize(_locker).Subscribe(
                 updates => updates.ForEach(

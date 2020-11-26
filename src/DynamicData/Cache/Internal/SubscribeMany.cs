@@ -23,7 +23,7 @@ namespace DynamicData.Cache.Internal
             }
 
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _subscriptionFactory = (t, key) => subscriptionFactory(t);
+            _subscriptionFactory = (t, _) => subscriptionFactory(t);
         }
 
         public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory)

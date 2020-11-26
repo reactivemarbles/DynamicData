@@ -109,7 +109,7 @@ namespace DynamicData.Kernel
             }
 
             var indexed = source.Select((element, index) => new { Element = element, Index = index });
-            return itemsToFind.Join(indexed, left => left, right => right.Element, (left, right) => right).Select(x => resultSelector(x.Element, x.Index));
+            return itemsToFind.Join(indexed, left => left, right => right.Element, (_, right) => right).Select(x => resultSelector(x.Element, x.Index));
         }
 
         internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source)
@@ -143,7 +143,7 @@ namespace DynamicData.Kernel
 #if !WINDOWS_UWP
         internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
         {
-            return new HashSet<T>(source);
+            return new(source);
         }
 
 #endif

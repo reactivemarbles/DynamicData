@@ -77,13 +77,13 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TDestination, TDestinationKey>> Run()
         {
-            return _childChanges is null ? Create() : CreateWithChangeset();
+            return _childChanges is null ? Create() : CreateWithChangeSet();
         }
 
         private IObservable<IChangeSet<TDestination, TDestinationKey>> Create()
         {
             return _source.Transform(
-                (t, key) =>
+                (t, _) =>
                     {
                         var destination = _manySelector(t).Select(m => new DestinationContainer(m, _keySelector(m))).ToArray();
                         return new ManyContainer(() => destination);
@@ -91,7 +91,7 @@ namespace DynamicData.Cache.Internal
                 true).Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
         }
 
-        private IObservable<IChangeSet<TDestination, TDestinationKey>> CreateWithChangeset()
+        private IObservable<IChangeSet<TDestination, TDestinationKey>> CreateWithChangeSet()
         {
             if (_childChanges is null)
             {
@@ -104,7 +104,7 @@ namespace DynamicData.Cache.Internal
                         var result = new ChangeAwareCache<TDestination, TDestinationKey>();
 
                         var transformed = _source.Transform(
-                            (t, key) =>
+                            (t, _) =>
                                 {
                                     // Only skip initial for first time Adds where there is initial data records
                                     var locker = new object();
@@ -170,11 +170,6 @@ namespace DynamicData.Cache.Internal
 
                 public int GetHashCode(DestinationContainer obj)
                 {
-                    if (obj.Key is null)
-                    {
-                        return 0;
-                    }
-
                     return EqualityComparer<TDestinationKey?>.Default.GetHashCode(obj.Key);
                 }
             }
@@ -227,8 +222,8 @@ namespace DynamicData.Cache.Internal
 
                                 foreach (var destination in updates)
                                 {
-                                    var current = currentItems.First(d => d.Key is not null && d.Key.Equals(destination.Key));
-                                    var previous = previousItems.First(d => d.Key is not null && d.Key.Equals(destination.Key));
+                                    var current = currentItems.First(d => d.Key.Equals(destination.Key));
+                                    var previous = previousItems.First(d => d.Key.Equals(destination.Key));
 
                                     // Do not update is items are the same reference
                                     if (!ReferenceEquals(current.Item, previous.Item))

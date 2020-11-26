@@ -16,7 +16,7 @@ namespace DynamicData.Cache.Internal
         private readonly IChangeSet<TObject, TKey> _source;
 
         /// <summary>Initializes a new instance of the <see cref="RemoveKeyEnumerator{TObject, TKey}"/> class.Converts a <see cref="Change{TObject, TKey}"/> to <see cref="ChangeSet{TObject}"/>.</summary>
-        /// <param name="source">The changeset with a key.</param>
+        /// <param name="source">The change set with a key.</param>
         /// <param name="list">
         /// An optional list, if provided it allows the refresh from a key based cache to find the index for the resulting list based refresh.
         /// If not provided a refresh will dropdown to a replace which may ultimately result in a remove+add change downstream.
@@ -48,17 +48,18 @@ namespace DynamicData.Cache.Internal
                         // See: DynamicData > Binding > ObservableCollectionAdaptor.cs Line 129-130
 
                         // Note: A refresh is not index based within the context of a sorted change.
-                        // Thus, currentIndex will not be available here where as other changes like add and remove do have indexes if coming from a sorted changeset.
+                        // Thus, currentIndex will not be available here where as other changes like add and remove do have indexes if coming from a sorted change set.
 
                         // In order to properly handle a refresh and map to an index on a list, we need to use the source list (within the edit method so that it's thread safe)
-                        if (_list?.IndexOf(change.Current) is int index && index >= 0)
+                        var index = _list?.IndexOf(change.Current);
+                        if (index >= 0)
                         {
-                            yield return new Change<TObject>(ListChangeReason.Refresh, current: change.Current, index: index);
+                            yield return new Change<TObject>(ListChangeReason.Refresh, change.Current, index.Value);
                         }
                         else
                         {
                             // Fallback to a replace if a list is not available
-                            yield return new Change<TObject>(ListChangeReason.Replace, current: change.Current, previous: change.Current);
+                            yield return new Change<TObject>(ListChangeReason.Replace, change.Current, change.Current);
                         }
 
                         break;
@@ -69,12 +70,12 @@ namespace DynamicData.Cache.Internal
                         break;
 
                     case ChangeReason.Update:
-                        yield return new Change<TObject>(ListChangeReason.Remove, change.Previous.Value, index: change.PreviousIndex);
-                        yield return new Change<TObject>(ListChangeReason.Add, change.Current, index: change.CurrentIndex);
+                        yield return new Change<TObject>(ListChangeReason.Remove, change.Previous.Value, change.PreviousIndex);
+                        yield return new Change<TObject>(ListChangeReason.Add, change.Current, change.CurrentIndex);
                         break;
 
                     case ChangeReason.Remove:
-                        yield return new Change<TObject>(ListChangeReason.Remove, change.Current, index: change.CurrentIndex);
+                        yield return new Change<TObject>(ListChangeReason.Remove, change.Current, change.CurrentIndex);
                         break;
                 }
             }

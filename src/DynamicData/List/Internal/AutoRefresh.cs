@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -17,16 +16,16 @@ namespace DynamicData.List.Internal
     {
         private readonly TimeSpan? _buffer;
 
-        private readonly Func<TObject, IObservable<TAny>> _reevaluator;
+        private readonly Func<TObject, IObservable<TAny>> _reEvaluator;
 
         private readonly IScheduler? _scheduler;
 
         private readonly IObservable<IChangeSet<TObject>> _source;
 
-        public AutoRefresh(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
+        public AutoRefresh(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _reevaluator = reevaluator ?? throw new ArgumentNullException(nameof(reevaluator));
+            _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
             _buffer = buffer;
             _scheduler = scheduler;
         }
@@ -44,18 +43,12 @@ namespace DynamicData.List.Internal
                             .Publish();
 
                         // monitor each item observable and create change
-                        var itemHasChanged = shared.MergeMany((t) => _reevaluator(t).Select(x => t));
+                        var itemHasChanged = shared.MergeMany((t) => _reEvaluator(t).Select(_ => t));
 
-                        // create a changeset, either buffered or one item at the time
-                        IObservable<IEnumerable<TObject>> itemsChanged;
-                        if (_buffer is null)
-                        {
-                            itemsChanged = itemHasChanged.Select(t => new[] { t });
-                        }
-                        else
-                        {
-                            itemsChanged = itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Any());
-                        }
+                        // create a change set, either buffered or one item at the time
+                        IObservable<IEnumerable<TObject>> itemsChanged = _buffer is null ?
+                                                                             itemHasChanged.Select(t => new[] { t }) :
+                                                                             itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
 
                         IObservable<IChangeSet<TObject>> requiresRefresh = itemsChanged.Synchronize(locker).Select(
                             items =>

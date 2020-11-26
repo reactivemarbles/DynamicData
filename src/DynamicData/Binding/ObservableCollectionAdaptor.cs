@@ -61,7 +61,7 @@ namespace DynamicData.Binding
 
     /// <summary>
     /// Represents an adaptor which is used to update observable collection from
-    /// a changeset stream.
+    /// a change set stream.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -69,7 +69,7 @@ namespace DynamicData.Binding
     public class ObservableCollectionAdaptor<TObject, TKey> : IObservableCollectionAdaptor<TObject, TKey>
         where TKey : notnull
     {
-        private readonly Cache<TObject, TKey> _cache = new Cache<TObject, TKey>();
+        private readonly Cache<TObject, TKey> _cache = new();
 
         private readonly int _refreshThreshold;
 

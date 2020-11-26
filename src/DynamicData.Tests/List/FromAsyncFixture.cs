@@ -16,7 +16,7 @@ namespace DynamicData.Tests.List
 {
     public class FromAsyncFixture
     {
-        private TestScheduler _scheduler;
+        private readonly TestScheduler _scheduler;
 
         public FromAsyncFixture()
         {

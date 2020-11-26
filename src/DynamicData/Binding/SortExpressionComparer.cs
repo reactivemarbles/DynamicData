@@ -20,7 +20,7 @@ namespace DynamicData.Binding
         /// <returns>A comparer in ascending order.</returns>
         public static SortExpressionComparer<T> Ascending(Func<T, IComparable> expression)
         {
-            return new SortExpressionComparer<T> { new SortExpression<T>(expression) };
+            return new SortExpressionComparer<T> { new(expression) };
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace DynamicData.Binding
         /// <returns>A comparer in descending order.</returns>
         public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression)
         {
-            return new SortExpressionComparer<T> { new SortExpression<T>(expression, SortDirection.Descending) };
+            return new SortExpressionComparer<T> { new(expression, SortDirection.Descending) };
         }
 
         /// <inheritdoc/>

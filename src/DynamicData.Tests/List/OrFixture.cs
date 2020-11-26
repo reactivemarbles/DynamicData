@@ -30,9 +30,9 @@ namespace DynamicData.Tests.List
         [Fact]
         public void RefreshPassesThrough()
         {
-            SourceList<Item> source1 = new SourceList<Item>();
+            SourceList<Item> source1 = new();
             source1.Add(new Item("A"));
-            SourceList<Item> source2 = new SourceList<Item>();
+            SourceList<Item> source2 = new();
             source2.Add(new Item("B"));
 
             var list = new List<IObservable<IChangeSet<Item>>> { source1.Connect().AutoRefresh(), source2.Connect().AutoRefresh() };
@@ -55,9 +55,9 @@ namespace DynamicData.Tests.List
             var item2 = new Item("B");
             var item1Replacement = new Item("Test");
 
-            SourceList<Item> source1 = new SourceList<Item>();
+            SourceList<Item> source1 = new();
             source1.Add(item1);
-            SourceList<Item> source2 = new SourceList<Item>();
+            SourceList<Item> source2 = new();
             source2.Add(item2);
 
             var list = new List<IObservable<IChangeSet<Item>>> { source1.Connect(), source2.Connect() };

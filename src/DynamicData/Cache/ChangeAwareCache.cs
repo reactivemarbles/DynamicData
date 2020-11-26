@@ -55,16 +55,16 @@ namespace DynamicData
         }
 
         /// <inheritdoc />
-        public int Count => _data?.Count ?? 0;
+        public int Count => _data.Count;
 
         /// <inheritdoc />
-        public IEnumerable<TObject> Items => _data?.Values ?? Enumerable.Empty<TObject>();
+        public IEnumerable<TObject> Items => _data.Values;
 
         /// <inheritdoc />
-        public IEnumerable<TKey> Keys => _data?.Keys ?? Enumerable.Empty<TKey>();
+        public IEnumerable<TKey> Keys => _data.Keys;
 
         /// <inheritdoc />
-        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data ?? Enumerable.Empty<KeyValuePair<TKey, TObject>>();
+        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
 
         /// <summary>
         /// Adds the item to the cache without checking whether there is an existing value in the cache.
@@ -142,7 +142,7 @@ namespace DynamicData
         }
 
         /// <inheritdoc />
-        public Optional<TObject> Lookup(TKey key) => _data?.Lookup(key) ?? Optional<TObject>.None;
+        public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
         /// <summary>
         /// Raises an evaluate change for the specified keys.

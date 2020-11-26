@@ -18,7 +18,7 @@ namespace DynamicData.List.Internal
         public IEnumerable<T> Items => ReferenceCounts.Keys;
 
 #pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
-        private Dictionary<T, int> ReferenceCounts { get; } = new Dictionary<T, int>();
+        private Dictionary<T, int> ReferenceCounts { get; } = new();
 #pragma warning restore CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
 
         public int this[T item] => ReferenceCounts[item];

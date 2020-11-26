@@ -292,7 +292,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the summed value.</returns>
         public static IObservable<int> Sum<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, int?> valueSelector)
         {
-            return source.Accumlate(0, t => valueSelector(t).GetValueOrDefault(), (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0, t => valueSelector(t).GetValueOrDefault(), (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -326,7 +326,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -348,7 +348,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0L, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0L, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -370,7 +370,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -392,7 +392,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0D, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0D, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -414,7 +414,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -436,7 +436,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0M, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0M, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -458,7 +458,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0, valueSelector, (current, value) => current + value, (current, value) => current - value);
         }
 
         /// <summary>
@@ -480,7 +480,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(valueSelector));
             }
 
-            return source.Accumlate(0F, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
+            return source.Accumulate(0F, t => valueSelector(t).ValueOr(0), (current, value) => current + value, (current, value) => current - value);
         }
     }
 }

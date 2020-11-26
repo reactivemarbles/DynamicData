@@ -42,7 +42,7 @@ namespace DynamicData.List.Internal
                     {
                         var locker = new object();
 
-                        Func<T, bool> predicate = t => false;
+                        Func<T, bool> predicate = _ => false;
                         var all = new List<ItemWithMatch>();
                         var filtered = new ChangeAwareList<ItemWithMatch>();
                         var immutableFilter = _predicate is not null;
@@ -101,7 +101,7 @@ namespace DynamicData.List.Internal
 
         private static IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
         {
-            // Maintain all items as well as filtered list. This enables us to a) requery when the predicate changes b) check the previous state when Refresh is called
+            // Maintain all items as well as filtered list. This enables us to a) re-query when the predicate changes b) check the previous state when Refresh is called
             foreach (var item in changes)
             {
                 switch (item.Reason)

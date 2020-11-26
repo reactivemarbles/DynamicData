@@ -29,7 +29,7 @@ namespace DynamicData.List.Internal
         public GroupOnProperty(IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _groupSelector = groupSelectorKey?.Compile() ?? throw new ArgumentNullException(nameof(groupSelectorKey));
+            _groupSelector = groupSelectorKey.Compile();
             _propertySelector = groupSelectorKey;
             _throttle = throttle;
             _scheduler = scheduler;

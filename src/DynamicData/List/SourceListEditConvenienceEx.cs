@@ -68,7 +68,7 @@ namespace DynamicData
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="allItems">The items to compare against and performing deltaing.</param>
+        /// <param name="allItems">The items to compare against and performing a delta.</param>
         /// <param name="equalityComparer">The equality comparer used to determine whether an item has changed.</param>
         public static void EditDiff<T>(this ISourceList<T> source, IEnumerable<T> allItems, IEqualityComparer<T>? equalityComparer = null)
         {

@@ -31,7 +31,7 @@ namespace DynamicData
         IgnoreEvaluates = 2,
 
         /// <summary>
-        /// The insert at end then sort entire set.  This can be the best algorithm for large datasets with many changes.
+        /// The insert at end then sort entire set.  This can be the best algorithm for large data sets with many changes.
         /// </summary>
         [Obsolete("This is no longer being used. Use one of the other options instead.")]
         InsertAtEndThenSort = 3

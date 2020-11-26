@@ -10,9 +10,9 @@ namespace DynamicData.List.Internal
 {
     internal sealed class ReaderWriter<T>
     {
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
-        private ChangeAwareList<T> _data = new ChangeAwareList<T>();
+        private ChangeAwareList<T> _data = new();
 
         private bool _updateInProgress;
 
@@ -120,7 +120,7 @@ namespace DynamicData.List.Internal
             // Make a copy, apply changes on the main list, perform the preview callback with the old list and swap the lists again to finalize the update.
             lock (_locker)
             {
-                ChangeAwareList<T> copy = new ChangeAwareList<T>(_data, false);
+                ChangeAwareList<T> copy = new(_data, false);
 
                 _updateInProgress = true;
                 updateAction(_data);

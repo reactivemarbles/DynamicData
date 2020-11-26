@@ -34,7 +34,7 @@ namespace DynamicData.Binding
                 throw new ArgumentException("The property does not have a valid declaring type.", nameof(source));
             }
 
-            var inpc = typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(property.DeclaringType.GetTypeInfo());
+            var notifyPropertyChanged = typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(property.DeclaringType.GetTypeInfo());
 
             return t =>
                 {
@@ -43,12 +43,12 @@ namespace DynamicData.Binding
                         return Observable<Unit>.Never;
                     }
 
-                    if (!inpc)
+                    if (!notifyPropertyChanged)
                     {
                         return Observable.Return(Unit.Default);
                     }
 
-                    return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(handler => ((INotifyPropertyChanged)t).PropertyChanged += handler, handler => ((INotifyPropertyChanged)t).PropertyChanged -= handler).Where(args => args.EventArgs.PropertyName == property.Name).Select(args => Unit.Default);
+                    return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(handler => ((INotifyPropertyChanged)t).PropertyChanged += handler, handler => ((INotifyPropertyChanged)t).PropertyChanged -= handler).Where(args => args.EventArgs.PropertyName == property.Name).Select(_ => Unit.Default);
                 };
         }
 
@@ -156,17 +156,16 @@ namespace DynamicData.Binding
             }
 
             MemberExpression? memberExpression = null;
-            if (lambda.Body.NodeType == ExpressionType.Convert && lambda.Body is UnaryExpression unaryExpression && unaryExpression.Operand is MemberExpression unaryMemberExpression)
+            switch (lambda.Body.NodeType)
             {
-                memberExpression = unaryMemberExpression;
-            }
-            else if (lambda.Body.NodeType == ExpressionType.MemberAccess)
-            {
-                memberExpression = lambda.Body as MemberExpression;
-            }
-            else if (lambda.Body.NodeType == ExpressionType.Call)
-            {
-                return ((MethodCallExpression)lambda.Body).Method;
+                case ExpressionType.Convert when lambda.Body is UnaryExpression { Operand: MemberExpression unaryMemberExpression }:
+                    memberExpression = unaryMemberExpression;
+                    break;
+                case ExpressionType.MemberAccess:
+                    memberExpression = lambda.Body as MemberExpression;
+                    break;
+                case ExpressionType.Call:
+                    return ((MethodCallExpression)lambda.Body).Method;
             }
 
             if (memberExpression is null)

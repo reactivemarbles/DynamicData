@@ -52,7 +52,7 @@ namespace DynamicData.List.Internal
                                     // add pause timeout if required
                                     if (_timeOut != TimeSpan.Zero)
                                     {
-                                        timeoutSubscriber.Disposable = Observable.Timer(_timeOut, _scheduler).Select(l => false).SubscribeSafe(timeoutSubject);
+                                        timeoutSubscriber.Disposable = Observable.Timer(_timeOut, _scheduler).Select(_ => false).SubscribeSafe(timeoutSubject);
                                     }
                                 });
 

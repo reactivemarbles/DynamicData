@@ -32,7 +32,7 @@ namespace DynamicData.Tests.Cache
 
         protected ISourceCache<Person, string> _targetSource;
 
-        private ChangeSetAggregator<Person, string> _results;
+        private readonly ChangeSetAggregator<Person, string> _results;
 
         protected ExceptFixtureBase()
         {

@@ -43,7 +43,7 @@ namespace DynamicData.List.Internal
                         var dateTime = _scheduler.Now.DateTime;
                         long orderItemWasAdded = -1;
 
-                        var autoRemover = _sourceList.Connect().Synchronize(_locker).Do(x => dateTime = _scheduler.Now.DateTime).Cast(
+                        var autoRemover = _sourceList.Connect().Synchronize(_locker).Do(_ => dateTime = _scheduler.Now.DateTime).Cast(
                             t =>
                                 {
                                     var removeAt = _expireAfter(t);

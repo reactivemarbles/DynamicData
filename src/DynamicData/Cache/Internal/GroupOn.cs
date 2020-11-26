@@ -240,7 +240,7 @@ namespace DynamicData.Cache.Internal
                             if (groupCache.Count == 0)
                             {
                                 _groupCache.RemoveIfContained(group.Key);
-                                result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key, groupCache));
+                                result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, group.Key, groupCache));
                             }
                         });
 
@@ -282,12 +282,12 @@ namespace DynamicData.Cache.Internal
 
                 public override bool Equals(object? obj)
                 {
-                    return obj is ChangeWithGroup @group && Equals(@group);
+                    return obj is ChangeWithGroup group && Equals(group);
                 }
 
                 public override int GetHashCode()
                 {
-                    return Key is null ? 0 : Key.GetHashCode();
+                    return Key.GetHashCode();
                 }
 
                 public override string ToString()

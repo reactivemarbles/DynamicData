@@ -17,9 +17,9 @@ namespace DynamicData.Cache.Internal
     internal sealed class Combiner<TObject, TKey>
         where TKey : notnull
     {
-        private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new ChangeAwareCache<TObject, TKey>();
+        private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new();
 
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
         private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
 

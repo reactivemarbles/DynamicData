@@ -16,7 +16,7 @@ namespace DynamicData
         /// <summary>
         /// The default request value.
         /// </summary>
-        public static readonly VirtualRequest Default = new VirtualRequest(0, 25);
+        public static readonly VirtualRequest Default = new(0, 25);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualRequest"/> class.
@@ -45,7 +45,7 @@ namespace DynamicData
         public static IEqualityComparer<IVirtualRequest?> StartIndexSizeComparer { get; } = new StartIndexSizeEqualityComparer();
 
         /// <summary>
-        /// Gets the maximumn number of items to return.
+        /// Gets the maximum number of items to return.
         /// </summary>
         public int Size { get; } = 25;
 

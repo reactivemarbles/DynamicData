@@ -30,7 +30,7 @@ namespace DynamicData.Kernel
         {
             _index++;
 
-            return _index < (_list?.Count ?? 0);
+            return _index < _list.Count;
         }
 
         public void Dispose()

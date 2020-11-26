@@ -82,11 +82,11 @@ namespace DynamicData.List.Internal
             return Page(all, paged, request);
         }
 
-        private static PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T>? changeset = null)
+        private static PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T>? changeSet = null)
         {
-            if (changeset is not null)
+            if (changeSet is not null)
             {
-                all.Clone(changeset);
+                all.Clone(changeSet);
             }
 
             var previous = paged;
@@ -112,7 +112,7 @@ namespace DynamicData.List.Internal
 
             var startIndex = skip;
 
-            var moves = changeset.EmptyIfNull()
+            var moves = changeSet.EmptyIfNull()
                                  .Where(change => change.Reason == ListChangeReason.Moved
                                                   && change.MovedWithinRange(startIndex, startIndex + request.Size));
 

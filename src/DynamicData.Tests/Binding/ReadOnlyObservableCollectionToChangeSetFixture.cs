@@ -69,7 +69,7 @@ namespace DynamicData.Tests.Binding
             // Arrange
             var sourceCache = new SourceCache<Item, Guid>(item => item.Id);
 
-            var item1 = new Item(name: "Old Name");
+            var item1 = new Item("Old Name");
 
             sourceCache.AddOrUpdate(item1);
 

@@ -22,9 +22,9 @@ namespace DynamicData
     {
         private readonly List<T> _innerList;
 
-        private readonly object _lockObject = new object();
+        private readonly object _lockObject = new();
 
-        private ChangeSet<T> _changes = new ChangeSet<T>();
+        private ChangeSet<T> _changes = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChangeAwareList{T}"/> class.
@@ -52,7 +52,7 @@ namespace DynamicData
 
             _innerList = new List<T>(list);
 
-            if (_innerList.Any())
+            if (_innerList.Count > 0)
             {
                 _changes.Add(new Change<T>(ListChangeReason.AddRange, list));
             }
@@ -181,7 +181,7 @@ namespace DynamicData
                 if (_innerList.Count == 0 && returnValue.Removes == returnValue.TotalChanges && returnValue.TotalChanges > 1)
                 {
                     var removed = returnValue.Unified().Select(u => u.Current);
-                    returnValue = new ChangeSet<T> { new Change<T>(ListChangeReason.Clear, removed) };
+                    returnValue = new ChangeSet<T> { new(ListChangeReason.Clear, removed) };
                 }
 
                 ClearChanges();
@@ -562,7 +562,7 @@ namespace DynamicData
                 // attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
                 var last = Last;
 
-                if (last.HasValue && last.Value?.Reason == ListChangeReason.Add)
+                if (last.HasValue && last.Value.Reason == ListChangeReason.Add)
                 {
                     // begin a new batch if possible
                     var firstOfBatch = _changes.Count - 1;
@@ -581,7 +581,7 @@ namespace DynamicData
                         _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
                     }
                 }
-                else if (last.HasValue && last.Value?.Reason == ListChangeReason.AddRange)
+                else if (last.HasValue && last.Value.Reason == ListChangeReason.AddRange)
                 {
                     // check whether the new item is in the specified range
                     var range = last.Value.Range;
@@ -687,7 +687,7 @@ namespace DynamicData
 
                 // attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
                 var last = Last;
-                if (last.HasValue && last.Value?.Reason == ListChangeReason.Remove)
+                if (last.HasValue && last.Value.Reason == ListChangeReason.Remove)
                 {
                     // begin a new batch
                     var firstOfBatch = _changes.Count - 1;
@@ -707,7 +707,7 @@ namespace DynamicData
                         _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
                     }
                 }
-                else if (last.HasValue && last.Value?.Reason == ListChangeReason.RemoveRange)
+                else if (last.HasValue && last.Value.Reason == ListChangeReason.RemoveRange)
                 {
                     // add to the end of the previous batch
                     var range = last.Value.Range;

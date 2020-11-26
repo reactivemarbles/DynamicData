@@ -19,11 +19,11 @@ namespace DynamicData.Tests.Cache
     {
         private readonly SourceCache<Person, int> _cache;
 
-        private readonly CompositeDisposable _cleanup = new CompositeDisposable();
+        private readonly CompositeDisposable _cleanup = new();
 
-        private readonly List<Person> _sortedCollection = new List<Person>();
+        private readonly List<Person> _sortedCollection = new();
 
-        private readonly List<Person> _unsortedCollection = new List<Person>();
+        private readonly List<Person> _unsortedCollection = new();
 
         public ToSortedCollectionFixture()
         {
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void SortAscending()
         {
-            TestScheduler testScheduler = new TestScheduler();
+            TestScheduler testScheduler = new();
 
             _cleanup.Add(
                 _cache.Connect().ObserveOn(testScheduler).Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).ToCollection().Do(
@@ -71,7 +71,7 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void SortDescending()
         {
-            TestScheduler testScheduler = new TestScheduler();
+            TestScheduler testScheduler = new();
 
             _cleanup.Add(
                 _cache.Connect().ObserveOn(testScheduler).Sort(SortExpressionComparer<Person>.Ascending(p => p.Age)).ToCollection().Do(

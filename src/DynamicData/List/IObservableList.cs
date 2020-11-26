@@ -21,7 +21,7 @@ namespace DynamicData
         int Count { get; }
 
         /// <summary>
-        /// Gets observe the count changes, starting with the inital items count.
+        /// Gets observe the count changes, starting with the initial items count.
         /// </summary>
         IObservable<int> CountChanged { get; }
 

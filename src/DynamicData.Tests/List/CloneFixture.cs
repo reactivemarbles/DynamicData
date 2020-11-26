@@ -17,7 +17,7 @@ namespace DynamicData.Tests.List
 
         private readonly ICollection<Person> _collection = new Collection<Person>();
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly ISourceCache<Person, string> _source;
 

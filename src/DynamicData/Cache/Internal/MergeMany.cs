@@ -28,12 +28,12 @@ namespace DynamicData.Cache.Internal
             }
 
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _observableSelector = (t, key) => observableSelector(t);
+            _observableSelector = (t, _) => observableSelector(t);
         }
 
         public IObservable<TDestination> Run()
         {
-            return Observable.Create<TDestination>(observer => _source.SubscribeMany((t, key) => _observableSelector(t, key).Subscribe(observer.OnNext, ex => { }, () => { })).Subscribe(t => { }, observer.OnError));
+            return Observable.Create<TDestination>(observer => _source.SubscribeMany((t, key) => _observableSelector(t, key).Subscribe(observer.OnNext, _ => { }, () => { })).Subscribe(_ => { }, observer.OnError));
         }
     }
 }

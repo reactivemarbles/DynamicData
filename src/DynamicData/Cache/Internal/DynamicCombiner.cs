@@ -37,7 +37,7 @@ namespace DynamicData.Cache.Internal
 
                         // Transform to a merge container.
                         // This populates a RefTracker when the original source is subscribed to
-                        var sourceLists = _source.Connect().Synchronize(locker).Transform(changeset => new MergeContainer(changeset)).AsObservableList();
+                        var sourceLists = _source.Connect().Synchronize(locker).Transform(changeSet => new MergeContainer(changeSet)).AsObservableList();
 
                         var sharedLists = sourceLists.Connect().Publish();
 
@@ -139,7 +139,7 @@ namespace DynamicData.Cache.Internal
             if (items is IList<KeyValuePair<TKey, TObject>> list)
             {
                 // zero allocation enumerator
-                foreach (var item in (EnumerableIList<KeyValuePair<TKey, TObject>>)EnumerableIList.Create(list))
+                foreach (var item in EnumerableIList.Create(list))
                 {
                     ProcessItem(target, sourceLists, item.Value, item.Key);
                 }
@@ -193,7 +193,7 @@ namespace DynamicData.Cache.Internal
                 Source = source.Do(Clone);
             }
 
-            public Cache<TObject, TKey> Cache { get; } = new Cache<TObject, TKey>();
+            public Cache<TObject, TKey> Cache { get; } = new();
 
             public IObservable<IChangeSet<TObject, TKey>> Source { get; }
 

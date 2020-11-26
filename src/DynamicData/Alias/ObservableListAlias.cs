@@ -47,21 +47,21 @@ namespace DynamicData.Alias
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <typeparam name="TSource">The type of the source.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="manyselector">The selector for the enumerable.</param>
+        /// <param name="manySelector">The selector for the enumerable.</param>
         /// <returns>An observable which emits the change set.</returns>
-        public static IObservable<IChangeSet<TDestination>> SelectMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manyselector)
+        public static IObservable<IChangeSet<TDestination>> SelectMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manySelector)
         {
             if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (manyselector is null)
+            if (manySelector is null)
             {
-                throw new ArgumentNullException(nameof(manyselector));
+                throw new ArgumentNullException(nameof(manySelector));
             }
 
-            return source.TransformMany(manyselector);
+            return source.TransformMany(manySelector);
         }
 
         /// <summary>

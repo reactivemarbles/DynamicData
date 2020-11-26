@@ -48,15 +48,9 @@ namespace DynamicData.List.Internal
 
                         var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
-                        IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> reGrouper;
-                        if (_reGrouper is null)
-                        {
-                            reGrouper = Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>();
-                        }
-                        else
-                        {
-                            reGrouper = _reGrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
-                        }
+                        IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> reGrouper = _reGrouper is null ?
+                                                                                               Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>() :
+                                                                                               _reGrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 
                         var publisher = grouper.Merge(reGrouper).NotEmpty().SubscribeSafe(observer);
 
@@ -67,21 +61,21 @@ namespace DynamicData.List.Internal
         private static IChangeSet<IGrouping<TObject, TGroupKey>> CreateChangeSet(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IDictionary<TGroupKey, IGrouping<TObject, TGroupKey>> initialStateOfGroups)
         {
             // Now maintain target list
-            foreach (var intialGroup in initialStateOfGroups)
+            foreach (var initialGroup in initialStateOfGroups)
             {
-                var key = intialGroup.Key;
-                var current = allGroupings[intialGroup.Key];
+                var key = initialGroup.Key;
+                var current = allGroupings[initialGroup.Key];
 
                 if (current.List.Count == 0)
                 {
                     // remove if empty
                     allGroupings.Remove(key);
-                    result.Remove(intialGroup.Value);
+                    result.Remove(initialGroup.Value);
                 }
                 else
                 {
                     var currentState = GetGroupState(current);
-                    if (intialGroup.Value.Count == 0)
+                    if (initialGroup.Value.Count == 0)
                     {
                         // an add
                         result.Add(currentState);
@@ -89,7 +83,7 @@ namespace DynamicData.List.Internal
                     else
                     {
                         // a replace (or add if the old group has already been removed)
-                        result.Replace(intialGroup.Value, currentState);
+                        result.Replace(initialGroup.Value, currentState);
                     }
                 }
             }
@@ -160,7 +154,7 @@ namespace DynamicData.List.Internal
                                 var currentItem = change.Current.Item;
 
                                 // check whether an item changing has resulted in a different group
-                                if (previousGroup?.Equals(currentGroup) == false)
+                                if (previousGroup.Equals(currentGroup) == false)
                                 {
                                     GetInitialState();
 

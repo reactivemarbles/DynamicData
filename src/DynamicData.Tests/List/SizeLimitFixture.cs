@@ -13,7 +13,7 @@ namespace DynamicData.Tests.List
 {
     public class SizeLimitFixture : IDisposable
     {
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly ChangeSetAggregator<Person> _results;
 

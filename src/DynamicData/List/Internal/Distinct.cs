@@ -33,7 +33,7 @@ namespace DynamicData.List.Internal
                         var result = new ChangeAwareList<TValue>();
 
                         return _source.Transform<T, ItemWithMatch>(
-                            (t, previous, idx) =>
+                            (t, previous, _) =>
                                 {
                                     var previousValue = previous.ConvertOr(p => p is null ? default : p.Value, () => default);
 

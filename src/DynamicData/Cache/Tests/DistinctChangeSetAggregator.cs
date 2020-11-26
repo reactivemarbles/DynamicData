@@ -13,7 +13,7 @@ using DynamicData.Diagnostics;
 namespace DynamicData.Tests
 {
     /// <summary>
-    /// Aggregates all events and statistics for a distinct changeset to help assertions when testing.
+    /// Aggregates all events and statistics for a distinct change set to help assertions when testing.
     /// </summary>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     public class DistinctChangeSetAggregator<TValue> : IDisposable
@@ -31,7 +31,7 @@ namespace DynamicData.Tests
         {
             var published = source.Publish();
 
-            var error = published.Subscribe(updates => { }, ex => Error = ex);
+            var error = published.Subscribe(_ => { }, ex => Error = ex);
             var results = published.Subscribe(updates => Messages.Add(updates));
             Data = published.AsObservableCache();
             var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
@@ -94,7 +94,7 @@ namespace DynamicData.Tests
 
             if (isDisposing)
             {
-                _disposer?.Dispose();
+                _disposer.Dispose();
             }
         }
     }

@@ -14,11 +14,11 @@ namespace DynamicData.Cache.Internal
     {
         private readonly Func<TObject, TKey>? _keySelector;
 
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
         private CacheUpdater<TObject, TKey>? _activeUpdater;
 
-        private Dictionary<TKey, TObject> _data = new Dictionary<TKey, TObject>(); // could do with priming this on first time load
+        private Dictionary<TKey, TObject> _data = new(); // could do with priming this on first time load
 
         public ReaderWriter(Func<TObject, TKey>? keySelector = null) => _keySelector = keySelector;
 

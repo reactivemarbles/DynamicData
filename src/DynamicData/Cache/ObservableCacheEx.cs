@@ -305,7 +305,7 @@ namespace DynamicData
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="applyLocking">if set to <c>true</c> all methods are synchronised. There is no need to apply locking when the consumer can be sure the the read / write operations are already synchronised.</param>
+        /// <param name="applyLocking">if set to <c>true</c> all methods are synchronised. There is no need to apply locking when the consumer can be sure the read / write operations are already synchronised.</param>
         /// <returns>An observable cache.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, bool applyLocking = true)
@@ -330,8 +330,8 @@ namespace DynamicData
         /// <typeparam name="TObject">The object of the change set.</typeparam>
         /// <typeparam name="TKey">The key of the change set.</typeparam>
         /// <param name="source">The source observable.</param>
-        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes.</param>
-        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations.</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have successive property changes.</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable change set with additional refresh changes.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
@@ -344,7 +344,7 @@ namespace DynamicData
             }
 
             return source.AutoRefreshOnObservable(
-                (t, v) =>
+                (t, _) =>
                     {
                         if (propertyChangeThrottle is null)
                         {
@@ -365,8 +365,8 @@ namespace DynamicData
         /// <typeparam name="TProperty">The type of the property.</typeparam>
         /// <param name="source">The source observable.</param>
         /// <param name="propertyAccessor">Specify a property to observe changes. When it changes a Refresh is invoked.</param>
-        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes.</param>
-        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations.</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have successive property changes.</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable change set with additional refresh changes.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefresh<TObject, TKey, TProperty>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TProperty>> propertyAccessor, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
@@ -379,7 +379,7 @@ namespace DynamicData
             }
 
             return source.AutoRefreshOnObservable(
-                (t, v) =>
+                (t, _) =>
                     {
                         if (propertyChangeThrottle is null)
                         {
@@ -406,7 +406,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            return source.AutoRefreshOnObservable((t, v) => reevaluator(t), changeSetBuffer, scheduler);
+            return source.AutoRefreshOnObservable((t, _) => reevaluator(t), changeSetBuffer, scheduler);
         }
 
         /// <summary>
@@ -417,7 +417,7 @@ namespace DynamicData
         /// <typeparam name="TAny">The type of evaluation.</typeparam>
         /// <param name="source">The source observable change set.</param>
         /// <param name="reevaluator">An observable which acts on items within the collection and produces a value when the item should be refreshed.</param>
-        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This g  reatly increases performance when many elements require a refresh.</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements require a refresh.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable change set with additional refresh changes.</returns>
         public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
@@ -484,14 +484,14 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-        /// <param name="intialPauseState">if set to <c>true</c> [intial pause state].</param>
+        /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable which emits change sets.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool intialPauseState = false, IScheduler? scheduler = null)
+        public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, intialPauseState, scheduler: scheduler).Run();
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, scheduler: scheduler).Run();
         }
 
         /// <summary>
@@ -520,7 +520,7 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-        /// <param name="initialPauseState">if set to <c>true</c> [intial pause state].</param>
+        /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
         /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long. On completion buffering will cease.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable which emits change sets.</returns>
@@ -549,7 +549,7 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-        /// <param name="initialPauseState">if set to <c>true</c> [intial pause state].</param>
+        /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
         /// <param name="timer">Specify a time observable. The buffer will be emptied each time the timer produces a value and when it completes. On completion buffering will cease.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable which emits change sets.</returns>
@@ -557,7 +557,7 @@ namespace DynamicData
         public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, IObservable<Unit>? timer = null, IScheduler? scheduler = null)
             where TKey : notnull
         {
-            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, timer, scheduler: scheduler).Run();
+            return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, timer, scheduler).Run();
         }
 
         /// <summary>
@@ -749,7 +749,7 @@ namespace DynamicData
 #if SUPPORTS_BINDINGLIST
 
         /// <summary>
-        /// Binds a clone of the observable changeset to the target observable collection.
+        /// Binds a clone of the observable change set to the target observable collection.
         /// </summary>
         /// <typeparam name="TObject">The object type.</typeparam>
         /// <typeparam name="TKey">The key type.</typeparam>
@@ -1843,7 +1843,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return left.FullJoin(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+            return left.FullJoin(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
         /// <summary>
@@ -1925,7 +1925,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return left.FullJoinMany(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+            return left.FullJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
         /// <summary>
@@ -2104,7 +2104,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Groups the source using the property specified by the property selector. Each update produces immuatable grouping. Groups are re-applied when the property value changed.
+        /// Groups the source using the property specified by the property selector. Each update produces immutable grouping. Groups are re-applied when the property value changed.
         ///
         /// When there are likely to be a large number of group property changes specify a throttle to improve performance.
         /// </summary>
@@ -2135,7 +2135,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Groups the source on the value returned by group selector factory. Each update produces immuatable grouping.
+        /// Groups the source on the value returned by group selector factory. Each update produces immutable grouping.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2278,7 +2278,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return left.InnerJoin(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+            return left.InnerJoin(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
         /// <summary>
@@ -2360,7 +2360,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return left.InnerJoinMany(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+            return left.InnerJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
         /// <summary>
@@ -2455,7 +2455,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return left.LeftJoin(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+            return left.LeftJoin(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
         /// <summary>
@@ -2536,7 +2536,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return left.LeftJoinMany(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+            return left.LeftJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
         /// <summary>
@@ -2655,7 +2655,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
+        /// Dynamically merges the observable which is selected from each item in the stream, and un-merges the item
         /// when it is no longer part of the stream.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2684,7 +2684,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
+        /// Dynamically merges the observable which is selected from each item in the stream, and un-merges the item
         /// when it is no longer part of the stream.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2713,7 +2713,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
+        /// Dynamically merges the observable which is selected from each item in the stream, and un-merges the item
         /// when it is no longer part of the stream.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -2742,7 +2742,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Dynamically merges the observable which is selected from each item in the stream, and unmerges the item
+        /// Dynamically merges the observable which is selected from each item in the stream, and un-merges the item
         /// when it is no longer part of the stream.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -3596,7 +3596,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(resultSelector));
             }
 
-            return left.RightJoinMany(right, rightKeySelector, (leftKey, leftValue, rightValue) => resultSelector(leftValue, rightValue));
+            return left.RightJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
         }
 
         /// <summary>
@@ -3641,7 +3641,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Defer the subscribtion until loaded and skip initial changeset.
+        /// Defer the subscription until loaded and skip initial change set.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -3662,7 +3662,7 @@ namespace DynamicData
         /// <summary>
         /// Sorts using the specified comparer.
         /// Returns the underlying ChangeSet as as per the system conventions.
-        /// The resulting changeset also exposes a sorted key value collection of of the underlying cached data.
+        /// The resulting change set also exposes a sorted key value collection of of the underlying cached data.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -3886,7 +3886,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// The equivalent of rx startwith operator, but wraps the item in a change where reason is ChangeReason.Add.
+        /// The equivalent of rx StartWith operator, but wraps the item in a change where reason is ChangeReason.Add.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -3907,18 +3907,18 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed.
+        /// Subscribes to each item when it is added to the stream and un-subscribes when it is removed.  All items will be unsubscribed when the stream is disposed.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="subscriptionFactory">The subsription function.</param>
+        /// <param name="subscriptionFactory">The subscription function.</param>
         /// <returns>An observable which emits a change set.</returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// subscriptionFactory.</exception>
         /// <remarks>
-        /// Subscribes to each item when it is added or updates and unsubcribes when it is removed.
+        /// Subscribes to each item when it is added or updates and un-subscribes when it is removed.
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
             where TKey : notnull
@@ -3937,18 +3937,18 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed.
+        /// Subscribes to each item when it is added to the stream and unsubscribes when it is removed.  All items will be unsubscribed when the stream is disposed.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="subscriptionFactory">The subsription function.</param>
+        /// <param name="subscriptionFactory">The subscription function.</param>
         /// <returns>An observable which emits a change set.</returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// subscriptionFactory.</exception>
         /// <remarks>
-        /// Subscribes to each item when it is added or updates and unsubcribes when it is removed.
+        /// Subscribes to each item when it is added or updates and unsubscribes when it is removed.
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory)
             where TKey : notnull
@@ -3967,13 +3967,13 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Suppress  refresh notifications.
+        /// Suppress refresh notifications.
         /// </summary>
         /// <typeparam name="TObject">The object of the change set.</typeparam>
         /// <typeparam name="TKey">The key of the change set.</typeparam>
         /// <param name="source">The source observable change set.</param>
         /// <returns>An observable which emits change sets.</returns>
-        public static IObservable<IChangeSet<TObject, TKey>> SupressRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        public static IObservable<IChangeSet<TObject, TKey>> SuppressRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
             return source.WhereReasonsAreNot(ChangeReason.Refresh);
@@ -4006,7 +4006,7 @@ namespace DynamicData
         /// Transforms an observable sequence of observable changes sets into an observable sequence
         /// producing values only from the most recent observable sequence.
         /// Each time a new inner observable sequence is received, unsubscribe from the
-        /// previous inner observable sequence and clear the existing resukt set.
+        /// previous inner observable sequence and clear the existing result set.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -4039,7 +4039,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the observable to an observable changeset.
+        /// Converts the observable to an observable change set.
         /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -4440,7 +4440,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(forceTransform));
             }
 
-            return source.Transform((cur, prev, key) => transformFactory(cur, key), forceTransform.ForForced<TSource, TKey>());
+            return source.Transform((cur, _, key) => transformFactory(cur, key), forceTransform.ForForced<TSource, TKey>());
         }
 
         /// <summary>
@@ -4488,14 +4488,13 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects.</param>
-        /// <param name="maximumConcurrency">The maximum concurrent tasks used to perform transforms.</param>
         /// <returns>
         /// A transformed update collection.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null, int maximumConcurrency = 1)
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
             if (source is null)
@@ -4508,7 +4507,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            return source.TransformAsync((current, previous, key) => transformFactory(current), maximumConcurrency, forceTransform);
+            return source.TransformAsync((current, _, _) => transformFactory(current), forceTransform);
         }
 
         /// <summary>
@@ -4519,7 +4518,6 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
-        /// <param name="maximumConcurrency">***Concurrency has been disabled and will be re-implemented later.  The maximum concurrent tasks used to perform transforms.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects.</param>
         /// <returns>
         /// A transformed update collection.
@@ -4527,7 +4525,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
             if (source is null)
@@ -4540,7 +4538,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            return source.TransformAsync((current, _, key) => transformFactory(current, key), maximumConcurrency, forceTransform);
+            return source.TransformAsync((current, _, key) => transformFactory(current, key), forceTransform);
         }
 
         /// <summary>
@@ -4551,7 +4549,6 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
-        /// <param name="maximumConcurrency">***Concurrency has been disabled and will be re-implemented later. The maximum concurrent tasks used to perform transforms.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects.</param>
         /// <returns>
         /// A transformed update collection.
@@ -4559,7 +4556,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
             if (source is null)
@@ -4572,7 +4569,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, null, maximumConcurrency, forceTransform).Run();
+            return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, null, forceTransform).Run();
         }
 
         /// <summary>
@@ -4664,7 +4661,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(errorHandler));
             }
 
-            return source.TransformSafe((current, previous, key) => transformFactory(current), errorHandler, forceTransform.ForForced<TSource, TKey>());
+            return source.TransformSafe((current, _, _) => transformFactory(current), errorHandler, forceTransform.ForForced<TSource, TKey>());
         }
 
         /// <summary>
@@ -4857,14 +4854,13 @@ namespace DynamicData
         /// <param name="transformFactory">The transform factory.</param>
         /// <param name="errorHandler">The error handler.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects.</param>
-        /// <param name="maximumConcurrency">The maximum concurrent tasks used to perform transforms.</param>
         /// <returns>
         /// A transformed update collection.
         /// </returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null, int maximumConcurrency = 1)
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
             if (source is null)
@@ -4882,7 +4878,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(errorHandler));
             }
 
-            return source.TransformSafeAsync((current, _, _) => transformFactory(current), errorHandler, maximumConcurrency, forceTransform);
+            return source.TransformSafeAsync((current, _, _) => transformFactory(current), errorHandler, forceTransform);
         }
 
         /// <summary>
@@ -4894,7 +4890,6 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
         /// <param name="errorHandler">The error handler.</param>
-        /// <param name="maximumConcurrency">The maximum concurrent tasks used to perform transforms.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects.</param>
         /// <returns>
         /// A transformed update collection.
@@ -4902,7 +4897,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
             if (source is null)
@@ -4920,7 +4915,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(errorHandler));
             }
 
-            return source.TransformSafeAsync((current, previous, key) => transformFactory(current, key), errorHandler, maximumConcurrency, forceTransform);
+            return source.TransformSafeAsync((current, _, key) => transformFactory(current, key), errorHandler, forceTransform);
         }
 
         /// <summary>
@@ -4932,7 +4927,6 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="transformFactory">The transform factory.</param>
         /// <param name="errorHandler">The error handler.</param>
-        /// <param name="maximumConcurrency">The maximum concurrent tasks used to perform transforms.</param>
         /// <param name="forceTransform">Invoke to force a new transform for items matching the selected objects.</param>
         /// <returns>
         /// A transformed update collection.
@@ -4940,7 +4934,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
-        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+        public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
             where TKey : notnull
         {
             if (source is null)
@@ -4958,11 +4952,11 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(errorHandler));
             }
 
-            return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, errorHandler, maximumConcurrency, forceTransform).Run();
+            return new TransformAsync<TDestination, TSource, TKey>(source, transformFactory, errorHandler, forceTransform).Run();
         }
 
         /// <summary>
-        /// Transforms the object to a fully recursive tree, create a hiearchy based on the pivot function.
+        /// Transforms the object to a fully recursive tree, create a hierarchy based on the pivot function.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -5236,7 +5230,7 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="propertiesToMonitor">specify properties to Monitor, or omit to monitor all property changes.</param>
-        /// <returns>An observable which emits the object whos property has changed.</returns>
+        /// <returns>An observable which emits the object which has had a property changed.</returns>
         public static IObservable<TObject?> WhenAnyPropertyChanged<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params string[] propertiesToMonitor)
             where TKey : notnull
             where TObject : INotifyPropertyChanged
@@ -5321,7 +5315,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(reasons));
             }
 
-            if (!reasons.Any())
+            if (reasons.Length == 0)
             {
                 throw new ArgumentException("Must select at least one reason");
             }
@@ -5349,7 +5343,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(reasons));
             }
 
-            if (!reasons.Any())
+            if (reasons.Length == 0)
             {
                 throw new ArgumentException("Must select at least one reason");
             }
@@ -5576,12 +5570,12 @@ namespace DynamicData
                     });
         }
 
-        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, CombineOperator type, params IObservable<IChangeSet<TObject, TKey>>[] combinetarget)
+        private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, CombineOperator type, params IObservable<IChangeSet<TObject, TKey>>[] combineTarget)
             where TKey : notnull
         {
-            if (combinetarget is null)
+            if (combineTarget is null)
             {
-                throw new ArgumentNullException(nameof(combinetarget));
+                throw new ArgumentNullException(nameof(combineTarget));
             }
 
             return Observable.Create<IChangeSet<TObject, TKey>>(
@@ -5603,7 +5597,7 @@ namespace DynamicData
                         IDisposable subscriber = Disposable.Empty;
                         try
                         {
-                            var list = combinetarget.ToList();
+                            var list = combineTarget.ToList();
                             list.Insert(0, source);
 
                             var combiner = new Combiner<TObject, TKey>(type, UpdateAction);

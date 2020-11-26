@@ -32,7 +32,7 @@ namespace DynamicData.Cache.Internal
                     {
                         var allData = new Cache<TObject, TKey>();
                         var filteredData = new ChangeAwareCache<TObject, TKey>();
-                        Func<TObject, bool> predicate = t => false;
+                        Func<TObject, bool> predicate = _ => false;
 
                         var locker = new object();
 
@@ -68,7 +68,7 @@ namespace DynamicData.Cache.Internal
             return Observable.Create<Func<TObject, bool>>(
                 observable =>
                     {
-                        Func<TObject, bool> latest = t => false;
+                        Func<TObject, bool> latest = _ => false;
 
                         observable.OnNext(latest);
 

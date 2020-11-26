@@ -29,7 +29,7 @@ namespace DynamicData.Binding
         {
             Sender = sender;
             UnobtainableValue = true;
-            Value = default(TValue);
+            Value = default;
         }
 
         /// <summary>

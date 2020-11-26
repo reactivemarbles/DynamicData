@@ -14,7 +14,7 @@ namespace DynamicData.Cache.Internal
     internal class Cache<TObject, TKey> : ICache<TObject, TKey>
         where TKey : notnull
     {
-        public static readonly Cache<TObject, TKey> Empty = new Cache<TObject, TKey>();
+        public static readonly Cache<TObject, TKey> Empty = new();
 
         private readonly Dictionary<TKey, TObject> _data;
 
@@ -48,7 +48,7 @@ namespace DynamicData.Cache.Internal
 
         public Cache<TObject, TKey> Clone()
         {
-            return new Cache<TObject, TKey>(new Dictionary<TKey, TObject>(_data));
+            return new(new Dictionary<TKey, TObject>(_data));
         }
 
         public void Clone(IChangeSet<TObject, TKey> changes)

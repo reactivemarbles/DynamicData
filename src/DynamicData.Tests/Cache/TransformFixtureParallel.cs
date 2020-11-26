@@ -18,9 +18,9 @@ namespace DynamicData.Tests.Cache
                 return new PersonWithGender(p, gender);
             };
 
-        private ChangeSetAggregator<PersonWithGender, string> _results;
+        private readonly ChangeSetAggregator<PersonWithGender, string> _results;
 
-        private ISourceCache<Person, string> _source;
+        private readonly ISourceCache<Person, string> _source;
 
         public TransformFixtureParallel()
         {
@@ -114,8 +114,7 @@ namespace DynamicData.Tests.Cache
         {
             using var source = new SourceCache<Person, string>(p => p.Name);
             using var results = new ChangeSetAggregator<PersonWithGender?, string>(source.Connect()
-                .Transform((Func<Person, PersonWithGender?>)(p => null),
-                    new ParallelisationOptions(ParallelType.Parallelise)));
+                .Transform((Func<Person, PersonWithGender?>)(p => null), new ParallelisationOptions(ParallelType.Parallelise)));
             source.AddOrUpdate(new Person("Adult1", 50));
 
             results.Messages.Count.Should().Be(1, "Should be 1 updates");
@@ -127,10 +126,10 @@ namespace DynamicData.Tests.Cache
         public void Update()
         {
             const string key = "Adult1";
-            var newperson = new Person(key, 50);
+            var newPerson = new Person(key, 50);
             var updated = new Person(key, 51);
 
-            _source.AddOrUpdate(newperson);
+            _source.AddOrUpdate(newPerson);
             _source.AddOrUpdate(updated);
 
             _results.Messages.Count.Should().Be(2, "Should be 2 updates");

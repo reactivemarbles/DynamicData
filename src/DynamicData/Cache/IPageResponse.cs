@@ -5,7 +5,7 @@
 namespace DynamicData.Operators
 {
     /// <summary>
-    /// Response from the pagation operator.
+    /// Response from the pagination operator.
     /// </summary>
     public interface IPageResponse
     {

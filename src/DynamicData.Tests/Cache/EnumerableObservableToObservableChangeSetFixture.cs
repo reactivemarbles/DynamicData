@@ -20,7 +20,7 @@ namespace DynamicData.Tests.Cache
         {
             var subject = new Subject<IEnumerable<Person>>();
             var scheduler = new TestScheduler();
-            var results = subject.ToObservableChangeSet<Person>(t => TimeSpan.FromMinutes(1), scheduler: scheduler).AsAggregator();
+            var results = subject.ToObservableChangeSet<Person>(t => TimeSpan.FromMinutes(1), scheduler).AsAggregator();
 
             var people = Enumerable.Range(1, 200).Select(i => new Person("p" + i.ToString("000"), i)).ToArray();
 
@@ -39,7 +39,7 @@ namespace DynamicData.Tests.Cache
         {
             var subject = new Subject<IEnumerable<Person>>();
             var scheduler = new TestScheduler();
-            var results = subject.ToObservableChangeSet(limitSizeTo: 100, scheduler: scheduler).AsAggregator();
+            var results = subject.ToObservableChangeSet(100, scheduler).AsAggregator();
 
             var people = Enumerable.Range(1, 200).Select(i => new Person("p" + i.ToString("000"), i)).ToArray();
 

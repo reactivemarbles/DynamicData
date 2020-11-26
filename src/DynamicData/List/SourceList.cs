@@ -21,15 +21,15 @@ namespace DynamicData
     {
         private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
 
-        private readonly Subject<IChangeSet<T>> _changesPreview = new Subject<IChangeSet<T>>();
+        private readonly Subject<IChangeSet<T>> _changesPreview = new();
 
         private readonly IDisposable _cleanUp;
 
-        private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
+        private readonly Lazy<ISubject<int>> _countChanged = new(() => new Subject<int>());
 
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
-        private readonly ReaderWriter<T> _readerWriter = new ReaderWriter<T>();
+        private readonly ReaderWriter<T> _readerWriter = new();
 
         private int _editLevel;
 
@@ -82,9 +82,9 @@ namespace DynamicData
                             if (_readerWriter.Items.Length > 0)
                             {
                                 observer.OnNext(
-                                    new ChangeSet<T>()
+                                    new ChangeSet<T>
                                         {
-                                            new Change<T>(ListChangeReason.AddRange, _readerWriter.Items)
+                                            new(ListChangeReason.AddRange, _readerWriter.Items)
                                         });
                             }
 
@@ -106,7 +106,7 @@ namespace DynamicData
         public void Dispose()
         {
             _cleanUp.Dispose();
-            _changesPreview?.Dispose();
+            _changesPreview.Dispose();
         }
 
         /// <inheritdoc />
@@ -125,14 +125,7 @@ namespace DynamicData
 
                 if (_editLevel == 1)
                 {
-                    if (_changesPreview.HasObservers)
-                    {
-                        changes = _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview);
-                    }
-                    else
-                    {
-                        changes = _readerWriter.Write(updateAction);
-                    }
+                    changes = _changesPreview.HasObservers ? _readerWriter.WriteWithPreview(updateAction, InvokeNextPreview) : _readerWriter.Write(updateAction);
                 }
                 else
                 {

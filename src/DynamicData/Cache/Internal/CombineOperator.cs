@@ -25,7 +25,7 @@ namespace DynamicData.Cache.Internal
         Xor,
 
         /// <summary>
-        /// Include the items in the first changeset and exclude any items belonging to the other.
+        /// Include the items in the first change set and exclude any items belonging to the other.
         /// </summary>
         Except
     }

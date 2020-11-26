@@ -10,11 +10,11 @@ namespace DynamicData.Tests
 {
     public class EnumerableExFixtures
     {
-        private readonly Person _person1 = new Person("One", 1);
+        private readonly Person _person1 = new("One", 1);
 
-        private readonly Person _person2 = new Person("Two", 2);
+        private readonly Person _person2 = new("Two", 2);
 
-        private readonly Person _person3 = new Person("Three", 3);
+        private readonly Person _person3 = new("Three", 3);
 
         [Fact]
         public void CanConvertToObservableChangeSetCache()

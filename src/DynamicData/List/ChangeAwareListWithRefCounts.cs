@@ -12,7 +12,7 @@ namespace DynamicData
 {
     internal class ChangeAwareListWithRefCounts<T> : ChangeAwareList<T>
     {
-        private readonly ReferenceCountTracker<T> _tracker = new ReferenceCountTracker<T>();
+        private readonly ReferenceCountTracker<T> _tracker = new();
 
         public override void Clear()
         {

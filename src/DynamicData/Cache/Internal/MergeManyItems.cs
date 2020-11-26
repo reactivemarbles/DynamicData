@@ -30,7 +30,7 @@ namespace DynamicData.Cache.Internal
             }
 
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _observableSelector = (t, key) => observableSelector(t);
+            _observableSelector = (t, _) => observableSelector(t);
         }
 
         public IObservable<ItemWithValue<TObject, TDestination>> Run()

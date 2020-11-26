@@ -5,7 +5,7 @@
 namespace DynamicData
 {
     /// <summary>
-    /// A simple adaptor to inject side effects into a changeset observable.
+    /// A simple adaptor to inject side effects into a change set observable.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
     public interface IChangeSetAdaptor<T>

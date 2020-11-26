@@ -11,11 +11,11 @@ namespace DynamicData.Tests.Cache
 {
     public class InnerJoinFixture : IDisposable
     {
-        private SourceCache<Device, string> _left;
+        private readonly SourceCache<Device, string> _left;
 
-        private ChangeSetAggregator<DeviceWithMetadata, string> _result;
+        private readonly ChangeSetAggregator<DeviceWithMetadata, string> _result;
 
-        private SourceCache<DeviceMetaData, string> _right;
+        private readonly SourceCache<DeviceMetaData, string> _right;
 
         public InnerJoinFixture()
         {

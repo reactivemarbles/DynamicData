@@ -170,7 +170,7 @@ namespace DynamicData.Cache.Internal
                                             // check whether the previous item was in a different group. If so remove from old group
                                             var previous = _itemCache.Lookup(current.Key).ValueOrThrow(() => CreateMissingKeyException(ChangeReason.Update, current.Key));
 
-                                            if (previous.GroupKey is not null && !previous.GroupKey.Equals(current.GroupKey))
+                                            if (!previous.GroupKey.Equals(current.GroupKey))
                                             {
                                                 RemoveFromOldGroup(initialStateOfGroups, previous.GroupKey, current.Key);
                                             }
@@ -278,16 +278,6 @@ namespace DynamicData.Cache.Internal
 
                 public bool Equals(ChangeWithGroup other)
                 {
-                    if (Key is null && other.Key is null)
-                    {
-                        return true;
-                    }
-
-                    if (Key is null || other.Key is null)
-                    {
-                        return false;
-                    }
-
                     return Key.Equals(other.Key);
                 }
 
@@ -298,7 +288,7 @@ namespace DynamicData.Cache.Internal
 
                 public override int GetHashCode()
                 {
-                    return Key is null ? 0 : Key.GetHashCode();
+                    return Key.GetHashCode();
                 }
 
                 public override string ToString()

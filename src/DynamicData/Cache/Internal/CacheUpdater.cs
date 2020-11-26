@@ -110,7 +110,7 @@ namespace DynamicData.Cache.Internal
             if (itemsPairs is IList<KeyValuePair<TKey, TObject>> list)
             {
                 // zero allocation enumerator
-                foreach (var item in (EnumerableIList<KeyValuePair<TKey, TObject>>)EnumerableIList.Create(list))
+                foreach (var item in EnumerableIList.Create(list))
                 {
                     _cache.AddOrUpdate(item.Value, item.Key);
                 }

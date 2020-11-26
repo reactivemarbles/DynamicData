@@ -18,18 +18,15 @@ namespace DynamicData.Cache.Internal
 
         private readonly IObservable<Func<TSource, TKey, bool>>? _forceTransform;
 
-        private readonly int _maximumConcurrency;
-
         private readonly IObservable<IChangeSet<TSource, TKey>> _source;
 
         private readonly Func<TSource, Optional<TSource>, TKey, Task<TDestination>> _transformFactory;
 
-        public TransformAsync(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>>? exceptionCallback, int maximumConcurrency = 1, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+        public TransformAsync(IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>>? exceptionCallback, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         {
             _source = source;
             _exceptionCallback = exceptionCallback;
             _transformFactory = transformFactory;
-            _maximumConcurrency = maximumConcurrency;
             _forceTransform = forceTransform;
         }
 
@@ -73,7 +70,7 @@ namespace DynamicData.Cache.Internal
         {
             // check for errors and callback if a handler has been specified
             var errors = transformedItems.Where(t => !t.Success).ToArray();
-            if (errors.Any())
+            if (errors.Length > 0)
             {
                 errors.ForEach(t => _exceptionCallback?.Invoke(new Error<TSource, TKey>(t.Error, t.Change.Current, t.Change.Key)));
             }

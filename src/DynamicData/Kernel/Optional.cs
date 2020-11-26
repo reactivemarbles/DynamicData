@@ -110,7 +110,7 @@ namespace DynamicData.Kernel
         /// <returns>The optional value.</returns>
         public static Optional<T> Create(T? value)
         {
-            return new Optional<T>(value);
+            return new(value);
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace DynamicData.Kernel
         /// <returns>The optional.</returns>
         public static Optional<T> ToOptional(T? value)
         {
-            return new Optional<T>(value);
+            return new(value);
         }
 
         /// <inheritdoc />
@@ -167,7 +167,7 @@ namespace DynamicData.Kernel
                 return false;
             }
 
-            return obj is Optional<T> && Equals((Optional<T>)obj);
+            return obj is Optional<T> optional && Equals(optional);
         }
 
         /// <inheritdoc />
@@ -219,7 +219,7 @@ namespace DynamicData.Kernel
         /// <returns>The optional value.</returns>
         public static Optional<T> Some<T>(T value)
         {
-            return new Optional<T>(value);
+            return new(value);
         }
     }
 }

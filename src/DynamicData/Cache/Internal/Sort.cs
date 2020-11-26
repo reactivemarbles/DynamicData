@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -67,7 +66,7 @@ namespace DynamicData.Cache.Internal
 
         private class Sorter
         {
-            private readonly ChangeAwareCache<TObject, TKey> _cache = new ChangeAwareCache<TObject, TKey>();
+            private readonly ChangeAwareCache<TObject, TKey> _cache = new();
 
             private readonly SortOptimisations _optimisations;
 

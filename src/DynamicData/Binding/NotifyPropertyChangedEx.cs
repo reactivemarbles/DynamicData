@@ -30,7 +30,7 @@ namespace DynamicData.Binding
                 throw new ArgumentNullException(nameof(source));
             }
 
-            return Observable.FromEventPattern<PropertyChangedEventHandler?, PropertyChangedEventArgs>(handler => source.PropertyChanged += handler, handler => source.PropertyChanged -= handler).Where(x => propertiesToMonitor is null || propertiesToMonitor.Length == 0 || propertiesToMonitor.Contains(x.EventArgs.PropertyName)).Select(x => source);
+            return Observable.FromEventPattern<PropertyChangedEventHandler?, PropertyChangedEventArgs>(handler => source.PropertyChanged += handler, handler => source.PropertyChanged -= handler).Where(x => propertiesToMonitor.Length == 0 || propertiesToMonitor.Contains(x.EventArgs.PropertyName)).Select(_ => source);
         }
 
         /// <summary>

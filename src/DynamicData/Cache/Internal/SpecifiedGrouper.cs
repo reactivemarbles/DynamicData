@@ -54,7 +54,7 @@ namespace DynamicData.Cache.Internal
                                 }).DisposeMany().AsObservableCache();
 
                         // connect to each individual item and update the resulting group
-                        var updateFromcChilds = sourceGroups.Connect().SubscribeMany(
+                        var updatesFromChildren = sourceGroups.Connect().SubscribeMany(
                             x => x.Cache.Connect().Subscribe(
                                 updates =>
                                     {
@@ -78,7 +78,7 @@ namespace DynamicData.Cache.Internal
                                     notifier.Dispose();
                                     sourceGroups.Dispose();
                                     parentGroups.Dispose();
-                                    updateFromcChilds.Dispose();
+                                    updatesFromChildren.Dispose();
                                 });
                     });
         }

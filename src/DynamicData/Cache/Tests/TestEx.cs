@@ -13,7 +13,7 @@ namespace DynamicData.Tests
     public static class TestEx
     {
         /// <summary>
-        /// Aggregates all events and statistics for a paged changeset to help assertions when testing.
+        /// Aggregates all events and statistics for a paged change set to help assertions when testing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -22,11 +22,11 @@ namespace DynamicData.Tests
         public static ChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
             where TKey : notnull
         {
-            return new ChangeSetAggregator<TObject, TKey>(source);
+            return new(source);
         }
 
         /// <summary>
-        /// Aggregates all events and statistics for a distinct changeset to help assertions when testing.
+        /// Aggregates all events and statistics for a distinct change set to help assertions when testing.
         /// </summary>
         /// <typeparam name="TValue">The type of the value.</typeparam>
         /// <param name="source">The source.</param>
@@ -44,7 +44,7 @@ namespace DynamicData.Tests
         }
 
         /// <summary>
-        /// Aggregates all events and statistics for a sorted changeset to help assertions when testing.
+        /// Aggregates all events and statistics for a sorted change set to help assertions when testing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -63,7 +63,7 @@ namespace DynamicData.Tests
         }
 
         /// <summary>
-        /// Aggregates all events and statistics for a virtual changeset to help assertions when testing.
+        /// Aggregates all events and statistics for a virtual change set to help assertions when testing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -82,7 +82,7 @@ namespace DynamicData.Tests
         }
 
         /// <summary>
-        /// Aggregates all events and statistics for a paged changeset to help assertions when testing.
+        /// Aggregates all events and statistics for a paged change set to help assertions when testing.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>

@@ -9,7 +9,7 @@ using System.Reactive;
 
 namespace DynamicData.Binding
 {
-    [DebuggerDisplay("ObservablePropertyPart<{_expression}>")]
+    [DebuggerDisplay("ObservablePropertyPart<{" + nameof(_expression) + "}>")]
     internal sealed class ObservablePropertyPart
     {
         // ReSharper disable once NotAccessedField.Local

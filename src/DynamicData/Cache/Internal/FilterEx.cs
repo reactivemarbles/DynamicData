@@ -84,19 +84,19 @@ namespace DynamicData.Cache.Internal
 
             foreach (var kvp in allData.KeyValues)
             {
-                var exisiting = filtered.Lookup(kvp.Key);
+                var existing = filtered.Lookup(kvp.Key);
                 var matches = predicate(kvp.Value);
 
                 if (matches)
                 {
-                    if (!exisiting.HasValue)
+                    if (!existing.HasValue)
                     {
                         filtered.Add(kvp.Value, kvp.Key);
                     }
                 }
                 else
                 {
-                    if (exisiting.HasValue)
+                    if (existing.HasValue)
                     {
                         filtered.Remove(kvp.Key);
                     }

@@ -15,9 +15,9 @@ namespace DynamicData.Tests.List
                 return Task.FromResult(transformed);
             };
 
-        private ChangeSetAggregator<PersonWithGender> _results;
+        private readonly ChangeSetAggregator<PersonWithGender> _results;
 
-        private ISourceList<Person> _source;
+        private readonly ISourceList<Person> _source;
 
         public TransformAsyncFixture()
         {

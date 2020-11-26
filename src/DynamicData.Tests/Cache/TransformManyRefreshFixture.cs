@@ -42,7 +42,7 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void AutoRefreshOnOtherProperty()
         {
-            var friends = new List<PersonWithFriends> { new PersonWithFriends("Friend1", 40) };
+            var friends = new List<PersonWithFriends> { new("Friend1", 40) };
             var person = new PersonWithFriends("Person", 50, friends);
             _source.AddOrUpdate(person);
 
@@ -57,7 +57,7 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void DirectRefresh()
         {
-            var friends = new List<PersonWithFriends> { new PersonWithFriends("Friend1", 40) };
+            var friends = new List<PersonWithFriends> { new("Friend1", 40) };
             var person = new PersonWithFriends("Person", 50, friends);
             _source.AddOrUpdate(person);
 

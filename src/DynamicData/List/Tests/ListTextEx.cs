@@ -13,14 +13,14 @@ namespace DynamicData.Tests
     public static class ListTextEx
     {
         /// <summary>
-        /// Aggregates all events and statistics for a changeset to help assertions when testing.
+        /// Aggregates all events and statistics for a change set to help assertions when testing.
         /// </summary>
         /// <param name="source">The source observable.</param>
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <returns>The change set aggregator.</returns>
         public static ChangeSetAggregator<T> AsAggregator<T>(this IObservable<IChangeSet<T>> source)
         {
-            return new ChangeSetAggregator<T>(source);
+            return new(source);
         }
     }
 }

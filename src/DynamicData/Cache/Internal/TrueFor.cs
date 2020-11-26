@@ -34,7 +34,7 @@ namespace DynamicData.Cache.Internal
                         var inlineChanges = transformed.MergeMany(t => t.Observable);
                         var queried = transformed.ToCollection();
 
-                        // nb: we do not care about the inline change because we are only monitoring it to cause a re-evalutaion of all items
+                        // nb: we do not care about the inline change because we are only monitoring it to cause a re-evaluation of all items
                         var publisher = queried.CombineLatest(inlineChanges, (items, _) => _collectionMatcher(items)).DistinctUntilChanged().SubscribeSafe(observer);
 
                         return new CompositeDisposable(publisher, transformed.Connect());

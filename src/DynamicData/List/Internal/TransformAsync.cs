@@ -162,8 +162,7 @@ namespace DynamicData.List.Internal
                                 throw new UnspecifiedIndexException("Cannot move as an index was not specified");
                             }
 
-                            var collection = transformed as IExtendedList<TransformedItemContainer>;
-                            if (collection is not null)
+                            if (transformed is IExtendedList<TransformedItemContainer> collection)
                             {
                                 collection.Move(change.PreviousIndex, change.CurrentIndex);
                             }

@@ -11,7 +11,7 @@ namespace DynamicData.Tests.List
 {
     public class ChangeAwareListFixture
     {
-        private ChangeAwareList<int> _list;
+        private readonly ChangeAwareList<int> _list;
 
         public ChangeAwareListFixture()
         {

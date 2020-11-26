@@ -23,7 +23,7 @@ namespace DynamicData.Binding
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="observableList">The output observable list.</param>
-        /// <returns>The <paramref name="source"/> changeset for continued chaining.</returns>
+        /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<TObject>> BindToObservableList<TObject>(this IObservable<IChangeSet<TObject>> source, out IObservableList<TObject> observableList)
         {
@@ -33,10 +33,10 @@ namespace DynamicData.Binding
             }
 
             // Load our source list with the change set.
-            // Each changeset we need to convert to remove the key.
+            // Each change set we need to convert to remove the key.
             var sourceList = new SourceList<TObject>(source);
 
-            // Output our readonly observable list, preventing the sourcelist from being editted from anywhere else.
+            // Output our readonly observable list, preventing the source list from being edited from anywhere else.
             observableList = sourceList;
 
             // Return a observable that will connect to the source so we can properly dispose when the pipeline ends.
@@ -53,7 +53,7 @@ namespace DynamicData.Binding
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="observableList">The observable list which is the output.</param>
-        /// <returns>The <paramref name="source"/> changeset for continued chaining.</returns>
+        /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out IObservableList<TObject> observableList)
             where TKey : notnull
@@ -64,10 +64,10 @@ namespace DynamicData.Binding
             }
 
             // Load our source list with the change set.
-            // Each changeset we need to convert to remove the key.
+            // Each change set we need to convert to remove the key.
             var sourceList = new SourceList<TObject>();
 
-            // Output our readonly observable list, preventing the sourcelist from being editted from anywhere else.
+            // Output our readonly observable list, preventing the source list from being edited from anywhere else.
             observableList = sourceList;
 
             // Return a observable that will connect to the source so we can properly dispose when the pipeline ends.
@@ -84,7 +84,7 @@ namespace DynamicData.Binding
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="observableList">The output observable list.</param>
-        /// <returns>The <paramref name="source"/> changeset for continued chaining.</returns>
+        /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<ISortedChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out IObservableList<TObject> observableList)
             where TKey : notnull
@@ -95,10 +95,10 @@ namespace DynamicData.Binding
             }
 
             // Load our source list with the change set.
-            // Each changeset we need to convert to remove the key.
+            // Each change set we need to convert to remove the key.
             var sourceList = new SourceList<TObject>();
 
-            // Output our readonly observable list, preventing the sourcelist from being editted from anywhere else.
+            // Output our readonly observable list, preventing the source list from being edited from anywhere else.
             observableList = sourceList;
 
             // Return a observable that will connect to the source so we can properly dispose when the pipeline ends.
@@ -141,7 +141,7 @@ namespace DynamicData.Binding
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="changeSetWithKey">The source change set.</param>
         /// <param name="list">The list needed to support refresh.</param>
-        /// <returns>The downcasted <see cref="IChangeSet{TObject}"/>.</returns>
+        /// <returns>The down casted <see cref="IChangeSet{TObject}"/>.</returns>
         private static IChangeSet<TObject> RemoveKey<TObject, TKey>(this IChangeSet<TObject, TKey> changeSetWithKey, IExtendedList<TObject> list)
             where TKey : notnull
         {

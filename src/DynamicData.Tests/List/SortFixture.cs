@@ -15,7 +15,7 @@ namespace DynamicData.Tests.List
     {
         private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name).ThenByAscending(p => p.Age);
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly ChangeSetAggregator<Person> _results;
 

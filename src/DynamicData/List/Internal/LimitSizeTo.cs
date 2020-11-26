@@ -37,13 +37,13 @@ namespace DynamicData.List.Internal
             return _sourceList.Connect().ObserveOn(_scheduler).Synchronize(_locker).Transform(t => new ExpirableItem<T>(t, _scheduler.Now.DateTime, Interlocked.Increment(ref orderItemWasAdded))).ToCollection().Select(
                 list =>
                     {
-                        var numbertoExpire = list.Count - _sizeLimit;
-                        if (numbertoExpire < 0)
+                        var numberToExpire = list.Count - _sizeLimit;
+                        if (numberToExpire < 0)
                         {
                             return emptyResult;
                         }
 
-                        return list.OrderBy(exp => exp.ExpireAt).ThenBy(exp => exp.Index).Take(numbertoExpire).Select(item => item.Item).ToList();
+                        return list.OrderBy(exp => exp.ExpireAt).ThenBy(exp => exp.Index).Take(numberToExpire).Select(item => item.Item).ToList();
                     }).Where(items => items.Count != 0);
         }
     }

@@ -35,7 +35,7 @@ namespace DynamicData.Tests
             Data = published.AsObservableCache();
 
             var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex);
-            var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary, ex => { });
+            var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary, _ => { });
             var connected = published.Connect();
 
             _disposer = Disposable.Create(
@@ -104,7 +104,7 @@ namespace DynamicData.Tests
 
             if (isDisposing)
             {
-                _disposer?.Dispose();
+                _disposer.Dispose();
             }
         }
     }

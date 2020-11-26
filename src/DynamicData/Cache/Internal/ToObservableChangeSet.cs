@@ -61,25 +61,26 @@ namespace DynamicData.Cache.Internal
                                         if (latest is IList<TObject> list)
                                         {
                                             // zero allocation enumerator
-                                            var elist = EnumerableIList.Create(list);
+                                            var enumerableList = EnumerableIList.Create(list);
                                             if (!_singleValueSource)
                                             {
-                                                state.Remove(state.Keys.Except(elist.Select(_keySelector)).ToList());
+                                                state.Remove(state.Keys.Except(enumerableList.Select(_keySelector)).ToList());
                                             }
 
-                                            foreach (var item in elist)
+                                            foreach (var item in enumerableList)
                                             {
                                                 state.AddOrUpdate(item, _keySelector(item));
                                             }
                                         }
                                         else
                                         {
+                                            var enumerable = latest.ToList();
                                             if (!_singleValueSource)
                                             {
-                                                state.Remove(state.Keys.Except(latest.Select(_keySelector)).ToList());
+                                                state.Remove(state.Keys.Except(enumerable.Select(_keySelector)).ToList());
                                             }
 
-                                            foreach (var item in latest)
+                                            foreach (var item in enumerable)
                                             {
                                                 state.AddOrUpdate(item, _keySelector(item));
                                             }

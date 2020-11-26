@@ -18,8 +18,6 @@ namespace DynamicData.Tests
     {
         private readonly IDisposable _disposer;
 
-        private Exception? _error;
-
         private bool _isDisposed;
 
         /// <summary>
@@ -32,7 +30,7 @@ namespace DynamicData.Tests
 
             Data = published.AsObservableList();
 
-            var results = published.Subscribe(updates => Messages.Add(updates), ex => _error = ex);
+            var results = published.Subscribe(updates => Messages.Add(updates), ex => Exception = ex);
             var connected = published.Connect();
 
             _disposer = Disposable.Create(
@@ -43,6 +41,11 @@ namespace DynamicData.Tests
                         results.Dispose();
                     });
         }
+
+        /// <summary>
+        /// Gets or sets the exception.
+        /// </summary>
+        public Exception? Exception { get; set; }
 
         /// <summary>
         /// Gets a clone of the data.
@@ -78,7 +81,7 @@ namespace DynamicData.Tests
 
             if (isDisposing)
             {
-                _disposer?.Dispose();
+                _disposer.Dispose();
             }
         }
     }

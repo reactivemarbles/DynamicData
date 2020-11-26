@@ -13,11 +13,11 @@ namespace DynamicData.Tests.Cache
 {
     public class ChangesReducerFixture
     {
-        private static Person _testEntity = new Person("test", "test", 32);
+        private static readonly Person _testEntity = new Person("test", "test", 32);
 
-        private static int _testIndex = 0;
+        private static readonly int _testIndex = 0;
 
-        private static Change<Person, string>[] _changes = new[]
+        private static readonly Change<Person, string>[] _changes = new[]
                                                                {
                                                                    new Change<Person, string>(ChangeReason.Add, _testEntity.Key, _testEntity, _testIndex),
                                                                    new Change<Person, string>(ChangeReason.Remove, _testEntity.Key, _testEntity, _testIndex),

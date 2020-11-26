@@ -29,7 +29,7 @@ namespace DynamicData.Cache.Internal
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _timeSelector = timeSelector ?? throw new ArgumentNullException(nameof(timeSelector));
             _interval = interval;
-            _scheduler = scheduler ?? Scheduler.Default;
+            _scheduler = scheduler;
         }
 
         public IObservable<IChangeSet<TObject, TKey>> ExpireAfter()
@@ -75,7 +75,7 @@ namespace DynamicData.Cache.Internal
                     {
                         var dateTime = DateTime.Now;
 
-                        var autoRemover = _source.Do(x => dateTime = _scheduler.Now.DateTime).Transform(
+                        var autoRemover = _source.Do(_ => dateTime = _scheduler.Now.DateTime).Transform(
                             (t, v) =>
                                 {
                                     var removeAt = _timeSelector(t);
@@ -97,16 +97,16 @@ namespace DynamicData.Cache.Internal
                             }
                         }
 
-                        var removalSubscripion = new SingleAssignmentDisposable();
+                        var removalSubscription = new SingleAssignmentDisposable();
                         if (_interval.HasValue)
                         {
                             // use polling
-                            removalSubscripion.Disposable = _scheduler.ScheduleRecurringAction(_interval.Value, RemovalAction);
+                            removalSubscription.Disposable = _scheduler.ScheduleRecurringAction(_interval.Value, RemovalAction);
                         }
                         else
                         {
                             // create a timer for each distinct time
-                            removalSubscripion.Disposable = autoRemover.Connect().DistinctValues(ei => ei.ExpireAt).SubscribeMany(
+                            removalSubscription.Disposable = autoRemover.Connect().DistinctValues(ei => ei.ExpireAt).SubscribeMany(
                                 datetime =>
                                     {
                                         var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
@@ -117,7 +117,7 @@ namespace DynamicData.Cache.Internal
                         return Disposable.Create(
                             () =>
                                 {
-                                    removalSubscripion.Dispose();
+                                    removalSubscription.Dispose();
                                     autoRemover.Dispose();
                                 });
                     });

@@ -141,7 +141,7 @@ namespace DynamicData
         void RemoveKeys(IEnumerable<TKey> key);
 
         /// <summary>
-        /// Updates using changes using the specified changeset.
+        /// Updates using changes using the specified change set.
         /// </summary>
         /// <param name="changes">The changes to update with.</param>
         [Obsolete("Use Clone()")]

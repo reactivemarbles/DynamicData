@@ -45,16 +45,10 @@ namespace DynamicData.List.Internal
                         // monitor each item observable and create change, carry the value of the observable property
                         IObservable<ObjWithFilterValue> itemHasChanged = shared.MergeMany(v => _filter(v.Obj).Select(prop => new ObjWithFilterValue(v.Obj, prop)));
 
-                        // create a changeset, either buffered or one item at the time
-                        IObservable<IEnumerable<ObjWithFilterValue>> itemsChanged;
-                        if (_buffer is null)
-                        {
-                            itemsChanged = itemHasChanged.Select(t => new[] { t });
-                        }
-                        else
-                        {
-                            itemsChanged = itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Any());
-                        }
+                        // create a change set, either buffered or one item at the time
+                        IObservable<IEnumerable<ObjWithFilterValue>> itemsChanged = _buffer is null ?
+                                                                                        itemHasChanged.Select(t => new[] { t }) :
+                                                                                        itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
 
                         IObservable<IChangeSet<ObjWithFilterValue>> requiresRefresh = itemsChanged.Synchronize(locker).Select(
                             items =>

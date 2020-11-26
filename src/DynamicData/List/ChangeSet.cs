@@ -9,7 +9,7 @@ using System.Linq;
 namespace DynamicData
 {
     /// <summary>
-    /// A set of changes which has occured since the last reported change.
+    /// A set of changes which has occurred since the last reported change.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
     public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>

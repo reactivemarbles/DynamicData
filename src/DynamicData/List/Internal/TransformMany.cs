@@ -21,7 +21,7 @@ namespace DynamicData.List.Internal
 
         private readonly IEqualityComparer<TDestination> _equalityComparer;
 
-        private readonly Func<TSource, IEnumerable<TDestination>> _manyselector;
+        private readonly Func<TSource, IEnumerable<TDestination>> _manySelector;
 
         private readonly IObservable<IChangeSet<TSource>> _source;
 
@@ -88,7 +88,7 @@ namespace DynamicData.List.Internal
         public TransformMany(IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null, Func<TSource, IObservable<IChangeSet<TDestination>>>? childChanges = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _manyselector = manySelector;
+            _manySelector = manySelector;
             _childChanges = childChanges;
             _equalityComparer = equalityComparer ?? EqualityComparer<TDestination>.Default;
         }
@@ -97,7 +97,7 @@ namespace DynamicData.List.Internal
         {
             if (_childChanges is not null)
             {
-                return CreateWithChangeset();
+                return CreateWithChangeSet();
             }
 
             return Observable.Create<IChangeSet<TDestination>>(
@@ -106,7 +106,7 @@ namespace DynamicData.List.Internal
                         // NB: ChangeAwareList is used internally by dd to capture changes to a list and ensure they can be replayed by subsequent operators
                         var result = new ChangeAwareList<TDestination>();
 
-                        return _source.Transform(item => new ManyContainer(_manyselector(item).ToArray()), true).Select(
+                        return _source.Transform(item => new ManyContainer(_manySelector(item).ToArray()), true).Select(
                             changes =>
                                 {
                                     var destinationChanges = new DestinationEnumerator(changes, _equalityComparer);
@@ -116,7 +116,7 @@ namespace DynamicData.List.Internal
                     });
         }
 
-        private IObservable<IChangeSet<TDestination>> CreateWithChangeset()
+        private IObservable<IChangeSet<TDestination>> CreateWithChangeSet()
         {
             if (_childChanges is null)
             {
@@ -132,7 +132,7 @@ namespace DynamicData.List.Internal
                             t =>
                                 {
                                     var locker = new object();
-                                    var collection = _manyselector(t);
+                                    var collection = _manySelector(t);
                                     var changes = _childChanges(t).Synchronize(locker).Skip(1);
                                     return new ManyContainer(collection, changes);
                                 }).Publish();
@@ -149,14 +149,14 @@ namespace DynamicData.List.Internal
                                     return result.CaptureChanges();
                                 });
 
-                        var subseq = subsequent.RemoveIndex().Select(
+                        var subsequentSelection = subsequent.RemoveIndex().Select(
                             changes =>
                                 {
                                     result.Clone(changes, _equalityComparer);
                                     return result.CaptureChanges();
                                 });
 
-                        var allChanges = init.Merge(subseq);
+                        var allChanges = init.Merge(subsequentSelection);
 
                         return new CompositeDisposable(allChanges.SubscribeSafe(observer), transformed.Connect());
                     });

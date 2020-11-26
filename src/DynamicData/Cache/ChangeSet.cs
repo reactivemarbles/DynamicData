@@ -19,7 +19,7 @@ namespace DynamicData
         /// <summary>
         /// An empty change set.
         /// </summary>
-        public static readonly ChangeSet<TObject, TKey> Empty = new ChangeSet<TObject, TKey>();
+        public static readonly ChangeSet<TObject, TKey> Empty = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.

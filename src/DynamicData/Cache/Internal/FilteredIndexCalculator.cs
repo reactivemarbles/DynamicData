@@ -18,9 +18,9 @@ namespace DynamicData.Cache.Internal
             {
                 // clear collection and rebuild
                 var removed = previousItems.Select((item, index) => new Change<TObject, TKey>(ChangeReason.Remove, item.Key, item.Value, index));
-                var newitems = currentItems.Select((item, index) => new Change<TObject, TKey>(ChangeReason.Add, item.Key, item.Value, index));
+                var newItems = currentItems.Select((item, index) => new Change<TObject, TKey>(ChangeReason.Add, item.Key, item.Value, index));
 
-                return new List<Change<TObject, TKey>>(removed.Union(newitems));
+                return new List<Change<TObject, TKey>>(removed.Union(newItems));
             }
 
             var previousList = previousItems.ToList();
@@ -28,7 +28,7 @@ namespace DynamicData.Cache.Internal
 
             var removes = previousItems.Except(currentItems, keyComparer).ToList();
             var adds = currentItems.Except(previousItems, keyComparer).ToList();
-            var inbothKeys = new HashSet<TKey>(previousItems.Intersect(currentItems, keyComparer).Select(x => x.Key));
+            var inBothKeys = new HashSet<TKey>(previousItems.Intersect(currentItems, keyComparer).Select(x => x.Key));
 
             var result = new List<Change<TObject, TKey>>();
             foreach (var remove in removes)
@@ -50,7 +50,7 @@ namespace DynamicData.Cache.Internal
 
             // Adds and removes have been accounted for
             // so check whether anything in the remaining change set have been moved ot updated
-            var remainingItems = sourceUpdates.EmptyIfNull().Where(u => inbothKeys.Contains(u.Key) && (u.Reason == ChangeReason.Update || u.Reason == ChangeReason.Moved || u.Reason == ChangeReason.Refresh)).ToList();
+            var remainingItems = sourceUpdates.EmptyIfNull().Where(u => inBothKeys.Contains(u.Key) && (u.Reason == ChangeReason.Update || u.Reason == ChangeReason.Moved || u.Reason == ChangeReason.Refresh)).ToList();
 
             foreach (var change in remainingItems)
             {
@@ -75,10 +75,10 @@ namespace DynamicData.Cache.Internal
                     // TODO:  We have the index already, would be more efficient to calculate new position from the original index
                     var current = new KeyValuePair<TKey, TObject>(change.Key, change.Current);
 
-                    var previousindex = previousList.IndexOf(current);
+                    var previousIndex = previousList.IndexOf(current);
                     int desiredIndex = currentItems.IndexOf(current);
 
-                    if (previousindex == desiredIndex)
+                    if (previousIndex == desiredIndex)
                     {
                         continue;
                     }
@@ -88,9 +88,9 @@ namespace DynamicData.Cache.Internal
                         throw new SortException("Cannot determine current index");
                     }
 
-                    previousList.RemoveAt(previousindex);
+                    previousList.RemoveAt(previousIndex);
                     previousList.Insert(desiredIndex, current);
-                    result.Add(new Change<TObject, TKey>(current.Key, current.Value, desiredIndex, previousindex));
+                    result.Add(new Change<TObject, TKey>(current.Key, current.Value, desiredIndex, previousIndex));
                 }
                 else
                 {
@@ -114,21 +114,21 @@ namespace DynamicData.Cache.Internal
                     continue;
                 }
 
-                int newposition = GetInsertPositionLinear(previousList, current, currentItems.Comparer);
+                int newPosition = GetInsertPositionLinear(previousList, current, currentItems.Comparer);
 
-                if (old < newposition)
+                if (old < newPosition)
                 {
-                    newposition--;
+                    newPosition--;
                 }
 
-                if (old == newposition)
+                if (old == newPosition)
                 {
                     continue;
                 }
 
                 previousList.RemoveAt(old);
-                previousList.Insert(newposition, current);
-                result.Add(new Change<TObject, TKey>(u.Key, u.Current, newposition, old));
+                previousList.Insert(newPosition, current);
+                result.Add(new Change<TObject, TKey>(u.Key, u.Current, newPosition, old));
             }
 
             return result;

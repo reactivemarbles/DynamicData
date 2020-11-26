@@ -13,7 +13,7 @@ using DynamicData.Kernel;
 namespace DynamicData
 {
     /// <summary>
-    /// Extensions to help with maintainence of a list.
+    /// Extensions to help with maintenance of a list.
     /// </summary>
     public static class ListEx
     {
@@ -62,39 +62,34 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(items));
             }
 
-            if (source is List<T>)
+            switch (source)
             {
-                if (index >= 0)
-                {
-                    ((List<T>)source).InsertRange(index, items);
-                }
-                else
-                {
-                    ((List<T>)source).AddRange(items);
-                }
-            }
-            else if (source is IExtendedList<T>)
-            {
-                if (index >= 0)
-                {
-                    ((IExtendedList<T>)source).InsertRange(items, index);
-                }
-                else
-                {
-                    ((IExtendedList<T>)source).AddRange(items);
-                }
-            }
-            else
-            {
-                if (index >= 0)
-                {
-                    // TODO: Why the hell reverse? Surely there must be as reason otherwise I would not have done it.
-                    items.Reverse().ForEach(t => source.Insert(index, t));
-                }
-                else
-                {
-                    items.ForEach(source.Add);
-                }
+                case List<T> list when index >= 0:
+                    list.InsertRange(index, items);
+                    break;
+                case List<T> list:
+                    list.AddRange(items);
+                    break;
+                case IExtendedList<T> extendedList when index >= 0:
+                    extendedList.InsertRange(items, index);
+                    break;
+                case IExtendedList<T> extendedList:
+                    extendedList.AddRange(items);
+                    break;
+                default:
+                    {
+                        if (index >= 0)
+                        {
+                            // TODO: Why the hell reverse? Surely there must be as reason otherwise I would not have done it.
+                            items.Reverse().ForEach(t => source.Insert(index, t));
+                        }
+                        else
+                        {
+                            items.ForEach(source.Add);
+                        }
+
+                        break;
+                    }
             }
         }
 
@@ -121,17 +116,17 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(items));
             }
 
-            if (source is List<T>)
+            switch (source)
             {
-                ((List<T>)source).AddRange(items);
-            }
-            else if (source is IExtendedList<T>)
-            {
-                ((IExtendedList<T>)source).AddRange(items);
-            }
-            else
-            {
-                items.ForEach(source.Add);
+                case List<T> list:
+                    list.AddRange(items);
+                    break;
+                case IExtendedList<T> extendedList:
+                    extendedList.AddRange(items);
+                    break;
+                default:
+                    items.ForEach(source.Add);
+                    break;
             }
         }
 
@@ -154,17 +149,17 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(items));
             }
 
-            if (source is List<T>)
+            switch (source)
             {
-                ((List<T>)source).InsertRange(index, items);
-            }
-            else if (source is IExtendedList<T>)
-            {
-                ((IExtendedList<T>)source).InsertRange(items, index);
-            }
-            else
-            {
-                items.ForEach(source.Add);
+                case List<T> list:
+                    list.InsertRange(index, items);
+                    break;
+                case IExtendedList<T> list:
+                    list.InsertRange(items, index);
+                    break;
+                default:
+                    items.ForEach(source.Add);
+                    break;
             }
         }
 
@@ -420,7 +415,7 @@ namespace DynamicData
 
             var toRemoveArray = itemsToRemove.AsArray();
 
-            // match all indicies and and remove in reverse as it is more efficient
+            // match all indexes and and remove in reverse as it is more efficient
             var toRemove = source.IndexOfMany(toRemoveArray).OrderByDescending(x => x.Index).ToArray();
 
             // if there are duplicates, it could be that an item exists in the
@@ -431,7 +426,7 @@ namespace DynamicData
             if (hasDuplicates)
             {
                 // Slow remove but safe
-                toRemoveArray?.ForEach(t => source.Remove(t));
+                toRemoveArray.ForEach(t => source.Remove(t));
             }
             else
             {
@@ -446,11 +441,11 @@ namespace DynamicData
         /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="original">The original.</param>
-        /// <param name="replacewith">The replacewith.</param>
+        /// <param name="replaceWith">The value to replace with.</param>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// items.</exception>
-        public static void Replace<T>(this IList<T> source, T original, T replacewith)
+        public static void Replace<T>(this IList<T> source, T original, T replaceWith)
         {
             if (source is null)
             {
@@ -462,9 +457,9 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(original));
             }
 
-            if (replacewith is null)
+            if (replaceWith is null)
             {
-                throw new ArgumentNullException(nameof(replacewith));
+                throw new ArgumentNullException(nameof(replaceWith));
             }
 
             var index = source.IndexOf(original);
@@ -473,7 +468,7 @@ namespace DynamicData
                 throw new ArgumentException("Cannot find index of original item. Either it does not exist in the list or the hashcode has mutated");
             }
 
-            source[index] = replacewith;
+            source[index] = replaceWith;
         }
 
         /// <summary>
@@ -527,8 +522,8 @@ namespace DynamicData
         /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="original">The original.</param>
-        /// <param name="replacewith">The replacewith.</param>
-        public static void ReplaceOrAdd<T>(this IList<T> source, T original, T replacewith)
+        /// <param name="replaceWith">The value to replace with.</param>
+        public static void ReplaceOrAdd<T>(this IList<T> source, T original, T replaceWith)
         {
             if (source is null)
             {
@@ -540,19 +535,19 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(original));
             }
 
-            if (replacewith is null)
+            if (replaceWith is null)
             {
-                throw new ArgumentNullException(nameof(replacewith));
+                throw new ArgumentNullException(nameof(replaceWith));
             }
 
             var index = source.IndexOf(original);
             if (index == -1)
             {
-                source.Add(replacewith);
+                source.Add(replaceWith);
             }
             else
             {
-                source[index] = replacewith;
+                source[index] = replaceWith;
             }
         }
 
@@ -681,17 +676,10 @@ namespace DynamicData
                         }
                         else
                         {
-                            if (equalityComparer is not null)
+                            int index = source.IndexOf(change.Current, equalityComparer);
+                            if (index > -1)
                             {
-                                int index = source.IndexOf(change.Current, equalityComparer);
-                                if (index > -1)
-                                {
-                                    source.RemoveAt(index);
-                                }
-                            }
-                            else
-                            {
-                                source.Remove(change.Current);
+                                source.RemoveAt(index);
                             }
                         }
 
@@ -759,17 +747,16 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (source is List<T>)
+            switch (source)
             {
-                ((List<T>)source).RemoveRange(index, count);
-            }
-            else if (source is IExtendedList<T>)
-            {
-                ((IExtendedList<T>)source).RemoveRange(index, count);
-            }
-            else
-            {
-                throw new NotSupportedException($"Cannot remove range from {source.GetType().FullName}");
+                case List<T> list:
+                    list.RemoveRange(index, count);
+                    break;
+                case IExtendedList<T> list:
+                    list.RemoveRange(index, count);
+                    break;
+                default:
+                    throw new NotSupportedException($"Cannot remove range from {source.GetType().FullName}");
             }
         }
     }

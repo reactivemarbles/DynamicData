@@ -18,16 +18,16 @@ namespace DynamicData
         where TKey : notnull
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-        private readonly Subject<ChangeSet<TObject, TKey>> _changes = new Subject<ChangeSet<TObject, TKey>>();
+        private readonly Subject<ChangeSet<TObject, TKey>> _changes = new();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-        private readonly Subject<ChangeSet<TObject, TKey>> _changesPreview = new Subject<ChangeSet<TObject, TKey>>();
+        private readonly Subject<ChangeSet<TObject, TKey>> _changesPreview = new();
 
         private readonly IDisposable _cleanUp;
 
-        private readonly Lazy<ISubject<int>> _countChanged = new Lazy<ISubject<int>>(() => new Subject<int>());
+        private readonly Lazy<ISubject<int>> _countChanged = new(() => new Subject<int>());
 
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
         private readonly ReaderWriter<TObject, TKey> _readerWriter;
 

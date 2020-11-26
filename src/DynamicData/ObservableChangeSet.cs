@@ -394,7 +394,7 @@ namespace DynamicData
                     {
                         var list = new SourceList<T>();
                         IDisposable? disposeAction = null;
-                        SingleAssignmentDisposable actionDisposable = new SingleAssignmentDisposable();
+                        SingleAssignmentDisposable actionDisposable = new();
 
                         try
                         {

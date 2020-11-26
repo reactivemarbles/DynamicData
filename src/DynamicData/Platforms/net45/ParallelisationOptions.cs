@@ -14,30 +14,30 @@ namespace DynamicData.PLinq
         /// <summary>
         /// The default parallelisation options.
         /// </summary>
-        public static readonly ParallelisationOptions Default = new ParallelisationOptions(ParallelType.Ordered, 0);
+        public static readonly ParallelisationOptions Default = new(ParallelType.Ordered);
 
         /// <summary>
         /// Value to be used when no parallelisation should take place.
         /// </summary>
-        public static readonly ParallelisationOptions None = new ParallelisationOptions(ParallelType.None, 0);
+        public static readonly ParallelisationOptions None = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ParallelisationOptions"/> class.
         /// </summary>
         /// <param name="type">The type of parallel operation.</param>
         /// <param name="threshold">The threshold before making the operation parallel.</param>
-        /// <param name="maxDegreeOfParallisation">The maximum degrees of parallelism.</param>
-        public ParallelisationOptions(ParallelType type = ParallelType.None, int threshold = 0, int maxDegreeOfParallisation = 0)
+        /// <param name="maxDegreeOfParallelisation">The maximum degrees of parallelism.</param>
+        public ParallelisationOptions(ParallelType type = ParallelType.None, int threshold = 0, int maxDegreeOfParallelisation = 0)
         {
             Type = type;
             Threshold = threshold;
-            MaxDegreeOfParallisation = maxDegreeOfParallisation;
+            MaxDegreeOfParallelisation = maxDegreeOfParallelisation;
         }
 
         /// <summary>
-        /// Gets the maximum degree of parallisation.
+        /// Gets the maximum degree of parallelisation.
         /// </summary>
-        public int MaxDegreeOfParallisation { get; }
+        public int MaxDegreeOfParallelisation { get; }
 
         /// <summary>
         /// Gets the threshold.

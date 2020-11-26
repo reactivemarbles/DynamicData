@@ -12,7 +12,7 @@ namespace DynamicData.Tests.List
 {
     public class VirtualisationFixture : IDisposable
     {
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly ISubject<VirtualRequest> _requestSubject = new BehaviorSubject<VirtualRequest>(new VirtualRequest(0, 25));
 

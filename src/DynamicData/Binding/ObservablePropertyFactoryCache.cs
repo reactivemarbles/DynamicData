@@ -12,9 +12,9 @@ namespace DynamicData.Binding
 {
     internal sealed class ObservablePropertyFactoryCache
     {
-        public static readonly ObservablePropertyFactoryCache Instance = new ObservablePropertyFactoryCache();
+        public static readonly ObservablePropertyFactoryCache Instance = new();
 
-        private readonly ConcurrentDictionary<string, object> _factories = new ConcurrentDictionary<string, object>();
+        private readonly ConcurrentDictionary<string, object> _factories = new();
 
         private ObservablePropertyFactoryCache()
         {
@@ -27,7 +27,7 @@ namespace DynamicData.Binding
 
             var result = _factories.GetOrAdd(
                 key,
-                k =>
+                _ =>
                     {
                         ObservablePropertyFactory<TObject, TProperty> factory;
 
@@ -39,7 +39,7 @@ namespace DynamicData.Binding
                         else
                         {
                             var chain = memberChain.Select(m => new ObservablePropertyPart(m)).ToArray();
-                            var accessor = expression?.Compile() ?? throw new ArgumentNullException(nameof(expression));
+                            var accessor = expression.Compile() ?? throw new ArgumentNullException(nameof(expression));
                             factory = new ObservablePropertyFactory<TObject, TProperty>(accessor, chain);
                         }
 

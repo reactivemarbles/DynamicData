@@ -40,7 +40,7 @@ namespace DynamicData
 
         public override int GetHashCode()
         {
-            return SortedItems?.GetHashCode() ?? 0;
+            return SortedItems.GetHashCode();
         }
 
         public override string ToString()

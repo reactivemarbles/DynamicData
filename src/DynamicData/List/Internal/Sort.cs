@@ -42,7 +42,7 @@ namespace DynamicData.List.Internal
                 observer =>
                     {
                         var locker = new object();
-                        var orginal = new List<T>();
+                        var original = new List<T>();
                         var target = new ChangeAwareList<T>();
 
                         var changed = _source.Synchronize(locker).Select(
@@ -50,12 +50,12 @@ namespace DynamicData.List.Internal
                                 {
                                     if (_resetThreshold > 1)
                                     {
-                                        orginal.Clone(changes);
+                                        original.Clone(changes);
                                     }
 
-                                    return changes.TotalChanges > _resetThreshold && _comparer is not null ? Reset(orginal, target) : Process(target, changes);
+                                    return changes.TotalChanges > _resetThreshold ? Reset(original, target) : Process(target, changes);
                                 });
-                        var resort = _resort.Synchronize(locker).Select(changes => Reorder(target));
+                        var resort = _resort.Synchronize(locker).Select(_ => Reorder(target));
                         var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
 
                         return changed.Merge(resort).Merge(changeComparer).Where(changes => changes.Count != 0).SubscribeSafe(observer);
@@ -141,12 +141,6 @@ namespace DynamicData.List.Internal
 
         private IChangeSet<T> ProcessImpl(ChangeAwareList<T> target, IChangeSet<T> changes)
         {
-            if (_comparer is null)
-            {
-                target.Clone(changes);
-                return target.CaptureChanges();
-            }
-
             var refreshes = new List<T>(changes.Refreshes);
 
             foreach (var change in changes)
@@ -229,18 +223,18 @@ namespace DynamicData.List.Internal
                     continue;
                 }
 
-                int newposition = GetInsertPositionLinear(target, item);
-                if (old < newposition)
+                int newPosition = GetInsertPositionLinear(target, item);
+                if (old < newPosition)
                 {
-                    newposition--;
+                    newPosition--;
                 }
 
-                if (old == newposition)
+                if (old == newPosition)
                 {
                     continue;
                 }
 
-                target.Move(old, newposition);
+                target.Move(old, newPosition);
             }
 
             return target.CaptureChanges();

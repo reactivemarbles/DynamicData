@@ -187,7 +187,7 @@ namespace DynamicData
             {
                 var hashCode = (int)Reason;
                 hashCode = (hashCode * 397) ^ Item.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Range?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ Range.GetHashCode();
                 return hashCode;
             }
         }
@@ -195,7 +195,7 @@ namespace DynamicData
         /// <inheritdoc />
         public override string ToString()
         {
-            return Range is not null ? $"{Reason}. {Range.Count} changes" : $"{Reason}. Current: {Item.Current}, Previous: {Item.Previous}";
+            return $"{Reason}. {Range.Count} changes";
         }
     }
 }

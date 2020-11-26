@@ -18,7 +18,7 @@ namespace DynamicData.Tests.Binding
 
         private readonly BindingList<Person> _collection;
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly SourceList<Person> _source;
 

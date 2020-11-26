@@ -7,7 +7,7 @@
 namespace DynamicData.PLinq
 {
     /// <summary>
-    /// The type of parallisation.
+    /// The type of parallelisation.
     /// </summary>
     public enum ParallelType
     {

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -15,16 +14,16 @@ namespace DynamicData.Cache.Internal
     {
         private readonly TimeSpan? _buffer;
 
-        private readonly Func<TObject, TKey, IObservable<TAny>> _reevaluator;
+        private readonly Func<TObject, TKey, IObservable<TAny>> _reEvaluator;
 
         private readonly IScheduler _scheduler;
 
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
-        public AutoRefresh(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reevaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
+        public AutoRefresh(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _reevaluator = reevaluator ?? throw new ArgumentNullException(nameof(reevaluator));
+            _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
             _buffer = buffer;
             _scheduler = scheduler ?? Scheduler.Default;
         }
@@ -37,18 +36,12 @@ namespace DynamicData.Cache.Internal
                         var shared = _source.Publish();
 
                         // monitor each item observable and create change
-                        var changes = shared.MergeMany((t, k) => { return _reevaluator(t, k).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, k, t)); });
+                        var changes = shared.MergeMany((t, k) => { return _reEvaluator(t, k).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, k, t)); });
 
-                        // create a changeset, either buffered or one item at the time
-                        IObservable<IChangeSet<TObject, TKey>> refreshChanges;
-                        if (_buffer is null)
-                        {
-                            refreshChanges = changes.Select(c => new ChangeSet<TObject, TKey>(new[] { c }));
-                        }
-                        else
-                        {
-                            refreshChanges = changes.Buffer(_buffer.Value, _scheduler).Where(list => list.Any()).Select(items => new ChangeSet<TObject, TKey>(items));
-                        }
+                        // create a change set, either buffered or one item at the time
+                        IObservable<IChangeSet<TObject, TKey>> refreshChanges = _buffer is null ?
+                                                                                    changes.Select(c => new ChangeSet<TObject, TKey>(new[] { c })) :
+                                                                                    changes.Buffer(_buffer.Value, _scheduler).Where(list => list.Count > 0).Select(items => new ChangeSet<TObject, TKey>(items));
 
                         // publish refreshes and underlying changes
                         var locker = new object();

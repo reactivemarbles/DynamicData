@@ -370,7 +370,7 @@ namespace DynamicData.Aggregation
         /// <param name="source">The source.</param>
         /// <param name="valueSelector">The value selector.</param>
         /// <param name="emptyValue">The empty value.</param>
-        /// <returns>An obserable of averages as a double value.</returns>
+        /// <returns>An observable of averages as a double value.</returns>
         public static IObservable<double> Avg<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, long> valueSelector, long emptyValue = 0)
         {
             return source.AvgCalc(valueSelector, emptyValue, (current, item) => new Avg<long>(current.Count + 1, current.Sum + item), (current, item) => new Avg<long>(current.Count - 1, current.Sum - item), values => values.Sum / (double)values.Count);

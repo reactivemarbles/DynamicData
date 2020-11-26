@@ -15,7 +15,7 @@ namespace DynamicData
     public interface IKeyValueCollection<TObject, TKey> : IEnumerable<KeyValuePair<TKey, TObject>>
     {
         /// <summary>
-        /// Gets the comparer used to peform the sort.
+        /// Gets the comparer used to perform the sort.
         /// </summary>
         /// <value>
         /// The comparer.

@@ -41,7 +41,7 @@ namespace DynamicData
         /// <summary>
         /// Gets a Empty version of the RangeChange.
         /// </summary>
-        public static RangeChange<T> Empty { get; } = new RangeChange<T>();
+        public static RangeChange<T> Empty { get; } = new();
 
         /// <summary>
         ///     Gets the total update count.

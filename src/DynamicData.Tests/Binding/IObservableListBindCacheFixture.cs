@@ -12,7 +12,7 @@ namespace DynamicData.Tests.Binding
 {
     public class IObservableListBindCacheFixture : IDisposable
     {
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly IObservableList<Person> _list;
 

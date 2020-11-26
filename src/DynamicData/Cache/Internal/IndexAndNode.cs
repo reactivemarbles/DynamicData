@@ -11,7 +11,7 @@ namespace DynamicData.Cache.Internal
     {
         public static IndexAndNode<TNodeValue> Create<TNodeValue>(int index, LinkedListNode<TNodeValue> value)
         {
-            return new IndexAndNode<TNodeValue>(index, value);
+            return new(index, value);
         }
     }
 

@@ -24,11 +24,11 @@ namespace DynamicData.Tests.Cache
                 return new PersonWithGender(p, gender);
             };
 
-        private IList<Error<Person, string>> _errors;
+        private readonly IList<Error<Person, string>> _errors;
 
-        private ChangeSetAggregator<PersonWithGender, string> _results;
+        private readonly ChangeSetAggregator<PersonWithGender, string> _results;
 
-        private ISourceCache<Person, string> _source;
+        private readonly ISourceCache<Person, string> _source;
 
         public TransformSafeFixture()
         {

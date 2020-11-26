@@ -12,7 +12,7 @@ namespace DynamicData.Cache.Internal
     internal sealed class SizeLimiter<TObject, TKey>
         where TKey : notnull
     {
-        private readonly ChangeAwareCache<ExpirableItem<TObject, TKey>, TKey> _cache = new ChangeAwareCache<ExpirableItem<TObject, TKey>, TKey>();
+        private readonly ChangeAwareCache<ExpirableItem<TObject, TKey>, TKey> _cache = new();
 
         private readonly int _sizeLimit;
 
@@ -25,11 +25,11 @@ namespace DynamicData.Cache.Internal
         {
             _cache.Clone(updates);
 
-            var itemstoexpire = _cache.KeyValues.OrderByDescending(exp => exp.Value.ExpireAt).Skip(_sizeLimit).Select(exp => new Change<TObject, TKey>(ChangeReason.Remove, exp.Key, exp.Value.Value)).ToList();
+            var itemsToExpire = _cache.KeyValues.OrderByDescending(exp => exp.Value.ExpireAt).Skip(_sizeLimit).Select(exp => new Change<TObject, TKey>(ChangeReason.Remove, exp.Key, exp.Value.Value)).ToList();
 
-            if (itemstoexpire.Count > 0)
+            if (itemsToExpire.Count > 0)
             {
-                _cache.Remove(itemstoexpire.Select(exp => exp.Key));
+                _cache.Remove(itemsToExpire.Select(exp => exp.Key));
             }
 
             var notifications = _cache.CaptureChanges();

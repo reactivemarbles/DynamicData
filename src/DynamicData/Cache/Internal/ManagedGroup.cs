@@ -10,7 +10,7 @@ namespace DynamicData.Cache.Internal
     internal sealed class ManagedGroup<TObject, TKey, TGroupKey> : IGroup<TObject, TKey, TGroupKey>, IDisposable
         where TKey : notnull
     {
-        private readonly IntermediateCache<TObject, TKey> _cache = new IntermediateCache<TObject, TKey>();
+        private readonly IntermediateCache<TObject, TKey> _cache = new();
 
         public ManagedGroup(TGroupKey groupKey)
         {

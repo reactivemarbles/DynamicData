@@ -15,7 +15,7 @@ namespace DynamicData.List.Internal
 {
     internal sealed class DynamicCombiner<T>
     {
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
         private readonly IObservableList<IObservable<IChangeSet<T>>> _source;
 
@@ -37,7 +37,7 @@ namespace DynamicData.List.Internal
 
                         // Transform to a merge container.
                         // This populates a RefTracker when the original source is subscribed to
-                        var sourceLists = _source.Connect().Synchronize(_locker).Transform(changeset => new MergeContainer(changeset)).AsObservableList();
+                        var sourceLists = _source.Connect().Synchronize(_locker).Transform(changeSet => new MergeContainer(changeSet)).AsObservableList();
 
                         // merge the items back together
                         var allChanges = sourceLists.Connect().MergeMany(mc => mc.Source).Synchronize(_locker).Subscribe(
@@ -203,7 +203,7 @@ namespace DynamicData.List.Internal
 
             public IObservable<IChangeSet<T>> Source { get; }
 
-            public ReferenceCountTracker<T> Tracker { get; } = new ReferenceCountTracker<T>();
+            public ReferenceCountTracker<T> Tracker { get; } = new();
 
             private void Clone(IChangeSet<T> changes)
             {

@@ -37,19 +37,19 @@ namespace DynamicData.PLinq
         }
 
         /// <summary>
-        /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed.
+        /// Subscribes to each item when it is added to the stream and unsubscribes when it is removed.  All items will be unsubscribed when the stream is disposed.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="subscriptionFactory">The subsription function.</param>
+        /// <param name="subscriptionFactory">The subscription function.</param>
         /// <param name="parallelisationOptions">The parallelisation options.</param>
         /// <returns>An observable which emits a change set.</returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// subscriptionFactory.</exception>
         /// <remarks>
-        /// Subscribes to each item when it is added or updates and unsubcribes when it is removed.
+        /// Subscribes to each item when it is added or updates and unsubscribes when it is removed.
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
@@ -69,23 +69,23 @@ namespace DynamicData.PLinq
                 throw new ArgumentNullException(nameof(parallelisationOptions));
             }
 
-            return new PSubscribeMany<TObject, TKey>(source, (t, v) => subscriptionFactory(t), parallelisationOptions).Run();
+            return new PSubscribeMany<TObject, TKey>(source, (t, _) => subscriptionFactory(t), parallelisationOptions).Run();
         }
 
         /// <summary>
-        /// Subscribes to each item when it is added to the stream and unsubcribes when it is removed.  All items will be unsubscribed when the stream is disposed.
+        /// Subscribes to each item when it is added to the stream and unsubscribes when it is removed.  All items will be unsubscribed when the stream is disposed.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
-        /// <param name="subscriptionFactory">The subsription function.</param>
+        /// <param name="subscriptionFactory">The subscription function.</param>
         /// <param name="parallelisationOptions">The parallelisation options.</param>
         /// <returns>An observable which emits a change set.</returns>
         /// <exception cref="System.ArgumentNullException">source
         /// or
         /// subscriptionFactory.</exception>
         /// <remarks>
-        /// Subscribes to each item when it is added or updates and unsubcribes when it is removed.
+        /// Subscribes to each item when it is added or updates and unsubscribes when it is removed.
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
@@ -141,7 +141,7 @@ namespace DynamicData.PLinq
                 throw new ArgumentNullException(nameof(parallelisationOptions));
             }
 
-            return new PTransform<TDestination, TSource, TKey>(source, (t, p, k) => transformFactory(t, k), parallelisationOptions).Run();
+            return new PTransform<TDestination, TSource, TKey>(source, (t, _, k) => transformFactory(t, k), parallelisationOptions).Run();
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
         {
-            return new PTransform<TDestination, TSource, TKey>(source, (t, p, k) => transformFactory(t), parallelisationOptions).Run();
+            return new PTransform<TDestination, TSource, TKey>(source, (t, _, _) => transformFactory(t), parallelisationOptions).Run();
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace DynamicData.PLinq
                 throw new ArgumentNullException(nameof(parallelisationOptions));
             }
 
-            return new PTransform<TDestination, TSource, TKey>(source, (t, p, k) => transformFactory(t), parallelisationOptions, errorHandler).Run();
+            return new PTransform<TDestination, TSource, TKey>(source, (t, _, _) => transformFactory(t), parallelisationOptions, errorHandler).Run();
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, ParallelisationOptions parallelisationOptions)
             where TKey : notnull
         {
-            return new PTransform<TDestination, TSource, TKey>(source, (t, p, k) => transformFactory(t, k), parallelisationOptions, errorHandler).Run();
+            return new PTransform<TDestination, TSource, TKey>(source, (t, _, k) => transformFactory(t, k), parallelisationOptions, errorHandler).Run();
         }
     }
 }

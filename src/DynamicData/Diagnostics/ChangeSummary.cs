@@ -12,7 +12,7 @@ namespace DynamicData.Diagnostics
         /// <summary>
         /// An empty instance of change summary.
         /// </summary>
-        public static readonly ChangeSummary Empty = new ChangeSummary();
+        public static readonly ChangeSummary Empty = new();
 
         private readonly int _index;
 
@@ -77,8 +77,8 @@ namespace DynamicData.Diagnostics
             unchecked
             {
                 int hashCode = _index;
-                hashCode = (hashCode * 397) ^ (Latest?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (Overall?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ Latest.GetHashCode();
+                hashCode = (hashCode * 397) ^ Overall.GetHashCode();
                 return hashCode;
             }
         }

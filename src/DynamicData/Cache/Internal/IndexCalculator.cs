@@ -234,11 +234,11 @@ namespace DynamicData.Cache.Internal
 
             if (index > 0)
             {
-                var indx = index;
-                index = List.BinarySearch(indx - 1, List.Count - indx, item, _comparer);
+                var tempIndex = index;
+                index = List.BinarySearch(tempIndex - 1, List.Count - tempIndex, item, _comparer);
                 if (index > 0)
                 {
-                    return indx;
+                    return tempIndex;
                 }
             }
 

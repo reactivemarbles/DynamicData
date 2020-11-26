@@ -49,17 +49,7 @@ namespace DynamicData.Cache.Internal
                 return true;
             }
 
-            if (other is null)
-            {
-                return false;
-            }
-
-            if (other.Key is null && Key is null)
-            {
-                return true;
-            }
-
-            return EqualityComparer<TGroupKey?>.Default.Equals(Key, other.Key);
+            return other is not null && EqualityComparer<TGroupKey?>.Default.Equals(Key, other.Key);
         }
 
         public override bool Equals(object? obj)
@@ -69,7 +59,7 @@ namespace DynamicData.Cache.Internal
 
         public override int GetHashCode()
         {
-            return Key is null ? 0 : EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
+            return EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
         }
 
         public Optional<TObject> Lookup(TKey key)

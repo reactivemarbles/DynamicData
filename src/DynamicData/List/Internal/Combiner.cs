@@ -14,7 +14,7 @@ namespace DynamicData.List.Internal
 {
     internal sealed class Combiner<T>
     {
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
         private readonly ICollection<IObservable<IChangeSet<T>>> _source;
 

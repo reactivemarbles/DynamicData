@@ -29,7 +29,7 @@ namespace DynamicData.Tests.Cache
                     curr = next;
                 }
 
-                yield return selector(curr, default(T));
+                yield return selector(curr, default);
             }
         }
 
@@ -59,7 +59,7 @@ namespace DynamicData.Tests.Cache
                     curr = next;
                 }
 
-                yield return selector(prev, curr, default(T));
+                yield return selector(prev, curr, default);
             }
         }
 

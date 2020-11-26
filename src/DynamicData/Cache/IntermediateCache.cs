@@ -70,7 +70,7 @@ namespace DynamicData
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
 
         /// <summary>
-        /// Returns a filtered changeset of cache changes preceded with the initial state.
+        /// Returns a filtered change set of cache changes preceded with the initial state.
         /// </summary>
         /// <param name="predicate">The predicate.</param>
         /// <returns>An observable which will emit change sets.</returns>
@@ -99,7 +99,7 @@ namespace DynamicData
         /// <summary>
         /// Action to apply a batch update to a cache. Multiple update methods can be invoked within a single batch operation.
         /// These operations are invoked within the cache's lock and is therefore thread safe.
-        /// The result of the action will produce a single changeset.
+        /// The result of the action will produce a single change set.
         /// </summary>
         /// <param name="updateAction">The update action.</param>
         public void Edit(Action<ICacheUpdater<TObject, TKey>> updateAction)

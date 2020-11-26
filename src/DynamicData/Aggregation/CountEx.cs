@@ -44,7 +44,7 @@ namespace DynamicData.Aggregation
         /// <returns>An observable which emits the count.</returns>
         public static IObservable<int> Count<TObject>(this IObservable<IAggregateChangeSet<TObject>> source)
         {
-            return source.Accumlate(0, t => 1, (current, increment) => current + increment, (current, increment) => current - increment);
+            return source.Accumulate(0, _ => 1, (current, increment) => current + increment, (current, increment) => current - increment);
         }
 
         /// <summary>

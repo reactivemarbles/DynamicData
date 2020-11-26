@@ -92,7 +92,7 @@ namespace DynamicData.Kernel
         {
             unchecked
             {
-                int hashCode = Key is null ? 0 : EqualityComparer<TKey>.Default.GetHashCode(Key);
+                int hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
                 hashCode = (hashCode * 397) ^ (Value is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Value));
                 hashCode = (hashCode * 397) ^ (Exception is not null ? Exception.GetHashCode() : 0);
                 return hashCode;

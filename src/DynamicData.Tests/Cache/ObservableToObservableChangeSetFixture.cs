@@ -21,7 +21,7 @@ namespace DynamicData.Tests.Cache
         {
             var subject = new Subject<Person>();
             var scheduler = new TestScheduler();
-            var results = subject.ToObservableChangeSet(expireAfter: t => TimeSpan.FromMinutes(1), scheduler: scheduler).AsAggregator();
+            var results = subject.ToObservableChangeSet(t => TimeSpan.FromMinutes(1), scheduler).AsAggregator();
 
             var items = Enumerable.Range(1, 200).Select(i => new Person("p" + i.ToString("000"), i)).ToArray();
             foreach (var person in items)
@@ -41,9 +41,9 @@ namespace DynamicData.Tests.Cache
         public void ExpireAfterTimeDynamic()
         {
             var scheduler = new TestScheduler();
-            var source = Observable.Interval(TimeSpan.FromSeconds(1), scheduler: scheduler).Take(30).Select(i => (int)i).Select(i => new Person("p" + i.ToString("000"), i));
+            var source = Observable.Interval(TimeSpan.FromSeconds(1), scheduler).Take(30).Select(i => (int)i).Select(i => new Person("p" + i.ToString("000"), i));
 
-            var results = source.ToObservableChangeSet(expireAfter: t => TimeSpan.FromSeconds(10), scheduler: scheduler).AsAggregator();
+            var results = source.ToObservableChangeSet(t => TimeSpan.FromSeconds(10), scheduler).AsAggregator();
 
             scheduler.AdvanceBy(TimeSpan.FromSeconds(30).Ticks);
 
@@ -57,9 +57,9 @@ namespace DynamicData.Tests.Cache
         public void ExpireAfterTimeDynamicWithKey()
         {
             var scheduler = new TestScheduler();
-            var source = Observable.Interval(TimeSpan.FromSeconds(1), scheduler: scheduler).Take(30).Select(i => (int)i).Select(i => new Person("p" + i.ToString("000"), i));
+            var source = Observable.Interval(TimeSpan.FromSeconds(1), scheduler).Take(30).Select(i => (int)i).Select(i => new Person("p" + i.ToString("000"), i));
 
-            var results = source.ToObservableChangeSet(p => p.Key, expireAfter: t => TimeSpan.FromSeconds(10), scheduler: scheduler).AsAggregator();
+            var results = source.ToObservableChangeSet(p => p.Key, t => TimeSpan.FromSeconds(10), scheduler: scheduler).AsAggregator();
 
             scheduler.AdvanceBy(TimeSpan.FromSeconds(30).Ticks);
 
@@ -74,7 +74,7 @@ namespace DynamicData.Tests.Cache
         {
             var subject = new Subject<Person>();
             var scheduler = new TestScheduler();
-            var results = subject.ToObservableChangeSet(p => p.Key, expireAfter: t => TimeSpan.FromMinutes(1), scheduler: scheduler).AsAggregator();
+            var results = subject.ToObservableChangeSet(p => p.Key, t => TimeSpan.FromMinutes(1), scheduler: scheduler).AsAggregator();
 
             var items = Enumerable.Range(1, 200).Select(i => new Person("p" + i.ToString("000"), i)).ToArray();
             foreach (var person in items)

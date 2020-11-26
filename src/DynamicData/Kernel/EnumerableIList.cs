@@ -34,11 +34,11 @@ namespace DynamicData.Kernel
             set => _list[index] = value;
         }
 
-        public static implicit operator EnumerableIList<T>(List<T> list) => new EnumerableIList<T>(list);
+        public static implicit operator EnumerableIList<T>(List<T> list) => new(list);
 
-        public static implicit operator EnumerableIList<T>(T[] array) => new EnumerableIList<T>(array);
+        public static implicit operator EnumerableIList<T>(T[] array) => new(array);
 
-        public EnumeratorIList<T> GetEnumerator() => new EnumeratorIList<T>(_list);
+        public EnumeratorIList<T> GetEnumerator() => new(_list);
 
         /// <inheritdoc />
         public void Add(T item) => _list.Add(item);
@@ -71,10 +71,10 @@ namespace DynamicData.Kernel
 
     internal static class EnumerableIList
     {
-        public static EnumerableIList<T> Create<T>(IList<T> list) => new EnumerableIList<T>(list);
+        public static EnumerableIList<T> Create<T>(IList<T> list) => new(list);
 
-        public static EnumerableIList<Change<TObject, TKey>> Create<TObject, TKey>(IChangeSet<TObject, TKey> changeset)
+        public static EnumerableIList<Change<TObject, TKey>> Create<TObject, TKey>(IChangeSet<TObject, TKey> changeSet)
                 where TKey : notnull =>
-            Create((IList<Change<TObject, TKey>>)changeset);
+            Create((IList<Change<TObject, TKey>>)changeSet);
     }
 }

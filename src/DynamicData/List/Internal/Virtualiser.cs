@@ -50,7 +50,7 @@ namespace DynamicData.List.Internal
                     });
         }
 
-        private static IChangeSet<T>? CheckParamsAndVirtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest? request)
+        private static IChangeSet<T>? CheckParamsAndVirtualise(IList<T> all, ChangeAwareList<T> virtualised, IVirtualRequest? request)
         {
             if (request is null || request.StartIndex < 0 || request.Size < 1)
             {
@@ -60,11 +60,11 @@ namespace DynamicData.List.Internal
             return Virtualise(all, virtualised, request);
         }
 
-        private static IChangeSet<T> Virtualise(List<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request, IChangeSet<T>? changeset = null)
+        private static IChangeSet<T> Virtualise(IList<T> all, ChangeAwareList<T> virtualised, IVirtualRequest request, IChangeSet<T>? changeSet = null)
         {
-            if (changeset is not null)
+            if (changeSet is not null)
             {
-                all.Clone(changeset);
+                all.Clone(changeSet);
             }
 
             var previous = virtualised;
@@ -83,7 +83,7 @@ namespace DynamicData.List.Internal
                         virtualised.Insert(index, t);
                     });
 
-            var moves = changeset.EmptyIfNull().Where(change => change.Reason == ListChangeReason.Moved && change.MovedWithinRange(request.StartIndex, request.StartIndex + request.Size));
+            var moves = changeSet.EmptyIfNull().Where(change => change.Reason == ListChangeReason.Moved && change.MovedWithinRange(request.StartIndex, request.StartIndex + request.Size));
 
             foreach (var change in moves)
             {

@@ -16,9 +16,9 @@ namespace DynamicData.Tests.Binding
     {
         private readonly IDisposable _binder;
 
-        private readonly BindingList<Person> _collection = new BindingList<Person>();
+        private readonly BindingList<Person> _collection = new();
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly ISourceCache<Person, string> _source;
 

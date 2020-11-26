@@ -29,7 +29,7 @@ namespace DynamicData.Cache.Internal
         }
 
         /// <summary>
-        /// Gets the comparer used to peform the sort.
+        /// Gets the comparer used to perform the sort.
         /// </summary>
         /// <value>
         /// The comparer.

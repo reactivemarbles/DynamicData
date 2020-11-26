@@ -29,9 +29,9 @@ namespace DynamicData.Tests.Cache
                 50,
                 new Person[]
                     {
-                        new Person("Child1", 1),
-                        new Person("Child2", 2),
-                        new Person("Child3", 3)
+                        new("Child1", 1),
+                        new("Child2", 2),
+                        new("Child3", 3)
                     });
             _source.AddOrUpdate(parent);
             _results.Data.Count.Should().Be(3, "Should be 4 in the cache");
@@ -55,7 +55,7 @@ namespace DynamicData.Tests.Cache
                 50,
                 new Person[]
                     {
-                        new Person("Child1", 1), new Person("Child2", 2), new Person("Child3", 3)
+                        new("Child1", 1), new("Child2", 2), new("Child3", 3)
                     });
             _source.AddOrUpdate(parent);
             _source.Remove(parent);
@@ -70,7 +70,7 @@ namespace DynamicData.Tests.Cache
                 50,
                 new Person[]
                     {
-                        new Person("Child1", 1), new Person("Child2", 2), new Person("Child3", 3)
+                        new("Child1", 1), new("Child2", 2), new("Child3", 3)
                     });
             _source.AddOrUpdate(parent1);
 
@@ -79,7 +79,7 @@ namespace DynamicData.Tests.Cache
                 50,
                 new Person[]
                     {
-                        new Person("Child1", 1), new Person("Child3", 3)
+                        new("Child1", 1), new("Child3", 3)
                     });
             _source.Remove(parent2);
             _results.Data.Count.Should().Be(0, "Should be 0 in the cache");
@@ -93,7 +93,7 @@ namespace DynamicData.Tests.Cache
                 50,
                 new Person[]
                     {
-                        new Person("Child1", 1), new Person("Child2", 2), new Person("Child3", 3)
+                        new("Child1", 1), new("Child2", 2), new("Child3", 3)
                     });
             _source.AddOrUpdate(parent1);
 
@@ -102,7 +102,7 @@ namespace DynamicData.Tests.Cache
                 50,
                 new Person[]
                     {
-                        new Person("Child1", 1), new Person("Child3", 3),
+                        new("Child1", 1), new("Child3", 3),
                     });
             _source.AddOrUpdate(parent2);
             _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
@@ -118,7 +118,7 @@ namespace DynamicData.Tests.Cache
                 50,
                 new Person[]
                     {
-                        new Person("Child1", 1), new Person("Child2", 2), new Person("Child3", 3)
+                        new("Child1", 1), new("Child2", 2), new("Child3", 3)
                     });
             _source.AddOrUpdate(parent1);
 
@@ -127,7 +127,7 @@ namespace DynamicData.Tests.Cache
                 50,
                 new Person[]
                     {
-                        new Person("Child1", 1), new Person("Child3", 3), new Person("Child5", 3),
+                        new("Child1", 1), new("Child3", 3), new("Child5", 3),
                     });
             _source.AddOrUpdate(parent2);
             _results.Data.Count.Should().Be(3, "Should be 2 in the cache");

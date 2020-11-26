@@ -32,7 +32,7 @@ namespace DynamicData.Aggregation
         /// <returns>
         /// A distinct observable of the maximum item.
         /// </returns>
-        public static IObservable<TResult> Maximum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
+        public static IObservable<TResult> Maximum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
             where TResult : struct, IComparable<TResult>
         {
             return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
@@ -50,7 +50,7 @@ namespace DynamicData.Aggregation
         /// <returns>
         /// A distinct observable of the maximum item.
         /// </returns>
-        public static IObservable<TResult> Maximum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
+        public static IObservable<TResult> Maximum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
             where TKey : notnull
             where TResult : struct, IComparable<TResult>
         {
@@ -66,7 +66,7 @@ namespace DynamicData.Aggregation
         /// <param name="valueSelector">The value selector.</param>
         /// <param name="emptyValue">The value to use when the underlying collection is empty.</param>
         /// <returns>A distinct observable of the minimums item.</returns>
-        public static IObservable<TResult> Minimum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
+        public static IObservable<TResult> Minimum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
             where TResult : struct, IComparable<TResult>
         {
             return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
@@ -84,14 +84,14 @@ namespace DynamicData.Aggregation
         /// <returns>
         /// A distinct observable of the minimums item.
         /// </returns>
-        public static IObservable<TResult> Minimum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default(TResult))
+        public static IObservable<TResult> Minimum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
             where TKey : notnull
             where TResult : struct, IComparable<TResult>
         {
             return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
         }
 
-        private static IObservable<TResult> Calculate<TObject, TResult>(this IObservable<ChangesAndCollection<TObject>> source, Func<TObject, TResult> valueSelector, MaxOrMin maxOrMin, TResult emptyValue = default(TResult))
+        private static IObservable<TResult> Calculate<TObject, TResult>(this IObservable<ChangesAndCollection<TObject>> source, Func<TObject, TResult> valueSelector, MaxOrMin maxOrMin, TResult emptyValue = default)
             where TResult : struct, IComparable<TResult>
         {
             if (source is null)
@@ -114,10 +114,7 @@ namespace DynamicData.Aggregation
                         foreach (var change in latest.Changes)
                         {
                             var value = valueSelector(change.Item);
-                            if (!current.HasValue)
-                            {
-                                current = value;
-                            }
+                            current ??= value;
 
                             if (change.Type == AggregateType.Add)
                             {
@@ -146,7 +143,7 @@ namespace DynamicData.Aggregation
                             var collection = latest.Collection;
                             if (collection.Count == 0)
                             {
-                                current = default(TResult?);
+                                current = default;
                             }
                             else
                             {

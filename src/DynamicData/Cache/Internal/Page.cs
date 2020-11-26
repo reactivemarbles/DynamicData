@@ -29,9 +29,12 @@ namespace DynamicData.Cache.Internal
                         var locker = new object();
                         var paginator = new Paginator();
                         var request = _pageRequests.Synchronize(locker).Select(paginator.Paginate);
-                        var datachange = _source.Synchronize(locker).Select(paginator.Update);
+                        var dataChange = _source.Synchronize(locker).Select(paginator.Update);
 
-                        return request.Merge(datachange).Where(updates => updates is not null).Select(x => x!).SubscribeSafe(observer);
+                        return request.Merge(dataChange)
+                            .Where(updates => updates is not null)
+                            .Select(x => x!)
+                            .SubscribeSafe(observer);
                     });
         }
 
@@ -96,11 +99,6 @@ namespace DynamicData.Cache.Internal
             private IPagedChangeSet<TObject, TKey>? Paginate(ISortedChangeSet<TObject, TKey>? updates = null)
             {
                 if (_isLoaded == false)
-                {
-                    return null;
-                }
-
-                if (_request is null)
                 {
                     return null;
                 }

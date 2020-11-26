@@ -41,9 +41,9 @@ namespace DynamicData.Binding
 
             _factory = (t, notifyInitial) =>
                 {
-                    PropertyValue<TObject, TProperty> Factory() => new PropertyValue<TObject, TProperty>(t, accessor(t));
+                    PropertyValue<TObject, TProperty> Factory() => new(t, accessor(t));
 
-                    var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(handler => t.PropertyChanged += handler, handler => t.PropertyChanged -= handler).Where(args => args.EventArgs.PropertyName == member.Name).Select(x => Factory());
+                    var propertyChanged = Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(handler => t.PropertyChanged += handler, handler => t.PropertyChanged -= handler).Where(args => args.EventArgs.PropertyName == member.Name).Select(_ => Factory());
 
                     if (!notifyInitial)
                     {

@@ -11,7 +11,7 @@ namespace DynamicData.Tests.Cache
 {
     public class DynamicXorFixture : IDisposable
     {
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly ChangeSetAggregator<Person, string> _results;
 

@@ -89,7 +89,7 @@ namespace DynamicData.Tests.Cache
         [Fact]
         public void MakeSelectMagicWorkWithObservable()
         {
-            var initialItem = new IntHolder() { Value = 1, Description = "Initial Description" };
+            var initialItem = new IntHolder { Value = 1, Description = "Initial Description" };
 
             var sourceList = new SourceList<IntHolder>();
             sourceList.Add(initialItem);

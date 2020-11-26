@@ -67,7 +67,7 @@ namespace DynamicData
             unchecked
             {
                 int hashCode = Response.GetHashCode();
-                hashCode = (hashCode * 397) ^ (SortedItems?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ SortedItems.GetHashCode();
                 return hashCode;
             }
         }

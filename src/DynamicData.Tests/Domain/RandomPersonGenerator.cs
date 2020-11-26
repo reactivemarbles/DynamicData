@@ -6,7 +6,7 @@ namespace DynamicData.Tests.Domain
 {
     public class RandomPersonGenerator
     {
-        private readonly IEnumerable<string> _boys = new List<string>()
+        private readonly IEnumerable<string> _boys = new List<string>
                                                          {
                                                              "Sergio", "Daniel", "Carolina", "David", "Reina", "Saul", "Bernard", "Danny",
                                                              "Dimas", "Yuri", "Ivan", "Laura", "John", "Bob", "Charles", "Rupert", "William",
@@ -14,21 +14,21 @@ namespace DynamicData.Tests.Domain
                                                              "Kai", "Dominguez", "Escobar", "Martin", "Crespo", "Xavier", "Lyons", "Stephens", "Aaron"
                                                          };
 
-        private readonly IEnumerable<string> _girls = new List<string>()
+        private readonly IEnumerable<string> _girls = new List<string>
                                                           {
                                                               "Ruth", "Katy", "Patricia", "Nikki", "Zoe", "Esmerelda", "Fiona", "Amber", "Kirsty", "Zaira",
                                                               "Claire", "Isabel", "Esmerelda", "Nicola", "Lucy", "Louise", "Elizabeth", "Anne", "Rebecca",
                                                               "Rhian", "Beatrice"
                                                           };
 
-        private readonly IEnumerable<string> _lastnames = new List<string>()
+        private readonly IEnumerable<string> _lastnames = new List<string>
                                                               {
                                                                   "Johnson", "Williams", "Jones", "Brown", "David", "Miller", "Wilson", "Anderson", "Thomas",
                                                                   "Jackson", "White", "Robinson", "Williams", "Jones", "Windor", "McQueen", "X", "Black",
                                                                   "Green", "Chicken", "Partrige", "Broad", "Flintoff", "Root"
                                                               };
 
-        private readonly Random _random = new Random();
+        private readonly Random _random = new();
 
         public IEnumerable<Person> Take(int number = 10000)
         {

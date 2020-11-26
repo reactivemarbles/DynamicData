@@ -183,7 +183,7 @@ namespace DynamicData
         /// <filterpriority>2.</filterpriority>
         public override int GetHashCode()
         {
-            return Key is null ? 0 : EqualityComparer<TKey>.Default.GetHashCode(Key);
+            return EqualityComparer<TKey>.Default.GetHashCode(Key);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace DynamicData
 
             if (isDisposing)
             {
-                _cleanUp?.Dispose();
+                _cleanUp.Dispose();
             }
         }
     }

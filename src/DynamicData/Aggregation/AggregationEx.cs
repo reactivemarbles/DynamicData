@@ -29,7 +29,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(source));
             }
 
-            return source.Select(changeset => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject, TKey>(changeset));
+            return source.Select(changeSet => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject, TKey>(changeSet));
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace DynamicData.Aggregation
                 throw new ArgumentNullException(nameof(source));
             }
 
-            return source.Select(changeset => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject>(changeset));
+            return source.Select(changeSet => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject>(changeSet));
         }
 
         /// <summary>
@@ -86,9 +86,9 @@ namespace DynamicData.Aggregation
         /// <param name="addAction">The add action.</param>
         /// <param name="removeAction">The remove action.</param>
         /// <returns>An observable with the accumulated value.</returns>
-        internal static IObservable<TResult> Accumlate<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
+        internal static IObservable<TResult> Accumulate<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
         {
-            return source.ForAggregation().Accumlate(seed, accessor, addAction, removeAction);
+            return source.ForAggregation().Accumulate(seed, accessor, addAction, removeAction);
         }
 
         /// <summary>
@@ -104,10 +104,10 @@ namespace DynamicData.Aggregation
         /// <param name="addAction">The add action.</param>
         /// <param name="removeAction">The remove action.</param>
         /// <returns>An observable with the accumulated value.</returns>
-        internal static IObservable<TResult> Accumlate<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
+        internal static IObservable<TResult> Accumulate<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
             where TKey : notnull
         {
-            return source.ForAggregation().Accumlate(seed, accessor, addAction, removeAction);
+            return source.ForAggregation().Accumulate(seed, accessor, addAction, removeAction);
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace DynamicData.Aggregation
         /// <param name="addAction">The add action.</param>
         /// <param name="removeAction">The remove action.</param>
         /// <returns>An observable with the accumulated value.</returns>
-        internal static IObservable<TResult> Accumlate<TObject, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
+        internal static IObservable<TResult> Accumulate<TObject, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
         {
             if (source is null)
             {

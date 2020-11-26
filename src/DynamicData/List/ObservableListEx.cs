@@ -29,7 +29,7 @@ namespace DynamicData
     public static class ObservableListEx
     {
         /// <summary>
-        /// Injects a side effect into a changeset observable.
+        /// Injects a side effect into a change set observable.
         /// </summary>
         /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
@@ -192,8 +192,8 @@ namespace DynamicData
         /// </summary>
         /// <typeparam name="TObject">The type of object.</typeparam>
         /// <param name="source">The source observable.</param>
-        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes.</param>
-        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations.</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have successive property changes.</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable change set with additional refresh changes.</returns>
         public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
@@ -225,8 +225,8 @@ namespace DynamicData
         /// <typeparam name="TProperty">The type of property.</typeparam>
         /// <param name="source">The source observable.</param>
         /// <param name="propertyAccessor">Specify a property to observe changes. When it changes a Refresh is invoked.</param>
-        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have sucessive property changes.</param>
-        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refesh invocations.</param>
+        /// <param name="changeSetBuffer">Batch up changes by specifying the buffer. This greatly increases performance when many elements have successive property changes.</param>
+        /// <param name="propertyChangeThrottle">When observing on multiple property changes, apply a throttle to prevent excessive refresh invocations.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable change set with additional refresh changes.</returns>
         public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertyAccessor, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
@@ -282,7 +282,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Binds a clone of the observable changeset to the target observable collection.
+        /// Binds a clone of the observable change set to the target observable collection.
         /// </summary>
         /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
@@ -334,7 +334,7 @@ namespace DynamicData
 
 #if SUPPORTS_BINDINGLIST
         /// <summary>
-        /// Binds a clone of the observable changeset to the target observable collection.
+        /// Binds a clone of the observable change set to the target observable collection.
         /// </summary>
         /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
@@ -385,11 +385,11 @@ namespace DynamicData
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-        /// <param name="intialPauseState">if set to <c>true</c> [intial pause state].</param>
+        /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable which emits the change set.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
-        public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool intialPauseState, IScheduler? scheduler = null)
+        public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IScheduler? scheduler = null)
         {
             if (source is null)
             {
@@ -401,7 +401,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(pauseIfTrueSelector));
             }
 
-            return BufferIf(source, pauseIfTrueSelector, intialPauseState, null, scheduler);
+            return BufferIf(source, pauseIfTrueSelector, initialPauseState, null, scheduler);
         }
 
         /// <summary>
@@ -427,12 +427,12 @@ namespace DynamicData
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
-        /// <param name="intialPauseState">if set to <c>true</c> [intial pause state].</param>
+        /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
         /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable which emits the change set.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
-        public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool intialPauseState, TimeSpan? timeOut, IScheduler? scheduler = null)
+        public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, TimeSpan? timeOut, IScheduler? scheduler = null)
         {
             if (source is null)
             {
@@ -444,23 +444,23 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(pauseIfTrueSelector));
             }
 
-            return new BufferIf<T>(source, pauseIfTrueSelector, intialPauseState, timeOut, scheduler).Run();
+            return new BufferIf<T>(source, pauseIfTrueSelector, initialPauseState, timeOut, scheduler).Run();
         }
 
         /// <summary>
-        /// Buffers changes for an intial period only. After the period has elapsed, not further buffering occurs.
+        /// Buffers changes for an initial period only. After the period has elapsed, not further buffering occurs.
         /// </summary>
         /// <typeparam name="TObject">The type of object.</typeparam>
-        /// <param name="source">The source changeset.</param>
-        /// <param name="initalBuffer">The period to buffer, measure from the time that the first item arrives.</param>
+        /// <param name="source">The source change set.</param>
+        /// <param name="initialBuffer">The period to buffer, measure from the time that the first item arrives.</param>
         /// <param name="scheduler">The scheduler to buffer on.</param>
         /// <returns>An observable which emits the change set.</returns>
-        public static IObservable<IChangeSet<TObject>> BufferInitial<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan initalBuffer, IScheduler? scheduler = null)
+        public static IObservable<IChangeSet<TObject>> BufferInitial<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan initialBuffer, IScheduler? scheduler = null)
         {
             return source.DeferUntilLoaded().Publish(
                 shared =>
                     {
-                        var initial = shared.Buffer(initalBuffer, scheduler ?? Scheduler.Default).FlattenBufferResult().Take(1);
+                        var initial = shared.Buffer(initialBuffer, scheduler ?? Scheduler.Default).FlattenBufferResult().Take(1);
 
                         return initial.Concat(shared);
                     });
@@ -537,7 +537,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Convert the object using the sepcified conversion function.
+        /// Convert the object using the specified conversion function.
         ///
         /// This is a lighter equivalent of Transform and is designed to be used with non-disposable objects.
         /// </summary>
@@ -720,7 +720,7 @@ namespace DynamicData
         /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="timeSelector">Selector returning when to expire the item. Return null for non-expiring item.</param>
-        /// <param name="pollingInterval">Enter the polling interval to optimise expiry timers, if ommited 1 timer is created for each unique expiry time.</param>
+        /// <param name="pollingInterval">Enter the polling interval to optimise expiry timers, if omitted 1 timer is created for each unique expiry time.</param>
         /// <param name="scheduler">The scheduler.</param>
         /// <returns>An observable which emits the enumerable of items.</returns>
         public static IObservable<IEnumerable<T>> ExpireAfter<T>(this ISourceList<T> source, Func<T, TimeSpan?> timeSelector, TimeSpan? pollingInterval = null, IScheduler? scheduler = null)
@@ -993,7 +993,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Groups the source on the value returned by group selector factory. Each update produces immuatable grouping.
+        ///  Groups the source on the value returned by group selector factory. Each update produces immutable grouping.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
@@ -1475,18 +1475,6 @@ namespace DynamicData
         /// <typeparam name="T">The type of the object.</typeparam>
         /// <param name="source">The source observable change set.</param>
         /// <returns>An observable which emits the change set.</returns>
-        [Obsolete("Use SuppressRefresh")]
-        public static IObservable<IChangeSet<T>> SupressRefresh<T>(this IObservable<IChangeSet<T>> source)
-        {
-            return source.WhereReasonsAreNot(ListChangeReason.Refresh);
-        }
-
-        /// <summary>
-        /// Suppress  refresh notifications.
-        /// </summary>
-        /// <typeparam name="T">The type of the object.</typeparam>
-        /// <param name="source">The source observable change set.</param>
-        /// <returns>An observable which emits the change set.</returns>
         public static IObservable<IChangeSet<T>> SuppressRefresh<T>(this IObservable<IChangeSet<T>> source)
         {
             return source.WhereReasonsAreNot(ListChangeReason.Refresh);
@@ -1596,7 +1584,7 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Converts the observable to an observable changeset, with a specified limit of how large the list can be.
+        /// Converts the observable to an observable change set, with a specified limit of how large the list can be.
         /// Change set observes observable change events.
         /// </summary>
         /// <typeparam name="T">The type of the object.</typeparam>
@@ -1793,7 +1781,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t), transformOnRefresh);
+            return source.Transform<TSource, TDestination>((t, _, _) => transformFactory(t), transformOnRefresh);
         }
 
         /// <summary>
@@ -1822,7 +1810,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t, idx), transformOnRefresh);
+            return source.Transform<TSource, TDestination>((t, _, idx) => transformFactory(t, idx), transformOnRefresh);
         }
 
         /// <summary>
@@ -1853,7 +1841,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(transformFactory));
             }
 
-            return source.Transform<TSource, TDestination>((t, previous, idx) => transformFactory(t, previous), transformOnRefresh);
+            return source.Transform<TSource, TDestination>((t, previous, _) => transformFactory(t, previous), transformOnRefresh);
         }
 
         /// <summary>
