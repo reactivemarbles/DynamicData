@@ -93,22 +93,6 @@ jobs:
       with:
         name: nuget
 
-    - name: Save SignClient Configuration
-      run: 'echo "$SIGN_CLIENT_CONFIG" > SignPackages.json'
-      shell: bash
-      env:
-        SIGN_CLIENT_CONFIG: ${{secrets.SIGN_CLIENT_CONFIG}}
-
-    - name: Sign NuGet Packages
-      uses: glennawatson/signclient@v1
-      with:
-        input-files: '**/*.nupkg'
-        sign-client-secret: ${{ secrets.SIGN_CLIENT_SECRET }}
-        sign-client-user: ${{ secrets.SIGN_CLIENT_USER_ID }}
-        project-name: reactiveui
-        description: reactiveui
-        config-file: SignPackages.json
-
     - name: Changelog
       uses: glennawatson/ChangeLog@v1
       id: changelog
