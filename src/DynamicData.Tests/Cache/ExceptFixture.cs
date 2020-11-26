@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
     public class ExceptFixture : ExceptFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -24,11 +26,13 @@ namespace DynamicData.Tests.Cache
         }
     }
 
-    public abstract class ExceptFixtureBase: IDisposable
+    public abstract class ExceptFixtureBase : IDisposable
     {
-        protected ISourceCache<Person, string> _targetSource;
         protected ISourceCache<Person, string> _exceptSource;
-        private ChangeSetAggregator<Person, string> _results;
+
+        protected ISourceCache<Person, string> _targetSource;
+
+        private readonly ChangeSetAggregator<Person, string> _results;
 
         protected ExceptFixtureBase()
         {
@@ -37,23 +41,11 @@ namespace DynamicData.Tests.Cache
             _results = CreateObservable().AsAggregator();
         }
 
-        protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();
-
         public void Dispose()
         {
             _targetSource.Dispose();
             _exceptSource.Dispose();
             _results.Dispose();
-        }
-
-        [Fact]
-        public void UpdatingOneSourceOnlyProducesResult()
-        {
-            var person = new Person("Adult1", 50);
-            _targetSource.AddOrUpdate(person);
-
-            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
         }
 
         [Fact]
@@ -78,5 +70,17 @@ namespace DynamicData.Tests.Cache
             _results.Messages.Count.Should().Be(1, "Should be 2 updates");
             _results.Data.Count.Should().Be(1, "Cache should have no items");
         }
+
+        [Fact]
+        public void UpdatingOneSourceOnlyProducesResult()
+        {
+            var person = new Person("Adult1", 50);
+            _targetSource.AddOrUpdate(person);
+
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        }
+
+        protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();
     }
 }

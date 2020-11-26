@@ -1,23 +1,28 @@
 using System;
-using System.Reactive.Subjects;
-using DynamicData.Tests.Domain;
-using Microsoft.Reactive.Testing;
-using Xunit;
-using FluentAssertions;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
+
+using DynamicData.Tests.Domain;
+
+using FluentAssertions;
+
+using Microsoft.Reactive.Testing;
+
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class BatchIfFixture: IDisposable
+    public class BatchIfFixture : IDisposable
     {
-        private readonly ISourceList<Person> _source;
-        private readonly ChangeSetAggregator<Person> _results;
-        private readonly TestScheduler _scheduler;
-
         private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
 
-        public  BatchIfFixture()
+        private readonly ChangeSetAggregator<Person> _results;
+
+        private readonly TestScheduler _scheduler;
+
+        private readonly ISourceList<Person> _source;
+
+        public BatchIfFixture()
         {
             _pausingSubject = new Subject<bool>();
             _scheduler = new TestScheduler();
@@ -25,10 +30,24 @@ namespace DynamicData.Tests.List
             _results = _source.Connect().BufferIf(_pausingSubject, _scheduler).AsAggregator();
         }
 
-        public void Dispose()
+        [Fact]
+        public void CanToggleSuspendResume()
         {
-            _results.Dispose();
-            _source.Dispose();
+            _pausingSubject.OnNext(true);
+            ////advance otherwise nothing happens
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
+
+            _source.Add(new Person("A", 1));
+
+            //go forward an arbitary amount of time
+            _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+            _results.Messages.Count.Should().Be(0, "There should be no messages");
+
+            _pausingSubject.OnNext(false);
+            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
+            _source.Add(new Person("B", 1));
+
+            _results.Messages.Count.Should().Be(2, "There should be no messages");
         }
 
         /// <summary>
@@ -41,11 +60,7 @@ namespace DynamicData.Tests.List
             var consumerScheduler = new TestScheduler();
 
             //Note consumer is running on a different scheduler
-            _source.Connect()
-                   .BufferIf(_pausingSubject, producerScheduler)
-                   .ObserveOn(consumerScheduler)
-                   .Bind(out var target)
-                   .AsAggregator();
+            _source.Connect().BufferIf(_pausingSubject, producerScheduler).ObserveOn(consumerScheduler).Bind(out var target).AsAggregator();
 
             _source.Add(new Person("A", 1));
 
@@ -79,6 +94,12 @@ namespace DynamicData.Tests.List
             target.Count.Should().Be(2, "There should be 2 message");
         }
 
+        public void Dispose()
+        {
+            _results.Dispose();
+            _source.Dispose();
+        }
+
         [Fact]
         public void NoResultsWillBeReceivedIfPaused()
         {
@@ -101,26 +122,6 @@ namespace DynamicData.Tests.List
             //go forward an arbitary amount of time
             _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
             _results.Messages.Count.Should().Be(1, "Should be 1 update");
-        }
-
-        [Fact]
-        public void CanToggleSuspendResume()
-        {
-            _pausingSubject.OnNext(true);
-            ////advance otherwise nothing happens
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-
-            _source.Add(new Person("A", 1));
-
-            //go forward an arbitary amount of time
-            _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-            _results.Messages.Count.Should().Be(0, "There should be no messages");
-
-            _pausingSubject.OnNext(false);
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-            _source.Add(new Person("B", 1));
-
-            _results.Messages.Count.Should().Be(2, "There should be no messages");
         }
     }
 }

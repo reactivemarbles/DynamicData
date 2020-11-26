@@ -1,20 +1,22 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+        where TKey : notnull
     {
         private readonly IObservableCache<TObject, TKey> _cache;
 
         public AnonymousObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -27,39 +29,39 @@ namespace DynamicData.Cache.Internal
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
 
+        public int Count => _cache.Count;
+
         public IObservable<int> CountChanged => _cache.CountChanged;
 
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
-        {
-            return _cache.Watch(key);
-        }
+        public IEnumerable<TObject> Items => _cache.Items;
 
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool> predicate = null)
+        public IEnumerable<TKey> Keys => _cache.Keys;
+
+        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
+
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null)
         {
             return _cache.Connect(predicate);
         }
 
-        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool> predicate = null)
+        public void Dispose()
         {
-            return _cache.Preview(predicate);
+            _cache.Dispose();
         }
-
-        public IEnumerable<TKey> Keys => _cache.Keys;
-
-        public IEnumerable<TObject> Items => _cache.Items;
-
-        public int Count => _cache.Count;
-
-        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
 
         public Optional<TObject> Lookup(TKey key)
         {
             return _cache.Lookup(key);
         }
 
-        public void Dispose()
+        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
         {
-            _cache.Dispose();
+            return _cache.Preview(predicate);
+        }
+
+        public IObservable<Change<TObject, TKey>> Watch(TKey key)
+        {
+            return _cache.Watch(key);
         }
     }
 }

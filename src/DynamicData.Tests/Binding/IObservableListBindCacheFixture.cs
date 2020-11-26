@@ -1,38 +1,33 @@
 ﻿using System;
 using System.Linq;
+
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-
-    public class IObservableListBindCacheFixture: IDisposable
+    public class IObservableListBindCacheFixture : IDisposable
     {
+        private readonly RandomPersonGenerator _generator = new();
+
         private readonly IObservableList<Person> _list;
+
         private readonly ChangeSetAggregator<Person> _listNotifications;
+
         private readonly ISourceCache<Person, string> _source;
+
         private readonly ChangeSetAggregator<Person, string> _sourceCacheNotifications;
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
 
         public IObservableListBindCacheFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
-            _sourceCacheNotifications = _source
-                .Connect()
-                .AutoRefresh()
-                .BindToObservableList(out _list)
-                .AsAggregator();
+            _sourceCacheNotifications = _source.Connect().AutoRefresh().BindToObservableList(out _list).AsAggregator();
 
             _listNotifications = _list.Connect().AsAggregator();
-        }
-
-        public void Dispose()
-        {
-            _sourceCacheNotifications.Dispose();
-            _listNotifications.Dispose();
-            _source.Dispose();
         }
 
         [Fact]
@@ -43,28 +38,6 @@ namespace DynamicData.Tests.Binding
 
             _list.Count.Should().Be(1, "Should be 1 item in the collection");
             _list.Items.First().Should().Be(person, "Should be same person");
-        }
-
-        [Fact]
-        public void UpdateToSourceUpdatesTheDestination()
-        {
-            var person = new Person("Adult1", 50);
-            var personUpdated = new Person("Adult1", 51);
-            _source.AddOrUpdate(person);
-            _source.AddOrUpdate(personUpdated);
-
-            _list.Count.Should().Be(1, "Should be 1 item in the collection");
-            _list.Items.First().Should().Be(personUpdated, "Should be updated person");
-        }
-
-        [Fact]
-        public void RemoveSourceRemovesFromTheDestination()
-        {
-            var person = new Person("Adult1", 50);
-            _source.AddOrUpdate(person);
-            _source.Remove(person);
-
-            _list.Count.Should().Be(0, "Should be 1 item in the collection");
         }
 
         [Fact]
@@ -86,6 +59,13 @@ namespace DynamicData.Tests.Binding
             _list.Count.Should().Be(0, "Should be 100 items in the collection");
         }
 
+        public void Dispose()
+        {
+            _sourceCacheNotifications.Dispose();
+            _listNotifications.Dispose();
+            _source.Dispose();
+        }
+
         [Fact]
         public void ListRecievesRefresh()
         {
@@ -96,6 +76,28 @@ namespace DynamicData.Tests.Binding
 
             _listNotifications.Messages.Count().Should().Be(2);
             _listNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+        }
+
+        [Fact]
+        public void RemoveSourceRemovesFromTheDestination()
+        {
+            var person = new Person("Adult1", 50);
+            _source.AddOrUpdate(person);
+            _source.Remove(person);
+
+            _list.Count.Should().Be(0, "Should be 1 item in the collection");
+        }
+
+        [Fact]
+        public void UpdateToSourceUpdatesTheDestination()
+        {
+            var person = new Person("Adult1", 50);
+            var personUpdated = new Person("Adult1", 51);
+            _source.AddOrUpdate(person);
+            _source.AddOrUpdate(personUpdated);
+
+            _list.Count.Should().Be(1, "Should be 1 item in the collection");
+            _list.Items.First().Should().Be(personUpdated, "Should be updated person");
         }
     }
 }

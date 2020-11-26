@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,7 +8,7 @@ using System;
 namespace DynamicData
 {
     /// <summary>
-    /// Source cache convenience extensions
+    /// Source cache convenience extensions.
     /// </summary>
     public static class SourceCacheEx
     {
@@ -21,10 +21,11 @@ namespace DynamicData
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="converter">The conversion factory.</param>
-        /// <returns></returns>
+        /// <returns>An observable which emits the change set.</returns>
         public static IObservable<IChangeSet<TDestination, TKey>> Cast<TSource, TKey, TDestination>(this IObservableCache<TSource, TKey> source, Func<TSource, TDestination> converter)
+            where TKey : notnull
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }

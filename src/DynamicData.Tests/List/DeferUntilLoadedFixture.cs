@@ -1,28 +1,30 @@
 using System;
 using System.Linq;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
     public class DeferAnsdSkipFixture
     {
         [Fact]
         public void DeferUntilLoadedDoesNothingUntilDataHasBeenReceived()
         {
             bool updateReceived = false;
-            IChangeSet<Person> result = null;
+            IChangeSet<Person>? result = null;
 
             var cache = new SourceList<Person>();
 
-            var deferStream = cache.Connect().DeferUntilLoaded()
-                                   .Subscribe(changes =>
-                                   {
-                                       updateReceived = true;
-                                       result = changes;
-                                   });
+            var deferStream = cache.Connect().DeferUntilLoaded().Subscribe(
+                changes =>
+                    {
+                        updateReceived = true;
+                        result = changes;
+                    });
 
             var person = new Person("Test", 1);
 
@@ -30,6 +32,12 @@ namespace DynamicData.Tests.List
             cache.Add(person);
 
             updateReceived.Should().BeTrue();
+
+            if (result is null)
+            {
+                throw new InvalidOperationException(nameof(result));
+            }
+
             result.Adds.Should().Be(1);
             result.Unified().First().Current.Should().Be(person);
             deferStream.Dispose();
@@ -42,8 +50,7 @@ namespace DynamicData.Tests.List
 
             var cache = new SourceList<Person>();
 
-            var deferStream = cache.Connect().SkipInitial()
-                                   .Subscribe(changes => updateReceived = true);
+            var deferStream = cache.Connect().SkipInitial().Subscribe(changes => updateReceived = true);
 
             updateReceived.Should().BeFalse();
 

@@ -1,16 +1,11 @@
 ﻿using System;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Tests.Domain
 {
     public class ParentAndChildren : IEquatable<ParentAndChildren>
     {
-        public Person Parent { get; }
-        public string ParentId { get;  }
-        public Person[] Children { get; }
-
-        public int Count => Children.Length;
-
         public ParentAndChildren(Person parent, Person[] children)
         {
             Parent = parent;
@@ -19,14 +14,30 @@ namespace DynamicData.Tests.Domain
 
         public ParentAndChildren(string parentId, Optional<Person> parent, Person[] children)
         {
-            Parent = parent.ValueOr(()=>null);
+            Parent = parent.ValueOrDefault();
             ParentId = parentId;
             Children = children;
         }
 
-        #region Equality
+        public Person[] Children { get; }
 
-        public bool Equals(ParentAndChildren other)
+        public int Count => Children.Length;
+
+        public Person? Parent { get; }
+
+        public string? ParentId { get; }
+
+        public static bool operator ==(ParentAndChildren left, ParentAndChildren right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(ParentAndChildren left, ParentAndChildren right)
+        {
+            return !Equals(left, right);
+        }
+
+        public bool Equals(ParentAndChildren? other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -41,7 +52,7 @@ namespace DynamicData.Tests.Domain
             return string.Equals(ParentId, other.ParentId);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
@@ -58,25 +69,13 @@ namespace DynamicData.Tests.Domain
                 return false;
             }
 
-            return Equals((ParentAndChildren) obj);
+            return Equals((ParentAndChildren)obj);
         }
 
         public override int GetHashCode()
         {
-            return (ParentId != null ? ParentId.GetHashCode() : 0);
+            return (ParentId is not null ? ParentId.GetHashCode() : 0);
         }
-
-        public static bool operator ==(ParentAndChildren left, ParentAndChildren right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ParentAndChildren left, ParentAndChildren right)
-        {
-            return !Equals(left, right);
-        }
-
-        #endregion
 
         public override string ToString()
         {

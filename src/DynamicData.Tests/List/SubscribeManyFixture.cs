@@ -1,53 +1,29 @@
 using System;
 using System.Linq;
 using System.Reactive.Disposables;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class SubscribeManyFixture: IDisposable
+    public class SubscribeManyFixture : IDisposable
     {
-        private class SubscribeableObject
-        {
-            public bool IsSubscribed { get; private set; }
-            private int Id { get; }
-
-            public void Subscribe()
-            {
-                IsSubscribed = true;
-            }
-
-            public void UnSubscribe()
-            {
-                IsSubscribed = false;
-            }
-
-            public SubscribeableObject(int id)
-            {
-                Id = id;
-            }
-        }
-
-        private readonly ISourceList<SubscribeableObject> _source;
         private readonly ChangeSetAggregator<SubscribeableObject> _results;
 
-        public  SubscribeManyFixture()
+        private readonly ISourceList<SubscribeableObject> _source;
+
+        public SubscribeManyFixture()
         {
             _source = new SourceList<SubscribeableObject>();
             _results = new ChangeSetAggregator<SubscribeableObject>(
-                _source.Connect().SubscribeMany(subscribeable =>
-                {
-                    subscribeable.Subscribe();
-                    return Disposable.Create(subscribeable.UnSubscribe);
-                }));
-        }
-
-        public void Dispose()
-        {
-            _source.Dispose();
-            _results.Dispose();
+                _source.Connect().SubscribeMany(
+                    subscribeable =>
+                        {
+                            subscribeable.Subscribe();
+                            return Disposable.Create(subscribeable.UnSubscribe);
+                        }));
         }
 
         [Fact]
@@ -60,15 +36,10 @@ namespace DynamicData.Tests.List
             _results.Data.Items.First().IsSubscribed.Should().Be(true, "Should be subscribed");
         }
 
-        [Fact]
-        public void RemoveIsUnsubscribed()
+        public void Dispose()
         {
-            _source.Add(new SubscribeableObject(1));
-            _source.RemoveAt(0);
-
-            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
-            _results.Messages[1].First().Item.Current.IsSubscribed.Should().Be(false, "Should be be unsubscribed");
+            _source.Dispose();
+            _results.Dispose();
         }
 
         //[Fact]
@@ -94,6 +65,39 @@ namespace DynamicData.Tests.List
             var items = _results.Messages[0].SelectMany(x => x.Range);
 
             items.All(d => !d.IsSubscribed).Should().BeTrue();
+        }
+
+        [Fact]
+        public void RemoveIsUnsubscribed()
+        {
+            _source.Add(new SubscribeableObject(1));
+            _source.RemoveAt(0);
+
+            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+            _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
+            _results.Messages[1].First().Item.Current.IsSubscribed.Should().Be(false, "Should be be unsubscribed");
+        }
+
+        private class SubscribeableObject
+        {
+            public SubscribeableObject(int id)
+            {
+                Id = id;
+            }
+
+            public bool IsSubscribed { get; private set; }
+
+            private int Id { get; }
+
+            public void Subscribe()
+            {
+                IsSubscribed = true;
+            }
+
+            public void UnSubscribe()
+            {
+                IsSubscribed = false;
+            }
         }
     }
 }

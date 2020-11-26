@@ -1,21 +1,48 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
     internal sealed class ReaderWriter<T>
     {
-        private ChangeAwareList<T> _data = new ChangeAwareList<T>();
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
+
+        private ChangeAwareList<T> _data = new();
+
         private bool _updateInProgress;
+
+        public int Count
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _data.Count;
+                }
+            }
+        }
+
+        public T[] Items
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    var result = new T[_data.Count];
+                    _data.CopyTo(result, 0);
+                    return result;
+                }
+            }
+        }
 
         public IChangeSet<T> Write(IChangeSet<T> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
@@ -33,7 +60,7 @@ namespace DynamicData.List.Internal
 
         public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -52,49 +79,15 @@ namespace DynamicData.List.Internal
             return result;
         }
 
-        public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
-        {
-            if (updateAction == null)
-            {
-                throw new ArgumentNullException(nameof(updateAction));
-            }
-
-            if (previewHandler == null)
-            {
-                throw new ArgumentNullException(nameof(previewHandler));
-            }
-
-            IChangeSet<T> result;
-
-            // Make a copy, apply changes on the main list, perform the preview callback with the old list and swap the lists again to finalize the update.
-            lock (_locker)
-            {
-                ChangeAwareList<T> copy = new ChangeAwareList<T>(_data, false);
-
-                _updateInProgress = true;
-                updateAction(_data);
-                _updateInProgress = false;
-
-                result = _data.CaptureChanges();
-
-                InternalEx.Swap(ref _data, ref copy);
-
-                previewHandler(result);
-
-                InternalEx.Swap(ref _data, ref copy);
-            }
-
-            return result;
-        }
-
         /// <summary>
         /// Perform a recursive write operation.
         /// Changes are added to the topmost change tracker.
         /// Use only during an invocation of Write/WriteWithPreview.
         /// </summary>
+        /// <param name="updateAction">The action to perform on the list.</param>
         public void WriteNested(Action<IExtendedList<T>> updateAction)
         {
-            if (updateAction == null)
+            if (updateAction is null)
             {
                 throw new ArgumentNullException(nameof(updateAction));
             }
@@ -110,28 +103,39 @@ namespace DynamicData.List.Internal
             }
         }
 
-        public T[] Items
+        public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
         {
-            get
+            if (updateAction is null)
             {
-                lock (_locker)
-                {
-                    var result = new T[_data.Count];
-                    _data.CopyTo(result, 0);
-                    return result;
-                }
+                throw new ArgumentNullException(nameof(updateAction));
             }
-        }
 
-        public int Count
-        {
-            get
+            if (previewHandler is null)
             {
-                lock (_locker)
-                {
-                    return _data.Count;
-                }
+                throw new ArgumentNullException(nameof(previewHandler));
             }
+
+            IChangeSet<T> result;
+
+            // Make a copy, apply changes on the main list, perform the preview callback with the old list and swap the lists again to finalize the update.
+            lock (_locker)
+            {
+                ChangeAwareList<T> copy = new(_data, false);
+
+                _updateInProgress = true;
+                updateAction(_data);
+                _updateInProgress = false;
+
+                result = _data.CaptureChanges();
+
+                InternalEx.Swap(ref _data, ref copy);
+
+                previewHandler(result);
+
+                InternalEx.Swap(ref _data, ref copy);
+            }
+
+            return result;
         }
     }
 }

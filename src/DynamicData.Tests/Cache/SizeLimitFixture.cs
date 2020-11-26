@@ -1,24 +1,30 @@
 using System;
 using System.Linq;
 using System.Reactive.Linq;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Microsoft.Reactive.Testing;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
-    public class SizeLimitFixture: IDisposable
+    public class SizeLimitFixture : IDisposable
     {
-        private readonly ISourceCache<Person, string> _source;
+        private readonly RandomPersonGenerator _generator = new();
+
         private readonly ChangeSetAggregator<Person, string> _results;
+
         private readonly TestScheduler _scheduler;
+
         private readonly IDisposable _sizeLimiter;
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly ISourceCache<Person, string> _source;
 
-        public  SizeLimitFixture()
+        public SizeLimitFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceCache<Person, string>(p => p.Key);
@@ -26,11 +32,15 @@ namespace DynamicData.Tests.Cache
             _results = _source.Connect().AsAggregator();
         }
 
-        public void Dispose()
+        [Fact]
+        public void Add()
         {
-            _sizeLimiter.Dispose();
-            _source.Dispose();
-            _results.Dispose();
+            var person = _generator.Take(1).First();
+            _source.AddOrUpdate(person);
+
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
         [Fact]
@@ -73,47 +83,18 @@ namespace DynamicData.Tests.Cache
             _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
         }
 
-        [Fact]
-        public void Add()
+        public void Dispose()
         {
-            var person = _generator.Take(1).First();
-            _source.AddOrUpdate(person);
-
-            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-            _results.Data.Items.First().Should().Be(person, "Should be same person");
-        }
-
-        [Fact]
-        public void ThrowsIfSizeLimitIsZero()
-        {
-            // Initialise();
-            Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
-        }
-
-        [Fact]
-        public void OnCompleteIsInvokedWhenSourceIsDisposed()
-        {
-            bool completed = false;
-
-            var subscriber = _source.LimitSizeTo(10)
-                                    .Finally(() => completed = true)
-                                    .Subscribe(updates => { Console.WriteLine(); });
-
+            _sizeLimiter.Dispose();
             _source.Dispose();
-
-            completed.Should().BeTrue();
+            _results.Dispose();
         }
 
         [Fact]
         public void InvokeLimitSizeToWhenOverLimit()
         {
             bool removesTriggered = false;
-            var subscriber = _source.LimitSizeTo(10, _scheduler)
-                                    .Subscribe(removes =>
-                                    {
-                                        removesTriggered = true;
-                                    });
+            var subscriber = _source.LimitSizeTo(10, _scheduler).Subscribe(removes => { removesTriggered = true; });
 
             _source.AddOrUpdate(_generator.Take(10).ToArray());
             _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);
@@ -132,6 +113,25 @@ namespace DynamicData.Tests.Cache
             _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
 
             subscriber.Dispose();
+        }
+
+        [Fact]
+        public void OnCompleteIsInvokedWhenSourceIsDisposed()
+        {
+            bool completed = false;
+
+            var subscriber = _source.LimitSizeTo(10).Finally(() => completed = true).Subscribe(updates => { Console.WriteLine(); });
+
+            _source.Dispose();
+
+            completed.Should().BeTrue();
+        }
+
+        [Fact]
+        public void ThrowsIfSizeLimitIsZero()
+        {
+            // Initialise();
+            Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
         }
     }
 }

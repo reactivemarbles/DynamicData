@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reactive.Subjects;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
     public class ToObservableChangeSetFixtureWithCompletion : IDisposable
     {
-        private readonly ISubject<Person> _observable;
         private readonly IDisposable _disposable;
+
+        private readonly ISubject<Person> _observable;
+
         private readonly List<Person> _target;
+
         private bool _hasCompleted = false;
 
         public ToObservableChangeSetFixtureWithCompletion()
@@ -20,10 +26,12 @@ namespace DynamicData.Tests.Cache
 
             _target = new List<Person>();
 
-            _disposable = _observable
-                .ToObservableChangeSet(p => p.Key)
-                .Clone(_target)
-                .Subscribe(x => { }, () => _hasCompleted = true);
+            _disposable = _observable.ToObservableChangeSet(p => p.Key).Clone(_target).Subscribe(x => { }, () => _hasCompleted = true);
+        }
+
+        public void Dispose()
+        {
+            _disposable.Dispose();
         }
 
         [Fact]
@@ -39,13 +47,6 @@ namespace DynamicData.Tests.Cache
 
             _observable.OnNext(new Person("Three", 3));
             _target.Count.Should().Be(2);
-
         }
-
-        public void Dispose()
-        {
-            _disposable.Dispose();
-        }
-
     }
 }

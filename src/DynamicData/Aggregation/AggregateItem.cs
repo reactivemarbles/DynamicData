@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace DynamicData.Aggregation
 {
     /// <summary>
-    /// An object representing added and removed items in a continuous aggregation stream
+    /// An object representing added and removed items in a continuous aggregation stream.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     public readonly struct AggregateItem<TObject> : IEquatable<AggregateItem<TObject>>
@@ -34,25 +34,6 @@ namespace DynamicData.Aggregation
         /// </summary>
         public TObject Item { get; }
 
-        public override bool Equals(object obj)
-        {
-            return obj is AggregateItem<TObject> item && Equals(item);
-        }
-
-        public bool Equals(AggregateItem<TObject> other)
-        {
-            return Type == other.Type &&
-                   EqualityComparer<TObject>.Default.Equals(Item, other.Item);
-        }
-
-        public override int GetHashCode()
-        {
-            var hashCode = -1719135621;
-            hashCode = hashCode * -1521134295 + Type.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<TObject>.Default.GetHashCode(Item);
-            return hashCode;
-        }
-
         public static bool operator ==(AggregateItem<TObject> left, AggregateItem<TObject> right)
         {
             return left.Equals(right);
@@ -61,6 +42,27 @@ namespace DynamicData.Aggregation
         public static bool operator !=(AggregateItem<TObject> left, AggregateItem<TObject> right)
         {
             return !(left == right);
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object? obj)
+        {
+            return obj is AggregateItem<TObject> item && Equals(item);
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(AggregateItem<TObject> other)
+        {
+            return Type == other.Type && EqualityComparer<TObject>.Default.Equals(Item, other.Item);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            var hashCode = -1719135621;
+            hashCode = (hashCode * -1521134295) + Type.GetHashCode();
+            hashCode = (hashCode * -1521134295) + (Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item));
+            return hashCode;
         }
     }
 }

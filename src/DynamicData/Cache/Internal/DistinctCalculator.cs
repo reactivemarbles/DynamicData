@@ -1,21 +1,28 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal sealed class DistinctCalculator<TObject, TKey, TValue>
+        where TValue : notnull
+        where TKey : notnull
     {
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-        private readonly Func<TObject, TValue> _valueSelector;
-        private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
-        private readonly IDictionary<TKey, int> _keyCounters = new Dictionary<TKey, int>();
         private readonly IDictionary<TKey, TValue> _itemCache = new Dictionary<TKey, TValue>();
+
+        private readonly IDictionary<TKey, int> _keyCounters = new Dictionary<TKey, int>();
+
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+        private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
+
+        private readonly Func<TObject, TValue> _valueSelector;
 
         public DistinctCalculator(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
         {
@@ -32,21 +39,21 @@ namespace DynamicData.Cache.Internal
         {
             var result = new DistinctChangeSet<TValue>();
 
-            void AddKeyAction( TKey key, TValue value) => _keyCounters.Lookup(key)
-                .IfHasValue(count => _keyCounters[key] = count + 1)
-                .Else(() =>
-                {
-                    _keyCounters[key] = 1;
-                    _itemCache[key] = value; // add to cache
-                });
+            void AddKeyAction(TKey key, TValue value) =>
+                _keyCounters.Lookup(key).IfHasValue(count => _keyCounters[key] = count + 1).Else(
+                    () =>
+                        {
+                            _keyCounters[key] = 1;
+                            _itemCache[key] = value; // add to cache
+                        });
 
-            void AddValueAction( TValue value) => _valueCounters.Lookup(value)
-                .IfHasValue(count => _valueCounters[value] = count + 1)
-                .Else(() =>
-                {
-                    _valueCounters[value] = 1;
-                    result.Add(new Change<TValue, TValue>(ChangeReason.Add, value, value));
-                });
+            void AddValueAction(TValue value) =>
+                _valueCounters.Lookup(value).IfHasValue(count => _valueCounters[value] = count + 1).Else(
+                    () =>
+                        {
+                            _valueCounters[value] = 1;
+                            result.Add(new Change<TValue, TValue>(ChangeReason.Add, value, value));
+                        });
 
             void RemoveKeyAction(TKey key)
             {
@@ -56,7 +63,7 @@ namespace DynamicData.Cache.Internal
                     return;
                 }
 
-                //decrement counter
+                // decrement counter
                 var newCount = counter.Value - 1;
                 _keyCounters[key] = newCount;
                 if (newCount != 0)
@@ -64,7 +71,7 @@ namespace DynamicData.Cache.Internal
                     return;
                 }
 
-                //if there are none, then remove from cache
+                // if there are none, then remove from cache
                 _keyCounters.Remove(key);
                 _itemCache.Remove(key);
             }
@@ -77,7 +84,7 @@ namespace DynamicData.Cache.Internal
                     return;
                 }
 
-                //decrement counter
+                // decrement counter
                 var newCount = counter.Value - 1;
                 _valueCounters[value] = newCount;
                 if (newCount != 0)
@@ -85,13 +92,12 @@ namespace DynamicData.Cache.Internal
                     return;
                 }
 
-                //if there are none, then remove and notify
+                // if there are none, then remove and notify
                 _valueCounters.Remove(value);
                 result.Add(new Change<TValue, TValue>(ChangeReason.Remove, value, value));
             }
 
-            var enumerable = changes.ToConcreteType();
-            foreach (var change in enumerable)
+            foreach (var change in changes.ToConcreteType())
             {
                 var key = change.Key;
                 switch (change.Reason)
@@ -103,6 +109,7 @@ namespace DynamicData.Cache.Internal
                             AddValueAction(value);
                             break;
                         }
+
                     case ChangeReason.Refresh:
                     case ChangeReason.Update:
                         {
@@ -118,6 +125,7 @@ namespace DynamicData.Cache.Internal
                             _itemCache[key] = value;
                             break;
                         }
+
                     case ChangeReason.Remove:
                         {
                             var previous = _itemCache[key];
@@ -127,6 +135,7 @@ namespace DynamicData.Cache.Internal
                         }
                 }
             }
+
             return result;
         }
     }

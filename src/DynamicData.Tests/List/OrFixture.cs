@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
     public class OrFixture : OrFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -29,9 +30,9 @@ namespace DynamicData.Tests.List
         [Fact]
         public void RefreshPassesThrough()
         {
-            SourceList<Item> source1 = new SourceList<Item>();
+            SourceList<Item> source1 = new();
             source1.Add(new Item("A"));
-            SourceList<Item> source2 = new SourceList<Item>();
+            SourceList<Item> source2 = new();
             source2.Add(new Item("B"));
 
             var list = new List<IObservable<IChangeSet<Item>>> { source1.Connect().AutoRefresh(), source2.Connect().AutoRefresh() };
@@ -54,9 +55,9 @@ namespace DynamicData.Tests.List
             var item2 = new Item("B");
             var item1Replacement = new Item("Test");
 
-            SourceList<Item> source1 = new SourceList<Item>();
+            SourceList<Item> source1 = new();
             source1.Add(item1);
-            SourceList<Item> source2 = new SourceList<Item>();
+            SourceList<Item> source2 = new();
             source2.Add(item2);
 
             var list = new List<IObservable<IChangeSet<Item>>> { source1.Connect(), source2.Connect() };
@@ -69,10 +70,12 @@ namespace DynamicData.Tests.List
         }
     }
 
-    public abstract class OrFixtureBase: IDisposable
+    public abstract class OrFixtureBase : IDisposable
     {
         protected ISourceList<int> _source1;
+
         protected ISourceList<int> _source2;
+
         private readonly ChangeSetAggregator<int> _results;
 
         protected OrFixtureBase()
@@ -82,7 +85,24 @@ namespace DynamicData.Tests.List
             _results = CreateObservable().AsAggregator();
         }
 
-        protected abstract IObservable<IChangeSet<int>> CreateObservable();
+        [Fact]
+        public void ClearOnlyClearsOneSource()
+        {
+            _source1.AddRange(Enumerable.Range(1, 5));
+            _source2.AddRange(Enumerable.Range(6, 5));
+            _source1.Clear();
+            _results.Data.Count.Should().Be(5);
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
+        }
+
+        [Fact]
+        public void CombineRange()
+        {
+            _source1.AddRange(Enumerable.Range(1, 5));
+            _source2.AddRange(Enumerable.Range(6, 5));
+            _results.Data.Count.Should().Be(10);
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 10));
+        }
 
         public void Dispose()
         {
@@ -117,23 +137,6 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Fact]
-        public void CombineRange()
-        {
-            _source1.AddRange(Enumerable.Range(1, 5));
-            _source2.AddRange(Enumerable.Range(6, 5));
-            _results.Data.Count.Should().Be(10);
-            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 10));
-        }
-
-        [Fact]
-        public void ClearOnlyClearsOneSource()
-        {
-            _source1.AddRange(Enumerable.Range(1, 5));
-            _source2.AddRange(Enumerable.Range(6, 5));
-            _source1.Clear();
-            _results.Data.Count.Should().Be(5);
-            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
-        }
+        protected abstract IObservable<IChangeSet<int>> CreateObservable();
     }
 }

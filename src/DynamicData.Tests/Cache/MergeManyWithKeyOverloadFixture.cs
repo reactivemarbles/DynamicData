@@ -1,48 +1,18 @@
 using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using Xunit;
+
 using FluentAssertions;
+
+using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
-    public class MergeManyWithKeyOverloadFixture: IDisposable
+    public class MergeManyWithKeyOverloadFixture : IDisposable
     {
-        private class ObjectWithObservable
-        {
-            private readonly ISubject<bool> _changed = new Subject<bool>();
-            private bool _value;
-
-            public ObjectWithObservable(int id)
-            {
-                Id = id;
-            }
-
-            public void InvokeObservable(bool value)
-            {
-                _value = value;
-                _changed.OnNext(value);
-            }
-
-            public void CompleteObservable()
-            {
-                _changed.OnCompleted();
-            }
-
-            public void FailObservable(Exception ex)
-            {
-                _changed.OnError(ex);
-            }
-
-            public IObservable<bool> Observable => _changed.AsObservable();
-
-            public int Id { get; }
-        }
-
         private readonly ISourceCache<ObjectWithObservable, int> _source;
 
-        public  MergeManyWithKeyOverloadFixture()
+        public MergeManyWithKeyOverloadFixture()
         {
             _source = new SourceCache<ObjectWithObservable, int>(p => p.Id);
         }
@@ -53,13 +23,26 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
+        public void EverythingIsUnsubscribedWhenStreamIsDisposed()
+        {
+            bool invoked = false;
+            var stream = _source.Connect().MergeMany((o, key) => o.Observable).Subscribe(o => { invoked = true; });
+
+            var item = new ObjectWithObservable(1);
+            _source.AddOrUpdate(item);
+
+            stream.Dispose();
+
+            item.InvokeObservable(true);
+            invoked.Should().BeFalse();
+        }
+
+        [Fact]
         public void InvocationOnlyWhenChildIsInvoked()
         {
             var invoked = false;
 
-            var stream = _source.Connect()
-                                .MergeMany((o, key) => o.Observable)
-                                .Subscribe(o => { invoked = true; });
+            var stream = _source.Connect().MergeMany((o, key) => o.Observable).Subscribe(o => { invoked = true; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -75,9 +58,7 @@ namespace DynamicData.Tests.Cache
         public void RemovedItemWillNotCauseInvocation()
         {
             bool invoked = false;
-            var stream = _source.Connect()
-                .MergeMany((o, key) => o.Observable)
-                .Subscribe(o => { invoked = true; });
+            var stream = _source.Connect().MergeMany((o, key) => o.Observable).Subscribe(o => { invoked = true; });
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -90,33 +71,10 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
-        public void EverythingIsUnsubscribedWhenStreamIsDisposed()
-        {
-            bool invoked = false;
-            var stream = _source.Connect()
-                .MergeMany((o, key) => o.Observable)
-                .Subscribe(o => { invoked = true; });
-
-            var item = new ObjectWithObservable(1);
-            _source.AddOrUpdate(item);
-
-            stream.Dispose();
-
-            item.InvokeObservable(true);
-            invoked.Should().BeFalse();
-        }
-
-        [Fact]
         public void SingleItemCompleteWillNotMergedStream()
         {
             var completed = false;
-            var stream =
-                _source.Connect()
-                    .MergeMany((o, key) => o.Observable)
-                    .Subscribe(
-                        _ => {},
-                        () => completed = true
-                        );
+            var stream = _source.Connect().MergeMany((o, key) => o.Observable).Subscribe(_ => { }, () => completed = true);
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -133,13 +91,7 @@ namespace DynamicData.Tests.Cache
         public void SingleItemFailWillNotFailMergedStream()
         {
             var failed = false;
-            var stream =
-                _source.Connect()
-                    .MergeMany((o, key) => o.Observable)
-                    .Subscribe(
-                        _ => { },
-                        ex => failed = true
-                    );
+            var stream = _source.Connect().MergeMany((o, key) => o.Observable).Subscribe(_ => { }, ex => failed = true);
 
             var item = new ObjectWithObservable(1);
             _source.AddOrUpdate(item);
@@ -151,5 +103,36 @@ namespace DynamicData.Tests.Cache
             failed.Should().BeFalse();
         }
 
+        private class ObjectWithObservable
+        {
+            private readonly ISubject<bool> _changed = new Subject<bool>();
+
+            private bool _value;
+
+            public ObjectWithObservable(int id)
+            {
+                Id = id;
+            }
+
+            public int Id { get; }
+
+            public IObservable<bool> Observable => _changed.AsObservable();
+
+            public void CompleteObservable()
+            {
+                _changed.OnCompleted();
+            }
+
+            public void FailObservable(Exception ex)
+            {
+                _changed.OnError(ex);
+            }
+
+            public void InvokeObservable(bool value)
+            {
+                _value = value;
+                _changed.OnNext(value);
+            }
+        }
     }
 }

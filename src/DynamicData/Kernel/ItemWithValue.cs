@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,23 +8,14 @@ using System.Collections.Generic;
 namespace DynamicData.Kernel
 {
     /// <summary>
-    /// Container for an item and it's Value from a list
+    /// Container for an item and it's Value from a list.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     public readonly struct ItemWithValue<TObject, TValue> : IEquatable<ItemWithValue<TObject, TValue>>
     {
         /// <summary>
-        /// Gets the item.
-        /// </summary>
-        public TObject Item { get; }
-
-        /// <summary>
-        /// Gets the Value.
-        /// </summary>
-        public TValue Value { get; }
-
-        /// <summary>
+        /// Initializes a new instance of the <see cref="ItemWithValue{TObject, TValue}"/> struct.
         /// Initializes a new instance of the <see cref="ItemWithIndex{T}"/> class.
         /// </summary>
         /// <param name="item">The item.</param>
@@ -35,33 +26,15 @@ namespace DynamicData.Kernel
             Value = value;
         }
 
-        #region Equality 
+        /// <summary>
+        /// Gets the item.
+        /// </summary>
+        public TObject Item { get; }
 
-        /// <inheritdoc />
-        public bool Equals(ItemWithValue<TObject, TValue> other)
-        {
-            return EqualityComparer<TObject>.Default.Equals(Item, other.Item) && EqualityComparer<TValue>.Default.Equals(Value, other.Value);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            return obj is ItemWithValue<TObject, TValue> && Equals((ItemWithValue<TObject, TValue>) obj);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (EqualityComparer<TObject>.Default.GetHashCode(Item) * 397) ^ EqualityComparer<TValue>.Default.GetHashCode(Value);
-            }
-        }
+        /// <summary>
+        /// Gets the Value.
+        /// </summary>
+        public TValue Value { get; }
 
         /// <summary>
         /// Implements the operator ==.
@@ -89,7 +62,31 @@ namespace DynamicData.Kernel
             return !Equals(left, right);
         }
 
-        #endregion
+        /// <inheritdoc />
+        public bool Equals(ItemWithValue<TObject, TValue> other)
+        {
+            return EqualityComparer<TObject>.Default.Equals(Item, other.Item) && EqualityComparer<TValue>.Default.Equals(Value, other.Value);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            return obj is ItemWithValue<TObject, TValue> itemWithValue && Equals(itemWithValue);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item) * 397) ^ (Value is null ? 0 : EqualityComparer<TValue>.Default.GetHashCode(Value));
+            }
+        }
 
         /// <inheritdoc />
         public override string ToString() => $"{Item} ({Value})";

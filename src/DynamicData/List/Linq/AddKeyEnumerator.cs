@@ -1,21 +1,21 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using DynamicData.Annotations;
 
 namespace DynamicData.List.Linq
 {
     internal class AddKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject, TKey>>
+        where TKey : notnull
     {
-        private readonly IChangeSet<TObject> _source;
         private readonly Func<TObject, TKey> _keySelector;
 
-        public AddKeyEnumerator([NotNull] IChangeSet<TObject> source,
-                                [NotNull] Func<TObject, TKey> keySelector)
+        private readonly IChangeSet<TObject> _source;
+
+        public AddKeyEnumerator(IChangeSet<TObject> source, Func<TObject, TKey> keySelector)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
@@ -25,9 +25,8 @@ namespace DynamicData.List.Linq
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>
-        /// A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.
+        /// A <see cref="IEnumerator{T}" /> that can be used to iterate through the collection.
         /// </returns>
-        /// <exception cref="System.ArgumentOutOfRangeException"></exception>
         public IEnumerator<Change<TObject, TKey>> GetEnumerator()
         {
             foreach (var change in _source)
@@ -56,7 +55,7 @@ namespace DynamicData.List.Linq
 
                     case ListChangeReason.Replace:
                         {
-                            //replace is a remove and add
+                            // replace is a remove and add
                             var previous = change.Item.Previous.Value;
                             var previousKey = _keySelector(previous);
                             yield return new Change<TObject, TKey>(ChangeReason.Remove, previousKey, previous);

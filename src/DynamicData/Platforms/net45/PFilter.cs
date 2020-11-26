@@ -1,13 +1,13 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if P_LINQ
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
@@ -15,10 +15,13 @@ using DynamicData.Kernel;
 namespace DynamicData.PLinq
 {
     internal class PFilter<TObject, TKey>
+        where TKey : notnull
     {
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly Func<TObject, bool> _filter;
+
         private readonly ParallelisationOptions _parallelisationOptions;
+
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
         public PFilter(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
         {
@@ -29,17 +32,15 @@ namespace DynamicData.PLinq
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                var filterer = new PLinqFilteredUpdater(_filter, _parallelisationOptions);
-                return _source
-                    .Select(filterer.Update)
-                    .NotEmpty()
-                    .SubscribeSafe(observer);
-            });
+            return Observable.Create<IChangeSet<TObject, TKey>>(
+                observer =>
+                    {
+                        var filterer = new PLinqFilteredUpdater(_filter, _parallelisationOptions);
+                        return _source.Select(filterer.Update).NotEmpty().SubscribeSafe(observer);
+                    });
         }
 
-        private  class PLinqFilteredUpdater: AbstractFilter<TObject, TKey>
+        private class PLinqFilteredUpdater : AbstractFilter<TObject, TKey>
         {
             private readonly ParallelisationOptions _parallelisationOptions;
 
@@ -49,27 +50,24 @@ namespace DynamicData.PLinq
                 _parallelisationOptions = parallelisationOptions;
             }
 
-            protected override IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory)
-            {
-                var keyValuePairs = items as KeyValuePair<TKey, TObject>[] ?? items.ToArray();
-
-                return keyValuePairs.ShouldParallelise(_parallelisationOptions)
-                    ? keyValuePairs.Parallelise(_parallelisationOptions).Select(factory).SelectValues()
-                    : keyValuePairs.Select(factory).SelectValues();
-            }
-
             protected override IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates)
             {
                 if (updates.ShouldParallelise(_parallelisationOptions))
                 {
-                    return updates.Parallelise(_parallelisationOptions)
-                        .Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
+                    return updates.Parallelise(_parallelisationOptions).Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
                 }
 
                 return updates.Select(u => new UpdateWithFilter(Filter(u.Current), u)).ToArray();
             }
+
+            protected override IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory)
+            {
+                var keyValuePairs = items as KeyValuePair<TKey, TObject>[] ?? items.ToArray();
+
+                return keyValuePairs.ShouldParallelise(_parallelisationOptions) ? keyValuePairs.Parallelise(_parallelisationOptions).Select(factory).SelectValues() : keyValuePairs.Select(factory).SelectValues();
+            }
         }
     }
-
 }
+
 #endif

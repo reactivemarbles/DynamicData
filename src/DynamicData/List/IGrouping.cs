@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -7,16 +7,16 @@ using System.Collections.Generic;
 namespace DynamicData.List
 {
     /// <summary>
-    /// Represents a group which provides an update after any value within the group changes
+    /// Represents a group which provides an update after any value within the group changes.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
-    public interface IGrouping<out TObject,  out TGroupKey>
+    public interface IGrouping<out TObject, out TGroupKey>
     {
         /// <summary>
-        /// Gets the group key
+        /// Gets the count.
         /// </summary>
-        TGroupKey Key { get; }
+        int Count { get; }
 
         /// <summary>
         /// Gets the items.
@@ -24,9 +24,8 @@ namespace DynamicData.List
         IEnumerable<TObject> Items { get; }
 
         /// <summary>
-        /// Gets the count.
+        /// Gets the group key.
         /// </summary>
-        int Count { get; }
-
+        TGroupKey Key { get; }
     }
 }

@@ -1,20 +1,25 @@
 using System;
-using DynamicData.Tests.Domain;
-using Microsoft.Reactive.Testing;
-using Xunit;
-using FluentAssertions;
 using System.Reactive.Linq;
+
+using DynamicData.Tests.Domain;
+
+using FluentAssertions;
+
+using Microsoft.Reactive.Testing;
+
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class BufferFixture: IDisposable
+    public class BufferFixture : IDisposable
     {
-        private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<Person> _results;
+
         private readonly TestScheduler _scheduler;
 
-        public  BufferFixture()
+        private readonly ISourceList<Person> _source;
+
+        public BufferFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();

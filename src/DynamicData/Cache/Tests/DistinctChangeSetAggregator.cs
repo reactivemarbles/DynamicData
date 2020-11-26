@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,20 +6,21 @@ using System;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
 using DynamicData.Diagnostics;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData.Tests
 {
     /// <summary>
-    /// Aggregates all events and statistics for a distinct changeset to help assertions when testing
+    /// Aggregates all events and statistics for a distinct change set to help assertions when testing.
     /// </summary>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     public class DistinctChangeSetAggregator<TValue> : IDisposable
+        where TValue : notnull
     {
         private readonly IDisposable _disposer;
-        private ChangeSummary _summary = ChangeSummary.Empty;
-        private Exception _error;
+
         private bool _isDisposed;
 
         /// <summary>
@@ -30,25 +31,34 @@ namespace DynamicData.Tests
         {
             var published = source.Publish();
 
-            var error = published.Subscribe(updates => { }, ex => _error = ex);
+            var error = published.Subscribe(_ => { }, ex => Error = ex);
             var results = published.Subscribe(updates => Messages.Add(updates));
             Data = published.AsObservableCache();
-            var summariser = published.CollectUpdateStats().Subscribe(summary => _summary = summary);
+            var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary);
 
             var connected = published.Connect();
-            _disposer = Disposable.Create(() =>
-            {
-                connected.Dispose();
-                summariser.Dispose();
-                results.Dispose();
-                error.Dispose();
-            });
+            _disposer = Disposable.Create(
+                () =>
+                    {
+                        connected.Dispose();
+                        summariser.Dispose();
+                        results.Dispose();
+                        error.Dispose();
+                    });
         }
 
         /// <summary>
         /// Gets the data.
         /// </summary>
         public IObservableCache<TValue, TValue> Data { get; }
+
+        /// <summary>
+        /// Gets the error.
+        /// </summary>
+        /// <value>
+        /// The error.
+        /// </value>
+        public Exception? Error { get; private set; }
 
         /// <summary>
         /// Gets the messages.
@@ -58,15 +68,7 @@ namespace DynamicData.Tests
         /// <summary>
         /// Gets the summary.
         /// </summary>
-        public ChangeSummary Summary => _summary;
-
-        /// <summary>
-        /// Gets the error.
-        /// </summary>
-        /// <value>
-        /// The error.
-        /// </value>
-        public Exception Error => _error;
+        public ChangeSummary Summary { get; private set; } = ChangeSummary.Empty;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -77,6 +79,10 @@ namespace DynamicData.Tests
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Disposes of managed and unmanaged responses.
+        /// </summary>
+        /// <param name="isDisposing">If being called by the Dispose method.</param>
         protected virtual void Dispose(bool isDisposing)
         {
             if (_isDisposed)
@@ -88,9 +94,8 @@ namespace DynamicData.Tests
 
             if (isDisposing)
             {
-                _disposer?.Dispose();
+                _disposer.Dispose();
             }
         }
-
     }
 }

@@ -1,28 +1,31 @@
-// ReSharper disable once CheckNamespace
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 namespace DynamicData.Operators
 {
     /// <summary>
-    /// Response from the pagation operator
+    /// Response from the pagination operator.
     /// </summary>
     public interface IPageResponse
     {
         /// <summary>
-        /// The size of the page.
-        /// </summary>
-        int PageSize { get; }
-
-        /// <summary>
-        /// The current page
+        /// Gets the current page.
         /// </summary>
         int Page { get; }
 
         /// <summary>
-        /// Total number of pages.
+        /// Gets total number of pages.
         /// </summary>
         int Pages { get; }
 
         /// <summary>
-        /// The total number of records in the underlying cache
+        /// Gets the size of the page.
+        /// </summary>
+        int PageSize { get; }
+
+        /// <summary>
+        /// Gets the total number of records in the underlying cache.
         /// </summary>
         int TotalSize { get; }
     }

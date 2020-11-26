@@ -1,32 +1,25 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    /// Exposes internal cache state to enable querying
+    /// Exposes internal cache state to enable querying.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public interface IQuery<TObject, TKey>
     {
         /// <summary>
-        /// Lookup a single item using the specified key.
+        /// Gets the count.
         /// </summary>
-        /// <remarks>
-        /// Fast indexed lookup
-        /// </remarks>
-        /// <param name="key">The key.</param>
-        Optional<TObject> Lookup(TKey key);
-
-        /// <summary>
-        /// Gets the keys.
-        /// </summary>
-        IEnumerable<TKey> Keys { get; }
+        int Count { get; }
 
         /// <summary>
         /// Gets the items.
@@ -34,7 +27,12 @@ namespace DynamicData
         IEnumerable<TObject> Items { get; }
 
         /// <summary>
-        /// Gets the items together with their keys
+        /// Gets the keys.
+        /// </summary>
+        IEnumerable<TKey> Keys { get; }
+
+        /// <summary>
+        /// Gets the items together with their keys.
         /// </summary>
         /// <value>
         /// The key values.
@@ -42,8 +40,13 @@ namespace DynamicData
         IEnumerable<KeyValuePair<TKey, TObject>> KeyValues { get; }
 
         /// <summary>
-        /// Gets the count.
+        /// Lookup a single item using the specified key.
         /// </summary>
-        int Count { get; }
+        /// <remarks>
+        /// Fast indexed lookup.
+        /// </remarks>
+        /// <param name="key">The key.</param>
+        /// <returns>The looked up value.</returns>
+        Optional<TObject> Lookup(TKey key);
     }
 }

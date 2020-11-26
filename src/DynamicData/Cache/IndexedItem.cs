@@ -1,17 +1,19 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    /// An item with it's index
+    /// An item with it's index.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public sealed class IndexedItem<TObject, TKey> //: IIndexedItem<TObject, TKey>
+    public sealed class IndexedItem<TObject, TKey> : IEquatable<IndexedItem<TObject, TKey>> // : IIndexedItem<TObject, TKey>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="IndexedItem{TObject, TKey}"/> class.
@@ -26,52 +28,25 @@ namespace DynamicData
             Key = key;
         }
 
-        #region Properties
-
         /// <summary>
         /// Gets the index.
         /// </summary>
         public int Index { get; }
 
         /// <summary>
-        /// Gets the value.
-        /// </summary>
-        public TObject Value { get; }
-
-        /// <summary>
         /// Gets the key.
         /// </summary>
         public TKey Key { get; }
 
-        #endregion
-
-        #region Equality
-
-        private bool Equals(IndexedItem<TObject, TKey> other)
-        {
-            return EqualityComparer<TKey>.Default.Equals(Key, other.Key) &&
-                   EqualityComparer<TObject>.Default.Equals(Value, other.Value) && Index == other.Index;
-        }
+        /// <summary>
+        /// Gets the value.
+        /// </summary>
+        public TObject Value { get; }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((IndexedItem<TObject, TKey>)obj);
+            return obj is IndexedItem<TObject, TKey> key && Equals(key);
         }
 
         /// <inheritdoc />
@@ -79,16 +54,25 @@ namespace DynamicData
         {
             unchecked
             {
-                int hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
-                hashCode = (hashCode * 397) ^ EqualityComparer<TObject>.Default.GetHashCode(Value);
+                int hashCode = Key is null ? 0 : EqualityComparer<TKey>.Default.GetHashCode(Key);
+                hashCode = (hashCode * 397) ^ (Value is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Value));
                 hashCode = (hashCode * 397) ^ Index;
                 return hashCode;
             }
         }
 
-        #endregion
-
         /// <inheritdoc />
         public override string ToString() => $"Value: {Value}, Key: {Key}, CurrentIndex: {Index}";
+
+        /// <inheritdoc />
+        public bool Equals(IndexedItem<TObject, TKey>? other)
+        {
+            if (other is null)
+            {
+                return false;
+            }
+
+            return EqualityComparer<TKey?>.Default.Equals(Key, other.Key) && EqualityComparer<TObject?>.Default.Equals(Value, other.Value) && Index == other.Index;
+        }
     }
 }

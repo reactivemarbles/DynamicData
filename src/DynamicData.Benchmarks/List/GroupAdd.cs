@@ -4,6 +4,7 @@
 
 using System;
 using System.Linq;
+
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 
@@ -16,7 +17,7 @@ namespace DynamicData.Benchmarks.List
     {
         private IDisposable _groupSubscription;
         private SourceList<int> _sourceList;
-        private int[] _items = Enumerable.Range(1,100).ToArray();
+        private int[] _items = Enumerable.Range(1, 100).ToArray();
 
         [Params(1, 100, 1_000, 10_000, 100_000)]
         public int N;

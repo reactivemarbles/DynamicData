@@ -1,26 +1,30 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    /// Node describing the relationship between and item and it's ancestors and descendent
+    /// Node describing the relationship between and item and it's ancestors and descendent.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
+        where TKey : notnull
         where TObject : class
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
         private readonly ISourceCache<Node<TObject, TKey>, TKey> _children = new SourceCache<Node<TObject, TKey>, TKey>(n => n.Key);
+
         private readonly IDisposable _cleanUp;
+
         private bool _isDisposed;
 
         /// <summary>
@@ -29,7 +33,7 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         /// <param name="key">The key.</param>
         public Node(TObject item, TKey key)
-            : this(item, key, null)
+            : this(item, key, default)
         {
         }
 
@@ -39,8 +43,7 @@ namespace DynamicData
         /// <param name="item">The item.</param>
         /// <param name="key">The key.</param>
         /// <param name="parent">The parent.</param>
-        /// <exception cref="System.ArgumentNullException"></exception>
-        public Node([NotNull] TObject item, TKey key, Optional<Node<TObject, TKey>> parent)
+        public Node(TObject item, TKey key, Optional<Node<TObject, TKey>> parent)
         {
             Item = item ?? throw new ArgumentNullException(nameof(item));
             Key = key;
@@ -50,35 +53,12 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// The item
-        /// </summary>
-        public TObject Item { get; }
-
-        /// <summary>
-        /// The key
-        /// </summary>
-        public TKey Key { get; }
-
-        /// <summary>
-        /// Gets the parent if it has one
-        /// </summary>
-        public Optional<Node<TObject, TKey>> Parent { get; internal set; }
-
-        /// <summary>
-        /// The child nodes
+        /// Gets the child nodes.
         /// </summary>
         public IObservableCache<Node<TObject, TKey>, TKey> Children { get; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether this instance is root.
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> if this instance is root node; otherwise, <c>false</c>.
-        /// </value>
-        public bool IsRoot => !Parent.HasValue;
-
-        /// <summary>
-        /// Gets the depth i.e. how many degrees of separation from the parent
+        /// Gets the depth i.e. how many degrees of separation from the parent.
         ///  </summary>
         public int Depth
         {
@@ -95,23 +75,71 @@ namespace DynamicData
 
                     i++;
                     parent = parent.Value.Parent;
-                } while (true);
+                }
+                while (true);
+
                 return i;
             }
         }
 
-        internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction)
+        /// <summary>
+        /// Gets a value indicating whether this instance is root.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is root node; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsRoot => !Parent.HasValue;
+
+        /// <summary>
+        /// Gets the item.
+        /// </summary>
+        public TObject Item { get; }
+
+        /// <summary>
+        /// Gets the key.
+        /// </summary>
+        public TKey Key { get; }
+
+        /// <summary>
+        /// Gets the parent if it has one.
+        /// </summary>
+        public Optional<Node<TObject, TKey>> Parent { get; internal set; }
+
+        /// <summary>
+        ///  Determines whether the specified objects are equal.
+        /// </summary>
+        /// <param name="left">The left value to compare.</param>
+        /// <param name="right">The right value to compare.</param>
+        /// <returns>If the two values are equal.</returns>
+        public static bool operator ==(Node<TObject, TKey>? left, Node<TObject, TKey>? right)
         {
-            _children.Edit(updateAction);
+            return Equals(left, right);
         }
 
-        #region Equality
+        /// <summary>
+        ///  Determines whether the specified objects are not equal.
+        /// </summary>
+        /// <param name="left">The left value to compare.</param>
+        /// <param name="right">The right value to compare.</param>
+        /// <returns>If the two values are not equal.</returns>
+        public static bool operator !=(Node<TObject, TKey> left, Node<TObject, TKey> right)
+        {
+            return !Equals(left, right);
+        }
+
+        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+        /// <filterpriority>2.</filterpriority>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>Determines whether the specified object is equal to the current object.</summary>
         /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
         /// <param name="other">The object to compare with the current object. </param>
-        /// <filterpriority>2</filterpriority>
-        public bool Equals(Node<TObject, TKey> other)
+        /// <filterpriority>2.</filterpriority>
+        public bool Equals(Node<TObject, TKey>? other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -129,8 +157,8 @@ namespace DynamicData
         /// <summary>Determines whether the specified object is equal to the current object.</summary>
         /// <returns>true if the specified object  is equal to the current object; otherwise, false.</returns>
         /// <param name="obj">The object to compare with the current object. </param>
-        /// <filterpriority>2</filterpriority>
-        public override bool Equals(object obj)
+        /// <filterpriority>2.</filterpriority>
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
@@ -152,50 +180,33 @@ namespace DynamicData
 
         /// <summary>Serves as the default hash function. </summary>
         /// <returns>A hash code for the current object.</returns>
-        /// <filterpriority>2</filterpriority>
+        /// <filterpriority>2.</filterpriority>
         public override int GetHashCode()
         {
             return EqualityComparer<TKey>.Default.GetHashCode(Key);
         }
 
         /// <summary>
-        ///  Determines whether the specified objects are equal
-        /// </summary>
-        public static bool operator ==(Node<TObject, TKey> left, Node<TObject, TKey> right)
-        {
-            return Equals(left, right);
-        }
-
-        /// <summary>
-        ///  Determines whether the specified objects are not equal
-        /// </summary>
-        public static bool operator !=(Node<TObject, TKey> left, Node<TObject, TKey> right)
-        {
-            return !Equals(left, right);
-        }
-
-        #endregion
-
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// Returns a <see cref="string" /> that represents this instance.
         /// </summary>
         /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
+        /// A <see cref="string" /> that represents this instance.
         /// </returns>
         public override string ToString()
         {
-            var count = Children.Count == 0 ? "" : $" ({Children.Count} children)";
+            var count = Children.Count == 0 ? string.Empty : $" ({Children.Count} children)";
             return $"{Item}{count}";
         }
 
-        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            _children.Edit(updateAction);
         }
 
+        /// <summary>
+        /// Disposes any managed or unmanaged resources.
+        /// </summary>
+        /// <param name="isDisposing">If the dispose is being called by the Dispose method.</param>
         protected virtual void Dispose(bool isDisposing)
         {
             if (_isDisposed)
@@ -207,7 +218,7 @@ namespace DynamicData
 
             if (isDisposing)
             {
-                _cleanUp?.Dispose();
+                _cleanUp.Dispose();
             }
         }
     }

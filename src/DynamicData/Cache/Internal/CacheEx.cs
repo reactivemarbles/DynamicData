@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -10,17 +10,10 @@ namespace DynamicData.Cache.Internal
 {
     internal static class CacheEx
     {
-
-        public static IChangeSet<TObject, TKey> GetInitialUpdates<TObject, TKey>(this ChangeAwareCache<TObject, TKey> source, Func<TObject, bool> filter = null)
-        {
-            var filtered = filter == null ? source.KeyValues : source.KeyValues.Where(kv => filter(kv.Value));
-            return new ChangeSet<TObject, TKey>(filtered.Select(i => new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value)));
-        }
-
         public static void Clone<TKey, TObject>(this IDictionary<TKey, TObject> source, IChangeSet<TObject, TKey> changes)
+            where TKey : notnull
         {
-            var enumerable = changes.ToConcreteType();
-            foreach (var item in enumerable)
+            foreach (var item in changes.ToConcreteType())
             {
                 switch (item.Reason)
                 {
@@ -28,11 +21,19 @@ namespace DynamicData.Cache.Internal
                     case ChangeReason.Add:
                         source[item.Key] = item.Current;
                         break;
+
                     case ChangeReason.Remove:
                         source.Remove(item.Key);
                         break;
                 }
             }
+        }
+
+        public static IChangeSet<TObject, TKey> GetInitialUpdates<TObject, TKey>(this ChangeAwareCache<TObject, TKey> source, Func<TObject, bool>? filter = null)
+            where TKey : notnull
+        {
+            var filtered = filter is null ? source.KeyValues : source.KeyValues.Where(kv => filter(kv.Value));
+            return new ChangeSet<TObject, TKey>(filtered.Select(i => new Change<TObject, TKey>(ChangeReason.Add, i.Key, i.Value)));
         }
     }
 }

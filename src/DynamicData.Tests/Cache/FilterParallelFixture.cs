@@ -1,28 +1,25 @@
 using System;
 using System.Linq;
+
 using DynamicData.PLinq;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
-    public class FilterParallelFixture: IDisposable
+    public class FilterParallelFixture : IDisposable
     {
-        private readonly ISourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<Person, string> _results;
+
+        private readonly ISourceCache<Person, string> _source;
 
         public FilterParallelFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = new ChangeSetAggregator<Person, string>(_source.Connect().Filter(p => p.Age > 20, new ParallelisationOptions(ParallelType.Ordered)));
-        }
-
-        public void Dispose()
-        {
-            _source.Dispose();
-            _results.Dispose();
         }
 
         [Fact]
@@ -53,11 +50,12 @@ namespace DynamicData.Tests.Cache
             var notmatched = new Person(key, 19);
             var matched = new Person(key, 21);
 
-            _source.Edit(updater =>
-            {
-                updater.AddOrUpdate(notmatched);
-                updater.AddOrUpdate(matched);
-            });
+            _source.Edit(
+                updater =>
+                    {
+                        updater.AddOrUpdate(notmatched);
+                        updater.AddOrUpdate(matched);
+                    });
 
             _results.Messages.Count.Should().Be(1, "Should be 1 updates");
             _results.Messages[0].First().Current.Should().Be(matched, "Should be same person");
@@ -128,6 +126,12 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(0, "Should be nothing cached");
         }
 
+        public void Dispose()
+        {
+            _source.Dispose();
+            _results.Dispose();
+        }
+
         [Fact]
         public void Remove()
         {
@@ -142,6 +146,26 @@ namespace DynamicData.Tests.Cache
             _results.Messages[0].Adds.Should().Be(1, "Should be 80 addes");
             _results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
             _results.Data.Count.Should().Be(0, "Should be nothing cached");
+        }
+
+        [Fact]
+        public void SameKeyChanges()
+        {
+            const string key = "Adult1";
+
+            _source.Edit(
+                updater =>
+                    {
+                        updater.AddOrUpdate(new Person(key, 50));
+                        updater.AddOrUpdate(new Person(key, 52));
+                        updater.AddOrUpdate(new Person(key, 53));
+                        updater.Remove(key);
+                    });
+
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
+            _results.Messages[0].Updates.Should().Be(2, "Should be 2 updates");
+            _results.Messages[0].Removes.Should().Be(1, "Should be 1 remove");
         }
 
         [Fact]
@@ -160,25 +184,6 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
-        public void SameKeyChanges()
-        {
-            const string key = "Adult1";
-
-            _source.Edit(updater =>
-            {
-                updater.AddOrUpdate(new Person(key, 50));
-                updater.AddOrUpdate(new Person(key, 52));
-                updater.AddOrUpdate(new Person(key, 53));
-                updater.Remove(key);
-            });
-
-            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-            _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
-            _results.Messages[0].Updates.Should().Be(2, "Should be 2 updates");
-            _results.Messages[0].Removes.Should().Be(1, "Should be 1 remove");
-        }
-
-        [Fact]
         public void UpdateNotMatched()
         {
             const string key = "Adult1";
@@ -193,4 +198,3 @@ namespace DynamicData.Tests.Cache
         }
     }
 }
-

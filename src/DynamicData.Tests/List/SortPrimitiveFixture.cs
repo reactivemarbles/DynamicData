@@ -1,18 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using DynamicData.Binding;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
     public class SortPrimitiveFixture : IDisposable
     {
-        private readonly ISourceList<int> _source;
+        private readonly IComparer<int> _comparer = SortExpressionComparer<int>.Ascending(i => i);
+
         private readonly ChangeSetAggregator<int> _results;
 
-        private readonly IComparer<int> _comparer = SortExpressionComparer<int>.Ascending(i => i);
+        private readonly ISourceList<int> _source;
 
         public SortPrimitiveFixture()
         {
@@ -30,7 +34,7 @@ namespace DynamicData.Tests.List
         public void RemoveRandomSorts()
         {
             //seems an odd test but believe me it catches  exceptions when sorting on primitives
-            var items = Enumerable.Range(1,100).OrderBy(_=>Guid.NewGuid()).ToArray();
+            var items = Enumerable.Range(1, 100).OrderBy(_ => Guid.NewGuid()).ToArray();
             _source.AddRange(items);
 
             _results.Data.Count.Should().Be(100);
@@ -44,8 +48,6 @@ namespace DynamicData.Tests.List
             {
                 _source.Remove(i);
             }
-
         }
-
     }
 }

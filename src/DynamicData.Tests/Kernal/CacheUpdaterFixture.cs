@@ -1,19 +1,21 @@
-﻿
-using System.Linq;
+﻿using System.Linq;
+
 using DynamicData.Cache.Internal;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Kernal
 {
-
     public class CacheUpdaterFixture
     {
         private readonly ChangeAwareCache<Person, string> _cache;
+
         private readonly CacheUpdater<Person, string> _updater;
 
-        public  CacheUpdaterFixture()
+        public CacheUpdaterFixture()
         {
             _cache = new ChangeAwareCache<Person, string>();
             _updater = new CacheUpdater<Person, string>(_cache);
@@ -77,6 +79,5 @@ namespace DynamicData.Tests.Kernal
             1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Update), "Should be 1 update");
             2.Should().Be(updates.Count, "Should be 2 updates");
         }
-
     }
 }

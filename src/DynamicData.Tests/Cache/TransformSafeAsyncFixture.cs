@@ -5,9 +5,12 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
@@ -21,22 +24,20 @@ namespace DynamicData.Tests.Cache
             var people = Enumerable.Range(1, 10).Select(i => new Person("Name" + i, i)).ToArray();
             var forceTransform = new Subject<Unit>();
 
-            using (var stub = new TransformStub(forceTransform))
+            using var stub = new TransformStub(forceTransform);
+            stub.Source.AddOrUpdate(people);
+            forceTransform.OnNext(Unit.Default);
+
+            stub.Results.Messages.Count.Should().Be(2);
+            stub.Results.Messages[1].Updates.Should().Be(10);
+
+            for (int i = 1; i <= 10; i++)
             {
-                stub.Source.AddOrUpdate(people);
-                forceTransform.OnNext(Unit.Default);
+                var original = stub.Results.Messages[0].ElementAt(i - 1).Current;
+                var updated = stub.Results.Messages[1].ElementAt(i - 1).Current;
 
-                stub.Results.Messages.Count.Should().Be(2);
-                stub.Results.Messages[1].Updates.Should().Be(10);
-
-                for (int i = 1; i <= 10; i++)
-                {
-                    var original = stub.Results.Messages[0].ElementAt(i - 1).Current;
-                    var updated = stub.Results.Messages[1].ElementAt(i - 1).Current;
-
-                    updated.Should().Be(original);
-                    ReferenceEquals(original, updated).Should().BeFalse();
-                }
+                updated.Should().Be(original);
+                ReferenceEquals(original, updated).Should().BeFalse();
             }
         }
 
@@ -189,7 +190,7 @@ namespace DynamicData.Tests.Cache
 
         //        stub.Results.Error.Should().BeNull();
 
-        //        Exception error = null;
+        //        Exception? error = null;
         //        stub.Source.Connect()
         //            .Subscribe(changes => { }, ex => error = ex);
 
@@ -202,86 +203,85 @@ namespace DynamicData.Tests.Cache
 
         private class TransformStub : IDisposable
         {
-            public ISourceCache<Person, string> Source { get; } = new SourceCache<Person, string>(p => p.Name);
-            public ChangeSetAggregator<PersonWithGender, string> Results { get; }
-
-            public Func< Person, Task<PersonWithGender>> TransformFactory { get; }
-
-            public IList<Error<Person, string>> HandledErrors { get; } = new List<Error<Person, string>>();
-
             public TransformStub()
             {
                 TransformFactory = (p) =>
-                {
-                    var result = new PersonWithGender(p, p.Age % 2 == 0 ? "M" : "F");
-                    return Task.FromResult(result);
-                };
+                    {
+                        var result = new PersonWithGender(p, p.Age % 2 == 0 ? "M" : "F");
+                        return Task.FromResult(result);
+                    };
 
-                Results = new ChangeSetAggregator<PersonWithGender, string>
-                (
-                    Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler)
-                );
+                Results = new ChangeSetAggregator<PersonWithGender, string>(Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler));
             }
 
             public TransformStub(Func<Person, PersonWithGender> factory)
             {
                 TransformFactory = (p) =>
-                {
-                    var result = factory(p);
-                    return Task.FromResult(result);
-                };
+                    {
+                        var result = factory(p);
+                        return Task.FromResult(result);
+                    };
 
-                Results = new ChangeSetAggregator<PersonWithGender, string>
-                (
-                    Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler)
-                );
+                Results = new ChangeSetAggregator<PersonWithGender, string>(Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler));
             }
 
             public TransformStub(IObservable<Unit> retransformer)
             {
                 TransformFactory = (p) =>
-                {
-                    var result = new PersonWithGender(p, p.Age % 2 == 0 ? "M" : "F");
-                    return Task.FromResult(result);
-                };
-
-                Results = new ChangeSetAggregator<PersonWithGender, string>
-                (
-                    Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler, retransformer.Select(x =>
                     {
-                        bool Transformer(Person p, string key) => true;
-                        return (Func<Person, string, bool>) Transformer;
-                    }))
-                );
+                        var result = new PersonWithGender(p, p.Age % 2 == 0 ? "M" : "F");
+                        return Task.FromResult(result);
+                    };
+
+                Results = new ChangeSetAggregator<PersonWithGender, string>(
+                    Source.Connect().TransformSafeAsync(
+                        TransformFactory,
+                        ErrorHandler,
+                        retransformer.Select(
+                            x =>
+                                {
+                                    bool Transformer(Person p, string key) => true;
+                                    return (Func<Person, string, bool>)Transformer;
+                                })));
             }
 
             public TransformStub(IObservable<Func<Person, bool>> retransformer)
             {
                 TransformFactory = (p) =>
-                {
-                    var result = new PersonWithGender(p, p.Age % 2 == 0 ? "M" : "F");
-                    return Task.FromResult(result);
-                };
-
-                Results = new ChangeSetAggregator<PersonWithGender, string>
-                (
-                    Source.Connect().TransformSafeAsync(TransformFactory, ErrorHandler, retransformer.Select(selector =>
                     {
-                        bool Transformed(Person p, string key) => selector(p);
-                        return (Func<Person, string, bool>) Transformed;
-                    }))
-                );
+                        var result = new PersonWithGender(p, p.Age % 2 == 0 ? "M" : "F");
+                        return Task.FromResult(result);
+                    };
+
+                Results = new ChangeSetAggregator<PersonWithGender, string>(
+                    Source.Connect().TransformSafeAsync(
+                        TransformFactory,
+                        ErrorHandler,
+                        retransformer.Select(
+                            selector =>
+                                {
+                                    bool Transformed(Person p, string key) => selector(p);
+                                    return (Func<Person, string, bool>)Transformed;
+                                })));
             }
 
-            private void ErrorHandler(Error<Person, string> error)
-            {
-                HandledErrors.Add(error);
-            }
+            public IList<Error<Person, string>> HandledErrors { get; } = new List<Error<Person, string>>();
+
+            public ChangeSetAggregator<PersonWithGender, string> Results { get; }
+
+            public ISourceCache<Person, string> Source { get; } = new SourceCache<Person, string>(p => p.Name);
+
+            public Func<Person, Task<PersonWithGender>> TransformFactory { get; }
 
             public void Dispose()
             {
                 Source.Dispose();
                 Results.Dispose();
+            }
+
+            private void ErrorHandler(Error<Person, string> error)
+            {
+                HandledErrors.Add(error);
             }
         }
     }

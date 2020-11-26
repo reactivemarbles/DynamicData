@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -10,29 +10,36 @@ using System.Threading;
 namespace DynamicData.Experimental
 {
     /// <summary>
-    /// A subject with a count of the number of subscribers
+    /// A subject with a count of the number of subscribers.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type of the item.</typeparam>
     internal class SubjectWithRefCount<T> : ISubjectWithRefCount<T>
     {
         private readonly ISubject<T> _subject;
+
         private int _refCount;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// Initializes a new instance of the <see cref="SubjectWithRefCount{T}"/> class.
         /// </summary>
-        public SubjectWithRefCount(ISubject<T> subject = null)
+        /// <param name="subject">The subject to perform reference counting on.</param>
+        public SubjectWithRefCount(ISubject<T>? subject = null)
         {
             _subject = subject ?? new Subject<T>();
         }
 
+        /// <summary>Gets number of subscribers.</summary>
+        /// <value>
+        /// The ref count.
+        /// </value>
+        public int RefCount => _refCount;
+
         /// <summary>
-        /// Provides the observer with new data.
+        /// Notifies the observer that the provider has finished sending push-based notifications.
         /// </summary>
-        /// <param name="value">The current notification information.</param>
-        public void OnNext(T value)
+        public void OnCompleted()
         {
-            _subject.OnNext(value);
+            _subject.OnCompleted();
         }
 
         /// <summary>
@@ -45,11 +52,12 @@ namespace DynamicData.Experimental
         }
 
         /// <summary>
-        /// Notifies the observer that the provider has finished sending push-based notifications.
+        /// Provides the observer with new data.
         /// </summary>
-        public void OnCompleted()
+        /// <param name="value">The current notification information.</param>
+        public void OnNext(T value)
         {
-            _subject.OnCompleted();
+            _subject.OnNext(value);
         }
 
         /// <summary>
@@ -64,17 +72,12 @@ namespace DynamicData.Experimental
             Interlocked.Increment(ref _refCount);
             var subscriber = _subject.Subscribe(observer);
 
-            return Disposable.Create(() =>
-            {
-                Interlocked.Decrement(ref _refCount);
-                subscriber.Dispose();
-            });
+            return Disposable.Create(
+                () =>
+                    {
+                        Interlocked.Decrement(ref _refCount);
+                        subscriber.Dispose();
+                    });
         }
-
-        /// <summary>number of subscribers.</summary>
-        /// <value>
-        /// The ref count.
-        /// </value>
-        public int RefCount => _refCount;
     }
 }

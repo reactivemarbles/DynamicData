@@ -1,21 +1,22 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    /// A request object for virtualisation
+    /// A request object for virtualisation.
     /// </summary>
     public class VirtualRequest : IEquatable<IVirtualRequest>, IVirtualRequest
     {
         /// <summary>
-        /// The default request value
+        /// The default request value.
         /// </summary>
-        public static readonly VirtualRequest Default = new VirtualRequest(0, 25);
+        public static readonly VirtualRequest Default = new(0, 25);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualRequest"/> class.
@@ -36,20 +37,50 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// The maximumn number of items to return
+        /// Gets the start index size comparer.
+        /// </summary>
+        /// <value>
+        /// The start index size comparer.
+        /// </value>
+        public static IEqualityComparer<IVirtualRequest?> StartIndexSizeComparer { get; } = new StartIndexSizeEqualityComparer();
+
+        /// <summary>
+        /// Gets the maximum number of items to return.
         /// </summary>
         public int Size { get; } = 25;
 
         /// <summary>
-        /// The first index in the virualised list
+        /// Gets the first index in the virualised list.
         /// </summary>
         public int StartIndex { get; }
 
-        #region Equality members
-
-        private sealed class StartIndexSizeEqualityComparer : IEqualityComparer<IVirtualRequest>
+        /// <inheritdoc />
+        public bool Equals(IVirtualRequest? other)
         {
-            public bool Equals(IVirtualRequest x, IVirtualRequest y)
+            return StartIndexSizeComparer.Equals(this, other);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            return obj is IVirtualRequest item && Equals(item);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (StartIndex * 397) ^ Size;
+            }
+        }
+
+        /// <inheritdoc />
+        public override string ToString() => $"StartIndex: {StartIndex}, Size: {Size}";
+
+        private sealed class StartIndexSizeEqualityComparer : IEqualityComparer<IVirtualRequest?>
+        {
+            public bool Equals(IVirtualRequest? x, IVirtualRequest? y)
             {
                 if (ReferenceEquals(x, y))
                 {
@@ -74,47 +105,18 @@ namespace DynamicData
                 return x.StartIndex == y.StartIndex && x.Size == y.Size;
             }
 
-            public int GetHashCode(IVirtualRequest obj)
+            public int GetHashCode(IVirtualRequest? obj)
             {
+                if (obj is null)
+                {
+                    return 0;
+                }
+
                 unchecked
                 {
                     return (obj.StartIndex * 397) ^ obj.Size;
                 }
             }
         }
-
-        /// <summary>
-        /// Gets the start index size comparer.
-        /// </summary>
-        /// <value>
-        /// The start index size comparer.
-        /// </value>
-        public static IEqualityComparer<IVirtualRequest> StartIndexSizeComparer { get; } = new StartIndexSizeEqualityComparer();
-
-        /// <inheritdoc />
-        public bool Equals(IVirtualRequest other)
-        {
-            return StartIndexSizeComparer.Equals(this, other);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object obj)
-        {
-            return Equals((IVirtualRequest)obj);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (StartIndex * 397) ^ Size;
-            }
-        }
-
-        #endregion
-
-        /// <inheritdoc />
-        public override string ToString() => $"StartIndex: {StartIndex}, Size: {Size}";
     }
 }

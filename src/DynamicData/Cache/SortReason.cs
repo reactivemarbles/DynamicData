@@ -1,8 +1,11 @@
-﻿// ReSharper disable once CheckNamespace
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+// Roland Pheasant licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 namespace DynamicData
 {
     /// <summary>
-    /// The reason why the sorted collection has changed
+    /// The reason why the sorted collection has changed.
     /// </summary>
     public enum SortReason
     {

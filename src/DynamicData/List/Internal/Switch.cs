@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -19,27 +19,26 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<T>> Run()
         {
-            return Observable.Create<IChangeSet<T>>(observer =>
-            {
-                var locker = new object();
-
-                var destination = new SourceList<T>();
-
-                var populator = Observable.Switch(_sources
-                    .Do(_ =>
+            return Observable.Create<IChangeSet<T>>(
+                observer =>
                     {
-                        lock (locker)
-                        {
-                            destination.Clear();
-                        }
-                    }))
-                    .Synchronize(locker)
-                    .PopulateInto(destination);
+                        var locker = new object();
 
-                var publisher = destination.Connect().SubscribeSafe(observer);
-                return new CompositeDisposable(destination, populator, publisher);
-            });
+                        var destination = new SourceList<T>();
+
+                        var populator = Observable.Switch(
+                            _sources.Do(
+                                _ =>
+                                    {
+                                        lock (locker)
+                                        {
+                                            destination.Clear();
+                                        }
+                                    })).Synchronize(locker).PopulateInto(destination);
+
+                        var publisher = destination.Connect().SubscribeSafe(observer);
+                        return new CompositeDisposable(destination, populator, publisher);
+                    });
         }
-
     }
 }

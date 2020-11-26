@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+
 using DynamicData.Kernel;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
     public class MonitorStatusFixture
     {
         [Fact]
@@ -15,32 +17,36 @@ namespace DynamicData.Tests.Cache
         {
             bool invoked = false;
             var status = ConnectionStatus.Pending;
-            var subscription = new Subject<int>().MonitorStatus().Subscribe(s =>
-            {
-                invoked = true;
-                status = s;
-            });
+            var subscription = new Subject<int>().MonitorStatus().Subscribe(
+                s =>
+                    {
+                        invoked = true;
+                        status = s;
+                    });
             invoked.Should().BeTrue();
             status.Should().Be(ConnectionStatus.Pending, "No status has been received");
             subscription.Dispose();
         }
 
         [Fact]
-        public void SetToLoaded()
+        public void MultipleInvokesDoNotCallLoadedAgain()
         {
             bool invoked = false;
-            var status = ConnectionStatus.Pending;
+            int invocations = 0;
             var subject = new Subject<int>();
-            var subscription = subject.MonitorStatus()
-                .Subscribe(s =>
-                {
-                    invoked = true;
-                    status = s;
-                });
+            var subscription = subject.MonitorStatus().Where(status => status == ConnectionStatus.Loaded).Subscribe(
+                s =>
+                    {
+                        invoked = true;
+                        invocations++;
+                    });
 
             subject.OnNext(1);
+            subject.OnNext(1);
+            subject.OnNext(1);
+
             invoked.Should().BeTrue();
-            status.Should().Be(ConnectionStatus.Loaded, "Status should be ConnectionStatus.Loaded");
+            invocations.Should().Be(1, "Status should be ConnectionStatus.Loaded");
             subscription.Dispose();
         }
 
@@ -52,12 +58,13 @@ namespace DynamicData.Tests.Cache
             var subject = new Subject<int>();
             Exception exception;
 
-            var subscription = subject.MonitorStatus()
-                .Subscribe(s =>
-                {
-                    invoked = true;
-                    status = s;
-                }, ex => { exception = ex; });
+            var subscription = subject.MonitorStatus().Subscribe(
+                s =>
+                    {
+                        invoked = true;
+                        status = s;
+                    },
+                ex => { exception = ex; });
 
             subject.OnError(new Exception("Test"));
             subscription.Dispose();
@@ -67,25 +74,21 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
-        public void MultipleInvokesDoNotCallLoadedAgain()
+        public void SetToLoaded()
         {
             bool invoked = false;
-            int invocations = 0;
+            var status = ConnectionStatus.Pending;
             var subject = new Subject<int>();
-            var subscription = subject.MonitorStatus()
-                .Where(status => status == ConnectionStatus.Loaded)
-                .Subscribe(s =>
-                {
-                    invoked = true;
-                    invocations++;
-                });
+            var subscription = subject.MonitorStatus().Subscribe(
+                s =>
+                    {
+                        invoked = true;
+                        status = s;
+                    });
 
             subject.OnNext(1);
-            subject.OnNext(1);
-            subject.OnNext(1);
-
             invoked.Should().BeTrue();
-            invocations.Should().Be(1, "Status should be ConnectionStatus.Loaded");
+            status.Should().Be(ConnectionStatus.Loaded, "Status should be ConnectionStatus.Loaded");
             subscription.Dispose();
         }
     }
