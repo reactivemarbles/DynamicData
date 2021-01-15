@@ -3,7 +3,11 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+#if WINUI3UWP
+using Microsoft.UI.Xaml.Data;
+#else
 using System.ComponentModel;
+#endif
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive.Linq;

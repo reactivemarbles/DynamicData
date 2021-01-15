@@ -4,8 +4,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+#if WINUI3UWP
+using Microsoft.UI.Xaml.Data;
+#else
 using System.ComponentModel;
+#endif
+#if WINUI3UWP
+using DynamicData.Binding.WinUI3UWP;
+#else
+using System.Collections.ObjectModel;
+#endif
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive;

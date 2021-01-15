@@ -1,10 +1,14 @@
 ﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
-
+#if SUPPORTS_BINDINGLIST
 using System;
 using System.Collections.Generic;
+#if WINUI3UWP
+using Microsoft.UI.Xaml.Data;
+#else
 using System.ComponentModel;
+#endif
 using System.Reactive;
 using System.Reactive.Linq;
 
@@ -138,3 +142,4 @@ namespace DynamicData.Binding
         }
     }
 }
+#endif

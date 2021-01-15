@@ -4,8 +4,13 @@
 
 using System;
 using System.Collections.Generic;
+#if WINUI3UWP
+using DynamicData.Binding.WinUI3UWP;
+using Microsoft.UI.Xaml.Data;
+#else
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+#endif
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;

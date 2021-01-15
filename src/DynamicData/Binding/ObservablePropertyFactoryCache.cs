@@ -4,7 +4,11 @@
 
 using System;
 using System.Collections.Concurrent;
+#if WINUI3UWP
+using Microsoft.UI.Xaml.Data;
+#else
 using System.ComponentModel;
+#endif
 using System.Linq;
 using System.Linq.Expressions;
 

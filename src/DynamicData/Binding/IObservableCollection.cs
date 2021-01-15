@@ -3,8 +3,13 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+#if WINUI3UWP
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Interop;
+#else
 using System.Collections.Specialized;
 using System.ComponentModel;
+#endif
 
 namespace DynamicData.Binding
 {

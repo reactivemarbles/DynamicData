@@ -5,7 +5,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+#if WINUI3UWP
+using DynamicData.Binding.WinUI3UWP;
+#else
 using System.Collections.ObjectModel;
+#endif
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;

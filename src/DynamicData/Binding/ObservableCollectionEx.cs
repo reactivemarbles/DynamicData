@@ -4,8 +4,13 @@
 
 using System;
 using System.Collections.Generic;
+#if WINUI3UWP
+using DynamicData.Binding.WinUI3UWP;
+using Microsoft.UI.Xaml.Interop;
+#else
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+#endif
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -156,13 +161,21 @@ namespace DynamicData.Binding
                                     {
                                         case NotifyCollectionChangedAction.Add when changes.NewItems is not null:
                                             {
+#if WINUI3UWP
+                                                if (changes.NewItems.Size == 1 && changes.NewItems.GetAt(0) is T item)
+#else
                                                 if (changes.NewItems.Count == 1 && changes.NewItems[0] is T item)
+#endif
                                                 {
                                                     list.Insert(changes.NewStartingIndex, item);
                                                 }
                                                 else
                                                 {
+#if WINUI3UWP
+                                                    list.InsertRange((changes.NewItems as System.Collections.IList)?.Cast<T>(), changes.NewStartingIndex);
+#else
                                                     list.InsertRange(changes.NewItems.Cast<T>(), changes.NewStartingIndex);
+#endif
                                                 }
 
                                                 break;
@@ -170,19 +183,30 @@ namespace DynamicData.Binding
 
                                         case NotifyCollectionChangedAction.Remove when changes.OldItems is not null:
                                             {
+#if WINUI3UWP
+                                                if (changes.OldItems.Size == 1)
+#else
                                                 if (changes.OldItems.Count == 1)
+#endif
                                                 {
                                                     list.RemoveAt(changes.OldStartingIndex);
                                                 }
                                                 else
                                                 {
+#if WINUI3UWP
+                                                    list.RemoveRange(changes.OldStartingIndex, (int)changes.OldItems.Size);
+#else
                                                     list.RemoveRange(changes.OldStartingIndex, changes.OldItems.Count);
+#endif
                                                 }
 
                                                 break;
                                             }
-
+#if WINUI3UWP
+                                        case NotifyCollectionChangedAction.Replace when changes.NewItems?.GetAt(0) is T replacedItem:
+#else
                                         case NotifyCollectionChangedAction.Replace when changes.NewItems?[0] is T replacedItem:
+#endif
                                             list[changes.NewStartingIndex] = replacedItem;
                                             break;
                                         case NotifyCollectionChangedAction.Reset:
