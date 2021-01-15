@@ -34,7 +34,7 @@ namespace DynamicData.Binding.WinUI3UWP
         {
             if (list is Microsoft.UI.Xaml.Interop.INotifyCollectionChanged)
             {
-                (list as Microsoft.UI.Xaml.Interop.INotifyCollectionChanged).CollectionChanged += ReadOnlyObservableCollection_CollectionChanged;
+                ((Microsoft.UI.Xaml.Interop.INotifyCollectionChanged)list).CollectionChanged += ReadOnlyObservableCollection_CollectionChanged;
             }
         }
 
