@@ -1,3 +1,14 @@
+![Build](https://github.com/reactivemarbles/DynamicData/workflows/Build/badge.svg) [![Code Coverage](https://codecov.io/gh/reactivemarbles/DynamicData/branch/master/graph/badge.svg)](https://codecov.io/gh/reactivemarbles/DynamicData)
+<a href="https://reactiveui.net/slack">
+        <img src="https://img.shields.io/badge/chat-slack-blue.svg">
+</a>
+[![NuGet Stats](https://img.shields.io/nuget/v/DynamicData.svg)](https://www.nuget.org/packages/DynamicData) ![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg)
+<br />
+<br />
+<a href="https://github.com/reactiveui/DynamicData">
+        <img width="170" height="170" src="https://github.com/reactiveui/styleguide/blob/master/logo_dynamic_data/logo.svg"/>
+</a>
+
 ## Dynamic Data
 
 Dynamic Data is a portable class library which brings the power of Reactive Extensions (Rx) to collections.  
@@ -24,8 +35,6 @@ var myOperation = myTradeCache.Connect()
 The magic is that as  ```myTradeCache``` is maintained the target observable collection looks after itself.
 
 This is a simple example to show how using Dynamic Data's collections and operators make in-memory data management extremely easy and can reduce the size and complexity of your code base by abstracting complicated and often repetitive operations.
-
-[![NuGet Stats](https://img.shields.io/nuget/v/DynamicData.svg)](https://www.nuget.org/packages/DynamicData) ![Downloads](https://img.shields.io/nuget/dt/DynamicData.svg) [![Build status](https://ci.appveyor.com/api/projects/status/jnq3kagdkp5xtqi5?svg=true)](https://ci.appveyor.com/project/RolandPheasant/dynamicdata-dpbpa)
 
 ### Sample Projects 
 
@@ -157,6 +166,20 @@ var myConnection = myObservableCollection.ToObservableChangeSet();
 ```
 This method is only recommended for simple queries which act only on the UI thread as `ObservableCollection` is not thread safe.
 
+### Create an Observable Change Set from an Binding List
+```cs
+var myBindingList = new BindingList<T>();
+```
+To create a cache based observable change set, call `.ToObservableChangeSet` and specify a key selector for the backing cache
+```cs
+var myConnection = myBindingList.ToObservableChangeSet(t => t.Key);
+```
+or to create a list based observable change set call `.ToObservableChangeSet` with no arguments
+```cs
+var myConnection = myBindingList.ToObservableChangeSet();
+```
+This method is only recommended for simple queries which act only on the UI thread as `ObservableCollection` is not thread safe.
+
 ### Using the ObservableChangeSet static class
 
 There is also  another way to create observable change sets, and that is to use the ```ObservableChangeSet``` static class.  This class is a facsimile of the Rx.Net ```Observable``` static class and provides an almost identical API. 
@@ -184,7 +207,7 @@ There are several overloads ```ObservableChangeSet.Create``` which match the ove
 
 ## Consuming Observable Change Sets
 The examples below illustrate the kind of things you can achieve after creating an observable change set. 
-Now you can create an observable cache or an observable list, here are a few quick fire examples to illustrated the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
+Now you can create an observable cache or an observable list, here are a few quick fire examples to illustrate the diverse range of things you can do. In all of these examples the resulting sequences always exactly reflect the items is the cache i.e. adds, updates and removes are always propagated.
 
 #### Create a Derived List or Cache
 This example shows how you can create derived collections from an observable change set. It applies a filter to a collection, and then creates a new observable collection that only contains items from the original collection that pass the filter.
@@ -203,6 +226,8 @@ var oldPeople = myList.Connect().Filter(person => person.Age > 65).AsObservableL
 The resulting observable list, oldPeople, will only contain people who are older than 65.
 
 The same pattern can be used with SourceCache by using `.AsObservableCache()` to create derived caches.
+
+As an alternative to `.Bind(out collection)` you can use `.BindToObservableList(out observableList)` for both `SourceList` & `SourceCache`. This is useful for getting derived read-only lists from sources that use `.AutoRefresh()`, since collections do not support refresh notifications.
 
 #### Filtering
 Filter the observable change set by using the `Filter` operator
@@ -237,6 +262,8 @@ The `GroupOn` operator pre-caches the specified groups according to the group se
 ```cs
 var myOperation = personChangeSet.GroupOn(person => person.Status)
 ```
+The value of the inner group is represented by an observable list for each matched group. When values matching the inner grouping are modified, it is the inner group which produces the changes.
+You can also use `GroupWithImmutableState` which will produce a grouping who's inner items are a fixed size array.
 
 #### Transformation
 The `Transform` operator allows you to map objects from the observable change set to another object
@@ -385,6 +412,6 @@ Even before Rx existed I had implemented a similar concept using old fashioned e
 ## Want to know more?
 I could go on endlessly but this is not the place for full documentation.  I promise this will come but for now I suggest downloading my WPF sample app (links at top of document)  as I intend it to be a 'living document' and I promise it will be continually maintained. 
 
-Also if you following me on Twitter you will find out when new samples or blog posts have been updated.
+Also, if you following me on Twitter you will find out when new samples or blog posts have been updated.
 
-Additionally if you have read up to here and not pressed star then why not? Ha. A star may make me be more responsive to any requests or queries.
+Additionally, if you have read up to here and not pressed star then why not? Ha. A star may make me be more responsive to any requests or queries.

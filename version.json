@@ -1,0 +1,17 @@
+{
+  "version": "7.1",
+  "publicReleaseRefSpec": [
+    "^refs/heads/main$", // we release out of master
+    "^refs/heads/preview/.*", // we release previews
+    "^refs/heads/rel/\\d+\\.\\d+\\.\\d+" // we also release branches starting with rel/N.N.N
+  ],
+  "nugetPackageVersion":{
+    "semVer": 2
+  },
+  "cloudBuild": {
+    "setVersionVariables": true,
+    "buildNumber": {
+      "enabled": false
+    }
+  }
+}
