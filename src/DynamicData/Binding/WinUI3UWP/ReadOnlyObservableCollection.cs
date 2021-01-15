@@ -27,25 +27,34 @@ namespace DynamicData.Binding.WinUI3UWP
     /// Replacement ObservableCollection for use only in WinUI3-UWP apps.
     /// </summary>
     /// <typeparam name="T">Anything.</typeparam>
-    public class ReadOnlyObservableCollection<T> : ReadOnlyCollection<T>, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    public class ReadOnlyObservableCollection<T> : IReadOnlyCollection<T>, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Microsoft.UI.Xaml.Data.INotifyPropertyChanged
     {
+        private ObservableCollection<T> _internalCollection;
+
+        public int Count => _internalCollection.Count;
+
         public ReadOnlyObservableCollection(IList<T> list)
-            : base(list.ToList())
         {
-            if (list is Microsoft.UI.Xaml.Interop.INotifyCollectionChanged)
-            {
-                ((Microsoft.UI.Xaml.Interop.INotifyCollectionChanged)list).CollectionChanged += ReadOnlyObservableCollection_CollectionChanged;
-            }
+            _internalCollection = new ObservableCollection<T>(list);
+            _internalCollection.CollectionChanged += InternalCollection_CollectionChanged;
+            _internalCollection.PropertyChanged += InternalCollection_PropertyChanged;
         }
 
-        private void ReadOnlyObservableCollection_CollectionChanged(object sender, Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs e)
+        public IEnumerator<T> GetEnumerator()
         {
-            CollectionChanged?.Invoke(this, e);
+            return _internalCollection.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _internalCollection.GetEnumerator();
         }
 
         public ReadOnlyObservableCollection(IEnumerable<T> collection)
-            : base(collection.ToList())
         {
+            _internalCollection = new ObservableCollection<T>(collection);
+            _internalCollection.CollectionChanged += InternalCollection_CollectionChanged;
+            _internalCollection.PropertyChanged += InternalCollection_PropertyChanged;
         }
 
         public event Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler CollectionChanged;
@@ -53,6 +62,16 @@ namespace DynamicData.Binding.WinUI3UWP
 #pragma warning disable 0067 // PropertyChanged is never used, raising a warning, but it's needed to implement INotifyPropertyChanged.
         public event PropertyChangedEventHandler PropertyChanged;
 #pragma warning restore 0067
+
+        private void InternalCollection_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            PropertyChanged?.Invoke(this, e);
+        }
+
+        private void InternalCollection_CollectionChanged(object sender, Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs e)
+        {
+            CollectionChanged?.Invoke(this, e);
+        }
     }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
