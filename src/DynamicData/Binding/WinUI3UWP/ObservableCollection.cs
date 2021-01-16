@@ -192,11 +192,6 @@ namespace DynamicData.Binding.WinUI3UWP
             }
         }
 
-        private void ObservableCollectionWinUI3UWP_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
 #pragma warning disable 0067 // PropertyChanged is never used, raising a warning, but it's needed to implement INotifyPropertyChanged.
         public event PropertyChangedEventHandler PropertyChanged;
 #pragma warning restore 0067

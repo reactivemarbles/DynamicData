@@ -38,6 +38,7 @@ namespace DynamicData.Binding.WinUI3UWP
             _internalCollection = new ObservableCollection<T>(list);
             _internalCollection.CollectionChanged += InternalCollection_CollectionChanged;
             _internalCollection.PropertyChanged += InternalCollection_PropertyChanged;
+            CollectionChanged?.Invoke(this, new Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, null, null, -1, -1));
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -55,6 +56,7 @@ namespace DynamicData.Binding.WinUI3UWP
             _internalCollection = new ObservableCollection<T>(collection);
             _internalCollection.CollectionChanged += InternalCollection_CollectionChanged;
             _internalCollection.PropertyChanged += InternalCollection_PropertyChanged;
+            CollectionChanged?.Invoke(this, new Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, null, null, -1, -1));
         }
 
         public event Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler CollectionChanged;
