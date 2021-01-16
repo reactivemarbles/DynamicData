@@ -27,11 +27,15 @@ namespace DynamicData.Binding.WinUI3UWP
     /// Replacement ObservableCollection for use only in WinUI3-UWP apps.
     /// </summary>
     /// <typeparam name="T">Anything.</typeparam>
-    public class ReadOnlyObservableCollection<T> : IReadOnlyCollection<T>, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    public class ReadOnlyObservableCollection<T> : IList<T>, IReadOnlyCollection<T>, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Microsoft.UI.Xaml.Data.INotifyPropertyChanged
     {
         private ObservableCollection<T> _internalCollection;
 
         public int Count => _internalCollection.Count;
+
+        public bool IsReadOnly => true;
+
+        public T this[int index] { get => _internalCollection[index]; set => throw new NotImplementedException(); }
 
         public ReadOnlyObservableCollection(IList<T> list)
         {
@@ -64,6 +68,46 @@ namespace DynamicData.Binding.WinUI3UWP
 #pragma warning disable 0067 // PropertyChanged is never used, raising a warning, but it's needed to implement INotifyPropertyChanged.
         public event PropertyChangedEventHandler PropertyChanged;
 #pragma warning restore 0067
+               
+        public int IndexOf(T item)
+        {
+            return _internalCollection.IndexOf(item);
+        }
+
+        public void Insert(int index, T item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Add(T item)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Contains(T item)
+        {
+            return _internalCollection.Contains(item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            _internalCollection.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(T item)
+        {
+            throw new NotImplementedException();
+        }
 
         private void InternalCollection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -74,6 +118,7 @@ namespace DynamicData.Binding.WinUI3UWP
         {
             CollectionChanged?.Invoke(this, e);
         }
+
     }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
