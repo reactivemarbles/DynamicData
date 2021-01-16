@@ -291,6 +291,75 @@ namespace DynamicData.Binding.WinUI3UWP
                 PropertyChanged?.Invoke(this, e);
             }
         }
+
+        protected void InsertItem(int index, T item)
+        {
+            CheckReentrancy();
+
+            TestBindableVector<T> newItem = new TestBindableVector<T>();
+            newItem.Add(item);
+
+            _backingCollection.Insert(index, item);
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Add,
+                newItem,
+                null,
+                index,
+                0);
+        }
+
+        protected void MoveItem(int oldIndex, int newIndex)
+        {
+            CheckReentrancy();
+
+            TestBindableVector<T> oldItem = new TestBindableVector<T>();
+            oldItem.Add(this[oldIndex]);
+            TestBindableVector<T> newItem = new TestBindableVector<T>(oldItem);
+
+            T item = this[oldIndex];
+            _backingCollection.RemoveAt(oldIndex);
+            _backingCollection.Insert(newIndex, item);
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Move,
+                newItem,
+                oldItem,
+                newIndex,
+                oldIndex);
+        }
+
+        protected void RemoveItem(int index)
+        {
+            CheckReentrancy();
+
+            TestBindableVector<T> oldItem = new TestBindableVector<T>();
+            oldItem.Add(this[index]);
+
+            _backingCollection.RemoveAt(index);
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Remove,
+                null,
+                oldItem,
+                0,
+                index);
+        }
+
+        protected void SetItem(int index, T item)
+        {
+            CheckReentrancy();
+
+            TestBindableVector<T> oldItem = new TestBindableVector<T>();
+            oldItem.Add(this[index]);
+            TestBindableVector<T> newItem = new TestBindableVector<T>();
+            newItem.Add(item);
+
+            _backingCollection[index] = item;
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Replace,
+                newItem,
+                oldItem,
+                index,
+                index);
+        }
     }
 
     public class TestBindableVector<T> : IList<T>, IBindableVector

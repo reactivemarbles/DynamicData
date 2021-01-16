@@ -29,6 +29,20 @@ namespace DynamicData.Binding.WinUI3UWP
     /// <typeparam name="T">Anything.</typeparam>
     public class ReadOnlyObservableCollection<T> : ObservableCollection<T>
     {
+        public ReadOnlyObservableCollection()
+        {
+        }
+
+        public ReadOnlyObservableCollection(IList<T> list)
+            : base(list)
+        {
+        }
+
+        public ReadOnlyObservableCollection(IEnumerable<T> collection)
+            : base(collection)
+        {
+        }
+
         public override bool IsReadOnly => true;
     }
 }
