@@ -21,11 +21,7 @@ namespace DynamicData.Binding
     /// An override of observable collection which allows the suspension of notifications.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
-#if WINUI3UWP
     public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObservableCollection<T>, IExtendedList<T>
-#else
-    public class ObservableCollectionExtended<T> : ObservableCollection<T>, IObservableCollection<T>, IExtendedList<T>
-#endif
     {
         private bool _suspendCount;
 
@@ -162,7 +158,7 @@ namespace DynamicData.Binding
                         _suspendNotifications = false;
                         OnPropertyChanged(new PropertyChangedEventArgs("Count"));
 #if WINUI3UWP
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, null, null, -1, -1));
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, null, null, 0, 0));
 #else
                         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 #endif
