@@ -68,7 +68,7 @@ namespace DynamicData.Binding.WinUI3UWP
 #pragma warning disable 0067 // PropertyChanged is never used, raising a warning, but it's needed to implement INotifyPropertyChanged.
         public event PropertyChangedEventHandler PropertyChanged;
 #pragma warning restore 0067
-               
+
         public int IndexOf(T item)
         {
             return _internalCollection.IndexOf(item);
@@ -118,7 +118,6 @@ namespace DynamicData.Binding.WinUI3UWP
         {
             CollectionChanged?.Invoke(this, e);
         }
-
     }
 }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
