@@ -150,7 +150,9 @@ namespace DynamicData.Binding
         {
             _suspendCount = true;
             _suspendNotifications = true;
-
+#if WINUI3UWP
+            var copyArray = new TestBindableVector<T>(this);
+#endif
             return Disposable.Create(
                 () =>
                     {
@@ -158,7 +160,8 @@ namespace DynamicData.Binding
                         _suspendNotifications = false;
                         OnPropertyChanged(new PropertyChangedEventArgs("Count"));
 #if WINUI3UWP
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, null, null, 0, 0));
+                        TestBindableVector<T> newItems = new TestBindableVector<T>(this);
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, newItems, copyArray, 0, 0));
 #else
                         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
 #endif

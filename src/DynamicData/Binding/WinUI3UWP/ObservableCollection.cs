@@ -114,11 +114,6 @@ namespace DynamicData.Binding.WinUI3UWP
                 oldIndex);
         }
 
-        public IDisposable SuspendNotifications()
-        {
-            throw new NotImplementedException();
-        }
-
         public int IndexOf(T item)
         {
             return _backingCollection.IndexOf(item);
@@ -132,6 +127,7 @@ namespace DynamicData.Binding.WinUI3UWP
             newItem.Add(item);
 
             _backingCollection.Insert(index, item);
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Add,
                 newItem,
@@ -148,6 +144,7 @@ namespace DynamicData.Binding.WinUI3UWP
             oldItem.Add(this[index]);
 
             _backingCollection.RemoveAt(index);
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Remove,
                 null,
@@ -164,6 +161,7 @@ namespace DynamicData.Binding.WinUI3UWP
             newItem.Add(item);
 
             _backingCollection.Add(item);
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Add,
                 newItem,
@@ -179,6 +177,7 @@ namespace DynamicData.Binding.WinUI3UWP
             TestBindableVector<T> oldItems = new TestBindableVector<T>(this);
 
             _backingCollection.Clear();
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Reset,
                 null,
@@ -208,6 +207,7 @@ namespace DynamicData.Binding.WinUI3UWP
             var result = _backingCollection.Remove(item);
             if (result)
             {
+                OnPropertyChanged(new PropertyChangedEventArgs("Count"));
                 OnCollectionChanged(
                     NotifyCollectionChangedAction.Remove,
                     null,
@@ -229,9 +229,7 @@ namespace DynamicData.Binding.WinUI3UWP
             return _backingCollection.GetEnumerator();
         }
 
-#pragma warning disable 0067 // PropertyChanged is never used, raising a warning, but it's needed to implement INotifyPropertyChanged.
         public event PropertyChangedEventHandler PropertyChanged;
-#pragma warning restore 0067
 
         protected IDisposable BlockReentrancy()
         {
@@ -253,6 +251,7 @@ namespace DynamicData.Binding.WinUI3UWP
             TestBindableVector<T> oldItems = new TestBindableVector<T>(this);
 
             _backingCollection.Clear();
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Reset,
                 null,
@@ -275,15 +274,15 @@ namespace DynamicData.Binding.WinUI3UWP
         {
             using (BlockReentrancy())
             {
-                if (e.Action != NotifyCollectionChangedAction.Replace)
-                {
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Count"));
-                }
-
+                // if (e.Action != NotifyCollectionChangedAction.Replace)
+                // {
+                //     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Count"));
+                // }
                 CollectionChanged?.Invoke(this, e);
             }
         }
 
+        // protected virtual void OnPropertyChanged(Microsoft.UI.Xaml.Data.PropertyChangedEventArgs e)
         protected virtual void OnPropertyChanged(Microsoft.UI.Xaml.Data.PropertyChangedEventArgs e)
         {
             using (BlockReentrancy())
@@ -300,6 +299,7 @@ namespace DynamicData.Binding.WinUI3UWP
             newItem.Add(item);
 
             _backingCollection.Insert(index, item);
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Add,
                 newItem,
@@ -335,6 +335,7 @@ namespace DynamicData.Binding.WinUI3UWP
             oldItem.Add(this[index]);
 
             _backingCollection.RemoveAt(index);
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Remove,
                 null,
