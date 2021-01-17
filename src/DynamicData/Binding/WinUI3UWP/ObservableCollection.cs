@@ -27,39 +27,11 @@ namespace DynamicData.Binding.WinUI3UWP
     /// Replacement ObservableCollection for use only in WinUI3-UWP apps.
     /// </summary>
     /// <typeparam name="T">Anything.</typeparam>
-    public class ObservableCollection<T> : IList<T>, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    public class ObservableCollection<T> : Collection<T>, Microsoft.UI.Xaml.Interop.INotifyCollectionChanged, Microsoft.UI.Xaml.Data.INotifyPropertyChanged
     {
-        private List<T> _backingCollection;
         private ReentrancyGuard? _reentrancyGuard;
 
-        // private IDisposable _notifyCollectionSuspended;
-        // private IDisposable _notifyCountSuspended;
-        public int Count => _backingCollection.Count;
-
         public virtual bool IsReadOnly => false;
-
-        public T this[int index]
-        {
-            get => _backingCollection[index];
-            set
-            {
-                if (!_backingCollection[index].Equals(value))
-                {
-                    TestBindableVector<T> oldItem = new TestBindableVector<T>();
-                    oldItem.Add(this[index]);
-                    TestBindableVector<T> newItem = new TestBindableVector<T>();
-                    newItem.Add(value);
-
-                    _backingCollection[index] = value;
-                    OnCollectionChanged(
-                        NotifyCollectionChangedAction.Replace,
-                        newItem,
-                        oldItem,
-                        index,
-                        index);
-                }
-            }
-        }
 
         private class ReentrancyGuard : IDisposable
         {
@@ -80,156 +52,26 @@ namespace DynamicData.Binding.WinUI3UWP
 
         public ObservableCollection()
         {
-            _backingCollection = new List<T>();
         }
 
         public ObservableCollection(IList<T> list)
+            : base(list.ToList())
         {
-            _backingCollection = new List<T>(list);
         }
 
         public ObservableCollection(IEnumerable<T> collection)
+            : base(collection.ToList())
         {
-            _backingCollection = new List<T>(collection);
         }
 
         public event Microsoft.UI.Xaml.Interop.NotifyCollectionChangedEventHandler CollectionChanged;
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public void Move(int oldIndex, int newIndex)
         {
-            CheckReentrancy();
-
-            TestBindableVector<T> oldItem = new TestBindableVector<T>();
-            oldItem.Add(this[oldIndex]);
-            TestBindableVector<T> newItem = new TestBindableVector<T>(oldItem);
-
-            T item = this[oldIndex];
-            _backingCollection.RemoveAt(oldIndex);
-            _backingCollection.Insert(newIndex, item);
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Move,
-                newItem,
-                oldItem,
-                newIndex,
-                oldIndex);
+            MoveItem(oldIndex, newIndex);
         }
-
-        public int IndexOf(T item)
-        {
-            return _backingCollection.IndexOf(item);
-        }
-
-        public void Insert(int index, T item)
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> newItem = new TestBindableVector<T>();
-            newItem.Add(item);
-
-            _backingCollection.Insert(index, item);
-            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Add,
-                newItem,
-                null,
-                index,
-                0);
-        }
-
-        public void RemoveAt(int index)
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> oldItem = new TestBindableVector<T>();
-            oldItem.Add(this[index]);
-
-            _backingCollection.RemoveAt(index);
-            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Remove,
-                null,
-                oldItem,
-                0,
-                index);
-        }
-
-        public void Add(T item)
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> newItem = new TestBindableVector<T>();
-            newItem.Add(item);
-
-            _backingCollection.Add(item);
-            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Add,
-                newItem,
-                null,
-                _backingCollection.Count - 1,
-                0);
-        }
-
-        public void Clear()
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> oldItems = new TestBindableVector<T>(this);
-
-            _backingCollection.Clear();
-            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Reset,
-                null,
-                oldItems,
-                0,
-                0);
-        }
-
-        public bool Contains(T item)
-        {
-            return _backingCollection.Contains(item);
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            _backingCollection.CopyTo(array, arrayIndex);
-        }
-
-        public bool Remove(T item)
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> oldItem = new TestBindableVector<T>();
-            oldItem.Add(item);
-            var oldIndex = _backingCollection.IndexOf(item);
-
-            var result = _backingCollection.Remove(item);
-            if (result)
-            {
-                OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-                OnCollectionChanged(
-                    NotifyCollectionChangedAction.Remove,
-                    null,
-                    oldItem,
-                    0,
-                    oldIndex);
-            }
-
-            return result;
-        }
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            return _backingCollection.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _backingCollection.GetEnumerator();
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
 
         protected IDisposable BlockReentrancy()
         {
@@ -244,20 +86,88 @@ namespace DynamicData.Binding.WinUI3UWP
             }
         }
 
-        protected void ClearItems()
+        protected override void ClearItems()
         {
             CheckReentrancy();
 
             TestBindableVector<T> oldItems = new TestBindableVector<T>(this);
 
-            _backingCollection.Clear();
-            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+            base.ClearItems();
             OnCollectionChanged(
                 NotifyCollectionChangedAction.Reset,
                 null,
                 oldItems,
                 0,
                 0);
+        }
+
+        protected override void InsertItem(int index, T item)
+        {
+            CheckReentrancy();
+
+            TestBindableVector<T> newItem = new TestBindableVector<T>();
+            newItem.Add(item);
+
+            base.InsertItem(index, item);
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Add,
+                newItem,
+                null,
+                index,
+                0);
+        }
+
+        protected virtual void MoveItem(int oldIndex, int newIndex)
+        {
+            CheckReentrancy();
+
+            TestBindableVector<T> oldItem = new TestBindableVector<T>();
+            oldItem.Add(this[oldIndex]);
+            TestBindableVector<T> newItem = new TestBindableVector<T>(oldItem);
+
+            T item = this[oldIndex];
+            RemoveAt(oldIndex);
+            base.InsertItem(newIndex, item);
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Move,
+                newItem,
+                oldItem,
+                newIndex,
+                oldIndex);
+        }
+
+        protected override void RemoveItem(int index)
+        {
+            CheckReentrancy();
+
+            TestBindableVector<T> oldItem = new TestBindableVector<T>();
+            oldItem.Add(this[index]);
+
+            base.RemoveItem(index);
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Remove,
+                null,
+                oldItem,
+                0,
+                index);
+        }
+
+        protected override void SetItem(int index, T item)
+        {
+            CheckReentrancy();
+
+            TestBindableVector<T> oldItem = new TestBindableVector<T>();
+            oldItem.Add(this[index]);
+            TestBindableVector<T> newItem = new TestBindableVector<T>();
+            newItem.Add(item);
+
+            base.SetItem(index, item);
+            OnCollectionChanged(
+                NotifyCollectionChangedAction.Replace,
+                newItem,
+                oldItem,
+                index,
+                index);
         }
 
         protected virtual void OnCollectionChanged(
@@ -274,10 +184,6 @@ namespace DynamicData.Binding.WinUI3UWP
         {
             using (BlockReentrancy())
             {
-                // if (e.Action != NotifyCollectionChangedAction.Replace)
-                // {
-                //     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Count"));
-                // }
                 CollectionChanged?.Invoke(this, e);
             }
         }
@@ -289,77 +195,6 @@ namespace DynamicData.Binding.WinUI3UWP
             {
                 PropertyChanged?.Invoke(this, e);
             }
-        }
-
-        protected void InsertItem(int index, T item)
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> newItem = new TestBindableVector<T>();
-            newItem.Add(item);
-
-            _backingCollection.Insert(index, item);
-            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Add,
-                newItem,
-                null,
-                index,
-                0);
-        }
-
-        protected void MoveItem(int oldIndex, int newIndex)
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> oldItem = new TestBindableVector<T>();
-            oldItem.Add(this[oldIndex]);
-            TestBindableVector<T> newItem = new TestBindableVector<T>(oldItem);
-
-            T item = this[oldIndex];
-            _backingCollection.RemoveAt(oldIndex);
-            _backingCollection.Insert(newIndex, item);
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Move,
-                newItem,
-                oldItem,
-                newIndex,
-                oldIndex);
-        }
-
-        protected void RemoveItem(int index)
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> oldItem = new TestBindableVector<T>();
-            oldItem.Add(this[index]);
-
-            _backingCollection.RemoveAt(index);
-            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Remove,
-                null,
-                oldItem,
-                0,
-                index);
-        }
-
-        protected void SetItem(int index, T item)
-        {
-            CheckReentrancy();
-
-            TestBindableVector<T> oldItem = new TestBindableVector<T>();
-            oldItem.Add(this[index]);
-            TestBindableVector<T> newItem = new TestBindableVector<T>();
-            newItem.Add(item);
-
-            _backingCollection[index] = item;
-            OnCollectionChanged(
-                NotifyCollectionChangedAction.Replace,
-                newItem,
-                oldItem,
-                index,
-                index);
         }
     }
 
