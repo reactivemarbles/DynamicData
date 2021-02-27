@@ -1,27 +1,29 @@
 using System;
-using DynamicData.Tests.Domain;
-using Microsoft.Reactive.Testing;
-using Xunit;
 using System.Reactive.Linq;
+
+using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
+using Microsoft.Reactive.Testing;
+
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class BatchFixture: IDisposable
+    public class BatchFixture : IDisposable
     {
-        private readonly ISourceList<Person> _source;
         private readonly ChangeSetAggregator<Person> _results;
+
         private readonly TestScheduler _scheduler;
 
-        public  BatchFixture()
+        private readonly ISourceList<Person> _source;
+
+        public BatchFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
-            _results = _source.Connect()
-                              .Buffer(TimeSpan.FromMinutes(1), _scheduler)
-                              .FlattenBufferResult()
-                              .AsAggregator();
+            _results = _source.Connect().Buffer(TimeSpan.FromMinutes(1), _scheduler).FlattenBufferResult().AsAggregator();
         }
 
         public void Dispose()

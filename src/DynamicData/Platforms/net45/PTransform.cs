@@ -1,29 +1,31 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 #if P_LINQ
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
     internal sealed class PTransform<TDestination, TSource, TKey>
+        where TKey : notnull
     {
         private readonly IObservable<IChangeSet<TSource, TKey>> _source;
         private readonly Func<TSource, Optional<TSource>, TKey, TDestination> _transformFactory;
         private readonly ParallelisationOptions _parallelisationOptions;
-        private readonly Action<Error<TSource, TKey>> _exceptionCallback;
+        private readonly Action<Error<TSource, TKey>>? _exceptionCallback;
 
-        public PTransform(IObservable<IChangeSet<TSource, TKey>> source,
+        public PTransform(
+            IObservable<IChangeSet<TSource, TKey>> source,
             Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
             ParallelisationOptions parallelisationOptions,
-            Action<Error<TSource, TKey>> exceptionCallback = null)
+            Action<Error<TSource, TKey>>? exceptionCallback = null)
         {
             _source = source;
             _exceptionCallback = exceptionCallback;
@@ -43,8 +45,6 @@ namespace DynamicData.PLinq
 
         private IChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
         {
-         //   var transformed = changes.Select(ToDestination);
-
             var transformed = changes.ShouldParallelise(_parallelisationOptions)
                 ? changes.Parallelise(_parallelisationOptions).Select(ToDestination).ToArray()
                 : changes.Select(ToDestination).ToArray();
@@ -66,7 +66,7 @@ namespace DynamicData.PLinq
             }
             catch (Exception ex)
             {
-                //only handle errors if a handler has been specified
+                // only handle errors if a handler has been specified
                 if (_exceptionCallback != null)
                 {
                     return new TransformResult(change, ex);
@@ -86,7 +86,9 @@ namespace DynamicData.PLinq
                     {
                         case ChangeReason.Add:
                         case ChangeReason.Update:
+#pragma warning disable CS8604 // Possible null reference argument.
                             cache.AddOrUpdate(result.Destination.ValueOrDefault(), result.Key);
+#pragma warning restore CS8604 // Possible null reference argument.
                             break;
 
                         case ChangeReason.Remove:
@@ -100,21 +102,15 @@ namespace DynamicData.PLinq
                 }
                 else
                 {
-                    _exceptionCallback(new Error<TSource, TKey>(result.Error, result.Change.Current, result.Change.Key));
+                    _exceptionCallback?.Invoke(new Error<TSource, TKey>(result.Error, result.Change.Current, result.Change.Key));
                 }
             }
 
             return cache.CaptureChanges();
         }
 
-        private struct TransformResult
+        private readonly struct TransformResult
         {
-            public Change<TSource, TKey> Change { get; }
-            public Exception Error { get; }
-            public bool Success { get; }
-            public Optional<TDestination> Destination { get; }
-            public TKey Key { get; }
-
             public TransformResult(Change<TSource, TKey> change, TDestination destination)
                 : this()
             {
@@ -141,6 +137,16 @@ namespace DynamicData.PLinq
                 Success = false;
                 Key = change.Key;
             }
+
+            public Change<TSource, TKey> Change { get; }
+
+            public Exception? Error { get; }
+
+            public bool Success { get; }
+
+            public Optional<TDestination> Destination { get; }
+
+            public TKey Key { get; }
         }
     }
 }

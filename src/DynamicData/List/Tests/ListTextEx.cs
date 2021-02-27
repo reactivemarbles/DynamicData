@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,18 +8,19 @@ using System;
 namespace DynamicData.Tests
 {
     /// <summary>
-    /// Test extensions
+    /// Test extensions.
     /// </summary>
     public static class ListTextEx
     {
         /// <summary>
-        /// Aggregates all events and statistics for a changeset to help assertions when testing
+        /// Aggregates all events and statistics for a change set to help assertions when testing.
         /// </summary>
+        /// <param name="source">The source observable.</param>
         /// <typeparam name="T">The type of the object.</typeparam>
-        /// <returns></returns>
+        /// <returns>The change set aggregator.</returns>
         public static ChangeSetAggregator<T> AsAggregator<T>(this IObservable<IChangeSet<T>> source)
         {
-            return new ChangeSetAggregator<T>(source);
+            return new(source);
         }
     }
 }

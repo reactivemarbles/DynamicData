@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 
 namespace DynamicData.Benchmarks.Cache
 {
@@ -17,18 +19,18 @@ namespace DynamicData.Benchmarks.Cache
         }
     }
 
-    [CoreJob]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [MemoryDiagnoser]
     [MarkdownExporterAttribute.GitHub]
     public class SourceCache
     {
         private SourceCache<BenchmarkItem, int> _cache;
-        private  BenchmarkItem[] _items = Enumerable.Range(1,100).Select(i=> new BenchmarkItem(i)).ToArray();
+        private BenchmarkItem[] _items = Enumerable.Range(1, 100).Select(i => new BenchmarkItem(i)).ToArray();
 
         [GlobalSetup]
         public void Setup()
         {
-            _cache = new SourceCache<BenchmarkItem, int>(i=> i.Id);
+            _cache = new SourceCache<BenchmarkItem, int>(i => i.Id);
         }
 
         [Params(1, 100, 1_000, 10_000, 100_000)]

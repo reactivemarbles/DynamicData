@@ -1,29 +1,23 @@
-﻿
-using DynamicData.Binding;
+﻿using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain
 {
     public enum AnimalFamily
     {
         Mammal,
+
         Reptile,
+
         Fish,
+
         Amphibian,
+
         Bird
     }
 
     public class Animal : AbstractNotifyPropertyChanged
     {
-        public string Name { get; }
-        public string Type { get; }
-        public AnimalFamily Family { get; }
-
         private bool _includeInResults;
-        public bool IncludeInResults
-        {
-            get => _includeInResults;
-            set => SetAndRaise(ref _includeInResults, value);
-        }
 
         public Animal(string name, string type, AnimalFamily family)
         {
@@ -31,5 +25,17 @@ namespace DynamicData.Tests.Domain
             Type = type;
             Family = family;
         }
+
+        public AnimalFamily Family { get; }
+
+        public bool IncludeInResults
+        {
+            get => _includeInResults;
+            set => SetAndRaise(ref _includeInResults, value);
+        }
+
+        public string Name { get; }
+
+        public string Type { get; }
     }
 }

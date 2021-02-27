@@ -1,13 +1,15 @@
 using System;
+
 using DynamicData.Aggregation;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.AggregationTests
 {
-
-    public class MaxFixture: IDisposable
+    public class MaxFixture : IDisposable
     {
         private readonly SourceCache<Person, string> _source;
 
@@ -16,19 +18,12 @@ namespace DynamicData.Tests.AggregationTests
             _source = new SourceCache<Person, string>(p => p.Name);
         }
 
-        public void Dispose()
-        {
-            _source.Dispose();
-        }
-
         [Fact]
         public void AddItems()
         {
             var result = 0;
 
-            var accumulator = _source.Connect()
-                                     .Maximum(p => p.Age)
-                                     .Subscribe(x => result = x);
+            var accumulator = _source.Connect().Maximum(p => p.Age).Subscribe(x => result = x);
 
             _source.AddOrUpdate(new Person("A", 10));
             _source.AddOrUpdate(new Person("B", 20));
@@ -39,22 +34,9 @@ namespace DynamicData.Tests.AggregationTests
             accumulator.Dispose();
         }
 
-        [Fact]
-        public void RemoveItems()
+        public void Dispose()
         {
-            var result = 0;
-
-            var accumulator = _source.Connect()
-                                     .Maximum(p => p.Age)
-                                     .Subscribe(x => result = x);
-
-            _source.AddOrUpdate(new Person("A", 10));
-            _source.AddOrUpdate(new Person("B", 20));
-            _source.AddOrUpdate(new Person("C", 30));
-
-            _source.Remove("C");
-            result.Should().Be(20, "Max value should be 20 after remove");
-            accumulator.Dispose();
+            _source.Dispose();
         }
 
         [Fact]
@@ -64,10 +46,7 @@ namespace DynamicData.Tests.AggregationTests
 
             var somepropChanged = _source.Connect().WhenValueChanged(p => p.Age);
 
-            var accumulator = _source.Connect()
-                .Maximum(p => p.Age)
-                .InvalidateWhen(somepropChanged)
-                .Subscribe(x => max = x);
+            var accumulator = _source.Connect().Maximum(p => p.Age).InvalidateWhen(somepropChanged).Subscribe(x => max = x);
 
             var personc = new Person("C", 5);
             _source.AddOrUpdate(new Person("A", 10));
@@ -82,5 +61,20 @@ namespace DynamicData.Tests.AggregationTests
             accumulator.Dispose();
         }
 
+        [Fact]
+        public void RemoveItems()
+        {
+            var result = 0;
+
+            var accumulator = _source.Connect().Maximum(p => p.Age).Subscribe(x => result = x);
+
+            _source.AddOrUpdate(new Person("A", 10));
+            _source.AddOrUpdate(new Person("B", 20));
+            _source.AddOrUpdate(new Person("C", 30));
+
+            _source.Remove("C");
+            result.Should().Be(20, "Max value should be 20 after remove");
+            accumulator.Dispose();
+        }
     }
 }

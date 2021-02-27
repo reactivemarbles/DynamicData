@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,14 +6,17 @@ using System;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal class SizeExpirer<TObject, TKey>
+        where TKey : notnull
     {
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
         private readonly int _size;
+
+        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
         public SizeExpirer(IObservable<IChangeSet<TObject, TKey>> source, int size)
         {
@@ -28,30 +31,29 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-            {
-                var sizeLimiter = new SizeLimiter<TObject, TKey>(_size);
-                var root = new IntermediateCache<TObject, TKey>(_source);
-
-                var subscriber = root.Connect()
-                    .Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now))
-                    .Select(changes =>
+            return Observable.Create<IChangeSet<TObject, TKey>>(
+                observer =>
                     {
-                        var result = sizeLimiter.Change(changes);
+                        var sizeLimiter = new SizeLimiter<TObject, TKey>(_size);
+                        var root = new IntermediateCache<TObject, TKey>(_source);
 
-                        var removes = result.Where(c => c.Reason == ChangeReason.Remove);
-                        root.Edit(updater => removes.ForEach(c => updater.Remove(c.Key)));
-                        return result;
-                    })
-                    .Finally(observer.OnCompleted)
-                    .SubscribeSafe(observer);
+                        var subscriber = root.Connect().Transform((t, v) => new ExpirableItem<TObject, TKey>(t, v, DateTime.Now)).Select(
+                            changes =>
+                                {
+                                    var result = sizeLimiter.Change(changes);
 
-                return Disposable.Create(() =>
-                {
-                    subscriber.Dispose();
-                    root.Dispose();
-                });
-            });
+                                    var removes = result.Where(c => c.Reason == ChangeReason.Remove);
+                                    root.Edit(updater => removes.ForEach(c => updater.Remove(c.Key)));
+                                    return result;
+                                }).Finally(observer.OnCompleted).SubscribeSafe(observer);
+
+                        return Disposable.Create(
+                            () =>
+                                {
+                                    subscriber.Dispose();
+                                    root.Dispose();
+                                });
+                    });
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -9,14 +9,6 @@ namespace DynamicData.Cache.Internal
 {
     internal readonly struct ExpirableItem<TObject, TKey> : IEquatable<ExpirableItem<TObject, TKey>>
     {
-        public TObject Value { get; }
-
-        public TKey Key { get; }
-
-        public DateTime ExpireAt { get; }
-
-        public long Index { get; }
-
         public ExpirableItem(TObject value, TKey key, DateTime dateTime, long index = 0)
         {
             Value = value;
@@ -25,33 +17,13 @@ namespace DynamicData.Cache.Internal
             Index = index;
         }
 
-        #region Equality members
+        public TObject Value { get; }
 
-        /// <inheritdoc />
-        public bool Equals(ExpirableItem<TObject, TKey> other)
-        {
-            return EqualityComparer<TKey>.Default.Equals(Key, other.Key) && ExpireAt.Equals(other.ExpireAt);
-        }
+        public TKey Key { get; }
 
-        /// <inheritdoc />
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
+        public DateTime ExpireAt { get; }
 
-            return obj is ExpirableItem<TObject, TKey> && Equals((ExpirableItem<TObject, TKey>) obj);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (EqualityComparer<TKey>.Default.GetHashCode(Key) * 397) ^ ExpireAt.GetHashCode();
-            }
-        }
+        public long Index { get; }
 
         public static bool operator ==(ExpirableItem<TObject, TKey> left, ExpirableItem<TObject, TKey> right)
         {
@@ -63,7 +35,26 @@ namespace DynamicData.Cache.Internal
             return !left.Equals(right);
         }
 
-        #endregion
+        /// <inheritdoc />
+        public bool Equals(ExpirableItem<TObject, TKey> other)
+        {
+            return EqualityComparer<TKey>.Default.Equals(Key, other.Key) && ExpireAt.Equals(other.ExpireAt);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            return obj is ExpirableItem<TObject, TKey> value && Equals(value);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Key is null ? 0 : EqualityComparer<TKey>.Default.GetHashCode(Key) * 397) ^ ExpireAt.GetHashCode();
+            }
+        }
 
         public override string ToString()
         {

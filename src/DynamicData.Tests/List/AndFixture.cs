@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
     public class AndFixture : AndFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -24,10 +25,12 @@ namespace DynamicData.Tests.List
         }
     }
 
-    public abstract class AndFixtureBase: IDisposable
+    public abstract class AndFixtureBase : IDisposable
     {
         protected ISourceList<int> _source1;
+
         protected ISourceList<int> _source2;
+
         private readonly ChangeSetAggregator<int> _results;
 
         protected AndFixtureBase()
@@ -37,7 +40,23 @@ namespace DynamicData.Tests.List
             _results = CreateObservable().AsAggregator();
         }
 
-        protected abstract IObservable<IChangeSet<int>> CreateObservable();
+        [Fact]
+        public void ClearOneClearsResult()
+        {
+            _source1.AddRange(Enumerable.Range(1, 5));
+            _source2.AddRange(Enumerable.Range(1, 5));
+            _source1.Clear();
+            _results.Data.Count.Should().Be(0);
+        }
+
+        [Fact]
+        public void CombineRange()
+        {
+            _source1.AddRange(Enumerable.Range(1, 10));
+            _source2.AddRange(Enumerable.Range(6, 10));
+            _results.Data.Count.Should().Be(5);
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
+        }
 
         public void Dispose()
         {
@@ -71,32 +90,14 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
-        public void CombineRange()
-        {
-            _source1.AddRange(Enumerable.Range(1, 10));
-            _source2.AddRange(Enumerable.Range(6, 10));
-            _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(6, 5));
-        }
-
-        [Fact]
-        public void ClearOneClearsResult()
-        {
-            _source1.AddRange(Enumerable.Range(1, 5));
-            _source2.AddRange(Enumerable.Range(1, 5));
-            _source1.Clear();
-            _results.Data.Count.Should().Be(0);
-        }
-
-        [Fact]
         public void StartingWithNonEmptySourceProducesNoResult()
         {
             _source1.Add(1);
 
-            using (var result = CreateObservable().AsAggregator())
-            {
-                result.Data.Count.Should().Be(0);
-            }
+            using var result = CreateObservable().AsAggregator();
+            result.Data.Count.Should().Be(0);
         }
+
+        protected abstract IObservable<IChangeSet<int>> CreateObservable();
     }
 }

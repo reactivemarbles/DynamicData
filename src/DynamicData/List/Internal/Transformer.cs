@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,20 +6,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
     internal sealed class Transformer<TSource, TDestination>
     {
+        private readonly Func<TSource, Optional<TDestination>, int, TransformedItemContainer> _containerFactory;
+
         private readonly IObservable<IChangeSet<TSource>> _source;
-        private readonly Func<TSource, Optional<TDestination>, int,  TransformedItemContainer> _containerFactory;
+
         private readonly bool _transformOnRefresh;
 
-        public Transformer([NotNull] IObservable<IChangeSet<TSource>> source, [NotNull] Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
+        public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
         {
-            if (factory == null)
+            if (factory is null)
             {
                 throw new ArgumentNullException(nameof(factory));
             }
@@ -31,87 +33,23 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<TDestination>> Run()
         {
-            return _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
-                {
-                    Transform(state, changes);
-                    return state;
-                })
-                .Select(transformed =>
-                {
-                    var changed = transformed.CaptureChanges();
-                    return changed.Transform(container => container.Destination);
-                });
-        }
-
-        private sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
-        {
-            public TSource Source { get; }
-            public TDestination Destination { get; }
-
-            public TransformedItemContainer(TSource source, TDestination destination)
-            {
-                Source = source;
-                Destination = destination;
-            }
-
-            #region Equality
-
-            public bool Equals(TransformedItemContainer other)
-            {
-                if (ReferenceEquals(null, other))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, other))
-                {
-                    return true;
-                }
-
-                return EqualityComparer<TSource>.Default.Equals(Source, other.Source);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, obj))
-                {
-                    return true;
-                }
-
-                if (obj.GetType() != GetType())
-                {
-                    return false;
-                }
-
-                return Equals((TransformedItemContainer)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                return EqualityComparer<TSource>.Default.GetHashCode(Source);
-            }
-
-            public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right)
-            {
-                return Equals(left, right);
-            }
-
-            public static bool operator !=(TransformedItemContainer left, TransformedItemContainer right)
-            {
-                return !Equals(left, right);
-            }
-
-            #endregion
+            return _source.Scan(
+                new ChangeAwareList<TransformedItemContainer>(),
+                (state, changes) =>
+                    {
+                        Transform(state, changes);
+                        return state;
+                    }).Select(
+                transformed =>
+                    {
+                        var changed = transformed.CaptureChanges();
+                        return changed.Transform(container => container.Destination);
+                    });
         }
 
         private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
         {
-            if (changes == null)
+            if (changes is null)
             {
                 throw new ArgumentNullException(nameof(changes));
             }
@@ -125,11 +63,11 @@ namespace DynamicData.List.Internal
                             var change = item.Item;
                             if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
                             {
-                                transformed.Add(_containerFactory(change.Current,Optional<TDestination>.None, transformed.Count));
+                                transformed.Add(_containerFactory(change.Current, Optional<TDestination>.None, transformed.Count));
                             }
                             else
                             {
-                                var converted = _containerFactory(change.Current, Optional<TDestination>.None,  change.CurrentIndex);
+                                var converted = _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex);
                                 transformed.Insert(change.CurrentIndex, converted);
                             }
 
@@ -140,30 +78,26 @@ namespace DynamicData.List.Internal
                         {
                             var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
 
-                            transformed.AddOrInsertRange(item.Range
-                                    .Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex)),
-                                item.Range.Index);
+                            transformed.AddOrInsertRange(item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex)), item.Range.Index);
 
                             break;
                         }
 
                     case ListChangeReason.Refresh:
-                    {
-                        if (_transformOnRefresh)
                         {
-                            var change = item.Item;
-                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
-                            var refreshed = _containerFactory(change.Current, previous, change.CurrentIndex);
+                            if (_transformOnRefresh)
+                            {
+                                var change = item.Item;
+                                Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                                transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
+                            }
+                            else
+                            {
+                                transformed.RefreshAt(item.Item.CurrentIndex);
+                            }
 
-                            transformed[change.CurrentIndex] = refreshed;
+                            break;
                         }
-                        else
-                        {
-                            transformed.RefreshAt(item.Item.CurrentIndex);
-                        }
-
-                        break;
-                    }
 
                     case ListChangeReason.Replace:
                         {
@@ -171,7 +105,6 @@ namespace DynamicData.List.Internal
                             Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                             if (change.CurrentIndex == change.PreviousIndex)
                             {
-
                                 transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
                             }
                             else
@@ -194,9 +127,9 @@ namespace DynamicData.List.Internal
                             }
                             else
                             {
-                                var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
+                                TransformedItemContainer? toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
 
-                                if (toRemove != null)
+                                if (toRemove is not null)
                                 {
                                     transformed.Remove(toRemove);
                                 }
@@ -222,7 +155,7 @@ namespace DynamicData.List.Internal
 
                     case ListChangeReason.Clear:
                         {
-                            //i.e. need to store transformed reference so we can correctly clear
+                            // i.e. need to store transformed reference so we can correctly clear
                             var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, transformed);
                             transformed.ClearOrRemoveMany(toClear);
 
@@ -242,6 +175,69 @@ namespace DynamicData.List.Internal
                             break;
                         }
                 }
+            }
+        }
+
+        private sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
+        {
+            public TransformedItemContainer(TSource source, TDestination destination)
+            {
+                Source = source;
+                Destination = destination;
+            }
+
+            public TDestination Destination { get; }
+
+            public TSource Source { get; }
+
+            public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right)
+            {
+                return Equals(left, right);
+            }
+
+            public static bool operator !=(TransformedItemContainer left, TransformedItemContainer right)
+            {
+                return !Equals(left, right);
+            }
+
+            public bool Equals(TransformedItemContainer? other)
+            {
+                if (ReferenceEquals(null, other))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, other))
+                {
+                    return true;
+                }
+
+                return EqualityComparer<TSource>.Default.Equals(Source, other.Source);
+            }
+
+            public override bool Equals(object? obj)
+            {
+                if (ReferenceEquals(null, obj))
+                {
+                    return false;
+                }
+
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (obj.GetType() != GetType())
+                {
+                    return false;
+                }
+
+                return Equals((TransformedItemContainer)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return Source is null ? 0 : EqualityComparer<TSource>.Default.GetHashCode(Source);
             }
         }
     }

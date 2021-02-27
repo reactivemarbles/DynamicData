@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -7,12 +7,12 @@ using System;
 namespace DynamicData.Diagnostics
 {
     /// <summary>
-    ///     Object used to capture accumulated changes
+    ///     Object used to capture accumulated changes.
     /// </summary>
     public class ChangeStatistics : IEquatable<ChangeStatistics>
     {
         /// <summary>
-        ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
+        ///     Initializes a new instance of the <see cref="ChangeStatistics"/> class.
         /// </summary>
         public ChangeStatistics()
         {
@@ -20,8 +20,15 @@ namespace DynamicData.Diagnostics
         }
 
         /// <summary>
-        ///     Initializes a new instance of the <see cref="T:System.Object" /> class.
+        ///     Initializes a new instance of the <see cref="ChangeStatistics"/> class.
         /// </summary>
+        /// <param name="index">The index of the change.</param>
+        /// <param name="adds">The number of additions.</param>
+        /// <param name="updates">The number of updates.</param>
+        /// <param name="removes">The number of removals.</param>
+        /// <param name="refreshes">The number of refreshes.</param>
+        /// <param name="moves">The number of moves.</param>
+        /// <param name="count">The new count.</param>
         public ChangeStatistics(int index, int adds, int updates, int removes, int refreshes, int moves, int count)
         {
             Index = index;
@@ -42,30 +49,6 @@ namespace DynamicData.Diagnostics
         public int Adds { get; }
 
         /// <summary>
-        ///     Gets the updates.
-        /// </summary>
-        /// <value>
-        ///     The updates.
-        /// </value>
-        public int Updates { get; }
-
-        /// <summary>
-        ///     Gets the removes.
-        /// </summary>
-        /// <value>
-        ///     The removes.
-        /// </value>
-        public int Removes { get; }
-
-        /// <summary>
-        ///     Gets the refreshes.
-        /// </summary>
-        /// <value>
-        ///     The refreshes.
-        /// </value>
-        public int Refreshes { get; }
-
-        /// <summary>
         ///     Gets the count.
         /// </summary>
         /// <value>
@@ -82,6 +65,14 @@ namespace DynamicData.Diagnostics
         public int Index { get; }
 
         /// <summary>
+        ///     Gets the last updated.
+        /// </summary>
+        /// <value>
+        ///     The last updated.
+        /// </value>
+        public DateTime LastUpdated { get; } = DateTime.Now;
+
+        /// <summary>
         ///     Gets the moves.
         /// </summary>
         /// <value>
@@ -90,17 +81,53 @@ namespace DynamicData.Diagnostics
         public int Moves { get; }
 
         /// <summary>
-        ///     Gets the last updated.
+        ///     Gets the refreshes.
         /// </summary>
         /// <value>
-        ///     The last updated.
+        ///     The refreshes.
         /// </value>
-        public DateTime LastUpdated { get; } = DateTime.Now;
+        public int Refreshes { get; }
 
-        #region Equality members
+        /// <summary>
+        ///     Gets the removes.
+        /// </summary>
+        /// <value>
+        ///     The removes.
+        /// </value>
+        public int Removes { get; }
+
+        /// <summary>
+        ///     Gets the updates.
+        /// </summary>
+        /// <value>
+        ///     The updates.
+        /// </value>
+        public int Updates { get; }
+
+        /// <summary>
+        /// Checks to see if both sides are equal.
+        /// </summary>
+        /// <param name="left">The left side to compare.</param>
+        /// <param name="right">The right side to compare.</param>
+        /// <returns>If the two sides are equal.</returns>
+        public static bool operator ==(ChangeStatistics left, ChangeStatistics right)
+        {
+            return Equals(left, right);
+        }
+
+        /// <summary>
+        /// Checks to see if both sides are not equal.
+        /// </summary>
+        /// <param name="left">The left side to compare.</param>
+        /// <param name="right">The right side to compare.</param>
+        /// <returns>If the two sides are not equal.</returns>
+        public static bool operator !=(ChangeStatistics left, ChangeStatistics right)
+        {
+            return !Equals(left, right);
+        }
 
         /// <inheritdoc />
-        public bool Equals(ChangeStatistics other)
+        public bool Equals(ChangeStatistics? other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -116,24 +143,9 @@ namespace DynamicData.Diagnostics
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((ChangeStatistics)obj);
+            return obj is ChangeStatistics change && Equals(change);
         }
 
         /// <inheritdoc />
@@ -153,26 +165,10 @@ namespace DynamicData.Diagnostics
             }
         }
 
-#pragma warning disable 1591
-
-        public static bool operator ==(ChangeStatistics left, ChangeStatistics right)
-
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ChangeStatistics left, ChangeStatistics right)
-        {
-            return !Equals(left, right);
-        }
-
-        #endregion
-
         /// <inheritdoc />
         public override string ToString()
         {
             return $"CurrentIndex: {Index}, Adds: {Adds}, Updates: {Updates}, Removes: {Removes}, Refreshes: {Refreshes}, Count: {Count}, Timestamp: {LastUpdated}";
         }
-
     }
 }

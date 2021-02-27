@@ -1,28 +1,25 @@
 ﻿using System;
 using System.Linq;
+
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
-    public class GroupOnPropertyWithImmutableStateFixture: IDisposable
+    public class GroupOnPropertyWithImmutableStateFixture : IDisposable
     {
-        private readonly SourceCache<Person, string> _source;
         private readonly ChangeSetAggregator<IGrouping<Person, string, int>, int> _results;
+
+        private readonly SourceCache<Person, string> _source;
 
         public GroupOnPropertyWithImmutableStateFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Key);
             _results = _source.Connect().GroupOnPropertyWithImmutableState(p => p.Age).AsAggregator();
-        }
-
-        public void Dispose()
-        {
-            _source.Dispose();
-            _results.Dispose();
         }
 
         [Fact]
@@ -36,30 +33,6 @@ namespace DynamicData.Tests.Cache
 
             firstGroup.Count.Should().Be(1);
             firstGroup.Key.Should().Be(10);
-        }
-
-        [Fact]
-        public void CanRemoveFromGroup()
-        {
-            var person = new Person("A", 10);
-            _source.AddOrUpdate(person);
-            _source.Remove(person);
-
-            _results.Data.Count.Should().Be(0);
-        }
-
-        [Fact]
-        public void Regroup()
-        {
-            var person = new Person("A", 10);
-            _source.AddOrUpdate(person);
-            person.Age = 20;
-
-            _results.Data.Count.Should().Be(1);
-            var firstGroup = _results.Data.Items.First();
-
-            firstGroup.Count.Should().Be(1);
-            firstGroup.Key.Should().Be(20);
         }
 
         [Fact]
@@ -85,19 +58,45 @@ namespace DynamicData.Tests.Cache
             var initialCount = people.Select(p => p.Age).Distinct().Count();
             _results.Data.Count.Should().Be(initialCount);
 
-            people.Take(25)
-                .ForEach(p => p.Age = 200);
+            people.Take(25).ForEach(p => p.Age = 200);
 
             var changedCount = people.Select(p => p.Age).Distinct().Count();
             _results.Data.Count.Should().Be(changedCount);
 
             //check that each item is only in one cache
-            var peopleInCache = _results.Data.Items
-                .SelectMany(g => g.Items)
-                .ToArray();
+            var peopleInCache = _results.Data.Items.SelectMany(g => g.Items).ToArray();
 
             peopleInCache.Length.Should().Be(100);
+        }
 
+        [Fact]
+        public void CanRemoveFromGroup()
+        {
+            var person = new Person("A", 10);
+            _source.AddOrUpdate(person);
+            _source.Remove(person);
+
+            _results.Data.Count.Should().Be(0);
+        }
+
+        public void Dispose()
+        {
+            _source.Dispose();
+            _results.Dispose();
+        }
+
+        [Fact]
+        public void Regroup()
+        {
+            var person = new Person("A", 10);
+            _source.AddOrUpdate(person);
+            person.Age = 20;
+
+            _results.Data.Count.Should().Be(1);
+            var firstGroup = _results.Data.Items.First();
+
+            firstGroup.Count.Should().Be(1);
+            firstGroup.Key.Should().Be(20);
         }
     }
 }

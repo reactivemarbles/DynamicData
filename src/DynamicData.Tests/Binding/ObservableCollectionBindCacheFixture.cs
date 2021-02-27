@@ -1,30 +1,31 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Reactive.Linq;
+
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-
-    public class ObservableCollectionBindCacheFixture: IDisposable
+    public class ObservableCollectionBindCacheFixture : IDisposable
     {
-        private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
-        private readonly ISourceCache<Person, string> _source;
         private readonly IDisposable _binder;
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+
+        private readonly ObservableCollectionExtended<Person> _collection = new();
+
+        private readonly RandomPersonGenerator _generator = new();
+
+        private readonly ISourceCache<Person, string> _source;
 
         public ObservableCollectionBindCacheFixture()
         {
             _source = new SourceCache<Person, string>(p => p.Name);
             _binder = _source.Connect().Bind(_collection).Subscribe();
-        }
-
-        public void Dispose()
-        {
-            _binder.Dispose();
-            _source.Dispose();
         }
 
         [Fact]
@@ -38,15 +39,28 @@ namespace DynamicData.Tests.Binding
         }
 
         [Fact]
-        public void UpdateToSourceUpdatesTheDestination()
+        public void BatchAdd()
         {
-            var person = new Person("Adult1", 50);
-            var personUpdated = new Person("Adult1", 51);
-            _source.AddOrUpdate(person);
-            _source.AddOrUpdate(personUpdated);
+            var people = _generator.Take(100).ToList();
+            _source.AddOrUpdate(people);
 
-            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
-            _collection.First().Should().Be(personUpdated, "Should be updated person");
+            _collection.Count.Should().Be(100, "Should be 100 items in the collection");
+            _collection.Should().BeEquivalentTo(_collection, "Collections should be equivalent");
+        }
+
+        [Fact]
+        public void BatchRemove()
+        {
+            var people = _generator.Take(100).ToList();
+            _source.AddOrUpdate(people);
+            _source.Clear();
+            _collection.Count.Should().Be(0, "Should be 100 items in the collection");
+        }
+
+        public void Dispose()
+        {
+            _binder.Dispose();
+            _source.Dispose();
         }
 
         [Fact]
@@ -60,22 +74,31 @@ namespace DynamicData.Tests.Binding
         }
 
         [Fact]
-        public void BatchAdd()
+        public void UpdateToSourceSendsReplaceOnDestination()
         {
-            var people = _generator.Take(100).ToList();
-            _source.AddOrUpdate(people);
+            var person = new Person("Adult1", 50);
+            var anotherPerson = new Person("Adult1", 51);
+            NotifyCollectionChangedAction action = default;
+            _source.AddOrUpdate(person);
 
-            _collection.Count.Should().Be(100, "Should be 100 items in the collection");
-            _collection.ShouldAllBeEquivalentTo(_collection, "Collections should be equivalent");
+            using (_collection.ObserveCollectionChanges().Select(x => x.EventArgs.Action).Subscribe(updateType => action = updateType))
+            {
+                _source.AddOrUpdate(anotherPerson);
+            }
+
+            action.Should().Be(NotifyCollectionChangedAction.Replace, "The notification type should be Replace");
         }
 
         [Fact]
-        public void BatchRemove()
+        public void UpdateToSourceUpdatesTheDestination()
         {
-            var people = _generator.Take(100).ToList();
-            _source.AddOrUpdate(people);
-            _source.Clear();
-            _collection.Count.Should().Be(0, "Should be 100 items in the collection");
+            var person = new Person("Adult1", 50);
+            var personUpdated = new Person("Adult1", 51);
+            _source.AddOrUpdate(person);
+            _source.AddOrUpdate(personUpdated);
+
+            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+            _collection.First().Should().Be(personUpdated, "Should be updated person");
         }
     }
 }

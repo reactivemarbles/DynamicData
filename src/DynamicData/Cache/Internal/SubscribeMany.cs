@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -9,19 +9,21 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal
 {
     internal class SubscribeMany<TObject, TKey>
+        where TKey : notnull
     {
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
         private readonly Func<TObject, TKey, IDisposable> _subscriptionFactory;
 
         public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
         {
-            if (subscriptionFactory == null)
+            if (subscriptionFactory is null)
             {
                 throw new ArgumentNullException(nameof(subscriptionFactory));
             }
 
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            _subscriptionFactory = (t, key) => subscriptionFactory(t);
+            _subscriptionFactory = (t, _) => subscriptionFactory(t);
         }
 
         public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory)
@@ -32,21 +34,13 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
         {
-
-            return Observable.Create<IChangeSet<TObject, TKey>>
-                (
-                    observer =>
+            return Observable.Create<IChangeSet<TObject, TKey>>(
+                observer =>
                     {
                         var published = _source.Publish();
-                        var subscriptions = published
-                            .Transform((t, k) => _subscriptionFactory(t, k))
-                            .DisposeMany()
-                            .Subscribe();
+                        var subscriptions = published.Transform((t, k) => _subscriptionFactory(t, k)).DisposeMany().Subscribe();
 
-                        return new CompositeDisposable(
-                            subscriptions,
-                            published.SubscribeSafe(observer),
-                            published.Connect());
+                        return new CompositeDisposable(subscriptions, published.SubscribeSafe(observer), published.Connect());
                     });
         }
     }

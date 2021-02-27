@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
     public class OrFixture : OrFixtureBase
     {
         protected override IObservable<IChangeSet<Person, string>> CreateObservable()
@@ -28,7 +30,9 @@ namespace DynamicData.Tests.Cache
     public abstract class OrFixtureBase : IDisposable
     {
         protected ISourceCache<Person, string> _source1;
+
         protected ISourceCache<Person, string> _source2;
+
         private readonly ChangeSetAggregator<Person, string> _results;
 
         protected OrFixtureBase()
@@ -38,34 +42,11 @@ namespace DynamicData.Tests.Cache
             _results = CreateObservable().AsAggregator();
         }
 
-        protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();
-
         public void Dispose()
         {
             _source1.Dispose();
             _source2.Dispose();
             _results.Dispose();
-        }
-
-        [Fact]
-        public void UpdatingOneSourceOnlyProducesResult()
-        {
-            var person = new Person("Adult1", 50);
-            _source1.AddOrUpdate(person);
-
-            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        }
-
-        [Fact]
-        public void UpdatingBothProducesResultsAndDoesNotDuplicateTheMessage()
-        {
-            var person = new Person("Adult1", 50);
-            _source1.AddOrUpdate(person);
-            _source2.AddOrUpdate(person);
-            _results.Messages.Count.Should().Be(1, "Should have no updates");
-            _results.Data.Count.Should().Be(1, "Cache should have no items");
-            _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
         [Fact]
@@ -81,6 +62,17 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
+        public void UpdatingBothProducesResultsAndDoesNotDuplicateTheMessage()
+        {
+            var person = new Person("Adult1", 50);
+            _source1.AddOrUpdate(person);
+            _source2.AddOrUpdate(person);
+            _results.Messages.Count.Should().Be(1, "Should have no updates");
+            _results.Data.Count.Should().Be(1, "Cache should have no items");
+            _results.Data.Items.First().Should().Be(person, "Should be same person");
+        }
+
+        [Fact]
         public void UpdatingOneProducesOnlyOneUpdate()
         {
             var person = new Person("Adult1", 50);
@@ -93,5 +85,17 @@ namespace DynamicData.Tests.Cache
             _results.Data.Count.Should().Be(1, "Cache should have no items");
             _results.Data.Items.First().Should().Be(personUpdated, "Should be updated person");
         }
+
+        [Fact]
+        public void UpdatingOneSourceOnlyProducesResult()
+        {
+            var person = new Person("Adult1", 50);
+            _source1.AddOrUpdate(person);
+
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        }
+
+        protected abstract IObservable<IChangeSet<Person, string>> CreateObservable();
     }
 }

@@ -3,16 +3,18 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 
 namespace DynamicData.Benchmarks.List
 {
-    [CoreJob]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [MemoryDiagnoser]
     [MarkdownExporterAttribute.GitHub]
     public class SourceList
     {
-        private  SourceList<string> _sourceList;
+        private SourceList<string> _sourceList;
         private string[] _items;
 
         [Params(1, 100, 1_000, 10_000, 100_000)]
@@ -35,6 +37,6 @@ namespace DynamicData.Benchmarks.List
         public void AddRange() => _sourceList.AddRange(_items);
 
         [Benchmark]
-        public void Insert() => _sourceList.InsertRange(_items,0);
+        public void Insert() => _sourceList.InsertRange(_items, 0);
     }
 }

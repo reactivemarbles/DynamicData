@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -12,8 +12,6 @@ namespace DynamicData.Kernel
     {
         private readonly IList<T> _items;
 
-        public static readonly IReadOnlyCollection<T> Empty = new ReadOnlyCollectionLight<T>();
-
         public ReadOnlyCollectionLight(IEnumerable<T> items)
         {
             _items = items.ToList();
@@ -25,6 +23,10 @@ namespace DynamicData.Kernel
             _items = new List<T>();
         }
 
+        public static IReadOnlyCollection<T> Empty { get; } = new ReadOnlyCollectionLight<T>();
+
+        public int Count { get; }
+
         public IEnumerator<T> GetEnumerator()
         {
             return _items.GetEnumerator();
@@ -34,7 +36,5 @@ namespace DynamicData.Kernel
         {
             return GetEnumerator();
         }
-
-        public int Count { get; }
     }
 }

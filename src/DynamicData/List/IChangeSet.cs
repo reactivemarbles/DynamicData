@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -9,19 +9,19 @@ namespace DynamicData
 {
     /// <summary>
     /// A collection of changes.
-    /// 
+    ///
     /// Changes are always published in the order.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     public interface IChangeSet<TObject> : IEnumerable<Change<TObject>>, IChangeSet
     {
         /// <summary>
-        ///     Gets the number of updates
+        ///     Gets the number of updates.
         /// </summary>
         int Replaced { get; }
 
         /// <summary>
-        /// The total count of items changed
+        /// Gets the total count of items changed.
         /// </summary>
         int TotalChanges { get; }
     }

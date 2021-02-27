@@ -1,23 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain
 {
     public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
     {
-        public string ParentName { get; }
-        public string Name { get; }
-        public string Gender { get; }
-        public string Key => Name;
         private int _age;
 
-        public Person(string firstname, string lastname, int age, string gender = "F", string parentName = null)
+        public Person()
+            : this("unknown", 0, "none")
+        {
+
+        }
+        public Person(string firstname, string lastname, int age, string gender = "F", string? parentName = null)
             : this(firstname + " " + lastname, age, gender, parentName)
         {
         }
 
-        public Person(string name, int age, string gender = "F", string parentName = null)
+        public Person(string name, int age, string gender = "F", string? parentName = null)
         {
             Name = name;
             _age = age;
@@ -25,15 +27,35 @@ namespace DynamicData.Tests.Domain
             ParentName = parentName ?? string.Empty;
         }
 
+        public static IEqualityComparer<Person> AgeComparer { get; } = new AgeEqualityComparer();
+
+        public static IEqualityComparer<Person> NameAgeGenderComparer { get; } = new NameAgeGenderEqualityComparer();
+
         public int Age
         {
             get => _age;
             set => SetAndRaise(ref _age, value);
         }
 
-        #region Equality Members
+        public string Gender { get; }
 
-        public bool Equals(Person other)
+        public string Key => Name;
+
+        public string Name { get; }
+
+        public string ParentName { get; }
+
+        public static bool operator ==(Person left, Person right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Person left, Person right)
+        {
+            return !Equals(left, right);
+        }
+
+        public bool Equals(Person? other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -48,7 +70,7 @@ namespace DynamicData.Tests.Domain
             return string.Equals(Name, other.Name);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
@@ -70,22 +92,17 @@ namespace DynamicData.Tests.Domain
 
         public override int GetHashCode()
         {
-            return (Name != null ? Name.GetHashCode() : 0);
+            return (Name is not null ? Name.GetHashCode() : 0);
         }
 
-        public static bool operator ==(Person left, Person right)
+        public override string ToString()
         {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(Person left, Person right)
-        {
-            return !Equals(left, right);
+            return $"{Name}. {Age}";
         }
 
         private sealed class AgeEqualityComparer : IEqualityComparer<Person>
         {
-            public bool Equals(Person x, Person y)
+            public bool Equals(Person? x, Person? y)
             {
                 if (ReferenceEquals(x, y))
                 {
@@ -116,11 +133,9 @@ namespace DynamicData.Tests.Domain
             }
         }
 
-        public static IEqualityComparer<Person> AgeComparer { get; } = new AgeEqualityComparer();
-
         private sealed class NameAgeGenderEqualityComparer : IEqualityComparer<Person>
         {
-            public bool Equals(Person x, Person y)
+            public bool Equals(Person? x, Person? y)
             {
                 if (ReferenceEquals(x, y))
                 {
@@ -149,21 +164,12 @@ namespace DynamicData.Tests.Domain
             {
                 unchecked
                 {
-                    var hashCode = (obj.Name != null ? obj.Name.GetHashCode() : 0);
+                    var hashCode = obj.Name.GetHashCode();
                     hashCode = (hashCode * 397) ^ obj._age;
-                    hashCode = (hashCode * 397) ^ (obj.Gender != null ? obj.Gender.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ obj.Gender.GetHashCode();
                     return hashCode;
                 }
             }
-        }
-
-        public static IEqualityComparer<Person> NameAgeGenderComparer { get; } = new NameAgeGenderEqualityComparer();
-
-        #endregion
-
-        public override string ToString()
-        {
-            return $"{Name}. {Age}";
         }
     }
 }

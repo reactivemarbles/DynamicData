@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+
 using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain
@@ -7,6 +8,7 @@ namespace DynamicData.Tests.Domain
     public class PersonWithFriends : AbstractNotifyPropertyChanged, IKey<string>
     {
         private int _age;
+
         private IEnumerable<PersonWithFriends> _friends;
 
         public PersonWithFriends(string name, int age)
@@ -22,8 +24,6 @@ namespace DynamicData.Tests.Domain
             Key = name;
         }
 
-        public string Name { get; }
-
         public int Age
         {
             get => _age;
@@ -36,18 +36,16 @@ namespace DynamicData.Tests.Domain
             set => SetAndRaise(ref _friends, value);
         }
 
-        public override string ToString()
-        {
-            return $"{Name}. {Age}";
-        }
-
-        #region Implementation of IKey<out string>
-
         /// <summary>
         ///     The key
         /// </summary>
         public string Key { get; }
 
-        #endregion
+        public string Name { get; }
+
+        public override string ToString()
+        {
+            return $"{Name}. {Age}";
+        }
     }
 }

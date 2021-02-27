@@ -1,10 +1,4 @@
-[![Build Status](https://dev.azure.com/dotnet/ReactiveUI/_apis/build/status/DynamicData-CI)](https://dev.azure.com/dotnet/ReactiveUI/_build/latest?definitionId=92) [![Code Coverage](https://codecov.io/gh/reactiveui/DynamicData/branch/master/graph/badge.svg)](https://codecov.io/gh/reactiveui/DynamicData)
-<a href="#backers">
-        <img src="https://opencollective.com/reactiveui/backers/badge.svg">
-</a>
-<a href="#sponsors">
-        <img src="https://opencollective.com/reactiveui/sponsors/badge.svg">
-</a>
+![Build](https://github.com/reactivemarbles/DynamicData/workflows/Build/badge.svg) [![Code Coverage](https://codecov.io/gh/reactivemarbles/DynamicData/branch/master/graph/badge.svg)](https://codecov.io/gh/reactivemarbles/DynamicData)
 <a href="https://reactiveui.net/slack">
         <img src="https://img.shields.io/badge/chat-slack-blue.svg">
 </a>
@@ -233,6 +227,8 @@ The resulting observable list, oldPeople, will only contain people who are older
 
 The same pattern can be used with SourceCache by using `.AsObservableCache()` to create derived caches.
 
+As an alternative to `.Bind(out collection)` you can use `.BindToObservableList(out observableList)` for both `SourceList` & `SourceCache`. This is useful for getting derived read-only lists from sources that use `.AutoRefresh()`, since collections do not support refresh notifications.
+
 #### Filtering
 Filter the observable change set by using the `Filter` operator
 ```cs
@@ -266,6 +262,8 @@ The `GroupOn` operator pre-caches the specified groups according to the group se
 ```cs
 var myOperation = personChangeSet.GroupOn(person => person.Status)
 ```
+The value of the inner group is represented by an observable list for each matched group. When values matching the inner grouping are modified, it is the inner group which produces the changes.
+You can also use `GroupWithImmutableState` which will produce a grouping who's inner items are a fixed size array.
 
 #### Transformation
 The `Transform` operator allows you to map objects from the observable change set to another object

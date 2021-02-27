@@ -3,39 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+
 using DynamicData.Tests.Domain;
+
 using FluentAssertions;
+
 using Microsoft.Reactive.Testing;
+
 using Xunit;
 
 namespace DynamicData.Tests.Cache
 {
-
     public class FromAsyncFixture
     {
-        public TestScheduler Scheduler { get; }
-
-        public  FromAsyncFixture()
+        public FromAsyncFixture()
         {
             Scheduler = new TestScheduler();
         }
+
+        public TestScheduler Scheduler { get; }
 
         [Fact]
         public void CanLoadFromTask()
         {
             Task<IEnumerable<Person>> Loader()
             {
-                var items = Enumerable.Range(1, 100)
-                    .Select(i => new Person("Person" + i, 1))
-                    .ToArray()
-                    .AsEnumerable();
+                var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, 1)).ToArray().AsEnumerable();
 
                 return Task.FromResult(items);
             }
 
-            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
-                .ToObservableChangeSet(p=>p.Key)
-                .AsObservableCache();
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).AsObservableCache();
 
             data.Count.Should().Be(100);
         }
@@ -49,11 +47,9 @@ namespace DynamicData.Tests.Cache
                 throw new Exception("Broken");
             }
 
-            Exception error = null;
+            Exception? error = null;
 
-            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>) Loader)
-               .ToObservableChangeSet(p => p.Key)
-                .Subscribe((changes) => { }, ex => error = ex);
+            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).Subscribe((changes) => { }, ex => error = ex);
 
             error.Should().NotBeNull();
         }
@@ -66,23 +62,16 @@ namespace DynamicData.Tests.Cache
                 throw new Exception("Broken");
             }
 
-            Exception error = null;
+            Exception? error = null;
 
-            var data = Observable.FromAsync(Loader)
-                .ToObservableChangeSet(p => p.Key)
-                .Subscribe(changes => { }, ex => error = ex);
+            var data = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).Subscribe(changes => { }, ex => error = ex);
 
-            var data2 = Observable.FromAsync(Loader)
-                .ToObservableChangeSet(p => p.Key)
-                .AsObservableCache()
-                .Connect()
-                .Subscribe(changes => { }, ex => error = ex);
+            var data2 = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).AsObservableCache().Connect().Subscribe(changes => { }, ex => error = ex);
 
             //var subscribed = data.Connect()
             //    
 
             error.Should().NotBeNull();
         }
-
     }
 }

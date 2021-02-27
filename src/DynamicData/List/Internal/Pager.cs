@@ -1,22 +1,24 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal
 {
     internal class Pager<T>
     {
-        private readonly IObservable<IChangeSet<T>> _source;
         private readonly IObservable<IPageRequest> _requests;
 
-        public Pager([NotNull] IObservable<IChangeSet<T>> source, [NotNull] IObservable<IPageRequest> requests)
+        private readonly IObservable<IChangeSet<T>> _source;
+
+        public Pager(IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _requests = requests ?? throw new ArgumentNullException(nameof(requests));
@@ -24,35 +26,55 @@ namespace DynamicData.List.Internal
 
         public IObservable<IPageChangeSet<T>> Run()
         {
-            return Observable.Create<IPageChangeSet<T>>(observer =>
-            {
-                var locker = new object();
-                var all = new List<T>();
-                var paged = new ChangeAwareList<T>();
-
-                IPageRequest parameters = new PageRequest(0, 25);
-
-                var requestStream = _requests
-                    .Synchronize(locker)
-                    .Select(request =>
+            return Observable.Create<IPageChangeSet<T>>(
+                observer =>
                     {
-                        parameters = request;
-                        return CheckParametersAndPage(all, paged, request);
+                        var locker = new object();
+                        var all = new List<T>();
+                        var paged = new ChangeAwareList<T>();
+
+                        IPageRequest parameters = new PageRequest(0, 25);
+
+                        var requestStream = _requests.Synchronize(locker).Select(
+                            request =>
+                                {
+                                    parameters = request;
+                                    return CheckParametersAndPage(all, paged, request);
+                                });
+
+                        var dataChanged = _source
+                            .Synchronize(locker)
+                            .Select(changes => Page(all, paged, parameters, changes));
+
+                        return requestStream
+                            .Merge(dataChanged)
+                            .Where(changes => changes is not null && changes.Count != 0)
+                            .Select(x => x!)
+                            .SubscribeSafe(observer);
                     });
-
-                var dataChanged = _source
-                    .Synchronize(locker)
-                    .Select(changes => Page(all, paged, parameters, changes));
-
-                return requestStream.Merge(dataChanged)
-                    .Where(changes => changes != null && changes.Count != 0)
-                    .SubscribeSafe(observer);
-            });
         }
 
-        private static PageChangeSet<T> CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest request)
+        private static int CalculatePages(ICollection all, IPageRequest? request)
         {
-            if (request == null || request.Page < 0 || request.Size < 1)
+            if (request is null || request.Size >= all.Count || request.Size == 0)
+            {
+                return 1;
+            }
+
+            int pages = all.Count / request.Size;
+            int overlap = all.Count % request.Size;
+
+            if (overlap == 0)
+            {
+                return pages;
+            }
+
+            return pages + 1;
+        }
+
+        private static PageChangeSet<T>? CheckParametersAndPage(List<T> all, ChangeAwareList<T> paged, IPageRequest? request)
+        {
+            if (request is null || request.Page < 0 || request.Size < 1)
             {
                 return null;
             }
@@ -60,11 +82,11 @@ namespace DynamicData.List.Internal
             return Page(all, paged, request);
         }
 
-        private static PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T> changeset = null)
+        private static PageChangeSet<T> Page(List<T> all, ChangeAwareList<T> paged, IPageRequest request, IChangeSet<T>? changeSet = null)
         {
-            if (changeset != null)
+            if (changeSet is not null)
             {
-                all.Clone(changeset);
+                all.Clone(changeSet);
             }
 
             var previous = paged;
@@ -90,19 +112,19 @@ namespace DynamicData.List.Internal
 
             var startIndex = skip;
 
-            var moves = changeset.EmptyIfNull()
+            var moves = changeSet.EmptyIfNull()
                                  .Where(change => change.Reason == ListChangeReason.Moved
                                                   && change.MovedWithinRange(startIndex, startIndex + request.Size));
 
             foreach (var change in moves)
             {
-                //check whether an item has moved within the same page
+                // check whether an item has moved within the same page
                 var currentIndex = change.Item.CurrentIndex - startIndex;
                 var previousIndex = change.Item.PreviousIndex - startIndex;
                 paged.Move(previousIndex, currentIndex);
             }
 
-            //find replaces [Is this ever the case that it can be reached]
+            // find replaces [Is this ever the case that it can be reached]
             for (int i = 0; i < current.Count; i++)
             {
                 var currentItem = current[i];
@@ -120,24 +142,6 @@ namespace DynamicData.List.Internal
             var changed = paged.CaptureChanges();
 
             return new PageChangeSet<T>(changed, new PageResponse(paged.Count, page, all.Count, pages));
-        }
-
-        private static int CalculatePages(List<T> all, IPageRequest request)
-        {
-            if (request.Size >= all.Count || request.Size==0)
-            {
-                return 1;
-            }
-
-            int pages = all.Count / request.Size;
-            int overlap = all.Count % request.Size;
-
-            if (overlap == 0)
-            {
-                return pages;
-            }
-
-            return pages + 1;
         }
     }
 }

@@ -1,17 +1,21 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+
 using DynamicData.Binding;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.Binding
 {
-
-    public class ObservableCollectionExtendedToChangeSetFixture: IDisposable
+    public class ObservableCollectionExtendedToChangeSetFixture : IDisposable
     {
         private readonly ObservableCollectionExtended<int> _collection;
+
         private readonly ChangeSetAggregator<int> _results;
+
         private readonly ReadOnlyObservableCollection<int> _target;
 
         public ObservableCollectionExtendedToChangeSetFixture()
@@ -19,24 +23,6 @@ namespace DynamicData.Tests.Binding
             _collection = new ObservableCollectionExtended<int>();
             _target = new ReadOnlyObservableCollection<int>(_collection);
             _results = _target.ToObservableChangeSet().AsAggregator();
-        }
-
-        public void Dispose()
-        {
-            _results.Dispose();
-        }
-
-        [Fact]
-        public void Move()
-        {
-            _collection.AddRange(Enumerable.Range(1, 10));
-
-            _results.Data.Items.ShouldAllBeEquivalentTo(_target);
-            _collection.Move(5, 8);
-            _results.Data.Items.ShouldAllBeEquivalentTo(_target);
-
-            _collection.Move(7, 1);
-            _results.Data.Items.ShouldAllBeEquivalentTo(_target);
         }
 
         [Fact]
@@ -49,16 +35,9 @@ namespace DynamicData.Tests.Binding
             _results.Data.Items.First().Should().Be(1);
         }
 
-        [Fact]
-        public void Remove()
+        public void Dispose()
         {
-            _collection.AddRange(Enumerable.Range(1, 10));
-
-            _collection.Remove(3);
-
-            _results.Data.Count.Should().Be(9);
-            _results.Data.Items.Contains(3).Should().BeFalse();
-            _results.Data.Items.ShouldAllBeEquivalentTo(_target);
+            _results.Dispose();
         }
 
         [Fact]
@@ -71,13 +50,37 @@ namespace DynamicData.Tests.Binding
         }
 
         [Fact]
+        public void Move()
+        {
+            _collection.AddRange(Enumerable.Range(1, 10));
+
+            _results.Data.Items.Should().BeEquivalentTo(_target);
+            _collection.Move(5, 8);
+            _results.Data.Items.Should().BeEquivalentTo(_target);
+
+            _collection.Move(7, 1);
+            _results.Data.Items.Should().BeEquivalentTo(_target);
+        }
+
+        [Fact]
+        public void Remove()
+        {
+            _collection.AddRange(Enumerable.Range(1, 10));
+
+            _collection.Remove(3);
+
+            _results.Data.Count.Should().Be(9);
+            _results.Data.Items.Contains(3).Should().BeFalse();
+            _results.Data.Items.Should().BeEquivalentTo(_target);
+        }
+
+        [Fact]
         public void Replace()
         {
             _collection.AddRange(Enumerable.Range(1, 10));
             _collection[8] = 20;
 
-            _results.Data.Items.ShouldBeEquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 20, 10 });
-
+            _results.Data.Items.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 20, 10 });
         }
 
         //[Fact]
@@ -86,7 +89,7 @@ namespace DynamicData.Tests.Binding
         //    _collection.AddRange(Enumerable.Range(1, 10));
 
         //    _collection.Reset();
-        //    _results.Data.Items.ShouldAllBeEquivalentTo(_target);
+        //    _results.Data.Items.Should().BeEquivalentTo(_target);
 
         //    var resetNotification = _results.Messages.Last();
         //    resetNotification.Removes.Should().Be(10);

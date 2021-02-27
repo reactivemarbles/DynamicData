@@ -1,15 +1,16 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    /// Represents a group which provides an update after any value within the group changes
+    /// Represents a group which provides an update after any value within the group changes.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -17,7 +18,17 @@ namespace DynamicData
     public interface IGrouping<TObject, TKey, out TGroupKey>
     {
         /// <summary>
-        /// Gets the group key
+        /// Gets the count.
+        /// </summary>
+        int Count { get; }
+
+        /// <summary>
+        /// Gets the items.
+        /// </summary>
+        IEnumerable<TObject> Items { get; }
+
+        /// <summary>
+        /// Gets the group key.
         /// </summary>
         TGroupKey Key { get; }
 
@@ -27,12 +38,7 @@ namespace DynamicData
         IEnumerable<TKey> Keys { get; }
 
         /// <summary>
-        /// Gets the items.
-        /// </summary>
-        IEnumerable<TObject> Items { get; }
-
-        /// <summary>
-        /// Gets the items together with their keys
+        /// Gets the items together with their keys.
         /// </summary>
         /// <value>
         /// The key values.
@@ -40,17 +46,13 @@ namespace DynamicData
         IEnumerable<KeyValuePair<TKey, TObject>> KeyValues { get; }
 
         /// <summary>
-        /// Gets the count.
-        /// </summary>
-        int Count { get; }
-
-        /// <summary>
         /// Lookup a single item using the specified key.
         /// </summary>
         /// <remarks>
-        /// Fast indexed lookup
+        /// Fast indexed lookup.
         /// </remarks>
         /// <param name="key">The key.</param>
+        /// <returns>The value that is looked up.</returns>
         Optional<TObject> Lookup(TKey key);
     }
 }

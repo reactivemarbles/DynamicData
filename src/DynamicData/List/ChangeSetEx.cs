@@ -1,11 +1,11 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DynamicData.Annotations;
+
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
 using DynamicData.List.Linq;
@@ -14,48 +14,20 @@ using DynamicData.List.Linq;
 namespace DynamicData
 {
     /// <summary>
-    /// Change set extensions
+    /// Change set extensions.
     /// </summary>
     public static class ChangeSetEx
     {
         /// <summary>
-        /// Remove the index from the changes
+        /// Returns a flattened source with the index.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type of the item.</typeparam>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
-        public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
+        /// <returns>An enumerable of change sets.</returns>
+        /// <exception cref="ArgumentNullException">source.</exception>
+        public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
         {
-            return new WithoutIndexEnumerator<T>(source);
-        }
-
-        /// <summary>
-        /// Returns a flattend source
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">source</exception>
-        internal static IEnumerable<UnifiedChange<T>> Unified<T>([NotNull] this IChangeSet<T> source)
-        {
-            if (source == null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            return new UnifiedChangeEnumerator<T>(source);
-        }
-
-        /// <summary>
-        /// Returns a flattend source with the index
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException">source</exception>
-        public static IEnumerable<ItemChange<T>> Flatten<T>([NotNull] this IChangeSet<T> source)
-        {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
@@ -64,11 +36,10 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Gets the type of the change i.e. whether it is an item or a range change
+        /// Gets the type of the change i.e. whether it is an item or a range change.
         /// </summary>
         /// <param name="source">The source.</param>
-        /// <returns></returns>
-        /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+        /// <returns>The change type.</returns>
         public static ChangeType GetChangeType(this ListChangeReason source)
         {
             switch (source)
@@ -84,52 +55,77 @@ namespace DynamicData
                 case ListChangeReason.RemoveRange:
                 case ListChangeReason.Clear:
                     return ChangeType.Range;
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(source));
             }
         }
 
         /// <summary>
-        /// Transforms the changeset into a different type using the specified transform function.
+        /// Transforms the change set into a different type using the specified transform function.
         /// </summary>
         /// <typeparam name="TSource">The type of the source.</typeparam>
         /// <typeparam name="TDestination">The type of the destination.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="transformer">The transformer.</param>
-        /// <returns></returns>
+        /// <returns>The change set.</returns>
         /// <exception cref="ArgumentNullException">
         /// source
         /// or
-        /// transformer
+        /// transformer.
         /// </exception>
-        public static IChangeSet<TDestination> Transform<TSource, TDestination>([NotNull] this IChangeSet<TSource> source,
-                                                                                [NotNull] Func<TSource, TDestination> transformer)
+        public static IChangeSet<TDestination> Transform<TSource, TDestination>(this IChangeSet<TSource> source, Func<TSource, TDestination> transformer)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (transformer == null)
+            if (transformer is null)
             {
                 throw new ArgumentNullException(nameof(transformer));
             }
 
-            var changes = source.Select(change =>
-            {
-                if (change.Type == ChangeType.Item)
-                {
-                    return new Change<TDestination>(change.Reason,
-                                                    transformer(change.Item.Current),
-                                                    change.Item.Previous.Convert(transformer),
-                                                    change.Item.CurrentIndex,
-                                                    change.Item.PreviousIndex);
-                }
+            var changes = source.Select(
+                change =>
+                    {
+                        if (change.Type == ChangeType.Item)
+                        {
+                            return new Change<TDestination>(change.Reason, transformer(change.Item.Current), change.Item.Previous.Convert(transformer), change.Item.CurrentIndex, change.Item.PreviousIndex);
+                        }
 
-                return new Change<TDestination>(change.Reason, change.Range.Select(transformer), change.Range.Index);
-            });
+                        return new Change<TDestination>(change.Reason, change.Range.Select(transformer), change.Range.Index);
+                    });
 
             return new ChangeSet<TDestination>(changes);
+        }
+
+        /// <summary>
+        /// Remove the index from the changes.
+        /// </summary>
+        /// <typeparam name="T">The type of the item.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns>An enumerable of changes.</returns>
+        public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
+        {
+            return new WithoutIndexEnumerator<T>(source);
+        }
+
+        /// <summary>
+        /// Returns a flattened source.
+        /// </summary>
+        /// <typeparam name="T">The type of the item.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns>An enumerable of changes.</returns>
+        /// <exception cref="ArgumentNullException">source.</exception>
+        internal static IEnumerable<UnifiedChange<T>> Unified<T>(this IChangeSet<T> source)
+        {
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            return new UnifiedChangeEnumerator<T>(source);
         }
     }
 }

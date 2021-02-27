@@ -4,11 +4,13 @@
 
 using System;
 using System.Linq;
+
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 
 namespace DynamicData.Benchmarks.List
 {
-    [CoreJob]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [MemoryDiagnoser]
     [MarkdownExporterAttribute.GitHub]
     public class GroupRemove
@@ -46,7 +48,7 @@ namespace DynamicData.Benchmarks.List
         public void Remove() => _sourceList.RemoveAt(_items[0]);
 
         [Benchmark]
-        public void RemoveRange() => _sourceList.RemoveRange(40,20);
+        public void RemoveRange() => _sourceList.RemoveRange(40, 20);
 
         [Benchmark]
         public void Clear() => _sourceList.Clear();

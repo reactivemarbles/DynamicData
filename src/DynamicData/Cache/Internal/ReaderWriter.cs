@@ -1,137 +1,48 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
     internal sealed class ReaderWriter<TObject, TKey>
+        where TKey : notnull
     {
-        private readonly Func<TObject, TKey> _keySelector;
-        private Dictionary<TKey,TObject> _data = new Dictionary<TKey, TObject>(); //could do with priming this on first time load
-        private CacheUpdater<TObject, TKey> _activeUpdater;
+        private readonly Func<TObject, TKey>? _keySelector;
 
-        private readonly object _locker = new object();
+        private readonly object _locker = new();
 
-        public ReaderWriter(Func<TObject, TKey> keySelector = null) => _keySelector = keySelector;
+        private CacheUpdater<TObject, TKey>? _activeUpdater;
 
-        #region Writers
+        private Dictionary<TKey, TObject> _data = new(); // could do with priming this on first time load
 
-        public ChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
+        public ReaderWriter(Func<TObject, TKey>? keySelector = null) => _keySelector = keySelector;
+
+        public int Count
         {
-            if (changes == null)
+            get
             {
-                throw new ArgumentNullException(nameof(changes));
-            }
-
-            return DoUpdate(updater => updater.Clone(changes), previewHandler, collectChanges);
-        }
-
-        public ChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
-        {
-            if (updateAction == null)
-            {
-                throw new ArgumentNullException(nameof(updateAction));
-            }
-
-            return DoUpdate(updateAction, previewHandler, collectChanges);
-        }
-
-        public ChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
-        {
-            if (updateAction == null)
-            {
-                throw new ArgumentNullException(nameof(updateAction));
-            }
-
-            return DoUpdate(updateAction, previewHandler, collectChanges);
-        }
-
-        private ChangeSet<TObject, TKey> DoUpdate(Action<CacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>> previewHandler, bool collectChanges)
-        {
-            lock (_locker)
-            {
-                if (previewHandler != null)
+                lock (_locker)
                 {
-                    var copy = new Dictionary<TKey, TObject>(_data);
-                    var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
-
-                    _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
-                    updateAction(_activeUpdater);
-                    _activeUpdater = null;
-
-                    var changes = changeAwareCache.CaptureChanges();
-
-                    InternalEx.Swap(ref copy, ref _data);
-                    previewHandler(changes);
-                    InternalEx.Swap(ref copy, ref _data);
-
-                    return changes;
+                    return _data.Count;
                 }
-
-                if (collectChanges)
-                {
-                    var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
-
-                    _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
-                    updateAction(_activeUpdater);
-                    _activeUpdater = null;
-
-                    return changeAwareCache.CaptureChanges();
-                }
-
-                _activeUpdater = new CacheUpdater<TObject, TKey>(_data, _keySelector);
-                updateAction(_activeUpdater);
-                _activeUpdater = null;
-
-                return ChangeSet<TObject, TKey>.Empty;
             }
         }
 
-        internal void WriteNested(Action<ISourceUpdater<TObject, TKey>> updateAction)
+        public TObject[] Items
         {
-            lock (_locker)
+            get
             {
-                if (_activeUpdater == null)
+                lock (_locker)
                 {
-                    throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
+                    TObject[] result = new TObject[_data.Count];
+                    _data.Values.CopyTo(result, 0);
+                    return result;
                 }
-
-                updateAction(_activeUpdater);
-            }
-        }
-
-        #endregion
-
-        #region Accessors
-
-        public ChangeSet<TObject, TKey> GetInitialUpdates( Func<TObject, bool> filter = null)
-        {
-            lock (_locker)
-            {
-                var dictionary = _data;
-
-                if (dictionary.Count == 0)
-                {
-                    return ChangeSet<TObject, TKey>.Empty;
-                }
-
-                var changes = filter == null
-                    ? new ChangeSet<TObject, TKey>(dictionary.Count)
-                    : new ChangeSet<TObject, TKey>();
-
-                foreach (var kvp in dictionary)
-                {
-                    if (filter == null || filter(kvp.Value))
-                    {
-                        changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
-                    }
-                }
-
-                return changes;
             }
         }
 
@@ -167,16 +78,28 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-        public TObject[] Items
+        public ChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool>? filter = null)
         {
-            get
+            lock (_locker)
             {
-                lock (_locker)
+                var dictionary = _data;
+
+                if (dictionary.Count == 0)
                 {
-                    TObject[] result = new TObject[_data.Count];
-                    _data.Values.CopyTo(result, 0);
-                    return result;
+                    return ChangeSet<TObject, TKey>.Empty;
                 }
+
+                var changes = filter is null ? new ChangeSet<TObject, TKey>(dictionary.Count) : new ChangeSet<TObject, TKey>();
+
+                foreach (var kvp in dictionary)
+                {
+                    if (filter is null || filter(kvp.Value))
+                    {
+                        changes.Add(new Change<TObject, TKey>(ChangeReason.Add, kvp.Key, kvp.Value));
+                    }
+                }
+
+                return changes;
             }
         }
 
@@ -188,17 +111,88 @@ namespace DynamicData.Cache.Internal
             }
         }
 
-        public int Count
+        public ChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
         {
-            get
+            if (changes is null)
             {
-                lock (_locker)
+                throw new ArgumentNullException(nameof(changes));
+            }
+
+            return DoUpdate(updater => updater.Clone(changes), previewHandler, collectChanges);
+        }
+
+        public ChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
+        {
+            if (updateAction is null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
+
+            return DoUpdate(updateAction, previewHandler, collectChanges);
+        }
+
+        public ChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
+        {
+            if (updateAction is null)
+            {
+                throw new ArgumentNullException(nameof(updateAction));
+            }
+
+            return DoUpdate(updateAction, previewHandler, collectChanges);
+        }
+
+        public void WriteNested(Action<ISourceUpdater<TObject, TKey>> updateAction)
+        {
+            lock (_locker)
+            {
+                if (_activeUpdater is null)
                 {
-                    return _data.Count;
+                    throw new InvalidOperationException("WriteNested can only be used if another write is already in progress.");
                 }
+
+                updateAction(_activeUpdater);
             }
         }
 
-        #endregion
+        private ChangeSet<TObject, TKey> DoUpdate(Action<CacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
+        {
+            lock (_locker)
+            {
+                if (previewHandler is not null)
+                {
+                    var copy = new Dictionary<TKey, TObject>(_data);
+                    var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
+
+                    _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
+                    updateAction(_activeUpdater);
+                    _activeUpdater = null;
+
+                    var changes = changeAwareCache.CaptureChanges();
+
+                    InternalEx.Swap(ref copy, ref _data);
+                    previewHandler(changes);
+                    InternalEx.Swap(ref copy, ref _data);
+
+                    return changes;
+                }
+
+                if (collectChanges)
+                {
+                    var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
+
+                    _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
+                    updateAction(_activeUpdater);
+                    _activeUpdater = null;
+
+                    return changeAwareCache.CaptureChanges();
+                }
+
+                _activeUpdater = new CacheUpdater<TObject, TKey>(_data, _keySelector);
+                updateAction(_activeUpdater);
+                _activeUpdater = null;
+
+                return ChangeSet<TObject, TKey>.Empty;
+            }
+        }
     }
 }

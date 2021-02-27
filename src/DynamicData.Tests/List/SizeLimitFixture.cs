@@ -1,22 +1,29 @@
 using System;
 using System.Linq;
+
 using DynamicData.Tests.Domain;
-using Microsoft.Reactive.Testing;
-using Xunit;
+
 using FluentAssertions;
+
+using Microsoft.Reactive.Testing;
+
+using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
-    public class SizeLimitFixture: IDisposable
+    public class SizeLimitFixture : IDisposable
     {
-        private readonly ISourceList<Person> _source;
-        private readonly ChangeSetAggregator<Person> _results;
-        private readonly TestScheduler _scheduler;
-        private readonly IDisposable _sizeLimiter;
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
-        public  SizeLimitFixture()
+        private readonly ChangeSetAggregator<Person> _results;
+
+        private readonly TestScheduler _scheduler;
+
+        private readonly IDisposable _sizeLimiter;
+
+        private readonly ISourceList<Person> _source;
+
+        public SizeLimitFixture()
         {
             _scheduler = new TestScheduler();
             _source = new SourceList<Person>();
@@ -24,11 +31,15 @@ namespace DynamicData.Tests.List
             _results = _source.Connect().AsAggregator();
         }
 
-        public void Dispose()
+        [Fact]
+        public void Add()
         {
-            _sizeLimiter.Dispose();
-            _source.Dispose();
-            _results.Dispose();
+            var person = _generator.Take(1).First();
+            _source.Add(person);
+
+            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+            _results.Data.Items.First().Should().Be(person, "Should be same person");
         }
 
         [Fact]
@@ -72,19 +83,14 @@ namespace DynamicData.Tests.List
             _results.Messages[2].Removes.Should().Be(10, "Should be 10 removes in the third update");
         }
 
-        [Fact]
-        public void Add()
+        public void Dispose()
         {
-            var person = _generator.Take(1).First();
-            _source.Add(person);
-
-            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-            _results.Data.Items.First().Should().Be(person, "Should be same person");
+            _sizeLimiter.Dispose();
+            _source.Dispose();
+            _results.Dispose();
         }
 
         [Fact]
-
         public void ForceError()
         {
             var person = _generator.Take(1).First();

@@ -1,53 +1,23 @@
-﻿// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    ///   Container to describe a single change to a cache
+    ///   Container to describe a single change to a cache.
     /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
     public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
+        where TKey : notnull
     {
-        /// <summary>
-        /// The unique key of the item which has changed
-        /// </summary>
-        public TKey Key { get; }
-
-        /// <summary>
-        /// The  reason for the change
-        /// </summary>
-        public ChangeReason Reason { get; }
-
-        /// <summary>
-        /// The item which has changed
-        /// </summary>
-        public TObject Current { get; }
-
-        /// <summary>
-        /// The current index
-        /// </summary>
-        public int CurrentIndex { get; }
-
-        /// <summary>
-        /// The previous change.
-        /// 
-        /// This is only when Reason==ChangeReason.Replace.
-        /// </summary>
-        public Optional<TObject> Previous { get; }
-
-        /// <summary>
-        /// The previous change.
-        /// 
-        /// This is only when Reason==ChangeReason.Update or ChangeReason.Move.
-        /// </summary>
-        public int PreviousIndex { get; }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
         /// </summary>
@@ -61,7 +31,8 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Constructor for ChangeReason.Move
+        /// Initializes a new instance of the <see cref="Change{TObject, TKey}"/> struct.
+        /// Constructor for ChangeReason.Move.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="current">The current.</param>
@@ -70,7 +41,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentException">
         /// CurrentIndex must be greater than or equal to zero
         /// or
-        /// PreviousIndex must be greater than or equal to zero
+        /// PreviousIndex must be greater than or equal to zero.
         /// </exception>
         public Change(TKey key, TObject current, int currentIndex, int previousIndex)
             : this()
@@ -105,7 +76,7 @@ namespace DynamicData
         /// <exception cref="System.ArgumentException">
         /// For ChangeReason.Add, a previous value cannot be specified
         /// or
-        /// For ChangeReason.Change, must supply previous value
+        /// For ChangeReason.Change, must supply previous value.
         /// </exception>
         public Change(ChangeReason reason, TKey key, TObject current, Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1)
             : this()
@@ -128,19 +99,57 @@ namespace DynamicData
             }
         }
 
-        #region Equality
+        /// <summary>
+        /// Gets the unique key of the item which has changed.
+        /// </summary>
+        public TKey Key { get; }
 
         /// <summary>
-        ///  Determines whether the specified objects are equal
+        /// Gets the  reason for the change.
         /// </summary>
+        public ChangeReason Reason { get; }
+
+        /// <summary>
+        /// Gets the item which has changed.
+        /// </summary>
+        public TObject Current { get; }
+
+        /// <summary>
+        /// Gets the current index.
+        /// </summary>
+        public int CurrentIndex { get; }
+
+        /// <summary>
+        /// Gets the previous change.
+        ///
+        /// This is only when Reason==ChangeReason.Replace.
+        /// </summary>
+        public Optional<TObject> Previous { get; }
+
+        /// <summary>
+        /// Gets the previous change.
+        ///
+        /// This is only when Reason==ChangeReason.Update or ChangeReason.Move.
+        /// </summary>
+        public int PreviousIndex { get; }
+
+        /// <summary>
+        ///  Determines whether the specified objects are equal.
+        /// </summary>
+        /// <param name="left">The left value to compare.</param>
+        /// <param name="right">The right value to compare.</param>
+        /// <returns>If the two values are equal to each other.</returns>
         public static bool operator ==(Change<TObject, TKey> left, Change<TObject, TKey> right)
         {
             return left.Equals(right);
         }
 
         /// <summary>
-        ///  Determines whether the specified objects are equal
+        ///  Determines whether the specified objects are equal.
         /// </summary>
+        /// <param name="left">The left value to compare.</param>
+        /// <param name="right">The right value to compare.</param>
+        /// <returns>If the two values are not equal to each other.</returns>
         public static bool operator !=(Change<TObject, TKey> left, Change<TObject, TKey> right)
         {
             return !left.Equals(right);
@@ -149,23 +158,18 @@ namespace DynamicData
         /// <inheritdoc />
         public bool Equals(Change<TObject, TKey> other)
         {
-            return EqualityComparer<TKey>.Default.Equals(Key, other.Key)
-                && Reason == other.Reason
-                && EqualityComparer<TObject>.Default.Equals(Current, other.Current)
-                && CurrentIndex == other.CurrentIndex
-                && Previous.Equals(other.Previous)
-                && PreviousIndex == other.PreviousIndex;
+            return EqualityComparer<TKey>.Default.Equals(Key, other.Key) && Reason == other.Reason && EqualityComparer<TObject?>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
                 return false;
             }
 
-            return obj is Change<TObject, TKey> && Equals((Change<TObject, TKey>) obj);
+            return obj is Change<TObject, TKey> change && Equals(change);
         }
 
         /// <inheritdoc />
@@ -174,16 +178,14 @@ namespace DynamicData
             unchecked
             {
                 var hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
-                hashCode = (hashCode * 397) ^ (int) Reason;
-                hashCode = (hashCode * 397) ^ EqualityComparer<TObject>.Default.GetHashCode(Current);
+                hashCode = (hashCode * 397) ^ (int)Reason;
+                hashCode = (hashCode * 397) ^ (Current is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Current));
                 hashCode = (hashCode * 397) ^ CurrentIndex;
                 hashCode = (hashCode * 397) ^ Previous.GetHashCode();
                 hashCode = (hashCode * 397) ^ PreviousIndex;
                 return hashCode;
             }
         }
-
-        #endregion
 
         /// <inheritdoc />
         public override string ToString()

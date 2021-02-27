@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -8,10 +8,10 @@ using System.Collections.Generic;
 namespace DynamicData.List.Linq
 {
     /// <summary>
-    /// Index to remove the index. This is necessary for WhereReasonAre* operators. 
-    /// Otherwise these operators could break subsequent operators when the subsequent operator relies on the index
+    /// Index to remove the index. This is necessary for WhereReasonAre* operators.
+    /// Otherwise these operators could break subsequent operators when the subsequent operator relies on the index.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type of the item.</typeparam>
     internal class WithoutIndexEnumerator<T> : IEnumerable<Change<T>>
     {
         private readonly IEnumerable<Change<T>> _changeSet;
@@ -27,7 +27,7 @@ namespace DynamicData.List.Linq
             {
                 if (change.Reason == ListChangeReason.Moved)
                 {
-                    //exceptional case - makes no sense to remove index from move 
+                    // exceptional case - makes no sense to remove index from move
                     continue;
                 }
 

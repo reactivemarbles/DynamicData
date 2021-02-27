@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using FluentAssertions;
+
 using Xunit;
 
 namespace DynamicData.Tests.List
 {
-
     public class XOrFixture : XOrFixtureBase
     {
         protected override IObservable<IChangeSet<int>> CreateObservable()
@@ -24,10 +25,12 @@ namespace DynamicData.Tests.List
         }
     }
 
-    public abstract class XOrFixtureBase: IDisposable
+    public abstract class XOrFixtureBase : IDisposable
     {
         protected ISourceList<int> _source1;
+
         protected ISourceList<int> _source2;
+
         private readonly ChangeSetAggregator<int> _results;
 
         protected XOrFixtureBase()
@@ -37,7 +40,24 @@ namespace DynamicData.Tests.List
             _results = CreateObservable().AsAggregator();
         }
 
-        protected abstract IObservable<IChangeSet<int>> CreateObservable();
+        [Fact]
+        public void ClearOnlyClearsOneSource()
+        {
+            _source1.AddRange(Enumerable.Range(1, 5));
+            _source2.AddRange(Enumerable.Range(6, 5));
+            _source1.Clear();
+            _results.Data.Count.Should().Be(5);
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5));
+        }
+
+        [Fact]
+        public void CombineRange()
+        {
+            _source1.AddRange(Enumerable.Range(1, 5));
+            _source2.AddRange(Enumerable.Range(6, 5));
+            _results.Data.Count.Should().Be(10);
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 10));
+        }
 
         public void Dispose()
         {
@@ -64,6 +84,15 @@ namespace DynamicData.Tests.List
         }
 
         [Fact]
+        public void OverlappingRangeExludesInteresct()
+        {
+            _source1.AddRange(Enumerable.Range(1, 10));
+            _source2.AddRange(Enumerable.Range(6, 10));
+            _results.Data.Count.Should().Be(10);
+            _results.Data.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5).Union(Enumerable.Range(11, 5)));
+        }
+
+        [Fact]
         public void RemovedWhenNoLongerInBoth()
         {
             _source1.Add(1);
@@ -80,32 +109,6 @@ namespace DynamicData.Tests.List
             _results.Data.Count.Should().Be(0);
         }
 
-        [Fact]
-        public void CombineRange()
-        {
-            _source1.AddRange(Enumerable.Range(1, 5));
-            _source2.AddRange(Enumerable.Range(6, 5));
-            _results.Data.Count.Should().Be(10);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 10));
-        }
-
-        [Fact]
-        public void ClearOnlyClearsOneSource()
-        {
-            _source1.AddRange(Enumerable.Range(1, 5));
-            _source2.AddRange(Enumerable.Range(6, 5));
-            _source1.Clear();
-            _results.Data.Count.Should().Be(5);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(6, 5));
-        }
-
-        [Fact]
-        public void OverlappingRangeExludesInteresct()
-        {
-            _source1.AddRange(Enumerable.Range(1, 10));
-            _source2.AddRange(Enumerable.Range(6, 10));
-            _results.Data.Count.Should().Be(10);
-            _results.Data.Items.ShouldAllBeEquivalentTo(Enumerable.Range(1, 5).Union(Enumerable.Range(11, 5)));
-        }
+        protected abstract IObservable<IChangeSet<int>> CreateObservable();
     }
 }

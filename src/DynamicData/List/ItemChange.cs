@@ -1,70 +1,34 @@
-// Copyright (c) 2011-2019 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Generic;
+
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData
 {
     /// <summary>
-    /// Container to describe a single change to a cache
+    /// Container to describe a single change to a cache.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type of the item.</typeparam>
     public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     {
         /// <summary>
-        /// An empty change
+        /// An empty change.
         /// </summary>
-        public static readonly ItemChange<T> Empty = new ItemChange<T>();
+        public static readonly ItemChange<T> Empty;
 
         /// <summary>
-        /// The reason for the change
-        /// </summary>
-        public ListChangeReason Reason { get; }
-
-        /// <summary>
-        /// The item which has changed
-        /// </summary>
-        public T Current { get; }
-
-        /// <summary>
-        /// The current index
-        /// </summary>
-        public int CurrentIndex { get; }
-
-        /// <summary>
-        /// The previous change.
-        /// 
-        /// This is only when Reason==ChangeReason.Replace.
-        /// </summary>
-        public Optional<T> Previous { get; }
-
-        /// <summary>
-        /// The previous index.
-        /// 
-        /// This is only when Reason==ChangeReason.Replace or ChangeReason.Move.
-        /// </summary>
-        public int PreviousIndex { get; }
-
-        #region Construction
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Change{TObject, TKey}" /> struct.
+        /// Initializes a new instance of the <see cref="ItemChange{T}" /> struct.
         /// </summary>
         /// <param name="reason">The reason.</param>
         /// <param name="current">The current.</param>
         /// <param name="previous">The previous.</param>
         /// <param name="currentIndex">Value of the current.</param>
         /// <param name="previousIndex">Value of the previous.</param>
-        /// <exception cref="ArgumentException">For ChangeReason.Add, a previous value cannot be specified
-        /// or
-        /// For ChangeReason.Change, must supply previous value</exception>
-        /// <exception cref="System.ArgumentException">For ChangeReason.Add, a previous value cannot be specified
-        /// or
-        /// For ChangeReason.Change, must supply previous value</exception>
         public ItemChange(ListChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
             : this()
         {
@@ -91,48 +55,89 @@ namespace DynamicData
             Previous = Optional<T>.None;
         }
 
-        #endregion
+        /// <summary>
+        /// Gets the reason for the change.
+        /// </summary>
+        public ListChangeReason Reason { get; }
 
-        #region Equality
+        /// <summary>
+        /// Gets the item which has changed.
+        /// </summary>
+        public T Current { get; }
+
+        /// <summary>
+        /// Gets the current index.
+        /// </summary>
+        public int CurrentIndex { get; }
+
+        /// <summary>
+        /// Gets the previous change.
+        ///
+        /// This is only when Reason==ChangeReason.Replace.
+        /// </summary>
+        public Optional<T> Previous { get; }
+
+        /// <summary>
+        /// Gets the previous index.
+        ///
+        /// This is only when Reason==ChangeReason.Replace or ChangeReason.Move.
+        /// </summary>
+        public int PreviousIndex { get; }
+
+        /// <summary>
+        ///  Determines whether the specified objects are equal.
+        /// </summary>
+        /// <param name="left">The left hand side to compare.</param>
+        /// <param name="right">The right hand side to compare.</param>
+        /// <returns>If the two values are equal.</returns>
+        public static bool operator ==(ItemChange<T> left, ItemChange<T> right) => left.Equals(right);
+
+        /// <summary>
+        ///  Determines whether the specified objects are not equal.
+        /// </summary>
+        /// <param name="left">The left hand side to compare.</param>
+        /// <param name="right">The right hand side to compare.</param>
+        /// <returns>If the two values are not equal.</returns>
+        public static bool operator !=(ItemChange<T> left, ItemChange<T> right) => !left.Equals(right);
 
         /// <summary>
         ///  Determines whether the specified object, is equal to this instance.
         /// </summary>
         /// <param name="other">The other.</param>
-        /// <returns></returns>
+        /// <returns>If the value is equal.</returns>
         public bool Equals(ItemChange<T> other)
         {
             return EqualityComparer<T>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+        /// Determines whether the specified <see cref="object" />, is equal to this instance.
         /// </summary>
-        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <param name="obj">The <see cref="object" /> to compare with this instance.</param>
         /// <returns>
-        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        ///   <c>true</c> if the specified <see cref="object" /> is equal to this instance; otherwise, <c>false</c>.
         /// </returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
             {
                 return false;
             }
 
-            return obj is ItemChange<T> && Equals((ItemChange<T>)obj);
+            return obj is ItemChange<T> change && Equals(change);
         }
 
         /// <summary>
         /// Returns a hash code for this instance.
         /// </summary>
         /// <returns>
-        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table.
         /// </returns>
         public override int GetHashCode()
         {
             unchecked
             {
-                var hashCode = EqualityComparer<T>.Default.GetHashCode(Current);
+                var hashCode = Current is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Current);
                 hashCode = (hashCode * 397) ^ CurrentIndex;
                 hashCode = (hashCode * 397) ^ Previous.GetHashCode();
                 hashCode = (hashCode * 397) ^ PreviousIndex;
@@ -141,22 +146,10 @@ namespace DynamicData
         }
 
         /// <summary>
-        ///  Determines whether the specified objects are equal
-        /// </summary>
-        public static bool operator ==(ItemChange<T> left, ItemChange<T> right) => left.Equals(right);
-
-        /// <summary>
-        ///  Determines whether the specified objects are not equal
-        /// </summary>
-        public static bool operator !=(ItemChange<T> left, ItemChange<T> right) => !left.Equals(right);
-
-        #endregion
-
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// Returns a <see cref="string" /> that represents this instance.
         /// </summary>
         /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
+        /// A <see cref="string" /> that represents this instance.
         /// </returns>
         public override string ToString()
         {

@@ -1,24 +1,25 @@
 using System;
 using System.Threading.Tasks;
+
 using DynamicData.Tests.Domain;
 
 namespace DynamicData.Tests.List
 {
-
     [Obsolete("Not obsolete - test commented out due to test run freezing on Appveyor")]
-    public class TransformAsyncFixture: IDisposable
+    public class TransformAsyncFixture : IDisposable
     {
-        private ISourceList<Person> _source;
-        private ChangeSetAggregator<PersonWithGender> _results;
-
         private readonly Func<Person, Task<PersonWithGender>> _transformFactory = p =>
-        {
-            var gender = p.Age % 2 == 0 ? "M" : "F";
-            var transformed = new PersonWithGender(p, gender);
-            return Task.FromResult(transformed);
-        };
+            {
+                var gender = p.Age % 2 == 0 ? "M" : "F";
+                var transformed = new PersonWithGender(p, gender);
+                return Task.FromResult(transformed);
+            };
 
-        public  TransformAsyncFixture()
+        private readonly ChangeSetAggregator<PersonWithGender> _results;
+
+        private readonly ISourceList<Person> _source;
+
+        public TransformAsyncFixture()
         {
             _source = new SourceList<Person>();
             _results = new ChangeSetAggregator<PersonWithGender>(_source.Connect().TransformAsync(_transformFactory));
@@ -92,7 +93,7 @@ namespace DynamicData.Tests.List
         //    var result = await Task.WhenAll(tasks);
 
         //    var transformed = result.OrderBy(p => p.Age).ToArray();
-        //    _results.Data.Items.OrderBy(p => p.Age).ShouldAllBeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
+        //    _results.Data.Items.OrderBy(p => p.Age).Should().BeEquivalentTo(_results.Data.Items.OrderBy(p => p.Age), "Incorrect transform result");
         //}
 
         //[Fact]
