@@ -72,7 +72,7 @@ namespace DynamicData.Kernel
         /// <returns>The first value or none.</returns>
         public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         {
-            if (source == null)
+            if (source is null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
