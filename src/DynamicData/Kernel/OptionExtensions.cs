@@ -72,13 +72,20 @@ namespace DynamicData.Kernel
         /// <returns>The first value or none.</returns>
         public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         {
-            if (source is null)
+            if (source == null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var result = source.FirstOrDefault(selector);
-            return !Equals(result, null) ? result : Optional.None<T>();
+            foreach (T item in source)
+            {
+                if (selector(item))
+                {
+                    return Optional<T>.Create(item);
+                }
+            }
+
+            return Optional.None<T>();
         }
 
         /// <summary>
