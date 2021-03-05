@@ -1213,7 +1213,7 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="requests">Observable to control page requests.</param>
         /// <returns>An observable which emits the change set.</returns>
-        public static IObservable<IChangeSet<T>> Page<T>(this IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
+        public static IObservable<IPageChangeSet<T>> Page<T>(this IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
         {
             if (source is null)
             {
