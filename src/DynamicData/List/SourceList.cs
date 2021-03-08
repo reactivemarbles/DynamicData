@@ -17,7 +17,7 @@ namespace DynamicData
     /// An editable observable list.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
-    public sealed class SourceList<T> : ISourceList<T>
+    public class SourceList<T> : ISourceList<T>
     {
         private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
 
