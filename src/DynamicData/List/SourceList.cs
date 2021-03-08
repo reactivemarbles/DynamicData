@@ -111,26 +111,6 @@ namespace DynamicData
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// Disposes of managed and unmanaged responses.
-        /// </summary>
-        /// <param name="isDisposing">If being called by the Dispose method.</param>
-        protected virtual void Dispose(bool isDisposing)
-        {
-            if (_isDisposed)
-            {
-                return;
-            }
-
-            _isDisposed = true;
-
-            if (isDisposing)
-            {
-                _cleanUp.Dispose();
-                _changesPreview.Dispose();
-            }
-        }
-
         /// <inheritdoc />
         public void Edit(Action<IExtendedList<T>> updateAction)
         {
@@ -174,6 +154,26 @@ namespace DynamicData
             }
 
             return observable;
+        }
+
+        /// <summary>
+        /// Disposes of managed and unmanaged responses.
+        /// </summary>
+        /// <param name="isDisposing">If being called by the Dispose method.</param>
+        protected virtual void Dispose(bool isDisposing)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
+            if (isDisposing)
+            {
+                _cleanUp.Dispose();
+                _changesPreview.Dispose();
+            }
         }
 
         private void InvokeNext(IChangeSet<T> changes)
