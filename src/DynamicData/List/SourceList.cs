@@ -33,6 +33,8 @@ namespace DynamicData
 
         private int _editLevel;
 
+        private bool _isDisposed;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SourceList{T}"/> class.
         /// </summary>
@@ -105,8 +107,28 @@ namespace DynamicData
         /// <inheritdoc />
         public void Dispose()
         {
-            _cleanUp.Dispose();
-            _changesPreview.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Disposes of managed and unmanaged responses.
+        /// </summary>
+        /// <param name="isDisposing">If being called by the Dispose method.</param>
+        protected virtual void Dispose(bool isDisposing)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
+            if (isDisposing)
+            {
+                _cleanUp.Dispose();
+                _changesPreview.Dispose();
+            }
         }
 
         /// <inheritdoc />
