@@ -77,8 +77,15 @@ namespace DynamicData.Kernel
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var result = source.FirstOrDefault(selector);
-            return !Equals(result, null) ? result : Optional.None<T>();
+            foreach (T item in source)
+            {
+                if (selector(item))
+                {
+                    return Optional<T>.Create(item);
+                }
+            }
+
+            return Optional.None<T>();
         }
 
         /// <summary>
