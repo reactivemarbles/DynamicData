@@ -115,5 +115,16 @@ namespace DynamicData.Kernel
         {
             return source.Select(_ => Unit.Default);
         }
+
+        /// <summary>
+        /// Observable.Return without the memory leak.
+        /// </summary>
+        internal static IObservable<T> Return<T>(Func<T> source) =>
+            Observable.Create<T>(o =>
+            {
+                o.OnNext(source());
+                o.OnCompleted();
+                return () => { };
+            });
     }
 }

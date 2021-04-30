@@ -75,7 +75,7 @@ namespace DynamicData.Tests.Cache
             _source.AddOrUpdate(_generator.Take(10).ToArray());
             _source.AddOrUpdate(_generator.Take(10).ToArray());
 
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(100).Ticks);
+            _scheduler.Start();
 
             _results.Messages.Count.Should().Be(3, "Should be 3 updates");
             _results.Messages[0].Adds.Should().Be(10, "Should be 10 adds in the first update");
