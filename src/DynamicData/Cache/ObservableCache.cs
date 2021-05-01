@@ -106,19 +106,29 @@ namespace DynamicData
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null) =>
             Observable.Create<IChangeSet<TObject, TKey>>(
                 observer =>
+                {
+                    var initial = InternalEx.Return(() =>
                     {
+                        // lock getting initial changes and rely on a combination of Concat
+                        // + _changes being synchronized to produce thread safety  (I hope!)
                         lock (_locker)
                         {
-                            var initial = GetInitialUpdates(predicate);
-                            if (initial.Count != 0)
-                            {
-                                observer.OnNext(initial);
-                            }
-
-                            var updateSource = (predicate is null ? _changes : _changes.Filter(predicate)).NotEmpty();
-                            return updateSource.SubscribeSafe(observer);
+                            return (IChangeSet<TObject, TKey>)GetInitialUpdates(predicate);
                         }
                     });
+
+                    var changes = Observable.Defer(() => initial).Concat(_changes);
+                    if (predicate != null)
+                    {
+                        changes = changes.Filter(predicate);
+                    }
+                    else
+                    {
+                        changes = changes.NotEmpty();
+                    }
+
+                    return changes.SubscribeSafe(observer);
+                });
 
         public void Dispose() => _cleanUp.Dispose();
 

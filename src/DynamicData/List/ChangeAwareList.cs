@@ -487,7 +487,7 @@ namespace DynamicData
             {
                 if (index > _innerList.Count)
                 {
-                    throw new ArgumentOutOfRangeException($"{nameof(index)} cannot be greater than the size of the collection");
+                    throw new ArgumentOutOfRangeException(nameof(index), $"{nameof(index)} cannot be greater than the size of the collection");
                 }
 
                 RemoveItem(index);
