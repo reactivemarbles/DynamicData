@@ -45,7 +45,7 @@ namespace DynamicData.List.Internal
                         var original = new List<T>();
                         var target = new ChangeAwareList<T>();
 
-                        var changed = _source.Synchronize(locker).Select(
+                        var dataChanged = _source.Synchronize(locker).Select(
                             changes =>
                                 {
                                     if (_resetThreshold > 1)
@@ -58,7 +58,7 @@ namespace DynamicData.List.Internal
                         var resort = _resort.Synchronize(locker).Select(_ => Reorder(target));
                         var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
 
-                        return changed.Merge(resort).Merge(changeComparer).Where(changes => changes.Count != 0).SubscribeSafe(observer);
+                        return changeComparer.Merge(resort).Merge(dataChanged).Where(changes => changes.Count != 0).SubscribeSafe(observer);
                     });
         }
 
