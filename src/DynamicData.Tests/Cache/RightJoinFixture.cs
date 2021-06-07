@@ -13,14 +13,14 @@ namespace DynamicData.Tests.Cache
     {
         private readonly SourceCache<Device, string> _left;
 
-        private readonly ChangeSetAggregator<DeviceWithMetadata, string> _result;
+        private readonly ChangeSetAggregator<DeviceWithMetadata, int> _result;
 
-        private readonly SourceCache<DeviceMetaData, string> _right;
+        private readonly SourceCache<DeviceMetaData, int> _right;
 
         public RightJoinFixture()
         {
             _left = new SourceCache<Device, string>(device => device.Name);
-            _right = new SourceCache<DeviceMetaData, string>(device => device.Name);
+            _right = new SourceCache<DeviceMetaData, int>(device => device.Key);
 
             _result = _left.Connect().RightJoin(_right.Connect(), meta => meta.Name, (key, device, meta) => new DeviceWithMetadata(key, device, meta)).AsAggregator();
         }
@@ -40,7 +40,7 @@ namespace DynamicData.Tests.Cache
         }
 
         [Fact]
-        public void AddLetThenRight()
+        public void AddLeftThenRight()
         {
             _left.Edit(
                 innerCache =>
@@ -53,14 +53,14 @@ namespace DynamicData.Tests.Cache
             _right.Edit(
                 innerCache =>
                     {
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                     });
 
             3.Should().Be(_result.Data.Count);
 
-            _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
+            _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
         }
 
         [Fact]
@@ -69,15 +69,15 @@ namespace DynamicData.Tests.Cache
             _right.Edit(
                 innerCache =>
                     {
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                     });
 
             3.Should().Be(_result.Data.Count);
-            _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
-            _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
-            _result.Data.Lookup("Device3").HasValue.Should().BeTrue();
+            _result.Data.Lookup(1).HasValue.Should().BeTrue();
+            _result.Data.Lookup(2).HasValue.Should().BeTrue();
+            _result.Data.Lookup(3).HasValue.Should().BeTrue();
 
             _result.Data.Items.All(dwm => dwm.Device == Optional<Device>.None).Should().BeTrue();
         }
@@ -88,9 +88,9 @@ namespace DynamicData.Tests.Cache
             _right.Edit(
                 innerCache =>
                     {
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                     });
 
             _left.Edit(
@@ -103,7 +103,7 @@ namespace DynamicData.Tests.Cache
 
             3.Should().Be(_result.Data.Count);
 
-            _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
+            _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
         }
 
         public void Dispose()
@@ -127,18 +127,19 @@ namespace DynamicData.Tests.Cache
             _right.Edit(
                 innerCache =>
                     {
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                     });
 
-            _right.Remove("Device3");
+            _right.Remove(3);
 
             2.Should().Be(_result.Data.Count);
-            2.Should().Be(_result.Data.Items.Count(dwm => dwm.MetaData != Optional<DeviceMetaData>.None));
+            2.Should().Be(_result.Data.Items.Count(dwm => dwm.Device != Optional<Device>.None));
 
             _left.Remove("Device1");
-            _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
+            _result.Data.Lookup(1).HasValue.Should().BeTrue();
+            1.Should().Be(_result.Data.Items.Count(dwm => dwm.Device == Optional<Device>.None));
         }
 
         [Fact]
@@ -147,9 +148,9 @@ namespace DynamicData.Tests.Cache
             _right.Edit(
                 innerCache =>
                     {
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device1"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device2"));
-                        innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                     });
 
             _left.Edit(
@@ -162,8 +163,33 @@ namespace DynamicData.Tests.Cache
 
             3.Should().Be(_result.Data.Count);
 
-            _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
+            _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
         }
+
+        [Fact]
+        public void MultipleRight()
+        {
+            _left.Edit(
+                innerCache =>
+                    {
+                        innerCache.AddOrUpdate(new Device("Device1"));
+                        innerCache.AddOrUpdate(new Device("Device2"));
+                        innerCache.AddOrUpdate(new Device("Device3"));
+                    });
+
+            _right.Edit(
+                innerCache =>
+                    {
+                        innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(2,"Device3")); // deliberate!
+                        innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                    });
+
+            3.Should().Be(_result.Data.Count);
+
+            _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
+        }
+
 
         public class Device : IEquatable<Device>
         {
@@ -232,78 +258,46 @@ namespace DynamicData.Tests.Cache
 
         public class DeviceMetaData : IEquatable<DeviceMetaData>
         {
-            public DeviceMetaData(string name, bool isAutoConnect = false)
+            public DeviceMetaData(int key, string name, bool isAutoConnect = false)
             {
+                Key = key;
                 Name = name;
                 IsAutoConnect = isAutoConnect;
             }
 
             public bool IsAutoConnect { get; }
-
+            public int Key { get; }
             public string Name { get; }
 
-            public static bool operator ==(DeviceMetaData left, DeviceMetaData right)
+            public override string ToString()
             {
-                return Equals(left, right);
-            }
-
-            public static bool operator !=(DeviceMetaData left, DeviceMetaData right)
-            {
-                return !Equals(left, right);
+                return $"Key: {Key}. Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
             }
 
             public bool Equals(DeviceMetaData? other)
             {
-                if (ReferenceEquals(null, other))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, other))
-                {
-                    return true;
-                }
-
-                return string.Equals(Name, other.Name) && IsAutoConnect == other.IsAutoConnect;
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return IsAutoConnect == other.IsAutoConnect && Key == other.Key && Name == other.Name;
             }
 
             public override bool Equals(object? obj)
             {
-                if (ReferenceEquals(null, obj))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, obj))
-                {
-                    return true;
-                }
-
-                if (obj.GetType() != GetType())
-                {
-                    return false;
-                }
-
-                return Equals((DeviceMetaData)obj);
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((DeviceMetaData) obj);
             }
 
             public override int GetHashCode()
             {
-                unchecked
-                {
-                    return ((Name is not null ? Name.GetHashCode() : 0) * 397) ^ IsAutoConnect.GetHashCode();
-                }
-            }
-
-            public override string ToString()
-            {
-                return $"Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
+                return HashCode.Combine(IsAutoConnect, Key, Name);
             }
         }
 
         public class DeviceWithMetadata : IEquatable<DeviceWithMetadata>
         {
-            public DeviceWithMetadata(string key, Optional<Device> device, DeviceMetaData metaData)
+            public DeviceWithMetadata(int key, Optional<Device> device, DeviceMetaData metaData)
             {
                 Key = key;
                 Device = device;
@@ -312,7 +306,7 @@ namespace DynamicData.Tests.Cache
 
             public Optional<Device> Device { get; }
 
-            public string Key { get; }
+            public int Key { get; }
 
             public DeviceMetaData MetaData { get; }
 
@@ -363,7 +357,7 @@ namespace DynamicData.Tests.Cache
 
             public override int GetHashCode()
             {
-                return Key?.GetHashCode() ?? 0;
+                return Key;
             }
 
             public override string ToString()
