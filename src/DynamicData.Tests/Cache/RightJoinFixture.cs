@@ -190,6 +190,33 @@ namespace DynamicData.Tests.Cache
             _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
         }
 
+        [Fact]
+        public void MoreRight()
+        {
+            _left.Edit(
+                innerCache =>
+                    {
+                        innerCache.AddOrUpdate(new Device("Device1"));
+                        innerCache.AddOrUpdate(new Device("Device2"));
+                        innerCache.AddOrUpdate(new Device("Device3"));
+                    });
+
+            _right.Edit(
+                innerCache =>
+                    {
+                        innerCache.AddOrUpdate(new DeviceMetaData(1,"Device1"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(2,"Device2")); 
+                        innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
+                        innerCache.AddOrUpdate(new DeviceMetaData(4,"Device4"));
+                    });
+
+            4.Should().Be(_result.Data.Count);
+
+            _result.Data.Lookup(4).HasValue.Should().BeTrue();
+            _result.Data.Items.Count(dwm => dwm.Device == Optional<Device>.None).Should().Be(1);
+        }
+
+
 
         public class Device : IEquatable<Device>
         {

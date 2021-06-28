@@ -29,7 +29,7 @@ namespace DynamicData.Cache.Internal
         public IObservable<IChangeSet<TDestination, TLeftKey>> Run()
         {
             var rightGrouped = _right.GroupWithImmutableState(_rightKeySelector);
-            return _left.InnerJoin(rightGrouped, grouping => grouping.Key, _resultSelector);
+            return _left.InnerJoin(rightGrouped, grouping => grouping.Key, (key, left, right) => _resultSelector(key.leftKey, left, right)).ChangeKey((keyTuple, _) => keyTuple.leftKey);
         }
     }
 }
