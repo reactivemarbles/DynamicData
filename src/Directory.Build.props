@@ -53,7 +53,7 @@
   </ItemGroup>
 
   <ItemGroup>	
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.4.205" PrivateAssets="all" />	
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.4.220" PrivateAssets="all" />	
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.261" PrivateAssets="all" />
