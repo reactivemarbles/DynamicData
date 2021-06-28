@@ -114,7 +114,7 @@ namespace DynamicData.Binding
                         }
                         else
                         {
-                            list.Replace(update.Previous.Value, update.Current);
+                            list[update.CurrentIndex] = update.Current;
                         }
 
                         break;
