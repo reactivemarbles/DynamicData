@@ -28,7 +28,7 @@ namespace DynamicData.Cache.Internal
             _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
         }
 
-        public IObservable<IChangeSet<TDestination, (TLeftKey, TRightKey)>> Run()
+        public IObservable<IChangeSet<TDestination, (TLeftKey leftKey, TRightKey rightKey)>> Run()
         {
             return Observable.Create<IChangeSet<TDestination, (TLeftKey, TRightKey)>>(
                 observer =>
