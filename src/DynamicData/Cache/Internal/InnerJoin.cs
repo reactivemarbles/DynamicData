@@ -14,7 +14,7 @@ namespace DynamicData.Cache.Internal
     {
         private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left;
 
-        private readonly Func<(TLeftKey, TRightKey), TLeft, TRight, TDestination> _resultSelector;
+        private readonly Func<(TLeftKey leftKey, TRightKey rightKey), TLeft, TRight, TDestination> _resultSelector;
 
         private readonly IObservable<IChangeSet<TRight, TRightKey>> _right;
 
@@ -30,7 +30,7 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TDestination, (TLeftKey leftKey, TRightKey rightKey)>> Run()
         {
-            return Observable.Create<IChangeSet<TDestination, (TLeftKey, TRightKey)>>(
+            return Observable.Create<IChangeSet<TDestination, (TLeftKey leftKey, TRightKey rightKey)>>(
                 observer =>
                     {
                         var locker = new object();
@@ -41,7 +41,7 @@ namespace DynamicData.Cache.Internal
                         var rightGrouped = _right.Synchronize(locker).GroupWithImmutableState(_rightKeySelector).AsObservableCache(false);
 
                         // joined is the final cache
-                        var joinedCache = new LockFreeObservableCache<TDestination, (TLeftKey, TRightKey)>();
+                        var joinedCache = new LockFreeObservableCache<TDestination, (TLeftKey leftKey, TRightKey rightKey)>();
                         var leftLoader = leftCache.Connect().Subscribe(
                         changes =>
                         {
