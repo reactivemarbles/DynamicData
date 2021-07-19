@@ -34,7 +34,6 @@ namespace DynamicData.Cache.Internal
 
         private readonly ICacheUpdater<TObject, TKey> _updater;
 
-
         /// <summary>
         /// Initializes a new instance of the <see cref="LockFreeObservableCache{TObject, TKey}"/> class.
         /// </summary>
