@@ -24,8 +24,9 @@ namespace DynamicData
         /// Returns a filtered stream of cache changes preceded with the initial filtered state.
         /// </summary>
         /// <param name="predicate">The result will be filtered using the specified predicate.</param>
+        /// <param name="suppressEmptyChangeSets">By default, empty change sets are not emitted. Set this value to false to emit empty change sets.</param>
         /// <returns>An observable that emits the change set.</returns>
-        IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null);
+        IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true);
 
         /// <summary>
         /// Returns a filtered stream of cache changes.

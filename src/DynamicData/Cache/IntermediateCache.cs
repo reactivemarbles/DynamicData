@@ -44,101 +44,41 @@ namespace DynamicData
             _innerCache = new ObservableCache<TObject, TKey>();
         }
 
-        /// <summary>
-        /// Gets the total count of cached items.
-        /// </summary>
+        /// <inheritdoc />
         public int Count => _innerCache.Count;
 
-        /// <summary>
-        /// Gets a count changed observable starting with the current count.
-        /// </summary>
+        /// <inheritdoc />
         public IObservable<int> CountChanged => _innerCache.CountChanged;
 
-        /// <summary>
-        /// Gets the Items.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<TObject> Items => _innerCache.Items;
 
-        /// <summary>
-        /// Gets the keys.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<TKey> Keys => _innerCache.Keys;
 
-        /// <summary>
-        /// Gets the key value pairs.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
 
-        /// <summary>
-        /// Returns a filtered change set of cache changes preceded with the initial state.
-        /// </summary>
-        /// <param name="predicate">The predicate.</param>
-        /// <returns>An observable which will emit change sets.</returns>
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate)
-        {
-            return _innerCache.Connect(predicate);
-        }
+        /// <inheritdoc />
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
+            => _innerCache.Connect(predicate, suppressEmptyChangeSets);
 
-        /// <summary>
-        /// Returns a observable of cache changes preceded with the initial cache state.
-        /// </summary>
-        /// <returns>An observable which will emit change sets.</returns>
-        public IObservable<IChangeSet<TObject, TKey>> Connect()
-        {
-            return _innerCache.Connect();
-        }
+        /// <inheritdoc />
+        public void Dispose() => _innerCache.Dispose();
 
-        /// <summary>
-        /// Releases unmanaged and - optionally - managed resources.
-        /// </summary>
-        public void Dispose()
-        {
-            _innerCache.Dispose();
-        }
+        /// <inheritdoc />
+        public void Edit(Action<ICacheUpdater<TObject, TKey>> updateAction) => _innerCache.UpdateFromIntermediate(updateAction);
 
-        /// <summary>
-        /// Action to apply a batch update to a cache. Multiple update methods can be invoked within a single batch operation.
-        /// These operations are invoked within the cache's lock and is therefore thread safe.
-        /// The result of the action will produce a single change set.
-        /// </summary>
-        /// <param name="updateAction">The update action.</param>
-        public void Edit(Action<ICacheUpdater<TObject, TKey>> updateAction)
-        {
-            _innerCache.UpdateFromIntermediate(updateAction);
-        }
-
-        /// <summary>
-        /// Lookup a single item using the specified key.
-        /// </summary>
-        /// <remarks>
-        /// Fast indexed lookup.
-        /// </remarks>
-        /// <param name="key">The key.</param>
-        /// <returns>A optional value.</returns>
-        public Optional<TObject> Lookup(TKey key)
-        {
-            return _innerCache.Lookup(key);
-        }
+        /// <inheritdoc />
+        public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
         /// <inheritdoc />
         public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
-        {
-            return _innerCache.Preview(predicate);
-        }
+            => _innerCache.Preview(predicate);
 
-        /// <summary>
-        /// Returns an observable of any changes which match the specified key. The sequence starts with the initial item in the cache (if there is one).
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns>An observable which emits changes.</returns>
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
-        {
-            return _innerCache.Watch(key);
-        }
+        /// <inheritdoc />
+        public IObservable<Change<TObject, TKey>> Watch(TKey key) => _innerCache.Watch(key);
 
-        internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool>? filter = null)
-        {
-            return _innerCache.GetInitialUpdates(filter);
-        }
+        internal IChangeSet<TObject, TKey> GetInitialUpdates(Func<TObject, bool>? filter = null) => _innerCache.GetInitialUpdates(filter);
     }
 }

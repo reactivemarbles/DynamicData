@@ -53,7 +53,7 @@ namespace DynamicData
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
 
         /// <inheritdoc />
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null) => _innerCache.Connect(predicate);
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => _innerCache.Connect(predicate, suppressEmptyChangeSets);
 
         /// <inheritdoc />
         public void Dispose()
