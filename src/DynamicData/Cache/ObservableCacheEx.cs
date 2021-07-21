@@ -1592,8 +1592,9 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="filter">The filter.</param>
+        /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status</param>
         /// <returns>An observable which emits change sets.</returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, bool suppressEmptyChangeSets = true)
             where TKey : notnull
         {
             if (source is null)
@@ -1601,7 +1602,7 @@ namespace DynamicData
                 throw new ArgumentNullException(nameof(source));
             }
 
-            return new StaticFilter<TObject, TKey>(source, filter).Run();
+            return new StaticFilter<TObject, TKey>(source, filter, suppressEmptyChangeSets).Run();
         }
 
         /// <summary>
