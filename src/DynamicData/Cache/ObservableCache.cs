@@ -120,7 +120,7 @@ namespace DynamicData
                     var changes = Observable.Defer(() => initial).Concat(_changes);
                     if (predicate != null)
                     {
-                        changes = changes.Filter(predicate);
+                        changes = changes.Filter(predicate, suppressEmptyChangeSets);
                     }
                     else if (suppressEmptyChangeSets)
                     {

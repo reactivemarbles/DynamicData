@@ -30,16 +30,13 @@ namespace DynamicData.Cache.Internal
 
                 return _source.Subscribe(changes =>
                 {
-                    if (cache is null)
-                    {
-                        cache = new ChangeAwareCache<TObject, TKey>(changes!.Count);
-                    }
+                    cache ??= new ChangeAwareCache<TObject, TKey>(changes.Count);
 
                     cache.FilterChanges(changes, _filter);
-                    var result = cache.CaptureChanges();
+                    var filtered = cache.CaptureChanges();
 
-                    if (result.Count != 0 || !_suppressEmptyChangeSets)
-                        observer.OnNext(changes);
+                    if (filtered.Count != 0 || !_suppressEmptyChangeSets)
+                        observer.OnNext(filtered);
 
                 }, observer.OnError, observer.OnCompleted);
             });
