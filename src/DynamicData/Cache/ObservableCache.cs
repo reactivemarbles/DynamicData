@@ -234,10 +234,7 @@ namespace DynamicData
         {
             lock (_locker)
             {
-                if (changes.Count != 0)
-                {
-                    _changes.OnNext(changes);
-                }
+                _changes.OnNext(changes);
 
                 if (_countChanged.IsValueCreated)
                 {

@@ -132,5 +132,30 @@ namespace DynamicData.Tests.Cache
             called.Should().BeTrue();
             completed.Should().BeTrue();
         }
+
+        [Fact]
+        public void EmptyChanges()
+        {
+            IChangeSet<Person, string>? change = null;
+
+            using var subscription = _source.Connect(suppressEmptyChangeSets: false)
+                .Subscribe(c=> change = c);
+
+            change.Should().NotBeNull();
+            change!.Count.Should().Be(0);
+
+        }
+
+        [Fact]
+        public void EmptyChangesWithFilter()
+        {
+            IChangeSet<Person, string>? change = null;
+
+            using var subscription = _source.Connect(p=>p.Age == 20, suppressEmptyChangeSets: false)
+                .Subscribe(c => change = c);
+
+            change.Should().NotBeNull();
+            change!.Count.Should().Be(0);
+        }
     }
 }
