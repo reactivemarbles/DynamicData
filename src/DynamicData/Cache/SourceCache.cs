@@ -16,12 +16,10 @@ namespace DynamicData
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey>
+    public sealed class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey>
         where TKey : notnull
     {
         private readonly ObservableCache<TObject, TKey> _innerCache;
-
-        private bool _isDisposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SourceCache{TObject, TKey}"/> class.
@@ -53,14 +51,10 @@ namespace DynamicData
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
 
         /// <inheritdoc />
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null) => _innerCache.Connect(predicate);
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => _innerCache.Connect(predicate, suppressEmptyChangeSets);
 
         /// <inheritdoc />
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        public void Dispose() => _innerCache.Dispose();
 
         /// <inheritdoc />
         public void Edit(Action<ISourceUpdater<TObject, TKey>> updateAction) => _innerCache.UpdateFromSource(updateAction);
@@ -73,24 +67,5 @@ namespace DynamicData
 
         /// <inheritdoc />
         public IObservable<Change<TObject, TKey>> Watch(TKey key) => _innerCache.Watch(key);
-
-        /// <summary>
-        /// Disposes of managed and unmanaged responses.
-        /// </summary>
-        /// <param name="isDisposing">If being called by the Dispose method.</param>
-        protected virtual void Dispose(bool isDisposing)
-        {
-            if (_isDisposed)
-            {
-                return;
-            }
-
-            _isDisposed = true;
-
-            if (isDisposing)
-            {
-                _innerCache.Dispose();
-            }
-        }
     }
 }

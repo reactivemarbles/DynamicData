@@ -19,7 +19,7 @@ namespace DynamicData.Cache.Internal
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
-    public class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+    public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
         where TKey : notnull
     {
         private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
@@ -33,8 +33,6 @@ namespace DynamicData.Cache.Internal
         private readonly ChangeAwareCache<TObject, TKey> _innerCache = new();
 
         private readonly ICacheUpdater<TObject, TKey> _updater;
-
-        private bool _isDisposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LockFreeObservableCache{TObject, TKey}"/> class.
@@ -76,37 +74,23 @@ namespace DynamicData.Cache.Internal
                     });
         }
 
-        /// <summary>
-        /// Gets the total count of cached items.
-        /// </summary>
+        /// <inheritdoc />
         public int Count => _innerCache.Count;
 
-        /// <summary>
-        /// Gets a count changed observable starting with the current count.
-        /// </summary>
+        /// <inheritdoc />
         public IObservable<int> CountChanged => _countChanged.StartWith(_innerCache.Count).DistinctUntilChanged();
 
-        /// <summary>
-        /// Gets the Items.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<TObject> Items => _innerCache.Items;
 
-        /// <summary>
-        /// Gets the keys.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<TKey> Keys => _innerCache.Keys;
 
-        /// <summary>
-        /// Gets the key value pairs.
-        /// </summary>
+        /// <inheritdoc />
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
 
-        /// <summary>
-        /// Returns a observable of cache changes preceded with the initial cache state.
-        /// </summary>
-        /// <param name="predicate">The result will be filtered using the specified predicate.</param>
-        /// <returns>An observable that emits the change set.</returns>
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null)
+        /// <inheritdoc />ns>An observable that emits the change set.</returns>
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
         {
             return Observable.Defer(
                 () =>
@@ -118,14 +102,8 @@ namespace DynamicData.Cache.Internal
                     });
         }
 
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        /// <inheritdoc />
+        public void Dispose() => _cleanUp.Dispose();
 
         /// <summary>
         /// Edits the specified edit action.
@@ -186,25 +164,6 @@ namespace DynamicData.Cache.Internal
                                     }
                                 });
                     });
-        }
-
-        /// <summary>
-        /// Disposes of managed and unmanaged resources.
-        /// </summary>
-        /// <param name="isDisposing">If being called by the dispose method.</param>
-        protected virtual void Dispose(bool isDisposing)
-        {
-            if (_isDisposed)
-            {
-                return;
-            }
-
-            _isDisposed = true;
-
-            if (isDisposing)
-            {
-                _cleanUp.Dispose();
-            }
         }
     }
 }

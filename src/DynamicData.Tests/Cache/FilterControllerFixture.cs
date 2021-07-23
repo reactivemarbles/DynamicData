@@ -299,5 +299,19 @@ namespace DynamicData.Tests.Cache
             _results.Messages.Count.Should().Be(0, "Should be no updates");
             _results.Data.Count.Should().Be(0, "Should nothing cached");
         }
+
+        [Fact]
+        public void EmptyChanges()
+        {
+            IChangeSet<Person, string>? change = null;
+
+            //need to also apply overload on connect as that will also need to provide and empty notification
+            using var subscription = _source.Connect(suppressEmptyChangeSets: false)
+                .Filter(_filter, false)
+                .Subscribe(c => change = c);
+
+            change.Should().NotBeNull();
+            change!.Count.Should().Be(0);
+        }
     }
 }

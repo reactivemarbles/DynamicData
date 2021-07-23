@@ -39,29 +39,15 @@ namespace DynamicData.Cache.Internal
 
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
 
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null)
-        {
-            return _cache.Connect(predicate);
-        }
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
+          => _cache.Connect(predicate, suppressEmptyChangeSets);
 
-        public void Dispose()
-        {
-            _cache.Dispose();
-        }
+        public void Dispose() => _cache.Dispose();
 
-        public Optional<TObject> Lookup(TKey key)
-        {
-            return _cache.Lookup(key);
-        }
+        public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 
-        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
-        {
-            return _cache.Preview(predicate);
-        }
+        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => _cache.Preview(predicate);
 
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
-        {
-            return _cache.Watch(key);
-        }
+        public IObservable<Change<TObject, TKey>> Watch(TKey key) => _cache.Watch(key);
     }
 }

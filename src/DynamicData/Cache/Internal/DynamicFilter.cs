@@ -15,14 +15,16 @@ namespace DynamicData.Cache.Internal
         private readonly IObservable<Func<TObject, bool>> _predicateChanged;
 
         private readonly IObservable<Unit>? _refilterObservable;
+        private readonly bool _suppressEmptyChangeSets;
 
         private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
-        public DynamicFilter(IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit>? refilterObservable = null)
+        public DynamicFilter(IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit>? refilterObservable = null, bool suppressEmptyChangeSets = true)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
             _predicateChanged = predicateChanged ?? throw new ArgumentNullException(nameof(predicateChanged));
             _refilterObservable = refilterObservable;
+            _suppressEmptyChangeSets = suppressEmptyChangeSets;
         }
 
         public IObservable<IChangeSet<TObject, TKey>> Run()
@@ -59,7 +61,11 @@ namespace DynamicData.Cache.Internal
                                     return filteredData.CaptureChanges();
                                 });
 
-                        return refresher.Merge(dataChanged).NotEmpty().SubscribeSafe(observer);
+                        var source = refresher.Merge(dataChanged);
+                        if (_suppressEmptyChangeSets)
+                            source = source.NotEmpty();
+
+                        return source.SubscribeSafe(observer);
                     });
         }
 

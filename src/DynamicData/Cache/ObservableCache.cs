@@ -103,7 +103,7 @@ namespace DynamicData
 
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _readerWriter.KeyValues;
 
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null) =>
+        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) =>
             Observable.Create<IChangeSet<TObject, TKey>>(
                 observer =>
                 {
@@ -120,9 +120,9 @@ namespace DynamicData
                     var changes = Observable.Defer(() => initial).Concat(_changes);
                     if (predicate != null)
                     {
-                        changes = changes.Filter(predicate);
+                        changes = changes.Filter(predicate, suppressEmptyChangeSets);
                     }
-                    else
+                    else if (suppressEmptyChangeSets)
                     {
                         changes = changes.NotEmpty();
                     }
@@ -234,10 +234,7 @@ namespace DynamicData
         {
             lock (_locker)
             {
-                if (changes.Count != 0)
-                {
-                    _changes.OnNext(changes);
-                }
+                _changes.OnNext(changes);
 
                 if (_countChanged.IsValueCreated)
                 {

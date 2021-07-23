@@ -46,7 +46,7 @@ namespace DynamicData.Tests.Cache
             _source.AddOrUpdate(person);
 
             _errors.Count.Should().Be(1, "Should be 1 error reported");
-            _results.Messages.Count.Should().Be(0, "Should be no messages");
+            _results.Messages.Count.Should().Be(1, "Should be 1 messages");
         }
 
         [Fact]
@@ -118,7 +118,7 @@ namespace DynamicData.Tests.Cache
             _source.AddOrUpdate(update3);
 
             _errors.Count.Should().Be(1, "Should be 1 error reported");
-            _results.Messages.Count.Should().Be(2, "Should be 2 messages");
+            _results.Messages.Count.Should().Be(3, "Should be 3 messages");
 
             _results.Data.Count.Should().Be(1, "Should 1 item in the cache");
             _results.Data.Items.First().Should().Be(_transformFactory(update2), "Change 2 shoud be the only item cached");

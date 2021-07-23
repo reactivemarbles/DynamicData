@@ -1592,16 +1592,14 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="filter">The filter.</param>
+        /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
         /// <returns>An observable which emits change sets.</returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, bool suppressEmptyChangeSets = true)
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+            if (source is null) throw new ArgumentNullException(nameof(source));
 
-            return new StaticFilter<TObject, TKey>(source, filter).Run();
+            return new StaticFilter<TObject, TKey>(source, filter, suppressEmptyChangeSets).Run();
         }
 
         /// <summary>
@@ -1611,21 +1609,15 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
+        /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
         /// <returns>An observable which emits change sets.</returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged)
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, bool suppressEmptyChangeSets = true)
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+            if (source is null) throw new ArgumentNullException(nameof(source));
+            if (predicateChanged is null) throw new ArgumentNullException(nameof(predicateChanged));
 
-            if (predicateChanged is null)
-            {
-                throw new ArgumentNullException(nameof(predicateChanged));
-            }
-
-            return new DynamicFilter<TObject, TKey>(source, predicateChanged).Run();
+            return source.Filter(predicateChanged, Observable.Empty<Unit>(), suppressEmptyChangeSets);
         }
 
         /// <summary>
@@ -1635,22 +1627,15 @@ namespace DynamicData
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
+        /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
         /// <returns>An observable which emits change sets.</returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Unit> reapplyFilter)
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Unit> reapplyFilter, bool suppressEmptyChangeSets = true)
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+            if (source is null) throw new ArgumentNullException(nameof(source));
+            if (reapplyFilter is null) throw new ArgumentNullException(nameof(reapplyFilter));
 
-            if (reapplyFilter is null)
-            {
-                throw new ArgumentNullException(nameof(reapplyFilter));
-            }
-
-            var empty = Observable.Empty<Func<TObject, bool>>();
-            return new DynamicFilter<TObject, TKey>(source, empty, reapplyFilter).Run();
+            return source.Filter(Observable.Empty<Func<TObject, bool>>(), reapplyFilter, suppressEmptyChangeSets);
         }
 
         /// <summary>
@@ -1661,26 +1646,16 @@ namespace DynamicData
         /// <param name="source">The source.</param>
         /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
         /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
+        /// <param name="suppressEmptyChangeSets">By default empty changeset notifications are suppressed for performance reasons.  Set to false to publish empty changesets.  Doing so can be useful for monitoring loading status.</param>
         /// <returns>An observable which emits change sets.</returns>
-        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit> reapplyFilter)
+        public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit> reapplyFilter, bool suppressEmptyChangeSets = true)
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+            if (source is null) throw new ArgumentNullException(nameof(source));
+            if (predicateChanged is null) throw new ArgumentNullException(nameof(predicateChanged));
+            if (reapplyFilter is null) throw new ArgumentNullException(nameof(reapplyFilter));
 
-            if (predicateChanged is null)
-            {
-                throw new ArgumentNullException(nameof(predicateChanged));
-            }
-
-            if (reapplyFilter is null)
-            {
-                throw new ArgumentNullException(nameof(reapplyFilter));
-            }
-
-            return new DynamicFilter<TObject, TKey>(source, predicateChanged, reapplyFilter).Run();
+            return new DynamicFilter<TObject, TKey>(source, predicateChanged, reapplyFilter, suppressEmptyChangeSets).Run();
         }
 
         /// <summary>
