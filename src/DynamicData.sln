@@ -16,6 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".other", ".other", "{DFCC45
 		README.md = README.md
 		ReleaseNotes.md = ReleaseNotes.md
 		stylecop.json = stylecop.json
+		..\version.json = ..\version.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicData.Tests", "DynamicData.Tests\DynamicData.Tests.csproj", "{1D53F0EE-F579-4398-82E5-ECAB2AA70BF1}"
