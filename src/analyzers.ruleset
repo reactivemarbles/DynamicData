@@ -169,7 +169,7 @@
     <Rule Id="SA1137" Action="Error" />
     <Rule Id="SA1139" Action="Error" />
     <Rule Id="SA1200" Action="None" />
-    <Rule Id="SA1201" Action="Error" />
+    <Rule Id="SA1201" Action="None" />
     <Rule Id="SA1202" Action="Error" />
     <Rule Id="SA1203" Action="Error" />
     <Rule Id="SA1204" Action="Error" />
