@@ -22,13 +22,16 @@ namespace DynamicData.Cache.Internal
     public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
         where TKey : notnull
     {
-        private readonly ISubject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+        private readonly Subject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
 
-        private readonly ISubject<IChangeSet<TObject, TKey>> _changesPreview = new Subject<IChangeSet<TObject, TKey>>();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+        private readonly Subject<IChangeSet<TObject, TKey>> _changesPreview = new Subject<IChangeSet<TObject, TKey>>();
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+        private readonly Subject<int> _countChanged = new Subject<int>();
 
         private readonly IDisposable _cleanUp;
-
-        private readonly ISubject<int> _countChanged = new Subject<int>();
 
         private readonly ChangeAwareCache<TObject, TKey> _innerCache = new();
 
@@ -89,16 +92,25 @@ namespace DynamicData.Cache.Internal
         /// <inheritdoc />
         public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
 
-        /// <inheritdoc />ns>An observable that emits the change set.</returns>
+        /// <inheritdoc />
         public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
         {
             return Observable.Defer(
                 () =>
                     {
-                        var initial = _innerCache.GetInitialUpdates(predicate);
-                        var changes = Observable.Return(initial).Concat(_changes);
+                        var initial = InternalEx.Return(() => _innerCache.GetInitialUpdates(predicate));
+                        var changes = initial.Concat(_changes);
 
-                        return (predicate is null ? changes : changes.Filter(predicate)).NotEmpty();
+                        if (predicate != null)
+                        {
+                            changes = changes.Filter(predicate, suppressEmptyChangeSets);
+                        }
+                        else if (suppressEmptyChangeSets)
+                        {
+                            changes = changes.NotEmpty();
+                        }
+
+                        return changes;
                     });
         }
 

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
+using DynamicData.Binding;
 using FluentAssertions;
 
 using Xunit;
@@ -33,6 +36,97 @@ namespace DynamicData.Tests
             obsListDerived.Count.Should().Be(3);
             obsListDerived.Items.Should().BeEquivalentTo(a0, i2, i3);
         }
+
+        [Fact]
+        public void AutoRefreshWithObservablePredicate1()
+        {
+            var item1 = new ActivableItem
+            {
+                Activated = false
+            };
+
+            var items = new SourceList<ActivableItem>();
+            items.Add(item1);
+
+            var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
+
+            var obsListDerived = items
+                .Connect()
+                .AutoRefresh(i => i.Activated)
+                .Filter(filterSubject)
+                .Do(x => Console.WriteLine("Changes" + x.TotalChanges))
+                .AsObservableList();
+
+            // Default filter predicate denies all items
+            // The binding collection should stay empty, until the predicate changes
+            obsListDerived.Count.Should().Be(0);
+
+            item1.Activated = true;
+            obsListDerived.Count.Should().Be(0);
+
+            item1.Activated = false;
+            obsListDerived.Count.Should().Be(0);
+
+            item1.Activated = true;
+            obsListDerived.Count.Should().Be(0);
+
+            // Changing predicate, all "Activated" items should added to the binding collection
+            filterSubject.OnNext(i => i.Activated);
+
+            obsListDerived.Count.Should().Be(1);
+            obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+
+            // Changing property value
+            item1.Activated = false;
+            obsListDerived.Count.Should().Be(0);
+        }
+
+        [Fact]
+        public void AutoRefreshWithObservablePredicate2()
+        {
+            var item1 = new ActivableItem
+            {
+                Activated = false
+            };
+
+            var items = new ObservableCollection<ActivableItem>();
+            items.Add(item1);
+
+            var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
+
+            var obsListDerived = items
+                .ToObservableChangeSet()
+                .AutoRefresh(i => i.Activated)
+                .Filter(filterSubject)
+                .AsObservableList();
+
+            // Default filter predicate denies all items
+            // The binding collection should stay empty, until the predicate changes
+            obsListDerived.Count.Should().Be(0);
+
+            item1.Activated = true;
+            obsListDerived.Count.Should().Be(0);
+
+            item1.Activated = false;
+            obsListDerived.Count.Should().Be(0);
+
+            item1.Activated = true;
+            obsListDerived.Count.Should().Be(0);
+
+            // Changing predicate, all "Activated" items should added to the binding collection
+            filterSubject.OnNext(i => i.Activated);
+
+            obsListDerived.Count.Should().Be(1);
+            obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+
+            // Changing property value multiple times
+            item1.Activated = false;
+            item1.Activated = true;
+            item1.Activated = false;
+            item1.Activated = true;
+            obsListDerived.Count.Should().Be(1);
+            obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+        }
     }
 
     public class Item : INotifyPropertyChanged
@@ -58,5 +152,22 @@ namespace DynamicData.Tests
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
             }
         }
+    }
+
+    public class ActivableItem : INotifyPropertyChanged
+    {
+        private bool _activated;
+
+        public bool Activated
+        {
+            get => _activated;
+            set
+            {
+                _activated = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Activated)));
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

@@ -33,18 +33,16 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<TDestination>> Run()
         {
-            return _source.Scan(
-                new ChangeAwareList<TransformedItemContainer>(),
-                (state, changes) =>
-                    {
-                        Transform(state, changes);
-                        return state;
-                    }).Select(
-                transformed =>
-                    {
-                        var changed = transformed.CaptureChanges();
-                        return changed.Transform(container => container.Destination);
-                    });
+            return _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
+                {
+                    Transform(state, changes);
+                    return state;
+                })
+                .Select(transformed =>
+                {
+                    var changed = transformed.CaptureChanges();
+                    return changed.Transform(container => container.Destination);
+                });
         }
 
         private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)

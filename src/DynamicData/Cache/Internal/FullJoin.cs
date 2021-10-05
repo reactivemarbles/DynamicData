@@ -42,97 +42,91 @@ namespace DynamicData.Cache.Internal
                         var rightCache = _right.Synchronize(locker).ChangeKey(_rightKeySelector).AsObservableCache(false);
 
                         // joined is the final cache
-                        var joinedCache = new LockFreeObservableCache<TDestination, TLeftKey>();
+                        var joinedCache = new ChangeAwareCache<TDestination, TLeftKey>();
 
-                        var leftLoader = leftCache.Connect().Subscribe(
-                            changes =>
+                        var leftLoader = leftCache.Connect().Select(changes =>
                                 {
-                                    joinedCache.Edit(
-                                        innerCache =>
-                                            {
-                                                foreach (var change in changes.ToConcreteType())
+                                    foreach (var change in changes.ToConcreteType())
+                                    {
+                                        var left = change.Current;
+                                        var right = rightCache.Lookup(change.Key);
+
+                                        switch (change.Reason)
+                                        {
+                                            case ChangeReason.Add:
+                                            case ChangeReason.Update:
+                                                joinedCache.AddOrUpdate(_resultSelector(change.Key, left, right), change.Key);
+                                                break;
+
+                                            case ChangeReason.Remove:
+
+                                                if (!right.HasValue)
                                                 {
-                                                    var left = change.Current;
-                                                    var right = rightCache.Lookup(change.Key);
-
-                                                    switch (change.Reason)
-                                                    {
-                                                        case ChangeReason.Add:
-                                                        case ChangeReason.Update:
-                                                            innerCache.AddOrUpdate(_resultSelector(change.Key, left, right), change.Key);
-                                                            break;
-
-                                                        case ChangeReason.Remove:
-
-                                                            if (!right.HasValue)
-                                                            {
-                                                                // remove from result because there is no left and no rights
-                                                                innerCache.Remove(change.Key);
-                                                            }
-                                                            else
-                                                            {
-                                                                // update with no left value
-                                                                innerCache.AddOrUpdate(_resultSelector(change.Key, Optional<TLeft>.None, right), change.Key);
-                                                            }
-
-                                                            break;
-
-                                                        case ChangeReason.Refresh:
-                                                            // propagate upstream
-                                                            innerCache.Refresh(change.Key);
-                                                            break;
-                                                    }
+                                                    // remove from result because there is no left and no rights
+                                                    joinedCache.Remove(change.Key);
                                                 }
-                                            });
+                                                else
+                                                {
+                                                    // update with no left value
+                                                    joinedCache.AddOrUpdate(_resultSelector(change.Key, Optional<TLeft>.None, right), change.Key);
+                                                }
+
+                                                break;
+
+                                            case ChangeReason.Refresh:
+                                                // propagate upstream
+                                                joinedCache.Refresh(change.Key);
+                                                break;
+                                        }
+                                    }
+
+                                    return joinedCache.CaptureChanges();
                                 });
 
-                        var rightLoader = rightCache.Connect().Subscribe(
-                            changes =>
+                        var rightLoader = rightCache.Connect().Select(changes =>
                                 {
-                                    joinedCache.Edit(
-                                        innerCache =>
-                                            {
-                                                foreach (var change in changes.ToConcreteType())
+                                    foreach (var change in changes.ToConcreteType())
+                                    {
+                                        var right = change.Current;
+                                        var left = leftCache.Lookup(change.Key);
+
+                                        switch (change.Reason)
+                                        {
+                                            case ChangeReason.Add:
+                                            case ChangeReason.Update:
                                                 {
-                                                    var right = change.Current;
-                                                    var left = leftCache.Lookup(change.Key);
+                                                    joinedCache.AddOrUpdate(_resultSelector(change.Key, left, right), change.Key);
+                                                }
 
-                                                    switch (change.Reason)
+                                                break;
+
+                                            case ChangeReason.Remove:
+                                                {
+                                                    if (!left.HasValue)
                                                     {
-                                                        case ChangeReason.Add:
-                                                        case ChangeReason.Update:
-                                                            {
-                                                                innerCache.AddOrUpdate(_resultSelector(change.Key, left, right), change.Key);
-                                                            }
-
-                                                            break;
-
-                                                        case ChangeReason.Remove:
-                                                            {
-                                                                if (!left.HasValue)
-                                                                {
-                                                                    // remove from result because there is no left and no rights
-                                                                    innerCache.Remove(change.Key);
-                                                                }
-                                                                else
-                                                                {
-                                                                    // update with no right value
-                                                                    innerCache.AddOrUpdate(_resultSelector(change.Key, left, Optional<TRight>.None), change.Key);
-                                                                }
-                                                            }
-
-                                                            break;
-
-                                                        case ChangeReason.Refresh:
-                                                            // propagate upstream
-                                                            innerCache.Refresh(change.Key);
-                                                            break;
+                                                        // remove from result because there is no left and no rights
+                                                        joinedCache.Remove(change.Key);
+                                                    }
+                                                    else
+                                                    {
+                                                        // update with no right value
+                                                        joinedCache.AddOrUpdate(_resultSelector(change.Key, left, Optional<TRight>.None), change.Key);
                                                     }
                                                 }
-                                            });
+
+                                                break;
+
+                                            case ChangeReason.Refresh:
+                                                // propagate upstream
+                                                joinedCache.Refresh(change.Key);
+                                                break;
+                                        }
+                                    }
+
+                                    return joinedCache.CaptureChanges();
                                 });
 
-                        return new CompositeDisposable(joinedCache.Connect().NotEmpty().SubscribeSafe(observer), leftCache, rightCache, leftLoader, joinedCache, rightLoader);
+                        return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache);
                     });
         }
     }
