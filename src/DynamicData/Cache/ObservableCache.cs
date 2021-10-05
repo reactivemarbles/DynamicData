@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-
+using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
@@ -154,7 +154,7 @@ namespace DynamicData
                             return _changes.Finally(observer.OnCompleted).Subscribe(
                                 changes =>
                                     {
-                                        foreach (var change in changes)
+                                        foreach (var change in changes.ToConcreteType())
                                         {
                                             var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
                                             if (match)

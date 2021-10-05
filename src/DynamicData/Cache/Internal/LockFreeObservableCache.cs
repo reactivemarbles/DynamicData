@@ -170,9 +170,13 @@ namespace DynamicData.Cache.Internal
                         return _changes.Subscribe(
                             changes =>
                                 {
-                                    foreach (var match in changes.Where(update => update.Key.Equals(key)))
+                                    foreach (var change in changes.ToConcreteType())
                                     {
-                                        observer.OnNext(match);
+                                        var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
+                                        if (match)
+                                        {
+                                            observer.OnNext(change);
+                                        }
                                     }
                                 });
                     });

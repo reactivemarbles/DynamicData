@@ -10,7 +10,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal
 {
-    internal class DisposeMany<TObject, TKey>
+    internal sealed class DisposeMany<TObject, TKey>
         where TKey : notnull
     {
         private readonly Action<TObject> _removeAction;
