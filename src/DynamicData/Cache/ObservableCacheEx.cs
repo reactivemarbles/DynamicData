@@ -1104,6 +1104,7 @@ namespace DynamicData
         /// <returns>A continuation of the original stream.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+            where TObject : IDisposable
             where TKey : notnull
         {
             if (source is null)
@@ -1113,11 +1114,7 @@ namespace DynamicData
 
             return new DisposeMany<TObject, TKey>(
                 source,
-                t =>
-                    {
-                        var d = t as IDisposable;
-                        d?.Dispose();
-                    }).Run();
+                static d => d?.Dispose()).Run();
         }
 
         /// <summary>
