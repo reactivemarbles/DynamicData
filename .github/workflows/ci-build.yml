@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    types: [opened, synchronize, reopened, closed]
     branches: [ main ]
 
 env:
@@ -13,31 +12,31 @@ env:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     outputs:
       nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2.3.5
       with:
         fetch-depth: 0
+        lfs: true
 
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v1.8.2
       with:
         dotnet-version: 3.1.x
 
     - name: Install .NET 5
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v1.8.2
       with:
         dotnet-version: 5.0.x
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
-
-    - name: Update VS2019
-      shell: powershell
-      run: Start-Process -Wait -PassThru -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList "update --passive --norestart --installpath ""C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"""
+    - name: Install .NET 6
+      uses: actions/setup-dotnet@v1.8.2
+      with:
+        dotnet-version: 6.0.x
+        include-prerelease: true
 
     - name: NBGV
       id: nbgv
@@ -50,7 +49,7 @@ jobs:
       working-directory: src
       
     - name: Build
-      run: msbuild /t:build,pack /nowarn:MSB4011 /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
+      run: dotnet build --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
       working-directory: src
 
     - name: Run Unit Tests and Generate Coverage
@@ -63,6 +62,10 @@ jobs:
         output-format: cobertura
         output: '../../artifacts/'
         configuration: ${{ env.configuration }}
+
+    - name: Pack
+      run: dotnet pack --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
+      working-directory: src
 
     - name: Upload Code Coverage
       shell: bash
@@ -77,39 +80,3 @@ jobs:
       with:
         name: nuget
         path: '**/*.nupkg'
-
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    if: contains(github.event.pull_request.labels.*.name, 'release') && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-
-    - name: Download NuGet Packages
-      uses: actions/download-artifact@v2
-      with:
-        name: nuget
-
-    - name: Changelog
-      uses: glennawatson/ChangeLog@v1
-      id: changelog
-
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-      with:
-          tag_name: ${{ needs.build.outputs.nbgv }}
-          release_name: ${{ needs.build.outputs.nbgv }}
-          body: |
-            ${{ steps.changelog.outputs.commitLog }}
-
-    - name: NuGet Push
-      env:
-        NUGET_AUTH_TOKEN: ${{ secrets.NUGET_API_KEY }}
-        SOURCE_URL: https://api.nuget.org/v3/index.json
-      run: |
-        dotnet nuget push -s ${{ env.SOURCE_URL }} -k ${{ env.NUGET_AUTH_TOKEN }} **/*.nupkg
