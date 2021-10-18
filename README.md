@@ -1,4 +1,4 @@
-![Build](https://github.com/reactivemarbles/DynamicData/workflows/Build/badge.svg) [![Code Coverage](https://codecov.io/gh/reactivemarbles/DynamicData/branch/master/graph/badge.svg)](https://codecov.io/gh/reactivemarbles/DynamicData)
+![Build](https://github.com/reactivemarbles/DynamicData/workflows/Build/badge.svg) [![Code Coverage](https://codecov.io/gh/reactivemarbles/DynamicData/branch/main/graph/badge.svg)](https://codecov.io/gh/reactivemarbles/DynamicData)
 <a href="https://reactiveui.net/slack">
         <img src="https://img.shields.io/badge/chat-slack-blue.svg">
 </a>
