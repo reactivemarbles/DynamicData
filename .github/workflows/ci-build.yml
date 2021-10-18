@@ -45,8 +45,10 @@ jobs:
         setAllVars: true
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
-      
+      uses: glennawatson/setup-msbuild@v1.0.3
+      with:
+        prerelease: true
+        
     - name: NuGet Restore
       run: msbuild /t:restore /v:minimal /m
       working-directory: src
