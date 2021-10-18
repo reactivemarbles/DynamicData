@@ -43,10 +43,11 @@ jobs:
       with:
         setAllVars: true
 
-    - name: NuGet Restore
-      run: dotnet restore
-      working-directory: src
-      
+    - name: Add MSBuild to PATH
+      uses: glennawatson/setup-msbuild@v1.0.3
+      with:
+        prerelease: true
+        
     - name: NuGet Restore
       run: msbuild /t:restore /v:minimal /m
       working-directory: src
