@@ -47,18 +47,17 @@ jobs:
       run: dotnet restore
       working-directory: src
       
+    - name: NuGet Restore
+      run: msbuild /t:restore /v:minimal /m
+      working-directory: src
+      
     - name: Build
-      run: dotnet build --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
+      run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
       working-directory: src
 
     - uses: nuget/setup-nuget@v1
       name: Setup NuGet
 
-    - name: Pack
-      run: dotnet pack --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
-      working-directory: src
-
-    # Decode the base 64 encoded pfx and save the Signing_Certificate
     - name: Changelog
       uses: glennawatson/ChangeLog@v1
       id: changelog
