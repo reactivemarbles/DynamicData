@@ -30,7 +30,7 @@ namespace DynamicData.Tests.Domain
                 return false;
             }
 
-            return obj is PersonEmpKey && Equals((PersonEmpKey)obj);
+            return obj is PersonEmpKey personEmpKey && Equals(personEmpKey);
         }
 
         public override int GetHashCode()
@@ -39,6 +39,16 @@ namespace DynamicData.Tests.Domain
             {
                 return ((_name is not null ? _name.GetHashCode() : 0) * 397) ^ (_company is not null ? _company.GetHashCode() : 0);
             }
+        }
+
+        public static bool operator ==(PersonEmpKey left, PersonEmpKey right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PersonEmpKey left, PersonEmpKey right)
+        {
+            return !(left == right);
         }
     }
 
