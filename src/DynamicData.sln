@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29025.244
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31808.319
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DynamicData", "DynamicData\DynamicData.csproj", "{FE903921-6C55-40E3-9A16-4127ECACC12C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".other", ".other", "{DFCC45F8-251C-4D78-AF9B-15C1EDF0E603}"
 	ProjectSection(SolutionItems) = preProject
-		analyzers.ruleset = analyzers.ruleset
-		appveyor.yml = appveyor.yml
+		..\.editorconfig = ..\.editorconfig
+		..\.gitignore = ..\.gitignore
 		Directory.Build.props = Directory.Build.props
 		Directory.build.targets = Directory.build.targets
 		global.json = global.json
