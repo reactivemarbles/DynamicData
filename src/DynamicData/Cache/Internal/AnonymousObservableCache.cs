@@ -24,10 +24,7 @@ namespace DynamicData.Cache.Internal
             _cache = new ObservableCache<TObject, TKey>(source);
         }
 
-        public AnonymousObservableCache(IObservableCache<TObject, TKey> cache)
-        {
-            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        }
+        public AnonymousObservableCache(IObservableCache<TObject, TKey> cache) => _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
         public int Count => _cache.Count;
 

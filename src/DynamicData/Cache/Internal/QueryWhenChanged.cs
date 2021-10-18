@@ -24,18 +24,19 @@ namespace DynamicData.Cache.Internal
         {
             if (_itemChangedTrigger is null)
             {
-                return _source.Scan(
-                    (Cache<TObject, TKey>?)null,
-                    (cache, changes) =>
-                        {
-                            cache ??= new Cache<TObject, TKey>(changes.Count);
+                return Observable.Defer(() =>
+                    {
+                        return _source.Scan(
+                            (Cache<TObject, TKey>?)null,
+                            (cache, changes) =>
+                            {
+                                cache ??= new Cache<TObject, TKey>(changes.Count);
 
-                            cache.Clone(changes);
-                            return cache;
-                        })
-                    .Where(x => x is not null)
-                    .Select(x => x!)
-                    .Select(list => new AnonymousQuery<TObject, TKey>(list));
+                                cache.Clone(changes);
+                                return cache;
+                            });
+                    })
+                    .Select(cache => new AnonymousQuery<TObject, TKey>(cache!));
             }
 
             return _source.Publish(
@@ -48,10 +49,10 @@ namespace DynamicData.Cache.Internal
 
                         var sourceChanged = shared.Synchronize(locker).Scan(
                             state,
-                            (list, changes) =>
+                            (cache, changes) =>
                                 {
-                                    list.Clone(changes);
-                                    return list;
+                                    cache.Clone(changes);
+                                    return cache;
                                 }).Select(list => new AnonymousQuery<TObject, TKey>(list));
 
                         return sourceChanged.Merge(inlineChange);
