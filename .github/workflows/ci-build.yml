@@ -44,12 +44,15 @@ jobs:
       with:
         setAllVars: true
 
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+      
     - name: NuGet Restore
-      run: dotnet restore
+      run: msbuild /t:restore /v:minimal /m
       working-directory: src
       
     - name: Build
-      run: dotnet build --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
+      run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
       working-directory: src
 
     - name: Run Unit Tests and Generate Coverage
@@ -62,10 +65,6 @@ jobs:
         output-format: cobertura
         output: '../../artifacts/'
         configuration: ${{ env.configuration }}
-
-    - name: Pack
-      run: dotnet pack --configuration=${{ env.configuration }} --verbosity=minimal --no-restore
-      working-directory: src
 
     - name: Upload Code Coverage
       shell: bash
