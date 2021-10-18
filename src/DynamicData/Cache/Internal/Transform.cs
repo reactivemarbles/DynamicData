@@ -28,7 +28,9 @@ namespace DynamicData.Cache.Internal
             _transformFactory = transformFactory;
         }
 
-        public IObservable<IChangeSet<TDestination, TKey>> Run()
+        public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Defer(RunImpl);
+
+        private IObservable<IChangeSet<TDestination, TKey>> RunImpl()
         {
             return _source.Scan(
                 (ChangeAwareCache<TDestination, TKey>?)null,

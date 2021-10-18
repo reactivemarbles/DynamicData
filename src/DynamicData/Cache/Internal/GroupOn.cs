@@ -60,11 +60,9 @@ namespace DynamicData.Cache.Internal
 
         private sealed class Grouper
         {
-            private readonly IDictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>> _groupCache = new Dictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>>();
-
+            private readonly Dictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>> _groupCache = new();
             private readonly Func<TObject, TGroupKey> _groupSelectorKey;
-
-            private readonly IDictionary<TKey, ChangeWithGroup> _itemCache = new Dictionary<TKey, ChangeWithGroup>();
+            private readonly Dictionary<TKey, ChangeWithGroup> _itemCache = new();
 
             public Grouper(Func<TObject, TGroupKey> groupSelectorKey)
             {
@@ -83,17 +81,15 @@ namespace DynamicData.Cache.Internal
                 return HandleUpdates(updates);
             }
 
-            private Tuple<ManagedGroup<TObject, TKey, TGroupKey>, bool> GetCache(TGroupKey key)
+            private (ManagedGroup<TObject, TKey, TGroupKey> group, bool wasCreated) GetCache(TGroupKey key)
             {
                 var cache = _groupCache.Lookup(key);
                 if (cache.HasValue)
-                {
-                    return Tuple.Create(cache.Value, false);
-                }
+                    return (cache.Value, false);
 
                 var newcache = new ManagedGroup<TObject, TKey, TGroupKey>(key);
                 _groupCache[key] = newcache;
-                return Tuple.Create(newcache, true);
+                return (newcache, true);
             }
 
             private GroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IEnumerable<Change<TObject, TKey>> changes, bool isRegrouping = false)
@@ -109,8 +105,8 @@ namespace DynamicData.Cache.Internal
                     group =>
                         {
                             var groupItem = GetCache(group.Key);
-                            var groupCache = groupItem.Item1;
-                            if (groupItem.Item2)
+                            var groupCache = groupItem.group;
+                            if (groupItem.wasCreated)
                             {
                                 result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Add, group.Key, groupCache));
                             }
@@ -237,11 +233,9 @@ namespace DynamicData.Cache.Internal
                                         }
                                     });
 
-                            if (groupCache.Count == 0)
-                            {
-                                _groupCache.RemoveIfContained(group.Key);
-                                result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, group.Key, groupCache));
-                            }
+                            if (groupCache.Count != 0) return;
+                            _groupCache.RemoveIfContained(@group.Key);
+                            result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key, groupCache));
                         });
 
                 return new GroupChangeSet<TObject, TKey, TGroupKey>(result);
@@ -290,10 +284,7 @@ namespace DynamicData.Cache.Internal
                     return Key.GetHashCode();
                 }
 
-                public override string ToString()
-                {
-                    return $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";
-                }
+                public override string ToString() => $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";
             }
         }
     }

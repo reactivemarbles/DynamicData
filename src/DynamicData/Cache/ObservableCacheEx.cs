@@ -3745,6 +3745,38 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// Sorts a sequence by selected property.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="expression">The expression.</param>
+        /// <param name="sortOrder">The sort order. Defaults to ascending.</param>
+        /// <param name="sortOptimisations">The sort optimisations.</param>
+        /// <param name="resetThreshold">The reset threshold.</param>
+        /// <returns>An observable which emits change sets.</returns>
+        public static IObservable<ISortedChangeSet<TObject, TKey>> SortBy<TObject, TKey>(
+            this IObservable<IChangeSet<TObject, TKey>> source,
+            Func<TObject, IComparable> expression,
+            SortDirection sortOrder = SortDirection.Ascending,
+            SortOptimisations sortOptimisations = SortOptimisations.None,
+            int resetThreshold = DefaultSortResetThreshold)
+            where TKey : notnull
+        {
+            source = source ?? throw new ArgumentNullException(nameof(source));
+            expression = expression ?? throw new ArgumentNullException(nameof(expression));
+
+            return source.Sort(
+                sortOrder switch
+                {
+                    SortDirection.Descending => SortExpressionComparer<TObject>.Descending(expression),
+                    _ => SortExpressionComparer<TObject>.Ascending(expression),
+                },
+                sortOptimisations,
+                resetThreshold);
+        }
+
+        /// <summary>
         /// Prepends an empty change set to the source.
         /// </summary>
         /// <typeparam name="TObject">The object of the change set.</typeparam>

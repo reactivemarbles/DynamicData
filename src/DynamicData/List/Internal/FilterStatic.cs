@@ -22,13 +22,16 @@ namespace DynamicData.List.Internal
 
         public IObservable<IChangeSet<T>> Run()
         {
-            return _source.Scan(
-                new ChangeAwareList<T>(),
-                (state, changes) =>
+            return Observable.Defer(() =>
+            {
+                return _source.Scan(
+                    new ChangeAwareList<T>(),
+                    (state, changes) =>
                     {
                         Process(state, changes);
                         return state;
                     }).Select(filtered => filtered.CaptureChanges()).NotEmpty();
+            });
         }
 
         private void Process(ChangeAwareList<T> filtered, IChangeSet<T> changes)

@@ -22,8 +22,6 @@ namespace DynamicData
     {
         private readonly List<T> _innerList;
 
-        private readonly object _lockObject = new();
-
         private ChangeSet<T> _changes = new();
 
         /// <summary>
@@ -85,13 +83,7 @@ namespace DynamicData
         public int Capacity
         {
             get => _innerList.Capacity;
-            set
-            {
-                lock (_lockObject)
-                {
-                    _innerList.Capacity = value;
-                }
-            }
+            set => _innerList.Capacity = value;
         }
 
         /// <summary>
@@ -107,16 +99,7 @@ namespace DynamicData
         /// <summary>
         /// Gets the last change in the collection.
         /// </summary>
-        private Optional<Change<T>> Last
-        {
-            get
-            {
-                lock (_lockObject)
-                {
-                    return _changes.Count == 0 ? Optional.None<Change<T>>() : _changes[_changes.Count - 1];
-                }
-            }
-        }
+        private Optional<Change<T>> Last => _changes.Count == 0 ? Optional.None<Change<T>>() : _changes[_changes.Count - 1];
 
         /// <summary>
         /// Gets or sets the item at the specified index.
@@ -134,10 +117,7 @@ namespace DynamicData
         /// <param name="item">The item to add.</param>
         public void Add(T item)
         {
-            lock (_lockObject)
-            {
-                InsertItem(_innerList.Count, item);
-            }
+            InsertItem(_innerList.Count, item);
         }
 
         /// <summary>
@@ -154,11 +134,8 @@ namespace DynamicData
                 return;
             }
 
-            lock (_lockObject)
-            {
-                _changes.Add(args);
-                _innerList.AddRange(args.Range);
-            }
+            _changes.Add(args);
+            _innerList.AddRange(args.Range);
         }
 
         /// <summary>
@@ -167,25 +144,19 @@ namespace DynamicData
         /// <returns>The change set.</returns>
         public IChangeSet<T> CaptureChanges()
         {
-            ChangeSet<T> returnValue;
-            lock (_lockObject)
+            if (_changes.Count == 0)
+                return ChangeSet<T>.Empty;
+
+            ChangeSet<T> returnValue = _changes;
+
+            // we can infer this is a Clear
+            if (_innerList.Count == 0 && returnValue.Removes == returnValue.TotalChanges && returnValue.TotalChanges > 1)
             {
-                if (_changes.Count == 0)
-                {
-                    return ChangeSet<T>.Empty;
-                }
-
-                returnValue = _changes;
-
-                // we can infer this is a Clear
-                if (_innerList.Count == 0 && returnValue.Removes == returnValue.TotalChanges && returnValue.TotalChanges > 1)
-                {
-                    var removed = returnValue.Unified().Select(u => u.Current);
-                    returnValue = new ChangeSet<T> { new(ListChangeReason.Clear, removed) };
-                }
-
-                ClearChanges();
+                var removed = returnValue.Unified().Select(u => u.Current);
+                returnValue = new ChangeSet<T> { new(ListChangeReason.Clear, removed) };
             }
+
+            ClearChanges();
 
             return returnValue;
         }
@@ -195,18 +166,13 @@ namespace DynamicData
         /// </summary>
         public virtual void Clear()
         {
-            lock (_lockObject)
-            {
-                if (_innerList.Count == 0)
-                {
-                    return;
-                }
+            if (_innerList.Count == 0)
+                return;
 
-                var toRemove = _innerList.ToList();
+            var toRemove = _innerList.ToList();
 
-                _changes.Add(new Change<T>(ListChangeReason.Clear, toRemove));
-                _innerList.Clear();
-            }
+            _changes.Add(new Change<T>(ListChangeReason.Clear, toRemove));
+            _innerList.Clear();
         }
 
         /// <summary>
@@ -214,48 +180,24 @@ namespace DynamicData
         /// </summary>
         /// <param name="item">The item to check.</param>
         /// <returns>If the item is contained or not.</returns>
-        public virtual bool Contains(T item)
-        {
-            lock (_lockObject)
-            {
-                return _innerList.Contains(item);
-            }
-        }
+        public virtual bool Contains(T item) => _innerList.Contains(item);
 
         /// <summary>
         /// Copies the entire collection to a compatible one-dimensional array, starting at the specified index of the target array.
         /// </summary>
         /// <param name="array">The array to copy to.</param>
         /// <param name="arrayIndex">The index to start copying to.</param>
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            lock (_lockObject)
-            {
-                _innerList.CopyTo(array, arrayIndex);
-            }
-        }
+        public void CopyTo(T[] array, int arrayIndex) => _innerList.CopyTo(array, arrayIndex);
 
         /// <inheritdoc />
-        public IEnumerator<T> GetEnumerator()
-        {
-            lock (_lockObject)
-            {
-                return _innerList.ToList().GetEnumerator();
-            }
-        }
+        public IEnumerator<T> GetEnumerator() => _innerList.ToList().GetEnumerator();
 
         /// <summary>
         /// Searches for the specified object and returns the zero-based index of the first occurrence within the entire collection.
         /// </summary>
         /// <param name="item">The item to get the index of.</param>
         /// <returns>The index.</returns>
-        public int IndexOf(T item)
-        {
-            lock (_lockObject)
-            {
-                return _innerList.IndexOf(item);
-            }
-        }
+        public int IndexOf(T item) => _innerList.IndexOf(item);
 
         /// <summary>
         /// Searches for the specified object and returns the zero-based index of the first occurrence within the entire collection, using the specified comparer.
@@ -263,13 +205,7 @@ namespace DynamicData
         /// <param name="item">The item to get the index of.</param>
         /// <param name="equalityComparer">The equality comparer to use to compare.</param>
         /// <returns>The index.</returns>
-        public int IndexOf(T item, IEqualityComparer<T> equalityComparer)
-        {
-            lock (_lockObject)
-            {
-                return _innerList.IndexOf(item, equalityComparer);
-            }
-        }
+        public int IndexOf(T item, IEqualityComparer<T> equalityComparer) => _innerList.IndexOf(item, equalityComparer);
 
         /// <summary>
         /// Inserts an element into the list at the specified index.
@@ -283,15 +219,10 @@ namespace DynamicData
                 throw new ArgumentException($"{nameof(index)} cannot be negative");
             }
 
-            lock (_lockObject)
-            {
-                if (index > _innerList.Count)
-                {
-                    throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
-                }
+            if (index > _innerList.Count)
+                throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
 
-                InsertItem(index, item);
-            }
+            InsertItem(index, item);
         }
 
         /// <summary>
@@ -304,16 +235,10 @@ namespace DynamicData
         public void InsertRange(IEnumerable<T> collection, int index)
         {
             var args = new Change<T>(ListChangeReason.AddRange, collection, index);
-            if (args.Range.Count == 0)
-            {
-                return;
-            }
+            if (args.Range.Count == 0) return;
 
-            lock (_lockObject)
-            {
-                _changes.Add(args);
-                _innerList.InsertRange(index, args.Range);
-            }
+            _changes.Add(args);
+            _innerList.InsertRange(index, args.Range);
 
             OnInsertItems(index, args.Range);
         }
@@ -326,20 +251,14 @@ namespace DynamicData
         public virtual void Move(T item, int destination)
         {
             if (destination < 0)
-            {
                 throw new ArgumentException($"{nameof(destination)} cannot be negative");
-            }
 
-            lock (_lockObject)
-            {
-                if (destination > _innerList.Count)
-                {
-                    throw new ArgumentException($"{nameof(destination)} cannot be greater than the size of the collection");
-                }
+            if (destination > _innerList.Count)
+                throw new ArgumentException($"{nameof(destination)} cannot be greater than the size of the collection");
 
-                int index = _innerList.IndexOf(item);
-                Move(index, destination);
-            }
+            int index = _innerList.IndexOf(item);
+            Move(index, destination);
+
         }
 
         /// <summary>
@@ -350,32 +269,21 @@ namespace DynamicData
         public virtual void Move(int original, int destination)
         {
             if (original < 0)
-            {
                 throw new ArgumentException($"{nameof(original)} cannot be negative");
-            }
 
             if (destination < 0)
-            {
                 throw new ArgumentException($"{nameof(destination)} cannot be negative");
-            }
 
-            lock (_lockObject)
-            {
-                if (original > _innerList.Count)
-                {
-                    throw new ArgumentException($"{nameof(original)} cannot be greater than the size of the collection");
-                }
+            if (original > _innerList.Count)
+                throw new ArgumentException($"{nameof(original)} cannot be greater than the size of the collection");
 
-                if (destination > _innerList.Count)
-                {
-                    throw new ArgumentException($"{nameof(destination)} cannot be greater than the size of the collection");
-                }
+            if (destination > _innerList.Count)
+                throw new ArgumentException($"{nameof(destination)} cannot be greater than the size of the collection");
 
-                var item = _innerList[original];
-                _innerList.RemoveAt(original);
-                _innerList.Insert(destination, item);
-                _changes.Add(new Change<T>(item, destination, original));
-            }
+            var item = _innerList[original];
+            _innerList.RemoveAt(original);
+            _innerList.Insert(destination, item);
+            _changes.Add(new Change<T>(item, destination, original));
         }
 
         /// <summary>
@@ -392,18 +300,13 @@ namespace DynamicData
                 throw new ArgumentException($"{nameof(index)} cannot be negative");
             }
 
-            lock (_lockObject)
-            {
-                if (index > _innerList.Count)
-                {
-                    throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
-                }
+            if (index > _innerList.Count)
+                throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
 
-                var previous = _innerList[index];
-                _innerList[index] = item;
+            var previous = _innerList[index];
+            _innerList[index] = item;
 
-                _changes.Add(new Change<T>(ListChangeReason.Refresh, item, previous, index));
-            }
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, item, previous, index));
         }
 
         /// <summary>
@@ -416,14 +319,9 @@ namespace DynamicData
         {
             var index = IndexOf(item);
             if (index < 0)
-            {
                 return false;
-            }
 
-            lock (_lockObject)
-            {
-                _changes.Add(new Change<T>(ListChangeReason.Refresh, item, index));
-            }
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, item, index));
 
             return true;
         }
@@ -437,19 +335,14 @@ namespace DynamicData
         public void RefreshAt(int index)
         {
             if (index < 0)
-            {
                 throw new ArgumentException($"{nameof(index)} cannot be negative");
-            }
 
-            lock (_lockObject)
+            if (index > _innerList.Count)
             {
-                if (index > _innerList.Count)
-                {
-                    throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
-                }
-
-                _changes.Add(new Change<T>(ListChangeReason.Refresh, _innerList[index], index));
+                throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
             }
+
+            _changes.Add(new Change<T>(ListChangeReason.Refresh, _innerList[index], index));
         }
 
         /// <summary>
@@ -459,17 +352,11 @@ namespace DynamicData
         /// <returns>If the item was removed.</returns>
         public bool Remove(T item)
         {
-            lock (_lockObject)
-            {
-                var index = _innerList.IndexOf(item);
-                if (index < 0)
-                {
-                    return false;
-                }
+            var index = _innerList.IndexOf(item);
+            if (index < 0) return false;
 
-                RemoveItem(index, item);
-                return true;
-            }
+            RemoveItem(index, item);
+            return true;
         }
 
         /// <summary>
@@ -479,19 +366,12 @@ namespace DynamicData
         public void RemoveAt(int index)
         {
             if (index < 0)
-            {
                 throw new ArgumentException($"{nameof(index)} cannot be negative");
-            }
 
-            lock (_lockObject)
-            {
-                if (index > _innerList.Count)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index), $"{nameof(index)} cannot be greater than the size of the collection");
-                }
+            if (index > _innerList.Count)
+                throw new ArgumentOutOfRangeException(nameof(index), $"{nameof(index)} cannot be greater than the size of the collection");
 
-                RemoveItem(index);
-            }
+            RemoveItem(index);
         }
 
         /// <summary>
@@ -500,25 +380,21 @@ namespace DynamicData
         /// <param name="index">The zero-based starting index of the range of elements to remove.</param><param name="count">The number of elements to remove.</param><exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is less than 0.-or-<paramref name="count"/> is less than 0.</exception><exception cref="ArgumentException"><paramref name="index"/> and <paramref name="count"/> do not denote a valid range of elements in the <see cref="List{T}"/>.</exception>
         public void RemoveRange(int index, int count)
         {
-            Change<T> args;
-            lock (_lockObject)
+            if (index >= _innerList.Count || index + count > _innerList.Count)
             {
-                if (index >= _innerList.Count || index + count > _innerList.Count)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(index));
-                }
-
-                var toRemove = _innerList.Skip(index).Take(count).ToList();
-                if (toRemove.Count == 0)
-                {
-                    return;
-                }
-
-                args = new Change<T>(ListChangeReason.RemoveRange, toRemove, index);
-
-                _changes.Add(args);
-                _innerList.RemoveRange(index, count);
+                throw new ArgumentOutOfRangeException(nameof(index));
             }
+
+            var toRemove = _innerList.Skip(index).Take(count).ToList();
+            if (toRemove.Count == 0)
+            {
+                return;
+            }
+
+            var args = new Change<T>(ListChangeReason.RemoveRange, toRemove, index);
+
+            _changes.Add(args);
+            _innerList.RemoveRange(index, count);
 
             OnRemoveItems(index, args.Range);
         }
@@ -532,13 +408,7 @@ namespace DynamicData
         /// <summary>
         /// Clears the changes (for testing).
         /// </summary>
-        internal void ClearChanges()
-        {
-            lock (_lockObject)
-            {
-                _changes = new ChangeSet<T>();
-            }
-        }
+        internal void ClearChanges() => _changes = new ChangeSet<T>();
 
         /// <summary>
         /// Inserts an item at the specified index.
@@ -557,72 +427,69 @@ namespace DynamicData
                 throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
             }
 
-            lock (_lockObject)
+            // attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
+            var last = Last;
+
+            if (last.HasValue && last.Value.Reason == ListChangeReason.Add)
             {
-                // attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
-                var last = Last;
+                // begin a new batch if possible
+                var firstOfBatch = _changes.Count - 1;
+                var previousItem = last.Value.Item;
 
-                if (last.HasValue && last.Value.Reason == ListChangeReason.Add)
+                if (index == previousItem.CurrentIndex)
                 {
-                    // begin a new batch if possible
-                    var firstOfBatch = _changes.Count - 1;
-                    var previousItem = last.Value.Item;
-
-                    if (index == previousItem.CurrentIndex)
-                    {
-                        _changes[firstOfBatch] = new Change<T>(ListChangeReason.AddRange, new[] { item, previousItem.Current }, index);
-                    }
-                    else if (index == previousItem.CurrentIndex + 1)
-                    {
-                        _changes[firstOfBatch] = new Change<T>(ListChangeReason.AddRange, new[] { previousItem.Current, item }, previousItem.CurrentIndex);
-                    }
-                    else
-                    {
-                        _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
-                    }
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.AddRange, new[] { item, previousItem.Current }, index);
                 }
-                else if (last.HasValue && last.Value.Reason == ListChangeReason.AddRange)
+                else if (index == previousItem.CurrentIndex + 1)
                 {
-                    // check whether the new item is in the specified range
-                    var range = last.Value.Range;
-
-                    var minimum = Math.Max(range.Index - 1, 0);
-                    var maximum = range.Index + range.Count;
-                    var isPartOfRange = index >= minimum && index <= maximum;
-
-                    if (!isPartOfRange)
-                    {
-                        _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
-                    }
-                    else
-                    {
-                        var insertPosition = index - range.Index;
-                        if (insertPosition < 0)
-                        {
-                            insertPosition = 0;
-                        }
-                        else if (insertPosition >= range.Count)
-                        {
-                            insertPosition = range.Count;
-                        }
-
-                        range.Insert(insertPosition, item);
-
-                        if (index < range.Index)
-                        {
-                            range.SetStartingIndex(index);
-                        }
-                    }
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.AddRange, new[] { previousItem.Current, item }, previousItem.CurrentIndex);
                 }
                 else
                 {
-                    // first add, so cannot infer range
                     _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
                 }
-
-                // finally, add the item
-                _innerList.Insert(index, item);
             }
+            else if (last.HasValue && last.Value.Reason == ListChangeReason.AddRange)
+            {
+                // check whether the new item is in the specified range
+                var range = last.Value.Range;
+
+                var minimum = Math.Max(range.Index - 1, 0);
+                var maximum = range.Index + range.Count;
+                var isPartOfRange = index >= minimum && index <= maximum;
+
+                if (!isPartOfRange)
+                {
+                    _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
+                }
+                else
+                {
+                    var insertPosition = index - range.Index;
+                    if (insertPosition < 0)
+                    {
+                        insertPosition = 0;
+                    }
+                    else if (insertPosition >= range.Count)
+                    {
+                        insertPosition = range.Count;
+                    }
+
+                    range.Insert(insertPosition, item);
+
+                    if (index < range.Index)
+                    {
+                        range.SetStartingIndex(index);
+                    }
+                }
+            }
+            else
+            {
+                // first add, so cannot infer range
+                _changes.Add(new Change<T>(ListChangeReason.Add, item, index));
+            }
+
+            // finally, add the item
+            _innerList.Insert(index, item);
         }
 
         /// <summary>
@@ -659,11 +526,8 @@ namespace DynamicData
         /// <param name="index">The index being removed.</param>
         protected void RemoveItem(int index)
         {
-            lock (_lockObject)
-            {
-                var item = _innerList[index];
-                RemoveItem(index, item);
-            }
+            var item = _innerList[index];
+            RemoveItem(index, item);
         }
 
         /// <summary>
@@ -678,67 +542,62 @@ namespace DynamicData
                 throw new ArgumentException($"{nameof(index)} cannot be negative");
             }
 
-            lock (_lockObject)
+            if (index > _innerList.Count)
+                throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+
+            // attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
+            var last = Last;
+            if (last.HasValue && last.Value.Reason == ListChangeReason.Remove)
             {
-                if (index > _innerList.Count)
-                {
-                    throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
-                }
+                // begin a new batch
+                var firstOfBatch = _changes.Count - 1;
+                var previousItem = last.Value.Item;
 
-                // attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
-                var last = Last;
-                if (last.HasValue && last.Value.Reason == ListChangeReason.Remove)
+                if (index == previousItem.CurrentIndex)
                 {
-                    // begin a new batch
-                    var firstOfBatch = _changes.Count - 1;
-                    var previousItem = last.Value.Item;
-
-                    if (index == previousItem.CurrentIndex)
-                    {
-                        _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { previousItem.Current, item }, index);
-                    }
-                    else if (index == previousItem.CurrentIndex - 1)
-                    {
-                        // Nb: double check this one as it is the same as clause above. Can it be correct?
-                        _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { item, previousItem.Current }, index);
-                    }
-                    else
-                    {
-                        _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
-                    }
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { previousItem.Current, item }, index);
                 }
-                else if (last.HasValue && last.Value.Reason == ListChangeReason.RemoveRange)
+                else if (index == previousItem.CurrentIndex - 1)
                 {
-                    // add to the end of the previous batch
-                    var range = last.Value.Range;
-                    if (range.Index == index)
-                    {
-                        // removed in order
-                        range.Add(item);
-                    }
-                    else if (range.Index == index - 1)
-                    {
-                        _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
-                    }
-                    else if (range.Index == index + 1)
-                    {
-                        // removed in reverse order
-                        range.Insert(0, item);
-                        range.SetStartingIndex(index);
-                    }
-                    else
-                    {
-                        _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
-                    }
+                    // Nb: double check this one as it is the same as clause above. Can it be correct?
+                    _changes[firstOfBatch] = new Change<T>(ListChangeReason.RemoveRange, new[] { item, previousItem.Current }, index);
                 }
                 else
                 {
-                    // first remove, so cannot infer range
                     _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
                 }
-
-                _innerList.RemoveAt(index);
             }
+            else if (last.HasValue && last.Value.Reason == ListChangeReason.RemoveRange)
+            {
+                // add to the end of the previous batch
+                var range = last.Value.Range;
+                if (range.Index == index)
+                {
+                    // removed in order
+                    range.Add(item);
+                }
+                else if (range.Index == index - 1)
+                {
+                    _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
+                }
+                else if (range.Index == index + 1)
+                {
+                    // removed in reverse order
+                    range.Insert(0, item);
+                    range.SetStartingIndex(index);
+                }
+                else
+                {
+                    _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
+                }
+            }
+            else
+            {
+                // first remove, so cannot infer range
+                _changes.Add(new Change<T>(ListChangeReason.Remove, item, index));
+            }
+
+            _innerList.RemoveAt(index);
         }
 
         /// <summary>
@@ -748,24 +607,12 @@ namespace DynamicData
         /// <param name="item">The item to set.</param>
         protected virtual void SetItem(int index, T item)
         {
-            if (index < 0)
-            {
-                throw new ArgumentException($"{nameof(index)} cannot be negative");
-            }
+            if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
+            if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
 
-            T previous;
-
-            lock (_lockObject)
-            {
-                if (index > _innerList.Count)
-                {
-                    throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
-                }
-
-                previous = _innerList[index];
-                _changes.Add(new Change<T>(ListChangeReason.Replace, item, previous, index, index));
-                _innerList[index] = item;
-            }
+            var previous = _innerList[index];
+            _changes.Add(new Change<T>(ListChangeReason.Replace, item, previous, index, index));
+            _innerList[index] = item;
 
             OnSetItem(index, item, previous);
         }
