@@ -1093,17 +1093,46 @@ namespace DynamicData
         }
 
         /// <summary>
-        /// Disposes each item when no longer required.
-        ///
-        /// Individual items are disposed when removed or replaced. All items
-        /// are disposed when the stream is disposed.
+        /// Disposes each item when no longer required. <br/>
+        /// Individual items are disposed when removed or replaced. <br/>
+        /// All items are disposed when the stream is disposed.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
         /// <typeparam name="TKey">The type of the key.</typeparam>
         /// <param name="source">The source.</param>
         /// <returns>A continuation of the original stream.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(
+            this IObservable<IChangeSet<TObject, TKey>> source)
+            where TKey : notnull
+        {
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            return new DisposeMany<TObject, TKey>(
+                source,
+                static t =>
+                {
+                    var d = t as IDisposable;
+                    d?.Dispose();
+                }).Run();
+        }
+
+        /// <summary>
+        /// Disposes each item when no longer required. <br/>
+        /// Individual items are disposed when removed or replaced. <br/>
+        /// All items are disposed when the stream is disposed. <br/>
+        /// This is a strict version, restricting <typeparamref name="TObject"/> to be <see cref="IDisposable"/>.
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns>A continuation of the original stream.</returns>
+        /// <exception cref="System.ArgumentNullException">source.</exception>
+        public static IObservable<IChangeSet<TObject, TKey>> DisposeManyStrict<TObject, TKey>(
+            this IObservable<IChangeSet<TObject, TKey>> source)
             where TObject : IDisposable
             where TKey : notnull
         {
