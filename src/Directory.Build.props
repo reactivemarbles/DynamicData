@@ -8,19 +8,18 @@
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
     <IsBenchmarkProject>$(MSBuildProjectName.Contains('Benchmarks'))</IsBenchmarkProject>
     <DebugType>embedded</DebugType>
-    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)analyzers.ruleset</CodeAnalysisRuleSet>
-
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
-    <Copyright>Copyright (c) Roland Pheasant 2011-2020</Copyright>
+    <Copyright>Copyright (c) Roland Pheasant 2011-2021</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>http://dynamic-data.org</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/reactiveui/styleguide/master/logo_dynamic_data/main.png</PackageIconUrl>
     <PackageTags>DynamicData;Dynamic;Data;Rx;Reactive;Observable;Cache;Binding;ObservableCache;ObservableList;ObservableCollection;Collection;Linq</PackageTags>
     <PackageReleaseNotes>https://github.com/reactiveui/DynamicData/releases</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/reactiveui/DynamicData</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-
+    <PackageIcon>logo.png</PackageIcon>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    
     <!-- Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl> 
     <!-- Embed source files that are not tracked by the source control manager in the PDB -->
@@ -30,6 +29,10 @@
     <WarningsAsErrors>CS8600;CS8602;CS8603;CS8604;CS8605;CS8606;CS8607;CS8608;CS8609;CS8610;CS8611;CS8612;CS8613;CS8614;CS8615;CS8616;CS8617;CS8618;CS8619;CS8620;CS8621;CS8622;CS8623;CS8624;CS8625;CS8626;CS8627;CS8628;CS8629;CS8630;CS8634;CS8766;CS8767</WarningsAsErrors>    
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+  
   <!-- MonoAndroid doesn't seem to want to allow debugging for maintainers -->
   <PropertyGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
     <DebugType>Full</DebugType>
@@ -39,9 +42,12 @@
     <IsPackable>false</IsPackable>
     <CodeAnalysisRuleSet></CodeAnalysisRuleSet>
   </PropertyGroup>
-  
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\images\logo.png" Pack="true" PackagePath="\"/>
+  </ItemGroup>
   <ItemGroup Condition="'$(IsTestProject)' != 'true'">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" /> 
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" /> 
   </ItemGroup>
   
    <PropertyGroup>
@@ -53,12 +59,11 @@
   </ItemGroup>
 
   <ItemGroup>	
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.4.231" PrivateAssets="all" />	
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.4.244" PrivateAssets="all" />	
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
-    <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.261" PrivateAssets="all" />
+    <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.354" PrivateAssets="all" />
     <PackageReference Include="Roslynator.Analyzers" Version="3.2.2" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
