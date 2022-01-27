@@ -30,7 +30,7 @@ namespace DynamicData.Tests.Kernal
 
             _cache.Lookup("Adult1").Value.Should().Be(person);
             _cache.Count.Should().Be(1);
-            1.Should().Be(updates.Count, "Should be 1 updates");
+            updates.Count.Should().Be(1);
             updates.First().Should().Be(new Change<Person, string>(ChangeReason.Add, person.Name, person), "Should be 1 updates");
         }
 
@@ -68,9 +68,9 @@ namespace DynamicData.Tests.Kernal
             IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0, "Everything should be removed");
-            100.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 100 adds");
-            100.Should().Be(updates.Count(update => update.Reason == ChangeReason.Remove), "Should be 100 removes");
-            200.Should().Be(updates.Count, "Should be 200 updates");
+            updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(100);
+            updates.Count(update => update.Reason == ChangeReason.Remove).Should().Be(100);
+            updates.Count.Should().Be(200);
         }
 
         [Fact]
@@ -83,9 +83,9 @@ namespace DynamicData.Tests.Kernal
 
             _cache.Lookup("Name1").Value.Age.Should().Be(100);
             _cache.Count.Should().Be(1, "Successive updates should replace cache value");
-            99.Should().Be(updates.Count(update => update.Reason == ChangeReason.Update), "Should be 99 updates");
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 add");
-            100.Should().Be(updates.Count, "Should be 100 updates");
+            updates.Count(update => update.Reason == ChangeReason.Update).Should().Be(99);
+            updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
+            updates.Count.Should().Be(100);
         }
 
         [Fact]
@@ -99,9 +99,9 @@ namespace DynamicData.Tests.Kernal
             IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0);
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 add");
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Remove), "Should be 1 remove");
-            2.Should().Be(updates.Count, "Should be 2 updates");
+            updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
+            updates.Count(update => update.Reason == ChangeReason.Remove).Should().Be(1);
+            updates.Count.Should().Be(2);
         }
 
         [Fact]
@@ -117,9 +117,9 @@ namespace DynamicData.Tests.Kernal
 
             _cache.Lookup(key).Value.Should().Be(updated);
             _cache.Count.Should().Be(1);
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 adds");
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Update), "Should be 1 update");
-            2.Should().Be(updates.Count, "Should be 2 updates");
+            updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
+            updates.Count(update => update.Reason == ChangeReason.Update).Should().Be(1);
+            updates.Count.Should().Be(2);
         }
 
         [Fact]
@@ -131,9 +131,9 @@ namespace DynamicData.Tests.Kernal
             IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0, "Everything should be removed");
-            100.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 100 adds");
-            100.Should().Be(updates.Count(update => update.Reason == ChangeReason.Remove), "Should be 100 removes");
-            200.Should().Be(updates.Count, "Should be 200 updates");
+            updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(100);
+            updates.Count(update => update.Reason == ChangeReason.Remove).Should().Be(100);
+            updates.Count.Should().Be(200);
         }
 
         [Fact]

@@ -30,7 +30,7 @@ namespace DynamicData.Tests.Kernal
 
             _cache.Lookup("Adult1").Value.Should().Be(person);
             _cache.Count.Should().Be(1);
-            1.Should().Be(updates.Count, "Should be 1 updates");
+            updates.Count.Should().Be(1);
             updates.First().Should().Be(new Change<Person, string>(ChangeReason.Add, person.Name, person), "Should be 1 updates");
         }
 
@@ -57,9 +57,9 @@ namespace DynamicData.Tests.Kernal
             IChangeSet<Person, string> updates = _cache.CaptureChanges();
 
             _cache.Count.Should().Be(0);
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 add");
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Remove), "Should be 1 remove");
-            2.Should().Be(updates.Count, "Should be 2 updates");
+            updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
+            updates.Count(update => update.Reason == ChangeReason.Remove).Should().Be(1);
+            updates.Count.Should().Be(2);
         }
 
         [Fact]
@@ -75,9 +75,9 @@ namespace DynamicData.Tests.Kernal
 
             _cache.Lookup(key).Value.Should().Be(updated);
             _cache.Count.Should().Be(1);
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Add), "Should be 1 adds");
-            1.Should().Be(updates.Count(update => update.Reason == ChangeReason.Update), "Should be 1 update");
-            2.Should().Be(updates.Count, "Should be 2 updates");
+            updates.Count(update => update.Reason == ChangeReason.Add).Should().Be(1);
+            updates.Count(update => update.Reason == ChangeReason.Update).Should().Be(1);
+            updates.Count.Should().Be(2);
         }
     }
 }

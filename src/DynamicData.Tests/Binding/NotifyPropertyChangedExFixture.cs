@@ -25,20 +25,20 @@ namespace DynamicData.Tests.Binding
             if (notifyOnInitialValue)
             {
                 anotherPerson.Should().Be(lastChange.Sender);
-                10.Should().Be(lastChange.Value);
+                lastChange.Value.Should().Be(10);
             }
             else
             {
                 lastChange.Sender.Name.Should().Be("unknown");
-                (-1).Should().Be(lastChange.Value);
+                lastChange.Value.Should().Be(-1);
             }
 
             person.Age = 12;
-            person.Should().Be(lastChange.Sender);
-            12.Should().Be(lastChange.Value);
+            lastChange.Sender.Should().Be(person);
+            lastChange.Value.Should().Be(12);
             anotherPerson.Age = 13;
-            anotherPerson.Should().Be(lastChange.Sender);
-            13.Should().Be(lastChange.Value);
+            lastChange.Sender.Should().Be(anotherPerson);
+            lastChange.Value.Should().Be(13);
         }
 
         [Theory, InlineData(true), InlineData(false)]
@@ -50,21 +50,21 @@ namespace DynamicData.Tests.Binding
 
             if (notifyOnInitialValue)
             {
-                person.Should().Be(lastChange.Sender);
-                10.Should().Be(lastChange.Value);
+                lastChange.Sender.Should().Be(person);
+                lastChange.Value.Should().Be(10);
             }
             else
             {
                 lastChange.Sender.Name.Should().Be("unknown");
-                (-1).Should().Be(lastChange.Value);
+                lastChange.Value.Should().Be(-1);
             }
 
             person.Age = 12;
-            person.Should().Be(lastChange.Sender);
-            12.Should().Be(lastChange.Value);
+            lastChange.Sender.Should().Be(person);
+            lastChange.Value.Should().Be(12);
             person.Age = 13;
-            person.Should().Be(lastChange.Sender);
-            13.Should().Be(lastChange.Value);
+            lastChange.Sender.Should().Be(person);
+            lastChange.Value.Should().Be(13);
         }
 
         [Theory, InlineData(true), InlineData(false)]
@@ -76,9 +76,9 @@ namespace DynamicData.Tests.Binding
 
             (notifyOnInitialValue ? 10 : -1).Should().Be(age);
             person.Age = 12;
-            12.Should().Be(age);
+            age.Should().Be(12);
             person.Age = 13;
-            13.Should().Be(age);
+            age.Should().Be(13);
         }
 
         [Theory, InlineData(true), InlineData(false)]
@@ -94,9 +94,9 @@ namespace DynamicData.Tests.Binding
 
             (notifyOnInitialValue ? 10 : -1).Should().Be(lastAgeChange);
             person.Age = 12;
-            12.Should().Be(lastAgeChange);
+            lastAgeChange.Should().Be(12);
             anotherPerson.Age = 13;
-            13.Should().Be(lastAgeChange);
+            lastAgeChange.Should().Be(13);
         }
     }
 }

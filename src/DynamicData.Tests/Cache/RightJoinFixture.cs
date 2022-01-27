@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new Device("Device3"));
                     });
 
-            0.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(0);
         }
 
         [Fact]
@@ -58,7 +58,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
 
             _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
         }
@@ -74,7 +74,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
             _result.Data.Lookup(1).HasValue.Should().BeTrue();
             _result.Data.Lookup(2).HasValue.Should().BeTrue();
             _result.Data.Lookup(3).HasValue.Should().BeTrue();
@@ -101,7 +101,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new Device("Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
 
             _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
         }
@@ -134,12 +134,12 @@ namespace DynamicData.Tests.Cache
 
             _right.Remove(3);
 
-            2.Should().Be(_result.Data.Count);
-            2.Should().Be(_result.Data.Items.Count(dwm => dwm.Device != Optional<Device>.None));
+            _result.Data.Count.Should().Be(2);
+            _result.Data.Items.Count(dwm => dwm.Device != Optional<Device>.None).Should().Be(2);
 
             _left.Remove("Device1");
             _result.Data.Lookup(1).HasValue.Should().BeTrue();
-            1.Should().Be(_result.Data.Items.Count(dwm => dwm.Device == Optional<Device>.None));
+            _result.Data.Items.Count(dwm => dwm.Device == Optional<Device>.None).Should().Be(1);
         }
 
         [Fact]
@@ -161,7 +161,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new Device("Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
 
             _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
         }
@@ -185,7 +185,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new DeviceMetaData(3,"Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
 
             _result.Data.Items.All(dwm => dwm.Device != Optional<Device>.None).Should().BeTrue();
         }
@@ -210,7 +210,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new DeviceMetaData(4,"Device4"));
                     });
 
-            4.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(4);
 
             _result.Data.Lookup(4).HasValue.Should().BeTrue();
             _result.Data.Items.Count(dwm => dwm.Device == Optional<Device>.None).Should().Be(1);
