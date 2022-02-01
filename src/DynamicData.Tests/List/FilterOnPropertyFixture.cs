@@ -32,8 +32,8 @@ namespace DynamicData.Tests.List
 
             people[20].Age = 10;
 
-            2.Should().Be(stub.Results.Messages.Count);
-            81.Should().Be(stub.Results.Data.Count);
+            stub.Results.Messages.Count.Should().Be(2);
+            stub.Results.Data.Count.Should().Be(81);
         }
 
         [Fact]
@@ -45,8 +45,8 @@ namespace DynamicData.Tests.List
 
             people[10].Age = 20;
 
-            2.Should().Be(stub.Results.Messages.Count);
-            83.Should().Be(stub.Results.Data.Count);
+            stub.Results.Messages.Count.Should().Be(2);
+            stub.Results.Data.Count.Should().Be(83);
         }
 
         [Fact]
@@ -67,8 +67,8 @@ namespace DynamicData.Tests.List
             using var stub = new FilterPropertyStub();
             stub.Source.AddRange(people);
 
-            1.Should().Be(stub.Results.Messages.Count);
-            82.Should().Be(stub.Results.Data.Count);
+            stub.Results.Messages.Count.Should().Be(1);
+            stub.Results.Data.Count.Should().Be(82);
 
             stub.Results.Data.Items.Should().BeEquivalentTo(people.Skip(18));
         }

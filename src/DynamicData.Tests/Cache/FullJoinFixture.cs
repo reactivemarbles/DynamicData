@@ -36,7 +36,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new Device("Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
             _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
             _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
             _result.Data.Lookup("Device3").HasValue.Should().BeTrue();
@@ -64,7 +64,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
 
             _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
         }
@@ -80,7 +80,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new DeviceMetaData("Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
             _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
             _result.Data.Lookup("Device2").HasValue.Should().BeTrue();
             _result.Data.Lookup("Device3").HasValue.Should().BeTrue();
@@ -107,7 +107,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new Device("Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
 
             _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
         }
@@ -143,8 +143,8 @@ namespace DynamicData.Tests.Cache
 
             _right.Remove("Device3");
 
-            3.Should().Be(_result.Data.Count);
-            2.Should().Be(_result.Data.Items.Count(dwm => dwm.MetaData != Optional<DeviceMetaData>.None));
+            _result.Data.Count.Should().Be(3);
+            _result.Data.Items.Count(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().Be(2);
 
             _left.Remove("Device1");
             _result.Data.Lookup("Device1").HasValue.Should().BeTrue();
@@ -171,7 +171,7 @@ namespace DynamicData.Tests.Cache
                         innerCache.AddOrUpdate(new Device("Device3"));
                     });
 
-            3.Should().Be(_result.Data.Count);
+            _result.Data.Count.Should().Be(3);
 
             _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
         }
