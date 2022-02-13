@@ -248,7 +248,7 @@ Sort the observable change set by using the `Sort` operator
 ```cs
 var myPeople = new SourceList<People>();
 var myPeopleObservable = myPeople.Connect();
-var mySortedObservable = myPeopleObservable.Sort(SortExpressionComparer.Ascending(p => p.Age); 
+var mySortedObservable = myPeopleObservable.Sort(SortExpressionComparer.Ascending(p => p.Age)); 
 ```
 or to dynamically change sorting
 ```cs
