@@ -30,6 +30,13 @@ namespace DynamicData
         void AddOrUpdate(IEnumerable<TObject> items);
 
         /// <summary>
+        /// Adds or changes the specified items.
+        /// </summary>
+        /// <param name="items">The items.</param>
+        /// <param name="comparer">The comparer.</param>
+        void AddOrUpdate(IEnumerable<TObject> items, IEqualityComparer<TObject> comparer);
+
+        /// <summary>
         /// Adds or updates the item.
         /// </summary>
         /// <param name="item">The item.</param>
