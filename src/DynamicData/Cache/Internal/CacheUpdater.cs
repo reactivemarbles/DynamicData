@@ -44,15 +44,8 @@ namespace DynamicData.Cache.Internal
 
         public void AddOrUpdate(IEnumerable<TObject> items)
         {
-            if (items is null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            if (_keySelector is null)
-            {
-                throw new KeySelectorException("A key selector must be specified");
-            }
+            if (items is null) throw new ArgumentNullException(nameof(items));
+            if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
 
             if (items is IList<TObject> list)
             {
@@ -68,6 +61,42 @@ namespace DynamicData.Cache.Internal
                 {
                     _cache.AddOrUpdate(item, _keySelector(item));
                 }
+            }
+        }
+
+        public void AddOrUpdate(IEnumerable<TObject> items, IEqualityComparer<TObject> comparer)
+        {
+            if (items is null) throw new ArgumentNullException(nameof(items));
+            if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+            if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
+
+            void AddOrUpdateImpl(TObject item)
+            {
+                var key = _keySelector!(item);
+                var oldItem = _cache.Lookup(key);
+
+                if (oldItem.HasValue)
+                {
+                    if (comparer.Equals(oldItem.Value, item)) return;
+
+                    _cache.AddOrUpdate(item, key);
+                }
+                else
+                {
+                    _cache.AddOrUpdate(item, key);
+                }
+            }
+
+            if (items is IList<TObject> list)
+            {
+                // zero allocation enumerator
+                foreach (var item in EnumerableIList.Create(list))
+                    AddOrUpdateImpl(item);
+            }
+            else
+            {
+                foreach (var item in items)
+                    AddOrUpdateImpl(item);
             }
         }
 

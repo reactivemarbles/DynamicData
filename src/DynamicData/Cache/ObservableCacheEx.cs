@@ -149,6 +149,28 @@ namespace DynamicData
         }
 
         /// <summary>
+        /// <summary>
+        /// Adds or updates the cache with the specified items.
+        /// </summary>
+        /// </summary>
+        /// <typeparam name="TObject">The type of the object.</typeparam>
+        /// <typeparam name="TKey">The type of the key.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="items">The items.</param>
+        /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item.</param>
+        /// <exception cref="System.ArgumentNullException">source.</exception>
+        public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items, IEqualityComparer<TObject> equalityComparer)
+            where TKey : notnull
+        {
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            source.Edit(updater => updater.AddOrUpdate(items, equalityComparer));
+        }
+
+        /// <summary>
         /// Removes the specified key from the cache.
         /// If the item is not contained in the cache then the operation does nothing.
         /// </summary>
