@@ -5,6 +5,7 @@
 using System;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using DynamicData.Kernel;
@@ -32,16 +33,41 @@ namespace DynamicData.Cache.Internal
 
         public IObservable<IChangeSet<TDestination, TKey>> Run()
         {
-            return Observable.Create<IChangeSet<TDestination, TKey>>(
-                observer =>
+            return Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
                     {
                         var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
-                        var transformer = _source.SelectMany(changes => DoTransform(cache, changes));
+                        var asyncLock = new SemaphoreSlim(1, 1);
+
+                        var transformer = _source.SelectMany(async changes =>
+                            {
+                                try
+                                {
+                                    await asyncLock.WaitAsync();
+                                    return await DoTransform(cache, changes).ConfigureAwait(false);
+
+                                }
+                                finally
+                                {
+                                    asyncLock.Release();
+                                }
+                            });
 
                         if (_forceTransform is not null)
                         {
                             var locker = new object();
-                            var forced = _forceTransform.Synchronize(locker).SelectMany(shouldTransform => DoTransform(cache, shouldTransform));
+                            var forced = _forceTransform.Synchronize(locker).SelectMany(async shouldTransform =>
+                            {
+                                try
+                                {
+                                    await asyncLock.WaitAsync();
+                                    return await DoTransform(cache, shouldTransform).ConfigureAwait(false);
+
+                                }
+                                finally
+                                {
+                                    asyncLock.Release();
+                                }
+                            });
 
                             transformer = transformer.Synchronize(locker).Merge(forced);
                         }
