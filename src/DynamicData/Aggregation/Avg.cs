@@ -2,18 +2,17 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace DynamicData.Aggregation
+namespace DynamicData.Aggregation;
+
+internal readonly struct Avg<TValue>
 {
-    internal readonly struct Avg<TValue>
+    public Avg(int count, TValue sum)
     {
-        public Avg(int count, TValue sum)
-        {
-            Count = count;
-            Sum = sum;
-        }
-
-        public int Count { get; }
-
-        public TValue Sum { get; }
+        Count = count;
+        Sum = sum;
     }
+
+    public int Count { get; }
+
+    public TValue Sum { get; }
 }

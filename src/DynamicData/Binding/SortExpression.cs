@@ -4,33 +4,32 @@
 
 using System;
 
-namespace DynamicData.Binding
+namespace DynamicData.Binding;
+
+/// <summary>
+/// A value expression with sort direction.
+/// </summary>
+/// <typeparam name="T">The type of the item.</typeparam>
+public class SortExpression<T>
 {
     /// <summary>
-    /// A value expression with sort direction.
+    /// Initializes a new instance of the <see cref="SortExpression{T}"/> class.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    public class SortExpression<T>
+    /// <param name="expression">The expression.</param>
+    /// <param name="direction">The direction.</param>
+    public SortExpression(Func<T, IComparable> expression, SortDirection direction = SortDirection.Ascending)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SortExpression{T}"/> class.
-        /// </summary>
-        /// <param name="expression">The expression.</param>
-        /// <param name="direction">The direction.</param>
-        public SortExpression(Func<T, IComparable> expression, SortDirection direction = SortDirection.Ascending)
-        {
-            Expression = expression;
-            Direction = direction;
-        }
-
-        /// <summary>
-        /// Gets the direction.
-        /// </summary>
-        public SortDirection Direction { get; }
-
-        /// <summary>
-        /// Gets the expression.
-        /// </summary>
-        public Func<T, IComparable> Expression { get; }
+        Expression = expression;
+        Direction = direction;
     }
+
+    /// <summary>
+    /// Gets the direction.
+    /// </summary>
+    public SortDirection Direction { get; }
+
+    /// <summary>
+    /// Gets the expression.
+    /// </summary>
+    public Func<T, IComparable> Expression { get; }
 }

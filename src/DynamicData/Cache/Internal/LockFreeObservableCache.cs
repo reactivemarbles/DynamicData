@@ -11,175 +11,174 @@ using System.Reactive.Subjects;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+/// <summary>
+/// An observable cache which exposes an update API. Used at the root
+/// of all observable chains.
+/// </summary>
+/// <typeparam name="TObject">The type of the object.</typeparam>
+/// <typeparam name="TKey">The type of the key.</typeparam>
+public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+    where TKey : notnull
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Subject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Subject<IChangeSet<TObject, TKey>> _changesPreview = new Subject<IChangeSet<TObject, TKey>>();
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
+    private readonly Subject<int> _countChanged = new Subject<int>();
+
+    private readonly IDisposable _cleanUp;
+
+    private readonly ChangeAwareCache<TObject, TKey> _innerCache = new();
+
+    private readonly ICacheUpdater<TObject, TKey> _updater;
+
     /// <summary>
-    /// An observable cache which exposes an update API. Used at the root
-    /// of all observable chains.
+    /// Initializes a new instance of the <see cref="LockFreeObservableCache{TObject, TKey}"/> class.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
-        where TKey : notnull
+    /// <param name="source">The source.</param>
+    public LockFreeObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-        private readonly Subject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
+        _updater = new CacheUpdater<TObject, TKey>(_innerCache);
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-        private readonly Subject<IChangeSet<TObject, TKey>> _changesPreview = new Subject<IChangeSet<TObject, TKey>>();
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-        private readonly Subject<int> _countChanged = new Subject<int>();
-
-        private readonly IDisposable _cleanUp;
-
-        private readonly ChangeAwareCache<TObject, TKey> _innerCache = new();
-
-        private readonly ICacheUpdater<TObject, TKey> _updater;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LockFreeObservableCache{TObject, TKey}"/> class.
-        /// </summary>
-        /// <param name="source">The source.</param>
-        public LockFreeObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
-        {
-            _updater = new CacheUpdater<TObject, TKey>(_innerCache);
-
-            var loader = source.Select(
-                changes =>
-                    {
-                        _innerCache.Clone(changes);
-                        return _innerCache.CaptureChanges();
-                    }).SubscribeSafe(_changes);
-
-            _cleanUp = Disposable.Create(
-                () =>
-                    {
-                        loader.Dispose();
-                        _changesPreview.OnCompleted();
-                        _changes.OnCompleted();
-                        _countChanged.OnCompleted();
-                    });
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="LockFreeObservableCache{TObject, TKey}"/> class.
-        /// </summary>
-        public LockFreeObservableCache()
-        {
-            _updater = new CacheUpdater<TObject, TKey>(_innerCache);
-
-            _cleanUp = Disposable.Create(
-                () =>
-                    {
-                        _changes.OnCompleted();
-                        _countChanged.OnCompleted();
-                    });
-        }
-
-        /// <inheritdoc />
-        public int Count => _innerCache.Count;
-
-        /// <inheritdoc />
-        public IObservable<int> CountChanged => _countChanged.StartWith(_innerCache.Count).DistinctUntilChanged();
-
-        /// <inheritdoc />
-        public IEnumerable<TObject> Items => _innerCache.Items;
-
-        /// <inheritdoc />
-        public IEnumerable<TKey> Keys => _innerCache.Keys;
-
-        /// <inheritdoc />
-        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
-
-        /// <inheritdoc />
-        public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
-        {
-            return Observable.Defer(
-                () =>
-                    {
-                        var initial = InternalEx.Return(() => _innerCache.GetInitialUpdates(predicate));
-                        var changes = initial.Concat(_changes);
-
-                        if (predicate != null)
-                        {
-                            changes = changes.Filter(predicate, suppressEmptyChangeSets);
-                        }
-                        else if (suppressEmptyChangeSets)
-                        {
-                            changes = changes.NotEmpty();
-                        }
-
-                        return changes;
-                    });
-        }
-
-        /// <inheritdoc />
-        public void Dispose() => _cleanUp.Dispose();
-
-        /// <summary>
-        /// Edits the specified edit action.
-        /// </summary>
-        /// <param name="editAction">The edit action.</param>
-        public void Edit(Action<ICacheUpdater<TObject, TKey>> editAction)
-        {
-            if (editAction is null)
+        var loader = source.Select(
+            changes =>
             {
-                throw new ArgumentNullException(nameof(editAction));
-            }
+                _innerCache.Clone(changes);
+                return _innerCache.CaptureChanges();
+            }).SubscribeSafe(_changes);
 
-            editAction(_updater);
-            _changes.OnNext(_innerCache.CaptureChanges());
+        _cleanUp = Disposable.Create(
+            () =>
+            {
+                loader.Dispose();
+                _changesPreview.OnCompleted();
+                _changes.OnCompleted();
+                _countChanged.OnCompleted();
+            });
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LockFreeObservableCache{TObject, TKey}"/> class.
+    /// </summary>
+    public LockFreeObservableCache()
+    {
+        _updater = new CacheUpdater<TObject, TKey>(_innerCache);
+
+        _cleanUp = Disposable.Create(
+            () =>
+            {
+                _changes.OnCompleted();
+                _countChanged.OnCompleted();
+            });
+    }
+
+    /// <inheritdoc />
+    public int Count => _innerCache.Count;
+
+    /// <inheritdoc />
+    public IObservable<int> CountChanged => _countChanged.StartWith(_innerCache.Count).DistinctUntilChanged();
+
+    /// <inheritdoc />
+    public IEnumerable<TObject> Items => _innerCache.Items;
+
+    /// <inheritdoc />
+    public IEnumerable<TKey> Keys => _innerCache.Keys;
+
+    /// <inheritdoc />
+    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
+
+    /// <inheritdoc />
+    public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
+    {
+        return Observable.Defer(
+            () =>
+            {
+                var initial = InternalEx.Return(() => _innerCache.GetInitialUpdates(predicate));
+                var changes = initial.Concat(_changes);
+
+                if (predicate != null)
+                {
+                    changes = changes.Filter(predicate, suppressEmptyChangeSets);
+                }
+                else if (suppressEmptyChangeSets)
+                {
+                    changes = changes.NotEmpty();
+                }
+
+                return changes;
+            });
+    }
+
+    /// <inheritdoc />
+    public void Dispose() => _cleanUp.Dispose();
+
+    /// <summary>
+    /// Edits the specified edit action.
+    /// </summary>
+    /// <param name="editAction">The edit action.</param>
+    public void Edit(Action<ICacheUpdater<TObject, TKey>> editAction)
+    {
+        if (editAction is null)
+        {
+            throw new ArgumentNullException(nameof(editAction));
         }
 
-        /// <summary>
-        /// Lookup a single item using the specified key.
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns>The looked up value.</returns>
-        /// <remarks>
-        /// Fast indexed lookup.
-        /// </remarks>
-        public Optional<TObject> Lookup(TKey key)
-        {
-            return _innerCache.Lookup(key);
-        }
+        editAction(_updater);
+        _changes.OnNext(_innerCache.CaptureChanges());
+    }
 
-        /// <inheritdoc />
-        public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
-        {
-            return predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
-        }
+    /// <summary>
+    /// Lookup a single item using the specified key.
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <returns>The looked up value.</returns>
+    /// <remarks>
+    /// Fast indexed lookup.
+    /// </remarks>
+    public Optional<TObject> Lookup(TKey key)
+    {
+        return _innerCache.Lookup(key);
+    }
 
-        /// <summary>
-        /// Returns an observable of any changes which match the specified key. The sequence starts with the initial item in the cache (if there is one).
-        /// </summary>
-        /// <param name="key">The key.</param>
-        /// <returns>An observable that emits the changes.</returns>
-        public IObservable<Change<TObject, TKey>> Watch(TKey key)
-        {
-            return Observable.Create<Change<TObject, TKey>>(
-                observer =>
+    /// <inheritdoc />
+    public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
+    {
+        return predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
+    }
+
+    /// <summary>
+    /// Returns an observable of any changes which match the specified key. The sequence starts with the initial item in the cache (if there is one).
+    /// </summary>
+    /// <param name="key">The key.</param>
+    /// <returns>An observable that emits the changes.</returns>
+    public IObservable<Change<TObject, TKey>> Watch(TKey key)
+    {
+        return Observable.Create<Change<TObject, TKey>>(
+            observer =>
+            {
+                var initial = _innerCache.Lookup(key);
+                if (initial.HasValue)
+                {
+                    observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+                }
+
+                return _changes.Subscribe(
+                    changes =>
                     {
-                        var initial = _innerCache.Lookup(key);
-                        if (initial.HasValue)
+                        foreach (var change in changes.ToConcreteType())
                         {
-                            observer.OnNext(new Change<TObject, TKey>(ChangeReason.Add, key, initial.Value));
+                            var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
+                            if (match)
+                            {
+                                observer.OnNext(change);
+                            }
                         }
-
-                        return _changes.Subscribe(
-                            changes =>
-                                {
-                                    foreach (var change in changes.ToConcreteType())
-                                    {
-                                        var match = EqualityComparer<TKey>.Default.Equals(change.Key, key);
-                                        if (match)
-                                        {
-                                            observer.OnNext(change);
-                                        }
-                                    }
-                                });
                     });
-        }
+            });
     }
 }

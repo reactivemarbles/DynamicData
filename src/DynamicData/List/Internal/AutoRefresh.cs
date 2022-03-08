@@ -10,58 +10,57 @@ using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal class AutoRefresh<TObject, TAny>
 {
-    internal class AutoRefresh<TObject, TAny>
+    private readonly TimeSpan? _buffer;
+
+    private readonly Func<TObject, IObservable<TAny>> _reEvaluator;
+
+    private readonly IScheduler? _scheduler;
+
+    private readonly IObservable<IChangeSet<TObject>> _source;
+
+    public AutoRefresh(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
     {
-        private readonly TimeSpan? _buffer;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
+        _buffer = buffer;
+        _scheduler = scheduler;
+    }
 
-        private readonly Func<TObject, IObservable<TAny>> _reEvaluator;
+    public IObservable<IChangeSet<TObject>> Run()
+    {
+        return Observable.Create<IChangeSet<TObject>>(
+            observer =>
+            {
+                var locker = new object();
 
-        private readonly IScheduler? _scheduler;
+                var allItems = new List<TObject>();
 
-        private readonly IObservable<IChangeSet<TObject>> _source;
+                var shared = _source.Synchronize(locker).Clone(allItems) // clone all items so we can look up the index when a change has been made
+                    .Publish();
 
-        public AutoRefresh(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
-            _buffer = buffer;
-            _scheduler = scheduler;
-        }
+                // monitor each item observable and create change
+                var itemHasChanged = shared.MergeMany((t) => _reEvaluator(t).Select(_ => t));
 
-        public IObservable<IChangeSet<TObject>> Run()
-        {
-            return Observable.Create<IChangeSet<TObject>>(
-                observer =>
+                // create a change set, either buffered or one item at the time
+                IObservable<IEnumerable<TObject>> itemsChanged = _buffer is null ?
+                    itemHasChanged.Select(t => new[] { t }) :
+                    itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
+
+                IObservable<IChangeSet<TObject>> requiresRefresh = itemsChanged.Synchronize(locker).Select(
+                    items =>
                     {
-                        var locker = new object();
+                        // catch all the indices of items which have been refreshed
+                        return allItems.IndexOfMany(items, (t, idx) => new Change<TObject>(ListChangeReason.Refresh, t, idx));
+                    }).Select(changes => new ChangeSet<TObject>(changes));
 
-                        var allItems = new List<TObject>();
+                // publish refreshes and underlying changes
+                var publisher = shared.Merge(requiresRefresh).SubscribeSafe(observer);
 
-                        var shared = _source.Synchronize(locker).Clone(allItems) // clone all items so we can look up the index when a change has been made
-                            .Publish();
-
-                        // monitor each item observable and create change
-                        var itemHasChanged = shared.MergeMany((t) => _reEvaluator(t).Select(_ => t));
-
-                        // create a change set, either buffered or one item at the time
-                        IObservable<IEnumerable<TObject>> itemsChanged = _buffer is null ?
-                                                                             itemHasChanged.Select(t => new[] { t }) :
-                                                                             itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
-
-                        IObservable<IChangeSet<TObject>> requiresRefresh = itemsChanged.Synchronize(locker).Select(
-                            items =>
-                                {
-                                    // catch all the indices of items which have been refreshed
-                                    return allItems.IndexOfMany(items, (t, idx) => new Change<TObject>(ListChangeReason.Refresh, t, idx));
-                                }).Select(changes => new ChangeSet<TObject>(changes));
-
-                        // publish refreshes and underlying changes
-                        var publisher = shared.Merge(requiresRefresh).SubscribeSafe(observer);
-
-                        return new CompositeDisposable(publisher, shared.Connect());
-                    });
-        }
+                return new CompositeDisposable(publisher, shared.Connect());
+            });
     }
 }

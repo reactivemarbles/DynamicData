@@ -5,35 +5,34 @@
 using System;
 using System.Reactive.Linq;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class MergeMany<TObject, TKey, TDestination>
+    where TKey : notnull
 {
-    internal class MergeMany<TObject, TKey, TDestination>
-        where TKey : notnull
+    private readonly Func<TObject, TKey, IObservable<TDestination>> _observableSelector;
+
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+    public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
     {
-        private readonly Func<TObject, TKey, IObservable<TDestination>> _observableSelector;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _observableSelector = observableSelector ?? throw new ArgumentNullException(nameof(observableSelector));
+    }
 
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-        public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
+    public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
+    {
+        if (observableSelector is null)
         {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _observableSelector = observableSelector ?? throw new ArgumentNullException(nameof(observableSelector));
+            throw new ArgumentNullException(nameof(observableSelector));
         }
 
-        public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
-        {
-            if (observableSelector is null)
-            {
-                throw new ArgumentNullException(nameof(observableSelector));
-            }
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _observableSelector = (t, _) => observableSelector(t);
+    }
 
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _observableSelector = (t, _) => observableSelector(t);
-        }
-
-        public IObservable<TDestination> Run()
-        {
-            return Observable.Create<TDestination>(observer => _source.SubscribeMany((t, key) => _observableSelector(t, key).Subscribe(observer.OnNext, _ => { }, () => { })).Subscribe(_ => { }, observer.OnError));
-        }
+    public IObservable<TDestination> Run()
+    {
+        return Observable.Create<TDestination>(observer => _source.SubscribeMany((t, key) => _observableSelector(t, key).Subscribe(observer.OnNext, _ => { }, () => { })).Subscribe(_ => { }, observer.OnError));
     }
 }

@@ -675,6 +675,7 @@ dotnet_diagnostic.SX1101.severity = error
 dotnet_diagnostic.SX1309.severity = error
 
 dotnet_diagnostic.SX1623.severity = none
+dotnet_diagnostic.SX1309S.severity=silent
 
 # C++ Files
 [*.{cpp,h,in}]

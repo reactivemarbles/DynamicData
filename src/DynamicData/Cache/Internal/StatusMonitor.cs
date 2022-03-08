@@ -9,66 +9,65 @@ using System.Reactive.Subjects;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class StatusMonitor<T>
 {
-    internal class StatusMonitor<T>
+    private readonly IObservable<T> _source;
+
+    public StatusMonitor(IObservable<T> source)
     {
-        private readonly IObservable<T> _source;
+        _source = source;
+    }
 
-        public StatusMonitor(IObservable<T> source)
-        {
-            _source = source;
-        }
+    public IObservable<ConnectionStatus> Run()
+    {
+        return Observable.Create<ConnectionStatus>(
+            observer =>
+            {
+                var statusSubject = new Subject<ConnectionStatus>();
+                var status = ConnectionStatus.Pending;
 
-        public IObservable<ConnectionStatus> Run()
-        {
-            return Observable.Create<ConnectionStatus>(
-                observer =>
+                void Error(Exception ex)
+                {
+                    status = ConnectionStatus.Errored;
+                    statusSubject.OnNext(status);
+                    observer.OnError(ex);
+                }
+
+                void Completion()
+                {
+                    if (status == ConnectionStatus.Errored)
                     {
-                        var statusSubject = new Subject<ConnectionStatus>();
-                        var status = ConnectionStatus.Pending;
+                        return;
+                    }
 
-                        void Error(Exception ex)
-                        {
-                            status = ConnectionStatus.Errored;
-                            statusSubject.OnNext(status);
-                            observer.OnError(ex);
-                        }
+                    status = ConnectionStatus.Completed;
+                    statusSubject.OnNext(status);
+                }
 
-                        void Completion()
-                        {
-                            if (status == ConnectionStatus.Errored)
-                            {
-                                return;
-                            }
+                void Updated()
+                {
+                    if (status != ConnectionStatus.Pending)
+                    {
+                        return;
+                    }
 
-                            status = ConnectionStatus.Completed;
-                            statusSubject.OnNext(status);
-                        }
+                    status = ConnectionStatus.Loaded;
+                    statusSubject.OnNext(status);
+                }
 
-                        void Updated()
-                        {
-                            if (status != ConnectionStatus.Pending)
-                            {
-                                return;
-                            }
+                var monitor = _source.Subscribe(_ => Updated(), Error, Completion);
 
-                            status = ConnectionStatus.Loaded;
-                            statusSubject.OnNext(status);
-                        }
+                var subscriber = statusSubject.StartWith(status).DistinctUntilChanged().SubscribeSafe(observer);
 
-                        var monitor = _source.Subscribe(_ => Updated(), Error, Completion);
-
-                        var subscriber = statusSubject.StartWith(status).DistinctUntilChanged().SubscribeSafe(observer);
-
-                        return Disposable.Create(
-                            () =>
-                                {
-                                    statusSubject.OnCompleted();
-                                    monitor.Dispose();
-                                    subscriber.Dispose();
-                                });
+                return Disposable.Create(
+                    () =>
+                    {
+                        statusSubject.OnCompleted();
+                        monitor.Dispose();
+                        subscriber.Dispose();
                     });
-        }
+            });
     }
 }

@@ -7,60 +7,59 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.List
+namespace DynamicData.Tests.List;
+
+public class DeferAnsdSkipFixture
 {
-    public class DeferAnsdSkipFixture
+    [Fact]
+    public void DeferUntilLoadedDoesNothingUntilDataHasBeenReceived()
     {
-        [Fact]
-        public void DeferUntilLoadedDoesNothingUntilDataHasBeenReceived()
-        {
-            bool updateReceived = false;
-            IChangeSet<Person>? result = null;
+        bool updateReceived = false;
+        IChangeSet<Person>? result = null;
 
-            var cache = new SourceList<Person>();
+        var cache = new SourceList<Person>();
 
-            var deferStream = cache.Connect().DeferUntilLoaded().Subscribe(
-                changes =>
-                    {
-                        updateReceived = true;
-                        result = changes;
-                    });
-
-            var person = new Person("Test", 1);
-
-            updateReceived.Should().BeFalse();
-            cache.Add(person);
-
-            updateReceived.Should().BeTrue();
-
-            if (result is null)
+        var deferStream = cache.Connect().DeferUntilLoaded().Subscribe(
+            changes =>
             {
-                throw new InvalidOperationException(nameof(result));
-            }
+                updateReceived = true;
+                result = changes;
+            });
 
-            result.Adds.Should().Be(1);
-            result.Unified().First().Current.Should().Be(person);
-            deferStream.Dispose();
-        }
+        var person = new Person("Test", 1);
 
-        [Fact]
-        public void SkipInitialDoesNotReturnTheFirstBatchOfData()
+        updateReceived.Should().BeFalse();
+        cache.Add(person);
+
+        updateReceived.Should().BeTrue();
+
+        if (result is null)
         {
-            bool updateReceived = false;
-
-            var cache = new SourceList<Person>();
-
-            var deferStream = cache.Connect().SkipInitial().Subscribe(changes => updateReceived = true);
-
-            updateReceived.Should().BeFalse();
-
-            cache.Add(new Person("P1", 1));
-
-            updateReceived.Should().BeFalse();
-
-            cache.Add(new Person("P2", 2));
-            updateReceived.Should().BeTrue();
-            deferStream.Dispose();
+            throw new InvalidOperationException(nameof(result));
         }
+
+        result.Adds.Should().Be(1);
+        result.Unified().First().Current.Should().Be(person);
+        deferStream.Dispose();
+    }
+
+    [Fact]
+    public void SkipInitialDoesNotReturnTheFirstBatchOfData()
+    {
+        bool updateReceived = false;
+
+        var cache = new SourceList<Person>();
+
+        var deferStream = cache.Connect().SkipInitial().Subscribe(changes => updateReceived = true);
+
+        updateReceived.Should().BeFalse();
+
+        cache.Add(new Person("P1", 1));
+
+        updateReceived.Should().BeFalse();
+
+        cache.Add(new Person("P2", 2));
+        updateReceived.Should().BeTrue();
+        deferStream.Dispose();
     }
 }

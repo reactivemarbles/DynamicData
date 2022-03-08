@@ -6,35 +6,34 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public class IncludeUpdateFixture : IDisposable
 {
-    public class IncludeUpdateFixture : IDisposable
+    private readonly ChangeSetAggregator<Person, string> _results;
+
+    private readonly ISourceCache<Person, string> _source;
+
+    public IncludeUpdateFixture()
     {
-        private readonly ChangeSetAggregator<Person, string> _results;
+        _source = new SourceCache<Person, string>(p => p.Key);
+        _results = new ChangeSetAggregator<Person, string>(_source.Connect().IncludeUpdateWhen((current, previous) => current != previous));
+    }
 
-        private readonly ISourceCache<Person, string> _source;
+    public void Dispose()
+    {
+        _source.Dispose();
+    }
 
-        public IncludeUpdateFixture()
-        {
-            _source = new SourceCache<Person, string>(p => p.Key);
-            _results = new ChangeSetAggregator<Person, string>(_source.Connect().IncludeUpdateWhen((current, previous) => current != previous));
-        }
+    [Fact]
+    public void IgnoreFunctionWillIgnoreSubsequentUpdatesOfAnItem()
+    {
+        var person = new Person("Person", 10);
+        _source.AddOrUpdate(person);
+        _source.AddOrUpdate(person);
+        _source.AddOrUpdate(person);
 
-        public void Dispose()
-        {
-            _source.Dispose();
-        }
-
-        [Fact]
-        public void IgnoreFunctionWillIgnoreSubsequentUpdatesOfAnItem()
-        {
-            var person = new Person("Person", 10);
-            _source.AddOrUpdate(person);
-            _source.AddOrUpdate(person);
-            _source.AddOrUpdate(person);
-
-            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        }
+        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
     }
 }

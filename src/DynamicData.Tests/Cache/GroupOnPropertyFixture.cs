@@ -8,95 +8,94 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public class GroupOnPropertyFixture : IDisposable
 {
-    public class GroupOnPropertyFixture : IDisposable
+    private readonly ChangeSetAggregator<IGroup<Person, string, int>, int> _results;
+
+    private readonly SourceCache<Person, string> _source;
+
+    public GroupOnPropertyFixture()
     {
-        private readonly ChangeSetAggregator<IGroup<Person, string, int>, int> _results;
+        _source = new SourceCache<Person, string>(p => p.Key);
+        _results = _source.Connect().GroupOnProperty(p => p.Age).AsAggregator();
+    }
 
-        private readonly SourceCache<Person, string> _source;
+    [Fact]
+    public void CanGroupOnAdds()
+    {
+        _source.AddOrUpdate(new Person("A", 10));
 
-        public GroupOnPropertyFixture()
-        {
-            _source = new SourceCache<Person, string>(p => p.Key);
-            _results = _source.Connect().GroupOnProperty(p => p.Age).AsAggregator();
-        }
+        _results.Data.Count.Should().Be(1);
 
-        [Fact]
-        public void CanGroupOnAdds()
-        {
-            _source.AddOrUpdate(new Person("A", 10));
+        var firstGroup = _results.Data.Items.First();
 
-            _results.Data.Count.Should().Be(1);
+        firstGroup.Cache.Count.Should().Be(1);
+        firstGroup.Key.Should().Be(10);
+    }
 
-            var firstGroup = _results.Data.Items.First();
+    [Fact]
+    public void CanHandleAddBatch()
+    {
+        var generator = new RandomPersonGenerator();
+        var people = generator.Take(1000).ToArray();
 
-            firstGroup.Cache.Count.Should().Be(1);
-            firstGroup.Key.Should().Be(10);
-        }
+        _source.AddOrUpdate(people);
 
-        [Fact]
-        public void CanHandleAddBatch()
-        {
-            var generator = new RandomPersonGenerator();
-            var people = generator.Take(1000).ToArray();
+        var expectedGroupCount = people.Select(p => p.Age).Distinct().Count();
+        _results.Data.Count.Should().Be(expectedGroupCount);
+    }
 
-            _source.AddOrUpdate(people);
+    [Fact]
+    public void CanHandleChangedItemsBatch()
+    {
+        var generator = new RandomPersonGenerator();
+        var people = generator.Take(100).ToArray();
 
-            var expectedGroupCount = people.Select(p => p.Age).Distinct().Count();
-            _results.Data.Count.Should().Be(expectedGroupCount);
-        }
+        _source.AddOrUpdate(people);
 
-        [Fact]
-        public void CanHandleChangedItemsBatch()
-        {
-            var generator = new RandomPersonGenerator();
-            var people = generator.Take(100).ToArray();
+        var initialCount = people.Select(p => p.Age).Distinct().Count();
+        _results.Data.Count.Should().Be(initialCount);
 
-            _source.AddOrUpdate(people);
+        people.Take(25).ForEach(p => p.Age = 200);
 
-            var initialCount = people.Select(p => p.Age).Distinct().Count();
-            _results.Data.Count.Should().Be(initialCount);
+        var changedCount = people.Select(p => p.Age).Distinct().Count();
+        _results.Data.Count.Should().Be(changedCount);
 
-            people.Take(25).ForEach(p => p.Age = 200);
+        //check that each item is only in one cache
+        var peopleInCache = _results.Data.Items.SelectMany(g => g.Cache.Items).ToArray();
 
-            var changedCount = people.Select(p => p.Age).Distinct().Count();
-            _results.Data.Count.Should().Be(changedCount);
+        peopleInCache.Length.Should().Be(100);
+    }
 
-            //check that each item is only in one cache
-            var peopleInCache = _results.Data.Items.SelectMany(g => g.Cache.Items).ToArray();
+    [Fact]
+    public void CanRemoveFromGroup()
+    {
+        var person = new Person("A", 10);
+        _source.AddOrUpdate(person);
+        _source.Remove(person);
 
-            peopleInCache.Length.Should().Be(100);
-        }
+        _results.Data.Count.Should().Be(0);
+    }
 
-        [Fact]
-        public void CanRemoveFromGroup()
-        {
-            var person = new Person("A", 10);
-            _source.AddOrUpdate(person);
-            _source.Remove(person);
+    public void Dispose()
+    {
+        _source.Dispose();
+        _results.Dispose();
+    }
 
-            _results.Data.Count.Should().Be(0);
-        }
+    [Fact]
+    public void Regroup()
+    {
+        var person = new Person("A", 10);
+        _source.AddOrUpdate(person);
+        person.Age = 20;
 
-        public void Dispose()
-        {
-            _source.Dispose();
-            _results.Dispose();
-        }
+        _results.Data.Count.Should().Be(1);
+        var firstGroup = _results.Data.Items.First();
 
-        [Fact]
-        public void Regroup()
-        {
-            var person = new Person("A", 10);
-            _source.AddOrUpdate(person);
-            person.Age = 20;
-
-            _results.Data.Count.Should().Be(1);
-            var firstGroup = _results.Data.Items.First();
-
-            firstGroup.Cache.Count.Should().Be(1);
-            firstGroup.Key.Should().Be(20);
-        }
+        firstGroup.Cache.Count.Should().Be(1);
+        firstGroup.Key.Should().Be(20);
     }
 }

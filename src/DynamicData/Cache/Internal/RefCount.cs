@@ -6,60 +6,59 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class RefCount<TObject, TKey>
+    where TKey : notnull
 {
-    internal class RefCount<TObject, TKey>
-        where TKey : notnull
+    private readonly object _locker = new();
+
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+    private IObservableCache<TObject, TKey>? _cache;
+
+    private int _refCount;
+
+    public RefCount(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        private readonly object _locker = new();
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+    }
 
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-        private IObservableCache<TObject, TKey>? _cache;
-
-        private int _refCount;
-
-        public RefCount(IObservable<IChangeSet<TObject, TKey>> source)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-        }
-
-        public IObservable<IChangeSet<TObject, TKey>> Run()
-        {
-            return Observable.Create<IChangeSet<TObject, TKey>>(
-                observer =>
+    public IObservable<IChangeSet<TObject, TKey>> Run()
+    {
+        return Observable.Create<IChangeSet<TObject, TKey>>(
+            observer =>
+            {
+                lock (_locker)
+                {
+                    if (++_refCount == 1)
                     {
-                        lock (_locker)
+                        _cache = _source.AsObservableCache();
+                    }
+                }
+
+                if (_cache is null)
+                {
+                    throw new InvalidOperationException(nameof(_cache) + " is null");
+                }
+
+                var subscriber = _cache.Connect().SubscribeSafe(observer);
+
+                return Disposable.Create(() =>
+                {
+                    subscriber.Dispose();
+                    IDisposable? cacheToDispose = null;
+                    lock (_locker)
+                    {
+                        if (--_refCount == 0)
                         {
-                            if (++_refCount == 1)
-                            {
-                                _cache = _source.AsObservableCache();
-                            }
+                            cacheToDispose = _cache;
+                            _cache = null;
                         }
+                    }
 
-                        if (_cache is null)
-                        {
-                            throw new InvalidOperationException(nameof(_cache) + " is null");
-                        }
-
-                        var subscriber = _cache.Connect().SubscribeSafe(observer);
-
-                        return Disposable.Create(() =>
-                            {
-                                subscriber.Dispose();
-                                IDisposable? cacheToDispose = null;
-                                lock (_locker)
-                                {
-                                    if (--_refCount == 0)
-                                    {
-                                        cacheToDispose = _cache;
-                                        _cache = null;
-                                    }
-                                }
-
-                                cacheToDispose?.Dispose();
-                            });
-                    });
-        }
+                    cacheToDispose?.Dispose();
+                });
+            });
     }
 }

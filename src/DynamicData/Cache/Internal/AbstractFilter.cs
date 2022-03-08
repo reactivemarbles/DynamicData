@@ -7,152 +7,151 @@ using System.Collections.Generic;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
+    where TKey : notnull
 {
-    internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
-        where TKey : notnull
+    private readonly ChangeAwareCache<TObject, TKey> _cache;
+
+    protected AbstractFilter(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool>? filter)
     {
-        private readonly ChangeAwareCache<TObject, TKey> _cache;
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
 
-        protected AbstractFilter(ChangeAwareCache<TObject, TKey> cache, Func<TObject, bool>? filter)
+        Filter = filter ?? (_ => true);
+    }
+
+    public Func<TObject, bool> Filter { get; }
+
+    public IChangeSet<TObject, TKey> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items)
+    {
+        // this is an internal method only so we can be sure there are no duplicate keys in the result
+        // (therefore safe to parallelise)
+        Optional<Change<TObject, TKey>> Factory(KeyValuePair<TKey, TObject> kv)
         {
-            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            var existing = _cache.Lookup(kv.Key);
+            var matches = Filter(kv.Value);
 
-            Filter = filter ?? (_ => true);
-        }
-
-        public Func<TObject, bool> Filter { get; }
-
-        public IChangeSet<TObject, TKey> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items)
-        {
-            // this is an internal method only so we can be sure there are no duplicate keys in the result
-            // (therefore safe to parallelise)
-            Optional<Change<TObject, TKey>> Factory(KeyValuePair<TKey, TObject> kv)
+            if (matches)
             {
-                var existing = _cache.Lookup(kv.Key);
-                var matches = Filter(kv.Value);
-
-                if (matches)
+                if (!existing.HasValue)
                 {
-                    if (!existing.HasValue)
-                    {
-                        return new Change<TObject, TKey>(ChangeReason.Add, kv.Key, kv.Value);
-                    }
+                    return new Change<TObject, TKey>(ChangeReason.Add, kv.Key, kv.Value);
                 }
-                else
+            }
+            else
+            {
+                if (existing.HasValue)
                 {
-                    if (existing.HasValue)
-                    {
-                        return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, existing);
-                    }
+                    return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, existing);
                 }
-
-                return Optional.None<Change<TObject, TKey>>();
             }
 
-            var result = Refresh(items, Factory);
-            _cache.Clone(new ChangeSet<TObject, TKey>(result));
-
-            return _cache.CaptureChanges();
+            return Optional.None<Change<TObject, TKey>>();
         }
 
-        public IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates)
+        var result = Refresh(items, Factory);
+        _cache.Clone(new ChangeSet<TObject, TKey>(result));
+
+        return _cache.CaptureChanges();
+    }
+
+    public IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates)
+    {
+        var withFilter = GetChangesWithFilter(updates);
+        return ProcessResult(withFilter);
+    }
+
+    protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates);
+
+    protected abstract IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
+
+    private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> source)
+    {
+        // Have to process one item at a time as an item can be included multiple
+        // times in any batch
+        foreach (var item in source)
         {
-            var withFilter = GetChangesWithFilter(updates);
-            return ProcessResult(withFilter);
-        }
+            var matches = item.IsMatch;
+            var key = item.Change.Key;
+            var u = item.Change;
 
-        protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates);
-
-        protected abstract IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
-
-        private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> source)
-        {
-            // Have to process one item at a time as an item can be included multiple
-            // times in any batch
-            foreach (var item in source)
+            switch (item.Change.Reason)
             {
-                var matches = item.IsMatch;
-                var key = item.Change.Key;
-                var u = item.Change;
-
-                switch (item.Change.Reason)
-                {
-                    case ChangeReason.Add:
+                case ChangeReason.Add:
+                    {
+                        if (matches)
                         {
-                            if (matches)
-                            {
-                                _cache.AddOrUpdate(u.Current, u.Key);
-                            }
+                            _cache.AddOrUpdate(u.Current, u.Key);
                         }
+                    }
 
-                        break;
+                    break;
 
-                    case ChangeReason.Update:
+                case ChangeReason.Update:
+                    {
+                        if (matches)
                         {
-                            if (matches)
+                            _cache.AddOrUpdate(u.Current, u.Key);
+                        }
+                        else
+                        {
+                            _cache.Remove(u.Key);
+                        }
+                    }
+
+                    break;
+
+                case ChangeReason.Remove:
+                    _cache.Remove(u.Key);
+                    break;
+
+                case ChangeReason.Refresh:
+                    {
+                        var existing = _cache.Lookup(key);
+                        if (matches)
+                        {
+                            if (!existing.HasValue)
                             {
                                 _cache.AddOrUpdate(u.Current, u.Key);
                             }
                             else
+                            {
+                                _cache.Refresh();
+                            }
+                        }
+                        else
+                        {
+                            if (existing.HasValue)
                             {
                                 _cache.Remove(u.Key);
                             }
                         }
+                    }
 
-                        break;
-
-                    case ChangeReason.Remove:
-                        _cache.Remove(u.Key);
-                        break;
-
-                    case ChangeReason.Refresh:
-                        {
-                            var existing = _cache.Lookup(key);
-                            if (matches)
-                            {
-                                if (!existing.HasValue)
-                                {
-                                    _cache.AddOrUpdate(u.Current, u.Key);
-                                }
-                                else
-                                {
-                                    _cache.Refresh();
-                                }
-                            }
-                            else
-                            {
-                                if (existing.HasValue)
-                                {
-                                    _cache.Remove(u.Key);
-                                }
-                            }
-                        }
-
-                        break;
-                }
+                    break;
             }
-
-            return _cache.CaptureChanges();
         }
 
-        protected readonly struct UpdateWithFilter
+        return _cache.CaptureChanges();
+    }
+
+    protected readonly struct UpdateWithFilter
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UpdateWithFilter"/> struct.
+        /// Initializes a new instance of the <see cref="object"/> class.
+        /// </summary>
+        /// <param name="isMatch">If the filter is a match.</param>
+        /// <param name="change">The change.</param>
+        public UpdateWithFilter(bool isMatch, Change<TObject, TKey> change)
         {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="UpdateWithFilter"/> struct.
-            /// Initializes a new instance of the <see cref="object"/> class.
-            /// </summary>
-            /// <param name="isMatch">If the filter is a match.</param>
-            /// <param name="change">The change.</param>
-            public UpdateWithFilter(bool isMatch, Change<TObject, TKey> change)
-            {
-                IsMatch = isMatch;
-                Change = change;
-            }
-
-            public Change<TObject, TKey> Change { get; }
-
-            public bool IsMatch { get; }
+            IsMatch = isMatch;
+            Change = change;
         }
+
+        public Change<TObject, TKey> Change { get; }
+
+        public bool IsMatch { get; }
     }
 }

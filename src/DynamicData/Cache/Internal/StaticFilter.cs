@@ -5,41 +5,40 @@
 using System;
 using System.Reactive.Linq;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class StaticFilter<TObject, TKey>
+    where TKey : notnull
 {
-    internal class StaticFilter<TObject, TKey>
-        where TKey : notnull
+    private readonly Func<TObject, bool> _filter;
+    private readonly bool _suppressEmptyChangeSets;
+
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+    public StaticFilter(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, bool suppressEmptyChangeSets)
     {
-        private readonly Func<TObject, bool> _filter;
-        private readonly bool _suppressEmptyChangeSets;
+        _source = source;
+        _filter = filter;
+        _suppressEmptyChangeSets = suppressEmptyChangeSets;
+    }
 
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-        public StaticFilter(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, bool suppressEmptyChangeSets)
+    public IObservable<IChangeSet<TObject, TKey>> Run()
+    {
+        return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            _source = source;
-            _filter = filter;
-            _suppressEmptyChangeSets = suppressEmptyChangeSets;
-        }
+            ChangeAwareCache<TObject, TKey>? cache = null;
 
-        public IObservable<IChangeSet<TObject, TKey>> Run()
-        {
-            return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+            return _source.Subscribe(changes =>
             {
-                ChangeAwareCache<TObject, TKey>? cache = null;
+                cache ??= new ChangeAwareCache<TObject, TKey>(changes.Count);
 
-                return _source.Subscribe(changes =>
-                {
-                    cache ??= new ChangeAwareCache<TObject, TKey>(changes.Count);
+                cache.FilterChanges(changes, _filter);
+                var filtered = cache.CaptureChanges();
 
-                    cache.FilterChanges(changes, _filter);
-                    var filtered = cache.CaptureChanges();
+                if (filtered.Count != 0 || !_suppressEmptyChangeSets)
+                    observer.OnNext(filtered);
 
-                    if (filtered.Count != 0 || !_suppressEmptyChangeSets)
-                        observer.OnNext(filtered);
-
-                }, observer.OnError, observer.OnCompleted);
-            });
-        }
+            }, observer.OnError, observer.OnCompleted);
+        });
     }
 }

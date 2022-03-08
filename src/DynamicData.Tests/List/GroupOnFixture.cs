@@ -7,71 +7,70 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.List
+namespace DynamicData.Tests.List;
+
+public class GroupOnFixture : IDisposable
 {
-    public class GroupOnFixture : IDisposable
+    private readonly ChangeSetAggregator<IGroup<Person, int>> _results;
+
+    private readonly ISourceList<Person> _source;
+
+    public GroupOnFixture()
     {
-        private readonly ChangeSetAggregator<IGroup<Person, int>> _results;
+        _source = new SourceList<Person>();
+        _results = _source.Connect().GroupOn(p => p.Age).AsAggregator();
+    }
 
-        private readonly ISourceList<Person> _source;
+    [Fact]
+    public void Add()
+    {
+        var person = new Person("Adult1", 50);
+        _source.Add(person);
 
-        public GroupOnFixture()
-        {
-            _source = new SourceList<Person>();
-            _results = _source.Connect().GroupOn(p => p.Age).AsAggregator();
-        }
+        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
-        [Fact]
-        public void Add()
-        {
-            var person = new Person("Adult1", 50);
-            _source.Add(person);
+        var firstGroup = _results.Data.Items.First().List.Items.ToArray();
+        firstGroup[0].Should().Be(person, "Should be same person");
+    }
 
-            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+    [Fact]
+    public void BigList()
+    {
+        var generator = new RandomPersonGenerator();
+        var people = generator.Take(10000).ToArray();
+        _source.AddRange(people);
 
-            var firstGroup = _results.Data.Items.First().List.Items.ToArray();
-            firstGroup[0].Should().Be(person, "Should be same person");
-        }
+        Console.WriteLine();
+    }
 
-        [Fact]
-        public void BigList()
-        {
-            var generator = new RandomPersonGenerator();
-            var people = generator.Take(10000).ToArray();
-            _source.AddRange(people);
+    public void Dispose()
+    {
+        _source.Dispose();
+    }
 
-            Console.WriteLine();
-        }
+    [Fact]
+    public void Remove()
+    {
+        var person = new Person("Adult1", 50);
+        _source.Add(person);
+        _source.Remove(person);
+        _results.Messages.Count.Should().Be(2, "Should be 1 updates");
+        _results.Data.Count.Should().Be(0, "Should be no groups");
+    }
 
-        public void Dispose()
-        {
-            _source.Dispose();
-        }
+    [Fact]
+    public void UpdateWillChangeTheGroup()
+    {
+        var person = new Person("Adult1", 50);
+        var amended = new Person("Adult1", 60);
+        _source.Add(person);
+        _source.ReplaceAt(0, amended);
 
-        [Fact]
-        public void Remove()
-        {
-            var person = new Person("Adult1", 50);
-            _source.Add(person);
-            _source.Remove(person);
-            _results.Messages.Count.Should().Be(2, "Should be 1 updates");
-            _results.Data.Count.Should().Be(0, "Should be no groups");
-        }
+        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
 
-        [Fact]
-        public void UpdateWillChangeTheGroup()
-        {
-            var person = new Person("Adult1", 50);
-            var amended = new Person("Adult1", 60);
-            _source.Add(person);
-            _source.ReplaceAt(0, amended);
-
-            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-
-            var firstGroup = _results.Data.Items.First().List.Items.ToArray();
-            firstGroup[0].Should().Be(amended, "Should be same person");
-        }
+        var firstGroup = _results.Data.Items.First().List.Items.ToArray();
+        firstGroup[0].Should().Be(amended, "Should be same person");
     }
 }

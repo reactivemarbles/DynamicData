@@ -9,51 +9,50 @@ using Microsoft.Reactive.Testing;
 
 using Xunit;
 
-namespace DynamicData.Tests.List
+namespace DynamicData.Tests.List;
+
+public class ToObservableChangeSetFixture : ReactiveTest, IDisposable
 {
-    public class ToObservableChangeSetFixture : ReactiveTest, IDisposable
+    private readonly IDisposable _disposable;
+
+    private readonly Person _person1 = new("One", 1);
+
+    private readonly Person _person2 = new("Two", 2);
+
+    private readonly Person _person3 = new("Three", 3);
+
+    private readonly TestScheduler _scheduler;
+
+    private readonly List<Person> _target;
+
+    private readonly IObservable<Person> _observable;
+
+    public ToObservableChangeSetFixture()
     {
-        private readonly IDisposable _disposable;
+        _scheduler = new TestScheduler();
+        _observable = _scheduler.CreateColdObservable(OnNext(1, _person1), OnNext(2, _person2), OnNext(3, _person3));
 
-        private readonly Person _person1 = new("One", 1);
+        _target = new List<Person>();
 
-        private readonly Person _person2 = new("Two", 2);
+        _disposable = _observable.ToObservableChangeSet(2, _scheduler).Clone(_target).Subscribe();
+    }
 
-        private readonly Person _person3 = new("Three", 3);
+    public void Dispose()
+    {
+        _disposable.Dispose();
+    }
 
-        private readonly TestScheduler _scheduler;
+    [Fact]
+    public void ShouldLimitSizeOfBoundCollection()
+    {
+        _scheduler.AdvanceTo(2);
+        _target.Count.Should().Be(2, "Should be 2 item in target collection");
 
-        private readonly List<Person> _target;
+        _scheduler.AdvanceTo(3);
+        _target.Count.Should().Be(2, "Should be 2 item in target collection because of size limit");
 
-        private readonly IObservable<Person> _observable;
+        var expected = new[] { _person2, _person3 };
 
-        public ToObservableChangeSetFixture()
-        {
-            _scheduler = new TestScheduler();
-            _observable = _scheduler.CreateColdObservable(OnNext(1, _person1), OnNext(2, _person2), OnNext(3, _person3));
-
-            _target = new List<Person>();
-
-            _disposable = _observable.ToObservableChangeSet(2, _scheduler).Clone(_target).Subscribe();
-        }
-
-        public void Dispose()
-        {
-            _disposable.Dispose();
-        }
-
-        [Fact]
-        public void ShouldLimitSizeOfBoundCollection()
-        {
-            _scheduler.AdvanceTo(2);
-            _target.Count.Should().Be(2, "Should be 2 item in target collection");
-
-            _scheduler.AdvanceTo(3);
-            _target.Count.Should().Be(2, "Should be 2 item in target collection because of size limit");
-
-            var expected = new[] { _person2, _person3 };
-
-            _target.Should().BeEquivalentTo(expected);
-        }
+        _target.Should().BeEquivalentTo(expected);
     }
 }

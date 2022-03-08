@@ -9,291 +9,290 @@ using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal class Filter<T>
 {
-    internal class Filter<T>
+    private readonly ListFilterPolicy _policy;
+
+    private readonly Func<T, bool>? _predicate;
+
+    private readonly IObservable<Func<T, bool>>? _predicates;
+
+    private readonly IObservable<IChangeSet<T>> _source;
+
+    public Filter(IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicates, ListFilterPolicy policy = ListFilterPolicy.CalculateDiff)
     {
-        private readonly ListFilterPolicy _policy;
+        _policy = policy;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _predicates = predicates ?? throw new ArgumentNullException(nameof(predicates));
+    }
 
-        private readonly Func<T, bool>? _predicate;
+    public Filter(IObservable<IChangeSet<T>> source, Func<T, bool> predicate, ListFilterPolicy policy = ListFilterPolicy.CalculateDiff)
+    {
+        _policy = policy;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
+    }
 
-        private readonly IObservable<Func<T, bool>>? _predicates;
+    public IObservable<IChangeSet<T>> Run()
+    {
+        return Observable.Create<IChangeSet<T>>(
+            observer =>
+            {
+                var locker = new object();
 
-        private readonly IObservable<IChangeSet<T>> _source;
+                Func<T, bool> predicate = _ => false;
+                var all = new List<ItemWithMatch>();
+                var filtered = new ChangeAwareList<ItemWithMatch>();
+                var immutableFilter = _predicate is not null;
 
-        public Filter(IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicates, ListFilterPolicy policy = ListFilterPolicy.CalculateDiff)
-        {
-            _policy = policy;
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _predicates = predicates ?? throw new ArgumentNullException(nameof(predicates));
-        }
+                IObservable<IChangeSet<ItemWithMatch>> predicateChanged;
 
-        public Filter(IObservable<IChangeSet<T>> source, Func<T, bool> predicate, ListFilterPolicy policy = ListFilterPolicy.CalculateDiff)
-        {
-            _policy = policy;
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
-        }
-
-        public IObservable<IChangeSet<T>> Run()
-        {
-            return Observable.Create<IChangeSet<T>>(
-                observer =>
+                if (immutableFilter)
                 {
-                    var locker = new object();
+                    predicateChanged = Observable.Never<IChangeSet<ItemWithMatch>>();
+                    predicate = _predicate ?? predicate;
+                }
+                else
+                {
+                    if (_predicates is null)
+                        throw new InvalidOperationException("The predicates is not set and the change is not a immutableFilter.");
 
-                    Func<T, bool> predicate = _ => false;
-                    var all = new List<ItemWithMatch>();
-                    var filtered = new ChangeAwareList<ItemWithMatch>();
-                    var immutableFilter = _predicate is not null;
-
-                    IObservable<IChangeSet<ItemWithMatch>> predicateChanged;
-
-                    if (immutableFilter)
-                    {
-                        predicateChanged = Observable.Never<IChangeSet<ItemWithMatch>>();
-                        predicate = _predicate ?? predicate;
-                    }
-                    else
-                    {
-                        if (_predicates is null)
-                            throw new InvalidOperationException("The predicates is not set and the change is not a immutableFilter.");
-
-                        predicateChanged = _predicates.Synchronize(locker).Select(
-                            newPredicate =>
-                            {
-                                predicate = newPredicate;
-                                return Requery(predicate, all, filtered);
-                            });
-                    }
-
-                    /*
-                     * Apply the transform operator so 'IsMatch' state can be evaluated and captured one time only
-                     * This is to eliminate the need to re-apply the predicate when determining whether an item was previously matched,
-                     * which is essential when we have mutable state
-                     */
-
-                    // Need to get item by index and store it in the transform
-                    var filteredResult = _source.Synchronize(locker).Transform<T, ItemWithMatch>((t, previous) =>
-                            {
-                                var wasMatch = previous.ConvertOr(p => p!.IsMatch, () => false);
-                                return new ItemWithMatch(t, predicate(t), wasMatch);
-                            },
-                            true)
-                        .Select(changes =>
+                    predicateChanged = _predicates.Synchronize(locker).Select(
+                        newPredicate =>
                         {
-                            // keep track of all changes if filtering on an observable
-                            if (!immutableFilter)
-                                all.Clone(changes);
-
-                            return Process(filtered, changes);
+                            predicate = newPredicate;
+                            return Requery(predicate, all, filtered);
                         });
+                }
 
-                    return predicateChanged.Merge(filteredResult).NotEmpty()
-                        .Select(changes => changes.Transform(iwm => iwm.Item)) // use convert, not transform
-                        .SubscribeSafe(observer);
-                });
-        }
+                /*
+                 * Apply the transform operator so 'IsMatch' state can be evaluated and captured one time only
+                 * This is to eliminate the need to re-apply the predicate when determining whether an item was previously matched,
+                 * which is essential when we have mutable state
+                 */
 
-        private static IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
-        {
-            // Maintain all items as well as filtered list. This enables us to a) re-query when the predicate changes b) check the previous state when Refresh is called
-            foreach (var item in changes)
-            {
-                switch (item.Reason)
-                {
-                    case ListChangeReason.Add:
+                // Need to get item by index and store it in the transform
+                var filteredResult = _source.Synchronize(locker).Transform<T, ItemWithMatch>((t, previous) =>
                         {
-                            var change = item.Item;
-                            if (change.Current.IsMatch)
+                            var wasMatch = previous.ConvertOr(p => p!.IsMatch, () => false);
+                            return new ItemWithMatch(t, predicate(t), wasMatch);
+                        },
+                        true)
+                    .Select(changes =>
+                    {
+                        // keep track of all changes if filtering on an observable
+                        if (!immutableFilter)
+                            all.Clone(changes);
+
+                        return Process(filtered, changes);
+                    });
+
+                return predicateChanged.Merge(filteredResult).NotEmpty()
+                    .Select(changes => changes.Transform(iwm => iwm.Item)) // use convert, not transform
+                    .SubscribeSafe(observer);
+            });
+    }
+
+    private static IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
+    {
+        // Maintain all items as well as filtered list. This enables us to a) re-query when the predicate changes b) check the previous state when Refresh is called
+        foreach (var item in changes)
+        {
+            switch (item.Reason)
+            {
+                case ListChangeReason.Add:
+                    {
+                        var change = item.Item;
+                        if (change.Current.IsMatch)
+                            filtered.Add(change.Current);
+
+                        break;
+                    }
+
+                case ListChangeReason.AddRange:
+                    {
+                        var matches = item.Range.Where(t => t.IsMatch).ToList();
+                        filtered.AddRange(matches);
+                        break;
+                    }
+
+                case ListChangeReason.Replace:
+                    {
+                        var change = item.Item;
+                        var match = change.Current.IsMatch;
+                        var wasMatch = item.Item.Current.WasMatch;
+                        if (match)
+                        {
+                            if (wasMatch)
+                            {
+                                // an update, so get the latest index and pass the index up the chain
+                                var previous = filtered.Select(x => x.Item).IndexOfOptional(change.Previous.Value.Item).ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
+
+                                // replace inline
+                                filtered[previous.Index] = change.Current;
+                            }
+                            else
+                            {
                                 filtered.Add(change.Current);
-
-                            break;
+                            }
+                        }
+                        else
+                        {
+                            if (wasMatch)
+                                filtered.Remove(change.Previous.Value);
                         }
 
-                    case ListChangeReason.AddRange:
-                        {
-                            var matches = item.Range.Where(t => t.IsMatch).ToList();
-                            filtered.AddRange(matches);
-                            break;
-                        }
+                        break;
+                    }
 
-                    case ListChangeReason.Replace:
+                case ListChangeReason.Refresh:
+                    {
+                        var change = item.Item;
+                        var match = change.Current.IsMatch;
+                        var wasMatch = item.Item.Current.WasMatch;
+                        if (match)
                         {
-                            var change = item.Item;
-                            var match = change.Current.IsMatch;
-                            var wasMatch = item.Item.Current.WasMatch;
-                            if (match)
+                            if (wasMatch)
                             {
-                                if (wasMatch)
-                                {
-                                    // an update, so get the latest index and pass the index up the chain
-                                    var previous = filtered.Select(x => x.Item).IndexOfOptional(change.Previous.Value.Item).ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
+                                // an update, so get the latest index and pass the index up the chain
+                                var previous = filtered.Select(x => x.Item).IndexOfOptional(change.Current.Item).ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
 
-                                    // replace inline
-                                    filtered[previous.Index] = change.Current;
-                                }
-                                else
-                                {
-                                    filtered.Add(change.Current);
-                                }
+                                filtered.RefreshAt(previous.Index);
                             }
                             else
                             {
-                                if (wasMatch)
-                                    filtered.Remove(change.Previous.Value);
+                                filtered.Add(change.Current);
                             }
-
-                            break;
                         }
-
-                    case ListChangeReason.Refresh:
+                        else
                         {
-                            var change = item.Item;
-                            var match = change.Current.IsMatch;
-                            var wasMatch = item.Item.Current.WasMatch;
-                            if (match)
-                            {
-                                if (wasMatch)
-                                {
-                                    // an update, so get the latest index and pass the index up the chain
-                                    var previous = filtered.Select(x => x.Item).IndexOfOptional(change.Current.Item).ValueOrThrow(() => new InvalidOperationException($"Cannot find index of {typeof(T).Name} -> {change.Previous.Value}. Expected to be in the list"));
-
-                                    filtered.RefreshAt(previous.Index);
-                                }
-                                else
-                                {
-                                    filtered.Add(change.Current);
-                                }
-                            }
-                            else
-                            {
-                                if (wasMatch)
-                                    filtered.Remove(change.Current);
-                            }
-
-                            break;
+                            if (wasMatch)
+                                filtered.Remove(change.Current);
                         }
 
-                    case ListChangeReason.Remove:
-                        {
-                            filtered.Remove(item.Item.Current);
-                            break;
-                        }
+                        break;
+                    }
 
-                    case ListChangeReason.RemoveRange:
-                        {
-                            filtered.RemoveMany(item.Range);
-                            break;
-                        }
+                case ListChangeReason.Remove:
+                    {
+                        filtered.Remove(item.Item.Current);
+                        break;
+                    }
 
-                    case ListChangeReason.Clear:
-                        {
-                            filtered.ClearOrRemoveMany(item);
-                            break;
-                        }
-                }
+                case ListChangeReason.RemoveRange:
+                    {
+                        filtered.RemoveMany(item.Range);
+                        break;
+                    }
+
+                case ListChangeReason.Clear:
+                    {
+                        filtered.ClearOrRemoveMany(item);
+                        break;
+                    }
             }
+        }
 
+        return filtered.CaptureChanges();
+    }
+
+    private IChangeSet<ItemWithMatch> Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
+    {
+        if (all.Count == 0)
+        {
+            return ChangeSet<ItemWithMatch>.Empty;
+        }
+
+        if (_policy == ListFilterPolicy.ClearAndReplace)
+        {
+            var itemsWithMatch = all.Select(iwm => new ItemWithMatch(iwm.Item, predicate(iwm.Item), iwm.IsMatch)).ToList();
+
+            // mark items as matched?
+            filtered.Clear();
+            filtered.AddRange(itemsWithMatch.Where(iwm => iwm.IsMatch));
+
+            // reset state for all items
+            all.Clear();
+            all.AddRange(itemsWithMatch);
             return filtered.CaptureChanges();
         }
 
-        private IChangeSet<ItemWithMatch> Requery(Func<T, bool> predicate, List<ItemWithMatch> all, ChangeAwareList<ItemWithMatch> filtered)
+        var toAdd = new List<ItemWithMatch>(all.Count);
+        var toRemove = new List<ItemWithMatch>(all.Count);
+
+        for (int i = 0; i < all.Count; i++)
         {
-            if (all.Count == 0)
+            var original = all[i];
+
+            var newItem = new ItemWithMatch(original.Item, predicate(original.Item), original.IsMatch);
+
+            var current = all[i];
+            current.IsMatch = newItem.IsMatch;
+            current.WasMatch = newItem.WasMatch;
+
+            if (newItem.IsMatch && !newItem.WasMatch)
             {
-                return ChangeSet<ItemWithMatch>.Empty;
+                toAdd.Add(newItem);
             }
-
-            if (_policy == ListFilterPolicy.ClearAndReplace)
+            else if (!newItem.IsMatch && newItem.WasMatch)
             {
-                var itemsWithMatch = all.Select(iwm => new ItemWithMatch(iwm.Item, predicate(iwm.Item), iwm.IsMatch)).ToList();
-
-                // mark items as matched?
-                filtered.Clear();
-                filtered.AddRange(itemsWithMatch.Where(iwm => iwm.IsMatch));
-
-                // reset state for all items
-                all.Clear();
-                all.AddRange(itemsWithMatch);
-                return filtered.CaptureChanges();
+                toRemove.Add(newItem);
             }
-
-            var toAdd = new List<ItemWithMatch>(all.Count);
-            var toRemove = new List<ItemWithMatch>(all.Count);
-
-            for (int i = 0; i < all.Count; i++)
-            {
-                var original = all[i];
-
-                var newItem = new ItemWithMatch(original.Item, predicate(original.Item), original.IsMatch);
-
-                var current = all[i];
-                current.IsMatch = newItem.IsMatch;
-                current.WasMatch = newItem.WasMatch;
-
-                if (newItem.IsMatch && !newItem.WasMatch)
-                {
-                    toAdd.Add(newItem);
-                }
-                else if (!newItem.IsMatch && newItem.WasMatch)
-                {
-                    toRemove.Add(newItem);
-                }
-            }
-
-            filtered.RemoveMany(toRemove);
-            filtered.AddRange(toAdd);
-
-            return filtered.CaptureChanges();
         }
 
-        private class ItemWithMatch : IEquatable<ItemWithMatch>
+        filtered.RemoveMany(toRemove);
+        filtered.AddRange(toAdd);
+
+        return filtered.CaptureChanges();
+    }
+
+    private class ItemWithMatch : IEquatable<ItemWithMatch>
+    {
+        public T Item { get; }
+
+        public bool IsMatch { get; set; }
+
+        public bool WasMatch { get; set; }
+
+        public ItemWithMatch(T item, bool isMatch, bool wasMatch = false)
         {
-            public T Item { get; }
-
-            public bool IsMatch { get; set; }
-
-            public bool WasMatch { get; set; }
-
-            public ItemWithMatch(T item, bool isMatch, bool wasMatch = false)
-            {
-                Item = item;
-                IsMatch = isMatch;
-                WasMatch = wasMatch;
-            }
-
-            public bool Equals(ItemWithMatch? other)
-            {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
-                return EqualityComparer<T>.Default.Equals(Item, other.Item);
-            }
-
-            public override bool Equals(object? obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((ItemWithMatch)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                return EqualityComparer<T>.Default.GetHashCode(Item!);
-            }
-
-            public static bool operator ==(ItemWithMatch? left, ItemWithMatch? right)
-            {
-                return Equals(left, right);
-            }
-
-            public static bool operator !=(ItemWithMatch? left, ItemWithMatch? right)
-            {
-                return !Equals(left, right);
-            }
-
-            public override string ToString() => $"{Item}, (was {IsMatch} is {WasMatch}";
+            Item = item;
+            IsMatch = isMatch;
+            WasMatch = wasMatch;
         }
+
+        public bool Equals(ItemWithMatch? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return EqualityComparer<T>.Default.Equals(Item, other.Item);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((ItemWithMatch)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return EqualityComparer<T>.Default.GetHashCode(Item!);
+        }
+
+        public static bool operator ==(ItemWithMatch? left, ItemWithMatch? right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(ItemWithMatch? left, ItemWithMatch? right)
+        {
+            return !Equals(left, right);
+        }
+
+        public override string ToString() => $"{Item}, (was {IsMatch} is {WasMatch}";
     }
 }

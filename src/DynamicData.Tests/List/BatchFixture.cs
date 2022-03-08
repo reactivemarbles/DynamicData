@@ -9,44 +9,43 @@ using Microsoft.Reactive.Testing;
 
 using Xunit;
 
-namespace DynamicData.Tests.List
+namespace DynamicData.Tests.List;
+
+public class BatchFixture : IDisposable
 {
-    public class BatchFixture : IDisposable
+    private readonly ChangeSetAggregator<Person> _results;
+
+    private readonly TestScheduler _scheduler;
+
+    private readonly ISourceList<Person> _source;
+
+    public BatchFixture()
     {
-        private readonly ChangeSetAggregator<Person> _results;
+        _scheduler = new TestScheduler();
+        _source = new SourceList<Person>();
+        _results = _source.Connect().Buffer(TimeSpan.FromMinutes(1), _scheduler).FlattenBufferResult().AsAggregator();
+    }
 
-        private readonly TestScheduler _scheduler;
+    public void Dispose()
+    {
+        _results.Dispose();
+        _source.Dispose();
+    }
 
-        private readonly ISourceList<Person> _source;
+    [Fact]
+    public void NoResultsWillBeReceivedBeforeClosingBuffer()
+    {
+        _source.Add(new Person("A", 1));
+        _results.Messages.Count.Should().Be(0, "There should be no messages");
+    }
 
-        public BatchFixture()
-        {
-            _scheduler = new TestScheduler();
-            _source = new SourceList<Person>();
-            _results = _source.Connect().Buffer(TimeSpan.FromMinutes(1), _scheduler).FlattenBufferResult().AsAggregator();
-        }
+    [Fact]
+    public void ResultsWillBeReceivedAfterClosingBuffer()
+    {
+        _source.Add(new Person("A", 1));
 
-        public void Dispose()
-        {
-            _results.Dispose();
-            _source.Dispose();
-        }
-
-        [Fact]
-        public void NoResultsWillBeReceivedBeforeClosingBuffer()
-        {
-            _source.Add(new Person("A", 1));
-            _results.Messages.Count.Should().Be(0, "There should be no messages");
-        }
-
-        [Fact]
-        public void ResultsWillBeReceivedAfterClosingBuffer()
-        {
-            _source.Add(new Person("A", 1));
-
-            //go forward an arbitary amount of time
-            _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
-            _results.Messages.Count.Should().Be(1, "Should be 1 update");
-        }
+        //go forward an arbitary amount of time
+        _scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
+        _results.Messages.Count.Should().Be(1, "Should be 1 update");
     }
 }

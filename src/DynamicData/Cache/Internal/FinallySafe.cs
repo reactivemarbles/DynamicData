@@ -6,54 +6,53 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class FinallySafe<T>
 {
-    internal class FinallySafe<T>
+    private readonly Action _finallyAction;
+
+    private readonly IObservable<T> _source;
+
+    public FinallySafe(IObservable<T> source, Action finallyAction)
     {
-        private readonly Action _finallyAction;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _finallyAction = finallyAction ?? throw new ArgumentNullException(nameof(finallyAction));
+    }
 
-        private readonly IObservable<T> _source;
+    public IObservable<T> Run()
+    {
+        return Observable.Create<T>(
+            o =>
+            {
+                var finallyOnce = Disposable.Create(_finallyAction);
 
-        public FinallySafe(IObservable<T> source, Action finallyAction)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _finallyAction = finallyAction ?? throw new ArgumentNullException(nameof(finallyAction));
-        }
-
-        public IObservable<T> Run()
-        {
-            return Observable.Create<T>(
-                o =>
+                var subscription = _source.Subscribe(
+                    o.OnNext,
+                    ex =>
                     {
-                        var finallyOnce = Disposable.Create(_finallyAction);
-
-                        var subscription = _source.Subscribe(
-                            o.OnNext,
-                            ex =>
-                                {
-                                    try
-                                    {
-                                        o.OnError(ex);
-                                    }
-                                    finally
-                                    {
-                                        finallyOnce.Dispose();
-                                    }
-                                },
-                            () =>
-                                {
-                                    try
-                                    {
-                                        o.OnCompleted();
-                                    }
-                                    finally
-                                    {
-                                        finallyOnce.Dispose();
-                                    }
-                                });
-
-                        return new CompositeDisposable(subscription, finallyOnce);
+                        try
+                        {
+                            o.OnError(ex);
+                        }
+                        finally
+                        {
+                            finallyOnce.Dispose();
+                        }
+                    },
+                    () =>
+                    {
+                        try
+                        {
+                            o.OnCompleted();
+                        }
+                        finally
+                        {
+                            finallyOnce.Dispose();
+                        }
                     });
-        }
+
+                return new CompositeDisposable(subscription, finallyOnce);
+            });
     }
 }

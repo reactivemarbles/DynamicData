@@ -8,125 +8,124 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.List
+namespace DynamicData.Tests.List;
+
+public class VirtualisationFixture : IDisposable
 {
-    public class VirtualisationFixture : IDisposable
+    private readonly RandomPersonGenerator _generator = new();
+
+    private readonly ISubject<VirtualRequest> _requestSubject = new BehaviorSubject<VirtualRequest>(new VirtualRequest(0, 25));
+
+    private readonly ChangeSetAggregator<Person> _results;
+
+    private readonly ISourceList<Person> _source;
+
+    public VirtualisationFixture()
     {
-        private readonly RandomPersonGenerator _generator = new();
+        _source = new SourceList<Person>();
+        _results = _source.Connect().Virtualise(_requestSubject).AsAggregator();
+    }
 
-        private readonly ISubject<VirtualRequest> _requestSubject = new BehaviorSubject<VirtualRequest>(new VirtualRequest(0, 25));
+    public void Dispose()
+    {
+        _source.Dispose();
+        _results.Dispose();
+    }
 
-        private readonly ChangeSetAggregator<Person> _results;
+    [Fact]
+    public void InsertAfterPageProducesNothing()
+    {
+        var people = _generator.Take(100).ToArray();
+        _source.AddRange(people);
 
-        private readonly ISourceList<Person> _source;
+        var expected = people.Take(25).ToArray();
 
-        public VirtualisationFixture()
-        {
-            _source = new SourceList<Person>();
-            _results = _source.Connect().Virtualise(_requestSubject).AsAggregator();
-        }
+        _source.InsertRange(_generator.Take(100), 50);
+        _results.Data.Items.Should().BeEquivalentTo(expected);
+    }
 
-        public void Dispose()
-        {
-            _source.Dispose();
-            _results.Dispose();
-        }
+    [Fact]
+    public void InsertInPageReflectsChange()
+    {
+        var people = _generator.Take(100).ToArray();
+        _source.AddRange(people);
 
-        [Fact]
-        public void InsertAfterPageProducesNothing()
-        {
-            var people = _generator.Take(100).ToArray();
-            _source.AddRange(people);
+        var newPerson = new Person("A", 1);
+        _source.Insert(10, newPerson);
 
-            var expected = people.Take(25).ToArray();
+        var message = _results.Messages[1].ElementAt(0);
+        var removedPerson = people.ElementAt(24);
 
-            _source.InsertRange(_generator.Take(100), 50);
-            _results.Data.Items.Should().BeEquivalentTo(expected);
-        }
+        _results.Data.Items.ElementAt(10).Should().Be(newPerson);
+        message.Item.Current.Should().Be(removedPerson);
+        message.Reason.Should().Be(ListChangeReason.Remove);
+    }
 
-        [Fact]
-        public void InsertInPageReflectsChange()
-        {
-            var people = _generator.Take(100).ToArray();
-            _source.AddRange(people);
+    [Fact]
+    public void MoveToNextPage()
+    {
+        var people = _generator.Take(100).ToArray();
+        _source.AddRange(people);
+        _requestSubject.OnNext(new VirtualRequest(25, 25));
 
-            var newPerson = new Person("A", 1);
-            _source.Insert(10, newPerson);
+        var expected = people.Skip(25).Take(25).ToArray();
+        _results.Data.Items.Should().BeEquivalentTo(expected);
+    }
 
-            var message = _results.Messages[1].ElementAt(0);
-            var removedPerson = people.ElementAt(24);
+    [Fact]
+    public void MoveWithinSamePage()
+    {
+        var people = _generator.Take(100).ToArray();
+        _source.AddRange(people);
+        var personToMove = people[0];
+        _source.Move(0, 10);
 
-            _results.Data.Items.ElementAt(10).Should().Be(newPerson);
-            message.Item.Current.Should().Be(removedPerson);
-            message.Reason.Should().Be(ListChangeReason.Remove);
-        }
+        var actualPersonAtIndex10 = _results.Data.Items.ElementAt(10);
+        actualPersonAtIndex10.Should().Be(personToMove);
+    }
 
-        [Fact]
-        public void MoveToNextPage()
-        {
-            var people = _generator.Take(100).ToArray();
-            _source.AddRange(people);
-            _requestSubject.OnNext(new VirtualRequest(25, 25));
+    [Fact]
+    public void MoveWithinSamePage2()
+    {
+        var people = _generator.Take(100).ToArray();
+        _source.AddRange(people);
+        var personToMove = people[10];
+        _source.Move(10, 0);
 
-            var expected = people.Skip(25).Take(25).ToArray();
-            _results.Data.Items.Should().BeEquivalentTo(expected);
-        }
+        var actualPersonAtIndex0 = _results.Data.Items.ElementAt(0);
+        actualPersonAtIndex0.Should().Be(personToMove);
+    }
 
-        [Fact]
-        public void MoveWithinSamePage()
-        {
-            var people = _generator.Take(100).ToArray();
-            _source.AddRange(people);
-            var personToMove = people[0];
-            _source.Move(0, 10);
+    [Fact]
+    public void RemoveBeforeShiftsPage()
+    {
+        var people = _generator.Take(100).ToArray();
+        _source.AddRange(people);
+        _requestSubject.OnNext(new VirtualRequest(25, 25));
+        _source.RemoveAt(0);
+        var expected = people.Skip(26).Take(25).ToArray();
 
-            var actualPersonAtIndex10 = _results.Data.Items.ElementAt(10);
-            actualPersonAtIndex10.Should().Be(personToMove);
-        }
+        _results.Data.Items.Should().BeEquivalentTo(expected);
 
-        [Fact]
-        public void MoveWithinSamePage2()
-        {
-            var people = _generator.Take(100).ToArray();
-            _source.AddRange(people);
-            var personToMove = people[10];
-            _source.Move(10, 0);
+        var removedMessage = _results.Messages[2].ElementAt(0);
+        var removedPerson = people.ElementAt(25);
+        removedMessage.Item.Current.Should().Be(removedPerson);
+        removedMessage.Reason.Should().Be(ListChangeReason.Remove);
 
-            var actualPersonAtIndex0 = _results.Data.Items.ElementAt(0);
-            actualPersonAtIndex0.Should().Be(personToMove);
-        }
+        var addedMessage = _results.Messages[2].ElementAt(1);
+        var addedPerson = people.ElementAt(50);
+        addedMessage.Item.Current.Should().Be(addedPerson);
+        addedMessage.Reason.Should().Be(ListChangeReason.Add);
+    }
 
-        [Fact]
-        public void RemoveBeforeShiftsPage()
-        {
-            var people = _generator.Take(100).ToArray();
-            _source.AddRange(people);
-            _requestSubject.OnNext(new VirtualRequest(25, 25));
-            _source.RemoveAt(0);
-            var expected = people.Skip(26).Take(25).ToArray();
+    [Fact]
+    public void VirtualiseInitial()
+    {
+        var people = _generator.Take(100).ToArray();
+        _source.AddRange(people);
 
-            _results.Data.Items.Should().BeEquivalentTo(expected);
+        var expected = people.Take(25).ToArray();
 
-            var removedMessage = _results.Messages[2].ElementAt(0);
-            var removedPerson = people.ElementAt(25);
-            removedMessage.Item.Current.Should().Be(removedPerson);
-            removedMessage.Reason.Should().Be(ListChangeReason.Remove);
-
-            var addedMessage = _results.Messages[2].ElementAt(1);
-            var addedPerson = people.ElementAt(50);
-            addedMessage.Item.Current.Should().Be(addedPerson);
-            addedMessage.Reason.Should().Be(ListChangeReason.Add);
-        }
-
-        [Fact]
-        public void VirtualiseInitial()
-        {
-            var people = _generator.Take(100).ToArray();
-            _source.AddRange(people);
-
-            var expected = people.Take(25).ToArray();
-
-            _results.Data.Items.Should().BeEquivalentTo(expected);
-        }
+        _results.Data.Items.Should().BeEquivalentTo(expected);
     }
 }

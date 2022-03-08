@@ -4,38 +4,37 @@
 
 using System;
 
-namespace DynamicData.Kernel
+namespace DynamicData.Kernel;
+
+/// <summary>
+/// Continuation container used for the else operator on an option object.
+/// </summary>
+public sealed class OptionElse
 {
-    /// <summary>
-    /// Continuation container used for the else operator on an option object.
-    /// </summary>
-    public sealed class OptionElse
+    internal static readonly OptionElse NoAction = new(false);
+
+    private readonly bool _shouldRunAction;
+
+    internal OptionElse(bool shouldRunAction = true)
     {
-        internal static readonly OptionElse NoAction = new(false);
+        _shouldRunAction = shouldRunAction;
+    }
 
-        private readonly bool _shouldRunAction;
-
-        internal OptionElse(bool shouldRunAction = true)
+    /// <summary>
+    /// Invokes the specified action when an option has no value.
+    /// </summary>
+    /// <param name="action">The action.</param>
+    /// <exception cref="System.ArgumentNullException">action.</exception>
+    public void Else(Action action)
+    {
+        if (action is null)
         {
-            _shouldRunAction = shouldRunAction;
+            throw new ArgumentNullException(nameof(action));
         }
 
-        /// <summary>
-        /// Invokes the specified action when an option has no value.
-        /// </summary>
-        /// <param name="action">The action.</param>
-        /// <exception cref="System.ArgumentNullException">action.</exception>
-        public void Else(Action action)
+        if (_shouldRunAction)
         {
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            if (_shouldRunAction)
-            {
-                action();
-            }
+            action();
         }
     }
 }

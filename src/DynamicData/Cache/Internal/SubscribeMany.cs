@@ -6,42 +6,41 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class SubscribeMany<TObject, TKey>
+    where TKey : notnull
 {
-    internal class SubscribeMany<TObject, TKey>
-        where TKey : notnull
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+    private readonly Func<TObject, TKey, IDisposable> _subscriptionFactory;
+
+    public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
     {
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-        private readonly Func<TObject, TKey, IDisposable> _subscriptionFactory;
-
-        public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
+        if (subscriptionFactory is null)
         {
-            if (subscriptionFactory is null)
+            throw new ArgumentNullException(nameof(subscriptionFactory));
+        }
+
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _subscriptionFactory = (t, _) => subscriptionFactory(t);
+    }
+
+    public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory)
+    {
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _subscriptionFactory = subscriptionFactory ?? throw new ArgumentNullException(nameof(subscriptionFactory));
+    }
+
+    public IObservable<IChangeSet<TObject, TKey>> Run()
+    {
+        return Observable.Create<IChangeSet<TObject, TKey>>(
+            observer =>
             {
-                throw new ArgumentNullException(nameof(subscriptionFactory));
-            }
+                var published = _source.Publish();
+                var subscriptions = published.Transform((t, k) => _subscriptionFactory(t, k)).DisposeMany().Subscribe();
 
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _subscriptionFactory = (t, _) => subscriptionFactory(t);
-        }
-
-        public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _subscriptionFactory = subscriptionFactory ?? throw new ArgumentNullException(nameof(subscriptionFactory));
-        }
-
-        public IObservable<IChangeSet<TObject, TKey>> Run()
-        {
-            return Observable.Create<IChangeSet<TObject, TKey>>(
-                observer =>
-                    {
-                        var published = _source.Publish();
-                        var subscriptions = published.Transform((t, k) => _subscriptionFactory(t, k)).DisposeMany().Subscribe();
-
-                        return new CompositeDisposable(subscriptions, published.SubscribeSafe(observer), published.Connect());
-                    });
-        }
+                return new CompositeDisposable(subscriptions, published.SubscribeSafe(observer), published.Connect());
+            });
     }
 }

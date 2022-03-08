@@ -8,96 +8,95 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.Binding
+namespace DynamicData.Tests.Binding;
+
+public class IObservableListBindListFixture : IDisposable
 {
-    public class IObservableListBindListFixture : IDisposable
+    private readonly RandomPersonGenerator _generator = new();
+
+    private readonly IObservableList<Person> _list;
+
+    private readonly ChangeSetAggregator<Person> _observableListNotifications;
+
+    private readonly SourceList<Person> _source;
+
+    private readonly ChangeSetAggregator<Person> _sourceListNotifications;
+
+    public IObservableListBindListFixture()
     {
-        private readonly RandomPersonGenerator _generator = new();
+        _source = new SourceList<Person>();
+        _sourceListNotifications = _source.Connect().AutoRefresh().BindToObservableList(out _list).AsAggregator();
 
-        private readonly IObservableList<Person> _list;
+        _observableListNotifications = _list.Connect().AsAggregator();
+    }
 
-        private readonly ChangeSetAggregator<Person> _observableListNotifications;
+    [Fact]
+    public void AddRange()
+    {
+        var people = _generator.Take(100).ToList();
+        _source.AddRange(people);
 
-        private readonly SourceList<Person> _source;
+        _list.Count.Should().Be(100, "Should be 100 items in the collection");
+        _list.Should().BeEquivalentTo(_list, "Collections should be equivalent");
+    }
 
-        private readonly ChangeSetAggregator<Person> _sourceListNotifications;
+    [Fact]
+    public void AddToSourceAddsToDestination()
+    {
+        var person = new Person("Adult1", 50);
+        _source.Add(person);
 
-        public IObservableListBindListFixture()
-        {
-            _source = new SourceList<Person>();
-            _sourceListNotifications = _source.Connect().AutoRefresh().BindToObservableList(out _list).AsAggregator();
+        _list.Count.Should().Be(1, "Should be 1 item in the collection");
+        _list.Items.First().Should().Be(person, "Should be same person");
+    }
 
-            _observableListNotifications = _list.Connect().AsAggregator();
-        }
+    [Fact]
+    public void Clear()
+    {
+        var people = _generator.Take(100).ToList();
+        _source.AddRange(people);
+        _source.Clear();
+        _list.Count.Should().Be(0, "Should be 100 items in the collection");
+    }
 
-        [Fact]
-        public void AddRange()
-        {
-            var people = _generator.Take(100).ToList();
-            _source.AddRange(people);
+    public void Dispose()
+    {
+        _sourceListNotifications.Dispose();
+        _observableListNotifications.Dispose();
+        _source.Dispose();
+    }
 
-            _list.Count.Should().Be(100, "Should be 100 items in the collection");
-            _list.Should().BeEquivalentTo(_list, "Collections should be equivalent");
-        }
+    [Fact]
+    public void ListRecievesRefresh()
+    {
+        var person = new Person("Adult1", 50);
+        _source.Add(person);
 
-        [Fact]
-        public void AddToSourceAddsToDestination()
-        {
-            var person = new Person("Adult1", 50);
-            _source.Add(person);
+        person.Age = 60;
 
-            _list.Count.Should().Be(1, "Should be 1 item in the collection");
-            _list.Items.First().Should().Be(person, "Should be same person");
-        }
+        _observableListNotifications.Messages.Count().Should().Be(2);
+        _observableListNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+    }
 
-        [Fact]
-        public void Clear()
-        {
-            var people = _generator.Take(100).ToList();
-            _source.AddRange(people);
-            _source.Clear();
-            _list.Count.Should().Be(0, "Should be 100 items in the collection");
-        }
+    [Fact]
+    public void RemoveSourceRemovesFromTheDestination()
+    {
+        var person = new Person("Adult1", 50);
+        _source.Add(person);
+        _source.Remove(person);
 
-        public void Dispose()
-        {
-            _sourceListNotifications.Dispose();
-            _observableListNotifications.Dispose();
-            _source.Dispose();
-        }
+        _list.Count.Should().Be(0, "Should be 1 item in the collection");
+    }
 
-        [Fact]
-        public void ListRecievesRefresh()
-        {
-            var person = new Person("Adult1", 50);
-            _source.Add(person);
+    [Fact]
+    public void UpdateToSourceUpdatesTheDestination()
+    {
+        var person = new Person("Adult1", 50);
+        var personUpdated = new Person("Adult1", 51);
+        _source.Add(person);
+        _source.Replace(person, personUpdated);
 
-            person.Age = 60;
-
-            _observableListNotifications.Messages.Count().Should().Be(2);
-            _observableListNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
-        }
-
-        [Fact]
-        public void RemoveSourceRemovesFromTheDestination()
-        {
-            var person = new Person("Adult1", 50);
-            _source.Add(person);
-            _source.Remove(person);
-
-            _list.Count.Should().Be(0, "Should be 1 item in the collection");
-        }
-
-        [Fact]
-        public void UpdateToSourceUpdatesTheDestination()
-        {
-            var person = new Person("Adult1", 50);
-            var personUpdated = new Person("Adult1", 51);
-            _source.Add(person);
-            _source.Replace(person, personUpdated);
-
-            _list.Count.Should().Be(1, "Should be 1 item in the collection");
-            _list.Items.First().Should().Be(personUpdated, "Should be updated person");
-        }
+        _list.Count.Should().Be(1, "Should be 1 item in the collection");
+        _list.Items.First().Should().Be(personUpdated, "Should be updated person");
     }
 }

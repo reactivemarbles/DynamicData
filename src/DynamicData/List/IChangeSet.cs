@@ -5,24 +5,23 @@
 using System.Collections.Generic;
 
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData;
+
+/// <summary>
+/// A collection of changes.
+///
+/// Changes are always published in the order.
+/// </summary>
+/// <typeparam name="TObject">The type of the object.</typeparam>
+public interface IChangeSet<TObject> : IEnumerable<Change<TObject>>, IChangeSet
 {
     /// <summary>
-    /// A collection of changes.
-    ///
-    /// Changes are always published in the order.
+    ///     Gets the number of updates.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    public interface IChangeSet<TObject> : IEnumerable<Change<TObject>>, IChangeSet
-    {
-        /// <summary>
-        ///     Gets the number of updates.
-        /// </summary>
-        int Replaced { get; }
+    int Replaced { get; }
 
-        /// <summary>
-        /// Gets the total count of items changed.
-        /// </summary>
-        int TotalChanges { get; }
-    }
+    /// <summary>
+    /// Gets the total count of items changed.
+    /// </summary>
+    int TotalChanges { get; }
 }

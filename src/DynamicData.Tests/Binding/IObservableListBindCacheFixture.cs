@@ -8,96 +8,95 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.Binding
+namespace DynamicData.Tests.Binding;
+
+public class IObservableListBindCacheFixture : IDisposable
 {
-    public class IObservableListBindCacheFixture : IDisposable
+    private readonly RandomPersonGenerator _generator = new();
+
+    private readonly IObservableList<Person> _list;
+
+    private readonly ChangeSetAggregator<Person> _listNotifications;
+
+    private readonly ISourceCache<Person, string> _source;
+
+    private readonly ChangeSetAggregator<Person, string> _sourceCacheNotifications;
+
+    public IObservableListBindCacheFixture()
     {
-        private readonly RandomPersonGenerator _generator = new();
+        _source = new SourceCache<Person, string>(p => p.Name);
+        _sourceCacheNotifications = _source.Connect().AutoRefresh().BindToObservableList(out _list).AsAggregator();
 
-        private readonly IObservableList<Person> _list;
+        _listNotifications = _list.Connect().AsAggregator();
+    }
 
-        private readonly ChangeSetAggregator<Person> _listNotifications;
+    [Fact]
+    public void AddToSourceAddsToDestination()
+    {
+        var person = new Person("Adult1", 50);
+        _source.AddOrUpdate(person);
 
-        private readonly ISourceCache<Person, string> _source;
+        _list.Count.Should().Be(1, "Should be 1 item in the collection");
+        _list.Items.First().Should().Be(person, "Should be same person");
+    }
 
-        private readonly ChangeSetAggregator<Person, string> _sourceCacheNotifications;
+    [Fact]
+    public void BatchAdd()
+    {
+        var people = _generator.Take(100).ToList();
+        _source.AddOrUpdate(people);
 
-        public IObservableListBindCacheFixture()
-        {
-            _source = new SourceCache<Person, string>(p => p.Name);
-            _sourceCacheNotifications = _source.Connect().AutoRefresh().BindToObservableList(out _list).AsAggregator();
+        _list.Count.Should().Be(100, "Should be 100 items in the collection");
+        _list.Should().BeEquivalentTo(_list, "Collections should be equivalent");
+    }
 
-            _listNotifications = _list.Connect().AsAggregator();
-        }
+    [Fact]
+    public void BatchRemove()
+    {
+        var people = _generator.Take(100).ToList();
+        _source.AddOrUpdate(people);
+        _source.Clear();
+        _list.Count.Should().Be(0, "Should be 100 items in the collection");
+    }
 
-        [Fact]
-        public void AddToSourceAddsToDestination()
-        {
-            var person = new Person("Adult1", 50);
-            _source.AddOrUpdate(person);
+    public void Dispose()
+    {
+        _sourceCacheNotifications.Dispose();
+        _listNotifications.Dispose();
+        _source.Dispose();
+    }
 
-            _list.Count.Should().Be(1, "Should be 1 item in the collection");
-            _list.Items.First().Should().Be(person, "Should be same person");
-        }
+    [Fact]
+    public void ListRecievesRefresh()
+    {
+        var person = new Person("Adult1", 50);
+        _source.AddOrUpdate(person);
 
-        [Fact]
-        public void BatchAdd()
-        {
-            var people = _generator.Take(100).ToList();
-            _source.AddOrUpdate(people);
+        person.Age = 60;
 
-            _list.Count.Should().Be(100, "Should be 100 items in the collection");
-            _list.Should().BeEquivalentTo(_list, "Collections should be equivalent");
-        }
+        _listNotifications.Messages.Count().Should().Be(2);
+        _listNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
+    }
 
-        [Fact]
-        public void BatchRemove()
-        {
-            var people = _generator.Take(100).ToList();
-            _source.AddOrUpdate(people);
-            _source.Clear();
-            _list.Count.Should().Be(0, "Should be 100 items in the collection");
-        }
+    [Fact]
+    public void RemoveSourceRemovesFromTheDestination()
+    {
+        var person = new Person("Adult1", 50);
+        _source.AddOrUpdate(person);
+        _source.Remove(person);
 
-        public void Dispose()
-        {
-            _sourceCacheNotifications.Dispose();
-            _listNotifications.Dispose();
-            _source.Dispose();
-        }
+        _list.Count.Should().Be(0, "Should be 1 item in the collection");
+    }
 
-        [Fact]
-        public void ListRecievesRefresh()
-        {
-            var person = new Person("Adult1", 50);
-            _source.AddOrUpdate(person);
+    [Fact]
+    public void UpdateToSourceUpdatesTheDestination()
+    {
+        var person = new Person("Adult1", 50);
+        var personUpdated = new Person("Adult1", 51);
+        _source.AddOrUpdate(person);
+        _source.AddOrUpdate(personUpdated);
 
-            person.Age = 60;
-
-            _listNotifications.Messages.Count().Should().Be(2);
-            _listNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
-        }
-
-        [Fact]
-        public void RemoveSourceRemovesFromTheDestination()
-        {
-            var person = new Person("Adult1", 50);
-            _source.AddOrUpdate(person);
-            _source.Remove(person);
-
-            _list.Count.Should().Be(0, "Should be 1 item in the collection");
-        }
-
-        [Fact]
-        public void UpdateToSourceUpdatesTheDestination()
-        {
-            var person = new Person("Adult1", 50);
-            var personUpdated = new Person("Adult1", 51);
-            _source.AddOrUpdate(person);
-            _source.AddOrUpdate(personUpdated);
-
-            _list.Count.Should().Be(1, "Should be 1 item in the collection");
-            _list.Items.First().Should().Be(personUpdated, "Should be updated person");
-        }
+        _list.Count.Should().Be(1, "Should be 1 item in the collection");
+        _list.Items.First().Should().Be(personUpdated, "Should be updated person");
     }
 }

@@ -11,121 +11,120 @@ using DynamicData.List.Internal;
 using DynamicData.List.Linq;
 
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData;
+
+/// <summary>
+/// Change set extensions.
+/// </summary>
+public static class ChangeSetEx
 {
     /// <summary>
-    /// Change set extensions.
+    /// Returns a flattened source with the index.
     /// </summary>
-    public static class ChangeSetEx
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>An enumerable of change sets.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
     {
-        /// <summary>
-        /// Returns a flattened source with the index.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>An enumerable of change sets.</returns>
-        /// <exception cref="ArgumentNullException">source.</exception>
-        public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
+        if (source is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            return new ItemChangeEnumerator<T>(source);
+            throw new ArgumentNullException(nameof(source));
         }
 
-        /// <summary>
-        /// Gets the type of the change i.e. whether it is an item or a range change.
-        /// </summary>
-        /// <param name="source">The source.</param>
-        /// <returns>The change type.</returns>
-        public static ChangeType GetChangeType(this ListChangeReason source)
+        return new ItemChangeEnumerator<T>(source);
+    }
+
+    /// <summary>
+    /// Gets the type of the change i.e. whether it is an item or a range change.
+    /// </summary>
+    /// <param name="source">The source.</param>
+    /// <returns>The change type.</returns>
+    public static ChangeType GetChangeType(this ListChangeReason source)
+    {
+        switch (source)
         {
-            switch (source)
-            {
-                case ListChangeReason.Add:
-                case ListChangeReason.Refresh:
-                case ListChangeReason.Replace:
-                case ListChangeReason.Moved:
-                case ListChangeReason.Remove:
-                    return ChangeType.Item;
+            case ListChangeReason.Add:
+            case ListChangeReason.Refresh:
+            case ListChangeReason.Replace:
+            case ListChangeReason.Moved:
+            case ListChangeReason.Remove:
+                return ChangeType.Item;
 
-                case ListChangeReason.AddRange:
-                case ListChangeReason.RemoveRange:
-                case ListChangeReason.Clear:
-                    return ChangeType.Range;
+            case ListChangeReason.AddRange:
+            case ListChangeReason.RemoveRange:
+            case ListChangeReason.Clear:
+                return ChangeType.Range;
 
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(source));
-            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(source));
+        }
+    }
+
+    /// <summary>
+    /// Transforms the change set into a different type using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformer">The transformer.</param>
+    /// <returns>The change set.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// source
+    /// or
+    /// transformer.
+    /// </exception>
+    public static IChangeSet<TDestination> Transform<TSource, TDestination>(this IChangeSet<TSource> source, Func<TSource, TDestination> transformer)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
         }
 
-        /// <summary>
-        /// Transforms the change set into a different type using the specified transform function.
-        /// </summary>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="transformer">The transformer.</param>
-        /// <returns>The change set.</returns>
-        /// <exception cref="ArgumentNullException">
-        /// source
-        /// or
-        /// transformer.
-        /// </exception>
-        public static IChangeSet<TDestination> Transform<TSource, TDestination>(this IChangeSet<TSource> source, Func<TSource, TDestination> transformer)
+        if (transformer is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (transformer is null)
-            {
-                throw new ArgumentNullException(nameof(transformer));
-            }
-
-            var changes = source.Select(
-                change =>
-                    {
-                        if (change.Type == ChangeType.Item)
-                        {
-                            return new Change<TDestination>(change.Reason, transformer(change.Item.Current), change.Item.Previous.Convert(transformer), change.Item.CurrentIndex, change.Item.PreviousIndex);
-                        }
-
-                        return new Change<TDestination>(change.Reason, change.Range.Select(transformer), change.Range.Index);
-                    });
-
-            return new ChangeSet<TDestination>(changes);
+            throw new ArgumentNullException(nameof(transformer));
         }
 
-        /// <summary>
-        /// Remove the index from the changes.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>An enumerable of changes.</returns>
-        public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
-        {
-            return new WithoutIndexEnumerator<T>(source);
-        }
-
-        /// <summary>
-        /// Returns a flattened source.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>An enumerable of changes.</returns>
-        /// <exception cref="ArgumentNullException">source.</exception>
-        internal static IEnumerable<UnifiedChange<T>> Unified<T>(this IChangeSet<T> source)
-        {
-            if (source is null)
+        var changes = source.Select(
+            change =>
             {
-                throw new ArgumentNullException(nameof(source));
-            }
+                if (change.Type == ChangeType.Item)
+                {
+                    return new Change<TDestination>(change.Reason, transformer(change.Item.Current), change.Item.Previous.Convert(transformer), change.Item.CurrentIndex, change.Item.PreviousIndex);
+                }
 
-            return new UnifiedChangeEnumerator<T>(source);
+                return new Change<TDestination>(change.Reason, change.Range.Select(transformer), change.Range.Index);
+            });
+
+        return new ChangeSet<TDestination>(changes);
+    }
+
+    /// <summary>
+    /// Remove the index from the changes.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>An enumerable of changes.</returns>
+    public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
+    {
+        return new WithoutIndexEnumerator<T>(source);
+    }
+
+    /// <summary>
+    /// Returns a flattened source.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>An enumerable of changes.</returns>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    internal static IEnumerable<UnifiedChange<T>> Unified<T>(this IChangeSet<T> source)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
         }
+
+        return new UnifiedChangeEnumerator<T>(source);
     }
 }

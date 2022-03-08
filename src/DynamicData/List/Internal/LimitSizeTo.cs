@@ -9,42 +9,41 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal sealed class LimitSizeTo<T>
 {
-    internal sealed class LimitSizeTo<T>
+    private readonly object _locker;
+
+    private readonly IScheduler _scheduler;
+
+    private readonly int _sizeLimit;
+
+    private readonly ISourceList<T> _sourceList;
+
+    public LimitSizeTo(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, object locker)
     {
-        private readonly object _locker;
+        _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
+        _sizeLimit = sizeLimit;
+        _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
+        _locker = locker;
+    }
 
-        private readonly IScheduler _scheduler;
+    public IObservable<IEnumerable<T>> Run()
+    {
+        var emptyResult = new List<T>();
+        long orderItemWasAdded = -1;
 
-        private readonly int _sizeLimit;
+        return _sourceList.Connect().ObserveOn(_scheduler).Synchronize(_locker).Transform(t => new ExpirableItem<T>(t, _scheduler.Now.DateTime, Interlocked.Increment(ref orderItemWasAdded))).ToCollection().Select(
+            list =>
+            {
+                var numberToExpire = list.Count - _sizeLimit;
+                if (numberToExpire < 0)
+                {
+                    return emptyResult;
+                }
 
-        private readonly ISourceList<T> _sourceList;
-
-        public LimitSizeTo(ISourceList<T> sourceList, int sizeLimit, IScheduler scheduler, object locker)
-        {
-            _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
-            _sizeLimit = sizeLimit;
-            _scheduler = scheduler ?? throw new ArgumentNullException(nameof(scheduler));
-            _locker = locker;
-        }
-
-        public IObservable<IEnumerable<T>> Run()
-        {
-            var emptyResult = new List<T>();
-            long orderItemWasAdded = -1;
-
-            return _sourceList.Connect().ObserveOn(_scheduler).Synchronize(_locker).Transform(t => new ExpirableItem<T>(t, _scheduler.Now.DateTime, Interlocked.Increment(ref orderItemWasAdded))).ToCollection().Select(
-                list =>
-                    {
-                        var numberToExpire = list.Count - _sizeLimit;
-                        if (numberToExpire < 0)
-                        {
-                            return emptyResult;
-                        }
-
-                        return list.OrderBy(exp => exp.ExpireAt).ThenBy(exp => exp.Index).Take(numberToExpire).Select(item => item.Item).ToList();
-                    }).Where(items => items.Count != 0);
-        }
+                return list.OrderBy(exp => exp.ExpireAt).ThenBy(exp => exp.Index).Take(numberToExpire).Select(item => item.Item).ToList();
+            }).Where(items => items.Count != 0);
     }
 }

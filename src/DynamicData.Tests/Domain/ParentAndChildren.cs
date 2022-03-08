@@ -2,84 +2,83 @@
 
 using DynamicData.Kernel;
 
-namespace DynamicData.Tests.Domain
+namespace DynamicData.Tests.Domain;
+
+public class ParentAndChildren : IEquatable<ParentAndChildren>
 {
-    public class ParentAndChildren : IEquatable<ParentAndChildren>
+    public ParentAndChildren(Person parent, Person[] children)
     {
-        public ParentAndChildren(Person parent, Person[] children)
+        Parent = parent;
+        Children = children;
+    }
+
+    public ParentAndChildren(string parentId, Optional<Person> parent, Person[] children)
+    {
+        Parent = parent.ValueOrDefault();
+        ParentId = parentId;
+        Children = children;
+    }
+
+    public Person[] Children { get; }
+
+    public int Count => Children.Length;
+
+    public Person? Parent { get; }
+
+    public string? ParentId { get; }
+
+    public static bool operator ==(ParentAndChildren left, ParentAndChildren right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(ParentAndChildren left, ParentAndChildren right)
+    {
+        return !Equals(left, right);
+    }
+
+    public bool Equals(ParentAndChildren? other)
+    {
+        if (ReferenceEquals(null, other))
         {
-            Parent = parent;
-            Children = children;
+            return false;
         }
 
-        public ParentAndChildren(string parentId, Optional<Person> parent, Person[] children)
+        if (ReferenceEquals(this, other))
         {
-            Parent = parent.ValueOrDefault();
-            ParentId = parentId;
-            Children = children;
+            return true;
         }
 
-        public Person[] Children { get; }
+        return string.Equals(ParentId, other.ParentId);
+    }
 
-        public int Count => Children.Length;
-
-        public Person? Parent { get; }
-
-        public string? ParentId { get; }
-
-        public static bool operator ==(ParentAndChildren left, ParentAndChildren right)
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
         {
-            return Equals(left, right);
+            return false;
         }
 
-        public static bool operator !=(ParentAndChildren left, ParentAndChildren right)
+        if (ReferenceEquals(this, obj))
         {
-            return !Equals(left, right);
+            return true;
         }
 
-        public bool Equals(ParentAndChildren? other)
+        if (obj.GetType() != GetType())
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return string.Equals(ParentId, other.ParentId);
+            return false;
         }
 
-        public override bool Equals(object? obj)
-        {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
+        return Equals((ParentAndChildren)obj);
+    }
 
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
+    public override int GetHashCode()
+    {
+        return (ParentId is not null ? ParentId.GetHashCode() : 0);
+    }
 
-            if (obj.GetType() != GetType())
-            {
-                return false;
-            }
-
-            return Equals((ParentAndChildren)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return (ParentId is not null ? ParentId.GetHashCode() : 0);
-        }
-
-        public override string ToString()
-        {
-            return $"{nameof(Parent)}: {Parent}, ({Count} children)";
-        }
+    public override string ToString()
+    {
+        return $"{nameof(Parent)}: {Parent}, ({Count} children)";
     }
 }

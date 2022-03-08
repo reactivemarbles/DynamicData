@@ -5,27 +5,26 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal static class IndexAndNode
 {
-    internal static class IndexAndNode
+    public static IndexAndNode<TNodeValue> Create<TNodeValue>(int index, LinkedListNode<TNodeValue> value)
     {
-        public static IndexAndNode<TNodeValue> Create<TNodeValue>(int index, LinkedListNode<TNodeValue> value)
-        {
-            return new(index, value);
-        }
+        return new(index, value);
+    }
+}
+
+[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics.")]
+internal class IndexAndNode<TNodeValue>
+{
+    public IndexAndNode(int index, LinkedListNode<TNodeValue> node)
+    {
+        Index = index;
+        Node = node;
     }
 
-    [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics.")]
-    internal class IndexAndNode<TNodeValue>
-    {
-        public IndexAndNode(int index, LinkedListNode<TNodeValue> node)
-        {
-            Index = index;
-            Node = node;
-        }
+    public int Index { get; }
 
-        public int Index { get; }
-
-        public LinkedListNode<TNodeValue> Node { get; }
-    }
+    public LinkedListNode<TNodeValue> Node { get; }
 }

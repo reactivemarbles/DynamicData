@@ -4,18 +4,17 @@
 
 using System.Reactive.Subjects;
 
-namespace DynamicData.Experimental
+namespace DynamicData.Experimental;
+
+/// <summary>
+/// A subject which also contains its current reference count.
+/// </summary>
+/// <typeparam name="T">The type of item.</typeparam>
+internal interface ISubjectWithRefCount<T> : ISubject<T>
 {
-    /// <summary>
-    /// A subject which also contains its current reference count.
-    /// </summary>
-    /// <typeparam name="T">The type of item.</typeparam>
-    internal interface ISubjectWithRefCount<T> : ISubject<T>
-    {
-        /// <summary>Gets number of subscribers.</summary>
-        /// <value>
-        /// The ref count.
-        /// </value>
-        int RefCount { get; }
-    }
+    /// <summary>Gets number of subscribers.</summary>
+    /// <value>
+    /// The ref count.
+    /// </value>
+    int RefCount { get; }
 }

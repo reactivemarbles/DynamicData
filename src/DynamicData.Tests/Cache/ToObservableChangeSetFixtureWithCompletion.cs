@@ -8,45 +8,44 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public class ToObservableChangeSetFixtureWithCompletion : IDisposable
 {
-    public class ToObservableChangeSetFixtureWithCompletion : IDisposable
+    private readonly IDisposable _disposable;
+
+    private readonly ISubject<Person> _observable;
+
+    private readonly List<Person> _target;
+
+    private bool _hasCompleted = false;
+
+    public ToObservableChangeSetFixtureWithCompletion()
     {
-        private readonly IDisposable _disposable;
+        _observable = new Subject<Person>();
 
-        private readonly ISubject<Person> _observable;
+        _target = new List<Person>();
 
-        private readonly List<Person> _target;
+        _disposable = _observable.ToObservableChangeSet(p => p.Key).Clone(_target).Subscribe(x => { }, () => _hasCompleted = true);
+    }
 
-        private bool _hasCompleted = false;
+    public void Dispose()
+    {
+        _disposable.Dispose();
+    }
 
-        public ToObservableChangeSetFixtureWithCompletion()
-        {
-            _observable = new Subject<Person>();
+    [Fact]
+    public void ShouldReceiveUpdatesThenComplete()
+    {
+        _observable.OnNext(new Person("One", 1));
+        _observable.OnNext(new Person("Two", 2));
 
-            _target = new List<Person>();
+        _target.Count.Should().Be(2);
 
-            _disposable = _observable.ToObservableChangeSet(p => p.Key).Clone(_target).Subscribe(x => { }, () => _hasCompleted = true);
-        }
+        _observable.OnCompleted();
+        _hasCompleted.Should().Be(true);
 
-        public void Dispose()
-        {
-            _disposable.Dispose();
-        }
-
-        [Fact]
-        public void ShouldReceiveUpdatesThenComplete()
-        {
-            _observable.OnNext(new Person("One", 1));
-            _observable.OnNext(new Person("Two", 2));
-
-            _target.Count.Should().Be(2);
-
-            _observable.OnCompleted();
-            _hasCompleted.Should().Be(true);
-
-            _observable.OnNext(new Person("Three", 3));
-            _target.Count.Should().Be(2);
-        }
+        _observable.OnNext(new Person("Three", 3));
+        _target.Count.Should().Be(2);
     }
 }

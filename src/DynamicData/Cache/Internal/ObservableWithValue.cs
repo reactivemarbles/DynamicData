@@ -7,20 +7,19 @@ using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal sealed class ObservableWithValue<TObject, TValue>
 {
-    internal sealed class ObservableWithValue<TObject, TValue>
+    public ObservableWithValue(TObject item, IObservable<TValue> source)
     {
-        public ObservableWithValue(TObject item, IObservable<TValue> source)
-        {
-            Item = item;
-            Observable = source.Do(value => LatestValue = value);
-        }
-
-        public TObject Item { get; }
-
-        public Optional<TValue> LatestValue { get; private set; } = Optional<TValue>.None;
-
-        public IObservable<TValue> Observable { get; }
+        Item = item;
+        Observable = source.Do(value => LatestValue = value);
     }
+
+    public TObject Item { get; }
+
+    public Optional<TValue> LatestValue { get; private set; } = Optional<TValue>.None;
+
+    public IObservable<TValue> Observable { get; }
 }

@@ -9,114 +9,113 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public class ChangesReducerFixture
 {
-    public class ChangesReducerFixture
+    private static readonly Person _testEntity = new Person("test", "test", 32);
+
+    private static readonly int _testIndex = 0;
+
+    private static readonly Change<Person, string>[] _changes = new[]
     {
-        private static readonly Person _testEntity = new Person("test", "test", 32);
+        new Change<Person, string>(ChangeReason.Add, _testEntity.Key, _testEntity, _testIndex),
+        new Change<Person, string>(ChangeReason.Remove, _testEntity.Key, _testEntity, _testIndex),
+        new Change<Person, string>(ChangeReason.Moved, _testEntity.Key, _testEntity, _testEntity, _testIndex, _testIndex + 1),
+        new Change<Person, string>(ChangeReason.Update, _testEntity.Key, _testEntity, _testEntity, _testIndex),
+        new Change<Person, string>(ChangeReason.Refresh, _testEntity.Key, _testEntity, _testIndex)
+    };
 
-        private static readonly int _testIndex = 0;
+    // ReSharper disable once MemberCanBePrivate.Global
+    public static IEnumerable<object[]> ConstrainFirstValue(ChangeReason constraint, ChangeReason[] othersExcept)
+    {
+        var constrainedValue = _changes.Single(c => c.Reason == constraint);
+        var others = _changes.Where(c => c.Reason != constraint && !othersExcept.Contains(c.Reason));
+        return others.Select(other => new object[] { constrainedValue, other });
+    }
 
-        private static readonly Change<Person, string>[] _changes = new[]
-                                                               {
-                                                                   new Change<Person, string>(ChangeReason.Add, _testEntity.Key, _testEntity, _testIndex),
-                                                                   new Change<Person, string>(ChangeReason.Remove, _testEntity.Key, _testEntity, _testIndex),
-                                                                   new Change<Person, string>(ChangeReason.Moved, _testEntity.Key, _testEntity, _testEntity, _testIndex, _testIndex + 1),
-                                                                   new Change<Person, string>(ChangeReason.Update, _testEntity.Key, _testEntity, _testEntity, _testIndex),
-                                                                   new Change<Person, string>(ChangeReason.Refresh, _testEntity.Key, _testEntity, _testIndex)
-                                                               };
+    // ReSharper disable once MemberCanBePrivate.Global
+    public static IEnumerable<object[]> GetChanges()
+    {
+        return _changes.Select(x => new object[] { x });
+    }
 
-        // ReSharper disable once MemberCanBePrivate.Global
-        public static IEnumerable<object[]> ConstrainFirstValue(ChangeReason constraint, ChangeReason[] othersExcept)
-        {
-            var constrainedValue = _changes.Single(c => c.Reason == constraint);
-            var others = _changes.Where(c => c.Reason != constraint && !othersExcept.Contains(c.Reason));
-            return others.Select(other => new object[] { constrainedValue, other });
-        }
+    [Fact]
+    public void AddAndRemoveProduceNothing()
+    {
+        var add = _changes.Single(c => c.Reason == ChangeReason.Add);
+        var remove = _changes.Single(c => c.Reason == ChangeReason.Remove);
 
-        // ReSharper disable once MemberCanBePrivate.Global
-        public static IEnumerable<object[]> GetChanges()
-        {
-            return _changes.Select(x => new object[] { x });
-        }
+        var result = ChangesReducer.Reduce(add, remove);
+        result.HasValue.Should().Be(false);
+    }
 
-        [Fact]
-        public void AddAndRemoveProduceNothing()
-        {
-            var add = _changes.Single(c => c.Reason == ChangeReason.Add);
-            var remove = _changes.Single(c => c.Reason == ChangeReason.Remove);
+    [Fact]
+    public void AddAndUpdateProduceAdd()
+    {
+        var updatedEntity = new Person(_testEntity.Key, 55);
+        var newIndex = _testIndex + 1;
 
-            var result = ChangesReducer.Reduce(add, remove);
-            result.HasValue.Should().Be(false);
-        }
+        var add = new Change<Person, string>(ChangeReason.Add, _testEntity.Key, _testEntity, _testIndex);
+        var update = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, updatedEntity, add.Current, newIndex, _testIndex);
 
-        [Fact]
-        public void AddAndUpdateProduceAdd()
-        {
-            var updatedEntity = new Person(_testEntity.Key, 55);
-            var newIndex = _testIndex + 1;
+        var result = ChangesReducer.Reduce(add, update);
+        var expected = new Change<Person, string>(ChangeReason.Add, _testEntity.Key, updatedEntity, newIndex);
 
-            var add = new Change<Person, string>(ChangeReason.Add, _testEntity.Key, _testEntity, _testIndex);
-            var update = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, updatedEntity, add.Current, newIndex, _testIndex);
+        result.Value.Should().Be(expected);
+    }
 
-            var result = ChangesReducer.Reduce(add, update);
-            var expected = new Change<Person, string>(ChangeReason.Add, _testEntity.Key, updatedEntity, newIndex);
+    [Theory]
+    [MemberData(nameof(GetChanges))]
+    public void NoneGetsOverridenByAnything(Change<Person, string> c)
+    {
+        var result = ChangesReducer.Reduce(Optional<Change<Person, string>>.None, c);
+        result.Value.Should().Be(c);
+    }
 
-            result.Value.Should().Be(expected);
-        }
+    [Theory]
+    [MemberData(nameof(ConstrainFirstValue), ChangeReason.Refresh, new ChangeReason[] { })]
+    public void RefreshIsBeingOverridenByAnything(Change<Person, string> refresh, Change<Person, string> other)
+    {
+        var result = ChangesReducer.Reduce(refresh, other);
+        result.Value.Should().Be(other);
+    }
 
-        [Theory]
-        [MemberData(nameof(GetChanges))]
-        public void NoneGetsOverridenByAnything(Change<Person, string> c)
-        {
-            var result = ChangesReducer.Reduce(Optional<Change<Person, string>>.None, c);
-            result.Value.Should().Be(c);
-        }
+    [Fact]
+    public void RemoveAndAddProduceUpdate()
+    {
+        var remove = _changes.Single(c => c.Reason == ChangeReason.Remove);
+        var add = _changes.Single(c => c.Reason == ChangeReason.Add);
 
-        [Theory]
-        [MemberData(nameof(ConstrainFirstValue), ChangeReason.Refresh, new ChangeReason[] { })]
-        public void RefreshIsBeingOverridenByAnything(Change<Person, string> refresh, Change<Person, string> other)
-        {
-            var result = ChangesReducer.Reduce(refresh, other);
-            result.Value.Should().Be(other);
-        }
+        var result = ChangesReducer.Reduce(remove, add);
+        var expected = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, add.Current, remove.Current, add.CurrentIndex, remove.CurrentIndex);
 
-        [Fact]
-        public void RemoveAndAddProduceUpdate()
-        {
-            var remove = _changes.Single(c => c.Reason == ChangeReason.Remove);
-            var add = _changes.Single(c => c.Reason == ChangeReason.Add);
+        result.Value.Should().Be(expected);
+    }
 
-            var result = ChangesReducer.Reduce(remove, add);
-            var expected = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, add.Current, remove.Current, add.CurrentIndex, remove.CurrentIndex);
+    [Theory]
+    [MemberData(nameof(ConstrainFirstValue), ChangeReason.Remove, new[] { ChangeReason.Add })]
+    public void RemoveOverridesAnythingButAdd(Change<Person, string> remove, Change<Person, string> other)
+    {
+        var result = ChangesReducer.Reduce(other, remove);
+        result.Value.Should().Be(remove);
+    }
 
-            result.Value.Should().Be(expected);
-        }
+    [Fact]
+    public void TwoUpdatesProduceUpdate()
+    {
+        var updatedEntityOne = new Person(_testEntity.Key, 55);
+        var updatedEntityTwo = new Person(_testEntity.Key, 33);
 
-        [Theory]
-        [MemberData(nameof(ConstrainFirstValue), ChangeReason.Remove, new[] { ChangeReason.Add })]
-        public void RemoveOverridesAnythingButAdd(Change<Person, string> remove, Change<Person, string> other)
-        {
-            var result = ChangesReducer.Reduce(other, remove);
-            result.Value.Should().Be(remove);
-        }
+        var newIndexOne = _testIndex + 1;
+        var newIndexTwo = _testIndex + 2;
 
-        [Fact]
-        public void TwoUpdatesProduceUpdate()
-        {
-            var updatedEntityOne = new Person(_testEntity.Key, 55);
-            var updatedEntityTwo = new Person(_testEntity.Key, 33);
+        var firstUpdate = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, updatedEntityOne, _testEntity, newIndexOne, _testIndex);
+        var secondUpdate = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, updatedEntityTwo, updatedEntityOne, newIndexTwo, newIndexOne);
 
-            var newIndexOne = _testIndex + 1;
-            var newIndexTwo = _testIndex + 2;
+        var result = ChangesReducer.Reduce(firstUpdate, secondUpdate);
+        var expected = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, updatedEntityTwo, _testEntity, newIndexTwo, _testIndex);
 
-            var firstUpdate = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, updatedEntityOne, _testEntity, newIndexOne, _testIndex);
-            var secondUpdate = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, updatedEntityTwo, updatedEntityOne, newIndexTwo, newIndexOne);
-
-            var result = ChangesReducer.Reduce(firstUpdate, secondUpdate);
-            var expected = new Change<Person, string>(ChangeReason.Update, _testEntity.Key, updatedEntityTwo, _testEntity, newIndexTwo, _testIndex);
-
-            result.Value.Should().Be(expected);
-        }
+        result.Value.Should().Be(expected);
     }
 }

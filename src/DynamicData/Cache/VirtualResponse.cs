@@ -6,130 +6,129 @@ using System;
 using System.Collections.Generic;
 
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData;
+
+/// <summary>
+/// Defines values used to virtualise the result set.
+/// </summary>
+internal sealed class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualResponse
 {
-    /// <summary>
-    /// Defines values used to virtualise the result set.
-    /// </summary>
-    internal sealed class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualResponse
+    public VirtualResponse(int size, int startIndex, int totalSize)
     {
-        public VirtualResponse(int size, int startIndex, int totalSize)
+        Size = size;
+        StartIndex = startIndex;
+        TotalSize = totalSize;
+    }
+
+    public static IEqualityComparer<IVirtualResponse?> DefaultComparer { get; } = new TotalSizeStartIndexSizeEqualityComparer();
+
+    /// <summary>
+    /// Gets the requested size of the virtualised data.
+    /// </summary>
+    public int Size { get; }
+
+    /// <summary>
+    /// Gets the starting index.
+    /// </summary>
+    public int StartIndex { get; }
+
+    /// <summary>
+    /// Gets the total size of the underlying cache.
+    /// </summary>
+    public int TotalSize { get; }
+
+    /// <summary>
+    ///     Indicates whether the current object is equal to another object of the same type.
+    /// </summary>
+    /// <returns>
+    ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
+    /// </returns>
+    /// <param name="other">An object to compare with this object.</param>
+    public bool Equals(IVirtualResponse? other)
+    {
+        return DefaultComparer.Equals(this, other);
+    }
+
+    /// <summary>
+    ///     Determines whether the specified <see cref="object" /> is equal to the current <see cref="object" />.
+    /// </summary>
+    /// <returns>
+    ///     true if the specified object  is equal to the current object; otherwise, false.
+    /// </returns>
+    /// <param name="obj">The object to compare with the current object. </param>
+    public override bool Equals(object? obj)
+    {
+        return obj is IVirtualResponse item && Equals(item);
+    }
+
+    /// <summary>
+    ///     Serves as a hash function for a particular type.
+    /// </summary>
+    /// <returns>
+    ///     A hash code for the current <see cref="object" />.
+    /// </returns>
+    public override int GetHashCode()
+    {
+        unchecked
         {
-            Size = size;
-            StartIndex = startIndex;
-            TotalSize = totalSize;
+            int hashCode = Size;
+            hashCode = (hashCode * 397) ^ StartIndex;
+            hashCode = (hashCode * 397) ^ TotalSize;
+            return hashCode;
+        }
+    }
+
+    /// <summary>
+    /// Returns a <see cref="string"/> that represents the current <see cref="object"/>.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="string"/> that represents the current <see cref="object"/>.
+    /// </returns>
+    public override string ToString()
+    {
+        return $"Size: {Size}, StartIndex: {StartIndex}, TotalSize: {TotalSize}";
+    }
+
+    private sealed class TotalSizeStartIndexSizeEqualityComparer : IEqualityComparer<IVirtualResponse?>
+    {
+        public bool Equals(IVirtualResponse? x, IVirtualResponse? y)
+        {
+            if (ReferenceEquals(x, y))
+            {
+                return true;
+            }
+
+            if (ReferenceEquals(x, null))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(y, null))
+            {
+                return false;
+            }
+
+            if (x.GetType() != y.GetType())
+            {
+                return false;
+            }
+
+            return x.TotalSize == y.TotalSize && x.StartIndex == y.StartIndex && x.Size == y.Size;
         }
 
-        public static IEqualityComparer<IVirtualResponse?> DefaultComparer { get; } = new TotalSizeStartIndexSizeEqualityComparer();
-
-        /// <summary>
-        /// Gets the requested size of the virtualised data.
-        /// </summary>
-        public int Size { get; }
-
-        /// <summary>
-        /// Gets the starting index.
-        /// </summary>
-        public int StartIndex { get; }
-
-        /// <summary>
-        /// Gets the total size of the underlying cache.
-        /// </summary>
-        public int TotalSize { get; }
-
-        /// <summary>
-        ///     Indicates whether the current object is equal to another object of the same type.
-        /// </summary>
-        /// <returns>
-        ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
-        /// </returns>
-        /// <param name="other">An object to compare with this object.</param>
-        public bool Equals(IVirtualResponse? other)
+        public int GetHashCode(IVirtualResponse? obj)
         {
-            return DefaultComparer.Equals(this, other);
-        }
+            if (obj is null)
+            {
+                return 0;
+            }
 
-        /// <summary>
-        ///     Determines whether the specified <see cref="object" /> is equal to the current <see cref="object" />.
-        /// </summary>
-        /// <returns>
-        ///     true if the specified object  is equal to the current object; otherwise, false.
-        /// </returns>
-        /// <param name="obj">The object to compare with the current object. </param>
-        public override bool Equals(object? obj)
-        {
-            return obj is IVirtualResponse item && Equals(item);
-        }
-
-        /// <summary>
-        ///     Serves as a hash function for a particular type.
-        /// </summary>
-        /// <returns>
-        ///     A hash code for the current <see cref="object" />.
-        /// </returns>
-        public override int GetHashCode()
-        {
             unchecked
             {
-                int hashCode = Size;
-                hashCode = (hashCode * 397) ^ StartIndex;
-                hashCode = (hashCode * 397) ^ TotalSize;
+                int hashCode = obj.TotalSize;
+                hashCode = (hashCode * 397) ^ obj.StartIndex;
+                hashCode = (hashCode * 397) ^ obj.Size;
                 return hashCode;
-            }
-        }
-
-        /// <summary>
-        /// Returns a <see cref="string"/> that represents the current <see cref="object"/>.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="string"/> that represents the current <see cref="object"/>.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"Size: {Size}, StartIndex: {StartIndex}, TotalSize: {TotalSize}";
-        }
-
-        private sealed class TotalSizeStartIndexSizeEqualityComparer : IEqualityComparer<IVirtualResponse?>
-        {
-            public bool Equals(IVirtualResponse? x, IVirtualResponse? y)
-            {
-                if (ReferenceEquals(x, y))
-                {
-                    return true;
-                }
-
-                if (ReferenceEquals(x, null))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(y, null))
-                {
-                    return false;
-                }
-
-                if (x.GetType() != y.GetType())
-                {
-                    return false;
-                }
-
-                return x.TotalSize == y.TotalSize && x.StartIndex == y.StartIndex && x.Size == y.Size;
-            }
-
-            public int GetHashCode(IVirtualResponse? obj)
-            {
-                if (obj is null)
-                {
-                    return 0;
-                }
-
-                unchecked
-                {
-                    int hashCode = obj.TotalSize;
-                    hashCode = (hashCode * 397) ^ obj.StartIndex;
-                    hashCode = (hashCode * 397) ^ obj.Size;
-                    return hashCode;
-                }
             }
         }
     }

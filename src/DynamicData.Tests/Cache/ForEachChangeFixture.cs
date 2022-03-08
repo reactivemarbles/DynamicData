@@ -7,32 +7,31 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public class ForEachChangeFixture : IDisposable
 {
-    public class ForEachChangeFixture : IDisposable
+    private readonly ISourceCache<Person, string> _source;
+
+    public ForEachChangeFixture()
     {
-        private readonly ISourceCache<Person, string> _source;
+        _source = new SourceCache<Person, string>(p => p.Name);
+    }
 
-        public ForEachChangeFixture()
-        {
-            _source = new SourceCache<Person, string>(p => p.Name);
-        }
+    public void Dispose()
+    {
+        _source.Dispose();
+    }
 
-        public void Dispose()
-        {
-            _source.Dispose();
-        }
+    [Fact]
+    public void Test()
+    {
+        var messages = new List<Change<Person, string>>();
+        var messageWriter = _source.Connect().ForEachChange(messages.Add).Subscribe();
 
-        [Fact]
-        public void Test()
-        {
-            var messages = new List<Change<Person, string>>();
-            var messageWriter = _source.Connect().ForEachChange(messages.Add).Subscribe();
+        _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
+        messageWriter.Dispose();
 
-            _source.AddOrUpdate(new RandomPersonGenerator().Take(100));
-            messageWriter.Dispose();
-
-            messages.Count.Should().Be(100);
-        }
+        messages.Count.Should().Be(100);
     }
 }

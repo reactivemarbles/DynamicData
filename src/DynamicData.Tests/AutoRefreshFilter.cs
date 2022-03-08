@@ -8,166 +8,165 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests
+namespace DynamicData.Tests;
+
+public class AutoRefreshFilter
 {
-    public class AutoRefreshFilter
+    [Fact]
+    public void Test()
     {
-        [Fact]
-        public void Test()
+        var a0 = new Item("A0");
+        var i1 = new Item("I1");
+        var i2 = new Item("I2");
+        var i3 = new Item("I3");
+
+        var obsList = new SourceList<Item>();
+        obsList.AddRange(new[] { a0, i1, i2, i3 });
+
+        var obsListDerived = obsList.Connect().AutoRefresh(x => x.Name).Filter(x => x.Name.Contains("I")).AsObservableList();
+
+        obsListDerived.Count.Should().Be(3);
+        obsListDerived.Items.Should().BeEquivalentTo(i1, i2, i3);
+
+        i1.Name = "X2";
+        obsListDerived.Count.Should().Be(2);
+        obsListDerived.Items.Should().BeEquivalentTo(i2, i3);
+
+        a0.Name = "I0";
+        obsListDerived.Count.Should().Be(3);
+        obsListDerived.Items.Should().BeEquivalentTo(a0, i2, i3);
+    }
+
+    [Fact]
+    public void AutoRefreshWithObservablePredicate1()
+    {
+        var item1 = new ActivableItem
         {
-            var a0 = new Item("A0");
-            var i1 = new Item("I1");
-            var i2 = new Item("I2");
-            var i3 = new Item("I3");
+            Activated = false
+        };
 
-            var obsList = new SourceList<Item>();
-            obsList.AddRange(new[] { a0, i1, i2, i3 });
+        var items = new SourceList<ActivableItem>();
+        items.Add(item1);
 
-            var obsListDerived = obsList.Connect().AutoRefresh(x => x.Name).Filter(x => x.Name.Contains("I")).AsObservableList();
+        var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
 
-            obsListDerived.Count.Should().Be(3);
-            obsListDerived.Items.Should().BeEquivalentTo(i1, i2, i3);
+        var obsListDerived = items
+            .Connect()
+            .AutoRefresh(i => i.Activated)
+            .Filter(filterSubject)
+            .Do(x => Console.WriteLine("Changes" + x.TotalChanges))
+            .AsObservableList();
 
-            i1.Name = "X2";
-            obsListDerived.Count.Should().Be(2);
-            obsListDerived.Items.Should().BeEquivalentTo(i2, i3);
+        // Default filter predicate denies all items
+        // The binding collection should stay empty, until the predicate changes
+        obsListDerived.Count.Should().Be(0);
 
-            a0.Name = "I0";
-            obsListDerived.Count.Should().Be(3);
-            obsListDerived.Items.Should().BeEquivalentTo(a0, i2, i3);
+        item1.Activated = true;
+        obsListDerived.Count.Should().Be(0);
+
+        item1.Activated = false;
+        obsListDerived.Count.Should().Be(0);
+
+        item1.Activated = true;
+        obsListDerived.Count.Should().Be(0);
+
+        // Changing predicate, all "Activated" items should added to the binding collection
+        filterSubject.OnNext(i => i.Activated);
+
+        obsListDerived.Count.Should().Be(1);
+        obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+
+        // Changing property value
+        item1.Activated = false;
+        obsListDerived.Count.Should().Be(0);
+    }
+
+    [Fact]
+    public void AutoRefreshWithObservablePredicate2()
+    {
+        var item1 = new ActivableItem
+        {
+            Activated = false
+        };
+
+        var items = new ObservableCollection<ActivableItem>();
+        items.Add(item1);
+
+        var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
+
+        var obsListDerived = items
+            .ToObservableChangeSet()
+            .AutoRefresh(i => i.Activated)
+            .Filter(filterSubject)
+            .AsObservableList();
+
+        // Default filter predicate denies all items
+        // The binding collection should stay empty, until the predicate changes
+        obsListDerived.Count.Should().Be(0);
+
+        item1.Activated = true;
+        obsListDerived.Count.Should().Be(0);
+
+        item1.Activated = false;
+        obsListDerived.Count.Should().Be(0);
+
+        item1.Activated = true;
+        obsListDerived.Count.Should().Be(0);
+
+        // Changing predicate, all "Activated" items should added to the binding collection
+        filterSubject.OnNext(i => i.Activated);
+
+        obsListDerived.Count.Should().Be(1);
+        obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+
+        // Changing property value multiple times
+        item1.Activated = false;
+        item1.Activated = true;
+        item1.Activated = false;
+        item1.Activated = true;
+        obsListDerived.Count.Should().Be(1);
+        obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+    }
+}
+
+public class Item : INotifyPropertyChanged
+{
+    private string _name;
+
+    public Item(string name)
+    {
+        Id = Guid.NewGuid();
+        _name = name;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public Guid Id { get; }
+
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            _name = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
         }
+    }
+}
 
-        [Fact]
-        public void AutoRefreshWithObservablePredicate1()
+public class ActivableItem : INotifyPropertyChanged
+{
+    private bool _activated;
+
+    public bool Activated
+    {
+        get => _activated;
+        set
         {
-            var item1 = new ActivableItem
-            {
-                Activated = false
-            };
-
-            var items = new SourceList<ActivableItem>();
-            items.Add(item1);
-
-            var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
-
-            var obsListDerived = items
-                .Connect()
-                .AutoRefresh(i => i.Activated)
-                .Filter(filterSubject)
-                .Do(x => Console.WriteLine("Changes" + x.TotalChanges))
-                .AsObservableList();
-
-            // Default filter predicate denies all items
-            // The binding collection should stay empty, until the predicate changes
-            obsListDerived.Count.Should().Be(0);
-
-            item1.Activated = true;
-            obsListDerived.Count.Should().Be(0);
-
-            item1.Activated = false;
-            obsListDerived.Count.Should().Be(0);
-
-            item1.Activated = true;
-            obsListDerived.Count.Should().Be(0);
-
-            // Changing predicate, all "Activated" items should added to the binding collection
-            filterSubject.OnNext(i => i.Activated);
-
-            obsListDerived.Count.Should().Be(1);
-            obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
-
-            // Changing property value
-            item1.Activated = false;
-            obsListDerived.Count.Should().Be(0);
-        }
-
-        [Fact]
-        public void AutoRefreshWithObservablePredicate2()
-        {
-            var item1 = new ActivableItem
-            {
-                Activated = false
-            };
-
-            var items = new ObservableCollection<ActivableItem>();
-            items.Add(item1);
-
-            var filterSubject = new BehaviorSubject<Func<ActivableItem, bool>>(_ => false);
-
-            var obsListDerived = items
-                .ToObservableChangeSet()
-                .AutoRefresh(i => i.Activated)
-                .Filter(filterSubject)
-                .AsObservableList();
-
-            // Default filter predicate denies all items
-            // The binding collection should stay empty, until the predicate changes
-            obsListDerived.Count.Should().Be(0);
-
-            item1.Activated = true;
-            obsListDerived.Count.Should().Be(0);
-
-            item1.Activated = false;
-            obsListDerived.Count.Should().Be(0);
-
-            item1.Activated = true;
-            obsListDerived.Count.Should().Be(0);
-
-            // Changing predicate, all "Activated" items should added to the binding collection
-            filterSubject.OnNext(i => i.Activated);
-
-            obsListDerived.Count.Should().Be(1);
-            obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
-
-            // Changing property value multiple times
-            item1.Activated = false;
-            item1.Activated = true;
-            item1.Activated = false;
-            item1.Activated = true;
-            obsListDerived.Count.Should().Be(1);
-            obsListDerived.Items.Should().BeEquivalentTo(new[] { item1 });
+            _activated = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Activated)));
         }
     }
 
-    public class Item : INotifyPropertyChanged
-    {
-        private string _name;
-
-        public Item(string name)
-        {
-            Id = Guid.NewGuid();
-            _name = name;
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        public Guid Id { get; }
-
-        public string Name
-        {
-            get => _name;
-            set
-            {
-                _name = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
-            }
-        }
-    }
-
-    public class ActivableItem : INotifyPropertyChanged
-    {
-        private bool _activated;
-
-        public bool Activated
-        {
-            get => _activated;
-            set
-            {
-                _activated = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Activated)));
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-    }
+    public event PropertyChangedEventHandler? PropertyChanged;
 }

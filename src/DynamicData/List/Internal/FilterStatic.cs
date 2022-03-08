@@ -6,92 +6,91 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal class FilterStatic<T>
 {
-    internal class FilterStatic<T>
+    private readonly Func<T, bool> _predicate;
+
+    private readonly IObservable<IChangeSet<T>> _source;
+
+    public FilterStatic(IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
     {
-        private readonly Func<T, bool> _predicate;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
+    }
 
-        private readonly IObservable<IChangeSet<T>> _source;
-
-        public FilterStatic(IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
+    public IObservable<IChangeSet<T>> Run()
+    {
+        return Observable.Defer(() =>
         {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
-        }
-
-        public IObservable<IChangeSet<T>> Run()
-        {
-            return Observable.Defer(() =>
-            {
-                return _source.Scan(
-                    new ChangeAwareList<T>(),
-                    (state, changes) =>
-                    {
-                        Process(state, changes);
-                        return state;
-                    }).Select(filtered => filtered.CaptureChanges()).NotEmpty();
-            });
-        }
-
-        private void Process(ChangeAwareList<T> filtered, IChangeSet<T> changes)
-        {
-            foreach (var item in changes)
-            {
-                switch (item.Reason)
+            return _source.Scan(
+                new ChangeAwareList<T>(),
+                (state, changes) =>
                 {
-                    case ListChangeReason.Add:
-                        {
-                            var change = item.Item;
-                            if (_predicate(change.Current))
-                            {
-                                filtered.Add(change.Current);
-                            }
+                    Process(state, changes);
+                    return state;
+                }).Select(filtered => filtered.CaptureChanges()).NotEmpty();
+        });
+    }
 
-                            break;
+    private void Process(ChangeAwareList<T> filtered, IChangeSet<T> changes)
+    {
+        foreach (var item in changes)
+        {
+            switch (item.Reason)
+            {
+                case ListChangeReason.Add:
+                    {
+                        var change = item.Item;
+                        if (_predicate(change.Current))
+                        {
+                            filtered.Add(change.Current);
                         }
 
-                    case ListChangeReason.AddRange:
+                        break;
+                    }
+
+                case ListChangeReason.AddRange:
+                    {
+                        var matches = item.Range.Where(t => _predicate(t)).ToList();
+                        filtered.AddRange(matches);
+                        break;
+                    }
+
+                case ListChangeReason.Replace:
+                    {
+                        var change = item.Item;
+                        var match = _predicate(change.Current);
+                        if (match)
                         {
-                            var matches = item.Range.Where(t => _predicate(t)).ToList();
-                            filtered.AddRange(matches);
-                            break;
+                            filtered.ReplaceOrAdd(change.Previous.Value, change.Current);
+                        }
+                        else
+                        {
+                            filtered.Remove(change.Previous.Value);
                         }
 
-                    case ListChangeReason.Replace:
-                        {
-                            var change = item.Item;
-                            var match = _predicate(change.Current);
-                            if (match)
-                            {
-                                filtered.ReplaceOrAdd(change.Previous.Value, change.Current);
-                            }
-                            else
-                            {
-                                filtered.Remove(change.Previous.Value);
-                            }
+                        break;
+                    }
 
-                            break;
-                        }
+                case ListChangeReason.Remove:
+                    {
+                        filtered.Remove(item.Item.Current);
+                        break;
+                    }
 
-                    case ListChangeReason.Remove:
-                        {
-                            filtered.Remove(item.Item.Current);
-                            break;
-                        }
+                case ListChangeReason.RemoveRange:
+                    {
+                        filtered.RemoveMany(item.Range);
+                        break;
+                    }
 
-                    case ListChangeReason.RemoveRange:
-                        {
-                            filtered.RemoveMany(item.Range);
-                            break;
-                        }
-
-                    case ListChangeReason.Clear:
-                        {
-                            filtered.ClearOrRemoveMany(item);
-                            break;
-                        }
-                }
+                case ListChangeReason.Clear:
+                    {
+                        filtered.ClearOrRemoveMany(item);
+                        break;
+                    }
             }
         }
     }

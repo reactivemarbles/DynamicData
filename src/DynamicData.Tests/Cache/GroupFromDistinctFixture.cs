@@ -9,60 +9,59 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public class GroupFromDistinctFixture : IDisposable
 {
-    public class GroupFromDistinctFixture : IDisposable
+    private readonly ISourceCache<PersonEmployment, PersonEmpKey> _employmentCache;
+
+    private readonly ISourceCache<Person, string> _personCache;
+
+    public GroupFromDistinctFixture()
     {
-        private readonly ISourceCache<PersonEmployment, PersonEmpKey> _employmentCache;
+        _personCache = new SourceCache<Person, string>(p => p.Key);
+        _employmentCache = new SourceCache<PersonEmployment, PersonEmpKey>(e => e.Key);
+    }
 
-        private readonly ISourceCache<Person, string> _personCache;
+    public void Dispose()
+    {
+        _personCache?.Dispose();
+        _employmentCache?.Dispose();
+    }
 
-        public GroupFromDistinctFixture()
-        {
-            _personCache = new SourceCache<Person, string>(p => p.Key);
-            _employmentCache = new SourceCache<PersonEmployment, PersonEmpKey>(e => e.Key);
-        }
+    [Fact]
+    public void GroupFromDistinct()
+    {
+        const int numberOfPeople = 1000;
+        var random = new Random();
+        var companies = new List<string> { "Company A", "Company B", "Company C" };
 
-        public void Dispose()
-        {
-            _personCache?.Dispose();
-            _employmentCache?.Dispose();
-        }
+        //create 100 people
+        var people = Enumerable.Range(1, numberOfPeople).Select(i => new Person($"Person{i}", i)).ToArray();
 
-        [Fact]
-        public void GroupFromDistinct()
-        {
-            const int numberOfPeople = 1000;
-            var random = new Random();
-            var companies = new List<string> { "Company A", "Company B", "Company C" };
+        //create 0-3 jobs for each person and select from companies
+        var emphistory = Enumerable.Range(1, numberOfPeople).SelectMany(
+            i =>
+            {
+                var companiestogenrate = random.Next(0, 4);
+                return Enumerable.Range(0, companiestogenrate).Select(c => new PersonEmployment($"Person{i}", companies[c]));
+            }).ToList();
 
-            //create 100 people
-            var people = Enumerable.Range(1, numberOfPeople).Select(i => new Person($"Person{i}", i)).ToArray();
+        // Cache results
+        var allpeopleWithEmpHistory = _employmentCache.Connect().Group(e => e.Name, _personCache.Connect().DistinctValues(p => p.Name)).Transform(x => new PersonWithEmployment(x)).AsObservableCache();
 
-            //create 0-3 jobs for each person and select from companies
-            var emphistory = Enumerable.Range(1, numberOfPeople).SelectMany(
-                i =>
-                    {
-                        var companiestogenrate = random.Next(0, 4);
-                        return Enumerable.Range(0, companiestogenrate).Select(c => new PersonEmployment($"Person{i}", companies[c]));
-                    }).ToList();
+        _personCache.AddOrUpdate(people);
+        _employmentCache.AddOrUpdate(emphistory);
 
-            // Cache results
-            var allpeopleWithEmpHistory = _employmentCache.Connect().Group(e => e.Name, _personCache.Connect().DistinctValues(p => p.Name)).Transform(x => new PersonWithEmployment(x)).AsObservableCache();
+        allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople);
+        allpeopleWithEmpHistory.Items.SelectMany(d => d.EmploymentData.Items).Count().Should().Be(emphistory.Count);
 
-            _personCache.AddOrUpdate(people);
-            _employmentCache.AddOrUpdate(emphistory);
+        //check grouped items have the same key as the parent
+        allpeopleWithEmpHistory.Items.ForEach(p => { p.EmploymentData.Items.All(emph => emph.Name == p.Person).Should().BeTrue(); });
 
-            allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople);
-            allpeopleWithEmpHistory.Items.SelectMany(d => d.EmploymentData.Items).Count().Should().Be(emphistory.Count);
-
-            //check grouped items have the same key as the parent
-            allpeopleWithEmpHistory.Items.ForEach(p => { p.EmploymentData.Items.All(emph => emph.Name == p.Person).Should().BeTrue(); });
-
-            _personCache.Edit(updater => updater.Remove("Person1"));
-            allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople - 1);
-            _employmentCache.Edit(updater => updater.Remove(emphistory));
-            allpeopleWithEmpHistory.Dispose();
-        }
+        _personCache.Edit(updater => updater.Remove("Person1"));
+        allpeopleWithEmpHistory.Count.Should().Be(numberOfPeople - 1);
+        _employmentCache.Edit(updater => updater.Remove(emphistory));
+        allpeopleWithEmpHistory.Dispose();
     }
 }

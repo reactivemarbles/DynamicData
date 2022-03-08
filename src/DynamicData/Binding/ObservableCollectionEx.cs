@@ -10,193 +10,192 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 
-namespace DynamicData.Binding
+namespace DynamicData.Binding;
+
+/// <summary>
+/// Extensions to convert an observable collection into a dynamic stream.
+/// </summary>
+public static class ObservableCollectionEx
 {
     /// <summary>
-    /// Extensions to convert an observable collection into a dynamic stream.
+    /// Observes notify collection changed args.
     /// </summary>
-    public static class ObservableCollectionEx
+    /// <param name="source">The source collection.</param>
+    /// <returns>An observable that emits the event patterns.</returns>
+    public static IObservable<EventPattern<NotifyCollectionChangedEventArgs>> ObserveCollectionChanges(this INotifyCollectionChanged source)
     {
-        /// <summary>
-        /// Observes notify collection changed args.
-        /// </summary>
-        /// <param name="source">The source collection.</param>
-        /// <returns>An observable that emits the event patterns.</returns>
-        public static IObservable<EventPattern<NotifyCollectionChangedEventArgs>> ObserveCollectionChanges(this INotifyCollectionChanged source)
+        return Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(h => source.CollectionChanged += h, h => source.CollectionChanged -= h);
+    }
+
+    /// <summary>
+    /// Convert an observable collection into an observable change set.
+    /// Change set observes collection change events.
+    /// </summary>
+    /// <typeparam name="T">The type of the object.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>An observable that emits the change set.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ObservableCollection<T> source)
+    {
+        if (source is null)
         {
-            return Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(h => source.CollectionChanged += h, h => source.CollectionChanged -= h);
+            throw new ArgumentNullException(nameof(source));
         }
 
-        /// <summary>
-        /// Convert an observable collection into an observable change set.
-        /// Change set observes collection change events.
-        /// </summary>
-        /// <typeparam name="T">The type of the object.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>An observable that emits the change set.</returns>
-        /// <exception cref="System.ArgumentNullException">source.</exception>
-        public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ObservableCollection<T> source)
-        {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+        return ToObservableChangeSet<ObservableCollection<T>, T>(source);
+    }
 
-            return ToObservableChangeSet<ObservableCollection<T>, T>(source);
+    /// <summary>
+    /// Convert an observable collection into an observable change set.
+    /// Change set observes collection change events.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="keySelector">The key selector.</param>
+    /// <returns>An observable that emits the change set.</returns>
+    /// <exception cref="System.ArgumentNullException">source
+    /// or
+    /// keySelector.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
         }
 
-        /// <summary>
-        /// Convert an observable collection into an observable change set.
-        /// Change set observes collection change events.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="keySelector">The key selector.</param>
-        /// <returns>An observable that emits the change set.</returns>
-        /// <exception cref="System.ArgumentNullException">source
-        /// or
-        /// keySelector.</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
-            where TKey : notnull
+        if (keySelector is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (keySelector is null)
-            {
-                throw new ArgumentNullException(nameof(keySelector));
-            }
-
-            return ToObservableChangeSet<ObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
+            throw new ArgumentNullException(nameof(keySelector));
         }
 
-        /// <summary>
-        /// Convert the readonly observable collection into an observable change set.
-        /// Change set observes collection change events.
-        /// </summary>
-        /// <typeparam name="T">The type of the object.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>An observable that emits the change set.</returns>
-        /// <exception cref="System.ArgumentNullException">source.</exception>
-        public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReadOnlyObservableCollection<T> source)
-        {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+        return ToObservableChangeSet<ObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
+    }
 
-            return ToObservableChangeSet<ReadOnlyObservableCollection<T>, T>(source);
+    /// <summary>
+    /// Convert the readonly observable collection into an observable change set.
+    /// Change set observes collection change events.
+    /// </summary>
+    /// <typeparam name="T">The type of the object.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>An observable that emits the change set.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReadOnlyObservableCollection<T> source)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
         }
 
-        /// <summary>
-        /// Convert the readonly observable collection into an observable change set.
-        /// Change set observes collection change events.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="keySelector">The key selector.</param>
-        /// <returns>An observable that emits the change set.</returns>
-        /// <exception cref="System.ArgumentNullException">source
-        /// or
-        /// keySelector.</exception>
-        public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ReadOnlyObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
-            where TKey : notnull
+        return ToObservableChangeSet<ReadOnlyObservableCollection<T>, T>(source);
+    }
+
+    /// <summary>
+    /// Convert the readonly observable collection into an observable change set.
+    /// Change set observes collection change events.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="keySelector">The key selector.</param>
+    /// <returns>An observable that emits the change set.</returns>
+    /// <exception cref="System.ArgumentNullException">source
+    /// or
+    /// keySelector.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ReadOnlyObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
+        where TKey : notnull
+    {
+        if (source is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (keySelector is null)
-            {
-                throw new ArgumentNullException(nameof(keySelector));
-            }
-
-            return ToObservableChangeSet<ReadOnlyObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
+            throw new ArgumentNullException(nameof(source));
         }
 
-        /// <summary>
-        /// Convert an observable collection into an observable change set.
-        /// Change set observes collection change events.
-        /// </summary>
-        /// <typeparam name="TCollection">The type of collection.</typeparam>
-        /// <typeparam name="T">The type of the object.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>An observable that emits the change set.</returns>
-        /// <exception cref="System.ArgumentNullException">source.</exception>
-        public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
-            where TCollection : INotifyCollectionChanged, IEnumerable<T>
+        if (keySelector is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+            throw new ArgumentNullException(nameof(keySelector));
+        }
 
-            return Observable.Create<IChangeSet<T>>(
-                observer =>
+        return ToObservableChangeSet<ReadOnlyObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
+    }
+
+    /// <summary>
+    /// Convert an observable collection into an observable change set.
+    /// Change set observes collection change events.
+    /// </summary>
+    /// <typeparam name="TCollection">The type of collection.</typeparam>
+    /// <typeparam name="T">The type of the object.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>An observable that emits the change set.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
+        where TCollection : INotifyCollectionChanged, IEnumerable<T>
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        return Observable.Create<IChangeSet<T>>(
+            observer =>
+            {
+                var data = new ChangeAwareList<T>(source);
+
+                if (data.Count > 0)
+                {
+                    observer.OnNext(data.CaptureChanges());
+                }
+
+                return source.ObserveCollectionChanges().Scan(
+                    data,
+                    (list, args) =>
                     {
-                        var data = new ChangeAwareList<T>(source);
+                        var changes = args.EventArgs;
 
-                        if (data.Count > 0)
+                        switch (changes.Action)
                         {
-                            observer.OnNext(data.CaptureChanges());
-                        }
-
-                        return source.ObserveCollectionChanges().Scan(
-                            data,
-                            (list, args) =>
+                            case NotifyCollectionChangedAction.Add when changes.NewItems is not null:
                                 {
-                                    var changes = args.EventArgs;
-
-                                    switch (changes.Action)
+                                    if (changes.NewItems.Count == 1 && changes.NewItems[0] is T item)
                                     {
-                                        case NotifyCollectionChangedAction.Add when changes.NewItems is not null:
-                                            {
-                                                if (changes.NewItems.Count == 1 && changes.NewItems[0] is T item)
-                                                {
-                                                    list.Insert(changes.NewStartingIndex, item);
-                                                }
-                                                else
-                                                {
-                                                    list.InsertRange(changes.NewItems.Cast<T>(), changes.NewStartingIndex);
-                                                }
-
-                                                break;
-                                            }
-
-                                        case NotifyCollectionChangedAction.Remove when changes.OldItems is not null:
-                                            {
-                                                if (changes.OldItems.Count == 1)
-                                                {
-                                                    list.RemoveAt(changes.OldStartingIndex);
-                                                }
-                                                else
-                                                {
-                                                    list.RemoveRange(changes.OldStartingIndex, changes.OldItems.Count);
-                                                }
-
-                                                break;
-                                            }
-
-                                        case NotifyCollectionChangedAction.Replace when changes.NewItems?[0] is T replacedItem:
-                                            list[changes.NewStartingIndex] = replacedItem;
-                                            break;
-                                        case NotifyCollectionChangedAction.Reset:
-                                            list.Clear();
-                                            list.AddRange(source);
-                                            break;
-                                        case NotifyCollectionChangedAction.Move:
-                                            list.Move(changes.OldStartingIndex, changes.NewStartingIndex);
-                                            break;
+                                        list.Insert(changes.NewStartingIndex, item);
+                                    }
+                                    else
+                                    {
+                                        list.InsertRange(changes.NewItems.Cast<T>(), changes.NewStartingIndex);
                                     }
 
-                                    return list;
-                                }).Select(list => list.CaptureChanges()).SubscribeSafe(observer);
-                    });
-        }
+                                    break;
+                                }
+
+                            case NotifyCollectionChangedAction.Remove when changes.OldItems is not null:
+                                {
+                                    if (changes.OldItems.Count == 1)
+                                    {
+                                        list.RemoveAt(changes.OldStartingIndex);
+                                    }
+                                    else
+                                    {
+                                        list.RemoveRange(changes.OldStartingIndex, changes.OldItems.Count);
+                                    }
+
+                                    break;
+                                }
+
+                            case NotifyCollectionChangedAction.Replace when changes.NewItems?[0] is T replacedItem:
+                                list[changes.NewStartingIndex] = replacedItem;
+                                break;
+                            case NotifyCollectionChangedAction.Reset:
+                                list.Clear();
+                                list.AddRange(source);
+                                break;
+                            case NotifyCollectionChangedAction.Move:
+                                list.Move(changes.OldStartingIndex, changes.NewStartingIndex);
+                                break;
+                        }
+
+                        return list;
+                    }).Select(list => list.CaptureChanges()).SubscribeSafe(observer);
+            });
     }
 }

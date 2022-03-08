@@ -5,23 +5,22 @@
 using System.Collections.Generic;
 
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData;
+
+internal class DistinctChangeSet<T> : ChangeSet<T, T>, IDistinctChangeSet<T>
+    where T : notnull
 {
-    internal class DistinctChangeSet<T> : ChangeSet<T, T>, IDistinctChangeSet<T>
-        where T : notnull
+    public DistinctChangeSet(IEnumerable<Change<T, T>> items)
+        : base(items)
     {
-        public DistinctChangeSet(IEnumerable<Change<T, T>> items)
-            : base(items)
-        {
-        }
+    }
 
-        public DistinctChangeSet()
-        {
-        }
+    public DistinctChangeSet()
+    {
+    }
 
-        public DistinctChangeSet(int capacity)
-            : base(capacity)
-        {
-        }
+    public DistinctChangeSet(int capacity)
+        : base(capacity)
+    {
     }
 }

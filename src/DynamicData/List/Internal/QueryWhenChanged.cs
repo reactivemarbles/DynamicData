@@ -8,29 +8,28 @@ using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal class QueryWhenChanged<T>
 {
-    internal class QueryWhenChanged<T>
+    private readonly IObservable<IChangeSet<T>> _source;
+
+    public QueryWhenChanged(IObservable<IChangeSet<T>> source)
     {
-        private readonly IObservable<IChangeSet<T>> _source;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+    }
 
-        public QueryWhenChanged(IObservable<IChangeSet<T>> source)
+    public IObservable<IReadOnlyCollection<T>> Run()
+    {
+        return Observable.Create<IReadOnlyCollection<T>>(observer =>
         {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-        }
+            var list = new List<T>();
 
-        public IObservable<IReadOnlyCollection<T>> Run()
-        {
-            return Observable.Create<IReadOnlyCollection<T>>(observer =>
+            return _source.Subscribe(changes =>
             {
-                var list = new List<T>();
-
-                return _source.Subscribe(changes =>
-                {
-                    list.Clone(changes);
-                    observer.OnNext(new ReadOnlyCollectionLight<T>(list));
-                });
+                list.Clone(changes);
+                observer.OnNext(new ReadOnlyCollectionLight<T>(list));
             });
-        }
+        });
     }
 }

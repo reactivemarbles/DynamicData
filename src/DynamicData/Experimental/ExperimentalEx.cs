@@ -5,31 +5,30 @@
 using System;
 using System.Reactive.Concurrency;
 
-namespace DynamicData.Experimental
+namespace DynamicData.Experimental;
+
+/// <summary>
+/// Experimental operator extensions.
+/// </summary>
+public static class ExperimentalEx
 {
     /// <summary>
-    /// Experimental operator extensions.
+    /// Wraps the source cache, optimising it for watching individual updates.
     /// </summary>
-    public static class ExperimentalEx
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="scheduler">The scheduler.</param>
+    /// <returns>The watcher.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IWatcher<TObject, TKey> AsWatcher<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IScheduler? scheduler = null)
+        where TKey : notnull
     {
-        /// <summary>
-        /// Wraps the source cache, optimising it for watching individual updates.
-        /// </summary>
-        /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="scheduler">The scheduler.</param>
-        /// <returns>The watcher.</returns>
-        /// <exception cref="System.ArgumentNullException">source.</exception>
-        public static IWatcher<TObject, TKey> AsWatcher<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IScheduler? scheduler = null)
-            where TKey : notnull
+        if (source is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            return new Watcher<TObject, TKey>(source, scheduler ?? Scheduler.Default);
+            throw new ArgumentNullException(nameof(source));
         }
+
+        return new Watcher<TObject, TKey>(source, scheduler ?? Scheduler.Default);
     }
 }

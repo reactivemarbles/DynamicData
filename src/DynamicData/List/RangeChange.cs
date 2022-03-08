@@ -8,100 +8,99 @@ using System.Collections.Generic;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData;
+
+/// <summary>
+/// Multiple change container.
+/// </summary>
+/// <typeparam name="T">The type of the item.</typeparam>
+public sealed class RangeChange<T> : IEnumerable<T>
 {
+    private readonly List<T> _items;
+
     /// <summary>
-    /// Multiple change container.
+    /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
     /// </summary>
-    /// <typeparam name="T">The type of the item.</typeparam>
-    public sealed class RangeChange<T> : IEnumerable<T>
+    /// <param name="items">The items.</param>
+    /// <param name="index">The index.</param>
+    public RangeChange(IEnumerable<T> items, int index = -1)
     {
-        private readonly List<T> _items;
+        Index = index;
+        _items = items.AsList();
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
-        /// </summary>
-        /// <param name="items">The items.</param>
-        /// <param name="index">The index.</param>
-        public RangeChange(IEnumerable<T> items, int index = -1)
-        {
-            Index = index;
-            _items = items.AsList();
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
+    /// </summary>
+    private RangeChange()
+    {
+        _items = new List<T>();
+        Index = -1;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RangeChange{T}"/> class.
-        /// </summary>
-        private RangeChange()
-        {
-            _items = new List<T>();
-            Index = -1;
-        }
+    /// <summary>
+    /// Gets a Empty version of the RangeChange.
+    /// </summary>
+    public static RangeChange<T> Empty { get; } = new();
 
-        /// <summary>
-        /// Gets a Empty version of the RangeChange.
-        /// </summary>
-        public static RangeChange<T> Empty { get; } = new();
+    /// <summary>
+    ///     Gets the total update count.
+    /// </summary>
+    public int Count => _items.Count;
 
-        /// <summary>
-        ///     Gets the total update count.
-        /// </summary>
-        public int Count => _items.Count;
+    /// <summary>
+    /// Gets the index initial index i.e. for the initial starting point of the range insertion.
+    /// </summary>
+    /// <value>
+    /// The index.
+    /// </value>
+    public int Index { get; private set; }
 
-        /// <summary>
-        /// Gets the index initial index i.e. for the initial starting point of the range insertion.
-        /// </summary>
-        /// <value>
-        /// The index.
-        /// </value>
-        public int Index { get; private set; }
+    /// <summary>
+    /// Adds the specified item to the range.
+    /// </summary>
+    /// <param name="item">The item.</param>
+    public void Add(T item)
+    {
+        _items.Add(item);
+    }
 
-        /// <summary>
-        /// Adds the specified item to the range.
-        /// </summary>
-        /// <param name="item">The item.</param>
-        public void Add(T item)
-        {
-            _items.Add(item);
-        }
+    /// <inheritdoc/>
+    public IEnumerator<T> GetEnumerator()
+    {
+        return _items.GetEnumerator();
+    }
 
-        /// <inheritdoc/>
-        public IEnumerator<T> GetEnumerator()
-        {
-            return _items.GetEnumerator();
-        }
+    /// <summary>
+    /// Inserts the  item in the range at the specified index.
+    /// </summary>
+    /// <param name="index">The index.</param>
+    /// <param name="item">The item.</param>
+    public void Insert(int index, T item)
+    {
+        _items.Insert(index, item);
+    }
 
-        /// <summary>
-        /// Inserts the  item in the range at the specified index.
-        /// </summary>
-        /// <param name="index">The index.</param>
-        /// <param name="item">The item.</param>
-        public void Insert(int index, T item)
-        {
-            _items.Insert(index, item);
-        }
+    /// <summary>
+    /// Sets the index of the starting index of the range.
+    /// </summary>
+    /// <param name="index">The index.</param>
+    public void SetStartingIndex(int index)
+    {
+        Index = index;
+    }
 
-        /// <summary>
-        /// Sets the index of the starting index of the range.
-        /// </summary>
-        /// <param name="index">The index.</param>
-        public void SetStartingIndex(int index)
-        {
-            Index = index;
-        }
+    /// <summary>
+    /// Returns a <see cref="string" /> that represents this instance.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="string" /> that represents this instance.
+    /// </returns>
+    public override string ToString() => $"Range<{typeof(T).Name}>. Count={Count}";
 
-        /// <summary>
-        /// Returns a <see cref="string" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="string" /> that represents this instance.
-        /// </returns>
-        public override string ToString() => $"Range<{typeof(T).Name}>. Count={Count}";
-
-        /// <inheritdoc/>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    /// <inheritdoc/>
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }
