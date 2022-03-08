@@ -10,135 +10,134 @@ using Microsoft.Reactive.Testing;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public class BatchIfFixture : IDisposable
 {
-    public class BatchIfFixture : IDisposable
+    private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
+
+    private readonly ChangeSetAggregator<Person, string> _results;
+
+    private readonly TestScheduler _scheduler;
+
+    private readonly ISourceCache<Person, string> _source;
+
+    public BatchIfFixture()
     {
-        private readonly ISubject<bool> _pausingSubject = new Subject<bool>();
+        _scheduler = new TestScheduler();
+        _source = new SourceCache<Person, string>(p => p.Key);
+        _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
 
-        private readonly ChangeSetAggregator<Person, string> _results;
+        // _results = _source.Connect().BatchIf(new BehaviorSubject<bool>(true), scheduler: _scheduler).AsAggregator();
+    }
 
-        private readonly TestScheduler _scheduler;
+    [Fact]
+    public void CanToggleSuspendResume()
+    {
+        _pausingSubject.OnNext(true);
+        ////advance otherwise nothing happens
+        _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-        private readonly ISourceCache<Person, string> _source;
+        _source.AddOrUpdate(new Person("A", 1));
 
-        public BatchIfFixture()
-        {
-            _scheduler = new TestScheduler();
-            _source = new SourceCache<Person, string>(p => p.Key);
-            _results = _source.Connect().BatchIf(_pausingSubject, _scheduler).AsAggregator();
+        //go forward an arbitary amount of time
+        _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+        _results.Messages.Count.Should().Be(0, "There should be no messages");
 
-            // _results = _source.Connect().BatchIf(new BehaviorSubject<bool>(true), scheduler: _scheduler).AsAggregator();
-        }
+        _pausingSubject.OnNext(false);
+        _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-        [Fact]
-        public void CanToggleSuspendResume()
-        {
-            _pausingSubject.OnNext(true);
-            ////advance otherwise nothing happens
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
+        _source.AddOrUpdate(new Person("B", 1));
 
-            _source.AddOrUpdate(new Person("A", 1));
+        _results.Messages.Count.Should().Be(2, "There should be 2 messages");
 
-            //go forward an arbitary amount of time
-            _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-            _results.Messages.Count.Should().Be(0, "There should be no messages");
+        _pausingSubject.OnNext(true);
+        ////advance otherwise nothing happens
+        _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-            _pausingSubject.OnNext(false);
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
+        _source.AddOrUpdate(new Person("C", 1));
 
-            _source.AddOrUpdate(new Person("B", 1));
+        //go forward an arbitary amount of time
+        _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+        _results.Messages.Count.Should().Be(2, "There should be 2 messages");
 
-            _results.Messages.Count.Should().Be(2, "There should be 2 messages");
+        _pausingSubject.OnNext(false);
+        _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-            _pausingSubject.OnNext(true);
-            ////advance otherwise nothing happens
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
+        _results.Messages.Count.Should().Be(3, "There should be 3 messages");
+    }
 
-            _source.AddOrUpdate(new Person("C", 1));
+    /// <summary>
+    /// Test case to prove the issue and fix to DynamicData GitHub issue #98 - BatchIf race condition
+    /// </summary>
+    [Fact]
+    public void ChangesNotLostIfConsumerIsRunningOnDifferentThread()
+    {
+        var producerScheduler = new TestScheduler();
+        var consumerScheduler = new TestScheduler();
 
-            //go forward an arbitary amount of time
-            _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-            _results.Messages.Count.Should().Be(2, "There should be 2 messages");
+        //Note consumer is running on a different scheduler
+        _source.Connect().BatchIf(_pausingSubject, producerScheduler).ObserveOn(consumerScheduler).Bind(out var target).AsAggregator();
 
-            _pausingSubject.OnNext(false);
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
+        _source.AddOrUpdate(new Person("A", 1));
 
-            _results.Messages.Count.Should().Be(3, "There should be 3 messages");
-        }
+        producerScheduler.AdvanceBy(1);
+        consumerScheduler.AdvanceBy(1);
 
-        /// <summary>
-        /// Test case to prove the issue and fix to DynamicData GitHub issue #98 - BatchIf race condition
-        /// </summary>
-        [Fact]
-        public void ChangesNotLostIfConsumerIsRunningOnDifferentThread()
-        {
-            var producerScheduler = new TestScheduler();
-            var consumerScheduler = new TestScheduler();
+        target.Count.Should().Be(1, "There should be 1 message");
 
-            //Note consumer is running on a different scheduler
-            _source.Connect().BatchIf(_pausingSubject, producerScheduler).ObserveOn(consumerScheduler).Bind(out var target).AsAggregator();
+        _pausingSubject.OnNext(true);
 
-            _source.AddOrUpdate(new Person("A", 1));
+        producerScheduler.AdvanceBy(1);
+        consumerScheduler.AdvanceBy(1);
 
-            producerScheduler.AdvanceBy(1);
-            consumerScheduler.AdvanceBy(1);
+        _source.AddOrUpdate(new Person("B", 2));
 
-            target.Count.Should().Be(1, "There should be 1 message");
+        producerScheduler.AdvanceBy(1);
+        consumerScheduler.AdvanceBy(1);
 
-            _pausingSubject.OnNext(true);
+        target.Count.Should().Be(1, "There should be 1 message");
 
-            producerScheduler.AdvanceBy(1);
-            consumerScheduler.AdvanceBy(1);
+        _pausingSubject.OnNext(false);
 
-            _source.AddOrUpdate(new Person("B", 2));
+        producerScheduler.AdvanceBy(1);
 
-            producerScheduler.AdvanceBy(1);
-            consumerScheduler.AdvanceBy(1);
+        //Target doesnt get the messages until its scheduler runs, but the
+        //messages shouldnt be lost
+        target.Count.Should().Be(1, "There should be 1 message");
 
-            target.Count.Should().Be(1, "There should be 1 message");
+        consumerScheduler.AdvanceBy(1);
 
-            _pausingSubject.OnNext(false);
+        target.Count.Should().Be(2, "There should be 2 message");
+    }
 
-            producerScheduler.AdvanceBy(1);
+    public void Dispose()
+    {
+        _results.Dispose();
+        _source.Dispose();
+    }
 
-            //Target doesnt get the messages until its scheduler runs, but the
-            //messages shouldnt be lost
-            target.Count.Should().Be(1, "There should be 1 message");
+    [Fact]
+    public void NoResultsWillBeReceivedIfPaused()
+    {
+        _pausingSubject.OnNext(true);
+        //advance otherwise nothing happens
+        _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
 
-            consumerScheduler.AdvanceBy(1);
+        _source.AddOrUpdate(new Person("A", 1));
 
-            target.Count.Should().Be(2, "There should be 2 message");
-        }
+        //go forward an arbitary amount of time
+        _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+        _results.Messages.Count.Should().Be(0, "There should be no messages");
+    }
 
-        public void Dispose()
-        {
-            _results.Dispose();
-            _source.Dispose();
-        }
+    [Fact]
+    public void ResultsWillBeReceivedIfNotPaused()
+    {
+        _source.AddOrUpdate(new Person("A", 1));
 
-        [Fact]
-        public void NoResultsWillBeReceivedIfPaused()
-        {
-            _pausingSubject.OnNext(true);
-            //advance otherwise nothing happens
-            _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(10).Ticks);
-
-            _source.AddOrUpdate(new Person("A", 1));
-
-            //go forward an arbitary amount of time
-            _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-            _results.Messages.Count.Should().Be(0, "There should be no messages");
-        }
-
-        [Fact]
-        public void ResultsWillBeReceivedIfNotPaused()
-        {
-            _source.AddOrUpdate(new Person("A", 1));
-
-            //go forward an arbitary amount of time
-            _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
-            _results.Messages.Count.Should().Be(1, "Should be 1 update");
-        }
+        //go forward an arbitary amount of time
+        _scheduler.AdvanceBy(TimeSpan.FromMinutes(1).Ticks);
+        _results.Messages.Count.Should().Be(1, "Should be 1 update");
     }
 }

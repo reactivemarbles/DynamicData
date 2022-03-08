@@ -5,48 +5,47 @@
 using System;
 
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData;
+
+/// <summary>
+/// Thrown when an exception occurs within the sort operators.
+/// </summary>
+[Serializable]
+public class SortException : Exception
 {
     /// <summary>
-    /// Thrown when an exception occurs within the sort operators.
+    /// Initializes a new instance of the <see cref="SortException"/> class.
     /// </summary>
-    [Serializable]
-    public class SortException : Exception
+    /// <param name="message">The message that describes the error.</param>
+    public SortException(string message)
+        : base(message)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SortException"/> class.
-        /// </summary>
-        /// <param name="message">The message that describes the error.</param>
-        public SortException(string message)
-            : base(message)
-        {
-        }
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SortException"/> class.
-        /// </summary>
-        public SortException()
-        {
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortException"/> class.
+    /// </summary>
+    public SortException()
+    {
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SortException"/> class.
-        /// </summary>
-        /// <param name="message">A message about the exception.</param>
-        /// <param name="innerException">A inner exception with further information.</param>
-        public SortException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortException"/> class.
+    /// </summary>
+    /// <param name="message">A message about the exception.</param>
+    /// <param name="innerException">A inner exception with further information.</param>
+    public SortException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SortException"/> class.
-        /// </summary>
-        /// <param name="serializationInfo">The serialization info.</param>
-        /// <param name="streamingContext">The serialization context.</param>
-        protected SortException(System.Runtime.Serialization.SerializationInfo serializationInfo, System.Runtime.Serialization.StreamingContext streamingContext)
-            : base(serializationInfo, streamingContext)
-        {
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortException"/> class.
+    /// </summary>
+    /// <param name="serializationInfo">The serialization info.</param>
+    /// <param name="streamingContext">The serialization context.</param>
+    protected SortException(System.Runtime.Serialization.SerializationInfo serializationInfo, System.Runtime.Serialization.StreamingContext streamingContext)
+        : base(serializationInfo, streamingContext)
+    {
     }
 }

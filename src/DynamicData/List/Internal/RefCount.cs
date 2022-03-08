@@ -6,60 +6,59 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal class RefCount<T>
 {
-    internal class RefCount<T>
+    private readonly object _locker = new();
+
+    private readonly IObservable<IChangeSet<T>> _source;
+
+    private IObservableList<T>? _list;
+
+    private int _refCount;
+
+    public RefCount(IObservable<IChangeSet<T>> source)
     {
-        private readonly object _locker = new();
+        _source = source;
+    }
 
-        private readonly IObservable<IChangeSet<T>> _source;
-
-        private IObservableList<T>? _list;
-
-        private int _refCount;
-
-        public RefCount(IObservable<IChangeSet<T>> source)
-        {
-            _source = source;
-        }
-
-        public IObservable<IChangeSet<T>> Run()
-        {
-            return Observable.Create<IChangeSet<T>>(
-                observer =>
+    public IObservable<IChangeSet<T>> Run()
+    {
+        return Observable.Create<IChangeSet<T>>(
+            observer =>
+            {
+                lock (_locker)
+                {
+                    if (++_refCount == 1)
                     {
+                        _list = _source.AsObservableList();
+                    }
+                }
+
+                if (_list is null)
+                {
+                    throw new InvalidOperationException("The list is null despite having reference counting.");
+                }
+
+                var subscriber = _list.Connect().SubscribeSafe(observer);
+
+                return Disposable.Create(
+                    () =>
+                    {
+                        subscriber.Dispose();
+                        IDisposable? listToDispose = null;
                         lock (_locker)
                         {
-                            if (++_refCount == 1)
+                            if (--_refCount == 0)
                             {
-                                _list = _source.AsObservableList();
+                                listToDispose = _list;
+                                _list = null;
                             }
                         }
 
-                        if (_list is null)
-                        {
-                            throw new InvalidOperationException("The list is null despite having reference counting.");
-                        }
-
-                        var subscriber = _list.Connect().SubscribeSafe(observer);
-
-                        return Disposable.Create(
-                            () =>
-                                {
-                                    subscriber.Dispose();
-                                    IDisposable? listToDispose = null;
-                                    lock (_locker)
-                                    {
-                                        if (--_refCount == 0)
-                                        {
-                                            listToDispose = _list;
-                                            _list = null;
-                                        }
-                                    }
-
-                                    listToDispose?.Dispose();
-                                });
+                        listToDispose?.Dispose();
                     });
-        }
+            });
     }
 }

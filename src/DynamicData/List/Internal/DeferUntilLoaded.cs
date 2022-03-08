@@ -7,20 +7,19 @@ using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal class DeferUntilLoaded<T>
 {
-    internal class DeferUntilLoaded<T>
+    private readonly IObservable<IChangeSet<T>> _source;
+
+    public DeferUntilLoaded(IObservable<IChangeSet<T>> source)
     {
-        private readonly IObservable<IChangeSet<T>> _source;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+    }
 
-        public DeferUntilLoaded(IObservable<IChangeSet<T>> source)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-        }
-
-        public IObservable<IChangeSet<T>> Run()
-        {
-            return _source.MonitorStatus().Where(status => status == ConnectionStatus.Loaded).Take(1).Select(_ => new ChangeSet<T>()).Concat(_source).NotEmpty();
-        }
+    public IObservable<IChangeSet<T>> Run()
+    {
+        return _source.MonitorStatus().Where(status => status == ConnectionStatus.Loaded).Take(1).Select(_ => new ChangeSet<T>()).Concat(_source).NotEmpty();
     }
 }

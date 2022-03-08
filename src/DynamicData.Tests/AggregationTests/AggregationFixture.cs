@@ -9,89 +9,88 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.AggregationTests
+namespace DynamicData.Tests.AggregationTests;
+
+public class AggregationFixture : IDisposable
 {
-    public class AggregationFixture : IDisposable
+    private readonly IObservable<int> _accumulator;
+
+    private readonly SourceCache<Person, string> _source;
+
+    /// <summary>
+    /// Initialises this instance.
+    /// </summary>
+    public AggregationFixture()
     {
-        private readonly IObservable<int> _accumulator;
+        _source = new SourceCache<Person, string>(p => p.Name);
 
-        private readonly SourceCache<Person, string> _source;
-
-        /// <summary>
-        /// Initialises this instance.
-        /// </summary>
-        public AggregationFixture()
-        {
-            _source = new SourceCache<Person, string>(p => p.Name);
-
-            _accumulator = _source.Connect().ForAggregation().Scan(
-                0,
-                (current, items) =>
+        _accumulator = _source.Connect().ForAggregation().Scan(
+            0,
+            (current, items) =>
+            {
+                items.ForEach(
+                    x =>
                     {
-                        items.ForEach(
-                            x =>
-                                {
-                                    if (x.Type == AggregateType.Add)
-                                    {
-                                        current += x.Item.Age;
-                                    }
-                                    else
-                                    {
-                                        current -= x.Item.Age;
-                                    }
-                                });
-                        return current;
+                        if (x.Type == AggregateType.Add)
+                        {
+                            current += x.Item.Age;
+                        }
+                        else
+                        {
+                            current -= x.Item.Age;
+                        }
                     });
-        }
+                return current;
+            });
+    }
 
-        [Fact]
-        public void CanAccumulate()
-        {
-            int latest = 0;
-            int counter = 0;
+    [Fact]
+    public void CanAccumulate()
+    {
+        int latest = 0;
+        int counter = 0;
 
-            var accumulator = _accumulator.Subscribe(
-                value =>
-                    {
-                        latest = value;
-                        counter++;
-                    });
+        var accumulator = _accumulator.Subscribe(
+            value =>
+            {
+                latest = value;
+                counter++;
+            });
 
-            _source.AddOrUpdate(new Person("A", 10));
-            _source.AddOrUpdate(new Person("B", 20));
-            _source.AddOrUpdate(new Person("C", 30));
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
 
-            counter.Should().Be(3, "Should be 3 updates");
-            latest.Should().Be(60, "Accumulated value should be 60");
-            _source.AddOrUpdate(new Person("A", 5));
+        counter.Should().Be(3, "Should be 3 updates");
+        latest.Should().Be(60, "Accumulated value should be 60");
+        _source.AddOrUpdate(new Person("A", 5));
 
-            accumulator.Dispose();
-        }
+        accumulator.Dispose();
+    }
 
-        [Fact]
-        public void CanHandleUpdatedItem()
-        {
-            int latest = 0;
-            int counter = 0;
+    [Fact]
+    public void CanHandleUpdatedItem()
+    {
+        int latest = 0;
+        int counter = 0;
 
-            var accumulator = _accumulator.Subscribe(
-                value =>
-                    {
-                        latest = value;
-                        counter++;
-                    });
+        var accumulator = _accumulator.Subscribe(
+            value =>
+            {
+                latest = value;
+                counter++;
+            });
 
-            _source.AddOrUpdate(new Person("A", 10));
-            _source.AddOrUpdate(new Person("A", 15));
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("A", 15));
 
-            counter.Should().Be(2, "Should be 2 updates");
-            latest.Should().Be(15, "Accumulated value should be 60");
-            accumulator.Dispose();
-        }
+        counter.Should().Be(2, "Should be 2 updates");
+        latest.Should().Be(15, "Accumulated value should be 60");
+        accumulator.Dispose();
+    }
 
-        public void Dispose()
-        {
-            _source.Dispose();
-        }
+    public void Dispose()
+    {
+        _source.Dispose();
     }
 }

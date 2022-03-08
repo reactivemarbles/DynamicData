@@ -9,80 +9,79 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.List
+namespace DynamicData.Tests.List;
+
+public class CloneFixture : IDisposable
 {
-    public class CloneFixture : IDisposable
+    private readonly IDisposable _cloner;
+
+    private readonly ICollection<Person> _collection = new Collection<Person>();
+
+    private readonly RandomPersonGenerator _generator = new();
+
+    private readonly ISourceCache<Person, string> _source;
+
+    public CloneFixture()
     {
-        private readonly IDisposable _cloner;
+        _collection = new Collection<Person>();
+        _source = new SourceCache<Person, string>(p => p.Name);
+        _cloner = _source.Connect().Clone(_collection).Subscribe();
+    }
 
-        private readonly ICollection<Person> _collection = new Collection<Person>();
+    [Fact]
+    public void AddToSourceAddsToDestination()
+    {
+        var person = new Person("Adult1", 50);
+        _source.AddOrUpdate(person);
 
-        private readonly RandomPersonGenerator _generator = new();
+        _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+        _collection.First().Should().Be(person, "Should be same person");
+    }
 
-        private readonly ISourceCache<Person, string> _source;
+    [Fact]
+    public void BatchAdd()
+    {
+        var people = _generator.Take(100).ToList();
+        _source.AddOrUpdate(people);
 
-        public CloneFixture()
-        {
-            _collection = new Collection<Person>();
-            _source = new SourceCache<Person, string>(p => p.Name);
-            _cloner = _source.Connect().Clone(_collection).Subscribe();
-        }
+        _collection.Count.Should().Be(100, "Should be 100 items in the collection");
+        _collection.Should().BeEquivalentTo(_collection, "Collections should be equivalent");
+    }
 
-        [Fact]
-        public void AddToSourceAddsToDestination()
-        {
-            var person = new Person("Adult1", 50);
-            _source.AddOrUpdate(person);
+    [Fact]
+    public void BatchRemove()
+    {
+        var people = _generator.Take(100).ToList();
+        _source.AddOrUpdate(people);
+        _source.Clear();
+        _collection.Count.Should().Be(0, "Should be 100 items in the collection");
+    }
 
-            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
-            _collection.First().Should().Be(person, "Should be same person");
-        }
+    public void Dispose()
+    {
+        _cloner.Dispose();
+        _source.Dispose();
+    }
 
-        [Fact]
-        public void BatchAdd()
-        {
-            var people = _generator.Take(100).ToList();
-            _source.AddOrUpdate(people);
+    [Fact]
+    public void RemoveSourceRemovesFromTheDestination()
+    {
+        var person = new Person("Adult1", 50);
+        _source.AddOrUpdate(person);
+        _source.Remove(person);
 
-            _collection.Count.Should().Be(100, "Should be 100 items in the collection");
-            _collection.Should().BeEquivalentTo(_collection, "Collections should be equivalent");
-        }
+        _collection.Count.Should().Be(0, "Should be 1 item in the collection");
+    }
 
-        [Fact]
-        public void BatchRemove()
-        {
-            var people = _generator.Take(100).ToList();
-            _source.AddOrUpdate(people);
-            _source.Clear();
-            _collection.Count.Should().Be(0, "Should be 100 items in the collection");
-        }
+    [Fact]
+    public void UpdateToSourceUpdatesTheDestination()
+    {
+        var person = new Person("Adult1", 50);
+        var personUpdated = new Person("Adult1", 51);
+        _source.AddOrUpdate(person);
+        _source.AddOrUpdate(personUpdated);
 
-        public void Dispose()
-        {
-            _cloner.Dispose();
-            _source.Dispose();
-        }
-
-        [Fact]
-        public void RemoveSourceRemovesFromTheDestination()
-        {
-            var person = new Person("Adult1", 50);
-            _source.AddOrUpdate(person);
-            _source.Remove(person);
-
-            _collection.Count.Should().Be(0, "Should be 1 item in the collection");
-        }
-
-        [Fact]
-        public void UpdateToSourceUpdatesTheDestination()
-        {
-            var person = new Person("Adult1", 50);
-            var personUpdated = new Person("Adult1", 51);
-            _source.AddOrUpdate(person);
-            _source.AddOrUpdate(personUpdated);
-
-            _collection.Count.Should().Be(1, "Should be 1 item in the collection");
-            _collection.First().Should().Be(personUpdated, "Should be updated person");
-        }
+        _collection.Count.Should().Be(1, "Should be 1 item in the collection");
+        _collection.First().Should().Be(personUpdated, "Should be updated person");
     }
 }

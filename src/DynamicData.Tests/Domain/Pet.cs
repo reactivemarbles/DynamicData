@@ -1,9 +1,8 @@
-namespace DynamicData.Tests.Domain
-{
-    public class Pet
-    {
-        public string? Animal { get; set; }
+namespace DynamicData.Tests.Domain;
 
-        public string? Name { get; set; }
-    }
+public class Pet
+{
+    public string? Animal { get; set; }
+
+    public string? Name { get; set; }
 }

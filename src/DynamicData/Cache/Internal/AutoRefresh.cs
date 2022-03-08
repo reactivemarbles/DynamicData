@@ -7,48 +7,47 @@ using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class AutoRefresh<TObject, TKey, TAny>
+    where TKey : notnull
 {
-    internal class AutoRefresh<TObject, TKey, TAny>
-        where TKey : notnull
+    private readonly TimeSpan? _buffer;
+
+    private readonly Func<TObject, TKey, IObservable<TAny>> _reEvaluator;
+
+    private readonly IScheduler _scheduler;
+
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+    public AutoRefresh(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
     {
-        private readonly TimeSpan? _buffer;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
+        _buffer = buffer;
+        _scheduler = scheduler ?? Scheduler.Default;
+    }
 
-        private readonly Func<TObject, TKey, IObservable<TAny>> _reEvaluator;
+    public IObservable<IChangeSet<TObject, TKey>> Run()
+    {
+        return Observable.Create<IChangeSet<TObject, TKey>>(
+            observer =>
+            {
+                var shared = _source.Publish();
 
-        private readonly IScheduler _scheduler;
+                // monitor each item observable and create change
+                var changes = shared.MergeMany((t, k) => { return _reEvaluator(t, k).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, k, t)); });
 
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+                // create a change set, either buffered or one item at the time
+                IObservable<IChangeSet<TObject, TKey>> refreshChanges = _buffer is null ?
+                    changes.Select(c => new ChangeSet<TObject, TKey>(new[] { c })) :
+                    changes.Buffer(_buffer.Value, _scheduler).Where(list => list.Count > 0).Select(items => new ChangeSet<TObject, TKey>(items));
 
-        public AutoRefresh(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
-            _buffer = buffer;
-            _scheduler = scheduler ?? Scheduler.Default;
-        }
+                // publish refreshes and underlying changes
+                var locker = new object();
+                var publisher = shared.Synchronize(locker).Merge(refreshChanges.Synchronize(locker)).SubscribeSafe(observer);
 
-        public IObservable<IChangeSet<TObject, TKey>> Run()
-        {
-            return Observable.Create<IChangeSet<TObject, TKey>>(
-                observer =>
-                    {
-                        var shared = _source.Publish();
-
-                        // monitor each item observable and create change
-                        var changes = shared.MergeMany((t, k) => { return _reEvaluator(t, k).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, k, t)); });
-
-                        // create a change set, either buffered or one item at the time
-                        IObservable<IChangeSet<TObject, TKey>> refreshChanges = _buffer is null ?
-                                                                                    changes.Select(c => new ChangeSet<TObject, TKey>(new[] { c })) :
-                                                                                    changes.Buffer(_buffer.Value, _scheduler).Where(list => list.Count > 0).Select(items => new ChangeSet<TObject, TKey>(items));
-
-                        // publish refreshes and underlying changes
-                        var locker = new object();
-                        var publisher = shared.Synchronize(locker).Merge(refreshChanges.Synchronize(locker)).SubscribeSafe(observer);
-
-                        return new CompositeDisposable(publisher, shared.Connect());
-                    });
-        }
+                return new CompositeDisposable(publisher, shared.Connect());
+            });
     }
 }

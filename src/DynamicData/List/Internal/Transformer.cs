@@ -9,234 +9,233 @@ using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal sealed class Transformer<TSource, TDestination>
 {
-    internal sealed class Transformer<TSource, TDestination>
+    private readonly Func<TSource, Optional<TDestination>, int, TransformedItemContainer> _containerFactory;
+
+    private readonly IObservable<IChangeSet<TSource>> _source;
+
+    private readonly bool _transformOnRefresh;
+
+    public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
     {
-        private readonly Func<TSource, Optional<TDestination>, int, TransformedItemContainer> _containerFactory;
-
-        private readonly IObservable<IChangeSet<TSource>> _source;
-
-        private readonly bool _transformOnRefresh;
-
-        public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
+        if (factory is null)
         {
-            if (factory is null)
-            {
-                throw new ArgumentNullException(nameof(factory));
-            }
-
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _transformOnRefresh = transformOnRefresh;
-            _containerFactory = (item, prev, index) => new TransformedItemContainer(item, factory(item, prev, index));
+            throw new ArgumentNullException(nameof(factory));
         }
 
-        public IObservable<IChangeSet<TDestination>> Run()
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _transformOnRefresh = transformOnRefresh;
+        _containerFactory = (item, prev, index) => new TransformedItemContainer(item, factory(item, prev, index));
+    }
+
+    public IObservable<IChangeSet<TDestination>> Run()
+    {
+        return _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
+            {
+                Transform(state, changes);
+                return state;
+            })
+            .Select(transformed =>
+            {
+                var changed = transformed.CaptureChanges();
+                return changed.Transform(container => container.Destination);
+            });
+    }
+
+    private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
+    {
+        if (changes is null)
         {
-            return _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
-                {
-                    Transform(state, changes);
-                    return state;
-                })
-                .Select(transformed =>
-                {
-                    var changed = transformed.CaptureChanges();
-                    return changed.Transform(container => container.Destination);
-                });
+            throw new ArgumentNullException(nameof(changes));
         }
 
-        private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
+        foreach (var item in changes)
         {
-            if (changes is null)
+            switch (item.Reason)
             {
-                throw new ArgumentNullException(nameof(changes));
-            }
+                case ListChangeReason.Add:
+                    {
+                        var change = item.Item;
+                        if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
+                        {
+                            transformed.Add(_containerFactory(change.Current, Optional<TDestination>.None, transformed.Count));
+                        }
+                        else
+                        {
+                            var converted = _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex);
+                            transformed.Insert(change.CurrentIndex, converted);
+                        }
 
-            foreach (var item in changes)
-            {
-                switch (item.Reason)
-                {
-                    case ListChangeReason.Add:
+                        break;
+                    }
+
+                case ListChangeReason.AddRange:
+                    {
+                        var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
+
+                        transformed.AddOrInsertRange(item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex)), item.Range.Index);
+
+                        break;
+                    }
+
+                case ListChangeReason.Refresh:
+                    {
+                        if (_transformOnRefresh)
                         {
                             var change = item.Item;
-                            if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
-                            {
-                                transformed.Add(_containerFactory(change.Current, Optional<TDestination>.None, transformed.Count));
-                            }
-                            else
-                            {
-                                var converted = _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex);
-                                transformed.Insert(change.CurrentIndex, converted);
-                            }
-
-                            break;
+                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                            transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
                         }
-
-                    case ListChangeReason.AddRange:
+                        else
                         {
-                            var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
-
-                            transformed.AddOrInsertRange(item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex)), item.Range.Index);
-
-                            break;
+                            transformed.RefreshAt(item.Item.CurrentIndex);
                         }
 
-                    case ListChangeReason.Refresh:
+                        break;
+                    }
+
+                case ListChangeReason.Replace:
+                    {
+                        var change = item.Item;
+                        Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
+                        if (change.CurrentIndex == change.PreviousIndex)
                         {
-                            if (_transformOnRefresh)
-                            {
-                                var change = item.Item;
-                                Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
-                                transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
-                            }
-                            else
-                            {
-                                transformed.RefreshAt(item.Item.CurrentIndex);
-                            }
-
-                            break;
+                            transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
                         }
-
-                    case ListChangeReason.Replace:
+                        else
                         {
-                            var change = item.Item;
-                            Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
-                            if (change.CurrentIndex == change.PreviousIndex)
-                            {
-                                transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
-                            }
-                            else
-                            {
-                                transformed.RemoveAt(change.PreviousIndex);
-                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
-                            }
-
-                            break;
+                            transformed.RemoveAt(change.PreviousIndex);
+                            transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
                         }
 
-                    case ListChangeReason.Remove:
+                        break;
+                    }
+
+                case ListChangeReason.Remove:
+                    {
+                        var change = item.Item;
+                        bool hasIndex = change.CurrentIndex >= 0;
+
+                        if (hasIndex)
                         {
-                            var change = item.Item;
-                            bool hasIndex = change.CurrentIndex >= 0;
-
-                            if (hasIndex)
-                            {
-                                transformed.RemoveAt(change.CurrentIndex);
-                            }
-                            else
-                            {
-                                TransformedItemContainer? toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
-
-                                if (toRemove is not null)
-                                {
-                                    transformed.Remove(toRemove);
-                                }
-                            }
-
-                            break;
+                            transformed.RemoveAt(change.CurrentIndex);
                         }
-
-                    case ListChangeReason.RemoveRange:
+                        else
                         {
-                            if (item.Range.Index >= 0)
-                            {
-                                transformed.RemoveRange(item.Range.Index, item.Range.Count);
-                            }
-                            else
-                            {
-                                var toRemove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current)));
-                                transformed.RemoveMany(toRemove);
-                            }
+                            TransformedItemContainer? toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
 
-                            break;
+                            if (toRemove is not null)
+                            {
+                                transformed.Remove(toRemove);
+                            }
                         }
 
-                    case ListChangeReason.Clear:
+                        break;
+                    }
+
+                case ListChangeReason.RemoveRange:
+                    {
+                        if (item.Range.Index >= 0)
                         {
-                            // i.e. need to store transformed reference so we can correctly clear
-                            var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, transformed);
-                            transformed.ClearOrRemoveMany(toClear);
-
-                            break;
+                            transformed.RemoveRange(item.Range.Index, item.Range.Count);
                         }
-
-                    case ListChangeReason.Moved:
+                        else
                         {
-                            var change = item.Item;
-                            bool hasIndex = change.CurrentIndex >= 0;
-                            if (!hasIndex)
-                            {
-                                throw new UnspecifiedIndexException("Cannot move as an index was not specified");
-                            }
-
-                            transformed.Move(change.PreviousIndex, change.CurrentIndex);
-                            break;
+                            var toRemove = transformed.Where(t => item.Range.Any(current => ReferenceEquals(t.Source, current)));
+                            transformed.RemoveMany(toRemove);
                         }
-                }
+
+                        break;
+                    }
+
+                case ListChangeReason.Clear:
+                    {
+                        // i.e. need to store transformed reference so we can correctly clear
+                        var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, transformed);
+                        transformed.ClearOrRemoveMany(toClear);
+
+                        break;
+                    }
+
+                case ListChangeReason.Moved:
+                    {
+                        var change = item.Item;
+                        bool hasIndex = change.CurrentIndex >= 0;
+                        if (!hasIndex)
+                        {
+                            throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+                        }
+
+                        transformed.Move(change.PreviousIndex, change.CurrentIndex);
+                        break;
+                    }
             }
         }
+    }
 
-        private sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
+    private sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
+    {
+        public TransformedItemContainer(TSource source, TDestination destination)
         {
-            public TransformedItemContainer(TSource source, TDestination destination)
+            Source = source;
+            Destination = destination;
+        }
+
+        public TDestination Destination { get; }
+
+        public TSource Source { get; }
+
+        public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(TransformedItemContainer left, TransformedItemContainer right)
+        {
+            return !Equals(left, right);
+        }
+
+        public bool Equals(TransformedItemContainer? other)
+        {
+            if (ReferenceEquals(null, other))
             {
-                Source = source;
-                Destination = destination;
+                return false;
             }
 
-            public TDestination Destination { get; }
-
-            public TSource Source { get; }
-
-            public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right)
+            if (ReferenceEquals(this, other))
             {
-                return Equals(left, right);
+                return true;
             }
 
-            public static bool operator !=(TransformedItemContainer left, TransformedItemContainer right)
+            return EqualityComparer<TSource>.Default.Equals(Source, other.Source);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj))
             {
-                return !Equals(left, right);
+                return false;
             }
 
-            public bool Equals(TransformedItemContainer? other)
+            if (ReferenceEquals(this, obj))
             {
-                if (ReferenceEquals(null, other))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, other))
-                {
-                    return true;
-                }
-
-                return EqualityComparer<TSource>.Default.Equals(Source, other.Source);
+                return true;
             }
 
-            public override bool Equals(object? obj)
+            if (obj.GetType() != GetType())
             {
-                if (ReferenceEquals(null, obj))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, obj))
-                {
-                    return true;
-                }
-
-                if (obj.GetType() != GetType())
-                {
-                    return false;
-                }
-
-                return Equals((TransformedItemContainer)obj);
+                return false;
             }
 
-            public override int GetHashCode()
-            {
-                return Source is null ? 0 : EqualityComparer<TSource>.Default.GetHashCode(Source);
-            }
+            return Equals((TransformedItemContainer)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Source is null ? 0 : EqualityComparer<TSource>.Default.GetHashCode(Source);
         }
     }
 }

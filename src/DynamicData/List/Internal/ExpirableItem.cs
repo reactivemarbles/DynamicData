@@ -5,77 +5,76 @@
 using System;
 using System.Collections.Generic;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal sealed class ExpirableItem<TObject> : IEquatable<ExpirableItem<TObject>>
 {
-    internal sealed class ExpirableItem<TObject> : IEquatable<ExpirableItem<TObject>>
+    public ExpirableItem(TObject value, DateTime dateTime, long index)
     {
-        public ExpirableItem(TObject value, DateTime dateTime, long index)
+        Item = value;
+        ExpireAt = dateTime;
+        Index = index;
+    }
+
+    public DateTime ExpireAt { get; }
+
+    public long Index { get; }
+
+    public TObject Item { get; }
+
+    public static bool operator ==(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
+    {
+        return !Equals(left, right);
+    }
+
+    public bool Equals(ExpirableItem<TObject>? other)
+    {
+        if (ReferenceEquals(null, other))
         {
-            Item = value;
-            ExpireAt = dateTime;
-            Index = index;
+            return false;
         }
 
-        public DateTime ExpireAt { get; }
-
-        public long Index { get; }
-
-        public TObject Item { get; }
-
-        public static bool operator ==(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
+        if (ReferenceEquals(this, other))
         {
-            return Equals(left, right);
+            return true;
         }
 
-        public static bool operator !=(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
+        return EqualityComparer<TObject>.Default.Equals(Item, other.Item) && ExpireAt.Equals(other.ExpireAt) && Index == other.Index;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
         {
-            return !Equals(left, right);
+            return false;
         }
 
-        public bool Equals(ExpirableItem<TObject>? other)
+        if (ReferenceEquals(this, obj))
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return EqualityComparer<TObject>.Default.Equals(Item, other.Item) && ExpireAt.Equals(other.ExpireAt) && Index == other.Index;
+            return true;
         }
 
-        public override bool Equals(object? obj)
+        return obj is ExpirableItem<TObject> item && Equals(item);
+    }
+
+    public override int GetHashCode()
+    {
+        unchecked
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            return obj is ExpirableItem<TObject> item && Equals(item);
+            var hashCode = Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
+            hashCode = (hashCode * 397) ^ ExpireAt.GetHashCode();
+            hashCode = (hashCode * 397) ^ Index.GetHashCode();
+            return hashCode;
         }
+    }
 
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
-                hashCode = (hashCode * 397) ^ ExpireAt.GetHashCode();
-                hashCode = (hashCode * 397) ^ Index.GetHashCode();
-                return hashCode;
-            }
-        }
-
-        public override string ToString()
-        {
-            return $"{Item} @ {ExpireAt}";
-        }
+    public override string ToString()
+    {
+        return $"{Item} @ {ExpireAt}";
     }
 }

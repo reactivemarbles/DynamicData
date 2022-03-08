@@ -6,258 +6,257 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DynamicData.Kernel
+namespace DynamicData.Kernel;
+
+/// <summary>
+/// Extensions for optional.
+/// </summary>
+public static class OptionExtensions
 {
     /// <summary>
-    /// Extensions for optional.
+    /// Converts the specified source.
     /// </summary>
-    public static class OptionExtensions
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="converter">The converter.</param>
+    /// <returns>The converted value.</returns>
+    /// <exception cref="System.ArgumentNullException">converter.</exception>
+    public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter)
     {
-        /// <summary>
-        /// Converts the specified source.
-        /// </summary>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="converter">The converter.</param>
-        /// <returns>The converted value.</returns>
-        /// <exception cref="System.ArgumentNullException">converter.</exception>
-        public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter)
+        if (converter is null)
         {
-            if (converter is null)
-            {
-                throw new ArgumentNullException(nameof(converter));
-            }
-
-            return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
+            throw new ArgumentNullException(nameof(converter));
         }
 
-        /// <summary>
-        /// Converts the option value if it has a value, otherwise returns the result of the fallback converter.
-        /// </summary>
-        /// <typeparam name="TSource">The type of the source.</typeparam>
-        /// <typeparam name="TDestination">The type of the destination.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="converter">The converter.</param>
-        /// <param name="fallbackConverter">The fallback converter.</param>
-        /// <returns>The destination value.</returns>
-        /// <exception cref="System.ArgumentNullException">
-        /// converter
-        /// or
-        /// fallbackConverter.
-        /// </exception>
-        public static TDestination? ConvertOr<TSource, TDestination>(this Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
+        return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
+    }
+
+    /// <summary>
+    /// Converts the option value if it has a value, otherwise returns the result of the fallback converter.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="converter">The converter.</param>
+    /// <param name="fallbackConverter">The fallback converter.</param>
+    /// <returns>The destination value.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    /// converter
+    /// or
+    /// fallbackConverter.
+    /// </exception>
+    public static TDestination? ConvertOr<TSource, TDestination>(this Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
+    {
+        if (converter is null)
         {
-            if (converter is null)
-            {
-                throw new ArgumentNullException(nameof(converter));
-            }
-
-            if (fallbackConverter is null)
-            {
-                throw new ArgumentNullException(nameof(fallbackConverter));
-            }
-
-            return source.HasValue ? converter(source.Value) : fallbackConverter();
+            throw new ArgumentNullException(nameof(converter));
         }
 
-        /// <summary>
-        /// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam>
-        ///         <name>&amp;gt;T</name>
-        ///     </typeparam> container.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="selector">The selector.</param>
-        /// <returns>The first value or none.</returns>
-        public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
+        if (fallbackConverter is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            foreach (T item in source)
-            {
-                if (selector(item))
-                {
-                    return Optional<T>.Create(item);
-                }
-            }
-
-            return Optional.None<T>();
+            throw new ArgumentNullException(nameof(fallbackConverter));
         }
 
-        /// <summary>
-        /// Invokes the specified action when.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="action">The action.</param>
-        /// <returns>The optional else extension.</returns>
-        public static OptionElse IfHasValue<T>(this Optional<T> source, Action<T> action)
+        return source.HasValue ? converter(source.Value) : fallbackConverter();
+    }
+
+    /// <summary>
+    /// Overloads Enumerable.FirstOrDefault() and wraps the result in a Optional<typeparam>
+    ///         <name>&amp;gt;T</name>
+    ///     </typeparam> container.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="selector">The selector.</param>
+    /// <returns>The first value or none.</returns>
+    public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
+    {
+        if (source is null)
         {
-            if (!source.HasValue || source.Value is null)
-            {
-                return new OptionElse();
-            }
-
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            action(source.Value);
-            return OptionElse.NoAction;
+            throw new ArgumentNullException(nameof(source));
         }
 
-        /// <summary>
-        /// Invokes the specified action when.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="action">The action.</param>
-        /// <returns>The optional else extension.</returns>
-        public static OptionElse IfHasValue<T>(this Optional<T>? source, Action<T> action)
+        foreach (T item in source)
         {
-            if (!source.HasValue)
+            if (selector(item))
             {
-                return new OptionElse();
+                return Optional<T>.Create(item);
             }
-
-            if (!source.Value.HasValue)
-            {
-                return new OptionElse();
-            }
-
-            if (action is null)
-            {
-                throw new ArgumentNullException(nameof(action));
-            }
-
-            action(source.Value.Value);
-            return OptionElse.NoAction;
         }
 
-        /// <summary>
-        /// Overloads a TryGetValue of the dictionary wrapping the result as an Optional.<typeparam>
-        ///         <name>&amp;gt;TValue</name>
-        ///     </typeparam>
-        /// </summary>
-        /// <typeparam name="TValue">The type of the value.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="key">The key.</param>
-        /// <returns>The option of the looked up value.</returns>
-        public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
-        {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+        return Optional.None<T>();
+    }
 
-            bool result = source.TryGetValue(key, out var contained);
-            return result ? contained : Optional.None<TValue>();
+    /// <summary>
+    /// Invokes the specified action when.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="action">The action.</param>
+    /// <returns>The optional else extension.</returns>
+    public static OptionElse IfHasValue<T>(this Optional<T> source, Action<T> action)
+    {
+        if (!source.HasValue || source.Value is null)
+        {
+            return new OptionElse();
         }
 
-        /// <summary>
-        /// Removes item if contained in the cache.
-        /// </summary>
-        /// <typeparam name="TValue">The type of the value.</typeparam>
-        /// <typeparam name="TKey">The type of the key.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="key">The key.</param>
-        /// <returns>If the item was removed.</returns>
-        public static bool RemoveIfContained<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
+        if (action is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            return source.ContainsKey(key) && source.Remove(key);
+            throw new ArgumentNullException(nameof(action));
         }
 
-        /// <summary>
-        /// Filters where Optional has a value
-        /// and return the values only.
-        /// </summary>
-        /// <typeparam name="T">The type of item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>An enumerable of the selected items.</returns>
-        public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
+        action(source.Value);
+        return OptionElse.NoAction;
+    }
+
+    /// <summary>
+    /// Invokes the specified action when.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="action">The action.</param>
+    /// <returns>The optional else extension.</returns>
+    public static OptionElse IfHasValue<T>(this Optional<T>? source, Action<T> action)
+    {
+        if (!source.HasValue)
         {
-            return source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
+            return new OptionElse();
         }
 
-        /// <summary>
-        /// Returns the value if the nullable has a value, otherwise returns the result of the value selector.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="defaultValue">The default value.</param>
-        /// <returns>The value or the default value.</returns>
-        public static T ValueOr<T>(this T? source, T defaultValue)
-            where T : struct
+        if (!source.Value.HasValue)
         {
-            return source ?? defaultValue;
+            return new OptionElse();
         }
 
-        /// <summary>
-        /// Returns the value if the optional has a value, otherwise returns the result of the value selector.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="valueSelector">The value selector.</param>
-        /// <returns>If the value or a provided default.</returns>
-        /// <exception cref="System.ArgumentNullException">valueSelector.</exception>
-        public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector)
+        if (action is null)
         {
-            if (valueSelector is null)
-            {
-                throw new ArgumentNullException(nameof(valueSelector));
-            }
-
-            return source.HasValue ? source.Value : valueSelector();
+            throw new ArgumentNullException(nameof(action));
         }
 
-        /// <summary>
-        /// Returns the value if the optional has a value, otherwise returns the default value of T.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <returns>The value or default.</returns>
-        public static T? ValueOrDefault<T>(this Optional<T> source)
-        {
-            if (source.HasValue)
-            {
-                return source.Value;
-            }
+        action(source.Value.Value);
+        return OptionElse.NoAction;
+    }
 
-            return default;
+    /// <summary>
+    /// Overloads a TryGetValue of the dictionary wrapping the result as an Optional.<typeparam>
+    ///         <name>&amp;gt;TValue</name>
+    ///     </typeparam>
+    /// </summary>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="key">The key.</param>
+    /// <returns>The option of the looked up value.</returns>
+    public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
         }
 
-        /// <summary>
-        /// Returns the value if the optional has a value, otherwise throws an exception as specified by the exception generator.
-        /// </summary>
-        /// <typeparam name="T">The type of the item.</typeparam>
-        /// <param name="source">The source.</param>
-        /// <param name="exceptionGenerator">The exception generator.</param>
-        /// <returns>The value.</returns>
-        /// <exception cref="System.ArgumentNullException">exceptionGenerator.</exception>
-        public static T ValueOrThrow<T>(this Optional<T> source, Func<Exception> exceptionGenerator)
+        bool result = source.TryGetValue(key, out var contained);
+        return result ? contained : Optional.None<TValue>();
+    }
+
+    /// <summary>
+    /// Removes item if contained in the cache.
+    /// </summary>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="key">The key.</param>
+    /// <returns>If the item was removed.</returns>
+    public static bool RemoveIfContained<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
+    {
+        if (source is null)
         {
-            if (exceptionGenerator is null)
-            {
-                throw new ArgumentNullException(nameof(exceptionGenerator));
-            }
-
-            if (source.HasValue && source.Value is not null)
-            {
-                return source.Value;
-            }
-
-            throw exceptionGenerator();
+            throw new ArgumentNullException(nameof(source));
         }
+
+        return source.ContainsKey(key) && source.Remove(key);
+    }
+
+    /// <summary>
+    /// Filters where Optional has a value
+    /// and return the values only.
+    /// </summary>
+    /// <typeparam name="T">The type of item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>An enumerable of the selected items.</returns>
+    public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
+    {
+        return source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
+    }
+
+    /// <summary>
+    /// Returns the value if the nullable has a value, otherwise returns the result of the value selector.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="defaultValue">The default value.</param>
+    /// <returns>The value or the default value.</returns>
+    public static T ValueOr<T>(this T? source, T defaultValue)
+        where T : struct
+    {
+        return source ?? defaultValue;
+    }
+
+    /// <summary>
+    /// Returns the value if the optional has a value, otherwise returns the result of the value selector.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="valueSelector">The value selector.</param>
+    /// <returns>If the value or a provided default.</returns>
+    /// <exception cref="System.ArgumentNullException">valueSelector.</exception>
+    public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector)
+    {
+        if (valueSelector is null)
+        {
+            throw new ArgumentNullException(nameof(valueSelector));
+        }
+
+        return source.HasValue ? source.Value : valueSelector();
+    }
+
+    /// <summary>
+    /// Returns the value if the optional has a value, otherwise returns the default value of T.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <returns>The value or default.</returns>
+    public static T? ValueOrDefault<T>(this Optional<T> source)
+    {
+        if (source.HasValue)
+        {
+            return source.Value;
+        }
+
+        return default;
+    }
+
+    /// <summary>
+    /// Returns the value if the optional has a value, otherwise throws an exception as specified by the exception generator.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="exceptionGenerator">The exception generator.</param>
+    /// <returns>The value.</returns>
+    /// <exception cref="System.ArgumentNullException">exceptionGenerator.</exception>
+    public static T ValueOrThrow<T>(this Optional<T> source, Func<Exception> exceptionGenerator)
+    {
+        if (exceptionGenerator is null)
+        {
+            throw new ArgumentNullException(nameof(exceptionGenerator));
+        }
+
+        if (source.HasValue && source.Value is not null)
+        {
+            return source.Value;
+        }
+
+        throw exceptionGenerator();
     }
 }

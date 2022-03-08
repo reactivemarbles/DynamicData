@@ -5,48 +5,47 @@
 using System;
 
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData;
+
+/// <summary>
+/// Thrown when an index is expected but not specified.
+/// </summary>
+[Serializable]
+public class UnspecifiedIndexException : Exception
 {
     /// <summary>
-    /// Thrown when an index is expected but not specified.
+    /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
     /// </summary>
-    [Serializable]
-    public class UnspecifiedIndexException : Exception
+    /// <param name="message">The message that describes the error.</param>
+    public UnspecifiedIndexException(string message)
+        : base(message)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
-        /// </summary>
-        /// <param name="message">The message that describes the error.</param>
-        public UnspecifiedIndexException(string message)
-            : base(message)
-        {
-        }
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
-        /// </summary>
-        public UnspecifiedIndexException()
-        {
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
+    /// </summary>
+    public UnspecifiedIndexException()
+    {
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
-        /// </summary>
-        /// <param name="message">The error message that explains the reason for the exception.</param>
-        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
-        public UnspecifiedIndexException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
+    /// </summary>
+    /// <param name="message">The error message that explains the reason for the exception.</param>
+    /// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+    public UnspecifiedIndexException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
-        /// </summary>
-        /// <param name="serializationInfo">The serialization info.</param>
-        /// <param name="streamingContext">The serialization context.</param>
-        protected UnspecifiedIndexException(System.Runtime.Serialization.SerializationInfo serializationInfo, System.Runtime.Serialization.StreamingContext streamingContext)
-            : base(serializationInfo, streamingContext)
-        {
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
+    /// </summary>
+    /// <param name="serializationInfo">The serialization info.</param>
+    /// <param name="streamingContext">The serialization context.</param>
+    protected UnspecifiedIndexException(System.Runtime.Serialization.SerializationInfo serializationInfo, System.Runtime.Serialization.StreamingContext streamingContext)
+        : base(serializationInfo, streamingContext)
+    {
     }
 }

@@ -8,420 +8,419 @@ using System.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
+    where TKey : notnull
 {
-    internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
-        where TKey : notnull
+    private readonly ICache<TObject, TKey> _cache;
+
+    private readonly Func<TObject, TKey>? _keySelector;
+
+    public CacheUpdater(ICache<TObject, TKey> cache, Func<TObject, TKey>? keySelector = null)
     {
-        private readonly ICache<TObject, TKey> _cache;
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _keySelector = keySelector;
+    }
 
-        private readonly Func<TObject, TKey>? _keySelector;
-
-        public CacheUpdater(ICache<TObject, TKey> cache, Func<TObject, TKey>? keySelector = null)
+    public CacheUpdater(Dictionary<TKey, TObject> data, Func<TObject, TKey>? keySelector = null)
+    {
+        if (data is null)
         {
-            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-            _keySelector = keySelector;
+            throw new ArgumentNullException(nameof(data));
         }
 
-        public CacheUpdater(Dictionary<TKey, TObject> data, Func<TObject, TKey>? keySelector = null)
+        _cache = new Cache<TObject, TKey>(data);
+        _keySelector = keySelector;
+    }
+
+    public int Count => _cache.Count;
+
+    public IEnumerable<TObject> Items => _cache.Items;
+
+    public IEnumerable<TKey> Keys => _cache.Keys;
+
+    public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
+
+    public void AddOrUpdate(IEnumerable<TObject> items)
+    {
+        if (items is null) throw new ArgumentNullException(nameof(items));
+        if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
+
+        if (items is IList<TObject> list)
         {
-            if (data is null)
+            // zero allocation enumerator
+            foreach (var item in EnumerableIList.Create(list))
             {
-                throw new ArgumentNullException(nameof(data));
-            }
-
-            _cache = new Cache<TObject, TKey>(data);
-            _keySelector = keySelector;
-        }
-
-        public int Count => _cache.Count;
-
-        public IEnumerable<TObject> Items => _cache.Items;
-
-        public IEnumerable<TKey> Keys => _cache.Keys;
-
-        public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
-
-        public void AddOrUpdate(IEnumerable<TObject> items)
-        {
-            if (items is null) throw new ArgumentNullException(nameof(items));
-            if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
-
-            if (items is IList<TObject> list)
-            {
-                // zero allocation enumerator
-                foreach (var item in EnumerableIList.Create(list))
-                {
-                    _cache.AddOrUpdate(item, _keySelector(item));
-                }
-            }
-            else
-            {
-                foreach (var item in items)
-                {
-                    _cache.AddOrUpdate(item, _keySelector(item));
-                }
+                _cache.AddOrUpdate(item, _keySelector(item));
             }
         }
-
-        public void AddOrUpdate(IEnumerable<TObject> items, IEqualityComparer<TObject> comparer)
+        else
         {
-            if (items is null) throw new ArgumentNullException(nameof(items));
-            if (comparer is null) throw new ArgumentNullException(nameof(comparer));
-            if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
-
-            void AddOrUpdateImpl(TObject item)
+            foreach (var item in items)
             {
-                var key = _keySelector!(item);
-                var oldItem = _cache.Lookup(key);
-
-                if (oldItem.HasValue)
-                {
-                    if (comparer.Equals(oldItem.Value, item)) return;
-
-                    _cache.AddOrUpdate(item, key);
-                }
-                else
-                {
-                    _cache.AddOrUpdate(item, key);
-                }
-            }
-
-            if (items is IList<TObject> list)
-            {
-                // zero allocation enumerator
-                foreach (var item in EnumerableIList.Create(list))
-                    AddOrUpdateImpl(item);
-            }
-            else
-            {
-                foreach (var item in items)
-                    AddOrUpdateImpl(item);
+                _cache.AddOrUpdate(item, _keySelector(item));
             }
         }
+    }
 
-        public void AddOrUpdate(TObject item)
+    public void AddOrUpdate(IEnumerable<TObject> items, IEqualityComparer<TObject> comparer)
+    {
+        if (items is null) throw new ArgumentNullException(nameof(items));
+        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+        if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
+
+        void AddOrUpdateImpl(TObject item)
         {
-            if (_keySelector is null)
-            {
-                throw new KeySelectorException("A key selector must be specified");
-            }
-
-            var key = _keySelector(item);
-            _cache.AddOrUpdate(item, key);
-        }
-
-        public void AddOrUpdate(TObject item, IEqualityComparer<TObject> comparer)
-        {
-            if (_keySelector is null)
-            {
-                throw new KeySelectorException("A key selector must be specified");
-            }
-
-            var key = _keySelector(item);
+            var key = _keySelector!(item);
             var oldItem = _cache.Lookup(key);
+
             if (oldItem.HasValue)
             {
-                if (comparer.Equals(oldItem.Value, item))
-                {
-                    return;
-                }
+                if (comparer.Equals(oldItem.Value, item)) return;
 
                 _cache.AddOrUpdate(item, key);
+            }
+            else
+            {
+                _cache.AddOrUpdate(item, key);
+            }
+        }
+
+        if (items is IList<TObject> list)
+        {
+            // zero allocation enumerator
+            foreach (var item in EnumerableIList.Create(list))
+                AddOrUpdateImpl(item);
+        }
+        else
+        {
+            foreach (var item in items)
+                AddOrUpdateImpl(item);
+        }
+    }
+
+    public void AddOrUpdate(TObject item)
+    {
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
+        }
+
+        var key = _keySelector(item);
+        _cache.AddOrUpdate(item, key);
+    }
+
+    public void AddOrUpdate(TObject item, IEqualityComparer<TObject> comparer)
+    {
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
+        }
+
+        var key = _keySelector(item);
+        var oldItem = _cache.Lookup(key);
+        if (oldItem.HasValue)
+        {
+            if (comparer.Equals(oldItem.Value, item))
+            {
                 return;
             }
 
             _cache.AddOrUpdate(item, key);
+            return;
         }
 
-        public void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> itemsPairs)
+        _cache.AddOrUpdate(item, key);
+    }
+
+    public void AddOrUpdate(IEnumerable<KeyValuePair<TKey, TObject>> itemsPairs)
+    {
+        if (itemsPairs is IList<KeyValuePair<TKey, TObject>> list)
         {
-            if (itemsPairs is IList<KeyValuePair<TKey, TObject>> list)
+            // zero allocation enumerator
+            foreach (var item in EnumerableIList.Create(list))
             {
-                // zero allocation enumerator
-                foreach (var item in EnumerableIList.Create(list))
-                {
-                    _cache.AddOrUpdate(item.Value, item.Key);
-                }
-            }
-            else
-            {
-                foreach (var item in itemsPairs)
-                {
-                    _cache.AddOrUpdate(item.Value, item.Key);
-                }
+                _cache.AddOrUpdate(item.Value, item.Key);
             }
         }
-
-        public void AddOrUpdate(KeyValuePair<TKey, TObject> item)
+        else
         {
-            _cache.AddOrUpdate(item.Value, item.Key);
-        }
-
-        public void AddOrUpdate(TObject item, TKey key)
-        {
-            _cache.AddOrUpdate(item, key);
-        }
-
-        public void Clear()
-        {
-            _cache.Clear();
-        }
-
-        public void Clone(IChangeSet<TObject, TKey> changes)
-        {
-            _cache.Clone(changes);
-        }
-
-        [Obsolete(Constants.EvaluateIsDead)]
-        public void Evaluate(IEnumerable<TKey> keys) => Refresh(keys);
-
-        [Obsolete(Constants.EvaluateIsDead)]
-        public void Evaluate(IEnumerable<TObject> items) => Refresh(items);
-
-        [Obsolete(Constants.EvaluateIsDead)]
-        public void Evaluate(TObject item) => Refresh(item);
-
-        [Obsolete(Constants.EvaluateIsDead)]
-        public void Evaluate()
-        {
-            Refresh();
-        }
-
-        [Obsolete(Constants.EvaluateIsDead)]
-        public void Evaluate(TKey key)
-        {
-            Refresh(key);
-        }
-
-        public TKey GetKey(TObject item)
-        {
-            if (_keySelector is null)
+            foreach (var item in itemsPairs)
             {
-                throw new KeySelectorException("A key selector must be specified");
-            }
-
-            return _keySelector(item);
-        }
-
-        public IEnumerable<KeyValuePair<TKey, TObject>> GetKeyValues(IEnumerable<TObject> items)
-        {
-            if (_keySelector is null)
-            {
-                throw new KeySelectorException("A key selector must be specified");
-            }
-
-            return items.Select(t => new KeyValuePair<TKey, TObject>(_keySelector(t), t));
-        }
-
-        public void Load(IEnumerable<TObject> items)
-        {
-            if (items is null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            Clear();
-            AddOrUpdate(items);
-        }
-
-        public Optional<TObject> Lookup(TKey key)
-        {
-            var item = _cache.Lookup(key);
-            return item.HasValue ? item.Value : Optional.None<TObject>();
-        }
-
-        public Optional<TObject> Lookup(TObject item)
-        {
-            if (_keySelector is null)
-            {
-                throw new KeySelectorException("A key selector must be specified");
-            }
-
-            TKey key = _keySelector(item);
-            return Lookup(key);
-        }
-
-        public void Refresh()
-        {
-            _cache.Refresh();
-        }
-
-        public void Refresh(IEnumerable<TObject> items)
-        {
-            if (items is null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            if (items is IList<TObject> list)
-            {
-                // zero allocation enumerator
-                foreach (var item in EnumerableIList.Create(list))
-                {
-                    Refresh(item);
-                }
-            }
-            else
-            {
-                foreach (var item in items)
-                {
-                    Refresh(item);
-                }
+                _cache.AddOrUpdate(item.Value, item.Key);
             }
         }
+    }
 
-        public void Refresh(IEnumerable<TKey> keys)
+    public void AddOrUpdate(KeyValuePair<TKey, TObject> item)
+    {
+        _cache.AddOrUpdate(item.Value, item.Key);
+    }
+
+    public void AddOrUpdate(TObject item, TKey key)
+    {
+        _cache.AddOrUpdate(item, key);
+    }
+
+    public void Clear()
+    {
+        _cache.Clear();
+    }
+
+    public void Clone(IChangeSet<TObject, TKey> changes)
+    {
+        _cache.Clone(changes);
+    }
+
+    [Obsolete(Constants.EvaluateIsDead)]
+    public void Evaluate(IEnumerable<TKey> keys) => Refresh(keys);
+
+    [Obsolete(Constants.EvaluateIsDead)]
+    public void Evaluate(IEnumerable<TObject> items) => Refresh(items);
+
+    [Obsolete(Constants.EvaluateIsDead)]
+    public void Evaluate(TObject item) => Refresh(item);
+
+    [Obsolete(Constants.EvaluateIsDead)]
+    public void Evaluate()
+    {
+        Refresh();
+    }
+
+    [Obsolete(Constants.EvaluateIsDead)]
+    public void Evaluate(TKey key)
+    {
+        Refresh(key);
+    }
+
+    public TKey GetKey(TObject item)
+    {
+        if (_keySelector is null)
         {
-            if (keys is null)
-            {
-                throw new ArgumentNullException(nameof(keys));
-            }
-
-            if (keys is IList<TKey> list)
-            {
-                // zero allocation enumerator
-                foreach (var item in EnumerableIList.Create(list))
-                {
-                    Refresh(item);
-                }
-            }
-            else
-            {
-                foreach (var key in keys)
-                {
-                    Refresh(key);
-                }
-            }
+            throw new KeySelectorException("A key selector must be specified");
         }
 
-        public void Refresh(TObject item)
-        {
-            if (_keySelector is null)
-            {
-                throw new KeySelectorException("A key selector must be specified");
-            }
+        return _keySelector(item);
+    }
 
-            var key = _keySelector(item);
-            _cache.Refresh(key);
+    public IEnumerable<KeyValuePair<TKey, TObject>> GetKeyValues(IEnumerable<TObject> items)
+    {
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
         }
 
-        public void Refresh(TKey key)
+        return items.Select(t => new KeyValuePair<TKey, TObject>(_keySelector(t), t));
+    }
+
+    public void Load(IEnumerable<TObject> items)
+    {
+        if (items is null)
         {
-            _cache.Refresh(key);
+            throw new ArgumentNullException(nameof(items));
         }
 
-        public void Remove(IEnumerable<TObject> items)
-        {
-            if (items is null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
+        Clear();
+        AddOrUpdate(items);
+    }
 
-            if (items is IList<TObject> list)
-            {
-                // zero allocation enumerator
-                foreach (var item in EnumerableIList.Create(list))
-                {
-                    Remove(item);
-                }
-            }
-            else
-            {
-                foreach (var item in items)
-                {
-                    Remove(item);
-                }
-            }
+    public Optional<TObject> Lookup(TKey key)
+    {
+        var item = _cache.Lookup(key);
+        return item.HasValue ? item.Value : Optional.None<TObject>();
+    }
+
+    public Optional<TObject> Lookup(TObject item)
+    {
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
         }
 
-        public void Remove(IEnumerable<TKey> keys)
-        {
-            if (keys is null)
-            {
-                throw new ArgumentNullException(nameof(keys));
-            }
+        TKey key = _keySelector(item);
+        return Lookup(key);
+    }
 
-            if (keys is IList<TKey> list)
-            {
-                // zero allocation enumerator
-                foreach (var key in EnumerableIList.Create(list))
-                {
-                    Remove(key);
-                }
-            }
-            else
-            {
-                foreach (var key in keys)
-                {
-                    Remove(key);
-                }
-            }
+    public void Refresh()
+    {
+        _cache.Refresh();
+    }
+
+    public void Refresh(IEnumerable<TObject> items)
+    {
+        if (items is null)
+        {
+            throw new ArgumentNullException(nameof(items));
         }
 
-        public void Remove(TObject item)
+        if (items is IList<TObject> list)
         {
-            if (_keySelector is null)
+            // zero allocation enumerator
+            foreach (var item in EnumerableIList.Create(list))
             {
-                throw new KeySelectorException("A key selector must be specified");
-            }
-
-            var key = _keySelector(item);
-            _cache.Remove(key);
-        }
-
-        public void Remove(TKey key)
-        {
-            _cache.Remove(key);
-        }
-
-        public void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items)
-        {
-            if (items is null)
-            {
-                throw new ArgumentNullException(nameof(items));
-            }
-
-            if (items is IList<TObject> list)
-            {
-                // zero allocation enumerator
-                foreach (var key in EnumerableIList.Create(list))
-                {
-                    Remove(key);
-                }
-            }
-            else
-            {
-                foreach (var key in items)
-                {
-                    Remove(key);
-                }
+                Refresh(item);
             }
         }
-
-        public void Remove(KeyValuePair<TKey, TObject> item)
+        else
         {
-            Remove(item.Key);
-        }
-
-        public void RemoveKey(TKey key)
-        {
-            Remove(key);
-        }
-
-        public void RemoveKeys(IEnumerable<TKey> keys)
-        {
-            if (keys is null)
+            foreach (var item in items)
             {
-                throw new ArgumentNullException(nameof(keys));
+                Refresh(item);
             }
-
-            _cache.Remove(keys);
         }
+    }
 
-        public void Update(IChangeSet<TObject, TKey> changes)
+    public void Refresh(IEnumerable<TKey> keys)
+    {
+        if (keys is null)
         {
-            _cache.Clone(changes);
+            throw new ArgumentNullException(nameof(keys));
         }
+
+        if (keys is IList<TKey> list)
+        {
+            // zero allocation enumerator
+            foreach (var item in EnumerableIList.Create(list))
+            {
+                Refresh(item);
+            }
+        }
+        else
+        {
+            foreach (var key in keys)
+            {
+                Refresh(key);
+            }
+        }
+    }
+
+    public void Refresh(TObject item)
+    {
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
+        }
+
+        var key = _keySelector(item);
+        _cache.Refresh(key);
+    }
+
+    public void Refresh(TKey key)
+    {
+        _cache.Refresh(key);
+    }
+
+    public void Remove(IEnumerable<TObject> items)
+    {
+        if (items is null)
+        {
+            throw new ArgumentNullException(nameof(items));
+        }
+
+        if (items is IList<TObject> list)
+        {
+            // zero allocation enumerator
+            foreach (var item in EnumerableIList.Create(list))
+            {
+                Remove(item);
+            }
+        }
+        else
+        {
+            foreach (var item in items)
+            {
+                Remove(item);
+            }
+        }
+    }
+
+    public void Remove(IEnumerable<TKey> keys)
+    {
+        if (keys is null)
+        {
+            throw new ArgumentNullException(nameof(keys));
+        }
+
+        if (keys is IList<TKey> list)
+        {
+            // zero allocation enumerator
+            foreach (var key in EnumerableIList.Create(list))
+            {
+                Remove(key);
+            }
+        }
+        else
+        {
+            foreach (var key in keys)
+            {
+                Remove(key);
+            }
+        }
+    }
+
+    public void Remove(TObject item)
+    {
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
+        }
+
+        var key = _keySelector(item);
+        _cache.Remove(key);
+    }
+
+    public void Remove(TKey key)
+    {
+        _cache.Remove(key);
+    }
+
+    public void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items)
+    {
+        if (items is null)
+        {
+            throw new ArgumentNullException(nameof(items));
+        }
+
+        if (items is IList<TObject> list)
+        {
+            // zero allocation enumerator
+            foreach (var key in EnumerableIList.Create(list))
+            {
+                Remove(key);
+            }
+        }
+        else
+        {
+            foreach (var key in items)
+            {
+                Remove(key);
+            }
+        }
+    }
+
+    public void Remove(KeyValuePair<TKey, TObject> item)
+    {
+        Remove(item.Key);
+    }
+
+    public void RemoveKey(TKey key)
+    {
+        Remove(key);
+    }
+
+    public void RemoveKeys(IEnumerable<TKey> keys)
+    {
+        if (keys is null)
+        {
+            throw new ArgumentNullException(nameof(keys));
+        }
+
+        _cache.Remove(keys);
+    }
+
+    public void Update(IChangeSet<TObject, TKey> changes)
+    {
+        _cache.Clone(changes);
     }
 }

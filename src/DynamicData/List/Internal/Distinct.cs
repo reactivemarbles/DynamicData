@@ -9,222 +9,221 @@ using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal sealed class Distinct<T, TValue>
+    where TValue : notnull
 {
-    internal sealed class Distinct<T, TValue>
-        where TValue : notnull
+    private readonly IObservable<IChangeSet<T>> _source;
+
+    private readonly Func<T, TValue> _valueSelector;
+
+    public Distinct(IObservable<IChangeSet<T>> source, Func<T, TValue> valueSelector)
     {
-        private readonly IObservable<IChangeSet<T>> _source;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
+    }
 
-        private readonly Func<T, TValue> _valueSelector;
+    public IObservable<IChangeSet<TValue>> Run()
+    {
+        return Observable.Create<IChangeSet<TValue>>(
+            observer =>
+            {
+                var valueCounters = new Dictionary<TValue, int>();
+                var result = new ChangeAwareList<TValue>();
 
-        public Distinct(IObservable<IChangeSet<T>> source, Func<T, TValue> valueSelector)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
-        }
-
-        public IObservable<IChangeSet<TValue>> Run()
-        {
-            return Observable.Create<IChangeSet<TValue>>(
-                observer =>
+                return _source.Transform<T, ItemWithMatch>(
+                    (t, previous, _) =>
                     {
-                        var valueCounters = new Dictionary<TValue, int>();
-                        var result = new ChangeAwareList<TValue>();
+                        var previousValue = previous.ConvertOr(p => p is null ? default : p.Value, () => default);
 
-                        return _source.Transform<T, ItemWithMatch>(
-                            (t, previous, _) =>
-                                {
-                                    var previousValue = previous.ConvertOr(p => p is null ? default : p.Value, () => default);
+                        return new ItemWithMatch(t, _valueSelector(t), previousValue);
+                    },
+                    true).Select(changes => Process(valueCounters, result, changes)).NotEmpty().SubscribeSafe(observer);
+            });
+    }
 
-                                    return new ItemWithMatch(t, _valueSelector(t), previousValue);
-                                },
-                            true).Select(changes => Process(valueCounters, result, changes)).NotEmpty().SubscribeSafe(observer);
-                    });
+    private static IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithMatch> changes)
+    {
+        void AddAction(TValue value) =>
+            values.Lookup(value).IfHasValue(count => values[value] = count + 1).Else(
+                () =>
+                {
+                    values[value] = 1;
+                    result.Add(value);
+                });
+
+        void RemoveAction(TValue value)
+        {
+            var counter = values.Lookup(value);
+            if (!counter.HasValue)
+            {
+                return;
+            }
+
+            // decrement counter
+            var newCount = counter.Value - 1;
+            values[value] = newCount;
+            if (newCount != 0)
+            {
+                return;
+            }
+
+            // if there are none, then remove and notify
+            result.Remove(value);
+            values.Remove(value);
         }
 
-        private static IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithMatch> changes)
+        foreach (var change in changes)
         {
-            void AddAction(TValue value) =>
-                values.Lookup(value).IfHasValue(count => values[value] = count + 1).Else(
-                    () =>
-                        {
-                            values[value] = 1;
-                            result.Add(value);
-                        });
-
-            void RemoveAction(TValue value)
+            switch (change.Reason)
             {
-                var counter = values.Lookup(value);
-                if (!counter.HasValue)
-                {
-                    return;
-                }
+                case ListChangeReason.Add:
+                    {
+                        var value = change.Item.Current.Value;
+                        AddAction(value);
+                        break;
+                    }
 
-                // decrement counter
-                var newCount = counter.Value - 1;
-                values[value] = newCount;
-                if (newCount != 0)
-                {
-                    return;
-                }
+                case ListChangeReason.AddRange:
+                    {
+                        change.Range.Select(item => item.Value).ForEach(AddAction);
+                        break;
+                    }
 
-                // if there are none, then remove and notify
-                result.Remove(value);
-                values.Remove(value);
-            }
-
-            foreach (var change in changes)
-            {
-                switch (change.Reason)
-                {
-                    case ListChangeReason.Add:
+                case ListChangeReason.Refresh:
+                    {
+                        var value = change.Item.Current.Value;
+                        var previous = change.Item.Current.Previous;
+                        if (value.Equals(previous))
                         {
-                            var value = change.Item.Current.Value;
-                            AddAction(value);
-                            break;
+                            continue;
                         }
 
-                    case ListChangeReason.AddRange:
+                        if (previous is not null)
                         {
-                            change.Range.Select(item => item.Value).ForEach(AddAction);
-                            break;
-                        }
-
-                    case ListChangeReason.Refresh:
-                        {
-                            var value = change.Item.Current.Value;
-                            var previous = change.Item.Current.Previous;
-                            if (value.Equals(previous))
-                            {
-                                continue;
-                            }
-
-                            if (previous is not null)
-                            {
-                                RemoveAction(previous);
-                            }
-
-                            AddAction(value);
-                            break;
-                        }
-
-                    case ListChangeReason.Replace:
-                        {
-                            var value = change.Item.Current.Value;
-                            var previous = change.Item.Previous.Value.Value;
-                            if (value.Equals(previous))
-                            {
-                                continue;
-                            }
-
                             RemoveAction(previous);
-                            AddAction(value);
-                            break;
                         }
 
-                    case ListChangeReason.Remove:
+                        AddAction(value);
+                        break;
+                    }
+
+                case ListChangeReason.Replace:
+                    {
+                        var value = change.Item.Current.Value;
+                        var previous = change.Item.Previous.Value.Value;
+                        if (value.Equals(previous))
                         {
-                            var previous = change.Item.Current.Value;
-                            RemoveAction(previous);
-                            break;
+                            continue;
                         }
 
-                    case ListChangeReason.RemoveRange:
-                        {
-                            change.Range.Select(item => item.Value).ForEach(RemoveAction);
-                            break;
-                        }
+                        RemoveAction(previous);
+                        AddAction(value);
+                        break;
+                    }
 
-                    case ListChangeReason.Clear:
-                        {
-                            result.Clear();
-                            values.Clear();
-                            break;
-                        }
-                }
+                case ListChangeReason.Remove:
+                    {
+                        var previous = change.Item.Current.Value;
+                        RemoveAction(previous);
+                        break;
+                    }
+
+                case ListChangeReason.RemoveRange:
+                    {
+                        change.Range.Select(item => item.Value).ForEach(RemoveAction);
+                        break;
+                    }
+
+                case ListChangeReason.Clear:
+                    {
+                        result.Clear();
+                        values.Clear();
+                        break;
+                    }
             }
-
-            return result.CaptureChanges();
         }
 
-        private sealed class ItemWithMatch : IEquatable<ItemWithMatch>
+        return result.CaptureChanges();
+    }
+
+    private sealed class ItemWithMatch : IEquatable<ItemWithMatch>
+    {
+        public ItemWithMatch(T item, TValue value, TValue? previousValue)
         {
-            public ItemWithMatch(T item, TValue value, TValue? previousValue)
+            Item = item;
+            Value = value;
+            Previous = previousValue;
+        }
+
+        public T Item { get; }
+
+        public TValue? Previous { get; }
+
+        public TValue Value { get; }
+
+        /// <summary>Returns a value that indicates whether the values of two <see cref="Filter{T}.ItemWithMatch" /> objects are equal.</summary>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
+        public static bool operator ==(ItemWithMatch left, ItemWithMatch right)
+        {
+            return Equals(left, right);
+        }
+
+        /// <summary>Returns a value that indicates whether two <see cref="Filter{T}.ItemWithMatch" /> objects have different values.</summary>
+        /// <param name="left">The first value to compare.</param>
+        /// <param name="right">The second value to compare.</param>
+        /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
+        public static bool operator !=(ItemWithMatch left, ItemWithMatch right)
+        {
+            return !Equals(left, right);
+        }
+
+        public bool Equals(ItemWithMatch? other)
+        {
+            if (ReferenceEquals(null, other))
             {
-                Item = item;
-                Value = value;
-                Previous = previousValue;
+                return false;
             }
 
-            public T Item { get; }
-
-            public TValue? Previous { get; }
-
-            public TValue Value { get; }
-
-            /// <summary>Returns a value that indicates whether the values of two <see cref="Filter{T}.ItemWithMatch" /> objects are equal.</summary>
-            /// <param name="left">The first value to compare.</param>
-            /// <param name="right">The second value to compare.</param>
-            /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
-            public static bool operator ==(ItemWithMatch left, ItemWithMatch right)
+            if (ReferenceEquals(this, other))
             {
-                return Equals(left, right);
+                return true;
             }
 
-            /// <summary>Returns a value that indicates whether two <see cref="Filter{T}.ItemWithMatch" /> objects have different values.</summary>
-            /// <param name="left">The first value to compare.</param>
-            /// <param name="right">The second value to compare.</param>
-            /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
-            public static bool operator !=(ItemWithMatch left, ItemWithMatch right)
+            return EqualityComparer<T>.Default.Equals(Item, other.Item);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj))
             {
-                return !Equals(left, right);
+                return false;
             }
 
-            public bool Equals(ItemWithMatch? other)
+            if (ReferenceEquals(this, obj))
             {
-                if (ReferenceEquals(null, other))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, other))
-                {
-                    return true;
-                }
-
-                return EqualityComparer<T>.Default.Equals(Item, other.Item);
+                return true;
             }
 
-            public override bool Equals(object? obj)
+            if (obj.GetType() != GetType())
             {
-                if (ReferenceEquals(null, obj))
-                {
-                    return false;
-                }
-
-                if (ReferenceEquals(this, obj))
-                {
-                    return true;
-                }
-
-                if (obj.GetType() != GetType())
-                {
-                    return false;
-                }
-
-                return Equals((ItemWithMatch)obj);
+                return false;
             }
 
-            public override int GetHashCode()
-            {
-                return Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
-            }
+            return Equals((ItemWithMatch)obj);
+        }
 
-            public override string ToString()
-            {
-                return $"{nameof(Item)}: {Item}, {nameof(Value)}: {Value}, {nameof(Previous)}: {Previous}";
-            }
+        public override int GetHashCode()
+        {
+            return Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(Item)}: {Item}, {nameof(Value)}: {Value}, {nameof(Previous)}: {Previous}";
         }
     }
 }

@@ -5,28 +5,27 @@
 using System;
 using System.Reactive.Linq;
 
-namespace DynamicData.List.Internal
+namespace DynamicData.List.Internal;
+
+internal sealed class MergeMany<T, TDestination>
 {
-    internal sealed class MergeMany<T, TDestination>
+    private readonly Func<T, IObservable<TDestination>> _observableSelector;
+
+    private readonly IObservable<IChangeSet<T>> _source;
+
+    public MergeMany(IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
     {
-        private readonly Func<T, IObservable<TDestination>> _observableSelector;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _observableSelector = observableSelector ?? throw new ArgumentNullException(nameof(observableSelector));
+    }
 
-        private readonly IObservable<IChangeSet<T>> _source;
-
-        public MergeMany(IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _observableSelector = observableSelector ?? throw new ArgumentNullException(nameof(observableSelector));
-        }
-
-        public IObservable<TDestination> Run()
-        {
-            return Observable.Create<TDestination>(
-                observer =>
-                    {
-                        var locker = new object();
-                        return _source.SubscribeMany(t => _observableSelector(t).Synchronize(locker).Subscribe(observer.OnNext)).Subscribe(_ => { }, observer.OnError);
-                    });
-        }
+    public IObservable<TDestination> Run()
+    {
+        return Observable.Create<TDestination>(
+            observer =>
+            {
+                var locker = new object();
+                return _source.SubscribeMany(t => _observableSelector(t).Synchronize(locker).Subscribe(observer.OnNext)).Subscribe(_ => { }, observer.OnError);
+            });
     }
 }

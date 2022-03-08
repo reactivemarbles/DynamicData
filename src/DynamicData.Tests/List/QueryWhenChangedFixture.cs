@@ -6,88 +6,87 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.List
+namespace DynamicData.Tests.List;
+
+public class QueryWhenChangedFixture : IDisposable
 {
-    public class QueryWhenChangedFixture : IDisposable
+    private readonly ChangeSetAggregator<Person> _results;
+
+    private readonly ISourceList<Person> _source;
+
+    public QueryWhenChangedFixture()
     {
-        private readonly ChangeSetAggregator<Person> _results;
+        _source = new SourceList<Person>();
+        _results = new ChangeSetAggregator<Person>(_source.Connect(p => p.Age > 20));
+    }
 
-        private readonly ISourceList<Person> _source;
+    [Fact]
+    public void CanHandleAddsAndUpdates()
+    {
+        bool invoked = false;
+        var subscription = _source.Connect().QueryWhenChanged(q => q.Count).Subscribe(query => invoked = true);
 
-        public QueryWhenChangedFixture()
-        {
-            _source = new SourceList<Person>();
-            _results = new ChangeSetAggregator<Person>(_source.Connect(p => p.Age > 20));
-        }
+        var person = new Person("A", 1);
+        _source.Add(person);
+        _source.Remove(person);
 
-        [Fact]
-        public void CanHandleAddsAndUpdates()
-        {
-            bool invoked = false;
-            var subscription = _source.Connect().QueryWhenChanged(q => q.Count).Subscribe(query => invoked = true);
+        invoked.Should().BeTrue();
+        subscription.Dispose();
+    }
 
-            var person = new Person("A", 1);
-            _source.Add(person);
-            _source.Remove(person);
+    [Fact]
+    public void ChangeInvokedOnNext()
+    {
+        bool invoked = false;
 
-            invoked.Should().BeTrue();
-            subscription.Dispose();
-        }
+        var subscription = _source.Connect().QueryWhenChanged().Subscribe(x => invoked = true);
 
-        [Fact]
-        public void ChangeInvokedOnNext()
-        {
-            bool invoked = false;
+        invoked.Should().BeFalse();
 
-            var subscription = _source.Connect().QueryWhenChanged().Subscribe(x => invoked = true);
+        _source.Add(new Person("A", 1));
+        invoked.Should().BeTrue();
 
-            invoked.Should().BeFalse();
+        subscription.Dispose();
+    }
 
-            _source.Add(new Person("A", 1));
-            invoked.Should().BeTrue();
+    [Fact]
+    public void ChangeInvokedOnNext_WithSelector()
+    {
+        bool invoked = false;
 
-            subscription.Dispose();
-        }
+        var subscription = _source.Connect().QueryWhenChanged(query => query.Count).Subscribe(x => invoked = true);
 
-        [Fact]
-        public void ChangeInvokedOnNext_WithSelector()
-        {
-            bool invoked = false;
+        invoked.Should().BeFalse();
 
-            var subscription = _source.Connect().QueryWhenChanged(query => query.Count).Subscribe(x => invoked = true);
+        _source.Add(new Person("A", 1));
+        invoked.Should().BeTrue();
 
-            invoked.Should().BeFalse();
+        subscription.Dispose();
+    }
 
-            _source.Add(new Person("A", 1));
-            invoked.Should().BeTrue();
+    [Fact]
+    public void ChangeInvokedOnSubscriptionIfItHasData()
+    {
+        bool invoked = false;
+        _source.Add(new Person("A", 1));
+        var subscription = _source.Connect().QueryWhenChanged().Subscribe(x => invoked = true);
+        invoked.Should().BeTrue();
+        subscription.Dispose();
+    }
 
-            subscription.Dispose();
-        }
+    [Fact]
+    public void ChangeInvokedOnSubscriptionIfItHasData_WithSelector()
+    {
+        bool invoked = false;
+        _source.Add(new Person("A", 1));
+        var subscription = _source.Connect().QueryWhenChanged(query => query.Count).Subscribe(x => invoked = true);
+        invoked.Should().BeTrue();
+        subscription.Dispose();
+    }
 
-        [Fact]
-        public void ChangeInvokedOnSubscriptionIfItHasData()
-        {
-            bool invoked = false;
-            _source.Add(new Person("A", 1));
-            var subscription = _source.Connect().QueryWhenChanged().Subscribe(x => invoked = true);
-            invoked.Should().BeTrue();
-            subscription.Dispose();
-        }
-
-        [Fact]
-        public void ChangeInvokedOnSubscriptionIfItHasData_WithSelector()
-        {
-            bool invoked = false;
-            _source.Add(new Person("A", 1));
-            var subscription = _source.Connect().QueryWhenChanged(query => query.Count).Subscribe(x => invoked = true);
-            invoked.Should().BeTrue();
-            subscription.Dispose();
-        }
-
-        public void Dispose()
-        {
-            _source.Dispose();
-            _results.Dispose();
-        }
+    public void Dispose()
+    {
+        _source.Dispose();
+        _results.Dispose();
     }
 }

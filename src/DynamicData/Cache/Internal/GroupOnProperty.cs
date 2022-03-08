@@ -10,49 +10,48 @@ using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class GroupOnProperty<TObject, TKey, TGroup>
+    where TObject : INotifyPropertyChanged
+    where TKey : notnull
+    where TGroup : notnull
 {
-    internal class GroupOnProperty<TObject, TKey, TGroup>
-        where TObject : INotifyPropertyChanged
-        where TKey : notnull
-        where TGroup : notnull
+    private readonly Func<TObject, TGroup> _groupSelector;
+
+    private readonly Expression<Func<TObject, TGroup>> _propertySelector;
+
+    private readonly IScheduler? _scheduler;
+
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+
+    private readonly TimeSpan? _throttle;
+
+    public GroupOnProperty(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)
     {
-        private readonly Func<TObject, TGroup> _groupSelector;
+        _source = source ?? throw new ArgumentNullException(nameof(source));
+        _groupSelector = groupSelectorKey.Compile();
+        _propertySelector = groupSelectorKey;
+        _throttle = throttle;
+        _scheduler = scheduler;
+    }
 
-        private readonly Expression<Func<TObject, TGroup>> _propertySelector;
+    public IObservable<IGroupChangeSet<TObject, TKey, TGroup>> Run()
+    {
+        return _source.Publish(
+            shared =>
+            {
+                // Monitor explicit property changes
+                var regrouper = shared.WhenValueChanged(_propertySelector, false).ToUnit();
 
-        private readonly IScheduler? _scheduler;
+                // add a throttle if specified
+                if (_throttle is not null)
+                {
+                    regrouper = regrouper.Throttle(_throttle.Value, _scheduler ?? Scheduler.Default);
+                }
 
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-        private readonly TimeSpan? _throttle;
-
-        public GroupOnProperty(IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TGroup>> groupSelectorKey, TimeSpan? throttle = null, IScheduler? scheduler = null)
-        {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-            _groupSelector = groupSelectorKey.Compile();
-            _propertySelector = groupSelectorKey;
-            _throttle = throttle;
-            _scheduler = scheduler;
-        }
-
-        public IObservable<IGroupChangeSet<TObject, TKey, TGroup>> Run()
-        {
-            return _source.Publish(
-                shared =>
-                    {
-                        // Monitor explicit property changes
-                        var regrouper = shared.WhenValueChanged(_propertySelector, false).ToUnit();
-
-                        // add a throttle if specified
-                        if (_throttle is not null)
-                        {
-                            regrouper = regrouper.Throttle(_throttle.Value, _scheduler ?? Scheduler.Default);
-                        }
-
-                        // Use property changes as a trigger to re-evaluate Grouping
-                        return shared.Group(_groupSelector, regrouper);
-                    });
-        }
+                // Use property changes as a trigger to re-evaluate Grouping
+                return shared.Group(_groupSelector, regrouper);
+            });
     }
 }

@@ -5,14 +5,13 @@
 using System;
 using System.Reactive.Linq;
 
-namespace DynamicData.Binding
+namespace DynamicData.Binding;
+
+internal static class Observable<T>
 {
-    internal static class Observable<T>
-    {
-        public static IObservable<T?> Default { get; } = Observable.Return<T?>(default);
+    public static IObservable<T?> Default { get; } = Observable.Return<T?>(default);
 
-        public static IObservable<T> Empty { get; } = Observable.Empty<T>();
+    public static IObservable<T> Empty { get; } = Observable.Empty<T>();
 
-        public static IObservable<T> Never { get; } = Observable.Never<T>();
-    }
+    public static IObservable<T> Never { get; } = Observable.Never<T>();
 }

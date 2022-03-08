@@ -2,21 +2,20 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace DynamicData.Aggregation
+namespace DynamicData.Aggregation;
+
+internal readonly struct StdDev<TValue>
 {
-    internal readonly struct StdDev<TValue>
+    public StdDev(int count, TValue sumOfItems, TValue sumOfSquares)
     {
-        public StdDev(int count, TValue sumOfItems, TValue sumOfSquares)
-        {
-            Count = count;
-            SumOfItems = sumOfItems;
-            SumOfSquares = sumOfSquares;
-        }
-
-        public int Count { get; }
-
-        public TValue SumOfItems { get; }
-
-        public TValue SumOfSquares { get; }
+        Count = count;
+        SumOfItems = sumOfItems;
+        SumOfSquares = sumOfSquares;
     }
+
+    public int Count { get; }
+
+    public TValue SumOfItems { get; }
+
+    public TValue SumOfSquares { get; }
 }

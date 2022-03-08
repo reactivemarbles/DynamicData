@@ -5,33 +5,32 @@
 using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+/// <summary>
+/// Provides a filter.
+/// </summary>
+/// <typeparam name="TObject">The type of the object.</typeparam>
+/// <typeparam name="TKey">The type of the field.</typeparam>
+internal interface IFilter<TObject, TKey>
+    where TKey : notnull
 {
     /// <summary>
-    /// Provides a filter.
+    /// Gets the filter to use.
     /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the field.</typeparam>
-    internal interface IFilter<TObject, TKey>
-        where TKey : notnull
-    {
-        /// <summary>
-        /// Gets the filter to use.
-        /// </summary>
-        Func<TObject, bool> Filter { get; }
+    Func<TObject, bool> Filter { get; }
 
-        /// <summary>
-        /// Provides a change set with refreshed items.
-        /// </summary>
-        /// <param name="items">The items to refresh.</param>
-        /// <returns>A change set of the changes.</returns>
-        IChangeSet<TObject, TKey> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items);
+    /// <summary>
+    /// Provides a change set with refreshed items.
+    /// </summary>
+    /// <param name="items">The items to refresh.</param>
+    /// <returns>A change set of the changes.</returns>
+    IChangeSet<TObject, TKey> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items);
 
-        /// <summary>
-        /// Provides a change set with updated items.
-        /// </summary>
-        /// <param name="updates">The items to update.</param>
-        /// <returns>A change set of the changes.</returns>
-        IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates);
-    }
+    /// <summary>
+    /// Provides a change set with updated items.
+    /// </summary>
+    /// <param name="updates">The items to update.</param>
+    /// <returns>A change set of the changes.</returns>
+    IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates);
 }

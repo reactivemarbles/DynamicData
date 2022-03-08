@@ -2,21 +2,20 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace DynamicData
+namespace DynamicData;
+
+/// <summary>
+/// Description of the type of change.
+/// </summary>
+public enum ChangeType
 {
     /// <summary>
-    /// Description of the type of change.
+    /// A single item change.
     /// </summary>
-    public enum ChangeType
-    {
-        /// <summary>
-        /// A single item change.
-        /// </summary>
-        Item,
+    Item,
 
-        /// <summary>
-        /// A multiple item change.
-        /// </summary>
-        Range
-    }
+    /// <summary>
+    /// A multiple item change.
+    /// </summary>
+    Range
 }

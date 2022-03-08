@@ -1,78 +1,77 @@
 ﻿using System;
 
-namespace DynamicData.Tests.Domain
+namespace DynamicData.Tests.Domain;
+
+public class PersonWithGender : IEquatable<PersonWithGender>
 {
-    public class PersonWithGender : IEquatable<PersonWithGender>
+    public PersonWithGender(Person person, string gender)
     {
-        public PersonWithGender(Person person, string gender)
+        Name = person.Name;
+        Age = person.Age;
+        Gender = gender;
+    }
+
+    public PersonWithGender(string name, int age, string gender)
+    {
+        Name = name;
+        Age = age;
+        Gender = gender;
+    }
+
+    public int Age { get; }
+
+    public string Gender { get; }
+
+    public string Name { get; }
+
+    public bool Equals(PersonWithGender? other)
+    {
+        if (ReferenceEquals(null, other))
         {
-            Name = person.Name;
-            Age = person.Age;
-            Gender = gender;
+            return false;
         }
 
-        public PersonWithGender(string name, int age, string gender)
+        if (ReferenceEquals(this, other))
         {
-            Name = name;
-            Age = age;
-            Gender = gender;
+            return true;
         }
 
-        public int Age { get; }
+        return Equals(other.Name, Name) && other.Age == Age && Equals(other.Gender, Gender);
+    }
 
-        public string Gender { get; }
-
-        public string Name { get; }
-
-        public bool Equals(PersonWithGender? other)
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return Equals(other.Name, Name) && other.Age == Age && Equals(other.Gender, Gender);
+            return false;
         }
 
-        public override bool Equals(object? obj)
+        if (ReferenceEquals(this, obj))
         {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj.GetType() != typeof(PersonWithGender))
-            {
-                return false;
-            }
-
-            return Equals((PersonWithGender)obj);
+            return true;
         }
 
-        public override int GetHashCode()
+        if (obj.GetType() != typeof(PersonWithGender))
         {
-            unchecked
-            {
-                int result = (Name is not null ? Name.GetHashCode() : 0);
-                result = (result * 397) ^ Age;
-                result = (result * 397) ^ (Gender is not null ? Gender.GetHashCode() : 0);
-                return result;
-            }
+            return false;
         }
 
-        public override string ToString()
+        return Equals((PersonWithGender)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        unchecked
         {
-            return $"{this.Name}. {this.Age} ({Gender})";
+            int result = (Name is not null ? Name.GetHashCode() : 0);
+            result = (result * 397) ^ Age;
+            result = (result * 397) ^ (Gender is not null ? Gender.GetHashCode() : 0);
+            return result;
         }
+    }
+
+    public override string ToString()
+    {
+        return $"{this.Name}. {this.Age} ({Gender})";
     }
 }

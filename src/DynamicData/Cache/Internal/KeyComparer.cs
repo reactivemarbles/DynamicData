@@ -4,18 +4,17 @@
 
 using System.Collections.Generic;
 
-namespace DynamicData.Cache.Internal
-{
-    internal sealed class KeyComparer<TObject, TKey> : IEqualityComparer<KeyValuePair<TKey, TObject>>
-    {
-        public bool Equals(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
-        {
-            return x.Key?.Equals(y.Key) ?? false;
-        }
+namespace DynamicData.Cache.Internal;
 
-        public int GetHashCode(KeyValuePair<TKey, TObject> obj)
-        {
-            return obj.Key is null ? 0 : obj.Key.GetHashCode();
-        }
+internal sealed class KeyComparer<TObject, TKey> : IEqualityComparer<KeyValuePair<TKey, TObject>>
+{
+    public bool Equals(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
+    {
+        return x.Key?.Equals(y.Key) ?? false;
+    }
+
+    public int GetHashCode(KeyValuePair<TKey, TObject> obj)
+    {
+        return obj.Key is null ? 0 : obj.Key.GetHashCode();
     }
 }

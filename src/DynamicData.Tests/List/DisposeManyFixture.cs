@@ -5,87 +5,86 @@ using FluentAssertions;
 
 using Xunit;
 
-namespace DynamicData.Tests.List
+namespace DynamicData.Tests.List;
+
+public class DisposeManyFixture : IDisposable
 {
-    public class DisposeManyFixture : IDisposable
+    private readonly ChangeSetAggregator<DisposableObject> _results;
+
+    private readonly ISourceList<DisposableObject> _source;
+
+    public DisposeManyFixture()
     {
-        private readonly ChangeSetAggregator<DisposableObject> _results;
+        _source = new SourceList<DisposableObject>();
+        _results = new ChangeSetAggregator<DisposableObject>(_source.Connect().DisposeMany());
+    }
 
-        private readonly ISourceList<DisposableObject> _source;
+    [Fact]
+    public void AddWillNotCallDispose()
+    {
+        _source.Add(new DisposableObject(1));
 
-        public DisposeManyFixture()
+        _results.Messages.Count.Should().Be(1, "Should be 1 updates");
+        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        _results.Data.Items.First().IsDisposed.Should().Be(false, "Should not be disposed");
+    }
+
+    public void Dispose()
+    {
+        _source.Dispose();
+        _results.Dispose();
+    }
+
+    [Fact]
+    public void EverythingIsDisposedWhenStreamIsDisposed()
+    {
+        var toadd = Enumerable.Range(1, 10).Select(i => new DisposableObject(i));
+        _source.AddRange(toadd);
+        _source.Clear();
+
+        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+
+        var itemsCleared = _results.Messages[1].First().Range;
+        itemsCleared.All(d => d.IsDisposed).Should().BeTrue();
+    }
+
+    [Fact]
+    public void RemoveWillCallDispose()
+    {
+        _source.Add(new DisposableObject(1));
+        _source.RemoveAt(0);
+
+        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+        _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
+        _results.Messages[1].First().Item.Current.IsDisposed.Should().Be(true, "Should be disposed");
+    }
+
+    [Fact]
+    public void UpdateWillCallDispose()
+    {
+        _source.Add(new DisposableObject(1));
+        _source.ReplaceAt(0, new DisposableObject(1));
+
+        _results.Messages.Count.Should().Be(2, "Should be 2 updates");
+        _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
+        _results.Messages[1].First().Item.Current.IsDisposed.Should().Be(false, "Current should not be disposed");
+        _results.Messages[1].First().Item.Previous.Value.IsDisposed.Should().Be(true, "Previous should be disposed");
+    }
+
+    private class DisposableObject : IDisposable
+    {
+        public DisposableObject(int id)
         {
-            _source = new SourceList<DisposableObject>();
-            _results = new ChangeSetAggregator<DisposableObject>(_source.Connect().DisposeMany());
+            Id = id;
         }
 
-        [Fact]
-        public void AddWillNotCallDispose()
-        {
-            _source.Add(new DisposableObject(1));
+        public int Id { get; private set; }
 
-            _results.Messages.Count.Should().Be(1, "Should be 1 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-            _results.Data.Items.First().IsDisposed.Should().Be(false, "Should not be disposed");
-        }
+        public bool IsDisposed { get; private set; }
 
         public void Dispose()
         {
-            _source.Dispose();
-            _results.Dispose();
-        }
-
-        [Fact]
-        public void EverythingIsDisposedWhenStreamIsDisposed()
-        {
-            var toadd = Enumerable.Range(1, 10).Select(i => new DisposableObject(i));
-            _source.AddRange(toadd);
-            _source.Clear();
-
-            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-
-            var itemsCleared = _results.Messages[1].First().Range;
-            itemsCleared.All(d => d.IsDisposed).Should().BeTrue();
-        }
-
-        [Fact]
-        public void RemoveWillCallDispose()
-        {
-            _source.Add(new DisposableObject(1));
-            _source.RemoveAt(0);
-
-            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            _results.Data.Count.Should().Be(0, "Should be 0 items in the cache");
-            _results.Messages[1].First().Item.Current.IsDisposed.Should().Be(true, "Should be disposed");
-        }
-
-        [Fact]
-        public void UpdateWillCallDispose()
-        {
-            _source.Add(new DisposableObject(1));
-            _source.ReplaceAt(0, new DisposableObject(1));
-
-            _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-            _results.Data.Count.Should().Be(1, "Should be 1 items in the cache");
-            _results.Messages[1].First().Item.Current.IsDisposed.Should().Be(false, "Current should not be disposed");
-            _results.Messages[1].First().Item.Previous.Value.IsDisposed.Should().Be(true, "Previous should be disposed");
-        }
-
-        private class DisposableObject : IDisposable
-        {
-            public DisposableObject(int id)
-            {
-                Id = id;
-            }
-
-            public int Id { get; private set; }
-
-            public bool IsDisposed { get; private set; }
-
-            public void Dispose()
-            {
-                IsDisposed = true;
-            }
+            IsDisposed = true;
         }
     }
 }

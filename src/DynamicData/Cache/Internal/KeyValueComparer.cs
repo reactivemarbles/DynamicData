@@ -4,45 +4,44 @@
 
 using System.Collections.Generic;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+internal class KeyValueComparer<TObject, TKey> : IComparer<KeyValuePair<TKey, TObject>>
 {
-    internal class KeyValueComparer<TObject, TKey> : IComparer<KeyValuePair<TKey, TObject>>
+    private readonly IComparer<TObject>? _comparer;
+
+    public KeyValueComparer(IComparer<TObject>? comparer = null)
     {
-        private readonly IComparer<TObject>? _comparer;
+        _comparer = comparer;
+    }
 
-        public KeyValueComparer(IComparer<TObject>? comparer = null)
+    public int Compare(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
+    {
+        if (_comparer is not null)
         {
-            _comparer = comparer;
+            int result = _comparer.Compare(x.Value, y.Value);
+
+            if (result != 0)
+            {
+                return result;
+            }
         }
 
-        public int Compare(KeyValuePair<TKey, TObject> x, KeyValuePair<TKey, TObject> y)
+        if (x.Key is null && y.Key is null)
         {
-            if (_comparer is not null)
-            {
-                int result = _comparer.Compare(x.Value, y.Value);
-
-                if (result != 0)
-                {
-                    return result;
-                }
-            }
-
-            if (x.Key is null && y.Key is null)
-            {
-                return 0;
-            }
-
-            if (x.Key is null)
-            {
-                return 1;
-            }
-
-            if (y.Key is null)
-            {
-                return -1;
-            }
-
-            return x.Key.GetHashCode().CompareTo(y.Key.GetHashCode());
+            return 0;
         }
+
+        if (x.Key is null)
+        {
+            return 1;
+        }
+
+        if (y.Key is null)
+        {
+            return -1;
+        }
+
+        return x.Key.GetHashCode().CompareTo(y.Key.GetHashCode());
     }
 }

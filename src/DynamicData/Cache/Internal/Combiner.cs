@@ -9,181 +9,180 @@ using System.Reactive.Disposables;
 
 using DynamicData.Kernel;
 
-namespace DynamicData.Cache.Internal
+namespace DynamicData.Cache.Internal;
+
+/// <summary>
+///     Combines multiple caches using logical operators.
+/// </summary>
+internal sealed class Combiner<TObject, TKey>
+    where TKey : notnull
 {
-    /// <summary>
-    ///     Combines multiple caches using logical operators.
-    /// </summary>
-    internal sealed class Combiner<TObject, TKey>
-        where TKey : notnull
+    private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new();
+
+    private readonly object _locker = new();
+
+    private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
+
+    private readonly CombineOperator _type;
+
+    private readonly Action<IChangeSet<TObject, TKey>> _updatedCallback;
+
+    public Combiner(CombineOperator type, Action<IChangeSet<TObject, TKey>> updatedCallback)
     {
-        private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new();
+        _type = type;
+        _updatedCallback = updatedCallback;
+    }
 
-        private readonly object _locker = new();
-
-        private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
-
-        private readonly CombineOperator _type;
-
-        private readonly Action<IChangeSet<TObject, TKey>> _updatedCallback;
-
-        public Combiner(CombineOperator type, Action<IChangeSet<TObject, TKey>> updatedCallback)
+    public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
+    {
+        // subscribe
+        var disposable = new CompositeDisposable();
+        lock (_locker)
         {
-            _type = type;
-            _updatedCallback = updatedCallback;
+            var caches = Enumerable.Range(0, source.Length).Select(_ => new Cache<TObject, TKey>());
+            _sourceCaches.AddRange(caches);
+
+            foreach (var pair in source.Zip(_sourceCaches, (item, cache) => new { Item = item, Cache = cache }))
+            {
+                var subscription = pair.Item.Subscribe(updates => Update(pair.Cache, updates));
+                disposable.Add(subscription);
+            }
         }
 
-        public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
-        {
-            // subscribe
-            var disposable = new CompositeDisposable();
-            lock (_locker)
-            {
-                var caches = Enumerable.Range(0, source.Length).Select(_ => new Cache<TObject, TKey>());
-                _sourceCaches.AddRange(caches);
+        return disposable;
+    }
 
-                foreach (var pair in source.Zip(_sourceCaches, (item, cache) => new { Item = item, Cache = cache }))
+    private bool MatchesConstraint(TKey key)
+    {
+        switch (_type)
+        {
+            case CombineOperator.And:
                 {
-                    var subscription = pair.Item.Subscribe(updates => Update(pair.Cache, updates));
-                    disposable.Add(subscription);
+                    return _sourceCaches.All(s => s.Lookup(key).HasValue);
                 }
-            }
 
-            return disposable;
-        }
-
-        private bool MatchesConstraint(TKey key)
-        {
-            switch (_type)
-            {
-                case CombineOperator.And:
-                    {
-                        return _sourceCaches.All(s => s.Lookup(key).HasValue);
-                    }
-
-                case CombineOperator.Or:
-                    {
-                        return _sourceCaches.Any(s => s.Lookup(key).HasValue);
-                    }
-
-                case CombineOperator.Xor:
-                    {
-                        return _sourceCaches.Count(s => s.Lookup(key).HasValue) == 1;
-                    }
-
-                case CombineOperator.Except:
-                    {
-                        bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
-                        bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
-                        return first && !others;
-                    }
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(key));
-            }
-        }
-
-        private void Update(Cache<TObject, TKey> cache, IChangeSet<TObject, TKey> updates)
-        {
-            IChangeSet<TObject, TKey> notifications;
-
-            lock (_locker)
-            {
-                // update cache for the individual source
-                cache.Clone(updates);
-
-                // update combined
-                notifications = UpdateCombined(updates);
-            }
-
-            if (notifications.Count != 0)
-            {
-                _updatedCallback(notifications);
-            }
-        }
-
-        private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
-        {
-            // child caches have been updated before we reached this point.
-            foreach (var update in updates)
-            {
-                TKey key = update.Key;
-                switch (update.Reason)
+            case CombineOperator.Or:
                 {
-                    case ChangeReason.Add:
-                    case ChangeReason.Update:
-                        {
-                            // get the current key.
-                            // check whether the item should belong to the cache
-                            var cached = _combinedCache.Lookup(key);
-                            var contained = cached.HasValue;
-                            var match = MatchesConstraint(key);
+                    return _sourceCaches.Any(s => s.Lookup(key).HasValue);
+                }
 
-                            if (match)
+            case CombineOperator.Xor:
+                {
+                    return _sourceCaches.Count(s => s.Lookup(key).HasValue) == 1;
+                }
+
+            case CombineOperator.Except:
+                {
+                    bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
+                    bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
+                    return first && !others;
+                }
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(key));
+        }
+    }
+
+    private void Update(Cache<TObject, TKey> cache, IChangeSet<TObject, TKey> updates)
+    {
+        IChangeSet<TObject, TKey> notifications;
+
+        lock (_locker)
+        {
+            // update cache for the individual source
+            cache.Clone(updates);
+
+            // update combined
+            notifications = UpdateCombined(updates);
+        }
+
+        if (notifications.Count != 0)
+        {
+            _updatedCallback(notifications);
+        }
+    }
+
+    private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
+    {
+        // child caches have been updated before we reached this point.
+        foreach (var update in updates)
+        {
+            TKey key = update.Key;
+            switch (update.Reason)
+            {
+                case ChangeReason.Add:
+                case ChangeReason.Update:
+                    {
+                        // get the current key.
+                        // check whether the item should belong to the cache
+                        var cached = _combinedCache.Lookup(key);
+                        var contained = cached.HasValue;
+                        var match = MatchesConstraint(key);
+
+                        if (match)
+                        {
+                            if (contained)
                             {
-                                if (contained)
-                                {
-                                    if (!ReferenceEquals(update.Current, cached.Value))
-                                    {
-                                        _combinedCache.AddOrUpdate(update.Current, key);
-                                    }
-                                }
-                                else
+                                if (!ReferenceEquals(update.Current, cached.Value))
                                 {
                                     _combinedCache.AddOrUpdate(update.Current, key);
                                 }
                             }
                             else
                             {
-                                if (contained)
-                                {
-                                    _combinedCache.Remove(key);
-                                }
+                                _combinedCache.AddOrUpdate(update.Current, key);
                             }
                         }
-
-                        break;
-
-                    case ChangeReason.Remove:
+                        else
                         {
-                            var cached = _combinedCache.Lookup(key);
-                            var contained = cached.HasValue;
-                            bool shouldBeIncluded = MatchesConstraint(key);
-
-                            if (shouldBeIncluded)
+                            if (contained)
                             {
-                                var firstOne = _sourceCaches.Select(s => s.Lookup(key)).SelectValues().First();
-
-                                if (!cached.HasValue)
-                                {
-                                    _combinedCache.AddOrUpdate(firstOne, key);
-                                }
-                                else if (!ReferenceEquals(firstOne, cached.Value))
-                                {
-                                    _combinedCache.AddOrUpdate(firstOne, key);
-                                }
-                            }
-                            else
-                            {
-                                if (contained)
-                                {
-                                    _combinedCache.Remove(key);
-                                }
+                                _combinedCache.Remove(key);
                             }
                         }
+                    }
 
-                        break;
+                    break;
 
-                    case ChangeReason.Refresh:
+                case ChangeReason.Remove:
+                    {
+                        var cached = _combinedCache.Lookup(key);
+                        var contained = cached.HasValue;
+                        bool shouldBeIncluded = MatchesConstraint(key);
+
+                        if (shouldBeIncluded)
                         {
-                            _combinedCache.Refresh(key);
-                        }
+                            var firstOne = _sourceCaches.Select(s => s.Lookup(key)).SelectValues().First();
 
-                        break;
-                }
+                            if (!cached.HasValue)
+                            {
+                                _combinedCache.AddOrUpdate(firstOne, key);
+                            }
+                            else if (!ReferenceEquals(firstOne, cached.Value))
+                            {
+                                _combinedCache.AddOrUpdate(firstOne, key);
+                            }
+                        }
+                        else
+                        {
+                            if (contained)
+                            {
+                                _combinedCache.Remove(key);
+                            }
+                        }
+                    }
+
+                    break;
+
+                case ChangeReason.Refresh:
+                    {
+                        _combinedCache.Refresh(key);
+                    }
+
+                    break;
             }
-
-            return _combinedCache.CaptureChanges();
         }
+
+        return _combinedCache.CaptureChanges();
     }
 }

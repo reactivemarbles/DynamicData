@@ -12,66 +12,65 @@ using Microsoft.Reactive.Testing;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public class FromAsyncFixture
 {
-    public class FromAsyncFixture
+    public FromAsyncFixture()
     {
-        public FromAsyncFixture()
+        Scheduler = new TestScheduler();
+    }
+
+    public TestScheduler Scheduler { get; }
+
+    [Fact]
+    public void CanLoadFromTask()
+    {
+        Task<IEnumerable<Person>> Loader()
         {
-            Scheduler = new TestScheduler();
+            var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, 1)).ToArray().AsEnumerable();
+
+            return Task.FromResult(items);
         }
 
-        public TestScheduler Scheduler { get; }
+        var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).AsObservableCache();
 
-        [Fact]
-        public void CanLoadFromTask()
+        data.Count.Should().Be(100);
+    }
+
+    [Fact]
+    public void HandlesErrorsInObservable()
+    {
+        Task<IEnumerable<Person>> Loader()
         {
-            Task<IEnumerable<Person>> Loader()
-            {
-                var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, 1)).ToArray().AsEnumerable();
-
-                return Task.FromResult(items);
-            }
-
-            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).AsObservableCache();
-
-            data.Count.Should().Be(100);
+            Task.Delay(100);
+            throw new Exception("Broken");
         }
 
-        [Fact]
-        public void HandlesErrorsInObservable()
+        Exception? error = null;
+
+        var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).Subscribe((changes) => { }, ex => error = ex);
+
+        error.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void HandlesErrorsObservableList()
+    {
+        Task<IEnumerable<Person>> Loader()
         {
-            Task<IEnumerable<Person>> Loader()
-            {
-                Task.Delay(100);
-                throw new Exception("Broken");
-            }
-
-            Exception? error = null;
-
-            var data = Observable.FromAsync((Func<Task<IEnumerable<Person>>>)Loader).ToObservableChangeSet(p => p.Key).Subscribe((changes) => { }, ex => error = ex);
-
-            error.Should().NotBeNull();
+            throw new Exception("Broken");
         }
 
-        [Fact]
-        public void HandlesErrorsObservableList()
-        {
-            Task<IEnumerable<Person>> Loader()
-            {
-                throw new Exception("Broken");
-            }
+        Exception? error = null;
 
-            Exception? error = null;
+        var data = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).Subscribe(changes => { }, ex => error = ex);
 
-            var data = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).Subscribe(changes => { }, ex => error = ex);
+        var data2 = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).AsObservableCache().Connect().Subscribe(changes => { }, ex => error = ex);
 
-            var data2 = Observable.FromAsync(Loader).ToObservableChangeSet(p => p.Key).AsObservableCache().Connect().Subscribe(changes => { }, ex => error = ex);
+        //var subscribed = data.Connect()
+        //    
 
-            //var subscribed = data.Connect()
-            //    
-
-            error.Should().NotBeNull();
-        }
+        error.Should().NotBeNull();
     }
 }

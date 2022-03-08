@@ -7,23 +7,22 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reactive;
 
-namespace DynamicData.Binding
+namespace DynamicData.Binding;
+
+[DebuggerDisplay("ObservablePropertyPart<{" + nameof(_expression) + "}>")]
+internal sealed class ObservablePropertyPart
 {
-    [DebuggerDisplay("ObservablePropertyPart<{" + nameof(_expression) + "}>")]
-    internal sealed class ObservablePropertyPart
+    // ReSharper disable once NotAccessedField.Local
+    private readonly MemberExpression _expression;
+
+    public ObservablePropertyPart(MemberExpression expression)
     {
-        // ReSharper disable once NotAccessedField.Local
-        private readonly MemberExpression _expression;
-
-        public ObservablePropertyPart(MemberExpression expression)
-        {
-            _expression = expression;
-            Factory = expression.CreatePropertyChangedFactory();
-            Accessor = expression.CreateValueAccessor();
-        }
-
-        public Func<object, object> Accessor { get; }
-
-        public Func<object, IObservable<Unit>> Factory { get; }
+        _expression = expression;
+        Factory = expression.CreatePropertyChangedFactory();
+        Accessor = expression.CreateValueAccessor();
     }
+
+    public Func<object, object> Accessor { get; }
+
+    public Func<object, IObservable<Unit>> Factory { get; }
 }

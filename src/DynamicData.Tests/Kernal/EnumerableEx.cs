@@ -1,94 +1,93 @@
 using System;
 using System.Collections.Generic;
 
-namespace DynamicData.Tests.Cache
+namespace DynamicData.Tests.Cache;
+
+public static class EnumerableEx
 {
-    public static class EnumerableEx
+    public static IEnumerable<TResult> CurrentNextZip<T, TResult>(this IEnumerable<T> source, Func<T, T?, TResult> selector)
     {
-        public static IEnumerable<TResult> CurrentNextZip<T, TResult>(this IEnumerable<T> source, Func<T, T?, TResult> selector)
+        if (source is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (selector is null)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
-
-            var enumerator = source.GetEnumerator();
-            if (enumerator.MoveNext())
-            {
-                T curr = enumerator.Current;
-
-                while (enumerator.MoveNext())
-                {
-                    var next = enumerator.Current;
-                    yield return selector(curr, next);
-                    curr = next;
-                }
-
-                yield return selector(curr, default);
-            }
+            throw new ArgumentNullException(nameof(source));
         }
 
-        public static IEnumerable<TResult> PrevCurrentNextZip<T, TResult>(this IEnumerable<T> source, Func<T?, T, T?, TResult> selector)
+        if (selector is null)
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (selector is null)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
-
-            var enumerator = source.GetEnumerator();
-            if (enumerator.MoveNext())
-            {
-                T? prev = default(T);
-                T curr = enumerator.Current;
-
-                while (enumerator.MoveNext())
-                {
-                    var next = enumerator.Current;
-                    yield return selector(prev, curr, next);
-                    prev = curr;
-                    curr = next;
-                }
-
-                yield return selector(prev, curr, default);
-            }
+            throw new ArgumentNullException(nameof(selector));
         }
 
-        public static IEnumerable<TResult> PrevCurrentZip<T, TResult>(this IEnumerable<T> source, Func<T?, T, TResult> selector)
+        var enumerator = source.GetEnumerator();
+        if (enumerator.MoveNext())
         {
-            if (source is null)
+            T curr = enumerator.Current;
+
+            while (enumerator.MoveNext())
             {
-                throw new ArgumentNullException(nameof(source));
+                var next = enumerator.Current;
+                yield return selector(curr, next);
+                curr = next;
             }
 
-            if (selector is null)
+            yield return selector(curr, default);
+        }
+    }
+
+    public static IEnumerable<TResult> PrevCurrentNextZip<T, TResult>(this IEnumerable<T> source, Func<T?, T, T?, TResult> selector)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (selector is null)
+        {
+            throw new ArgumentNullException(nameof(selector));
+        }
+
+        var enumerator = source.GetEnumerator();
+        if (enumerator.MoveNext())
+        {
+            T? prev = default(T);
+            T curr = enumerator.Current;
+
+            while (enumerator.MoveNext())
             {
-                throw new ArgumentNullException(nameof(selector));
+                var next = enumerator.Current;
+                yield return selector(prev, curr, next);
+                prev = curr;
+                curr = next;
             }
 
-            var enumerator = source.GetEnumerator();
-            if (enumerator.MoveNext())
+            yield return selector(prev, curr, default);
+        }
+    }
+
+    public static IEnumerable<TResult> PrevCurrentZip<T, TResult>(this IEnumerable<T> source, Func<T?, T, TResult> selector)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (selector is null)
+        {
+            throw new ArgumentNullException(nameof(selector));
+        }
+
+        var enumerator = source.GetEnumerator();
+        if (enumerator.MoveNext())
+        {
+            T? prev = default(T);
+            T curr = enumerator.Current;
+
+            while (enumerator.MoveNext())
             {
-                T? prev = default(T);
-                T curr = enumerator.Current;
-
-                while (enumerator.MoveNext())
-                {
-                    yield return selector(prev, curr);
-                    prev = curr;
-                }
-
                 yield return selector(prev, curr);
+                prev = curr;
             }
+
+            yield return selector(prev, curr);
         }
     }
 }

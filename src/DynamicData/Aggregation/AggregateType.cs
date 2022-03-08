@@ -2,21 +2,20 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-namespace DynamicData.Aggregation
+namespace DynamicData.Aggregation;
+
+/// <summary>
+/// The type of aggregation.
+/// </summary>
+public enum AggregateType
 {
     /// <summary>
-    /// The type of aggregation.
+    /// The add.
     /// </summary>
-    public enum AggregateType
-    {
-        /// <summary>
-        /// The add.
-        /// </summary>
-        Add,
+    Add,
 
-        /// <summary>
-        /// The remove.
-        /// </summary>
-        Remove
-    }
+    /// <summary>
+    /// The remove.
+    /// </summary>
+    Remove
 }

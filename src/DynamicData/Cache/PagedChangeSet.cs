@@ -9,59 +9,58 @@ using DynamicData.Cache.Internal;
 using DynamicData.Operators;
 
 // ReSharper disable once CheckNamespace
-namespace DynamicData
+namespace DynamicData;
+
+internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>
+    where TKey : notnull
 {
-    internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>
-        where TKey : notnull
+    public static readonly new IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();
+
+    public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
+        : base(updates)
     {
-        public static readonly new IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();
+        Response = response;
+        SortedItems = sortedItems;
+    }
 
-        public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
-            : base(updates)
-        {
-            Response = response;
-            SortedItems = sortedItems;
-        }
+    private PagedChangeSet()
+    {
+        SortedItems = new KeyValueCollection<TObject, TKey>();
+        Response = new PageResponse(0, 0, 0, 0);
+    }
 
-        private PagedChangeSet()
-        {
-            SortedItems = new KeyValueCollection<TObject, TKey>();
-            Response = new PageResponse(0, 0, 0, 0);
-        }
+    public IPageResponse Response { get; }
 
-        public IPageResponse Response { get; }
+    public IKeyValueCollection<TObject, TKey> SortedItems { get; }
 
-        public IKeyValueCollection<TObject, TKey> SortedItems { get; }
+    /// <summary>
+    /// Determines if the two values equal each other.
+    /// </summary>
+    /// <param name="other">The other.</param>
+    /// <returns>If the page change set equals the other.</returns>
+    public bool Equals(PagedChangeSet<TObject, TKey> other)
+    {
+        return SortedItems.SequenceEqual(other.SortedItems);
+    }
 
-        /// <summary>
-        /// Determines if the two values equal each other.
-        /// </summary>
-        /// <param name="other">The other.</param>
-        /// <returns>If the page change set equals the other.</returns>
-        public bool Equals(PagedChangeSet<TObject, TKey> other)
-        {
-            return SortedItems.SequenceEqual(other.SortedItems);
-        }
+    public override bool Equals(object? obj)
+    {
+        return obj is PagedChangeSet<TObject, TKey> value && Equals(value);
+    }
 
-        public override bool Equals(object? obj)
-        {
-            return obj is PagedChangeSet<TObject, TKey> value && Equals(value);
-        }
+    public override int GetHashCode()
+    {
+        return SortedItems.GetHashCode();
+    }
 
-        public override int GetHashCode()
-        {
-            return SortedItems.GetHashCode();
-        }
-
-        /// <summary>
-        /// Returns a <see cref="string"/> that represents the SortedItems <see cref="object"/>.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="string"/> that represents the SortedItems <see cref="object"/>.
-        /// </returns>
-        public override string ToString()
-        {
-            return $"{base.ToString()}, Response: {Response}, SortedItems: {SortedItems}";
-        }
+    /// <summary>
+    /// Returns a <see cref="string"/> that represents the SortedItems <see cref="object"/>.
+    /// </summary>
+    /// <returns>
+    /// A <see cref="string"/> that represents the SortedItems <see cref="object"/>.
+    /// </returns>
+    public override string ToString()
+    {
+        return $"{base.ToString()}, Response: {Response}, SortedItems: {SortedItems}";
     }
 }
