@@ -55,7 +55,7 @@ internal class AddKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject, TKe
 
                 case ListChangeReason.Replace:
                     {
-                        // replace is a remove and add, IFF the keys do not match
+                        // replace is a remove and add, if and only if, the keys do not match
                         var previous = change.Item.Previous.Value;
                         var previousKey = _keySelector(previous);
 
