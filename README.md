@@ -47,6 +47,27 @@ This is a simple example to show how using Dynamic Data's collections and operat
 If you have any questions, want to get involved or would simply like to keep abreast of developments, you are welcome to join the slack community [Reactive UI Slack](https://reactiveui.net/slack). I am also available [@RolandPheasant](https://twitter.com/RolandPheasant) 
 There is a blog at  http://dynamic-data.org/ but alas it is hopelessly out of date.
 
+## Table of Contents
+
+* [Dynamic Data](#dynamic-data)
+  * [Sample Projects](#sample-projects)
+  * [Get in touch](#get-in-touch)
+* [Table of Contents](#table-of-contents)
+* [Create Dynamic Data Collections](#create-dynamic-data-collections)
+  * [The Observable List](#the-observable-list)
+  * [The Observable Cache](#the-observable-cache)
+* [Creating Observable Change Sets](#creating-observable-change-sets)
+  * [Connect to a Cache or List](#connect-to-a-cache-or-list)
+  * [Create an Observable Change Set from an Rx Observable](#create-an-observable-change-set-from-an-rx-observable)
+  * [Create an Observable Change Set from an Rx Observable with an Expiring Cache](#create-an-observable-change-set-from-an-rx-observable-with-an-expiring-cache)
+  * [Create an Observable Change Set from an Observable Collection](#create-an-observable-change-set-from-an-observable-collection)
+  * [Create an Observable Change Set from an Binding List](#create-an-observable-change-set-from-an-binding-list)
+  * [Using the ObservableChangeSet static class](#using-the-observablechangeset-static-class)
+* [Consuming Observable Change Sets](#consuming-observable-change-sets)
+* [Observable list vs observable cache](#observable-list-vs-observable-cache)
+* [History of Dynamic Data](#history-of-dynamic-data)
+* [Want to know more?](#want-to-know-more)
+
 ## Create Dynamic Data Collections
 
 ### The Observable List
