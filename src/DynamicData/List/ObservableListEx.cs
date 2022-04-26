@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -333,6 +333,7 @@ public static class ObservableListEx
     }
 
 #if SUPPORTS_BINDINGLIST
+
     /// <summary>
     /// Binds a clone of the observable change set to the target observable collection.
     /// </summary>
@@ -1116,6 +1117,35 @@ public static class ObservableListEx
         }
 
         return new OnBeingAdded<T>(source, addAction).Run();
+    }
+
+    /// <summary>
+    /// Callback for each item as and when it is being refreshed in the stream.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="refreshAction">The refresh action.</param>
+    /// <returns>An observable which emits a change set with items being added.</returns>
+    public static IObservable<IChangeSet<TObject>> OnItemRefreshed<TObject>(this IObservable<IChangeSet<TObject>> source, Action<TObject> refreshAction)
+    {
+        Action<TObject> refreshAction2 = refreshAction;
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (refreshAction2 == null)
+        {
+            throw new ArgumentNullException(nameof(refreshAction));
+        }
+
+        return source.Do(delegate(IChangeSet<TObject> changes)
+        {
+            changes.Where((Change<TObject> c) => c.Reason == ListChangeReason.Refresh).ForEach(delegate(Change<TObject> c)
+            {
+                refreshAction2(c.Item.Current);
+            });
+        });
     }
 
     /// <summary>

@@ -2825,6 +2825,37 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Callback for each item as and when it is being refreshed in the stream.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="refreshAction">The refresh action.</param>
+    /// <returns>An observable which emits a change set with items being added.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemRefreshed<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> refreshAction) 
+        where TKey : notnull
+    {
+        Action<TObject> refreshAction2 = refreshAction;
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (refreshAction2 == null)
+        {
+            throw new ArgumentNullException(nameof(refreshAction));
+        }
+
+        return source.Do(delegate(IChangeSet<TObject, TKey> changes)
+        {
+            changes.Where((Change<TObject, TKey> c) => c.Reason == ChangeReason.Refresh).ForEach(delegate(Change<TObject, TKey> c)
+            {
+                refreshAction2(c.Current);
+            });
+        });
+    }
+
+    /// <summary>
     /// Callback for each item as and when it is being removed from the stream.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
