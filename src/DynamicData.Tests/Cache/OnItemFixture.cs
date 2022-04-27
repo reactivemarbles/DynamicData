@@ -23,6 +23,22 @@ public class OnItemFixture
     }
 
     [Fact]
+    public void OnItemRefreshedCalled()
+    {
+        var called = false;
+        var source = new SourceCache<Person, int>(x => x.Age);
+
+        var person = new Person("A", 1);
+        source.AddOrUpdate(person);
+
+        source.Connect().AutoRefresh(x=>x.Age).OnItemRefreshed(_ => called = true).Subscribe();
+
+        person.Age += 1;
+
+        Assert.True(called);
+    }
+
+    [Fact]
     public void OnItemRemovedCalled()
     {
         var called = false;
