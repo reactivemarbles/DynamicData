@@ -2827,7 +2827,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="refreshAction">The refresh action.</param>
     /// <returns>An observable which emits a change set with items being added.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> OnItemRefreshed<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> refreshAction) 
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemRefreshed<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> refreshAction)
         where TKey : notnull
     {
         Action<TObject> refreshAction2 = refreshAction;
