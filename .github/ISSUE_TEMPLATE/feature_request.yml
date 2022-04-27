@@ -1,0 +1,36 @@
+name: Feature Request
+description: Create a request for functionality enhancement
+title: "[Feature]: "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Please note although we can't commit to any timeline
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the functionality desired 🐞
+      description: A clear and concise description of what the feature request is.
+      value: "A feature request"
+    validations:
+      required: true
+  - type: textarea
+    id: functionality-steps
+    attributes:
+      label: The steps the functionality will provide
+      description: "Steps of the desired functionality:"
+      value: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: input
+    id: considerations
+    attributes:
+      label: Considerations
+      description: "What attempts have you attempted with the existing functionality?"
+    validations:
+      required: true
