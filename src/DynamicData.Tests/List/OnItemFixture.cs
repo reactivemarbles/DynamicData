@@ -4,7 +4,7 @@ using DynamicData.Tests.Domain;
 
 using Xunit;
 
-namespace DynamicData.Tests.Cache;
+namespace DynamicData.Tests.List;
 
 public class OnItemFixture
 {
@@ -12,13 +12,13 @@ public class OnItemFixture
     public void OnItemAddCalled()
     {
         var called = false;
-        var source = new SourceCache<Person, int>(x => x.Age);
+        var source = new SourceList<Person>();
 
         source.Connect().OnItemAdded(_ => called = true).Subscribe();
 
         var person = new Person("A", 1);
 
-        source.AddOrUpdate(person);
+        source.Add(person);
         Assert.True(called);
     }
 
@@ -26,10 +26,10 @@ public class OnItemFixture
     public void OnItemRefreshedCalled()
     {
         var called = false;
-        var source = new SourceCache<Person, int>(x => x.Age);
+        var source = new SourceList<Person>();
 
         var person = new Person("A", 1);
-        source.AddOrUpdate(person);
+        source.Add(person);
 
         source.Connect().AutoRefresh(x=>x.Age).OnItemRefreshed(_ => called = true).Subscribe();
 
@@ -42,28 +42,13 @@ public class OnItemFixture
     public void OnItemRemovedCalled()
     {
         var called = false;
-        var source = new SourceCache<Person, int>(x => x.Age);
+        var source = new SourceList<Person>();
 
         source.Connect().OnItemRemoved(_ => called = true).Subscribe();
 
         var person = new Person("A", 1);
-        source.AddOrUpdate(person);
+        source.Add(person);
         source.Remove(person);
-        Assert.True(called);
-    }
-
-    [Fact]
-    public void OnItemUpdatedCalled()
-    {
-        var called = false;
-        var source = new SourceCache<Person, int>(x => x.Age);
-
-        source.Connect().OnItemUpdated((x, y) => called = true).Subscribe();
-
-        var person = new Person("A", 1);
-        source.AddOrUpdate(person);
-        var update = new Person("B", 1);
-        source.AddOrUpdate(update);
         Assert.True(called);
     }
 }
