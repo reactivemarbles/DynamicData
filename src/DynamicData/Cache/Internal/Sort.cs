@@ -94,10 +94,7 @@ internal sealed class Sort<TObject, TKey>
         /// </summary>
         /// <param name="changes">The changes.</param>
         /// <returns>The sorted change set.</returns>
-        public ISortedChangeSet<TObject, TKey>? Sort(IChangeSet<TObject, TKey> changes)
-        {
-            return DoSort(SortReason.DataChanged, changes);
-        }
+        public ISortedChangeSet<TObject, TKey>? Sort(IChangeSet<TObject, TKey> changes) => DoSort(SortReason.DataChanged, changes);
 
         /// <summary>
         /// Sorts all data using the specified comparer.
@@ -114,10 +111,7 @@ internal sealed class Sort<TObject, TKey>
         /// Sorts all data using the current comparer.
         /// </summary>
         /// <returns>The sorted change set.</returns>
-        public ISortedChangeSet<TObject, TKey>? Sort()
-        {
-            return DoSort(SortReason.Reorder);
-        }
+        public ISortedChangeSet<TObject, TKey>? Sort() => DoSort(SortReason.Reorder);
 
         /// <summary>
         /// Sorts using the specified sorter. Will return null if there are no changes.
@@ -239,11 +233,6 @@ internal sealed class Sort<TObject, TKey>
             if (_calculator is null)
             {
                 throw new InvalidOperationException("The calculator has not been initialized");
-            }
-
-            if ((sortReason == SortReason.InitialLoad || sortReason == SortReason.DataChanged) && changeSet.Count == 0)
-            {
-                return null;
             }
 
             if (sortReason == SortReason.Reorder && changeSet.Count == 0)
