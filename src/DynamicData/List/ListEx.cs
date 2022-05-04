@@ -251,10 +251,7 @@ public static class ListEx
     /// or
     /// changes.
     /// </exception>
-    public static void Clone<T>(this IList<T> source, IChangeSet<T> changes)
-    {
-        Clone(source, changes, null);
-    }
+    public static void Clone<T>(this IList<T> source, IChangeSet<T> changes) => Clone(source, changes, null);
 
     /// <summary>
     /// Clones the list from the specified change set.
@@ -268,10 +265,7 @@ public static class ListEx
     /// or
     /// changes.
     /// </exception>
-    public static void Clone<T>(this IList<T> source, IChangeSet<T> changes, IEqualityComparer<T>? equalityComparer)
-    {
-        Clone(source, (IEnumerable<Change<T>>)changes, equalityComparer);
-    }
+    public static void Clone<T>(this IList<T> source, IChangeSet<T> changes, IEqualityComparer<T>? equalityComparer) => Clone(source, (IEnumerable<Change<T>>)changes, equalityComparer);
 
     /// <summary>
     /// Clones the list from the specified enumerable of changes.
