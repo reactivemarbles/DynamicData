@@ -138,7 +138,10 @@ internal static class ExpressionBuilder
 
         IEnumerable<string?> GetNames()
         {
-            yield return typeof(TObject).FullName;
+            var type = typeof(TObject);
+
+            yield return type.Assembly.FullName;
+            yield return type.FullName;
             foreach (var member in members.Reverse())
             {
                 yield return member.Member.Name;
