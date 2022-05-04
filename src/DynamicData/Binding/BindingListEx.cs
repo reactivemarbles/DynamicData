@@ -108,7 +108,15 @@ public static class BindingListEx
                         {
                             case ListChangedType.ItemAdded when source[changes.NewIndex] is T newItem:
                                 {
-                                    list.Add(newItem);
+                                    if (changes.NewIndex == -1)
+                                    {
+                                        list.Add(newItem);
+                                    }
+                                    else
+                                    {
+                                        list.Insert(changes.NewIndex, newItem);
+                                    }
+
                                     break;
                                 }
 

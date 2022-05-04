@@ -32,10 +32,7 @@ public class BindingListToChangeSetFixture : IDisposable
         _results.Data.Items.First().Should().Be(1);
     }
 
-    public void Dispose()
-    {
-        _results.Dispose();
-    }
+    public void Dispose() => _results.Dispose();
 
     [Fact]
     public void Duplicates()
@@ -127,6 +124,23 @@ public class BindingListToChangeSetFixture : IDisposable
         var resetNotification = _results.Messages.Last();
         resetNotification.Removes.Should().Be(10);
         resetNotification.Adds.Should().Be(10);
+    }
+
+
+    [Fact]
+    public void InsertInto()
+    {
+        //Fixes https://github.com/reactivemarbles/DynamicData/issues/507
+        var target = new ObservableCollectionExtended<string>();
+
+        var bindingList = new BindingList<string>() { "a", "b", "c", "d" };
+        bindingList.ToObservableChangeSet()
+            .Bind(target)
+            .Subscribe();
+
+        bindingList.Insert(2, "Z at index 2");
+
+        target.Should().BeEquivalentTo("a", "b", "Z at index 2", "c", "d");
     }
 
     private class TestBindingList<T> : BindingList<T>
