@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
-    <NoWarn>$(NoWarn);CS0618;CA1801;CA1063</NoWarn>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <NoWarn>$(NoWarn);CS0618;CA1801;CA1063;CS8767;CS8602; CS8618</NoWarn>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>

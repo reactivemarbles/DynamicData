@@ -1130,7 +1130,7 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(source));
         }
 
-        return new DisposeMany<TObject, TKey>(
+        return new OnBeingRemoved<TObject, TKey>(
             source,
             t =>
             {
@@ -2866,17 +2866,10 @@ public static class ObservableCacheEx
     public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (removeAction is null) throw new ArgumentNullException(nameof(removeAction));
 
-        if (removeAction is null)
-        {
-            throw new ArgumentNullException(nameof(removeAction));
-        }
-
-        return source.Do(changes => changes.Where(c => c.Reason == ChangeReason.Remove).ForEach(c => removeAction(c.Current)));
+        return new OnBeingRemoved<TObject, TKey>(source, removeAction).Run();
     }
 
     /// <summary>
