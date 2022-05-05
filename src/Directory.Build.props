@@ -10,7 +10,7 @@
     <DebugType>embedded</DebugType>
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
-    <Copyright>Copyright (c) Roland Pheasant 2011-2021</Copyright>
+    <Copyright>Copyright (c) Roland Pheasant 2011-2022</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>http://dynamic-data.org</PackageProjectUrl>
     <PackageTags>DynamicData;Dynamic;Data;Rx;Reactive;Observable;Cache;Binding;ObservableCache;ObservableList;ObservableCollection;Collection;Linq</PackageTags>
