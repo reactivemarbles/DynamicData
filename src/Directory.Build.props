@@ -62,7 +62,7 @@
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.4.255" PrivateAssets="all" />	
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
-    <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.406" PrivateAssets="all" />
+    <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.435" PrivateAssets="all" />
     <PackageReference Include="Roslynator.Analyzers" Version="4.1.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
