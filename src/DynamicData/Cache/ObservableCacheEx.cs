@@ -1553,7 +1553,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>A changeset which guarantees a key is only present at most once in the changeset.</returns>
-    public static IObservable<IChangeSet<TObject, TKey>> EnsureUniqueKeys<TObject, TKey>(IObservable<ChangeSet<TObject, TKey>> source)
+    public static IObservable<IChangeSet<TObject, TKey>> EnsureUniqueKeys<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TKey : notnull
     {
         if (source == null)
@@ -1561,32 +1561,9 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(source));
         }
 
-        return source.Select(EnsureUniqueKeys);
+        return new UniquenessEnforcer<TObject, TKey>(source).Run();
     }
 
-    /// <summary>
-    /// Ensures there are no duplicated keys in the changeset.
-    /// </summary>
-    /// <param name="source"> The source change set.</param>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <returns>An observable of  change sets which guarantees a key is only present at most once in each changeset.</returns>
-    public static IChangeSet<TObject, TKey> EnsureUniqueKeys<TObject, TKey>(IChangeSet<TObject, TKey> source)
-        where TKey : notnull
-    {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        var items = source
-            .GroupBy(kvp => kvp.Key)
-            .Select(g => g.Aggregate(Optional<Change<TObject, TKey>>.None, ChangesReducer.Reduce))
-            .Where(x => x.HasValue)
-            .Select(x => x.Value);
-
-        return new ChangeSet<TObject, TKey>(items);
-    }
 
     /// <summary>
     /// Automatically removes items from the cache after the time specified by
