@@ -47,22 +47,4 @@ public class EnsureUniqueKeysFixture
         message1.Count.Should().Be(0);
 
     }
-    
-
-    [Fact]
-    public void RemovesProducesNothing()
-    {
-        _source.Edit(innerCache =>
-        {
-            innerCache.AddOrUpdate(new Person("Me", 20));
-            innerCache.AddOrUpdate(new Person("Me", 21));
-            innerCache.RemoveKey("Me");
-        });
-
-        var message1 = _results.Messages[0];
-        message1.Count.Should().Be(1);
-        message1.First().Current.Age.Should().Be(21);
-        message1.First().Reason.Should().Be(ChangeReason.Add);
-    }
-
 }
