@@ -35,20 +35,35 @@ public class ObservableChangeSetFixture
                     {
                         changeSet.AddOrUpdate(i++);
 
-                        await Task.Delay(10, token);
+                        /*
+                         *  Without ConfigureAwait(false) we get a flakey test which always work when run in isolation
+                         *  but periodically fails when all tests are run. WTAF - I have no idea why but can only speculate
+                         *  that without it the context is returning to the context running and it doesn't get back to it
+                         *  until after the test session ends
+                         */  
+                        await Task.Delay(5, token).ConfigureAwait(false);
                     }
                 },
                 i => i)
             .Select(cs => cs.Select(c => c.Current).ToList());
 
 
-        // take 5 items and do not rely on timings to produce a count as that results in flakey tests
-        using (var sub1 = observable.Take(5).Subscribe(item => result.Add(item)))
-        {
-            await Task.Delay(100);
-        }
+        bool isComplete = false;
+        Exception? error = null;
 
-        result.Should().BeEquivalentTo(new List<int>
+
+        //load list of results
+        var subscriber = observable
+            .Subscribe(item => result.AddRange(item), ex => error = ex, () => isComplete = true);
+
+        //allow some results through
+        await Task.Delay(100);
+
+        isComplete.Should().Be(false);
+        error.Should().BeNull();
+
+        //do not try to be clever with timings because wierd stuff happens in time
+        result.Take(5).Should().BeEquivalentTo(new List<int>
         {
             0,
             1,
@@ -56,6 +71,8 @@ public class ObservableChangeSetFixture
             3,
             4
         });
+
+        subscriber.Dispose();
     }
 
 

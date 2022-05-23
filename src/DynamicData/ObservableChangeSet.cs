@@ -293,7 +293,7 @@ public static class ObservableChangeSet
 
                 try
                 {
-                    await subscribe(cache, ct);
+                    await subscribe(cache, ct).ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {
