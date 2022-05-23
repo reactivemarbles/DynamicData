@@ -39,8 +39,11 @@ internal class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
 
                 // create local backing stores
                 var leftCache = _left.Synchronize(locker).AsObservableCache(false);
-                var rightCache = _right.Synchronize(locker).AsObservableCache(false);
-                var rightGrouped = _right.Synchronize(locker).GroupWithImmutableState(_rightKeySelector).AsObservableCache(false);
+
+                var rightShare = _right.Synchronize(locker).Publish();
+
+                var rightCache = rightShare.AsObservableCache(false);
+                var rightGrouped = rightShare.GroupWithImmutableState(_rightKeySelector).AsObservableCache(false);
 
                 // joined is the final cache
                 var joinedCache = new ChangeAwareCache<TDestination, TRightKey>();
@@ -117,7 +120,7 @@ internal class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
                     return joinedCache.CaptureChanges();
                 });
 
-                return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache);
+                return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache, rightShare.Connect());
             });
     }
 }
