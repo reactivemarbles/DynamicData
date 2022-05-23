@@ -127,7 +127,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <exception cref="ArgumentNullException"><paramref name="collection" /> is null.</exception>
     public void AddRange(IEnumerable<T> collection)
     {
-        var args = new Change<T>(ListChangeReason.AddRange, collection);
+        var args = new Change<T>(ListChangeReason.AddRange, collection, _innerList.Count);
 
         if (args.Range.Count == 0)
         {
