@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reactive.Linq;
 
 using DynamicData.Tests.Domain;
@@ -157,4 +158,34 @@ public class SourceCacheFixture : IDisposable
         change.Should().NotBeNull();
         change!.Count.Should().Be(0);
     }
+
+
+
+    [Fact]
+    public void StaticFilterRemove()
+    {
+        var cache = new SourceCache<SomeObject, int>(x => x.Id);
+        
+        var above5 = cache.Connect(x => x.Value > 5).AsObservableCache();
+        var below5 = cache.Connect(x => x.Value <= 5).AsObservableCache();
+
+        cache.AddOrUpdate(Enumerable.Range(1,10).Select(i=> new SomeObject(i,i)));
+
+
+        above5.Items.Should().BeEquivalentTo(Enumerable.Range(6, 5).Select(i => new SomeObject(i, i)));
+        below5.Items.Should().BeEquivalentTo(Enumerable.Range(1, 5).Select(i => new SomeObject(i, i)));
+
+        //should move from above 5 to below 5
+        cache.AddOrUpdate(new SomeObject(6,-1));
+
+        above5.Count.Should().Be(4);
+        below5.Count.Should().Be(6);
+
+
+        above5.Items.Should().BeEquivalentTo(Enumerable.Range(7, 4).Select(i => new SomeObject(i, i)));
+        below5.Items.Should().BeEquivalentTo(Enumerable.Range(1, 6).Select(i => new SomeObject(i, i == 6 ? -1 : i)));
+    }
+
+    public record class SomeObject(int Id, int Value);
+
 }
