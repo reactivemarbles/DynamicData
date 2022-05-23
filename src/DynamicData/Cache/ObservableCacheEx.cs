@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-#pragma warning disable SA1137
-
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -23,6 +21,7 @@ namespace DynamicData;
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "SA1137: Avoid different indentations", Justification = "Deliberate")]
 public static class ObservableCacheEx
 {
     private const int DefaultSortResetThreshold = 100;
@@ -1544,6 +1543,24 @@ public static class ObservableCacheEx
         where TKey : notnull
     {
         return ExpireAfter(source, timeSelector, interval, Scheduler.Default);
+    }
+
+    /// <summary>
+    /// Ensures there are no duplicated keys in the observable changeset.
+    /// </summary>
+    /// <param name="source"> The source change set.</param>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>A changeset which guarantees a key is only present at most once in the changeset.</returns>
+    public static IObservable<IChangeSet<TObject, TKey>> EnsureUniqueKeys<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TKey : notnull
+    {
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        return new UniquenessEnforcer<TObject, TKey>(source).Run();
     }
 
     /// <summary>
@@ -5691,5 +5708,3 @@ public static class ObservableCacheEx
         return new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
     }
 }
-
-#pragma warning restore SA1137
