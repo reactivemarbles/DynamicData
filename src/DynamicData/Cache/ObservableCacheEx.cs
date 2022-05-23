@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-#pragma warning disable SA1137
-
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -23,6 +21,7 @@ namespace DynamicData;
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "SA1137: Avoid different indentations", Justification = "Deliberate")]
 public static class ObservableCacheEx
 {
     private const int DefaultSortResetThreshold = 100;
@@ -1563,7 +1562,6 @@ public static class ObservableCacheEx
 
         return new UniquenessEnforcer<TObject, TKey>(source).Run();
     }
-
 
     /// <summary>
     /// Automatically removes items from the cache after the time specified by
@@ -5710,5 +5708,3 @@ public static class ObservableCacheEx
         return new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
     }
 }
-
-#pragma warning restore SA1137
