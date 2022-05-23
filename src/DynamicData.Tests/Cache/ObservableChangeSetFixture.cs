@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -15,6 +16,66 @@ namespace DynamicData.Tests.Cache;
 
 public class ObservableChangeSetFixture
 {
+
+    [Fact]
+    [Description(" See https://github.com/reactivemarbles/DynamicData/issues/383")]
+    public async Task AsyncSubscriptionCanReceiveMultipleResults()
+    {
+
+        //the aim of this test is to ensure we can continuously receive subscriptions when we use the async subscribe overloads
+        var result = new List<int>();
+
+
+        var observable = ObservableChangeSet.Create<int, int>(
+                async (changeSet, token) =>
+                {
+                    int i = 0;
+
+                    while (!token.IsCancellationRequested)
+                    {
+                        changeSet.AddOrUpdate(i++);
+
+                        /*
+                         *  Without ConfigureAwait(false) we get a flakey test which always work when run in isolation
+                         *  but periodically fails when all tests are run. WTAF - I have no idea why but can only speculate
+                         *  that without it the context is returning to the context of the test runner and it doesn't get back to it
+                         *  until after the test session ends
+                         */  
+                        await Task.Delay(5, token).ConfigureAwait(false);
+                    }
+                },
+                i => i)
+            .Select(cs => cs.Select(c => c.Current).ToList());
+
+
+        bool isComplete = false;
+        Exception? error = null;
+
+
+        //load list of results
+        var subscriber = observable
+            .Subscribe(item => result.AddRange(item), ex => error = ex, () => isComplete = true);
+
+        //allow some results through
+        await Task.Delay(100);
+
+        isComplete.Should().Be(false);
+        error.Should().BeNull();
+
+        //do not try to be clever with timings because wierd stuff happens in time
+        result.Take(5).Should().BeEquivalentTo(new List<int>
+        {
+            0,
+            1,
+            2,
+            3,
+            4
+        });
+
+        subscriber.Dispose();
+    }
+
+
     [Fact]
     public void HandlesAsyncError()
     {
