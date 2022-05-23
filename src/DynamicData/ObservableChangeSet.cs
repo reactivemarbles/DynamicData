@@ -106,7 +106,7 @@ public static class ObservableChangeSet
             throw new ArgumentNullException(nameof(keySelector));
         }
 
-        return Create(async (list, _) => await subscribe(list).ConfigureAwait(false), keySelector);
+        return Create(async (cache, _) => await subscribe(cache).ConfigureAwait(false), keySelector);
     }
 
     /// <summary>
@@ -135,6 +135,7 @@ public static class ObservableChangeSet
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
                 var disposable = new SingleAssignmentDisposable();
+                var responder = cache.Connect().SubscribeSafe(observer);
 
                 try
                 {
@@ -145,7 +146,7 @@ public static class ObservableChangeSet
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer), cache, disposable, Disposable.Create(observer.OnCompleted));
+                return new CompositeDisposable(responder, cache, disposable, Disposable.Create(observer.OnCompleted));
             });
     }
 
@@ -170,7 +171,7 @@ public static class ObservableChangeSet
             throw new ArgumentNullException(nameof(keySelector));
         }
 
-        return Create((list, _) => subscribe(list), keySelector);
+        return Create((cache, _) => subscribe(cache), keySelector);
     }
 
     /// <summary>
@@ -198,6 +199,8 @@ public static class ObservableChangeSet
             async (observer, ct) =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
+                var responder = cache.Connect().SubscribeSafe(observer);
+
                 Action? disposeAction = null;
 
                 try
@@ -210,7 +213,7 @@ public static class ObservableChangeSet
                 }
 
                 return new CompositeDisposable(
-                    cache.Connect().SubscribeSafe(observer),
+                    responder,
                     cache,
                     Disposable.Create(
                         () =>
@@ -246,6 +249,7 @@ public static class ObservableChangeSet
             async observer =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
+                var responder = cache.Connect().SubscribeSafe(observer);
 
                 try
                 {
@@ -256,7 +260,7 @@ public static class ObservableChangeSet
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer), cache, Disposable.Create(observer.OnCompleted));
+                return new CompositeDisposable(responder, cache, Disposable.Create(observer.OnCompleted));
             });
     }
 
@@ -285,17 +289,18 @@ public static class ObservableChangeSet
             async (observer, ct) =>
             {
                 var cache = new SourceCache<TObject, TKey>(keySelector);
+                var responder = cache.Connect().SubscribeSafe(observer);
 
                 try
                 {
-                    await subscribe(cache, ct).ConfigureAwait(false);
+                    await subscribe(cache, ct);
                 }
                 catch (Exception e)
                 {
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(cache.Connect().SubscribeSafe(observer), cache, Disposable.Create(observer.OnCompleted));
+                return new CompositeDisposable(responder, cache, Disposable.Create(observer.OnCompleted));
             });
     }
 
@@ -395,6 +400,7 @@ public static class ObservableChangeSet
                 var list = new SourceList<T>();
                 IDisposable? disposeAction = null;
                 SingleAssignmentDisposable actionDisposable = new();
+                var responder = list.Connect().SubscribeSafe(observer);
 
                 try
                 {
@@ -406,7 +412,7 @@ public static class ObservableChangeSet
                 }
 
                 return new CompositeDisposable(
-                    list.Connect().SubscribeSafe(observer),
+                    responder,
                     list,
                     actionDisposable,
                     Disposable.Create(
@@ -451,6 +457,8 @@ public static class ObservableChangeSet
             async (observer, ct) =>
             {
                 var list = new SourceList<T>();
+                var responder = list.Connect().SubscribeSafe(observer);
+
                 Action? disposeAction = null;
 
                 try
@@ -463,7 +471,7 @@ public static class ObservableChangeSet
                 }
 
                 return new CompositeDisposable(
-                    list.Connect().SubscribeSafe(observer),
+                    responder,
                     list,
                     Disposable.Create(
                         () =>
@@ -491,6 +499,7 @@ public static class ObservableChangeSet
             async observer =>
             {
                 var list = new SourceList<T>();
+                var responder = list.Connect().SubscribeSafe(observer);
 
                 try
                 {
@@ -501,7 +510,7 @@ public static class ObservableChangeSet
                     observer.OnError(e);
                 }
 
-                return new CompositeDisposable(list.Connect().SubscribeSafe(observer), list, Disposable.Create(observer.OnCompleted));
+                return new CompositeDisposable(responder, list, Disposable.Create(observer.OnCompleted));
             });
     }
 

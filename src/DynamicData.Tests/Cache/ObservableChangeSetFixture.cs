@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -15,6 +16,49 @@ namespace DynamicData.Tests.Cache;
 
 public class ObservableChangeSetFixture
 {
+
+    [Fact]
+    [Description(" See https://github.com/reactivemarbles/DynamicData/issues/383")]
+    public async Task AsyncSubscriptionCanReceiveMultipleResults()
+    {
+
+        //the aim of this test is to ensure we can continuously receive subscriptions when we use the async subscribe overloads
+        var result = new List<int>();
+
+
+        var observable = ObservableChangeSet.Create<int, int>(
+                async (changeSet, token) =>
+                {
+                    int i = 0;
+
+                    while (!token.IsCancellationRequested)
+                    {
+                        changeSet.AddOrUpdate(i++);
+
+                        await Task.Delay(10, token);
+                    }
+                },
+                i => i)
+            .Select(cs => cs.Select(c => c.Current).ToList());
+
+
+        // take 5 items and do not rely on timings to produce a count as that results in flakey tests
+        using (var sub1 = observable.Take(5).Subscribe(item => result.Add(item)))
+        {
+            await Task.Delay(100);
+        }
+
+        result.Should().BeEquivalentTo(new List<int>
+        {
+            0,
+            1,
+            2,
+            3,
+            4
+        });
+    }
+
+
     [Fact]
     public void HandlesAsyncError()
     {
