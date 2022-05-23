@@ -127,6 +127,7 @@ public class FilterFixture : IDisposable
         _results.Data.Count.Should().Be(0, "Should be nothing cached");
     }
 
+
     public void Dispose()
     {
         _source.Dispose();
