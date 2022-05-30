@@ -2,9 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
+using System.Diagnostics;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -16,6 +14,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
+[DebuggerDisplay("SourceCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 public sealed class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey>
     where TKey : notnull
 {

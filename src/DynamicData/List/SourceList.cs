@@ -2,8 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -17,6 +16,7 @@ namespace DynamicData;
 /// An editable observable list.
 /// </summary>
 /// <typeparam name="T">The type of the object.</typeparam>
+[DebuggerDisplay("SourceList<{typeof(T).Name}> ({Count} Items)")]
 public sealed class SourceList<T> : ISourceList<T>
 {
     private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();

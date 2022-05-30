@@ -2,11 +2,11 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace DynamicData.List.Internal;
 
+[DebuggerDisplay("AnonymousObservableList<{typeof(T).Name}> ({Count} Items)")]
 internal sealed class AnonymousObservableList<T> : IObservableList<T>
 {
     private readonly ISourceList<T> _sourceList;
@@ -21,10 +21,7 @@ internal sealed class AnonymousObservableList<T> : IObservableList<T>
         _sourceList = new SourceList<T>(source);
     }
 
-    public AnonymousObservableList(ISourceList<T> sourceList)
-    {
-        _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
-    }
+    public AnonymousObservableList(ISourceList<T> sourceList) => _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
 
     public int Count => _sourceList.Count;
 

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -19,6 +20,7 @@ namespace DynamicData.Cache.Internal;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
+[DebuggerDisplay("LockFreeObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     where TKey : notnull
 {
