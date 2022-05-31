@@ -4,11 +4,12 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
+[DebuggerDisplay("AnonymousObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
     where TKey : notnull
 {

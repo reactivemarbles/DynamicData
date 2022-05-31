@@ -45,7 +45,7 @@ internal sealed class GroupOn<TObject, TGroupKey>
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
-                IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> regrouper = _regrouper is null ?
+                var regrouper = _regrouper is null ?
                     Observable.Never<IChangeSet<IGroup<TObject, TGroupKey>>>() :
                     _regrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 

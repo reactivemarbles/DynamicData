@@ -4,7 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-
+using System.Diagnostics;
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -16,6 +16,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
+[DebuggerDisplay("IntermediateCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 public sealed class IntermediateCache<TObject, TKey> : IIntermediateCache<TObject, TKey>
     where TKey : notnull
 {
