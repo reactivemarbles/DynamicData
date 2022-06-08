@@ -29,11 +29,6 @@ public class ToObservableChangeSetFixtureWithCompletion : IDisposable
         _disposable = _observable.ToObservableChangeSet(p => p.Key).Clone(_target).Subscribe(x => { }, () => _hasCompleted = true);
     }
 
-    public void Dispose()
-    {
-        _disposable.Dispose();
-    }
-
     [Fact]
     public void ShouldReceiveUpdatesThenComplete()
     {
@@ -48,4 +43,6 @@ public class ToObservableChangeSetFixtureWithCompletion : IDisposable
         _observable.OnNext(new Person("Three", 3));
         _target.Count.Should().Be(2);
     }
+
+    public void Dispose() => _disposable.Dispose();
 }

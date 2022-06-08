@@ -95,7 +95,7 @@ public class ObservableChangeSetFixture
             },
             p => p.Name);
 
-        using (var dervived = observable.AsObservableCache())
+        using var dervived = observable.AsObservableCache();
         using (dervived.Connect().Subscribe(_ => { }, ex => error = ex))
         {
             error.Should().NotBeNull();
@@ -121,8 +121,8 @@ public class ObservableChangeSetFixture
             },
             p => p.Name);
 
-        using (var dervived = observable.AsObservableCache())
-        using (dervived.Connect().Subscribe(_ => { }, ex => error = ex))
+        using var derived = observable.AsObservableCache();
+        using (derived.Connect().Subscribe(_ => { }, ex => error = ex))
         {
             error.Should().NotBeNull();
         }

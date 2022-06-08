@@ -37,9 +37,7 @@ internal class ToObservableChangeSet<T>
         _scheduler = scheduler ?? Scheduler.Default;
     }
 
-    public IObservable<IChangeSet<T>> Run()
-    {
-        return Observable.Create<IChangeSet<T>>(
+    public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
                 if (_expireAfter is null && _limitSizeTo < 1)
@@ -109,7 +107,6 @@ internal class ToObservableChangeSet<T>
 
                 return new CompositeDisposable(publisher, sizeLimited.Connect());
             });
-    }
 
     private ExpirableItem<T> CreateExpirableItem(T latest, ref long orderItemWasAdded)
     {

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reactive.Subjects;
-
+using System.Threading.Tasks;
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
@@ -60,7 +61,13 @@ public class EnumerableObservableToObservableChangeSetFixture
     public void OnNextProducesAnAddAndRemoveChangeForEnumerableSource()
     {
         var subject = new Subject<IEnumerable<Person>>();
-        var results = subject.ToObservableChangeSet(p => p.Name).AsAggregator();
+
+        var results = ObservableChangeSet.Create<Person, string>(cache =>
+            {
+                return subject.Subscribe(items => cache.EditDiff(items, Person.NameAgeGenderComparer));
+            }, p => p.Name)
+            .AsAggregator();
+
 
         var people = new[]
         {
@@ -84,7 +91,7 @@ public class EnumerableObservableToObservableChangeSetFixture
 
         results.Messages.Last().Adds.Should().Be(0, "Should have added no items");
         results.Messages.Last().Updates.Should().Be(2, "Should have updated 2 items");
-        results.Messages.Last().Removes.Should().Be(1, "Should have removed 1 items");
+         results.Messages.Last().Removes.Should().Be(1, "Should have removed 1 items");
         results.Data.Count.Should().Be(2, "Should be 3 items in the cache");
 
         results.Messages.Count.Should().Be(2, "Should be 2 updates");
@@ -109,5 +116,26 @@ public class EnumerableObservableToObservableChangeSetFixture
         results.Messages.Count.Should().Be(1, "Should be 1 updates");
         results.Data.Count.Should().Be(3, "Should be 1 item in the cache");
         results.Data.Items.Should().BeEquivalentTo(results.Data.Items, "Lists should be equivalent");
+    }
+
+
+
+    [Fact]
+    public void ExpireAfterObservableCompleted()
+    {
+        //See https://github.com/reactivemarbles/DynamicData/issues/358
+
+        var scheduler = new TestScheduler();
+
+        var expiry =  Observable.Return(Enumerable.Range(0, 10).Select(i => new { A = i, B = 2 * i }))
+            .ToObservableChangeSet(x => x.A, _ => TimeSpan.FromSeconds(5), scheduler: scheduler)
+            .AsAggregator();
+
+        expiry.Data.Count.Should().Be(10);
+
+        scheduler.AdvanceBy(TimeSpan.FromSeconds(5).Ticks);
+
+        expiry.Data.Count.Should().Be(0);
+
     }
 }
