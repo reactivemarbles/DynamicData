@@ -2,20 +2,17 @@
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
 using FluentAssertions;
-
 using Microsoft.Reactive.Testing;
-
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
 public class ObservableToObservableChangeSetFixture
 {
+
     [Fact]
     public void ExpireAfterTime()
     {
@@ -52,6 +49,7 @@ public class ObservableToObservableChangeSetFixture
         results.Messages.Sum(x => x.Removes).Should().Be(20, "Should be 20 removes");
         results.Data.Count.Should().Be(10, "Should be 10 items in the cache");
     }
+
 
     [Fact]
     public void ExpireAfterTimeDynamicWithKey()

@@ -2,15 +2,9 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
-
-using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
@@ -40,81 +34,64 @@ internal class ToObservableChangeSet<T>
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
-                if (_expireAfter is null && _limitSizeTo < 1)
-                {
-                    return _source.Scan(
-                        new ChangeAwareList<T>(),
-                        (state, latest) =>
-                        {
-                            var items = latest.AsArray();
-                            if (items.Length == 1)
-                            {
-                                state.Add(items);
-                            }
-                            else
-                            {
-                                state.AddRange(items);
-                            }
-
-                            return state;
-                        }).Select(state => state.CaptureChanges()).SubscribeSafe(observer);
-                }
-
-                long orderItemWasAdded = -1;
                 var locker = new object();
 
-                var sourceList = new ChangeAwareList<ExpirableItem<T>>();
+                var dataSource = new SourceList<T>();
 
-                var sizeLimited = _source.Synchronize(locker).Scan(
-                    sourceList,
-                    (state, latest) =>
+                // load local data source with current items
+                var populator = _source.Synchronize(locker)
+                    .Subscribe(items =>
                     {
-                        var items = latest.AsArray();
-                        var expirable = items.Select(t => CreateExpirableItem(t, ref orderItemWasAdded));
-
-                        if (items.Length == 1)
+                        dataSource.Edit(innerList =>
                         {
-                            sourceList.Add(expirable);
-                        }
-                        else
+                            innerList.AddRange(items);
+
+                            if (_limitSizeTo > 0 && innerList.Count > _limitSizeTo)
+                            {
+                                // remove oldest items [these will always be the first x in the list]
+                                var toRemove = innerList.Count - _limitSizeTo;
+                                innerList.RemoveRange(0, toRemove);
+                            }
+                        });
+
+                    }, observer.OnError);
+
+                // handle time expiration
+                var timeExpiryDisposer = new CompositeDisposable();
+
+                DateTime Trim(DateTime date, long ticks) => new(date.Ticks - (date.Ticks % ticks), date.Kind);
+
+                if (_expireAfter is not null)
+                {
+                    var expiry = dataSource.Connect()
+                        .Transform(t =>
                         {
-                            sourceList.AddRange(expirable);
-                        }
+                            var removeAt = _expireAfter?.Invoke(t);
 
-                        if (_limitSizeTo > 0 && state.Count > _limitSizeTo)
+                            if (removeAt is null)
+                                return (Item: t, ExpireAt: DateTime.MaxValue);
+
+                            // get absolute expiry, and round by milliseconds to we can attempt to batch as many items into a single group
+                            var expireTime = Trim(_scheduler.Now.UtcDateTime.Add(removeAt.Value), TimeSpan.TicksPerMillisecond);
+
+                            return (Item: t, ExpireAt: expireTime);
+                        })
+                        .Filter(ei => ei.ExpireAt != DateTime.MaxValue)
+                        .GroupWithImmutableState(ei => ei.ExpireAt)
+                        .MergeMany(grouping => Observable.Timer(grouping.Key, _scheduler).Select(_ => grouping.Items.Select(x => x.Item).ToArray()))
+                        .Synchronize(locker)
+                        .Subscribe(items =>
                         {
-                            // remove oldest items [these will always be the first x in the list]
-                            var toRemove = state.Count - _limitSizeTo;
-                            state.RemoveRange(0, toRemove);
-                        }
+                            dataSource.RemoveMany(items);
+                        });
 
-                        return state;
-                    }).Select(state => state.CaptureChanges()).Publish();
+                    timeExpiryDisposer.Add(expiry);
+                }
 
-                var timeLimited = (_expireAfter is null ? Observable.Never<IChangeSet<ExpirableItem<T>>>() : sizeLimited).Filter(ei => ei.ExpireAt != DateTime.MaxValue).GroupWithImmutableState(ei => ei.ExpireAt).MergeMany(
-                    grouping =>
-                    {
-                        var expireAt = grouping.Key.Subtract(_scheduler.Now.DateTime);
-                        return Observable.Timer(expireAt, _scheduler).Select(_ => grouping);
-                    }).Synchronize(locker).Select(
-                    grouping =>
-                    {
-                        sourceList.RemoveMany(grouping.Items);
-                        return sourceList.CaptureChanges();
-                    });
-
-                var publisher = sizeLimited.Merge(timeLimited).Cast(ei => ei.Item).NotEmpty().SubscribeSafe(observer);
-
-                return new CompositeDisposable(publisher, sizeLimited.Connect());
+                return new CompositeDisposable(
+                    dataSource,
+                    populator,
+                    timeExpiryDisposer,
+                    dataSource.Connect().SubscribeSafe(observer));
             });
-
-    private ExpirableItem<T> CreateExpirableItem(T latest, ref long orderItemWasAdded)
-    {
-        // check whether expiry has been set for any items
-        var dateTime = _scheduler.Now.DateTime;
-        var removeAt = _expireAfter?.Invoke(latest);
-        var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;
-
-        return new ExpirableItem<T>(latest, expireAt, Interlocked.Increment(ref orderItemWasAdded));
-    }
 }

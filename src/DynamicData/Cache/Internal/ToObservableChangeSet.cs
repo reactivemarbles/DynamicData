@@ -43,7 +43,6 @@ internal class ToObservableChangeSet<TObject, TKey>
     {
         return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            long orderItemWasAdded = -1;
             var locker = new object();
 
             var dataSource = new SourceCache<TObject, TKey>(_keySelector);
@@ -57,6 +56,8 @@ internal class ToObservableChangeSet<TObject, TKey>
 
             if (_limitSizeTo > 0)
             {
+                long orderItemWasAdded = -1;
+
                 var transformed = dataSource.Connect()
                     .Transform(t => (Item: t, Order: Interlocked.Increment(ref orderItemWasAdded)))
                     .AsObservableCache();
@@ -96,7 +97,7 @@ internal class ToObservableChangeSet<TObject, TKey>
                             return (Item: t, ExpireAt: DateTime.MaxValue);
 
                         // get absolute expiry, and round by milliseconds to we can attempt to batch as many items into a single group
-                        var expireTime = Trim(_scheduler.Now.DateTime.Add(removeAt.Value), TimeSpan.TicksPerMillisecond);
+                        var expireTime = Trim(_scheduler.Now.UtcDateTime.Add(removeAt.Value), TimeSpan.TicksPerMillisecond);
 
                         return (Item: t, ExpireAt: expireTime);
                     })

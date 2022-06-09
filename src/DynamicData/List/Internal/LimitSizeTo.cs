@@ -34,7 +34,7 @@ internal sealed class LimitSizeTo<T>
         var emptyResult = new List<T>();
         long orderItemWasAdded = -1;
 
-        return _sourceList.Connect().ObserveOn(_scheduler).Synchronize(_locker).Transform(t => new ExpirableItem<T>(t, _scheduler.Now.DateTime, Interlocked.Increment(ref orderItemWasAdded))).ToCollection().Select(
+        return _sourceList.Connect().ObserveOn(_scheduler).Synchronize(_locker).Transform(t => new ExpirableItem<T>(t, _scheduler.Now.UtcDateTime, Interlocked.Increment(ref orderItemWasAdded))).ToCollection().Select(
             list =>
             {
                 var numberToExpire = list.Count - _sizeLimit;

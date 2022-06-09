@@ -75,7 +75,7 @@ internal class TimeExpirer<TObject, TKey>
             {
                 var dateTime = DateTime.Now;
 
-                var autoRemover = _source.Do(_ => dateTime = _scheduler.Now.DateTime).Transform(
+                var autoRemover = _source.Do(_ => dateTime = _scheduler.Now.UtcDateTime).Transform(
                     (t, v) =>
                     {
                         var removeAt = _timeSelector(t);
@@ -87,7 +87,7 @@ internal class TimeExpirer<TObject, TKey>
                 {
                     try
                     {
-                        var toRemove = autoRemover.KeyValues.Where(kv => kv.Value.ExpireAt <= _scheduler.Now.DateTime).ToList();
+                        var toRemove = autoRemover.KeyValues.Where(kv => kv.Value.ExpireAt <= _scheduler.Now.UtcDateTime).ToList();
 
                         observer.OnNext(toRemove.Select(kv => new KeyValuePair<TKey, TObject>(kv.Key, kv.Value.Value)).ToList());
                     }
@@ -109,7 +109,7 @@ internal class TimeExpirer<TObject, TKey>
                     removalSubscription.Disposable = autoRemover.Connect().DistinctValues(ei => ei.ExpireAt).SubscribeMany(
                         datetime =>
                         {
-                            var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
+                            var expireAt = datetime.Subtract(_scheduler.Now.UtcDateTime);
                             return Observable.Timer(expireAt, _scheduler).Take(1).Subscribe(_ => RemovalAction());
                         }).Subscribe();
                 }
