@@ -2,20 +2,17 @@
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
-
 using FluentAssertions;
-
 using Microsoft.Reactive.Testing;
-
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
 public class ObservableToObservableChangeSetFixture
 {
+
     [Fact]
     public void ExpireAfterTime()
     {
@@ -53,6 +50,7 @@ public class ObservableToObservableChangeSetFixture
         results.Data.Count.Should().Be(10, "Should be 10 items in the cache");
     }
 
+
     [Fact]
     public void ExpireAfterTimeDynamicWithKey()
     {
@@ -82,9 +80,11 @@ public class ObservableToObservableChangeSetFixture
             subject.OnNext(person);
         }
 
+        results.Data.Count.Should().Be(200, "Should 200 items in the cache");
+
         scheduler.AdvanceBy(TimeSpan.FromSeconds(61).Ticks);
 
-        results.Messages.Count.Should().Be(400, "Should be 400 messages");
+        results.Messages.Count.Should().Be(201, "Should be 201 messages");
         results.Messages.Sum(x => x.Adds).Should().Be(200, "Should be 200 adds");
         results.Messages.Sum(x => x.Removes).Should().Be(200, "Should be 200 removes");
         results.Data.Count.Should().Be(0, "Should be no data in the cache");

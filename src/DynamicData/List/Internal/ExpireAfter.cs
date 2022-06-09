@@ -40,10 +40,10 @@ internal sealed class ExpireAfter<T>
         return Observable.Create<IEnumerable<T>>(
             observer =>
             {
-                var dateTime = _scheduler.Now.DateTime;
+                var dateTime = _scheduler.Now.UtcDateTime;
                 long orderItemWasAdded = -1;
 
-                var autoRemover = _sourceList.Connect().Synchronize(_locker).Do(_ => dateTime = _scheduler.Now.DateTime).Cast(
+                var autoRemover = _sourceList.Connect().Synchronize(_locker).Do(_ => dateTime = _scheduler.Now.UtcDateTime).Cast(
                     t =>
                     {
                         var removeAt = _expireAfter(t);
@@ -82,7 +82,7 @@ internal sealed class ExpireAfter<T>
                         datetime =>
                         {
                             // ReSharper disable once InconsistentlySynchronizedField
-                            var expireAt = datetime.Subtract(_scheduler.Now.DateTime);
+                            var expireAt = datetime.Subtract(_scheduler.Now.UtcDateTime);
 
                             // ReSharper disable once InconsistentlySynchronizedField
                             return Observable.Timer(expireAt, _scheduler).Take(1).Subscribe(_ => RemovalAction());

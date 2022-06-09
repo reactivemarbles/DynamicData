@@ -2,142 +2,120 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
-
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
 internal class ToObservableChangeSet<TObject, TKey>
     where TKey : notnull
 {
-    private readonly Func<TObject, TimeSpan?>? _expireAfter;
-
+    private readonly IObservable<IEnumerable<TObject>> _source;
     private readonly Func<TObject, TKey> _keySelector;
-
+    private readonly Func<TObject, TimeSpan?>? _expireAfter;
     private readonly int _limitSizeTo;
-
     private readonly IScheduler _scheduler;
 
-    private readonly bool _singleValueSource;
-
-    private readonly IObservable<IEnumerable<TObject>> _source;
-
-    public ToObservableChangeSet(IObservable<TObject> source, Func<TObject, TKey> keySelector, Func<TObject, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
-        : this(source.Select(t => new[] { t }), keySelector, expireAfter, limitSizeTo, scheduler, true)
+    public ToObservableChangeSet(IObservable<TObject> source,
+        Func<TObject, TKey> keySelector,
+        Func<TObject, TimeSpan?>? expireAfter,
+        int limitSizeTo,
+        IScheduler? scheduler = null)
+        : this(source.Select(t => new[] { t }), keySelector, expireAfter, limitSizeTo, scheduler)
     {
     }
 
-    public ToObservableChangeSet(IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, Func<TObject, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null, bool singleValueSource = false)
+    public ToObservableChangeSet(IObservable<IEnumerable<TObject>> source,
+        Func<TObject, TKey> keySelector,
+        Func<TObject, TimeSpan?>? expireAfter,
+        int limitSizeTo,
+        IScheduler? scheduler = null)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
         _expireAfter = expireAfter;
         _limitSizeTo = limitSizeTo;
         _scheduler = scheduler ?? Scheduler.Default;
-        _singleValueSource = singleValueSource;
     }
 
     public IObservable<IChangeSet<TObject, TKey>> Run()
     {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
-            observer =>
+        return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+        {
+            var locker = new object();
+
+            var dataSource = new SourceCache<TObject, TKey>(_keySelector);
+
+            // load local data source with current items
+            var populator = _source.Synchronize(locker)
+                .Subscribe(items => dataSource.AddOrUpdate(items), observer.OnError);
+
+            // handle size expiration
+            var sizeExpiryDisposer = new CompositeDisposable();
+
+            if (_limitSizeTo > 0)
             {
                 long orderItemWasAdded = -1;
-                var locker = new object();
 
-                if (_expireAfter is null && _limitSizeTo < 1)
-                {
-                    return _source.Scan(
-                        new ChangeAwareCache<TObject, TKey>(),
-                        (state, latest) =>
-                        {
-                            if (latest is IList<TObject> list)
-                            {
-                                // zero allocation enumerator
-                                var enumerableList = EnumerableIList.Create(list);
-                                if (!_singleValueSource)
-                                {
-                                    state.Remove(state.Keys.Except(enumerableList.Select(_keySelector)).ToList());
-                                }
+                var transformed = dataSource.Connect()
+                    .Transform(t => (Item: t, Order: Interlocked.Increment(ref orderItemWasAdded)))
+                    .AsObservableCache();
 
-                                foreach (var item in enumerableList)
-                                {
-                                    state.AddOrUpdate(item, _keySelector(item));
-                                }
-                            }
-                            else
-                            {
-                                var enumerable = latest.ToList();
-                                if (!_singleValueSource)
-                                {
-                                    state.Remove(state.Keys.Except(enumerable.Select(_keySelector)).ToList());
-                                }
-
-                                foreach (var item in enumerable)
-                                {
-                                    state.AddOrUpdate(item, _keySelector(item));
-                                }
-                            }
-
-                            return state;
-                        }).Select(state => state.CaptureChanges()).SubscribeSafe(observer);
-                }
-
-                var cache = new ChangeAwareCache<ExpirableItem<TObject, TKey>, TKey>();
-                var sizeLimited = _source.Synchronize(locker).Scan(
-                    cache,
-                    (state, latest) =>
+                var transformedRemoved = transformed.Connect()
+                    .Subscribe(_ =>
                     {
-                        latest.Select(
-                            t =>
-                            {
-                                var key = _keySelector(t);
-                                return CreateExpirableItem(t, key, ref orderItemWasAdded);
-                            }).ForEach(ei => cache.AddOrUpdate(ei, ei.Key));
+                        if (transformed.Count <= _limitSizeTo) return;
 
-                        if (_limitSizeTo > 0 && state.Count > _limitSizeTo)
-                        {
-                            var toRemove = state.Count - _limitSizeTo;
+                        // remove oldest items
+                        var itemsToRemove = transformed.KeyValues
+                            .OrderBy(exp => exp.Value.Order)
+                            .Take(transformed.Count - _limitSizeTo)
+                            .Select(x => x.Key)
+                            .ToArray();
 
-                            // remove oldest items
-                            cache.KeyValues.OrderBy(exp => exp.Value.Index).Take(toRemove).ForEach(ei => cache.Remove(ei.Key));
-                        }
-
-                        return state;
-                    }).Select(state => state.CaptureChanges()).Publish();
-
-                var timeLimited = (_expireAfter is null ? Observable.Never<IChangeSet<ExpirableItem<TObject, TKey>, TKey>>() : sizeLimited).Filter(ei => ei.ExpireAt != DateTime.MaxValue).MergeMany(
-                    grouping =>
-                    {
-                        var expireAt = grouping.ExpireAt.Subtract(_scheduler.Now.DateTime);
-                        return Observable.Timer(expireAt, _scheduler).Select(_ => grouping);
-                    }).Synchronize(locker).Select(
-                    item =>
-                    {
-                        cache.Remove(item.Key);
-                        return cache.CaptureChanges();
+                        // schedule, otherwise we can get a deadlock when removing due to re-entrancey
+                        _scheduler.Schedule(() => dataSource.Remove(itemsToRemove));
                     });
+                sizeExpiryDisposer.Add(transformed);
+                sizeExpiryDisposer.Add(transformedRemoved);
+            }
 
-                var publisher = sizeLimited.Merge(timeLimited).Cast(ei => ei.Value).NotEmpty().SubscribeSafe(observer);
+            // handle time expiration
+            var timeExpiryDisposer = new CompositeDisposable();
 
-                return new CompositeDisposable(publisher, sizeLimited.Connect());
-            });
-    }
+            DateTime Trim(DateTime date, long ticks) => new(date.Ticks - (date.Ticks % ticks), date.Kind);
 
-    private ExpirableItem<TObject, TKey> CreateExpirableItem(TObject item, TKey key, ref long orderItemWasAdded)
-    {
-        // check whether expiry has been set for any items
-        var dateTime = _scheduler.Now.DateTime;
-        var removeAt = _expireAfter?.Invoke(item);
-        var expireAt = removeAt.HasValue ? dateTime.Add(removeAt.Value) : DateTime.MaxValue;
+            if (_expireAfter is not null)
+            {
+                var expiry = dataSource.Connect()
+                    .Transform(t =>
+                    {
+                        var removeAt = _expireAfter?.Invoke(t);
 
-        return new ExpirableItem<TObject, TKey>(item, key, expireAt, Interlocked.Increment(ref orderItemWasAdded));
+                        if (removeAt is null)
+                            return (Item: t, ExpireAt: DateTime.MaxValue);
+
+                        // get absolute expiry, and round by milliseconds to we can attempt to batch as many items into a single group
+                        var expireTime = Trim(_scheduler.Now.UtcDateTime.Add(removeAt.Value), TimeSpan.TicksPerMillisecond);
+
+                        return (Item: t, ExpireAt: expireTime);
+                    })
+                    .Filter(ei => ei.ExpireAt != DateTime.MaxValue)
+                    .GroupWithImmutableState(ei => ei.ExpireAt)
+                    .MergeMany(grouping => Observable.Timer(grouping.Key, _scheduler).Select(_ => grouping))
+                    .Synchronize(locker)
+                    .Subscribe(grouping => dataSource.Remove(grouping.Keys));
+
+                timeExpiryDisposer.Add(expiry);
+            }
+
+            return new CompositeDisposable(
+                dataSource,
+                populator,
+                sizeExpiryDisposer,
+                timeExpiryDisposer,
+                dataSource.Connect().SubscribeSafe(observer));
+        });
     }
 }
