@@ -44,22 +44,6 @@ public class ToObservableChangeSetFixture : ReactiveTest, IDisposable
     }
 
     [Fact]
-    public void DictionaryOrder()
-    {
-        var xxx = new Dictionary<int, int>();
-
-
-        foreach (var i in Enumerable.Range(1,10))
-        {
-            xxx[i] = i;
-        }
-
-        xxx[5] = 999;
-    }
-
-
-
-    [Fact]
     public void ShouldLimitSizeOfBoundCollection()
     {
         _scheduler.AdvanceTo(2);
