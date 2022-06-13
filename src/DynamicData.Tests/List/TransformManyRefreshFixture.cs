@@ -35,7 +35,7 @@ public class TransformManyRefreshFixture : IDisposable
         person.Friends = new[] { friend1, friend2 };
 
         _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-        _results.Data.Items.Should().BeEquivalentTo(friend1, friend2);
+        _results.Data.Items.Should().BeEquivalentTo(new[] { friend1, friend2});
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class TransformManyRefreshFixture : IDisposable
         person.Age = 55;
 
         _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-        _results.Data.Items.Should().BeEquivalentTo(friend1, friend2);
+        _results.Data.Items.Should().BeEquivalentTo(new[] { friend1, friend2});
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class TransformManyRefreshFixture : IDisposable
         person.Friends = new[] { friend4 };
 
         _results.Data.Count.Should().Be(2, "Should be 2 in the cache");
-        _results.Data.Items.Should().BeEquivalentTo(friend4, friend2);
+        _results.Data.Items.Should().BeEquivalentTo(new[] { friend4, friend2});
     }
 
     public void Dispose()

@@ -151,7 +151,7 @@ public class DynamicOrFixture : IDisposable
 
         _results.Data.Count.Should().Be(2);
         _results.Messages.Count.Should().Be(3);
-        _results.Data.Items.Should().BeEquivalentTo(9, 1);
+        _results.Data.Items.Should().BeEquivalentTo(new[] { 9, 1});
     }
 
     [Fact]

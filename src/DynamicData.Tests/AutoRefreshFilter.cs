@@ -26,15 +26,15 @@ public class AutoRefreshFilter
         var obsListDerived = obsList.Connect().AutoRefresh(x => x.Name).Filter(x => x.Name.Contains("I")).AsObservableList();
 
         obsListDerived.Count.Should().Be(3);
-        obsListDerived.Items.Should().BeEquivalentTo(i1, i2, i3);
+        obsListDerived.Items.Should().BeEquivalentTo(new []{ i1, i2, i3});
 
         i1.Name = "X2";
         obsListDerived.Count.Should().Be(2);
-        obsListDerived.Items.Should().BeEquivalentTo(i2, i3);
+        obsListDerived.Items.Should().BeEquivalentTo(new[] { i2, i3});
 
         a0.Name = "I0";
         obsListDerived.Count.Should().Be(3);
-        obsListDerived.Items.Should().BeEquivalentTo(a0, i2, i3);
+        obsListDerived.Items.Should().BeEquivalentTo(new[] { a0, i2, i3});
     }
 
     [Fact]

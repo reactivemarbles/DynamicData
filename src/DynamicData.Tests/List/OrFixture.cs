@@ -66,7 +66,7 @@ public class OrReplaceFixture
 
         results.Data.Count.Should().Be(2);
         results.Messages.Count.Should().Be(3);
-        results.Data.Items.Should().BeEquivalentTo(item1Replacement, item2);
+        results.Data.Items.Should().BeEquivalentTo(new[] { item1Replacement, item2});
     }
 }
 
