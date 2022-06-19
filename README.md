@@ -212,7 +212,7 @@ An observable list can be created as follows:
   {
 	  //some code to load data and subscribe
       var loader= myService.LoadMyDataObservable().Subscribe(observableList.Add);
-      var subscriber = myService.GetMySubscriptionsObservable().Subscribe(observableList .Add);
+      var subscriber = myService.GetMySubscriptionsObservable().Subscribe(observableList.Add);
       //dispose of resources
       return new CompositeDisposable(loader,subscriber );
   });
