@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -15,13 +13,15 @@ internal sealed class OnBeingRemoved<TObject, TKey>
     where TKey : notnull
 {
     private readonly Action<TObject> _removeAction;
+    private readonly bool _invokeOnUnsubscribe;
 
     private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
-    public OnBeingRemoved(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
+    public OnBeingRemoved(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction, bool invokeOnUnsubscribe)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _removeAction = removeAction ?? throw new ArgumentNullException(nameof(removeAction));
+        _invokeOnUnsubscribe = invokeOnUnsubscribe;
     }
 
     public IObservable<IChangeSet<TObject, TKey>> Run()
@@ -40,7 +40,11 @@ internal sealed class OnBeingRemoved<TObject, TKey>
 
                         lock (locker)
                         {
-                            cache.Items.ForEach(t => _removeAction(t));
+                            if (_invokeOnUnsubscribe)
+                            {
+                                cache.Items.ForEach(t => _removeAction(t));
+                            }
+
                             cache.Clear();
                         }
                     });
@@ -54,11 +58,6 @@ internal sealed class OnBeingRemoved<TObject, TKey>
             {
                 switch (change.Reason)
                 {
-                    case ChangeReason.Update:
-                        // ReSharper disable once InconsistentlySynchronizedField
-                        change.Previous.IfHasValue(t => _removeAction(t));
-                        break;
-
                     case ChangeReason.Remove:
                         // ReSharper disable once InconsistentlySynchronizedField
                         _removeAction(change.Current);

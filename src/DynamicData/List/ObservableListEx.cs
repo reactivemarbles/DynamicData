@@ -1150,13 +1150,14 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="removeAction">The remove action.</param>
+    /// <param name="invokeOnUnsubscribe"> Should the remove action be invoked when the subscription is disposed.</param>
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">
     /// source
     /// or
     /// removeAction.
     /// </exception>
-    public static IObservable<IChangeSet<T>> OnItemRemoved<T>(this IObservable<IChangeSet<T>> source, Action<T> removeAction)
+    public static IObservable<IChangeSet<T>> OnItemRemoved<T>(this IObservable<IChangeSet<T>> source, Action<T> removeAction, bool invokeOnUnsubscribe = true)
     {
         if (source is null)
         {
@@ -1168,7 +1169,7 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(removeAction));
         }
 
-        return new OnBeingRemoved<T>(source, removeAction).Run();
+        return new OnBeingRemoved<T>(source, removeAction, invokeOnUnsubscribe).Run();
     }
 
     /// <summary>
