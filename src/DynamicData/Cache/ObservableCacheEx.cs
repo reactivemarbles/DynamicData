@@ -1129,7 +1129,7 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(source));
         }
 
-        return new OnBeingRemoved<TObject, TKey>(
+        return new DisposeMany<TObject, TKey>(
             source,
             t =>
             {
@@ -2874,19 +2874,20 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="removeAction">The remove action.</param>
+    /// <param name="invokeOnUnsubscribe"> Should the remove action be invoked when the subscription is disposed.</param>
     /// <returns>An observable which emits a change set with items being removed.</returns>
     /// <exception cref="System.ArgumentNullException">
     /// source
     /// or
     /// removeAction.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
+    public static IObservable<IChangeSet<TObject, TKey>> OnItemRemoved<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction, bool invokeOnUnsubscribe = true)
         where TKey : notnull
     {
         if (source is null) throw new ArgumentNullException(nameof(source));
         if (removeAction is null) throw new ArgumentNullException(nameof(removeAction));
 
-        return new OnBeingRemoved<TObject, TKey>(source, removeAction).Run();
+        return new OnBeingRemoved<TObject, TKey>(source, removeAction, invokeOnUnsubscribe).Run();
     }
 
     /// <summary>

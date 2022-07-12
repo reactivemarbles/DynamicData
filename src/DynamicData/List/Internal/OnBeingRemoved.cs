@@ -14,13 +14,15 @@ namespace DynamicData.List.Internal;
 internal sealed class OnBeingRemoved<T>
 {
     private readonly Action<T> _callback;
+    private readonly bool _invokeOnUnsubscribe;
 
     private readonly IObservable<IChangeSet<T>> _source;
 
-    public OnBeingRemoved(IObservable<IChangeSet<T>> source, Action<T> callback)
+    public OnBeingRemoved(IObservable<IChangeSet<T>> source, Action<T> callback, bool invokeOnUnsubscribe)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _callback = callback ?? throw new ArgumentNullException(nameof(callback));
+        _invokeOnUnsubscribe = invokeOnUnsubscribe;
     }
 
     public IObservable<IChangeSet<T>> Run()
@@ -36,7 +38,11 @@ internal sealed class OnBeingRemoved<T>
                     () =>
                     {
                         subscriber.Dispose();
-                        items.ForEach(t => _callback(t));
+
+                        if (_invokeOnUnsubscribe)
+                        {
+                            items.ForEach(t => _callback(t));
+                        }
                     });
             });
     }
