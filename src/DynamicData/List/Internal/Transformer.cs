@@ -31,9 +31,9 @@ internal sealed class Transformer<TSource, TDestination>
         _containerFactory = (item, prev, index) => new TransformedItemContainer(item, factory(item, prev, index));
     }
 
-    public IObservable<IChangeSet<TDestination>> Run()
-    {
-        return _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
+    public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
+
+    private IObservable<IChangeSet<TDestination>> RunImpl() => _source.Scan(new ChangeAwareList<TransformedItemContainer>(), (state, changes) =>
             {
                 Transform(state, changes);
                 return state;
@@ -43,7 +43,6 @@ internal sealed class Transformer<TSource, TDestination>
                 var changed = transformed.CaptureChanges();
                 return changed.Transform(container => container.Destination);
             });
-    }
 
     private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
     {
@@ -125,7 +124,7 @@ internal sealed class Transformer<TSource, TDestination>
                         }
                         else
                         {
-                            TransformedItemContainer? toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
+                            var toRemove = transformed.FirstOrDefault(t => ReferenceEquals(t.Source, change.Current));
 
                             if (toRemove is not null)
                             {
@@ -188,15 +187,9 @@ internal sealed class Transformer<TSource, TDestination>
 
         public TSource Source { get; }
 
-        public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right)
-        {
-            return Equals(left, right);
-        }
+        public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right) => Equals(left, right);
 
-        public static bool operator !=(TransformedItemContainer left, TransformedItemContainer right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(TransformedItemContainer left, TransformedItemContainer right) => !Equals(left, right);
 
         public bool Equals(TransformedItemContainer? other)
         {
@@ -233,9 +226,6 @@ internal sealed class Transformer<TSource, TDestination>
             return Equals((TransformedItemContainer)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return Source is null ? 0 : EqualityComparer<TSource>.Default.GetHashCode(Source);
-        }
+        public override int GetHashCode() => Source is null ? 0 : EqualityComparer<TSource>.Default.GetHashCode(Source);
     }
 }

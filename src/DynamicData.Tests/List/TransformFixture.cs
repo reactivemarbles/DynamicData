@@ -144,4 +144,22 @@ public class TransformFixture : IDisposable
         _results.Messages[0].Adds.Should().Be(1, "Should be 1 adds");
         _results.Messages[0].Replaced.Should().Be(0, "Should be 1 update");
     }
+
+
+    [Fact]
+    public void MultipleSubscribersShouldNotShareState()
+    {
+        _source.AddRange(new Person[]
+        {
+            new ("Adult1", 50),
+            new ("Adult2", 51)
+        });
+
+        var transformed = _source.Connect()
+            .Transform(o => o);
+
+        // will throw if state of ChangeAwareList is shared
+        transformed.Transform(o => o).Subscribe();
+        transformed.Transform(o => o).Subscribe();
+    }
 }
