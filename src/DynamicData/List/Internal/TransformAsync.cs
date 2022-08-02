@@ -4,16 +4,19 @@
 
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using DynamicData.Binding;
+using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
 internal class TransformAsync<TSource, TDestination>
 {
-    private readonly Func<TSource, Task<TransformedItemContainer>> _containerFactory;
+    private readonly Func<TSource, Optional<TDestination>, int, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
 
     private readonly IObservable<IChangeSet<TSource>> _source;
 
-    public TransformAsync(IObservable<IChangeSet<TSource>> source, Func<TSource, Task<TDestination>> factory)
+    public TransformAsync(IObservable<IChangeSet<TSource>> source,
+        Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory)
     {
         if (factory is null)
         {
@@ -21,10 +24,10 @@ internal class TransformAsync<TSource, TDestination>
         }
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
-        _containerFactory = async item =>
+        _containerFactory = async (item, prev, index) =>
         {
-            var destination = await factory(item).ConfigureAwait(false);
-            return new TransformedItemContainer(item, destination);
+            var destination = await factory(item, prev, index).ConfigureAwait(false);
+            return new Transformer<TSource, TDestination>.TransformedItemContainer(item, destination);
         };
     }
 
@@ -33,7 +36,7 @@ internal class TransformAsync<TSource, TDestination>
         return Observable.Create<IChangeSet<TDestination>>(
             observer =>
             {
-                var state = new ChangeAwareList<TransformedItemContainer>();
+                var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
                 var asyncLock = new SemaphoreSlim(1, 1);
 
                 return _source.Select(
@@ -58,7 +61,9 @@ internal class TransformAsync<TSource, TDestination>
             });
     }
 
-    private async Task Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
+    private async Task Transform(
+        ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformed,
+        IChangeSet<TSource> changes)
     {
         if (changes is null)
         {
@@ -74,12 +79,16 @@ internal class TransformAsync<TSource, TDestination>
                         var change = item.Item;
                         if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
                         {
-                            var container = await _containerFactory(item.Item.Current).ConfigureAwait(false);
+                            var container =
+                                await _containerFactory(item.Item.Current, Optional<TDestination>.None,
+                                    transformed.Count).ConfigureAwait(false);
                             transformed.Add(container);
                         }
                         else
                         {
-                            var container = await _containerFactory(item.Item.Current).ConfigureAwait(false);
+                            var container =
+                                await _containerFactory(item.Item.Current, Optional<TDestination>.None,
+                                    change.CurrentIndex).ConfigureAwait(false);
                             transformed.Insert(change.CurrentIndex, container);
                         }
 
@@ -88,7 +97,8 @@ internal class TransformAsync<TSource, TDestination>
 
                 case ListChangeReason.AddRange:
                     {
-                        var tasks = item.Range.Select(_containerFactory);
+                        var startIndex = item.Range.Index < 0 ? transformed.Count : item.Range.Index;
+                        var tasks = item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex));
                         var containers = await Task.WhenAll(tasks).ConfigureAwait(false);
                         transformed.AddOrInsertRange(containers, item.Range.Index);
                         break;
@@ -97,16 +107,16 @@ internal class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Replace:
                     {
                         var change = item.Item;
-                        var container = await _containerFactory(item.Item.Current).ConfigureAwait(false);
 
+                        Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
                         if (change.CurrentIndex == change.PreviousIndex)
                         {
-                            transformed[change.CurrentIndex] = container;
+                            transformed[change.CurrentIndex] = await _containerFactory(change.Current, previous, change.CurrentIndex);
                         }
                         else
                         {
                             transformed.RemoveAt(change.PreviousIndex);
-                            transformed.Insert(change.CurrentIndex, container);
+                            transformed.Insert(change.CurrentIndex, await _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
                         }
 
                         break;
@@ -152,7 +162,9 @@ internal class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Clear:
                     {
                         // i.e. need to store transformed reference so we can correctly clear
-                        var toClear = new Change<TransformedItemContainer>(ListChangeReason.Clear, transformed);
+                        var toClear =
+                            new Change<Transformer<TSource, TDestination>.TransformedItemContainer>(
+                                ListChangeReason.Clear, transformed);
                         transformed.ClearOrRemoveMany(toClear);
 
                         break;
@@ -167,7 +179,8 @@ internal class TransformAsync<TSource, TDestination>
                             throw new UnspecifiedIndexException("Cannot move as an index was not specified");
                         }
 
-                        if (transformed is IExtendedList<TransformedItemContainer> collection)
+                        if (transformed is IExtendedList<Transformer<TSource, TDestination>.TransformedItemContainer>
+                            collection)
                         {
                             collection.Move(change.PreviousIndex, change.CurrentIndex);
                         }
@@ -181,54 +194,6 @@ internal class TransformAsync<TSource, TDestination>
                         break;
                     }
             }
-        }
-    }
-
-    private class TransformedItemContainer : IEquatable<TransformedItemContainer>
-    {
-        public TransformedItemContainer(TSource source, TDestination destination)
-        {
-            Source = source;
-            Destination = destination;
-        }
-
-        public TDestination Destination { get; }
-
-        public TSource Source { get; }
-
-        public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(TransformedItemContainer left, TransformedItemContainer right)
-        {
-            return !Equals(left, right);
-        }
-
-        public bool Equals(TransformedItemContainer? other)
-        {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return EqualityComparer<TSource>.Default.Equals(Source, other.Source);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is TransformedItemContainer item && Equals(item);
-        }
-
-        public override int GetHashCode()
-        {
-            return Source is null ? 0 : EqualityComparer<TSource>.Default.GetHashCode(Source);
         }
     }
 }

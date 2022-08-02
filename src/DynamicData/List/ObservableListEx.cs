@@ -1909,13 +1909,107 @@ public static class ObservableListEx
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
     /// <exception cref="System.ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
     /// </exception>
-    public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Task<TDestination>> transformFactory)
+    public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
+        this IObservable<IChangeSet<TSource>> source, Func<TSource, Task<TDestination>> transformFactory,
+        bool transformOnRefresh = false)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (transformFactory is null)
+        {
+            throw new ArgumentNullException(nameof(transformFactory));
+        }
+
+        return source.TransformAsync<TSource, TDestination>((t, _, _) => transformFactory(t));
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
+    /// <returns>A an observable change set of the transformed object.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    /// source
+    /// or
+    /// valueSelector.
+    /// </exception>
+    public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
+        this IObservable<IChangeSet<TSource>> source, Func<TSource, int, Task<TDestination>> transformFactory,
+        bool transformOnRefresh = false)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (transformFactory is null)
+        {
+            throw new ArgumentNullException(nameof(transformFactory));
+        }
+
+        return source.TransformAsync<TSource, TDestination>((t, _, i) => transformFactory(t, i));
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
+    /// <returns>A an observable change set of the transformed object.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    /// source
+    /// or
+    /// valueSelector.
+    /// </exception>
+    public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
+        this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, Task<TDestination>> transformFactory,
+        bool transformOnRefresh = false)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (transformFactory is null)
+        {
+            throw new ArgumentNullException(nameof(transformFactory));
+        }
+
+        return source.TransformAsync<TSource, TDestination>((t, d, _) => transformFactory(t, d));
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <returns>A an observable change set of the transformed object.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    /// source
+    /// or
+    /// valueSelector.
+    /// </exception>
+    public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
+        this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory)
     {
         if (source is null)
         {

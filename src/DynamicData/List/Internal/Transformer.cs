@@ -175,7 +175,7 @@ internal sealed class Transformer<TSource, TDestination>
         }
     }
 
-    private sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
+    internal sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
     {
         public TransformedItemContainer(TSource source, TDestination destination)
         {
