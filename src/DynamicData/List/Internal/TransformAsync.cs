@@ -33,33 +33,31 @@ internal class TransformAsync<TSource, TDestination>
         };
     }
 
-    public IObservable<IChangeSet<TDestination>> Run()
-    {
-        return Observable.Create<IChangeSet<TDestination>>(
-            observer =>
-            {
-                var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
-                var asyncLock = new SemaphoreSlim(1, 1);
+    public IObservable<IChangeSet<TDestination>> Run() => Observable.Defer(RunImpl);
 
-                return _source.Select(
-                    async changes =>
-                    {
-                        try
-                        {
-                            await asyncLock.WaitAsync().ConfigureAwait(false);
-                            await Transform(state, changes).ConfigureAwait(false);
-                            return state;
-                        }
-                        finally
-                        {
-                            asyncLock.Release();
-                        }
-                    }).Select(tasks => tasks.ToObservable()).SelectMany(items => items).Select(
-                    transformed =>
-                    {
-                        var changed = transformed.CaptureChanges();
-                        return changed.Transform(container => container.Destination);
-                    }).SubscribeSafe(observer);
+    private IObservable<IChangeSet<TDestination>> RunImpl()
+    {
+        var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
+        var asyncLock = new SemaphoreSlim(1, 1);
+
+        return _source.Select(
+            async changes =>
+            {
+                try
+                {
+                    await asyncLock.WaitAsync().ConfigureAwait(false);
+                    await Transform(state, changes).ConfigureAwait(false);
+                    return state;
+                }
+                finally
+                {
+                    asyncLock.Release();
+                }
+            }).Select(tasks => tasks.ToObservable()).SelectMany(items => items).Select(
+            transformed =>
+            {
+                var changed = transformed.CaptureChanges();
+                return changed.Transform(container => container.Destination);
             });
     }
 
