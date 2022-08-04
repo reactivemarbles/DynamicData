@@ -1930,7 +1930,7 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(transformFactory));
         }
 
-        return source.TransformAsync<TSource, TDestination>((t, _, _) => transformFactory(t));
+        return source.TransformAsync<TSource, TDestination>((t, _, _) => transformFactory(t), transformOnRefresh);
     }
 
     /// <summary>
@@ -1961,7 +1961,7 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(transformFactory));
         }
 
-        return source.TransformAsync<TSource, TDestination>((t, _, i) => transformFactory(t, i));
+        return source.TransformAsync<TSource, TDestination>((t, _, i) => transformFactory(t, i), transformOnRefresh);
     }
 
     /// <summary>
@@ -1992,7 +1992,7 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(transformFactory));
         }
 
-        return source.TransformAsync<TSource, TDestination>((t, d, _) => transformFactory(t, d));
+        return source.TransformAsync<TSource, TDestination>((t, d, _) => transformFactory(t, d), transformOnRefresh);
     }
 
     /// <summary>
@@ -2002,6 +2002,7 @@ public static class ObservableListEx
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
     /// <exception cref="System.ArgumentNullException">
     /// source
@@ -2009,7 +2010,8 @@ public static class ObservableListEx
     /// valueSelector.
     /// </exception>
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
-        this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory)
+        this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory,
+        bool transformOnRefresh = false)
     {
         if (source is null)
         {
@@ -2021,7 +2023,7 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(transformFactory));
         }
 
-        return new TransformAsync<TSource, TDestination>(source, transformFactory).Run();
+        return new TransformAsync<TSource, TDestination>(source, transformFactory, transformOnRefresh).Run();
     }
 
     /// <summary>

@@ -14,9 +14,10 @@ internal class TransformAsync<TSource, TDestination>
     private readonly Func<TSource, Optional<TDestination>, int, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
 
     private readonly IObservable<IChangeSet<TSource>> _source;
+    private readonly bool _transformOnRefresh;
 
     public TransformAsync(IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory)
+        Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory, bool transformOnRefresh)
     {
         if (factory is null)
         {
@@ -24,6 +25,7 @@ internal class TransformAsync<TSource, TDestination>
         }
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
+        _transformOnRefresh = transformOnRefresh;
         _containerFactory = async (item, prev, index) =>
         {
             var destination = await factory(item, prev, index).ConfigureAwait(false);
@@ -101,6 +103,24 @@ internal class TransformAsync<TSource, TDestination>
                         var tasks = item.Range.Select((t, idx) => _containerFactory(t, Optional<TDestination>.None, idx + startIndex));
                         var containers = await Task.WhenAll(tasks).ConfigureAwait(false);
                         transformed.AddOrInsertRange(containers, item.Range.Index);
+                        break;
+                    }
+
+                case ListChangeReason.Refresh:
+                    {
+                        var change = item.Item;
+                        if (_transformOnRefresh)
+                        {
+                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
+                            var container = await _containerFactory(change.Current, previous, change.CurrentIndex)
+                                .ConfigureAwait(false);
+                            transformed[change.CurrentIndex] = container;
+                        }
+                        else
+                        {
+                            transformed.RefreshAt(change.CurrentIndex);
+                        }
+
                         break;
                     }
 

@@ -121,4 +121,41 @@ public class TransformAsyncFixture : IDisposable
     //    _results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
     //    _results.Data.Count.Should().Be(0, "Should be nothing cached");
     //}
+
+    // [Fact]
+    // public void TransformOnRefresh()
+    // {
+    //     var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, 1)).ToArray();
+    //
+    //     //result should only be true when all items are set to true
+    //     using var list = new SourceList<Person>();
+    //     using var results = list.Connect().AutoRefresh(p => p.Age)
+    //         .TransformAsync(Task.FromResult, transformOnRefresh: true).AsAggregator();
+    //     list.AddRange(items);
+    //
+    //     results.Data.Count.Should().Be(100);
+    //     results.Messages.Count.Should().Be(1);
+    //
+    //     items[0].Age = 10;
+    //     results.Data.Count.Should().Be(100);
+    //     results.Messages.Count.Should().Be(2);
+    //
+    //     results.Messages[1].First().Reason.Should().Be(ListChangeReason.Replace);
+    //
+    //     //remove an item and check no change is fired
+    //     var toRemove = items[1];
+    //     list.Remove(toRemove);
+    //     results.Data.Count.Should().Be(99);
+    //     results.Messages.Count.Should().Be(3);
+    //     toRemove.Age = 100;
+    //     results.Messages.Count.Should().Be(3);
+    //
+    //     //add it back in and check it updates
+    //     list.Add(toRemove);
+    //     results.Messages.Count.Should().Be(4);
+    //     toRemove.Age = 101;
+    //     results.Messages.Count.Should().Be(5);
+    //
+    //     results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
+    // }
 }
