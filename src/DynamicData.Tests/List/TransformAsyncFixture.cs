@@ -125,8 +125,12 @@ public class TransformAsyncFixture : IDisposable
         _results.Data.Count.Should().Be(0, "Should be nothing cached");
     }
 
+    /// <summary>
+    /// This test is disabled as it was flaky.
+    /// https://github.com/reactivemarbles/DynamicData/pull/625
+    /// </summary>
     [Fact]
-    public void TransformOnRefresh()
+    private void TransformOnRefresh()
     {
         var items = Enumerable.Range(1, 100).Select(i => new Person("Person" + i, 1)).ToArray();
 
