@@ -82,15 +82,15 @@ internal sealed class Transformer<TSource, TDestination>
 
                 case ListChangeReason.Refresh:
                     {
+                        var change = item.Item;
                         if (_transformOnRefresh)
                         {
-                            var change = item.Item;
                             Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
                             transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
                         }
                         else
                         {
-                            transformed.RefreshAt(item.Item.CurrentIndex);
+                            transformed.RefreshAt(change.CurrentIndex);
                         }
 
                         break;
@@ -175,7 +175,7 @@ internal sealed class Transformer<TSource, TDestination>
         }
     }
 
-    private sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
+    internal sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
     {
         public TransformedItemContainer(TSource source, TDestination destination)
         {
