@@ -57,7 +57,15 @@ internal class TransformAsync<TSource, TDestination>
             transformed =>
             {
                 var changed = transformed.CaptureChanges();
-                return changed.Transform(container => container.Destination);
+                try
+                {
+                    asyncLock.Wait();
+                    return changed.Transform(container => container.Destination);
+                }
+                finally
+                {
+                    asyncLock.Release();
+                }
             });
     }
 
