@@ -5050,6 +5050,83 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Projects each update item to a new form using the specified transform function and when an update is received, allows the preservation of the previous instance.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="updateAction">The update action.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="System.ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<TDestination, TSource> updateAction)
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (transformFactory is null)
+        {
+            throw new ArgumentNullException(nameof(transformFactory));
+        }
+
+        if (updateAction is null)
+        {
+            throw new ArgumentNullException(nameof(updateAction));
+        }
+
+        return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction).Run();
+    }
+
+    /// <summary>
+    /// Projects each update item to a new form using the specified transform function and when an update is received, allows the preservation of the previous instance.
+    /// </summary>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="transformFactory">The transform factory.</param>
+    /// <param name="updateAction">The update action.</param>
+    /// <returns>
+    /// A transformed update collection.
+    /// </returns>
+    /// <exception cref="System.ArgumentNullException">source
+    /// or
+    /// transformFactory.</exception>
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<TDestination, TSource> updateAction, Action<Error<TSource, TKey>> errorHandler)
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (transformFactory is null)
+        {
+            throw new ArgumentNullException(nameof(transformFactory));
+        }
+
+        if (updateAction is null)
+        {
+            throw new ArgumentNullException(nameof(updateAction));
+        }
+
+        if (errorHandler is null)
+        {
+            throw new ArgumentNullException(nameof(errorHandler));
+        }
+
+        return new TransformWithInlineUpdate<TDestination, TSource, TKey>(source, transformFactory, updateAction, errorHandler).Run();
+    }
+
+    /// <summary>
     /// Converts moves changes to remove + add.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
