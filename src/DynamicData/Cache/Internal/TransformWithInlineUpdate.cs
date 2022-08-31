@@ -11,6 +11,7 @@ namespace DynamicData.Cache.Internal;
 
 internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
     where TKey : notnull
+    where TDestination : class
 {
     private readonly Action<Error<TSource, TKey>>? _exceptionCallback;
 

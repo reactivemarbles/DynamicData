@@ -5066,6 +5066,7 @@ public static class ObservableCacheEx
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<TDestination, TSource> updateAction)
         where TKey : notnull
+        where TDestination : class
     {
         if (source is null)
         {
@@ -5103,6 +5104,7 @@ public static class ObservableCacheEx
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<TDestination, TSource> updateAction, Action<Error<TSource, TKey>> errorHandler)
         where TKey : notnull
+        where TDestination : class
     {
         if (source is null)
         {
