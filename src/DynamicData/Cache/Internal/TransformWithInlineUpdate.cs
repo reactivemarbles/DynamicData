@@ -5,6 +5,7 @@
 using System.Reactive.Linq;
 
 using DynamicData.Kernel;
+using DynamicData.List.Internal;
 
 namespace DynamicData.Cache.Internal;
 
@@ -98,7 +99,22 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
     {
         var previous = cache.Lookup(change.Key)
                                 .ValueOrThrow(() => new MissingKeyException($"{change.Key} is not found."));
-        _updateAction(previous, change.Current);
+        if (_exceptionCallback is not null)
+        {
+            try
+            {
+                _updateAction(previous, change.Current);
+            }
+            catch (Exception ex)
+            {
+                _exceptionCallback(new Error<TSource, TKey>(ex, change.Current, change.Key));
+            }
+        }
+        else
+        {
+            _updateAction(previous, change.Current);
+        }
+
         cache.Refresh(change.Key);
     }
 }
