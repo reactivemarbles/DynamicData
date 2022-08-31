@@ -5094,6 +5094,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="transformFactory">The transform factory.</param>
     /// <param name="updateAction">The update action.</param>
+    /// <param name="errorHandler">The error handler.</param>
     /// <returns>
     /// A transformed update collection.
     /// </returns>
