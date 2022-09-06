@@ -2,9 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reactive.Disposables;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
@@ -14,6 +13,7 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
     where TKey : notnull
 {
     private readonly IObservableCache<TObject, TKey> _cache;
+    private readonly IDisposable _cleanUp;
 
     public AnonymousObservableCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
@@ -23,9 +23,16 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
         }
 
         _cache = new ObservableCache<TObject, TKey>(source);
+
+        _cleanUp = _cache;
     }
 
-    public AnonymousObservableCache(IObservableCache<TObject, TKey> cache) => _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+    public AnonymousObservableCache(IObservableCache<TObject, TKey> cache)
+    {
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+
+        _cleanUp = Disposable.Empty;
+    }
 
     public int Count => _cache.Count;
 
@@ -40,11 +47,11 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
     public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
         => _cache.Connect(predicate, suppressEmptyChangeSets);
 
-    public void Dispose() => _cache.Dispose();
-
     public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 
     public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => _cache.Preview(predicate);
 
     public IObservable<Change<TObject, TKey>> Watch(TKey key) => _cache.Watch(key);
+
+    public void Dispose() => _cleanUp.Dispose();
 }
