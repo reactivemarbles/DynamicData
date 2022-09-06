@@ -53,7 +53,6 @@ internal class TransformAsync<TSource, TDestination>
                         asyncLock.Release();
                     }
                 })
-            .Select(task => Observable.FromAsync(() => task))
             .Concat()
             .Select(transformed =>
             {
