@@ -40,21 +40,22 @@ internal class TransformAsync<TSource, TDestination>
         var state = new ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer>();
         var asyncLock = new SemaphoreSlim(1, 1);
 
-        return _source.Select(
-            async changes =>
-            {
-                try
+        return _source.Select(async changes =>
                 {
-                    await asyncLock.WaitAsync().ConfigureAwait(false);
-                    await Transform(state, changes).ConfigureAwait(false);
-                    return state;
-                }
-                finally
-                {
-                    asyncLock.Release();
-                }
-            }).Select(tasks => tasks.ToObservable()).SelectMany(items => items).Select(
-            transformed =>
+                    try
+                    {
+                        await asyncLock.WaitAsync();
+                        await Transform(state, changes);
+                        return state;
+                    }
+                    finally
+                    {
+                        asyncLock.Release();
+                    }
+                })
+            .Select(task => Observable.FromAsync(() => task))
+            .Concat()
+            .Select(transformed =>
             {
                 var changed = transformed.CaptureChanges();
                 return changed.Transform(container => container.Destination);
