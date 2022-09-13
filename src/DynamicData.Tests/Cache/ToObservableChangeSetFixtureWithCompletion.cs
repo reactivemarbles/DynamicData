@@ -29,7 +29,7 @@ public class ToObservableChangeSetFixtureWithCompletion : IDisposable
         _disposable = _observable.ToObservableChangeSet(p => p.Key).Clone(_target).Subscribe(x => { }, () => _hasCompleted = true);
     }
 
-    // [Fact] - disabled as it's questionable whether the completion should be invoked
+    [Fact] //- disabled as it's questionable whether the completion should be invoked
     public void ShouldReceiveUpdatesThenComplete()
     {
         _observable.OnNext(new Person("One", 1));

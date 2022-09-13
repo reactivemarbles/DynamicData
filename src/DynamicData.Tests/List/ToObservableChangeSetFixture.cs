@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
+using System.Reactive;
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
@@ -54,5 +56,33 @@ public class ToObservableChangeSetFixture : ReactiveTest, IDisposable
         var expected = new[] { _person2, _person3 };
 
         _target.Should().BeEquivalentTo(expected);
+    }
+
+    [Fact]
+    public void ListBroken()
+    {
+        // Arrange
+        using var disposable = new CompositeDisposable();
+        var publishedObservable = Observable.Create<int>(o =>
+            {
+                o.OnNext(1);
+                o.OnCompleted();
+                return Disposable.Empty;
+            })
+            .ToObservableChangeSet(i => i)
+            .Publish();
+        
+        var hasCompleted = false;
+
+        // Act
+        var d = publishedObservable.Subscribe(
+                _ => { },
+                _ => { },
+                () => { hasCompleted = true; });
+        disposable.Add(publishedObservable.Connect());
+        disposable.Add(d);
+
+        // Assert
+        hasCompleted.Should().BeTrue();
     }
 }
