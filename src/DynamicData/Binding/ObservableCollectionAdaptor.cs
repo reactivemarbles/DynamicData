@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 
 using DynamicData.Cache.Internal;
+using DynamicData.Kernel;
 
 namespace DynamicData.Binding;
 
@@ -72,6 +73,7 @@ public class ObservableCollectionAdaptor<TObject, TKey> : IObservableCollectionA
     private readonly Cache<TObject, TKey> _cache = new();
 
     private readonly int _refreshThreshold;
+    private readonly bool _useReplaceForUpdates;
 
     private bool _loaded;
 
@@ -79,9 +81,11 @@ public class ObservableCollectionAdaptor<TObject, TKey> : IObservableCollectionA
     /// Initializes a new instance of the <see cref="ObservableCollectionAdaptor{TObject, TKey}"/> class.
     /// </summary>
     /// <param name="refreshThreshold">The threshold before a reset notification is triggered.</param>
-    public ObservableCollectionAdaptor(int refreshThreshold = 25)
+    /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates. </param>
+    public ObservableCollectionAdaptor(int refreshThreshold = 25, bool useReplaceForUpdates = false)
     {
         _refreshThreshold = refreshThreshold;
+        _useReplaceForUpdates = useReplaceForUpdates;
     }
 
     /// <summary>
@@ -120,23 +124,50 @@ public class ObservableCollectionAdaptor<TObject, TKey> : IObservableCollectionA
         }
     }
 
-    private static void DoUpdate(IChangeSet<TObject, TKey> updates, IObservableCollection<TObject> list)
+    private void DoUpdate(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> list)
     {
-        foreach (var update in updates)
+        void Amend(Change<TObject, TKey> change)
         {
-            switch (update.Reason)
+            switch (change.Reason)
             {
                 case ChangeReason.Add:
-                    list.Add(update.Current);
+                    list.Add(change.Current);
                     break;
 
                 case ChangeReason.Remove:
-                    list.Remove(update.Current);
+                    list.Remove(change.Current);
                     break;
 
                 case ChangeReason.Update:
-                    list.Replace(update.Previous.Value, update.Current);
+
+                    // Remove / Add is default as some platforms do not support list[index] = XXX notifications.
+                    if (_useReplaceForUpdates)
+                    {
+                        list.Replace(change.Previous.Value, change.Current);
+                    }
+                    else
+                    {
+                        list.Remove(change.Previous.Value);
+                        list.Add(change.Current);
+                    }
+
                     break;
+            }
+        }
+
+        if (changes is IList<Change<TObject, TKey>> iList)
+        {
+            // allocation free enumeration
+            foreach (var change in EnumerableIList.Create(iList))
+            {
+                Amend(change);
+            }
+        }
+        else
+        {
+            foreach (var update in changes)
+            {
+                Amend(update);
             }
         }
     }
