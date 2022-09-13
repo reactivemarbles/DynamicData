@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Reactive.Disposables;
 
 namespace DynamicData.List.Internal;
 
@@ -10,6 +11,7 @@ namespace DynamicData.List.Internal;
 internal sealed class AnonymousObservableList<T> : IObservableList<T>
 {
     private readonly ISourceList<T> _sourceList;
+    private readonly IDisposable _cleanUp;
 
     public AnonymousObservableList(IObservable<IChangeSet<T>> source)
     {
@@ -19,9 +21,14 @@ internal sealed class AnonymousObservableList<T> : IObservableList<T>
         }
 
         _sourceList = new SourceList<T>(source);
+        _cleanUp = _sourceList;
     }
 
-    public AnonymousObservableList(ISourceList<T> sourceList) => _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
+    public AnonymousObservableList(ISourceList<T> sourceList)
+    {
+        _sourceList = sourceList ?? throw new ArgumentNullException(nameof(sourceList));
+        _cleanUp = Disposable.Empty;
+    }
 
     public int Count => _sourceList.Count;
 
@@ -31,7 +38,7 @@ internal sealed class AnonymousObservableList<T> : IObservableList<T>
 
     public IObservable<IChangeSet<T>> Connect(Func<T, bool>? predicate = null) => _sourceList.Connect(predicate);
 
-    public void Dispose() => _sourceList.Dispose();
-
     public IObservable<IChangeSet<T>> Preview(Func<T, bool>? predicate = null) => _sourceList.Preview(predicate);
+
+    public void Dispose() => _cleanUp.Dispose();
 }

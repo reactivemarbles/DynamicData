@@ -31,12 +31,10 @@ body:
     id: reproduce-repository
     attributes:
       label: Reproduction repository
-      description: "Simple repository representing the bug with unit tests"
+      description: "Url to a simple repository representing the bug with unit tests"
       placeholder: https://github.com/reactivemarbles/DynamicData
-      value: |
-        https://github.com/reactivemarbles/DynamicData
     validations:
-      required: false
+      required: true
   - type: textarea
     id: expected-behavior
     attributes:
