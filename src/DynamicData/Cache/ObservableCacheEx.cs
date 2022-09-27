@@ -3700,7 +3700,7 @@ public static class ObservableCacheEx
 
     /// <summary>
     /// Sorts using the specified comparer.
-    /// Returns the underlying ChangeSet as as per the system conventions.
+    /// Returns the underlying ChangeSet as per the system conventions.
     /// The resulting change set also exposes a sorted key value collection of of the underlying cached data.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
