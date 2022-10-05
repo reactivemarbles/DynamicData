@@ -585,9 +585,11 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="destination">The destination.</param>
+    /// <param name="refreshThreshold">The number of changes before a reset notification is triggered.</param>
+    /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, int refreshThreshold = 25, bool useReplaceForUpdates = false)
         where TKey : notnull
     {
         if (source is null)
@@ -600,7 +602,7 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(destination));
         }
 
-        var updater = new ObservableCollectionAdaptor<TObject, TKey>();
+        var updater = new ObservableCollectionAdaptor<TObject, TKey>(refreshThreshold, useReplaceForUpdates);
         return source.Bind(destination, updater);
     }
 
@@ -745,11 +747,12 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection.</param>
+    /// <param name="resetThreshold">The number of changes before a reset notification is triggered.</param>
+    /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
     /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, IObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, bool useReplaceForUpdates = false, IObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
         where TKey : notnull
     {
         if (source is null)
@@ -759,7 +762,7 @@ public static class ObservableCacheEx
 
         var target = new ObservableCollectionExtended<TObject>();
         var result = new ReadOnlyObservableCollection<TObject>(target);
-        var updater = adaptor ?? new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold);
+        var updater = adaptor ?? new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold, useReplaceForUpdates);
         readOnlyObservableCollection = result;
         return source.Bind(target, updater);
     }
@@ -3697,8 +3700,8 @@ public static class ObservableCacheEx
 
     /// <summary>
     /// Sorts using the specified comparer.
-    /// Returns the underlying ChangeSet as as per the system conventions.
-    /// The resulting change set also exposes a sorted key value collection of of the underlying cached data.
+    /// Returns the underlying ChangeSet as per the system conventions.
+    /// The resulting change set also exposes a sorted key value collection of the underlying cached data.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>

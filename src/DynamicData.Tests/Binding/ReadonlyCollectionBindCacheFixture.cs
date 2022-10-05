@@ -1,31 +1,26 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Linq;
-
 using DynamicData.Binding;
 using DynamicData.Tests.Domain;
-
 using FluentAssertions;
-
 using Xunit;
 
 namespace DynamicData.Tests.Binding;
 
-public class ObservableCollectionBindCacheFixture : IDisposable
+public class ReadonlyCollectionBindCacheFixture : IDisposable
 {
     private readonly IDisposable _binder;
-
-    private readonly ObservableCollectionExtended<Person> _collection = new();
-
+    private readonly ReadOnlyObservableCollection<Person> _collection;
     private readonly RandomPersonGenerator _generator = new();
-
     private readonly ISourceCache<Person, string> _source;
 
-    public ObservableCollectionBindCacheFixture()
+    public ReadonlyCollectionBindCacheFixture()
     {
         _source = new SourceCache<Person, string>(p => p.Name);
-        _binder = _source.Connect().Bind(_collection).Subscribe();
+        _binder = _source.Connect().Bind(out _collection).Subscribe();
     }
 
     [Fact]
@@ -82,11 +77,8 @@ public class ObservableCollectionBindCacheFixture : IDisposable
 
         void RunTest(bool useReplace)
         {
-            var collection = new ObservableCollectionExtended<Person>();
-
-            using var source =  new SourceCache<Person, string>(p => p.Name);
-            using var binder = source.Connect().Bind(collection, useReplaceForUpdates: useReplace).Subscribe();
-
+            using var source = new SourceCache<Person, string>(p => p.Name);
+            using var binder = source.Connect().Bind(out var collection, useReplaceForUpdates: useReplace).Subscribe();
 
             NotifyCollectionChangedAction action = default;
             source.AddOrUpdate(new Person("Adult1", 50));

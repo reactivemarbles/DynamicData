@@ -60,35 +60,23 @@ public sealed class RangeChange<T> : IEnumerable<T>
     /// Adds the specified item to the range.
     /// </summary>
     /// <param name="item">The item.</param>
-    public void Add(T item)
-    {
-        _items.Add(item);
-    }
+    public void Add(T item) => _items.Add(item);
 
     /// <inheritdoc/>
-    public IEnumerator<T> GetEnumerator()
-    {
-        return _items.GetEnumerator();
-    }
+    public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
 
     /// <summary>
     /// Inserts the  item in the range at the specified index.
     /// </summary>
     /// <param name="index">The index.</param>
     /// <param name="item">The item.</param>
-    public void Insert(int index, T item)
-    {
-        _items.Insert(index, item);
-    }
+    public void Insert(int index, T item) => _items.Insert(index, item);
 
     /// <summary>
     /// Sets the index of the starting index of the range.
     /// </summary>
     /// <param name="index">The index.</param>
-    public void SetStartingIndex(int index)
-    {
-        Index = index;
-    }
+    public void SetStartingIndex(int index) => Index = index;
 
     /// <summary>
     /// Returns a <see cref="string" /> that represents this instance.
@@ -99,8 +87,5 @@ public sealed class RangeChange<T> : IEnumerable<T>
     public override string ToString() => $"Range<{typeof(T).Name}>. Count={Count}";
 
     /// <inheritdoc/>
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
