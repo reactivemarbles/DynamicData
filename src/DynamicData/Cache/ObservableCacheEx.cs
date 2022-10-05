@@ -5057,14 +5057,14 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="transformFactory">The transform factory.</param>
-    /// <param name="updateAction">The update action.</param>
+    /// <param name="updateAction">Apply changes to the original. Example (previousTransformedItem, newOriginalItem) => previousTransformedItem.Value = newOriginalItem.</param>
     /// <returns>
     /// A transformed update collection.
     /// </returns>
     /// <exception cref="System.ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
-    public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<TDestination, TSource> updateAction)
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction)
         where TKey : notnull
         where TDestination : class
     {
@@ -5094,7 +5094,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="transformFactory">The transform factory.</param>
-    /// <param name="updateAction">The update action.</param>
+    /// <param name="updateAction">Apply changes to the original. Example (previousTransformedItem, newOriginalItem) => previousTransformedItem.Value = newOriginalItem.</param>
     /// <param name="errorHandler">The error handler.</param>
     /// <returns>
     /// A transformed update collection.
@@ -5102,7 +5102,7 @@ public static class ObservableCacheEx
     /// <exception cref="System.ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
-    public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<TDestination, TSource> updateAction, Action<Error<TSource, TKey>> errorHandler)
+    public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction, Action<Error<TSource, TKey>> errorHandler)
         where TKey : notnull
         where TDestination : class
     {

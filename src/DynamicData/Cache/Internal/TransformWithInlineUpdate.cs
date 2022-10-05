@@ -17,12 +17,12 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
 
     private readonly IObservable<IChangeSet<TSource, TKey>> _source;
 
-    private readonly Func<TSource, Optional<TSource>, TKey, TDestination> _transformFactory;
+    private readonly Func<TSource, TDestination> _transformFactory;
 
     private readonly Action<TDestination, TSource> _updateAction;
 
     public TransformWithInlineUpdate(IObservable<IChangeSet<TSource, TKey>> source,
-                                     Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
+                                     Func<TSource, TDestination> transformFactory,
                                      Action<TDestination, TSource> updateAction,
                                      Action<Error<TSource, TKey>>? exceptionCallback = null)
     {
@@ -81,7 +81,7 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
         {
             try
             {
-                transformed = _transformFactory(change.Current, change.Previous, change.Key);
+                transformed = _transformFactory(change.Current);
                 cache.AddOrUpdate(transformed, change.Key);
             }
             catch (Exception ex)
@@ -91,7 +91,7 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
         }
         else
         {
-            transformed = _transformFactory(change.Current, change.Previous, change.Key);
+            transformed = _transformFactory(change.Current);
             cache.AddOrUpdate(transformed, change.Key);
         }
     }
