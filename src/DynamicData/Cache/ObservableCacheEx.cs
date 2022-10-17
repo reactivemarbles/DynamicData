@@ -167,8 +167,7 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Removes the specified key from the cache.
-    /// If the item is not contained in the cache then the operation does nothing.
+    /// Adds or updates the cache with the specified item / key pair.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
