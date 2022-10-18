@@ -20,7 +20,7 @@ public static class InternalEx
     /// </summary>
     /// <remarks>
     /// With big thanks.  I took this from
-    /// https://social.msdn.microsoft.com/Forums/en-US/af43b14e-fb00-42d4-8fb1-5c45862f7796/recursive-async-web-requestresponse-what-is-best-practice-3rd-try.
+    /// http://social.msdn.microsoft.com/Forums/en-US/af43b14e-fb00-42d4-8fb1-5c45862f7796/recursive-async-web-requestresponse-what-is-best-practice-3rd-try.
     /// </remarks>
     /// <typeparam name="TSource">The type of the source.</typeparam>
     /// <typeparam name="TException">The type of the exception.</typeparam>
@@ -51,7 +51,7 @@ public static class InternalEx
     /// </summary>
     /// <remarks>
     ///  I took this from
-    /// https://www.zerobugbuild.com/?p=259.
+    /// http://www.zerobugbuild.com/?p=259.
     /// </remarks>
     /// <param name="scheduler">The scheduler.</param>
     /// <param name="interval">The interval.</param>
@@ -74,7 +74,7 @@ public static class InternalEx
     /// <remarks>
     ///  I took this from
     ///
-    /// https://www.zerobugbuild.com/?p=259
+    /// http://www.zerobugbuild.com/?p=259
     ///
     /// and adapted it to receive.
     /// </remarks>
