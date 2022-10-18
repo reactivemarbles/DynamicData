@@ -60,12 +60,9 @@ internal static class FilterEx
                                 cache.Refresh(key);
                             }
                         }
-                        else
+                        else if (existing.HasValue)
                         {
-                            if (existing.HasValue)
-                            {
-                                cache.Remove(key);
-                            }
+                            cache.Remove(key);
                         }
                     }
 

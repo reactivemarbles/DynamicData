@@ -13,10 +13,7 @@ internal sealed class AnonymousQuery<TObject, TKey> : IQuery<TObject, TKey>
 {
     private readonly Cache<TObject, TKey> _cache;
 
-    public AnonymousQuery(Cache<TObject, TKey> cache)
-    {
-        _cache = cache.Clone();
-    }
+    public AnonymousQuery(Cache<TObject, TKey> cache) => _cache = cache.Clone();
 
     public int Count => _cache.Count;
 
@@ -26,8 +23,5 @@ internal sealed class AnonymousQuery<TObject, TKey> : IQuery<TObject, TKey>
 
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
 
-    public Optional<TObject> Lookup(TKey key)
-    {
-        return _cache.Lookup(key);
-    }
+    public Optional<TObject> Lookup(TKey key) => _cache.Lookup(key);
 }

@@ -585,10 +585,9 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="destination">The destination.</param>
     /// <param name="refreshThreshold">The number of changes before a reset notification is triggered.</param>
-    /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, int refreshThreshold = 25, bool useReplaceForUpdates = false)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, int refreshThreshold = 25)
         where TKey : notnull
     {
         if (source is null)
@@ -601,8 +600,7 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(destination));
         }
 
-        var updater = new ObservableCollectionAdaptor<TObject, TKey>(refreshThreshold, useReplaceForUpdates);
-        return source.Bind(destination, updater);
+        return source.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(refreshThreshold));
     }
 
     /// <summary>
