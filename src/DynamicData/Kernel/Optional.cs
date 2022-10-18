@@ -78,60 +78,39 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The optional value.</returns>
-    public static implicit operator Optional<T>(T? value)
-    {
-        return ToOptional(value);
-    }
+    public static implicit operator Optional<T>(T? value) => ToOptional(value);
 
     /// <summary>
     /// Explicit cast from option to value.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The optional value.</returns>
-    public static explicit operator T?(Optional<T> value)
-    {
-        return FromOptional(value);
-    }
+    public static explicit operator T?(Optional<T> value) => FromOptional(value);
 
-    public static bool operator ==(Optional<T> left, Optional<T> right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(Optional<T> left, Optional<T> right) => left.Equals(right);
 
-    public static bool operator !=(Optional<T> left, Optional<T> right)
-    {
-        return !left.Equals(right);
-    }
+    public static bool operator !=(Optional<T> left, Optional<T> right) => !left.Equals(right);
 
     /// <summary>
     /// Creates the specified value.
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The optional value.</returns>
-    public static Optional<T> Create(T? value)
-    {
-        return new(value);
-    }
+    public static Optional<T> Create(T? value) => new(value);
 
     /// <summary>
     /// Gets the value from the optional value.
     /// </summary>
     /// <param name="value">The optional value.</param>
     /// <returns>The value.</returns>
-    public static T? FromOptional(Optional<T> value)
-    {
-        return value.Value;
-    }
+    public static T? FromOptional(Optional<T> value) => value.Value;
 
     /// <summary>
     /// Gets the optional from a value.
     /// </summary>
     /// <param name="value">The value to get the optional for.</param>
     /// <returns>The optional.</returns>
-    public static Optional<T> ToOptional(T? value)
-    {
-        return new(value);
-    }
+    public static Optional<T> ToOptional(T? value) => new(value);
 
     /// <inheritdoc />
     public bool Equals(Optional<T> other)
@@ -206,10 +185,7 @@ public static class Optional
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <returns>The optional value.</returns>
-    public static Optional<T> None<T>()
-    {
-        return Optional<T>.None;
-    }
+    public static Optional<T> None<T>() => Optional<T>.None;
 
     /// <summary>
     /// Wraps the specified value in an Optional container.
@@ -217,8 +193,5 @@ public static class Optional
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="value">The value.</param>
     /// <returns>The optional value.</returns>
-    public static Optional<T> Some<T>(T value)
-    {
-        return new(value);
-    }
+    public static Optional<T> Some<T>(T value) => new(value);
 }

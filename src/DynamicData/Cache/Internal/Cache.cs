@@ -23,10 +23,7 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey>
         _data = capacity > 1 ? new Dictionary<TKey, TObject>(capacity) : new Dictionary<TKey, TObject>();
     }
 
-    public Cache(Dictionary<TKey, TObject> data)
-    {
-        _data = data;
-    }
+    public Cache(Dictionary<TKey, TObject> data) => _data = data;
 
     public int Count => _data.Count;
 
@@ -36,20 +33,11 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey>
 
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _data;
 
-    public void AddOrUpdate(TObject item, TKey key)
-    {
-        _data[key] = item;
-    }
+    public void AddOrUpdate(TObject item, TKey key) => _data[key] = item;
 
-    public void Clear()
-    {
-        _data.Clear();
-    }
+    public void Clear() => _data.Clear();
 
-    public Cache<TObject, TKey> Clone()
-    {
-        return new(new Dictionary<TKey, TObject>(_data));
-    }
+    public Cache<TObject, TKey> Clone() => new(new Dictionary<TKey, TObject>(_data));
 
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
