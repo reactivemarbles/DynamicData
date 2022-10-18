@@ -85,7 +85,7 @@ public class ObservableCollectionBindCacheFixture : IDisposable
             var collection = new ObservableCollectionExtended<Person>();
 
             using var source =  new SourceCache<Person, string>(p => p.Name);
-            using var binder = source.Connect().Bind(collection, useReplaceForUpdates: useReplace).Subscribe();
+            using var binder = source.Connect().Bind(collection, new ObservableCollectionAdaptor<Person, string>(useReplaceForUpdates: useReplace)).Subscribe();
 
 
             NotifyCollectionChangedAction action = default;
