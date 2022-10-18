@@ -45,7 +45,7 @@ This is a simple example to show how using Dynamic Data's collections and operat
 ### Get in touch 
 
 If you have any questions, want to get involved or would simply like to keep abreast of developments, you are welcome to join the slack community [Reactive UI Slack](https://reactiveui.net/slack). I am also available [@RolandPheasant](https://twitter.com/RolandPheasant) 
-There is a blog at  http://dynamic-data.org/ but alas it is hopelessly out of date.
+There is a blog at  https://dynamic-data.org/ but alas it is hopelessly out of date.
 
 ## Table of Contents
 

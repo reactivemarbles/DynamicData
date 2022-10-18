@@ -196,7 +196,7 @@ public static class ListEx
     /// <summary>
     /// Performs a binary search on the specified collection.
     ///
-    /// Thanks to http://stackoverflow.com/questions/967047/how-to-perform-a-binary-search-on-ilistt.
+    /// Thanks to https://stackoverflow.com/questions/967047/how-to-perform-a-binary-search-on-ilistt.
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <typeparam name="TSearch">The type of the searched item.</typeparam>
