@@ -30,7 +30,7 @@ public static class EnumerableEx
     }
 
     /// <summary>
-    /// Casts the enumerable to an array if it is already an array.  Otherwise call ToList.
+    /// Casts the enumerable to a List if it is already a List.  Otherwise call ToList.
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
