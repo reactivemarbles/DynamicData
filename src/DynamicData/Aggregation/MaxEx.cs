@@ -118,7 +118,7 @@ public static class MaxEx
 
                     if (change.Type == AggregateType.Add)
                     {
-                        if(maxOrMin is MaxOrMin.Max)
+                        if (maxOrMin is MaxOrMin.Max)
                         {
                             if (value.CompareTo(current.Value) > 0)
                             {
