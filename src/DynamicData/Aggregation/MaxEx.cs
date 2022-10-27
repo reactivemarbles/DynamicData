@@ -118,8 +118,14 @@ public static class MaxEx
 
                     if (change.Type == AggregateType.Add)
                     {
-                        int isMatched = maxOrMin == MaxOrMin.Max ? 1 : -1;
-                        if (value.CompareTo(current.Value) == isMatched)
+                        if (maxOrMin is MaxOrMin.Max)
+                        {
+                            if (value.CompareTo(current.Value) > 0)
+                            {
+                                current = value;
+                            }
+                        }
+                        else if (value.CompareTo(current.Value) < 0)
                         {
                             current = value;
                         }
