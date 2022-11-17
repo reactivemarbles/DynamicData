@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -60,6 +61,43 @@ public class TransformAsyncFixture
         stub.Results.Messages[0].Adds.Should().Be(100, "Should be 80 adds");
         stub.Results.Messages[1].Removes.Should().Be(100, "Should be 80 removes");
         stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
+    }
+
+    [Fact]
+    public async Task RemoveFlowsToTheEnd()
+    {
+        int transform = 0;
+        int count = 500;
+        ReadOnlyObservableCollection<Person> collection;
+
+        using var stub = new TransformStub();
+        var people = Enumerable.Range(1, count).Select(l => new Person("Name" + l, l)).ToArray();
+
+        stub.Source.Connect()
+            .TransformAsync(async person=> {
+                try
+                {
+                    await Task.Delay(Random.Shared.Next(1, 12));
+                    return person;
+                }
+                finally
+                {
+                    transform++;
+                }
+            })
+            .Bind(out collection)
+            .Subscribe();
+
+        foreach(var p in people)
+        {
+            stub.Source.AddOrUpdate(p);
+            stub.Source.RemoveKey(p.Name);
+        }
+
+        while(transform!=count)
+            await Task.Delay(100);
+        await Task.Delay(3000);
+        count.Should().Be(collection.Count);
     }
 
     [Fact]
