@@ -97,7 +97,7 @@ public class TransformAsyncFixture
         while(transform!=count)
             await Task.Delay(100);
         await Task.Delay(3000);
-        count.Should().Be(collection.Count);
+        collection.Count.Should().Be(0);
     }
 
     [Fact]
