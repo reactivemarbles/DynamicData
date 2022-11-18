@@ -64,43 +64,6 @@ public class TransformAsyncFixture
     }
 
     [Fact]
-    public async Task RemoveFlowsToTheEnd()
-    {
-        int transform = 0;
-        int count = 500;
-        ReadOnlyObservableCollection<Person> collection;
-
-        using var stub = new TransformStub();
-        var people = Enumerable.Range(1, count).Select(l => new Person("Name" + l, l)).ToArray();
-
-        stub.Source.Connect()
-            .TransformAsync(async person=> {
-                try
-                {
-                    await Task.Delay(Random.Shared.Next(1, 12));
-                    return person;
-                }
-                finally
-                {
-                    transform++;
-                }
-            })
-            .Bind(out collection)
-            .Subscribe();
-
-        foreach(var p in people)
-        {
-            stub.Source.AddOrUpdate(p);
-            stub.Source.RemoveKey(p.Name);
-        }
-
-        while(transform!=count)
-            await Task.Delay(100);
-        await Task.Delay(3000);
-        collection.Count.Should().Be(0);
-    }
-
-    [Fact]
     public void HandleError()
     {
         using var stub = new TransformStub(p => throw new Exception("Broken"));
@@ -124,6 +87,44 @@ public class TransformAsyncFixture
         stub.Results.Messages[0].Adds.Should().Be(1, "Should be 80 addes");
         stub.Results.Messages[1].Removes.Should().Be(1, "Should be 80 removes");
         stub.Results.Data.Count.Should().Be(0, "Should be nothing cached");
+    }
+
+    [Fact]
+    public async Task RemoveFlowsToTheEnd()
+    {
+        int transform = 0;
+        int count = 500;
+        ReadOnlyObservableCollection<Person> collection;
+
+        var cache = new SourceCache<Person, string>(p => p.Name);
+        var people = Enumerable.Range(1, count).Select(l => new Person("Name" + l, l)).ToArray();
+
+        cache.Connect()
+            .TransformAsync(async person =>
+            {
+                try
+                {
+                    await Task.Delay(Random.Shared.Next(1, 12));
+                    return person;
+                }
+                finally
+                {
+                    transform++;
+                }
+            })
+            .Bind(out collection)
+            .Subscribe();
+
+        foreach (var p in people)
+        {
+            cache.AddOrUpdate(p);
+            cache.RemoveKey(p.Name);
+        }
+
+        while (transform != count)
+            await Task.Delay(100);
+        await Task.Delay(3000);
+        collection.Count.Should().Be(0);
     }
 
     [Fact]
