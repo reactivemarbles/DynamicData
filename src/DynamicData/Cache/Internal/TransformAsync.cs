@@ -39,8 +39,7 @@ internal class TransformAsync<TDestination, TSource, TKey>
                 await asyncLock.WaitAsync();
                 return await DoTransform(cache, changes).ConfigureAwait(false);
             })
-            .Do(_ => asyncLock.Release())
-            .Finally(() => asyncLock.Release());
+            .Do(_ => asyncLock.Release());
 
             if (_forceTransform is not null)
             {
@@ -51,8 +50,7 @@ internal class TransformAsync<TDestination, TSource, TKey>
                     await asyncLock.WaitAsync();
                     return await DoTransform(cache, shouldTransform).ConfigureAwait(false);
                 })
-                .Do(_ => asyncLock.Release())
-                .Finally(() => asyncLock.Release());
+                .Do(_ => asyncLock.Release());
 
                 transformer = transformer.Synchronize(locker).Merge(forced);
             }
