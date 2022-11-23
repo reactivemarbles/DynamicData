@@ -2,11 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 using DynamicData.Kernel;
 
@@ -38,36 +34,35 @@ internal class TransformAsync<TDestination, TSource, TKey>
             var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
             var asyncLock = new SemaphoreSlim(1, 1);
 
-            var transformer = _source.SelectMany(async changes =>
+            var transformer = _source.Select(async changes =>
             {
                 try
                 {
                     await asyncLock.WaitAsync();
                     return await DoTransform(cache, changes).ConfigureAwait(false);
-
                 }
                 finally
                 {
                     asyncLock.Release();
                 }
-            });
+            }).Concat();
 
             if (_forceTransform is not null)
             {
                 var locker = new object();
-                var forced = _forceTransform.Synchronize(locker).SelectMany(async shouldTransform =>
+                var forced = _forceTransform.Synchronize(locker)
+                .Select(async shouldTransform =>
                 {
                     try
                     {
                         await asyncLock.WaitAsync();
                         return await DoTransform(cache, shouldTransform).ConfigureAwait(false);
-
                     }
                     finally
                     {
                         asyncLock.Release();
                     }
-                });
+                }).Concat();
 
                 transformer = transformer.Synchronize(locker).Merge(forced);
             }
@@ -159,9 +154,9 @@ internal class TransformAsync<TDestination, TSource, TKey>
             Destination = destination;
         }
 
-        public TSource Source { get; }
-
         public TDestination Destination { get; }
+
+        public TSource Source { get; }
     }
 
     private sealed class TransformResult
