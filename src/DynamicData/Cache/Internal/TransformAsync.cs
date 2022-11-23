@@ -34,23 +34,38 @@ internal class TransformAsync<TDestination, TSource, TKey>
             var cache = new ChangeAwareCache<TransformedItemContainer, TKey>();
             var asyncLock = new SemaphoreSlim(1, 1);
 
-            var transformer = _source.SelectMany(async changes =>
+            var transformer = _source.Select(async changes =>
             {
-                await asyncLock.WaitAsync();
-                return await DoTransform(cache, changes).ConfigureAwait(false);
-            })
-            .Do(_ => asyncLock.Release());
+                try
+                {
+                    await asyncLock.WaitAsync();
+                    return await DoTransform(cache, changes).ConfigureAwait(false);
+
+                }
+                finally
+                {
+                    asyncLock.Release();
+                }
+            }).Concat();
 
             if (_forceTransform is not null)
             {
                 var locker = new object();
                 var forced = _forceTransform.Synchronize(locker)
-                .SelectMany(async shouldTransform =>
+                .Select(async shouldTransform =>
                 {
-                    await asyncLock.WaitAsync();
-                    return await DoTransform(cache, shouldTransform).ConfigureAwait(false);
-                })
-                .Do(_ => asyncLock.Release());
+                    try
+                    {
+                        await asyncLock.WaitAsync();
+                        return await DoTransform(cache, shouldTransform).ConfigureAwait(false);
+
+
+                    }
+                    finally
+                    {
+                        asyncLock.Release();
+                    }
+                }).Concat();
 
                 transformer = transformer.Synchronize(locker).Merge(forced);
             }
