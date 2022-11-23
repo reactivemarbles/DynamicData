@@ -40,7 +40,6 @@ internal class TransformAsync<TDestination, TSource, TKey>
                 {
                     await asyncLock.WaitAsync();
                     return await DoTransform(cache, changes).ConfigureAwait(false);
-
                 }
                 finally
                 {
@@ -58,8 +57,6 @@ internal class TransformAsync<TDestination, TSource, TKey>
                     {
                         await asyncLock.WaitAsync();
                         return await DoTransform(cache, shouldTransform).ConfigureAwait(false);
-
-
                     }
                     finally
                     {
