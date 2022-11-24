@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using DynamicData.Binding;
@@ -12,6 +13,26 @@ namespace DynamicData.Tests;
 
 public class AutoRefreshFilter
 {
+    [Fact]
+    public void Bind_Transform_and_FilterOnObservable()
+    {
+        var count = 3;
+        var list = new SourceList<string>();
+        list.AddRange(Enumerable.Range(1, count).Select(c => $"item {c}"));
+        
+        var bindedList = new ObservableCollectionExtended<string>();
+       
+        list.Connect()
+            .FilterOnObservable(_ => Observable.Return(true))
+            .Transform(str => str)
+            .Bind(bindedList)
+            .Subscribe(
+                _ => { },
+                ex => {Assert.Fail("There should be no error");}
+            );
+    }
+
+
     [Fact]
     public void Test()
     {

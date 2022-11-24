@@ -43,14 +43,14 @@ internal class FilterOnObservable<TObject>
                     .Publish();
 
                 // monitor each item observable and create change, carry the value of the observable property
-                IObservable<ObjWithFilterValue> itemHasChanged = shared.MergeMany(v => _filter(v.Obj).Select(prop => new ObjWithFilterValue(v.Obj, prop)));
+                var itemHasChanged = shared.MergeMany(v => _filter(v.Obj).Select(prop => new ObjWithFilterValue(v.Obj, prop)));
 
                 // create a change set, either buffered or one item at the time
-                IObservable<IEnumerable<ObjWithFilterValue>> itemsChanged = _buffer is null ?
+                var itemsChanged = _buffer is null ?
                     itemHasChanged.Select(t => new[] { t }) :
                     itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
 
-                IObservable<IChangeSet<ObjWithFilterValue>> requiresRefresh = itemsChanged.Synchronize(locker).Select(
+                var requiresRefresh = itemsChanged.Synchronize(locker).Select(
                     items =>
                     {
                         // catch all the indices of items which have been refreshed
@@ -58,7 +58,10 @@ internal class FilterOnObservable<TObject>
                     }).Select(changes => new ChangeSet<ObjWithFilterValue>(changes));
 
                 // publish refreshes and underlying changes
-                var publisher = shared.Merge(requiresRefresh).Filter(v => v.Filter).Transform(v => v.Obj).SuppressRefresh() // suppress refreshes from filter, avoids excessive refresh messages for no-op filter updates
+                var publisher = shared.Merge(requiresRefresh).Filter(v => v.Filter)
+                    .Transform(v => v.Obj)
+                    .SuppressRefresh() // suppress refreshes from filter, avoids excessive refresh messages for no-op filter updates
+                    .NotEmpty()
                     .SubscribeSafe(observer);
 
                 return new CompositeDisposable(publisher, shared.Connect());
