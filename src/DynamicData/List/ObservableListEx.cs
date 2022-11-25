@@ -1504,7 +1504,16 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> SuppressRefresh<T>(this IObservable<IChangeSet<T>> source)
     {
-        return source.WhereReasonsAreNot(ListChangeReason.Refresh);
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        return source.Select(changes =>
+        {
+            var filtered = changes.Where(c => c.Reason != ListChangeReason.Refresh);
+            return new ChangeSet<T>(filtered);
+        });
     }
 
     /// <summary>

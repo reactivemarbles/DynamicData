@@ -16,6 +16,13 @@ jobs:
     outputs:
       nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
     steps:
+    - name: Get Current Visual Studio Information
+      shell: bash
+      run: |
+        dotnet tool update -g dotnet-vs
+        echo "## About RELEASE ##"
+        vs where release
+       
     - name: Checkout
       uses: actions/checkout@v3
       with:
@@ -32,12 +39,11 @@ jobs:
         $process.StartInfo = $startInfo
         $process.Start()
         $process.WaitForExit()
-        
+ 
     - name: Install .NET 6
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
-        include-prerelease: true
         
     - name: NBGV
       id: nbgv

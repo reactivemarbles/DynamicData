@@ -15,7 +15,14 @@ jobs:
     runs-on: windows-2022
     outputs:
       nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
-    steps:
+    steps:        
+    - name: Get Current Visual Studio Information
+      shell: bash
+      run: |
+        dotnet tool update -g dotnet-vs
+        echo "## About RELEASE ##"
+        vs where release
+        
     - name: Checkout
       uses: actions/checkout@v3
       with:
@@ -33,12 +40,11 @@ jobs:
         $process.StartInfo = $startInfo
         $process.Start()
         $process.WaitForExit()
-        
+
     - name: Install .NET 6
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: 6.0.x
-        include-prerelease: true
 
     - name: NBGV
       id: nbgv
@@ -58,17 +64,21 @@ jobs:
     - name: Build
       run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
       working-directory: src
-
+      
+    #- name: Run Unit Tests and Generate Coverage
+    #  uses: glennawatson/coverlet-msbuild@v1
+    #  with:
+    #    project-files: '**/*Tests*.csproj'
+    #    no-build: true
+    #    exclude-filter: '[${{env.productNamespacePrefix}}.*.Tests.*]*'
+    #    include-filter: '[${{env.productNamespacePrefix}}*]*'
+    #    output-format: cobertura
+    #    output: '../../artifacts/'
+    #    configuration: ${{ env.configuration }}
+        
     - name: Run Unit Tests and Generate Coverage
-      uses: glennawatson/coverlet-msbuild@v1
-      with:
-        project-files: '**/*Tests*.csproj'
-        no-build: true
-        exclude-filter: '[${{env.productNamespacePrefix}}.*.Tests.*]*'
-        include-filter: '[${{env.productNamespacePrefix}}*]*'
-        output-format: cobertura
-        output: '../../artifacts/'
-        configuration: ${{ env.configuration }}
+      run: dotnet test /p:CollectCoverage=true --no-build /p:Exclude=DynamicData.Tests /p:Include=DynamicData.* --configuration Release /p:CoverletOutput=..\..\artifacts\DynamicData.Tests.xml /p:CoverletOutputFormat=cobertura
+      working-directory: src
 
     - name: Upload Code Coverage
       shell: bash
