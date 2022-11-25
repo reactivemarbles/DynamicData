@@ -101,8 +101,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>
 
             // 1. iterate and maintain child caches (_groupCache)
             // 2. maintain which group each item belongs to (_itemCache)
-            grouped.ForEach(
-                group =>
+            grouped.ForEach(group =>
                 {
                     var groupItem = GetCache(group.Key);
                     var groupCache = groupItem.group;
@@ -119,22 +118,16 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>
                                 switch (current.Reason)
                                 {
                                     case ChangeReason.Add:
-                                        {
-                                            groupUpdater.AddOrUpdate(current.Item, current.Key);
-                                            _itemCache[current.Key] = current;
-                                            break;
-                                        }
-
                                     case ChangeReason.Update:
                                         {
                                             groupUpdater.AddOrUpdate(current.Item, current.Key);
 
                                             // check whether the previous item was in a different group. If so remove from old group
-                                            var previous = _itemCache.Lookup(current.Key).ValueOrThrow(() => new MissingKeyException($"{current.Key} is missing from previous value on update. Object type {typeof(TObject).FullName}, Key type {typeof(TKey).FullName}, Group key type {typeof(TGroupKey).FullName}"));
+                                            var previous = _itemCache.Lookup(current.Key);
 
-                                            if (!EqualityComparer<TGroupKey>.Default.Equals(previous.GroupKey, current.GroupKey))
+                                            if (previous.HasValue && !EqualityComparer<TGroupKey>.Default.Equals(previous.Value.GroupKey, current.GroupKey))
                                             {
-                                                _groupCache.Lookup(previous.GroupKey).IfHasValue(
+                                                _groupCache.Lookup(previous.Value.GroupKey).IfHasValue(
                                                     g =>
                                                     {
                                                         g.Update(u => u.Remove(current.Key));
@@ -146,10 +139,9 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>
                                                         _groupCache.Remove(g.Key);
                                                         result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, g.Key, g));
                                                     });
-
-                                                _itemCache[current.Key] = current;
                                             }
 
+                                            _itemCache[current.Key] = current;
                                             break;
                                         }
 
