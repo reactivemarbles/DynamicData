@@ -15,7 +15,14 @@ jobs:
     runs-on: windows-2022
     outputs:
       nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
-    steps:
+    steps:        
+    - name: Get Current Visual Studio Information
+      shell: bash
+      run: |
+        dotnet tool update -g dotnet-vs
+        echo "## About RELEASE ##"
+        vs where release
+        
     - name: Checkout
       uses: actions/checkout@v3
       with:
@@ -33,14 +40,7 @@ jobs:
         $process.StartInfo = $startInfo
         $process.Start()
         $process.WaitForExit()
-        
-    - name: Get Current Visual Studio Information
-      shell: bash
-      run: |
-        dotnet tool update -g dotnet-vs
-        echo "## About RELEASE ##"
-        vs where release
-        
+
     - name: Install .NET 6
       uses: actions/setup-dotnet@v3
       with:
@@ -64,7 +64,7 @@ jobs:
     - name: Build
       run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
       working-directory: src
-
+      
     - name: Run Unit Tests and Generate Coverage
       uses: glennawatson/coverlet-msbuild@v1
       with:
