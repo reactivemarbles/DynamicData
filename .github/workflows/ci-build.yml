@@ -77,7 +77,8 @@ jobs:
     #    configuration: ${{ env.configuration }}
         
     - name: Run Unit Tests and Generate Coverage
-      run: dotnet test /p:CollectCoverage=true --no-build /p:Exclude=DynamicData.Tests /p:Include=DynamicData.* --configuration Release /p:CoverletOutput=..\..\artifacts\DynamicData.Tests.xml /p:CoverletOutputFormat=cobertura DynamicData.Tests.csproj
+      run: dotnet test /p:CollectCoverage=true --no-build /p:Exclude=DynamicData.Tests /p:Include=DynamicData.* --configuration Release /p:CoverletOutput=..\..\artifacts\DynamicData.Tests.xml /p:CoverletOutputFormat=cobertura
+      working-directory: src
 
     - name: Upload Code Coverage
       shell: bash
