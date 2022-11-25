@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
@@ -20,6 +21,42 @@ public class GroupFixture : IDisposable
     public GroupFixture()
     {
         _source = new SourceCache<Person, string>(p => p.Name);
+    }
+
+    [Fact]
+    public void Kaboom()
+    {
+        SourceCache<Mytype, int> cache = new(x => x.Key);
+        List<Mytype> listWithDuplicates = new()
+        {
+            new(1, "G1"),
+            new(1, "G2"),
+        };
+        cache
+            .Connect()
+            .Group(x => x.Grouping)
+            .Subscribe();
+
+        cache.Edit(x =>
+        {
+            x.AddOrUpdate(listWithDuplicates);
+            x.Clear();
+            x.AddOrUpdate(listWithDuplicates);
+        });
+    }
+
+    class Mytype
+    {
+        public Mytype(int key, string grouping)
+        {
+            Key = key;
+            Grouping = grouping;
+        }
+
+        public int Key { get; set; }
+        public string Grouping { get; set; }
+
+        public override string ToString() => $"{Key}, {Grouping}";
     }
 
     [Fact]
