@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -165,6 +166,24 @@ public class PageFixtureWithNoInitialData
 
         pager.OnNext(new PageRequest(2, 3));
         sut.Paged.Count.Should().Be(3);
+    }
+
+
+    [Fact]
+    public void DoesNotThrowWithDuplicates()
+    {
+        // see https://github.com/reactivemarbles/DynamicData/issues/540
+
+        var result = new List<string>();
+
+        var source = new SourceList<string>();
+        source.AddRange(Enumerable.Repeat("item", 10));
+        source.Connect()
+            .Page(new BehaviorSubject<IPageRequest>(new PageRequest(0, 3)))
+            .Clone(result)
+            .Subscribe();
+
+        result.Count.Should().Be(1);
     }
 }
 

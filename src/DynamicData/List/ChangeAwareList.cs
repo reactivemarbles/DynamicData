@@ -147,7 +147,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
         if (_changes.Count == 0)
             return ChangeSet<T>.Empty;
 
-        ChangeSet<T> returnValue = _changes;
+        var returnValue = _changes;
 
         // we can infer this is a Clear
         if (_innerList.Count == 0 && returnValue.Removes == returnValue.TotalChanges && returnValue.TotalChanges > 1)

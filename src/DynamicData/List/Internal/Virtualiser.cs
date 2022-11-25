@@ -2,11 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
-
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
@@ -69,43 +65,30 @@ internal sealed class Virtualiser<T>
 
         var previous = virtualised;
 
-        var current = all.Skip(request.StartIndex).Take(request.Size).ToList();
+        var current = all.Distinct().Skip(request.StartIndex).Take(request.Size).ToList();
 
         var adds = current.Except(previous);
         var removes = previous.Except(current);
 
         virtualised.RemoveMany(removes);
 
-        adds.ForEach(
-            t =>
-            {
-                var index = current.IndexOf(t);
-                virtualised.Insert(index, t);
-            });
-
-        var moves = changeSet.EmptyIfNull().Where(change => change.Reason == ListChangeReason.Moved && change.MovedWithinRange(request.StartIndex, request.StartIndex + request.Size));
-
-        foreach (var change in moves)
+        foreach (var add in adds)
         {
-            // check whether an item has moved within the same page
-            var currentIndex = change.Item.CurrentIndex - request.StartIndex;
-            var previousIndex = change.Item.PreviousIndex - request.StartIndex;
-            virtualised.Move(previousIndex, currentIndex);
+            var index = current.IndexOf(add);
+            virtualised.Insert(index, add);
         }
 
-        // find replaces [Is this ever the case that it can be reached]
-        for (var i = 0; i < current.Count; i++)
+        if (changeSet is not null && changeSet.Count != 0)
         {
-            var currentItem = current[i];
-            var previousItem = previous[i];
+            var moves = changeSet.EmptyIfNull().Where(change => change.Reason == ListChangeReason.Moved && change.MovedWithinRange(request.StartIndex, request.StartIndex + request.Size));
 
-            if (ReferenceEquals(currentItem, previousItem))
+            foreach (var change in moves)
             {
-                continue;
+                // check whether an item has moved within the same page
+                var currentIndex = change.Item.CurrentIndex - request.StartIndex;
+                var previousIndex = change.Item.PreviousIndex - request.StartIndex;
+                virtualised.Move(previousIndex, currentIndex);
             }
-
-            var index = virtualised.IndexOf(currentItem);
-            virtualised.Move(i, index);
         }
 
         return virtualised.CaptureChanges();

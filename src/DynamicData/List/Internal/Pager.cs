@@ -2,10 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 
 using DynamicData.Kernel;
@@ -95,7 +92,7 @@ internal class Pager<T>
         int page = request.Page > pages ? pages : request.Page;
         int skip = request.Size * (page - 1);
 
-        var current = all.Skip(skip)
+        var current = all.Distinct().Skip(skip)
             .Take(request.Size)
             .ToList();
 
@@ -104,39 +101,27 @@ internal class Pager<T>
 
         paged.RemoveMany(removes);
 
-        adds.ForEach(t =>
+        foreach (var add in adds)
         {
-            var index = current.IndexOf(t);
-            paged.Insert(index, t);
-        });
+            var index = current.IndexOf(add);
+            paged.Insert(index, add);
+        }
 
         var startIndex = skip;
 
-        var moves = changeSet.EmptyIfNull()
-            .Where(change => change.Reason == ListChangeReason.Moved
-                             && change.MovedWithinRange(startIndex, startIndex + request.Size));
-
-        foreach (var change in moves)
+        if (changeSet is not null && changeSet.Count != 0)
         {
-            // check whether an item has moved within the same page
-            var currentIndex = change.Item.CurrentIndex - startIndex;
-            var previousIndex = change.Item.PreviousIndex - startIndex;
-            paged.Move(previousIndex, currentIndex);
-        }
+            var moves = changeSet
+                .Where(change => change.Reason == ListChangeReason.Moved
+                                 && change.MovedWithinRange(startIndex, startIndex + request.Size));
 
-        // find replaces [Is this ever the case that it can be reached]
-        for (int i = 0; i < current.Count; i++)
-        {
-            var currentItem = current[i];
-            var previousItem = previous[i];
-
-            if (ReferenceEquals(currentItem, previousItem))
+            foreach (var change in moves)
             {
-                continue;
+                // check whether an item has moved within the same page
+                var currentIndex = change.Item.CurrentIndex - startIndex;
+                var previousIndex = change.Item.PreviousIndex - startIndex;
+                paged.Move(previousIndex, currentIndex);
             }
-
-            var index = paged.IndexOf(currentItem);
-            paged.Move(i, index);
         }
 
         var changed = paged.CaptureChanges();

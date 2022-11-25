@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 
@@ -127,5 +128,23 @@ public class VirtualisationFixture : IDisposable
         var expected = people.Take(25).ToArray();
 
         _results.Data.Items.Should().BeEquivalentTo(expected);
+    }
+
+
+    [Fact]
+    public void DoesNotThrowWithDuplicates()
+    {
+        // see https://github.com/reactivemarbles/DynamicData/issues/540
+
+        var result = new List<string>();
+
+        var source = new SourceList<string>();
+        source.AddRange(Enumerable.Repeat("item", 10));
+        source.Connect()
+            .Virtualise(new BehaviorSubject<IVirtualRequest>(new VirtualRequest(0, 3)))
+            .Clone(result)
+            .Subscribe();
+
+        result.Count.Should().Be(1);
     }
 }
