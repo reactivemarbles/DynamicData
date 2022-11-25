@@ -65,16 +65,19 @@ jobs:
       run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
       working-directory: src
       
+    #- name: Run Unit Tests and Generate Coverage
+    #  uses: glennawatson/coverlet-msbuild@v1
+    #  with:
+    #    project-files: '**/*Tests*.csproj'
+    #    no-build: true
+    #    exclude-filter: '[${{env.productNamespacePrefix}}.*.Tests.*]*'
+    #    include-filter: '[${{env.productNamespacePrefix}}*]*'
+    #    output-format: cobertura
+    #    output: '../../artifacts/'
+    #    configuration: ${{ env.configuration }}
+        
     - name: Run Unit Tests and Generate Coverage
-      uses: glennawatson/coverlet-msbuild@v1
-      with:
-        project-files: '**/*Tests*.csproj'
-        no-build: true
-        exclude-filter: '[${{env.productNamespacePrefix}}.*.Tests.*]*'
-        include-filter: '[${{env.productNamespacePrefix}}*]*'
-        output-format: cobertura
-        output: '../../artifacts/'
-        configuration: ${{ env.configuration }}
+      run: dotnet test /p:CollectCoverage=true --no-build /p:Exclude=DynamicData.Tests /p:Include=DynamicData.* --configuration Release /p:CoverletOutput=..\..\artifacts\DynamicData.Tests.xml /p:CoverletOutputFormat=cobertura DynamicData.Tests.csproj
 
     - name: Upload Code Coverage
       shell: bash
