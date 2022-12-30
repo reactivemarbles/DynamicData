@@ -22,6 +22,16 @@ jobs:
         dotnet tool update -g dotnet-vs
         echo "## About RELEASE ##"
         vs where release
+
+    - name: Update Visual Studio Latest Release
+      shell: bash
+      run: |
+        echo "## Update RELEASE ##"
+        vs update release Enterprise
+        vs modify release Enterprise +mobile +desktop +uwp +web
+        echo "## About RELEASE Updated ##"
+        vs where release
+        echo "##vso[task.prependpath]$(vs where release --prop=InstallationPath)\MSBuild\Current\Bin"
         
     - name: Checkout
       uses: actions/checkout@v3
@@ -29,22 +39,12 @@ jobs:
         fetch-depth: 0
         lfs: true
 
-    - name: Install Windows SDK 10.0.16299
-      shell: pwsh
-      run: |
-        Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/p/?linkid=864422 -OutFile winsdk.exe
-        $startInfo = New-Object System.Diagnostics.ProcessStartInfo
-        $startInfo.FileName = "winsdk.exe"
-        $startInfo.Arguments = "/norestart /quiet"
-        $process = New-Object System.Diagnostics.Process
-        $process.StartInfo = $startInfo
-        $process.Start()
-        $process.WaitForExit()
-
-    - name: Install .NET 6
+    - name: Install .NET 6 & .NET 7
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: |
+            6.0.x
+            7.0.x
 
     - name: NBGV
       id: nbgv
@@ -65,28 +65,18 @@ jobs:
       run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
       working-directory: src
       
-    #- name: Run Unit Tests and Generate Coverage
-    #  uses: glennawatson/coverlet-msbuild@v1
-    #  with:
-    #    project-files: '**/*Tests*.csproj'
-    #    no-build: true
-    #    exclude-filter: '[${{env.productNamespacePrefix}}.*.Tests.*]*'
-    #    include-filter: '[${{env.productNamespacePrefix}}*]*'
-    #    output-format: cobertura
-    #    output: '../../artifacts/'
-    #    configuration: ${{ env.configuration }}
-        
     - name: Run Unit Tests and Generate Coverage
-      run: dotnet test /p:CollectCoverage=true --no-build /p:Exclude=DynamicData.Tests /p:Include=DynamicData.* --configuration Release /p:CoverletOutput=..\..\artifacts\DynamicData.Tests.xml /p:CoverletOutputFormat=cobertura
-      working-directory: src
+      uses: glennawatson/coverlet-msbuild@v2.1
+      with:
+        project-files: '**/*Tests*.csproj'
+        no-build: true
+        exclude-filter: '[${{env.productNamespacePrefix}}.*.Tests.*]*'
+        include-filter: '[${{env.productNamespacePrefix}}*]*'
+        output-format: cobertura
+        configuration: ${{ env.configuration }}
 
     - name: Upload Code Coverage
-      shell: bash
-      run: |
-        echo $PWD
-        bash <(curl -s https://codecov.io/bash) -X gcov -X coveragepy -t ${{ env.CODECOV_TOKEN }} -s '$PWD/artifacts' -f '*.xml'
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      uses: codecov/codecov-action@v3
 
     - name: Create NuGet Artifacts
       uses: actions/upload-artifact@master
