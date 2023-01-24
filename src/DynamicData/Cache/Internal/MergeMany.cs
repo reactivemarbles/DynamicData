@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -36,7 +35,6 @@ internal class MergeMany<TObject, TKey, TDestination>
         return Observable.Create<TDestination>(
             observer =>
             {
-
                 var locker = new object();
                 return _source.SubscribeMany((t, key) => _observableSelector(t, key).Synchronize(locker).Subscribe(observer.OnNext, _ => { }, () => { })).Subscribe(_ => { }, observer.OnError);
             });
