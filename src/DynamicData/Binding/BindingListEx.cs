@@ -2,8 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -15,6 +14,145 @@ namespace DynamicData.Binding;
 /// </summary>
 public static class BindingListEx
 {
+    internal static void Clone<T>(this BindingList<T> source, IEnumerable<Change<T>> changes)
+    {
+        // ** Copied from ListEx for binding list specific changes
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (changes is null) throw new ArgumentNullException(nameof(changes));
+
+        foreach (var item in changes)
+        {
+            source.Clone(item, EqualityComparer<T>.Default);
+        }
+    }
+
+    private static void Clone<T>(this BindingList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
+    {
+        switch (item.Reason)
+        {
+            case ListChangeReason.Add:
+                {
+                    var change = item.Item;
+                    var hasIndex = change.CurrentIndex >= 0;
+                    if (hasIndex)
+                    {
+                        source.Insert(change.CurrentIndex, change.Current);
+                    }
+                    else
+                    {
+                        source.Add(change.Current);
+                    }
+
+                    break;
+                }
+
+            case ListChangeReason.AddRange:
+                {
+                    source.AddOrInsertRange(item.Range, item.Range.Index);
+                    break;
+                }
+
+            case ListChangeReason.Clear:
+                {
+                    source.ClearOrRemoveMany(item);
+                    break;
+                }
+
+            case ListChangeReason.Replace:
+                {
+                    var change = item.Item;
+                    if (change.CurrentIndex >= 0 && change.CurrentIndex == change.PreviousIndex)
+                    {
+                        source[change.CurrentIndex] = change.Current;
+                    }
+                    else
+                    {
+                        if (change.PreviousIndex == -1)
+                        {
+                            source.Remove(change.Previous.Value);
+                        }
+                        else
+                        {
+                            // is this best? or replace + move?
+                            source.RemoveAt(change.PreviousIndex);
+                        }
+
+                        if (change.CurrentIndex == -1)
+                        {
+                            source.Add(change.Current);
+                        }
+                        else
+                        {
+                            source.Insert(change.CurrentIndex, change.Current);
+                        }
+                    }
+
+                    break;
+                }
+
+            case ListChangeReason.Refresh:
+                {
+                    var index = source.IndexOf(item.Item.Current);
+                    if (index != -1)
+                        source.ResetItem(index);
+                    break;
+                }
+
+            case ListChangeReason.Remove:
+                {
+                    var change = item.Item;
+                    bool hasIndex = change.CurrentIndex >= 0;
+                    if (hasIndex)
+                    {
+                        source.RemoveAt(change.CurrentIndex);
+                    }
+                    else
+                    {
+                        int index = source.IndexOf(change.Current, equalityComparer);
+                        if (index > -1)
+                        {
+                            source.RemoveAt(index);
+                        }
+                    }
+
+                    break;
+                }
+
+            case ListChangeReason.RemoveRange:
+                {
+                    source.RemoveMany(item.Range);
+                    break;
+                }
+
+            case ListChangeReason.Moved:
+                {
+                    var change = item.Item;
+                    bool hasIndex = change.CurrentIndex >= 0;
+                    if (!hasIndex)
+                    {
+                        throw new UnspecifiedIndexException("Cannot move as an index was not specified");
+                    }
+
+                    if (source is IExtendedList<T> extendedList)
+                    {
+                        extendedList.Move(change.PreviousIndex, change.CurrentIndex);
+                    }
+                    else if (source is ObservableCollection<T> observableCollection)
+                    {
+                        observableCollection.Move(change.PreviousIndex, change.CurrentIndex);
+                    }
+                    else
+                    {
+                        // check this works whatever the index is
+                        source.RemoveAt(change.PreviousIndex);
+                        source.Insert(change.CurrentIndex, change.Current);
+                    }
+
+                    break;
+                }
+        }
+    }
+
     /// <summary>
     /// Observes list changed args.
     /// </summary>

@@ -57,11 +57,6 @@ namespace DynamicData.Tests.Binding
             _collection.Count.Should().Be(0, "Should be 100 items in the collection");
         }
 
-        public void Dispose()
-        {
-            _binder.Dispose();
-            _source.Dispose();
-        }
 
         [Fact]
         public void RemoveSourceRemovesFromTheDestination()
@@ -74,6 +69,26 @@ namespace DynamicData.Tests.Binding
         }
 
         [Fact]
+        public void Refresh()
+        {
+            var people = _generator.Take(100).ToList();
+            _source.AddOrUpdate(people);
+
+            ListChangedEventArgs? args = null;
+
+            _collection.ListChanged += (_, e) =>
+            {
+                args = e;
+            };
+
+            _source.Refresh(people[10]);
+
+            args.Should().NotBeNull();
+            args.ListChangedType.Should().Be(ListChangedType.ItemChanged);
+            args.NewIndex.Should().Be(10);
+        }
+
+        [Fact]
         public void UpdateToSourceUpdatesTheDestination()
         {
             var person = new Person("Adult1", 50);
@@ -83,6 +98,12 @@ namespace DynamicData.Tests.Binding
 
             _collection.Count.Should().Be(1, "Should be 1 item in the collection");
             _collection.First().Should().Be(personUpdated, "Should be updated person");
+        }
+
+        public void Dispose()
+        {
+            _binder.Dispose();
+            _source.Dispose();
         }
     }
 }
