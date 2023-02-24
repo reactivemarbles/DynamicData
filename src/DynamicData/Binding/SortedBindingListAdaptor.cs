@@ -4,6 +4,7 @@
 
 #if SUPPORTS_BINDINGLIST
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
@@ -102,6 +103,14 @@ namespace DynamicData.Binding
                         _list.RemoveAt(change.PreviousIndex);
                         _list.Insert(change.CurrentIndex, change.Current);
                         break;
+
+                    case ChangeReason.Refresh:
+                        {
+                            var index = _list.IndexOf(change.Current);
+                            if (index != -1)
+                                _list.ResetItem(index);
+                            break;
+                        }
                 }
             }
         }

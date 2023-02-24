@@ -1,30 +1,33 @@
 <Project>
-	<PropertyGroup>
-		<Product>$(AssemblyName) ($(TargetFramework))</Product>
-	</PropertyGroup>
+  <PropertyGroup>
+    <Product>$(AssemblyName) ($(TargetFramework))</Product>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('uap'))">
-		<DefineConstants>$(DefineConstants);WINDOWS_UWP;P_LINQ</DefineConstants>
-	</PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('uap'))">
+    <DefineConstants>$(DefineConstants);WINDOWS_UWP;P_LINQ</DefineConstants>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
-		<DefineConstants>$(DefineConstants);P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
-	</PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DefineConstants>$(DefineConstants);P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
-		<DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
-	</PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('netcoreapp'))">
-		<DefineConstants>$(DefineConstants);NETCOREAPP;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
-	</PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netcoreapp'))">
+    <DefineConstants>$(DefineConstants);NETCOREAPP;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('net5'))">
-		<DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
-	</PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net5'))">
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="$(TargetFramework.StartsWith('net6'))">
-		<DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
-	</PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net6'))">
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+  </PropertyGroup>
 
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net7'))">
+    <DefineConstants>$(DefineConstants);NETSTANDARD;PORTABLE;P_LINQ;SUPPORTS_BINDINGLIST</DefineConstants>
+  </PropertyGroup>
 </Project>
