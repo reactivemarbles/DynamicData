@@ -80,7 +80,6 @@ public class BindingListToChangeSetFixture : IDisposable
         sourceCacheResults.Messages.First().Adds.Should().Be(1);
         sourceCacheResults.Messages.Last().Refreshes.Should().Be(1);
 
-
         /*
              List receives add and replace instead of refresh (and as of 23/02/2023 it receives a refresh too!)
          */
