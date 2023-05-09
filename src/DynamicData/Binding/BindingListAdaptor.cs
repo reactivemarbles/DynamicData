@@ -119,23 +119,18 @@ namespace DynamicData.Binding
                         break;
 
                     case ChangeReason.Update:
-                        var item = update.Previous.Value;
-
-                        if (item is not null)
-                        {
-                            list.Remove(item);
-                        }
-
-                        list.Add(update.Current);
+                        var previousIndex = list.IndexOf(update.Previous.Value);
+                        if (previousIndex >= 0)
+                            list[previousIndex] = update.Current;
+                        else
+                            list.Add(update.Current);
                         break;
 
                     case ChangeReason.Refresh:
-                        {
-                            var index = list.IndexOf(update.Current);
-                            if (index != -1)
-                                list.ResetItem(index);
-                            break;
-                        }
+                        var index = list.IndexOf(update.Current);
+                        if (index != -1)
+                            list.ResetItem(index);
+                        break;
                 }
             }
         }

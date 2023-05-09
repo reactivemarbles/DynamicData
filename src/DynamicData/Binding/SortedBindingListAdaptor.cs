@@ -100,17 +100,27 @@ namespace DynamicData.Binding
                         break;
 
                     case ChangeReason.Update:
-                        _list.RemoveAt(change.PreviousIndex);
-                        _list.Insert(change.CurrentIndex, change.Current);
+                        if (change.CurrentIndex != change.PreviousIndex)
+                        {
+                            _list.RemoveAt(change.PreviousIndex);
+                            _list.Insert(change.CurrentIndex, change.Current);
+                        }
+                        else
+                        {
+                            var previousIndex = _list.IndexOf(change.Previous.Value);
+                            if (previousIndex >= 0)
+                                _list[previousIndex] = change.Current;
+                            else
+                                _list.Add(change.Current);
+                        }
+
                         break;
 
                     case ChangeReason.Refresh:
-                        {
-                            var index = _list.IndexOf(change.Current);
-                            if (index != -1)
-                                _list.ResetItem(index);
-                            break;
-                        }
+                        var index = _list.IndexOf(change.Current);
+                        if (index != -1)
+                            _list.ResetItem(index);
+                        break;
                 }
             }
         }
