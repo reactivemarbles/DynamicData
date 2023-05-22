@@ -67,6 +67,25 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
     {
     }
 
+    public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IObservableCache<TDestination, TDestinationKey>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+        : this(source,
+            x => manySelector(x).Items,
+            keySelector,
+            t => Observable.Defer(
+                () =>
+                {
+                    var subsequentChanges = Observable.Create<IChangeSet<TDestination, TDestinationKey>>(o => manySelector(t).Connect().Subscribe(o));
+
+                    if (manySelector(t).Count > 0)
+                    {
+                        return subsequentChanges;
+                    }
+
+                    return Observable.Return(ChangeSet<TDestination, TDestinationKey>.Empty).Concat(subsequentChanges);
+                }))
+    {
+    }
+
     public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IEnumerable<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector, Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>>? childChanges = null)
     {
         _source = source;
@@ -108,11 +127,11 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
                     {
                         // Only skip initial for first time Adds where there is initial data records
                         var locker = new object();
-                        var collection = _manySelector(t);
                         var changes = _childChanges(t).Synchronize(locker).Skip(1);
                         return new ManyContainer(
                             () =>
                             {
+                                var collection = _manySelector(t);
                                 lock (locker)
                                 {
                                     return collection.Select(m => new DestinationContainer(m, _keySelector(m))).ToArray();
