@@ -10,7 +10,7 @@
     <DebugType>embedded</DebugType>
     <Authors>Roland Pheasant</Authors>
     <Owners>Roland Pheasant</Owners>
-    <Copyright>Copyright (c) Roland Pheasant 2011-2022</Copyright>
+    <Copyright>Copyright (c) Roland Pheasant 2011-$([System.DateTime]::Now.ToString(yyyy))</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>http://dynamic-data.org</PackageProjectUrl>
     <PackageTags>DynamicData;Dynamic;Data;Rx;Reactive;Observable;Cache;Binding;ObservableCache;ObservableList;ObservableCollection;Collection;Linq</PackageTags>
@@ -18,6 +18,7 @@
     <RepositoryUrl>https://github.com/reactiveui/DynamicData</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
  
     <!-- Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
@@ -45,6 +46,7 @@
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\images\logo.png" Pack="true" PackagePath="\"/>
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
   <ItemGroup Condition="'$(IsTestProject)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" /> 
@@ -59,7 +61,7 @@
   </ItemGroup>
 
   <ItemGroup>	
-    <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.128" PrivateAssets="all" />	
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.132" PrivateAssets="all" />	
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.435" PrivateAssets="all" />
