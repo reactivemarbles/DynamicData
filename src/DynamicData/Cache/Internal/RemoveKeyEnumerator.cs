@@ -9,6 +9,7 @@ using System.Collections.Generic;
 namespace DynamicData.Cache.Internal;
 
 internal class RemoveKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject>>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IExtendedList<TObject>? _list;

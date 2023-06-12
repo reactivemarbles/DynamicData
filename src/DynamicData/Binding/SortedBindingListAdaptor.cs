@@ -17,6 +17,7 @@ namespace DynamicData.Binding
     /// <typeparam name="TObject">The type of object.</typeparam>
     /// <typeparam name="TKey">The type of key.</typeparam>
     public class SortedBindingListAdaptor<TObject, TKey> : ISortedChangeSetAdaptor<TObject, TKey>
+        where TObject : notnull
         where TKey : notnull
     {
         private readonly BindingList<TObject> _list;

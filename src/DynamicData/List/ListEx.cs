@@ -251,7 +251,8 @@ public static class ListEx
     /// or
     /// changes.
     /// </exception>
-    public static void Clone<T>(this IList<T> source, IChangeSet<T> changes) => Clone(source, changes, null);
+    public static void Clone<T>(this IList<T> source, IChangeSet<T> changes)
+        where T : notnull => Clone(source, changes, null);
 
     /// <summary>
     /// Clones the list from the specified change set.
@@ -265,7 +266,8 @@ public static class ListEx
     /// or
     /// changes.
     /// </exception>
-    public static void Clone<T>(this IList<T> source, IChangeSet<T> changes, IEqualityComparer<T>? equalityComparer) => Clone(source, (IEnumerable<Change<T>>)changes, equalityComparer);
+    public static void Clone<T>(this IList<T> source, IChangeSet<T> changes, IEqualityComparer<T>? equalityComparer)
+        where T : notnull => Clone(source, (IEnumerable<Change<T>>)changes, equalityComparer);
 
     /// <summary>
     /// Clones the list from the specified enumerable of changes.
@@ -280,6 +282,7 @@ public static class ListEx
     /// changes.
     /// </exception>
     public static void Clone<T>(this IList<T> source, IEnumerable<Change<T>> changes, IEqualityComparer<T>? equalityComparer)
+        where T : notnull
     {
         if (source is null)
         {
@@ -554,6 +557,7 @@ public static class ListEx
     /// <param name="source">The source.</param>
     /// <param name="change">The change.</param>
     internal static void ClearOrRemoveMany<T>(this IList<T> source, Change<T> change)
+        where T : notnull
     {
         // apply this to other operators
         if (source.Count == change.Range.Count)
@@ -567,6 +571,7 @@ public static class ListEx
     }
 
     internal static bool MovedWithinRange<T>(this Change<T> source, int startIndex, int endIndex)
+        where T : notnull
     {
         if (source.Reason != ListChangeReason.Moved)
         {
@@ -580,6 +585,7 @@ public static class ListEx
     }
 
     private static void Clone<T>(this IList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
+        where T : notnull
     {
         var changeAware = source as ChangeAwareList<T>;
 

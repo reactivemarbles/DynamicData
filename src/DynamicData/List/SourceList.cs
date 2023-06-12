@@ -18,6 +18,7 @@ namespace DynamicData;
 /// <typeparam name="T">The type of the object.</typeparam>
 [DebuggerDisplay("SourceList<{typeof(T).Name}> ({Count} Items)")]
 public sealed class SourceList<T> : ISourceList<T>
+    where T : notnull
 {
     private readonly ISubject<IChangeSet<T>> _changes = new Subject<IChangeSet<T>>();
 

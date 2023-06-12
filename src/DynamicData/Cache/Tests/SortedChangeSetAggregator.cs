@@ -18,6 +18,7 @@ namespace DynamicData.Tests;
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 public class SortedChangeSetAggregator<TObject, TKey> : IDisposable
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IDisposable _disposer;

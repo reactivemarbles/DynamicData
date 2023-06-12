@@ -9,6 +9,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="T">The type of the object.</typeparam>
 public interface IChangeSetAdaptor<T>
+    where T : notnull
 {
     /// <summary>
     /// Adapts the specified change.

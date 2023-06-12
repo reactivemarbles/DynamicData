@@ -11,6 +11,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class DisposeMany<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Action<TObject> _removeAction;

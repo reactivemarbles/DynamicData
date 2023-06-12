@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class Sort<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IComparer<TObject>? _comparer;

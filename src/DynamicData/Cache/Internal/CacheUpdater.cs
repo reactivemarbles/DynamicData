@@ -11,6 +11,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly ICache<TObject, TKey> _cache;

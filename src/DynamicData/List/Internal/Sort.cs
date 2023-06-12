@@ -13,6 +13,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class Sort<T>
+    where T : notnull
 {
     private readonly IObservable<IComparer<T>> _comparerObservable;
 

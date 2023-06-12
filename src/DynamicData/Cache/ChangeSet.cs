@@ -14,6 +14,7 @@ namespace DynamicData;
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 public class ChangeSet<TObject, TKey> : List<Change<TObject, TKey>>, IChangeSet<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     /// <summary>

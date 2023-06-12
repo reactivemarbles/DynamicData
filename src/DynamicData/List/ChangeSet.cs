@@ -13,6 +13,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="T">The type of the object.</typeparam>
 public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
+    where T : notnull
 {
     /// <summary>
     /// An empty change set.

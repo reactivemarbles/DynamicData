@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.List.Internal;
 
 internal class RefCount<T>
+    where T : notnull
 {
     private readonly object _locker = new();
 

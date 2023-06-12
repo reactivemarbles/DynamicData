@@ -8,6 +8,7 @@ using System.Collections.Generic;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class ManagedGroup<TObject, TKey, TGroupKey> : IGroup<TObject, TKey, TGroupKey>, IDisposable
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IntermediateCache<TObject, TKey> _cache = new();

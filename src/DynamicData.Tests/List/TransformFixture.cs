@@ -118,19 +118,6 @@ public class TransformFixture : IDisposable
     }
 
     [Fact]
-    public void TransformToNull()
-    {
-        using var source = new SourceList<Person>();
-        using var results = new ChangeSetAggregator<PersonWithGender?>(source.Connect()
-            .Transform((Func<Person, PersonWithGender?>)(p => null)));
-        source.Add(new Person("Adult1", 50));
-
-        results.Messages.Count.Should().Be(1, "Should be 1 updates");
-        results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
-        results.Data.Items.First().Should().Be(null, "Should be same person");
-    }
-
-    [Fact]
     public void Update()
     {
         const string key = "Adult1";

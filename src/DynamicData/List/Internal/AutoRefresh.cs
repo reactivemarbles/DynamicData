@@ -13,6 +13,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal class AutoRefresh<TObject, TAny>
+    where TObject : notnull
 {
     private readonly TimeSpan? _buffer;
 

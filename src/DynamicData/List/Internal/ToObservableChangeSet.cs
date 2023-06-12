@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.List.Internal;
 
 internal class ToObservableChangeSet<T>
+    where T : notnull
 {
     private readonly Func<T, TimeSpan?>? _expireAfter;
 

@@ -15,6 +15,7 @@ namespace DynamicData;
 
 [DebuggerDisplay("ObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]

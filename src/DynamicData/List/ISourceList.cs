@@ -13,6 +13,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
 public interface ISourceList<T> : IObservableList<T>
+    where T : notnull
 {
     /// <summary>
     /// Edit the inner list within the list's internal locking mechanism.

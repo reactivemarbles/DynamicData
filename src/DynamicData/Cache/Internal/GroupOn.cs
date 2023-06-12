@@ -14,6 +14,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class GroupOn<TObject, TKey, TGroupKey>
+    where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {

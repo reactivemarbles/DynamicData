@@ -13,9 +13,9 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class GroupOnPropertyWithImmutableState<TObject, TKey, TGroup>
+    where TObject : INotifyPropertyChanged
     where TKey : notnull
     where TGroup : notnull
-    where TObject : INotifyPropertyChanged
 {
     private readonly Func<TObject, TGroup> _groupSelector;
 

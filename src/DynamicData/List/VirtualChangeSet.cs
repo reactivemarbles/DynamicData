@@ -10,6 +10,7 @@ using System.Collections.Generic;
 namespace DynamicData;
 
 internal class VirtualChangeSet<T> : IVirtualChangeSet<T>
+    where T : notnull
 {
     private readonly IChangeSet<T> _virtualChangeSet;
 

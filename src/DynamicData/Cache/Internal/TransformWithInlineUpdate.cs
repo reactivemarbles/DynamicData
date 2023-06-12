@@ -10,8 +10,9 @@ using DynamicData.List.Internal;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
-    where TKey : notnull
     where TDestination : class
+    where TSource : notnull
+    where TKey : notnull
 {
     private readonly Action<Error<TSource, TKey>>? _exceptionCallback;
 

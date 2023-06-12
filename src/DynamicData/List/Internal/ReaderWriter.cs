@@ -9,6 +9,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class ReaderWriter<T>
+    where T : notnull
 {
     private readonly object _locker = new();
 

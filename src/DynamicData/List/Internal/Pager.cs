@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal class Pager<T>
+    where T : notnull
 {
     private readonly IObservable<IPageRequest> _requests;
 

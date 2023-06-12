@@ -11,6 +11,7 @@ using DynamicData.List.Internal;
 namespace DynamicData;
 
 internal class ChangeAwareListWithRefCounts<T> : ChangeAwareList<T>
+    where T : notnull
 {
     private readonly ReferenceCountTracker<T> _tracker = new();
 

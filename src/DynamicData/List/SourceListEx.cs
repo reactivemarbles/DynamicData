@@ -23,6 +23,8 @@ public static class SourceListEx
     /// <param name="conversionFactory">The conversion factory.</param>
     /// <returns>An observable which emits that change set.</returns>
     public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>(this ISourceList<TSource> source, Func<TSource, TDestination> conversionFactory)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {

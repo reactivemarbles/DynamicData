@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly ChangeAwareCache<TObject, TKey> _cache;

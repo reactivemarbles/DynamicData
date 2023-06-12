@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class Page<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservable<IPageRequest> _pageRequests;

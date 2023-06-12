@@ -11,6 +11,7 @@ namespace DynamicData;
 /// <typeparam name="TKey">The type of the key.</typeparam>s
 /// <typeparam name="TGroupKey">The value on which the stream has been grouped.</typeparam>
 public interface IImmutableGroupChangeSet<TObject, TKey, TGroupKey> : IChangeSet<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>
+    where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {

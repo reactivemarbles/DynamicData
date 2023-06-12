@@ -14,8 +14,8 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class TreeBuilder<TObject, TKey>
-    where TKey : notnull
     where TObject : class
+    where TKey : notnull
 {
     private readonly Func<TObject, TKey> _pivotOn;
 

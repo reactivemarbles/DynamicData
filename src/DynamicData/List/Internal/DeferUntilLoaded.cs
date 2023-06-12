@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal class DeferUntilLoaded<T>
+    where T : notnull
 {
     private readonly IObservable<IChangeSet<T>> _source;
 

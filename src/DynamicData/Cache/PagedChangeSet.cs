@@ -12,6 +12,7 @@ using DynamicData.Operators;
 namespace DynamicData;
 
 internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IPagedChangeSet<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     public static readonly new IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();

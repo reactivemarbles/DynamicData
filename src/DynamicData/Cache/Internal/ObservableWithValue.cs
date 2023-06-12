@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class ObservableWithValue<TObject, TValue>
+    where TValue : notnull
 {
     public ObservableWithValue(TObject item, IObservable<TValue> source)
     {

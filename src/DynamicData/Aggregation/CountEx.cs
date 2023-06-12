@@ -20,6 +20,7 @@ public static class CountEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
     public static IObservable<int> Count<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Count();
@@ -32,6 +33,7 @@ public static class CountEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
     public static IObservable<int> Count<TObject>(this IObservable<IChangeSet<TObject>> source)
+        where TObject : notnull
     {
         return source.ForAggregation().Count();
     }
@@ -68,6 +70,7 @@ public static class CountEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
     public static IObservable<bool> IsEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Count().StartWith(0).Select(count => count == 0);
@@ -81,6 +84,7 @@ public static class CountEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
     public static IObservable<bool> IsEmpty<TObject>(this IObservable<IChangeSet<TObject>> source)
+        where TObject : notnull
     {
         return source.ForAggregation().Count().StartWith(0).Select(count => count == 0);
     }
@@ -94,6 +98,7 @@ public static class CountEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
     public static IObservable<bool> IsNotEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Count().StartWith(0).Select(count => count > 0);
@@ -107,6 +112,7 @@ public static class CountEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the count.</returns>
     public static IObservable<bool> IsNotEmpty<TObject>(this IObservable<IChangeSet<TObject>> source)
+        where TObject : notnull
     {
         return source.ForAggregation().Count().StartWith(0).Select(count => count > 0);
     }

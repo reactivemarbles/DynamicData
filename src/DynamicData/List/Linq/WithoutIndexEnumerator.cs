@@ -13,6 +13,7 @@ namespace DynamicData.List.Linq;
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
 internal class WithoutIndexEnumerator<T> : IEnumerable<Change<T>>
+    where T : notnull
 {
     private readonly IEnumerable<Change<T>> _changeSet;
 

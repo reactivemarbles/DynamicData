@@ -11,6 +11,7 @@ using System.Reactive.Linq;
 namespace DynamicData.PLinq
 {
     internal class PSubscribeMany<TObject, TKey>
+        where TObject : notnull
         where TKey : notnull
     {
         private readonly ParallelisationOptions _parallelisationOptions;

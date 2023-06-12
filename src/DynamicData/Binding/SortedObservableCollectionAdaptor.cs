@@ -14,6 +14,7 @@ namespace DynamicData.Binding;
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 public class SortedObservableCollectionAdaptor<TObject, TKey> : ISortedObservableCollectionAdaptor<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly int _refreshThreshold;

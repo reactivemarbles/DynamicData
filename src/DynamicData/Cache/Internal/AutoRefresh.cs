@@ -10,6 +10,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class AutoRefresh<TObject, TKey, TAny>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly TimeSpan? _buffer;

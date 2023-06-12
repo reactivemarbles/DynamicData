@@ -22,6 +22,7 @@ public static class ChangeSetEx
     /// <returns>An enumerable of change sets.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -71,6 +72,8 @@ public static class ChangeSetEx
     /// transformer.
     /// </exception>
     public static IChangeSet<TDestination> Transform<TSource, TDestination>(this IChangeSet<TSource> source, Func<TSource, TDestination> transformer)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -103,6 +106,7 @@ public static class ChangeSetEx
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of changes.</returns>
     public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
+        where T : notnull
     {
         return new WithoutIndexEnumerator<T>(source);
     }
@@ -115,6 +119,7 @@ public static class ChangeSetEx
     /// <returns>An enumerable of changes.</returns>
     /// <exception cref="ArgumentNullException">source.</exception>
     internal static IEnumerable<UnifiedChange<T>> Unified<T>(this IChangeSet<T> source)
+        where T : notnull
     {
         if (source is null)
         {

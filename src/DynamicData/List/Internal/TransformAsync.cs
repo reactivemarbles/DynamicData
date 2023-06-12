@@ -10,6 +10,8 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal class TransformAsync<TSource, TDestination>
+    where TSource : notnull
+    where TDestination : notnull
 {
     private readonly Func<TSource, Optional<TDestination>, int, Task<Transformer<TSource, TDestination>.TransformedItemContainer>> _containerFactory;
 

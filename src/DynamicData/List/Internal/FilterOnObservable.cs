@@ -12,6 +12,7 @@ using System.Reactive.Linq;
 namespace DynamicData.List.Internal;
 
 internal class FilterOnObservable<TObject>
+    where TObject : notnull
 {
     private readonly TimeSpan? _buffer;
 

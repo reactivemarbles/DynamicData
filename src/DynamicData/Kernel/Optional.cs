@@ -17,6 +17,7 @@ namespace DynamicData.Kernel;
 [SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Deliberate usage.")]
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Class names the same, generic differences.")]
 public readonly struct Optional<T> : IEquatable<Optional<T>>
+    where T : notnull
 {
     private readonly T? _value;
 
@@ -185,7 +186,9 @@ public static class Optional
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <returns>The optional value.</returns>
-    public static Optional<T> None<T>() => Optional<T>.None;
+    public static Optional<T> None<T>()
+        where T : notnull
+        => Optional<T>.None;
 
     /// <summary>
     /// Wraps the specified value in an Optional container.
@@ -193,5 +196,7 @@ public static class Optional
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="value">The value.</param>
     /// <returns>The optional value.</returns>
-    public static Optional<T> Some<T>(T value) => new(value);
+    public static Optional<T> Some<T>(T? value)
+        where T : notnull
+        => new(value);
 }

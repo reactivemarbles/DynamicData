@@ -13,6 +13,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class DynamicCombiner<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservableList<IObservable<IChangeSet<TObject, TKey>>> _source;

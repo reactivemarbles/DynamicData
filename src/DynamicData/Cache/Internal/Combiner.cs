@@ -15,6 +15,7 @@ namespace DynamicData.Cache.Internal;
 ///     Combines multiple caches using logical operators.
 /// </summary>
 internal sealed class Combiner<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly ChangeAwareCache<TObject, TKey> _combinedCache = new();

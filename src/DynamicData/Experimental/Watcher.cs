@@ -13,6 +13,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Experimental;
 
 internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IDisposable _disposer;

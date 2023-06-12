@@ -14,6 +14,8 @@ using DynamicData.Kernel;
 namespace DynamicData.PLinq
 {
     internal sealed class PTransform<TDestination, TSource, TKey>
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         private readonly IObservable<IChangeSet<TSource, TKey>> _source;

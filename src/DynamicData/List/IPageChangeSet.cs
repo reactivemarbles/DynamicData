@@ -13,6 +13,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="T">The type of the object.</typeparam>
 public interface IPageChangeSet<T> : IChangeSet<T>
+    where T : notnull
 {
     /// <summary>
     /// Gets the parameters used to virtualise the stream.

@@ -26,6 +26,8 @@ public static class ObservableListAlias
     /// valueSelector.
     /// </exception>
     public static IObservable<IChangeSet<TDestination>> Select<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -50,6 +52,8 @@ public static class ObservableListAlias
     /// <param name="manySelector">The selector for the enumerable.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> SelectMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manySelector)
+        where TDestination : notnull
+        where TSource : notnull
     {
         if (source is null)
         {
@@ -73,6 +77,7 @@ public static class ObservableListAlias
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
+        where T : notnull
     {
         if (source is null)
         {
@@ -98,6 +103,7 @@ public static class ObservableListAlias
     /// or
     /// filterController.</exception>
     public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate)
+        where T : notnull
     {
         if (source is null)
         {

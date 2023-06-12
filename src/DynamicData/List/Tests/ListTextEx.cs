@@ -19,6 +19,7 @@ public static class ListTextEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <returns>The change set aggregator.</returns>
     public static ChangeSetAggregator<T> AsAggregator<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         return new(source);
     }

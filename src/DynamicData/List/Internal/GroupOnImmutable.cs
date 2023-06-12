@@ -14,6 +14,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class GroupOnImmutable<TObject, TGroupKey>
+    where TObject : notnull
     where TGroupKey : notnull
 {
     private readonly Func<TObject, TGroupKey> _groupSelector;

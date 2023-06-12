@@ -9,6 +9,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class AnonymousQuery<TObject, TKey> : IQuery<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Cache<TObject, TKey> _cache;

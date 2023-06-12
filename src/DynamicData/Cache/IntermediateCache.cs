@@ -18,6 +18,7 @@ namespace DynamicData;
 /// <typeparam name="TKey">The type of the key.</typeparam>
 [DebuggerDisplay("IntermediateCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 public sealed class IntermediateCache<TObject, TKey> : IIntermediateCache<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly ObservableCache<TObject, TKey> _innerCache;

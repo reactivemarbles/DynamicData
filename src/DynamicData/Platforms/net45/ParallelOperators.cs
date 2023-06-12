@@ -26,6 +26,7 @@ namespace DynamicData.PLinq
         /// <returns>An observable which emits a change set.</returns>
         /// <exception cref="System.ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
+            where TObject : notnull
             where TKey : notnull
         {
             if (source is null)
@@ -52,6 +53,7 @@ namespace DynamicData.PLinq
         /// Subscribes to each item when it is added or updates and unsubscribes when it is removed.
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
+            where TObject : notnull
             where TKey : notnull
         {
             if (source is null)
@@ -88,6 +90,7 @@ namespace DynamicData.PLinq
         /// Subscribes to each item when it is added or updates and unsubscribes when it is removed.
         /// </remarks>
         public static IObservable<IChangeSet<TObject, TKey>> SubscribeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IDisposable> subscriptionFactory, ParallelisationOptions parallelisationOptions)
+            where TObject : notnull
             where TKey : notnull
         {
             if (source is null)
@@ -124,6 +127,8 @@ namespace DynamicData.PLinq
         /// or
         /// transformFactory.</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, ParallelisationOptions parallelisationOptions)
+            where TDestination : notnull
+            where TSource : notnull
             where TKey : notnull
         {
             if (source is null)
@@ -160,6 +165,8 @@ namespace DynamicData.PLinq
         /// or
         /// transformFactory.</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, ParallelisationOptions parallelisationOptions)
+            where TDestination : notnull
+            where TSource : notnull
             where TKey : notnull
         {
             return new PTransform<TDestination, TSource, TKey>(source, (t, _, _) => transformFactory(t), parallelisationOptions).Run();
@@ -185,6 +192,8 @@ namespace DynamicData.PLinq
         /// or
         /// transformFactory.</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, ParallelisationOptions parallelisationOptions)
+            where TDestination : notnull
+            where TSource : notnull
             where TKey : notnull
         {
             if (source is null)
@@ -230,6 +239,8 @@ namespace DynamicData.PLinq
         /// or
         /// transformFactory.</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, ParallelisationOptions parallelisationOptions)
+            where TDestination : notnull
+            where TSource : notnull
             where TKey : notnull
         {
             return new PTransform<TDestination, TSource, TKey>(source, (t, _, k) => transformFactory(t, k), parallelisationOptions, errorHandler).Run();

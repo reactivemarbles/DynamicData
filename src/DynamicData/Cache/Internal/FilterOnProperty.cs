@@ -11,8 +11,8 @@ namespace DynamicData.Cache.Internal;
 
 [Obsolete("Use AutoRefresh(), followed by Filter() instead")]
 internal class FilterOnProperty<TObject, TKey, TProperty>
-    where TKey : notnull
     where TObject : INotifyPropertyChanged
+    where TKey : notnull
 {
     private readonly Func<TObject, bool> _predicate;
 

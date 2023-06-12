@@ -20,6 +20,7 @@ public static class TestEx
     /// <param name="source">The source.</param>
     /// <returns>The change set aggregator.</returns>
     public static ChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         return new(source);
@@ -52,6 +53,7 @@ public static class TestEx
     /// <returns>The sorted change set aggregator.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static SortedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -71,6 +73,7 @@ public static class TestEx
     /// <returns>The virtual change set aggregator.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static VirtualChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IVirtualChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -89,6 +92,7 @@ public static class TestEx
     /// <param name="source">The source.</param>
     /// <returns>The paged change set aggregator.</returns>
     public static PagedChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IPagedChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)

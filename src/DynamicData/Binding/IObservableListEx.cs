@@ -26,6 +26,7 @@ public static class IObservableListEx
     /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject>> BindToObservableList<TObject>(this IObservable<IChangeSet<TObject>> source, out IObservableList<TObject> observableList)
+        where TObject : notnull
     {
         if (source is null)
         {
@@ -56,6 +57,7 @@ public static class IObservableListEx
     /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out IObservableList<TObject> observableList)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -87,6 +89,7 @@ public static class IObservableListEx
     /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<ISortedChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out IObservableList<TObject> observableList)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -143,6 +146,7 @@ public static class IObservableListEx
     /// <param name="list">The list needed to support refresh.</param>
     /// <returns>The down casted <see cref="IChangeSet{TObject}"/>.</returns>
     private static IChangeSet<TObject> RemoveKey<TObject, TKey>(this IChangeSet<TObject, TKey> changeSetWithKey, IExtendedList<TObject> list)
+        where TObject : notnull
         where TKey : notnull
     {
         var enumerator = new Cache.Internal.RemoveKeyEnumerator<TObject, TKey>(changeSetWithKey, list);

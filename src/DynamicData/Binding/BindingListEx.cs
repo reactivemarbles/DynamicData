@@ -15,6 +15,7 @@ namespace DynamicData.Binding;
 public static class BindingListEx
 {
     internal static void Clone<T>(this BindingList<T> source, IEnumerable<Change<T>> changes)
+        where T : notnull
     {
         // ** Copied from ListEx for binding list specific changes
         if (source is null) throw new ArgumentNullException(nameof(source));
@@ -27,6 +28,7 @@ public static class BindingListEx
     }
 
     private static void Clone<T>(this BindingList<T> source, Change<T> item, IEqualityComparer<T> equalityComparer)
+        where T : notnull
     {
         switch (item.Reason)
         {
@@ -172,6 +174,7 @@ public static class BindingListEx
     /// <returns>An observable which emits change set values.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this BindingList<T> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -194,6 +197,7 @@ public static class BindingListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this BindingList<TObject> source, Func<TObject, TKey> keySelector)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -220,6 +224,7 @@ public static class BindingListEx
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
         where TCollection : IBindingList, IEnumerable<T>
+        where T : notnull
     {
         if (source is null)
         {

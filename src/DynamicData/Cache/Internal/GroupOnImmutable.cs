@@ -13,6 +13,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>
+    where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {

@@ -15,6 +15,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
 public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
+    where T : notnull
 {
     /// <summary>
     /// An empty change.

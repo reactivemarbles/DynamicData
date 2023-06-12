@@ -33,6 +33,7 @@ public static class MaxEx
     /// A distinct observable of the maximum item.
     /// </returns>
     public static IObservable<TResult> Maximum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
+        where TObject : notnull
         where TResult : struct, IComparable<TResult>
     {
         return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
@@ -51,6 +52,7 @@ public static class MaxEx
     /// A distinct observable of the maximum item.
     /// </returns>
     public static IObservable<TResult> Maximum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
+        where TObject : notnull
         where TKey : notnull
         where TResult : struct, IComparable<TResult>
     {
@@ -67,6 +69,7 @@ public static class MaxEx
     /// <param name="emptyValue">The value to use when the underlying collection is empty.</param>
     /// <returns>A distinct observable of the minimums item.</returns>
     public static IObservable<TResult> Minimum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
+        where TObject : notnull
         where TResult : struct, IComparable<TResult>
     {
         return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
@@ -85,6 +88,7 @@ public static class MaxEx
     /// A distinct observable of the minimums item.
     /// </returns>
     public static IObservable<TResult> Minimum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
+        where TObject : notnull
         where TKey : notnull
         where TResult : struct, IComparable<TResult>
     {
@@ -162,6 +166,7 @@ public static class MaxEx
     }
 
     private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -179,6 +184,7 @@ public static class MaxEx
     }
 
     private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
+        where TObject : notnull
     {
         if (source is null)
         {

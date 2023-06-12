@@ -10,6 +10,7 @@ using DynamicData.List.Internal;
 namespace DynamicData.List.Linq;
 
 internal class UnifiedChangeEnumerator<T> : IEnumerable<UnifiedChange<T>>
+    where T : notnull
 {
     private readonly IChangeSet<T> _changeSet;
 

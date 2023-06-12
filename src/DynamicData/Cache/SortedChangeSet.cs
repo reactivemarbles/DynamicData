@@ -11,6 +11,7 @@ using DynamicData.Cache.Internal;
 namespace DynamicData;
 
 internal class SortedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, ISortedChangeSet<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     public static readonly new ISortedChangeSet<TObject, TKey> Empty = new SortedChangeSet<TObject, TKey>();

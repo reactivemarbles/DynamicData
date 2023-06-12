@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class QueryWhenChanged<TObject, TKey, TValue>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Func<TObject, IObservable<TValue>>? _itemChangedTrigger;

@@ -37,6 +37,7 @@ public static class ObservableListEx
     /// adaptor.
     /// </exception>
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
+        where T : notnull
     {
         if (source is null)
         {
@@ -73,6 +74,7 @@ public static class ObservableListEx
     /// <param name="keySelector">The key selector.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> AddKey<TObject, TKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TKey> keySelector)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -97,6 +99,7 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
+        where T : notnull
     {
         return source.Combine(CombineOperator.And, others);
     }
@@ -109,6 +112,7 @@ public static class ObservableListEx
     /// <param name="sources">The sources.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.And);
     }
@@ -121,6 +125,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.And);
     }
@@ -133,6 +138,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<IObservableList<T>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.And);
     }
@@ -145,6 +151,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<ISourceList<T>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.And);
     }
@@ -157,6 +164,7 @@ public static class ObservableListEx
     /// <returns>An observable list.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservableList<T> AsObservableList<T>(this ISourceList<T> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -174,6 +182,7 @@ public static class ObservableListEx
     /// <returns>An observable list.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservableList<T> AsObservableList<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -263,6 +272,7 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable change set with additional refresh changes.</returns>
     public static IObservable<IChangeSet<TObject>> AutoRefreshOnObservable<TObject, TAny>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
+        where TObject : notnull
     {
         if (source is null)
         {
@@ -291,6 +301,7 @@ public static class ObservableListEx
     /// targetCollection.
     /// </exception>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, IObservableCollection<T> targetCollection, int resetThreshold = 25)
+        where T : notnull
     {
         if (source is null)
         {
@@ -315,6 +326,7 @@ public static class ObservableListEx
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>A continuation of the source stream.</returns>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = 25)
+        where T : notnull
     {
         if (source is null)
         {
@@ -344,6 +356,7 @@ public static class ObservableListEx
     /// </exception>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, BindingList<T> bindingList, int resetThreshold = 25)
+        where T : notnull
     {
         if (source is null)
         {
@@ -371,6 +384,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, IScheduler? scheduler = null)
+        where T : notnull
     {
         return BufferIf(source, pauseIfTrueSelector, false, scheduler);
     }
@@ -387,6 +401,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -413,6 +428,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut, IScheduler? scheduler = null)
+        where T : notnull
     {
         return BufferIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
     }
@@ -430,6 +446,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, TimeSpan? timeOut, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -453,6 +470,7 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler to buffer on.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject>> BufferInitial<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan initialBuffer, IScheduler? scheduler = null)
+        where TObject : notnull
     {
         return source.DeferUntilLoaded().Publish(
             shared =>
@@ -470,6 +488,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> Cast<TDestination>(this IObservable<IChangeSet<object>> source)
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -490,6 +509,8 @@ public static class ObservableListEx
     /// <param name="conversionFactory">The conversion factory.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> Cast<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> conversionFactory)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -510,9 +531,10 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
-    public static IObservable<IChangeSet<object?>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
+    public static IObservable<IChangeSet<object>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
+        where T : class
     {
-        return source.Select(changes => changes.Transform(t => (object?)t));
+        return source.Select(changes => changes.Transform(t => (object)t));
     }
 
     /// <summary>
@@ -524,6 +546,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> Clone<T>(this IObservable<IChangeSet<T>> source, IList<T> target)
+        where T : notnull
     {
         if (source is null)
         {
@@ -545,6 +568,8 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     [Obsolete("Prefer Cast as it is does the same thing but is semantically correct")]
     public static IObservable<IChangeSet<TDestination>> Convert<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TDestination> conversionFactory)
+        where TObject : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -566,6 +591,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -582,6 +608,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -602,6 +629,7 @@ public static class ObservableListEx
     /// <returns>A continuation of the original stream.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         return source.OnItemRemoved(
             t =>
@@ -625,6 +653,7 @@ public static class ObservableListEx
     /// valueSelector.
     /// </exception>
     public static IObservable<IChangeSet<TValue>> DistinctValues<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TValue> valueSelector)
+        where TObject : notnull
         where TValue : notnull
     {
         if (source is null)
@@ -649,6 +678,7 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
+        where T : notnull
     {
         return source.Combine(CombineOperator.Except, others);
     }
@@ -661,6 +691,7 @@ public static class ObservableListEx
     /// <param name="sources">The sources.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Except);
     }
@@ -672,6 +703,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Except);
     }
@@ -683,6 +715,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<IObservableList<T>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Except);
     }
@@ -694,6 +727,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<ISourceList<T>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Except);
     }
@@ -707,6 +741,7 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the enumerable of items.</returns>
     public static IObservable<IEnumerable<T>> ExpireAfter<T>(this ISourceList<T> source, Func<T, TimeSpan?> timeSelector, IScheduler? scheduler = null)
+        where T : notnull
     {
         return source.ExpireAfter(timeSelector, null, scheduler);
     }
@@ -721,6 +756,7 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the enumerable of items.</returns>
     public static IObservable<IEnumerable<T>> ExpireAfter<T>(this ISourceList<T> source, Func<T, TimeSpan?> timeSelector, TimeSpan? pollingInterval = null, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -747,6 +783,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
+        where T : notnull
     {
         if (source is null)
         {
@@ -773,6 +810,7 @@ public static class ObservableListEx
     /// or
     /// filterController.</exception>
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
+        where T : notnull
     {
         if (source is null)
         {
@@ -799,6 +837,7 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler used when throttling.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject>> FilterOnObservable<TObject>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<bool>> objectFilterObservable, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
+        where TObject : notnull
     {
         if (source is null)
         {
@@ -850,6 +889,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> FlattenBufferResult<T>(this IObservable<IList<IChangeSet<T>>> source)
+        where T : notnull
     {
         return source.Where(x => x.Count != 0).Select(updates => new ChangeSet<T>(updates.SelectMany(u => u)));
     }
@@ -862,6 +902,7 @@ public static class ObservableListEx
     /// <param name="action">The action.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject>> ForEachChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<Change<TObject>> action)
+        where TObject : notnull
     {
         if (source is null)
         {
@@ -886,6 +927,7 @@ public static class ObservableListEx
     /// <param name="action">The action.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject>> ForEachItemChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<ItemChange<TObject>> action)
+        where TObject : notnull
     {
         if (source is null)
         {
@@ -916,6 +958,7 @@ public static class ObservableListEx
     /// groupSelector.
     /// </exception>
     public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOn<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroup> groupSelector, IObservable<Unit>? regrouper = null)
+        where TObject : notnull
         where TGroup : notnull
     {
         if (source is null)
@@ -944,8 +987,8 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<IGroup<TObject, TGroup>>> GroupOnProperty<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TGroup>> propertySelector, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
-        where TGroup : notnull
         where TObject : INotifyPropertyChanged
+        where TGroup : notnull
     {
         if (source is null)
         {
@@ -973,8 +1016,8 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<List.IGrouping<TObject, TGroup>>> GroupOnPropertyWithImmutableState<TObject, TGroup>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TGroup>> propertySelector, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
-        where TGroup : notnull
         where TObject : INotifyPropertyChanged
+        where TGroup : notnull
     {
         if (source is null)
         {
@@ -1005,6 +1048,7 @@ public static class ObservableListEx
     /// groupSelectorKey.
     /// </exception>
     public static IObservable<IChangeSet<List.IGrouping<TObject, TGroupKey>>> GroupWithImmutableState<TObject, TGroupKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper = null)
+        where TObject : notnull
         where TGroupKey : notnull
     {
         if (source is null)
@@ -1032,6 +1076,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException">source.</exception>
     /// <exception cref="ArgumentException">sizeLimit cannot be zero.</exception>
     public static IObservable<IEnumerable<T>> LimitSizeTo<T>(this ISourceList<T> source, int sizeLimit, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1062,6 +1107,7 @@ public static class ObservableListEx
     /// or
     /// observableSelector.</exception>
     public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1084,6 +1130,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> NotEmpty<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1101,6 +1148,7 @@ public static class ObservableListEx
     /// <param name="addAction">The add action.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> OnItemAdded<T>(this IObservable<IChangeSet<T>> source, Action<T> addAction)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1123,6 +1171,7 @@ public static class ObservableListEx
     /// <param name="refreshAction">The refresh action.</param>
     /// <returns>An observable which emits a change set with items being added.</returns>
     public static IObservable<IChangeSet<TObject>> OnItemRefreshed<TObject>(this IObservable<IChangeSet<TObject>> source, Action<TObject> refreshAction)
+        where TObject : notnull
     {
         Action<TObject> refreshAction2 = refreshAction;
         if (source == null)
@@ -1158,6 +1207,7 @@ public static class ObservableListEx
     /// removeAction.
     /// </exception>
     public static IObservable<IChangeSet<T>> OnItemRemoved<T>(this IObservable<IChangeSet<T>> source, Action<T> removeAction, bool invokeOnUnsubscribe = true)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1180,6 +1230,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Or);
     }
@@ -1193,6 +1244,7 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
+        where T : notnull
     {
         return source.Combine(CombineOperator.Or, others);
     }
@@ -1205,6 +1257,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Or);
     }
@@ -1217,6 +1270,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<IObservableList<T>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Or);
     }
@@ -1229,6 +1283,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<ISourceList<T>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Or);
     }
@@ -1241,6 +1296,7 @@ public static class ObservableListEx
     /// <param name="requests">Observable to control page requests.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IPageChangeSet<T>> Page<T>(this IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1268,6 +1324,7 @@ public static class ObservableListEx
     /// destination.
     /// </exception>
     public static IDisposable PopulateInto<T>(this IObservable<IChangeSet<T>> source, ISourceList<T> destination)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1296,6 +1353,7 @@ public static class ObservableListEx
     /// resultSelector.
     /// </exception>
     public static IObservable<TDestination> QueryWhenChanged<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<IReadOnlyCollection<TObject>, TDestination> resultSelector)
+        where TObject : notnull
     {
         if (source is null)
         {
@@ -1318,6 +1376,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the read only collection.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IReadOnlyCollection<T>> QueryWhenChanged<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1334,6 +1393,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> RefCount<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1352,6 +1412,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> RemoveIndex<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1373,6 +1434,7 @@ public static class ObservableListEx
     /// comparer.
     /// </exception>
     public static IObservable<IChangeSet<T>> Reverse<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         var reverser = new Reverser<T>();
         if (source is null)
@@ -1391,6 +1453,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1415,6 +1478,7 @@ public static class ObservableListEx
     /// or
     /// comparer.</exception>
     public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions options = SortOptions.None, IObservable<Unit>? resort = null, IObservable<IComparer<T>>? comparerChanged = null, int resetThreshold = 50)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1443,6 +1507,7 @@ public static class ObservableListEx
     /// or
     /// comparer.</exception>
     public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IObservable<IComparer<T>> comparerChanged, SortOptions options = SortOptions.None, IObservable<Unit>? resort = null, int resetThreshold = 50)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1464,6 +1529,7 @@ public static class ObservableListEx
     /// <param name="source">The source observable of change set values.</param>
     /// <returns>An observable which emits a change set.</returns>
     public static IObservable<IChangeSet<T>> StartWithEmpty<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         return source.StartWith(ChangeSet<T>.Empty);
     }
@@ -1482,6 +1548,7 @@ public static class ObservableListEx
     /// Subscribes to each item when it is added or updates and unsubscribes when it is removed.
     /// </remarks>
     public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source, Func<T, IDisposable> subscriptionFactory)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1503,6 +1570,7 @@ public static class ObservableListEx
     /// <param name="source">The source observable change set.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> SuppressRefresh<T>(this IObservable<IChangeSet<T>> source)
+        where T : notnull
     {
         if (source == null)
         {
@@ -1529,6 +1597,7 @@ public static class ObservableListEx
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="sources" /> is null.</exception>
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservableList<T>> sources)
+        where T : notnull
     {
         if (sources is null)
         {
@@ -1551,6 +1620,7 @@ public static class ObservableListEx
     /// </returns>
     /// <exception cref="ArgumentNullException"><paramref name="sources" /> is null.</exception>
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         if (sources is null)
         {
@@ -1567,6 +1637,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
+        where TObject : notnull
     {
         return source.QueryWhenChanged(items => items);
     }
@@ -1583,6 +1654,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1605,6 +1677,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1632,6 +1705,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, int limitSizeTo, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1655,6 +1729,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1676,6 +1751,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, IScheduler? scheduler = null)
+        where T : notnull
     {
         return ToObservableChangeSet<T>(source, null, -1, scheduler);
     }
@@ -1693,6 +1769,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, int limitSizeTo, IScheduler? scheduler = null)
+        where T : notnull
     {
         return ToObservableChangeSet<T>(source, null, limitSizeTo, scheduler);
     }
@@ -1710,6 +1787,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
+        where T : notnull
     {
         return ToObservableChangeSet(source, expireAfter, 0, scheduler);
     }
@@ -1728,6 +1806,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1745,6 +1824,7 @@ public static class ObservableListEx
     /// <param name="numberOfItems">The number of items.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Top<T>(this IObservable<IChangeSet<T>> source, int numberOfItems)
+        where T : notnull
     {
         if (source is null)
         {
@@ -1769,6 +1849,7 @@ public static class ObservableListEx
     /// <param name="sortOrder">The sort order. Defaults to ascending.</param>
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TSortKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
+        where TObject : notnull
     {
         return source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending ? new ReadOnlyCollectionLight<TObject>(query.OrderBy(sort)) : new ReadOnlyCollectionLight<TObject>(query.OrderByDescending(sort)));
     }
@@ -1781,6 +1862,7 @@ public static class ObservableListEx
     /// <param name="comparer">The sort comparer.</param>
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject>(this IObservable<IChangeSet<TObject>> source, IComparer<TObject> comparer)
+        where TObject : notnull
     {
         return source.QueryWhenChanged(
             query =>
@@ -1806,6 +1888,8 @@ public static class ObservableListEx
     /// valueSelector.
     /// </exception>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, TDestination> transformFactory, bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -1835,6 +1919,8 @@ public static class ObservableListEx
     /// valueSelector.
     /// </exception>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, int, TDestination> transformFactory, bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -1866,6 +1952,8 @@ public static class ObservableListEx
     /// valueSelector.
     /// </exception>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, TDestination> transformFactory, bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -1897,6 +1985,8 @@ public static class ObservableListEx
     /// valueSelector.
     /// </exception>
     public static IObservable<IChangeSet<TDestination>> Transform<TSource, TDestination>(this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> transformFactory, bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -1928,6 +2018,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source, Func<TSource, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -1959,6 +2051,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source, Func<TSource, int, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -1990,6 +2084,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -2021,6 +2117,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
         this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {
@@ -2050,6 +2148,8 @@ public static class ObservableListEx
     /// manySelector.
     /// </exception>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
+        where TDestination : notnull
+        where TSource : notnull
     {
         if (source is null)
         {
@@ -2074,6 +2174,8 @@ public static class ObservableListEx
     /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
+        where TDestination : notnull
+        where TSource : notnull
     {
         return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
     }
@@ -2088,6 +2190,8 @@ public static class ObservableListEx
     /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
+        where TDestination : notnull
+        where TSource : notnull
     {
         return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
     }
@@ -2102,6 +2206,8 @@ public static class ObservableListEx
     /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IObservableList<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
+        where TDestination : notnull
+        where TSource : notnull
     {
         return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
     }
@@ -2114,6 +2220,7 @@ public static class ObservableListEx
     /// <param name="requests">The requests.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IVirtualChangeSet<T>> Virtualise<T>(this IObservable<IChangeSet<T>> source, IObservable<IVirtualRequest> requests)
+        where T : notnull
     {
         if (source is null)
         {
@@ -2207,6 +2314,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentException">Must enter at least 1 reason.</exception>
     public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
+        where T : notnull
     {
         if (reasons is null)
         {
@@ -2236,6 +2344,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentException">Must enter at least 1 reason.</exception>
     public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
+        where T : notnull
     {
         if (reasons is null)
         {
@@ -2265,6 +2374,7 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
+        where T : notnull
     {
         return source.Combine(CombineOperator.Xor, others);
     }
@@ -2277,6 +2387,7 @@ public static class ObservableListEx
     /// <param name="sources">The sources.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Xor);
     }
@@ -2289,6 +2400,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Xor);
     }
@@ -2301,6 +2413,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<IObservableList<T>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Xor);
     }
@@ -2313,11 +2426,13 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<ISourceList<T>> sources)
+        where T : notnull
     {
         return sources.Combine(CombineOperator.Xor);
     }
 
     private static IObservable<IChangeSet<T>> Combine<T>(this ICollection<IObservable<IChangeSet<T>>> sources, CombineOperator type)
+        where T : notnull
     {
         if (sources is null)
         {
@@ -2328,6 +2443,7 @@ public static class ObservableListEx
     }
 
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservable<IChangeSet<T>> source, CombineOperator type, params IObservable<IChangeSet<T>>[] others)
+        where T : notnull
     {
         if (source is null)
         {
@@ -2349,6 +2465,7 @@ public static class ObservableListEx
     }
 
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<ISourceList<T>> sources, CombineOperator type)
+        where T : notnull
     {
         if (sources is null)
         {
@@ -2365,6 +2482,7 @@ public static class ObservableListEx
     }
 
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<IObservableList<T>> sources, CombineOperator type)
+        where T : notnull
     {
         if (sources is null)
         {
@@ -2381,6 +2499,7 @@ public static class ObservableListEx
     }
 
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<IObservable<IChangeSet<T>>> sources, CombineOperator type)
+        where T : notnull
     {
         if (sources is null)
         {

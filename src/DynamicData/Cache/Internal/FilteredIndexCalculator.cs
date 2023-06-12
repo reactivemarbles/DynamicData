@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal static class FilteredIndexCalculator<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     public static IList<Change<TObject, TKey>> Calculate(IKeyValueCollection<TObject, TKey> currentItems, IKeyValueCollection<TObject, TKey> previousItems, IChangeSet<TObject, TKey>? sourceUpdates)

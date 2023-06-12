@@ -22,6 +22,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<int> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, int> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -36,6 +37,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<int> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, int?> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -50,6 +52,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<long> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, long> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -64,6 +67,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<long> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, long?> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -78,6 +82,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<double> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, double> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -92,6 +97,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<double> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, double?> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -106,6 +112,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<decimal> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, decimal> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -120,6 +127,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<decimal> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, decimal?> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -134,6 +142,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<float> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, float> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -148,6 +157,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<float> Sum<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, float?> valueSelector)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
@@ -161,6 +171,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<int> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, int> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -173,6 +184,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<int> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, int?> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -185,6 +197,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<long> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, long> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -197,6 +210,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<long> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, long?> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -209,6 +223,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<double> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, double> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -221,6 +236,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<double> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, double?> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -233,6 +249,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<decimal> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, decimal> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -245,6 +262,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<decimal> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, decimal?> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -257,6 +275,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<float> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, float> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }
@@ -269,6 +288,7 @@ public static class SumEx
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>An observable which emits the summed value.</returns>
     public static IObservable<float> Sum<T>(this IObservable<IChangeSet<T>> source, Func<T, float?> valueSelector)
+        where T : notnull
     {
         return source.ForAggregation().Sum(valueSelector);
     }

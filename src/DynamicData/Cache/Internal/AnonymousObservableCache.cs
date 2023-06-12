@@ -10,6 +10,7 @@ namespace DynamicData.Cache.Internal;
 
 [DebuggerDisplay("AnonymousObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservableCache<TObject, TKey> _cache;
