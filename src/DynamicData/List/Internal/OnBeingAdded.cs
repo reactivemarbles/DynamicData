@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class OnBeingAdded<T>
+    where T : notnull
 {
     private readonly Action<T> _callback;
 

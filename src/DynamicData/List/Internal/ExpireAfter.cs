@@ -15,6 +15,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class ExpireAfter<T>
+    where T : notnull
 {
     private readonly Func<T, TimeSpan?> _expireAfter;
 

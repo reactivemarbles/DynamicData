@@ -14,6 +14,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class GroupOn<TObject, TGroupKey>
+    where TObject : notnull
     where TGroupKey : notnull
 {
     private readonly Func<TObject, TGroupKey> _groupSelector;

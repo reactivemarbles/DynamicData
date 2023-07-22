@@ -11,7 +11,9 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class Cast<TSource, TKey, TDestination>
+    where TSource : notnull
     where TKey : notnull
+    where TDestination : notnull
 {
     private readonly Func<TSource, TDestination> _converter;
 

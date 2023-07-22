@@ -14,6 +14,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="T">The type of item.</typeparam>
 public interface IObservableList<T> : IDisposable
+    where T : notnull
 {
     /// <summary>
     /// Gets the count.

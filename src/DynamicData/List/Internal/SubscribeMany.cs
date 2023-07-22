@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.List.Internal;
 
 internal sealed class SubscribeMany<T>
+    where T : notnull
 {
     private readonly IObservable<IChangeSet<T>> _source;
 

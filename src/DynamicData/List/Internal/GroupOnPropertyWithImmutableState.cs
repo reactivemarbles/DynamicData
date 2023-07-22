@@ -13,8 +13,8 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class GroupOnPropertyWithImmutableState<TObject, TGroup>
-    where TGroup : notnull
     where TObject : INotifyPropertyChanged
+    where TGroup : notnull
 {
     private readonly Func<TObject, TGroup> _groupSelector;
 

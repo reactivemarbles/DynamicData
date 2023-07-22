@@ -25,6 +25,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, int> valueSelector, int emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -42,6 +43,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, int?> valueSelector, int emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -59,6 +61,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, long> valueSelector, long emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -76,6 +79,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, long?> valueSelector, long emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -93,6 +97,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, double> valueSelector, double emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -110,6 +115,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, double?> valueSelector, double emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -127,6 +133,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<decimal> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, decimal> valueSelector, decimal emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -144,6 +151,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<decimal> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, decimal?> valueSelector, decimal emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -161,6 +169,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<float> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, float> valueSelector, float emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -178,6 +187,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<float> Avg<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, float?> valueSelector, float emptyValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
@@ -194,6 +204,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, int> valueSelector, int emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -209,6 +220,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, int?> valueSelector, int emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -224,6 +236,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, long> valueSelector, long emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -239,6 +252,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, long?> valueSelector, long emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -254,6 +268,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, double> valueSelector, double emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -269,6 +284,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<double> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, double?> valueSelector, double emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -284,6 +300,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<decimal> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, decimal> valueSelector, decimal emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -299,6 +316,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<decimal> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, decimal?> valueSelector, decimal emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -314,6 +332,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<float> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, float> valueSelector, float emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }
@@ -329,6 +348,7 @@ public static class AvgEx
     /// An observable of averages.
     /// </returns>
     public static IObservable<float> Avg<T>(this IObservable<IChangeSet<T>> source, Func<T, float?> valueSelector, float emptyValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().Avg(valueSelector, emptyValue);
     }

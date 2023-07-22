@@ -10,6 +10,8 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class Transform<TDestination, TSource, TKey>
+    where TDestination : notnull
+    where TSource : notnull
     where TKey : notnull
 {
     private readonly Action<Error<TSource, TKey>>? _exceptionCallback;

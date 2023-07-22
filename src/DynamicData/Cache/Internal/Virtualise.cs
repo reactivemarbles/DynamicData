@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class Virtualise<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservable<ISortedChangeSet<TObject, TKey>> _source;

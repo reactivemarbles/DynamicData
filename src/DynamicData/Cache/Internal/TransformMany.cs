@@ -16,8 +16,10 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
-    where TSourceKey : notnull
+    where TDestination : notnull
     where TDestinationKey : notnull
+    where TSource : notnull
+    where TSourceKey : notnull
 {
     private readonly Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>>? _childChanges;
 

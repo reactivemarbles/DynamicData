@@ -12,6 +12,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class OnBeingRemoved<T>
+    where T : notnull
 {
     private readonly Action<T> _callback;
     private readonly bool _invokeOnUnsubscribe;

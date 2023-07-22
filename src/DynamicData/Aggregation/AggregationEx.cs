@@ -22,6 +22,7 @@ public static class AggregationEx
     /// <param name="source">The source.</param>
     /// <returns>The aggregated change set.</returns>
     public static IObservable<IAggregateChangeSet<TObject>> ForAggregation<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -39,6 +40,7 @@ public static class AggregationEx
     /// <param name="source">The source.</param>
     /// <returns>The aggregated change set.</returns>
     public static IObservable<IAggregateChangeSet<TObject>> ForAggregation<TObject>(this IObservable<IChangeSet<TObject>> source)
+        where TObject : notnull
     {
         if (source is null)
         {
@@ -87,6 +89,7 @@ public static class AggregationEx
     /// <param name="removeAction">The remove action.</param>
     /// <returns>An observable with the accumulated value.</returns>
     internal static IObservable<TResult> Accumulate<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
+        where TObject : notnull
     {
         return source.ForAggregation().Accumulate(seed, accessor, addAction, removeAction);
     }
@@ -105,6 +108,7 @@ public static class AggregationEx
     /// <param name="removeAction">The remove action.</param>
     /// <returns>An observable with the accumulated value.</returns>
     internal static IObservable<TResult> Accumulate<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().Accumulate(seed, accessor, addAction, removeAction);

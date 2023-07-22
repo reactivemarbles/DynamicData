@@ -74,6 +74,7 @@ internal static class EnumerableIList
     public static EnumerableIList<T> Create<T>(IList<T> list) => new(list);
 
     public static EnumerableIList<Change<TObject, TKey>> Create<TObject, TKey>(IChangeSet<TObject, TKey> changeSet)
+        where TObject : notnull
         where TKey : notnull =>
         Create((IList<Change<TObject, TKey>>)changeSet);
 }

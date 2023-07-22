@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class MergeManyItems<TObject, TKey, TDestination>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Func<TObject, TKey, IObservable<TDestination>> _observableSelector;

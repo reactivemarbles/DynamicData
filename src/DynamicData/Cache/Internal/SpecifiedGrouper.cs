@@ -10,6 +10,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class SpecifiedGrouper<TObject, TKey, TGroupKey>
+    where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {

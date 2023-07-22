@@ -9,6 +9,7 @@ namespace DynamicData.Cache.Internal;
 internal static class FilterEx
 {
     public static void FilterChanges<TObject, TKey>(this ChangeAwareCache<TObject, TKey> cache, IChangeSet<TObject, TKey> changes, Func<TObject, bool> predicate)
+        where TObject : notnull
         where TKey : notnull
     {
         foreach (var change in changes.ToConcreteType())
@@ -72,6 +73,7 @@ internal static class FilterEx
     }
 
     public static IChangeSet<TObject, TKey> RefreshFilteredFrom<TObject, TKey>(this ChangeAwareCache<TObject, TKey> filtered, Cache<TObject, TKey> allData, Func<TObject, bool> predicate)
+        where TObject : notnull
         where TKey : notnull
     {
         if (allData.Count == 0)

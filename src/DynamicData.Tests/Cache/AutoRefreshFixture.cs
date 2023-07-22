@@ -89,13 +89,13 @@ public class AutoRefreshFixture
     [Fact]
     public void MakeSelectMagicWorkWithObservable()
     {
-        var initialItem = new IntHolder { Value = 1, Description = "Initial Description" };
+        var initialItem = new IntHolder(1, "Initial Description");
 
         var sourceList = new SourceList<IntHolder>();
         sourceList.Add(initialItem);
 
         var descriptionStream = sourceList.Connect().AutoRefresh(intHolder => intHolder!.Description).Transform(intHolder => intHolder!.Description, true).Do(x => { }) // <--- Add break point here to check the overload fixes it
-            .Bind(out ReadOnlyObservableCollection<string?> resultCollection);
+            .Bind(out ReadOnlyObservableCollection<string> resultCollection);
 
         using (descriptionStream.Subscribe())
         {
@@ -109,11 +109,17 @@ public class AutoRefreshFixture
 
     public class IntHolder : AbstractNotifyPropertyChanged
     {
-        public string? _description_;
+        public string _description_;
 
         public int _value;
 
-        public string? Description
+        public IntHolder(int value, string description)
+        {
+            _value = value;
+            _description_ = description;
+        }
+
+        public string Description
         {
             get => _description_;
             set => SetAndRaise(ref _description_, value);

@@ -23,6 +23,8 @@ public static class OptionExtensions
     /// <returns>The converted value.</returns>
     /// <exception cref="System.ArgumentNullException">converter.</exception>
     public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter)
+        where TSource : notnull
+        where TDestination : notnull
     {
         if (converter is null)
         {
@@ -47,6 +49,7 @@ public static class OptionExtensions
     /// fallbackConverter.
     /// </exception>
     public static TDestination? ConvertOr<TSource, TDestination>(this Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
+        where TSource : notnull
     {
         if (converter is null)
         {
@@ -71,6 +74,7 @@ public static class OptionExtensions
     /// <param name="selector">The selector.</param>
     /// <returns>The first value or none.</returns>
     public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
+        where T : notnull
     {
         if (source is null)
         {
@@ -96,6 +100,7 @@ public static class OptionExtensions
     /// <param name="action">The action.</param>
     /// <returns>The optional else extension.</returns>
     public static OptionElse IfHasValue<T>(this Optional<T> source, Action<T> action)
+        where T : notnull
     {
         if (!source.HasValue || source.Value is null)
         {
@@ -119,6 +124,7 @@ public static class OptionExtensions
     /// <param name="action">The action.</param>
     /// <returns>The optional else extension.</returns>
     public static OptionElse IfHasValue<T>(this Optional<T>? source, Action<T> action)
+        where T : notnull
     {
         if (!source.HasValue)
         {
@@ -150,6 +156,7 @@ public static class OptionExtensions
     /// <param name="key">The key.</param>
     /// <returns>The option of the looked up value.</returns>
     public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
+        where TValue : notnull
     {
         if (source is null)
         {
@@ -186,6 +193,7 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of the selected items.</returns>
     public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
+        where T : notnull
     {
         return source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
     }
@@ -212,6 +220,7 @@ public static class OptionExtensions
     /// <returns>If the value or a provided default.</returns>
     /// <exception cref="System.ArgumentNullException">valueSelector.</exception>
     public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector)
+        where T : notnull
     {
         if (valueSelector is null)
         {
@@ -228,6 +237,7 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <returns>The value or default.</returns>
     public static T? ValueOrDefault<T>(this Optional<T> source)
+        where T : notnull
     {
         if (source.HasValue)
         {
@@ -246,6 +256,7 @@ public static class OptionExtensions
     /// <returns>The value.</returns>
     /// <exception cref="System.ArgumentNullException">exceptionGenerator.</exception>
     public static T ValueOrThrow<T>(this Optional<T> source, Func<Exception> exceptionGenerator)
+        where T : notnull
     {
         if (exceptionGenerator is null)
         {

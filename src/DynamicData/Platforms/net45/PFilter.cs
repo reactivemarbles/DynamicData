@@ -15,6 +15,7 @@ using DynamicData.Kernel;
 namespace DynamicData.PLinq
 {
     internal class PFilter<TObject, TKey>
+        where TObject : notnull
         where TKey : notnull
     {
         private readonly Func<TObject, bool> _filter;

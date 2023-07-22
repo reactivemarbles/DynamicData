@@ -15,6 +15,7 @@ namespace DynamicData;
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 public interface IQuery<TObject, TKey>
+    where TObject : notnull
 {
     /// <summary>
     /// Gets the count.

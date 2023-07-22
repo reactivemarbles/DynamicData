@@ -12,6 +12,7 @@ using DynamicData.Operators;
 namespace DynamicData;
 
 internal sealed class PageChangeSet<T> : IPageChangeSet<T>
+    where T : notnull
 {
     private readonly IChangeSet<T> _virtualChangeSet;
 

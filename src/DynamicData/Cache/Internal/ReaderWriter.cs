@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class ReaderWriter<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Func<TObject, TKey>? _keySelector;

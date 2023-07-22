@@ -7,6 +7,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class EditDiff<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Func<TObject, TObject, bool> _areEqual;

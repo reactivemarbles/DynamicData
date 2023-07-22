@@ -20,6 +20,7 @@ namespace DynamicData;
 /// <typeparam name="TObject">The value of the cache.</typeparam>
 /// <typeparam name="TKey">The key of the cache.</typeparam>
 public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Dictionary<TKey, TObject> _data;

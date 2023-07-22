@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal readonly struct UnifiedChange<T> : IEquatable<UnifiedChange<T>>
+    where T : notnull
 {
     public UnifiedChange(ListChangeReason reason, T current)
         : this(reason, current, Optional.None<T>())

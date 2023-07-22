@@ -12,6 +12,7 @@ namespace DynamicData.Cache.Internal;
 
 [DebuggerDisplay("Cache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 internal class Cache<TObject, TKey> : ICache<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     public static readonly Cache<TObject, TKey> Empty = new();

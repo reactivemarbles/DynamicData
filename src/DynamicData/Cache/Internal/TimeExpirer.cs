@@ -14,6 +14,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class TimeExpirer<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly TimeSpan? _interval;

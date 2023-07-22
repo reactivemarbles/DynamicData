@@ -15,6 +15,7 @@ namespace DynamicData.Binding
     /// </summary>
     /// <typeparam name="T">The type of items.</typeparam>
     public class BindingListAdaptor<T> : IChangeSetAdaptor<T>
+        where T : notnull
     {
         private readonly BindingList<T> _list;
 
@@ -63,6 +64,7 @@ namespace DynamicData.Binding
     /// <typeparam name="TKey">The type of the key.</typeparam>
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics")]
     public class BindingListAdaptor<TObject, TKey> : IChangeSetAdaptor<TObject, TKey>
+        where TObject : notnull
         where TKey : notnull
     {
         private readonly Cache<TObject, TKey> _cache = new();

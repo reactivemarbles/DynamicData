@@ -12,6 +12,7 @@ internal static class CacheEx
 {
     public static void Clone<TKey, TObject>(this IDictionary<TKey, TObject> source, IChangeSet<TObject, TKey> changes)
         where TKey : notnull
+        where TObject : notnull
     {
         foreach (var item in changes.ToConcreteType())
         {
@@ -30,6 +31,7 @@ internal static class CacheEx
     }
 
     public static IChangeSet<TObject, TKey> GetInitialUpdates<TObject, TKey>(this ChangeAwareCache<TObject, TKey> source, Func<TObject, bool>? filter = null)
+        where TObject : notnull
         where TKey : notnull
     {
         var filtered = filter is null ? source.KeyValues : source.KeyValues.Where(kv => filter(kv.Value));

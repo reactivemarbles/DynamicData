@@ -16,6 +16,7 @@ namespace DynamicData;
 /// <typeparam name="TKey">The type of the key.</typeparam>
 /// <typeparam name="TGroupKey">The type of the group key.</typeparam>
 public interface IGrouping<TObject, TKey, out TGroupKey>
+    where TObject : notnull
 {
     /// <summary>
     /// Gets the count.

@@ -11,6 +11,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal class EditDiff<T>
+    where T : notnull
 {
     private readonly IEqualityComparer<T> _equalityComparer;
 

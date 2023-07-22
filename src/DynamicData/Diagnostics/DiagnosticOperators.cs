@@ -21,6 +21,7 @@ public static class DiagnosticOperators
     /// <returns>An observable which emits the change summary.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<ChangeSummary> CollectUpdateStats<TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source)
+        where TSource : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -54,6 +55,7 @@ public static class DiagnosticOperators
     /// <returns>An observable which emits the change summary.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<ChangeSummary> CollectUpdateStats<TSource>(this IObservable<IChangeSet<TSource>> source)
+        where TSource : notnull
     {
         if (source is null)
         {

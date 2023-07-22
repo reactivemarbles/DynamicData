@@ -26,6 +26,7 @@ public class ListCreationFixtures
     }
 
     private void SubscribeAndAssert<T>(IObservable<IChangeSet<T>> observableChangeset, bool expectsError = false)
+        where T : notnull
     {
         Exception? error = null;
         bool complete = false;

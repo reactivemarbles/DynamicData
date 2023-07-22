@@ -10,6 +10,7 @@ namespace DynamicData;
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TGroup">The type of the group.</typeparam>
 public interface IGroup<TObject, out TGroup>
+    where TObject : notnull
 {
     /// <summary>
     /// Gets the group key.

@@ -15,6 +15,7 @@ namespace DynamicData.Tests;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 public class ChangeSetAggregator<TObject> : IDisposable
+    where TObject : notnull
 {
     private readonly IDisposable _disposer;
 

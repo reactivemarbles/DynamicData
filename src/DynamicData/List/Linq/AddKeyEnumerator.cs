@@ -9,6 +9,7 @@ using System.Collections.Generic;
 namespace DynamicData.List.Linq;
 
 internal class AddKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject, TKey>>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Func<TObject, TKey> _keySelector;

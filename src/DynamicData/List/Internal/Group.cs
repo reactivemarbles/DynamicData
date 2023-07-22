@@ -8,6 +8,7 @@ using System.Collections.Generic;
 namespace DynamicData.List.Internal;
 
 internal class Group<TObject, TGroup> : IGroup<TObject, TGroup>, IDisposable, IEquatable<Group<TObject, TGroup>>
+    where TObject : notnull
 {
     public Group(TGroup groupKey) => GroupKey = groupKey;
 

@@ -13,6 +13,7 @@ namespace DynamicData.Cache.Internal;
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the field.</typeparam>
 internal interface IFilter<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     /// <summary>

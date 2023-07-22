@@ -29,6 +29,7 @@ public static class EnumerableEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> AsObservableChangeSet<TObject, TKey>(this IEnumerable<TObject> source, Func<TObject, TKey> keySelector, bool completable = false)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -66,6 +67,7 @@ public static class EnumerableEx
     /// <returns>An observable change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject>> AsObservableChangeSet<TObject>(this IEnumerable<TObject> source, bool completable = false)
+        where TObject : notnull
     {
         if (source is null)
         {

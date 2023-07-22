@@ -11,6 +11,7 @@ using System.Reactive.Subjects;
 namespace DynamicData.List.Internal;
 
 internal sealed class BufferIf<T>
+    where T : notnull
 {
     private readonly bool _initialPauseState;
 

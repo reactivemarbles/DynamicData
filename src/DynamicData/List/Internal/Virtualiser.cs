@@ -8,6 +8,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class Virtualiser<T>
+    where T : notnull
 {
     private readonly IObservable<IVirtualRequest> _requests;
 

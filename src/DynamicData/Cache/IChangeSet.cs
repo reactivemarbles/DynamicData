@@ -15,6 +15,7 @@ namespace DynamicData;
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 public interface IChangeSet<TObject, TKey> : IChangeSet, IEnumerable<Change<TObject, TKey>>
+    where TObject : notnull
     where TKey : notnull
 {
     /// <summary>

@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class ToObservableChangeSet<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservable<IEnumerable<TObject>> _source;

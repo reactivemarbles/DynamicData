@@ -10,6 +10,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class DynamicFilter<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservable<Func<TObject, bool>> _predicateChanged;

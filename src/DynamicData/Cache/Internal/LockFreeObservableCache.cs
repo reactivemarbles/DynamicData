@@ -22,6 +22,7 @@ namespace DynamicData.Cache.Internal;
 /// <typeparam name="TKey">The type of the key.</typeparam>
 [DebuggerDisplay("LockFreeObservableCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]

@@ -22,6 +22,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, int> valueSelector, int fallbackValue)
+        where T : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
     }
@@ -35,6 +36,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, long> valueSelector, long fallbackValue)
+        where T : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
     }
@@ -48,6 +50,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, double> valueSelector, double fallbackValue)
+        where T : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
     }
@@ -61,6 +64,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, decimal> valueSelector, decimal fallbackValue)
+        where T : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
     }
@@ -74,6 +78,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<T>(this IObservable<IChangeSet<T>> source, Func<T, float> valueSelector, float fallbackValue = 0)
+        where T : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
     }
@@ -88,6 +93,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, int> valueSelector, int fallbackValue)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
@@ -103,6 +109,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, long> valueSelector, long fallbackValue)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
@@ -118,6 +125,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, double> valueSelector, double fallbackValue)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
@@ -133,6 +141,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, decimal> valueSelector, decimal fallbackValue)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);
@@ -148,6 +157,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<double> StdDev<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, float> valueSelector, float fallbackValue = 0)
+        where TObject : notnull
         where TKey : notnull
     {
         return source.ForAggregation().StdDev(valueSelector, fallbackValue);

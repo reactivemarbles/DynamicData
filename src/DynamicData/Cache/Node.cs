@@ -17,8 +17,8 @@ namespace DynamicData;
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
 public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
-    where TKey : notnull
     where TObject : class
+    where TKey : notnull
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
     private readonly ISourceCache<Node<TObject, TKey>, TKey> _children = new SourceCache<Node<TObject, TKey>, TKey>(n => n.Key);

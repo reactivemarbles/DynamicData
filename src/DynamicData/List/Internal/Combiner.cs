@@ -13,6 +13,7 @@ using DynamicData.Cache.Internal;
 namespace DynamicData.List.Internal;
 
 internal sealed class Combiner<T>
+    where T : notnull
 {
     private readonly object _locker = new();
 

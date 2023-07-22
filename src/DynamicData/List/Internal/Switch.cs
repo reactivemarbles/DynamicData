@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.List.Internal;
 
 internal sealed class Switch<T>
+    where T : notnull
 {
     private readonly IObservable<IObservable<IChangeSet<T>>> _sources;
 

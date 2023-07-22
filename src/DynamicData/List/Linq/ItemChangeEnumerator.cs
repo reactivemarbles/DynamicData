@@ -8,6 +8,7 @@ using System.Collections.Generic;
 namespace DynamicData.List.Linq;
 
 internal class ItemChangeEnumerator<T> : IEnumerable<ItemChange<T>>
+    where T : notnull
 {
     private readonly IChangeSet<T> _changeSet;
 

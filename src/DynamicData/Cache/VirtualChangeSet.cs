@@ -11,6 +11,7 @@ using DynamicData.Cache.Internal;
 namespace DynamicData;
 
 internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, IVirtualChangeSet<TObject, TKey>, IEquatable<VirtualChangeSet<TObject, TKey>>
+    where TObject : notnull
     where TKey : notnull
 {
     public static readonly new IVirtualChangeSet<TObject, TKey> Empty = new VirtualChangeSet<TObject, TKey>();

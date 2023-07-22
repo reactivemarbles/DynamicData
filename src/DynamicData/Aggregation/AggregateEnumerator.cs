@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace DynamicData.Aggregation;
 
 internal class AggregateEnumerator<T> : IAggregateChangeSet<T>
+    where T : notnull
 {
     private readonly IChangeSet<T> _source;
 
@@ -64,6 +65,7 @@ internal class AggregateEnumerator<T> : IAggregateChangeSet<T>
 
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same name, different generics.")]
 internal class AggregateEnumerator<TObject, TKey> : IAggregateChangeSet<TObject>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IChangeSet<TObject, TKey> _source;

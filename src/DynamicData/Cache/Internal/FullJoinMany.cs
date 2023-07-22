@@ -9,8 +9,11 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal class FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>
+    where TLeft : notnull
     where TLeftKey : notnull
+    where TRight : notnull
     where TRightKey : notnull
+    where TDestination : notnull
 {
     private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left;
 

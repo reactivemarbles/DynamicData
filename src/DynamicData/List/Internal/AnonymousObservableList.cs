@@ -9,6 +9,7 @@ namespace DynamicData.List.Internal;
 
 [DebuggerDisplay("AnonymousObservableList<{typeof(T).Name}> ({Count} Items)")]
 internal sealed class AnonymousObservableList<T> : IObservableList<T>
+    where T : notnull
 {
     private readonly ISourceList<T> _sourceList;
     private readonly IDisposable _cleanUp;

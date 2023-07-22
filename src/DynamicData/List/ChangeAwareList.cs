@@ -19,6 +19,7 @@ namespace DynamicData;
 /// <typeparam name="T">The item type.</typeparam>
 /// <seealso cref="DynamicData.IExtendedList{T}" />
 public class ChangeAwareList<T> : IExtendedList<T>
+    where T : notnull
 {
     private readonly List<T> _innerList;
 

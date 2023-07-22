@@ -17,6 +17,6 @@ internal static class CacheChangeSetEx
     /// </summary>
     /// <param name="changeSet">The source change set.</param>
     public static ChangeSet<TObject, TKey> ToConcreteType<TObject, TKey>(this IChangeSet<TObject, TKey> changeSet)
-        where TKey : notnull
-        => (ChangeSet<TObject, TKey>)changeSet;
+        where TObject : notnull
+        where TKey : notnull => (ChangeSet<TObject, TKey>)changeSet;
 }

@@ -217,6 +217,7 @@ public class ObservableChangeSetFixture
 
     private void SubscribeAndAssert<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> observableChangeset, bool expectsError = false, Action<IObservableCache<TObject, TKey>>? checkContentAction = null)
         where TKey : notnull
+        where TObject : notnull
     {
         Exception? error = null;
         bool complete = false;

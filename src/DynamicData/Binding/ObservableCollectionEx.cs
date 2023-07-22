@@ -36,6 +36,7 @@ public static class ObservableCollectionEx
     /// <returns>An observable that emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ObservableCollection<T> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -58,6 +59,7 @@ public static class ObservableCollectionEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -82,6 +84,7 @@ public static class ObservableCollectionEx
     /// <returns>An observable that emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReadOnlyObservableCollection<T> source)
+        where T : notnull
     {
         if (source is null)
         {
@@ -104,6 +107,7 @@ public static class ObservableCollectionEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ReadOnlyObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -130,6 +134,7 @@ public static class ObservableCollectionEx
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
         where TCollection : INotifyCollectionChanged, IEnumerable<T>
+        where T : notnull
     {
         if (source is null)
         {

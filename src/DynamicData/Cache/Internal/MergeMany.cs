@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class MergeMany<TObject, TKey, TDestination>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly Func<TObject, TKey, IObservable<TDestination>> _observableSelector;

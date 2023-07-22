@@ -23,7 +23,9 @@ public static class SourceCacheEx
     /// <param name="converter">The conversion factory.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination, TKey>> Cast<TSource, TKey, TDestination>(this IObservableCache<TSource, TKey> source, Func<TSource, TDestination> converter)
+        where TSource : notnull
         where TKey : notnull
+        where TDestination : notnull
     {
         if (source is null)
         {

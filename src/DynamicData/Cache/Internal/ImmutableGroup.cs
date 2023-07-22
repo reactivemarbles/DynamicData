@@ -10,6 +10,7 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class ImmutableGroup<TObject, TKey, TGroupKey> : IGrouping<TObject, TKey, TGroupKey>, IEquatable<ImmutableGroup<TObject, TKey, TGroupKey>>
+    where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {

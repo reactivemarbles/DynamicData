@@ -13,6 +13,8 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class TransformMany<TSource, TDestination>
+    where TSource : notnull
+    where TDestination : notnull
 {
     private readonly Func<TSource, IObservable<IChangeSet<TDestination>>>? _childChanges;
 

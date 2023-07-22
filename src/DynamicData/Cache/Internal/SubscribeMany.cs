@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class SubscribeMany<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservable<IChangeSet<TObject, TKey>> _source;

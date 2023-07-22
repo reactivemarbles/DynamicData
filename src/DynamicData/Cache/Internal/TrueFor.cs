@@ -10,7 +10,9 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal class TrueFor<TObject, TKey, TValue>
+    where TObject : notnull
     where TKey : notnull
+    where TValue : notnull
 {
     private readonly Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> _collectionMatcher;
 

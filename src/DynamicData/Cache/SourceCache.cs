@@ -16,6 +16,7 @@ namespace DynamicData;
 /// <typeparam name="TKey">The type of the key.</typeparam>
 [DebuggerDisplay("SourceCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 public sealed class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly ObservableCache<TObject, TKey> _innerCache;

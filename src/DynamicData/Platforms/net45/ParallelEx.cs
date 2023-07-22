@@ -16,6 +16,7 @@ namespace DynamicData.PLinq
     internal static class ParallelEx
     {
         internal static ParallelQuery<Change<TObject, TKey>> Parallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
+            where TObject : notnull
             where TKey : notnull
         {
             switch (option.Type)
@@ -79,6 +80,7 @@ namespace DynamicData.PLinq
         }
 
         internal static bool ShouldParallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
+            where TObject : notnull
             where TKey : notnull
         {
             return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered) && (option.Threshold >= 0 && source.Count >= option.Threshold);

@@ -8,6 +8,7 @@ using System.Reactive.Linq;
 namespace DynamicData.List.Internal;
 
 internal sealed class MergeMany<T, TDestination>
+    where T : notnull
 {
     private readonly Func<T, IObservable<TDestination>> _observableSelector;
 

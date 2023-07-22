@@ -51,7 +51,7 @@ public class SortChangedFixture
             Number = number;
         }
 
-        public int CompareTo([AllowNull] ListItem other) => DefaultComparer.Compare(this, other);
+        public int CompareTo(ListItem? other) => DefaultComparer.Compare(this, other);
             
     }
 }

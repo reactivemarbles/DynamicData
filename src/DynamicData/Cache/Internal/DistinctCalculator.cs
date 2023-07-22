@@ -11,8 +11,9 @@ using DynamicData.Kernel;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class DistinctCalculator<TObject, TKey, TValue>
-    where TValue : notnull
+    where TObject : notnull
     where TKey : notnull
+    where TValue : notnull
 {
     private readonly IDictionary<TKey, TValue> _itemCache = new Dictionary<TKey, TValue>();
 

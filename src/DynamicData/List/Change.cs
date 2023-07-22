@@ -12,6 +12,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
 public sealed class Change<T> : IEquatable<Change<T>>
+    where T : notnull
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="Change{T}"/> class.

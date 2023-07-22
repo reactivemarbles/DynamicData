@@ -22,6 +22,7 @@ public static class ExperimentalEx
     /// <returns>The watcher.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IWatcher<TObject, TKey> AsWatcher<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IScheduler? scheduler = null)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)

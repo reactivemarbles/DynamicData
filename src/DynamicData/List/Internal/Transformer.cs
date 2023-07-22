@@ -12,6 +12,8 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class Transformer<TSource, TDestination>
+    where TSource : notnull
+    where TDestination : notnull
 {
     private readonly Func<TSource, Optional<TDestination>, int, TransformedItemContainer> _containerFactory;
 

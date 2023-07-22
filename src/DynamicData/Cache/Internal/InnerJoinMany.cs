@@ -7,8 +7,11 @@ using System;
 namespace DynamicData.Cache.Internal;
 
 internal class InnerJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>
+    where TLeft : notnull
     where TLeftKey : notnull
+    where TRight : notnull
     where TRightKey : notnull
+    where TDestination : notnull
 {
     private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left;
 

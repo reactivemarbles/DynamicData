@@ -14,6 +14,7 @@ namespace DynamicData.Cache.Internal;
 /// and apply indexed changes with no need to apply ant expensive IndexOf() operations.
 /// </summary>
 internal sealed class IndexCalculator<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly SortOptimisations _optimisations;

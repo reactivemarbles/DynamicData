@@ -12,6 +12,7 @@ using System.Threading;
 namespace DynamicData.List.Internal;
 
 internal sealed class LimitSizeTo<T>
+    where T : notnull
 {
     private readonly object _locker;
 

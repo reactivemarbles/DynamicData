@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 namespace DynamicData.Cache.Internal;
 
 internal sealed class Switch<TObject, TKey>
+    where TObject : notnull
     where TKey : notnull
 {
     private readonly IObservable<IObservable<IChangeSet<TObject, TKey>>> _sources;

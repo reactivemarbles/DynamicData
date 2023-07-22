@@ -14,6 +14,7 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 public interface IChangeSet<TObject> : IEnumerable<Change<TObject>>, IChangeSet
+    where TObject : notnull
 {
     /// <summary>
     ///     Gets the number of updates.

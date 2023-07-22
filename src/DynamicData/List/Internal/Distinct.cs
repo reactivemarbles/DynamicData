@@ -12,6 +12,7 @@ using DynamicData.Kernel;
 namespace DynamicData.List.Internal;
 
 internal sealed class Distinct<T, TValue>
+    where T : notnull
     where TValue : notnull
 {
     private readonly IObservable<IChangeSet<T>> _source;

@@ -12,6 +12,7 @@ namespace DynamicData;
 /// <typeparam name="TKey">The type of the key.</typeparam>
 /// <typeparam name="TGroupKey">The type of value used to group the original stream.</typeparam>
 public interface IGroup<TObject, TKey, out TGroupKey> : IKey<TGroupKey>
+    where TObject : notnull
     where TKey : notnull
 {
     /// <summary>

@@ -31,6 +31,8 @@ public static class ObservableCacheAlias
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -67,6 +69,8 @@ public static class ObservableCacheAlias
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         return source.Transform(transformFactory, forceTransform);
@@ -88,6 +92,8 @@ public static class ObservableCacheAlias
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Unit> forceTransform)
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         return source.Transform(transformFactory, forceTransform);
@@ -109,6 +115,8 @@ public static class ObservableCacheAlias
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Func<TSource, bool>>? forceTransform = null)
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -136,7 +144,9 @@ public static class ObservableCacheAlias
     /// <param name="keySelector">The key selector which must be unique across all.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination, TDestinationKey>> SelectMany<TDestination, TDestinationKey, TSource, TSourceKey>(this IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IEnumerable<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
+        where TDestination : notnull
         where TDestinationKey : notnull
+        where TSource : notnull
         where TSourceKey : notnull
     {
         return source.TransformMany(manySelector, keySelector);
@@ -162,6 +172,8 @@ public static class ObservableCacheAlias
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -207,6 +219,8 @@ public static class ObservableCacheAlias
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, bool>>? forceTransform = null)
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -247,6 +261,8 @@ public static class ObservableCacheAlias
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -287,6 +303,8 @@ public static class ObservableCacheAlias
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
+        where TDestination : notnull
+        where TSource : notnull
         where TKey : notnull
     {
         return source.TransformSafe(transformFactory, errorHandler, forceTransform);
@@ -301,8 +319,8 @@ public static class ObservableCacheAlias
     /// <param name="pivotOn">The pivot on.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<Node<TObject, TKey>, TKey>> SelectTree<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn)
-        where TKey : notnull
         where TObject : class
+        where TKey : notnull
     {
         if (source is null)
         {
@@ -326,6 +344,7 @@ public static class ObservableCacheAlias
     /// <param name="filter">The filter.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -345,6 +364,7 @@ public static class ObservableCacheAlias
     /// <param name="predicateChanged">Observable to change the underlying predicate.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -369,6 +389,7 @@ public static class ObservableCacheAlias
     /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Unit> reapplyFilter)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
@@ -394,6 +415,7 @@ public static class ObservableCacheAlias
     /// <param name="reapplyFilter">Observable to re-evaluate whether the filter still matches items. Use when filtering on mutable values.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> Where<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit> reapplyFilter)
+        where TObject : notnull
         where TKey : notnull
     {
         if (source is null)
