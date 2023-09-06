@@ -1232,65 +1232,6 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Signal observers to re-evaluate the specified item.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="item">The item.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    [Obsolete(Constants.EvaluateIsDead)]
-    public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
-        where TKey : notnull
-    {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        source.Edit(updater => updater.Refresh(item));
-    }
-
-    /// <summary>
-    /// Signal observers to re-evaluate the specified items.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    [Obsolete(Constants.EvaluateIsDead)]
-    public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
-        where TKey : notnull
-    {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        source.Edit(updater => updater.Refresh(items));
-    }
-
-    /// <summary>
-    /// Signal observers to re-evaluate the all items.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    [Obsolete(Constants.EvaluateIsDead)]
-    public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source)
-        where TKey : notnull
-    {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        source.Edit(updater => updater.Refresh());
-    }
-
-    /// <summary>
     /// Dynamically apply a logical Except operator between the collections
     /// Items from the first collection in the outer list are included unless contained in any of the other lists.
     /// </summary>

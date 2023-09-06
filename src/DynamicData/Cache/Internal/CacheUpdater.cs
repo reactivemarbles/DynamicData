@@ -153,46 +153,13 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
         }
     }
 
-    public void AddOrUpdate(KeyValuePair<TKey, TObject> item)
-    {
-        _cache.AddOrUpdate(item.Value, item.Key);
-    }
+    public void AddOrUpdate(KeyValuePair<TKey, TObject> item) => _cache.AddOrUpdate(item.Value, item.Key);
 
-    public void AddOrUpdate(TObject item, TKey key)
-    {
-        _cache.AddOrUpdate(item, key);
-    }
+    public void AddOrUpdate(TObject item, TKey key) => _cache.AddOrUpdate(item, key);
 
-    public void Clear()
-    {
-        _cache.Clear();
-    }
+    public void Clear() => _cache.Clear();
 
-    public void Clone(IChangeSet<TObject, TKey> changes)
-    {
-        _cache.Clone(changes);
-    }
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(IEnumerable<TKey> keys) => Refresh(keys);
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(IEnumerable<TObject> items) => Refresh(items);
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(TObject item) => Refresh(item);
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate()
-    {
-        Refresh();
-    }
-
-    [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(TKey key)
-    {
-        Refresh(key);
-    }
+    public void Clone(IChangeSet<TObject, TKey> changes) => _cache.Clone(changes);
 
     public TKey GetKey(TObject item)
     {

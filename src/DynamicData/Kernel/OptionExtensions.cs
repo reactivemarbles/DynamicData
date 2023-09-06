@@ -99,7 +99,7 @@ public static class OptionExtensions
     {
         if (!source.HasValue || source.Value is null)
         {
-            return new OptionElse();
+            return default;
         }
 
         if (action is null)
@@ -122,12 +122,12 @@ public static class OptionExtensions
     {
         if (!source.HasValue)
         {
-            return new OptionElse();
+            return default;
         }
 
         if (!source.Value.HasValue)
         {
-            return new OptionElse();
+            return default;
         }
 
         if (action is null)

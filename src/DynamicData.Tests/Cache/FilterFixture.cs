@@ -93,7 +93,7 @@ public class FilterFixture : IDisposable
         _source.Remove(people);
 
         _results.Messages.Count.Should().Be(2, "Should be 2 updates");
-        _results.Messages[0].Adds.Should().Be(80, "Should be 80 addes");
+        _results.Messages[0].Adds.Should().Be(80, "Should be 80 adds");
         _results.Messages[1].Removes.Should().Be(80, "Should be 80 removes");
         _results.Data.Count.Should().Be(0, "Should be nothing cached");
     }

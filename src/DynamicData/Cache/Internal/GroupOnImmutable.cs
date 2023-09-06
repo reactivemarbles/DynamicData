@@ -47,11 +47,11 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>
 
     private sealed class Grouper
     {
-        private readonly IDictionary<TGroupKey, GroupCache> _allGroupings = new Dictionary<TGroupKey, GroupCache>();
+        private readonly Dictionary<TGroupKey, GroupCache> _allGroupings = new Dictionary<TGroupKey, GroupCache>();
 
         private readonly Func<TObject, TGroupKey> _groupSelectorKey;
 
-        private readonly IDictionary<TKey, ChangeWithGroup> _itemCache = new Dictionary<TKey, ChangeWithGroup>();
+        private readonly Dictionary<TKey, ChangeWithGroup> _itemCache = new Dictionary<TKey, ChangeWithGroup>();
 
         public Grouper(Func<TObject, TGroupKey> groupSelectorKey)
         {
