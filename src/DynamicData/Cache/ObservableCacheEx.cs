@@ -5670,7 +5670,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="propertyAccessor">The property accessor.</param>
-    /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+    /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value.</param>
     /// <returns>An observable which emits a property when it has changed.</returns>
     public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
@@ -5697,7 +5697,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="propertyAccessor">The property accessor.</param>
-    /// <param name="notifyOnInitialValue">if set to <c>true</c> [notify on initial value].</param>
+    /// <param name="notifyOnInitialValue">If true the resulting observable includes the initial value.</param>
     /// <returns>An observable which emits a value when it has changed.</returns>
     public static IObservable<TValue?> WhenValueChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
