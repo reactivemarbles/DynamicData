@@ -77,7 +77,7 @@ namespace DynamicData.Tests.Binding
             //update once as initial load is always a reset
             _source.AddOrUpdate(new Person("Me", 21));
 
-            bool invoked = false;
+            var invoked = false;
             _collection.ListChanged += (sender, e) =>
                 {
                     invoked = true;
@@ -126,8 +126,8 @@ namespace DynamicData.Tests.Binding
             //update once as initial load is always a reset
             _source.AddOrUpdate(new Person("Me", 21));
 
-            bool invoked = false;
-            bool resetInvoked = false;
+            var invoked = false;
+            var resetInvoked = false;
             _collection.ListChanged += (sender, e) =>
                 {
                     invoked = true;

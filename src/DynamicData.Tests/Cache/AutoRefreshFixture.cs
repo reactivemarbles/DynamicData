@@ -95,7 +95,7 @@ public class AutoRefreshFixture
         sourceList.Add(initialItem);
 
         var descriptionStream = sourceList.Connect().AutoRefresh(intHolder => intHolder!.Description).Transform(intHolder => intHolder!.Description, true).Do(x => { }) // <--- Add break point here to check the overload fixes it
-            .Bind(out ReadOnlyObservableCollection<string> resultCollection);
+            .Bind(out var resultCollection);
 
         using (descriptionStream.Subscribe())
         {

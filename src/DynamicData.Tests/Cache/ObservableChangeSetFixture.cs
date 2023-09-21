@@ -19,7 +19,8 @@ public class ObservableChangeSetFixture
 
     [Fact] //Disabled due to test failing when run with a test runner. Run locally in isolation and it works
     [Description("See https://github.com/reactivemarbles/DynamicData/issues/383")]
-     private async Task AsyncSubscriptionCanReceiveMultipleResults()
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1030:Do not call ConfigureAwait in test method", Justification = "Without ConfigureAwait(false) we get a flakey test which always work when run in isolation but periodically fails when all tests are run.")]
+    private async Task AsyncSubscriptionCanReceiveMultipleResults()
     {
 
         //the aim of this test is to ensure we can continuously receive subscriptions when we use the async subscribe overloads
@@ -29,7 +30,7 @@ public class ObservableChangeSetFixture
         var observable = ObservableChangeSet.Create<int, int>(
                 async (changeSet, token) =>
                 {
-                    int i = 0;
+                    var i = 0;
 
                     while (!token.IsCancellationRequested)
                     {
@@ -48,7 +49,7 @@ public class ObservableChangeSetFixture
             .Select(cs => cs.Select(c => c.Current).ToList());
 
 
-        bool isComplete = false;
+        var isComplete = false;
         Exception? error = null;
 
 
@@ -81,10 +82,7 @@ public class ObservableChangeSetFixture
     {
         Exception? error = null;
 
-        Task<IEnumerable<Person>> Loader()
-        {
-            throw new Exception("Broken");
-        }
+        static Task<IEnumerable<Person>> Loader() => throw new Exception("Broken");
 
         var observable = ObservableChangeSet.Create<Person, string>(
             async cache =>
@@ -107,10 +105,7 @@ public class ObservableChangeSetFixture
     {
         Exception? error = null;
 
-        IEnumerable<Person> Loader()
-        {
-            throw new Exception("Broken");
-        }
+        static IEnumerable<Person> Loader() => throw new Exception("Broken");
 
         var observable = ObservableChangeSet.Create<Person, string>(
             cache =>
@@ -131,9 +126,9 @@ public class ObservableChangeSetFixture
     [Fact]
     public void LoadsAndDisposeFromObservableCache()
     {
-        bool isDisposed = false;
+        var isDisposed = false;
 
-        var observable = ObservableChangeSet.Create<Person, string>(cache => { return () => { isDisposed = true; }; }, p => p.Name);
+        var observable = ObservableChangeSet.Create<Person, string>(cache => () => isDisposed = true, p => p.Name);
 
         observable.AsObservableCache().Dispose();
         isDisposed.Should().BeTrue();
@@ -142,14 +137,14 @@ public class ObservableChangeSetFixture
     [Fact]
     public void LoadsAndDisposeUsingAction()
     {
-        bool isDisposed = false;
+        var isDisposed = false;
         SubscribeAndAssert(
             ObservableChangeSet.Create<Person, string>(
                 cache =>
                 {
-                    Person[] people = Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray();
+                    var people = Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray();
                     cache.AddOrUpdate(people);
-                    return () => { isDisposed = true; };
+                    return () => isDisposed = true;
                 },
                 p => p.Name),
             checkContentAction: result => result.Count.Should().Be(100));
@@ -160,16 +155,16 @@ public class ObservableChangeSetFixture
     [Fact]
     public void LoadsAndDisposeUsingActionAsync()
     {
-        Task<Person[]> CreateTask() => Task.FromResult(Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray());
+        static Task<Person[]> CreateTask() => Task.FromResult(Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray());
 
-        bool isDisposed = false;
+        var isDisposed = false;
         SubscribeAndAssert(
             ObservableChangeSet.Create<Person, string>(
                 async cache =>
                 {
                     var people = await CreateTask();
                     cache.AddOrUpdate(people);
-                    return () => { isDisposed = true; };
+                    return () => isDisposed = true;
                 },
                 p => p.Name),
             checkContentAction: result => result.Count.Should().Be(100));
@@ -180,14 +175,14 @@ public class ObservableChangeSetFixture
     [Fact]
     public void LoadsAndDisposeUsingDisposable()
     {
-        bool isDisposed = false;
+        var isDisposed = false;
         SubscribeAndAssert(
             ObservableChangeSet.Create<Person, string>(
                 cache =>
                 {
-                    Person[] people = Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray();
+                    var people = Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray();
                     cache.AddOrUpdate(people);
-                    return Disposable.Create(() => { isDisposed = true; });
+                    return Disposable.Create(() => isDisposed = true);
                 },
                 p => p.Name),
             checkContentAction: result => result.Count.Should().Be(100));
@@ -198,16 +193,16 @@ public class ObservableChangeSetFixture
     [Fact]
     public void LoadsAndDisposeUsingDisposableAsync()
     {
-        Task<Person[]> CreateTask() => Task.FromResult(Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray());
+        static Task<Person[]> CreateTask() => Task.FromResult(Enumerable.Range(1, 100).Select(i => new Person($"Name.{i}", i)).ToArray());
 
-        bool isDisposed = false;
+        var isDisposed = false;
         SubscribeAndAssert(
             ObservableChangeSet.Create<Person, string>(
                 async cache =>
                 {
                     var people = await CreateTask();
                     cache.AddOrUpdate(people);
-                    return Disposable.Create(() => { isDisposed = true; });
+                    return Disposable.Create(() => isDisposed = true);
                 },
                 p => p.Name),
             checkContentAction: result => result.Count.Should().Be(100));
@@ -220,7 +215,7 @@ public class ObservableChangeSetFixture
         where TObject : notnull
     {
         Exception? error = null;
-        bool complete = false;
+        var complete = false;
         IChangeSet<TObject, TKey>? changes = null;
 
         using (var cache = observableChangeset.Finally(() => complete = true).AsObservableCache())

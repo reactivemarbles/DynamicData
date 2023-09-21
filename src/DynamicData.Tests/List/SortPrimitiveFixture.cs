@@ -44,7 +44,7 @@ public class SortPrimitiveFixture : IDisposable
 
         actualResult.Should().BeEquivalentTo(expectedResult);
 
-        for (int i = 0; i < 50; i++)
+        for (var i = 0; i < 50; i++)
         {
             _source.Remove(i);
         }

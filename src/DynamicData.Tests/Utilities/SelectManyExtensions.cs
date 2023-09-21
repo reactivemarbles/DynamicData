@@ -46,7 +46,7 @@ public static class SelectManyExtensions
             throw new ArgumentNullException(nameof(selector));
         }
 
-        T[] selectManyRecursive = source as T[] ?? source.ToArray();
+        var selectManyRecursive = source as T[] ?? source.ToArray();
         return !selectManyRecursive.Any() ? selectManyRecursive : selectManyRecursive.Concat(selectManyRecursive.SelectMany(i => selector(i).EmptyIfNull()).SelectManyRecursive(selector));
     }
 

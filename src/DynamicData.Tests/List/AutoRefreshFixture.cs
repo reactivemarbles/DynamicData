@@ -348,7 +348,7 @@ public class AutoRefreshFixture
     [Fact]
     public void RefreshTransformAsList()
     {
-        SourceList<Example> list = new SourceList<Example>();
+        var list = new SourceList<Example>();
         var valueList = list.Connect().AutoRefresh(e => e.Value).Transform(e => e.Value, true).AsObservableList();
 
         var obj = new Example { Value = 0 };

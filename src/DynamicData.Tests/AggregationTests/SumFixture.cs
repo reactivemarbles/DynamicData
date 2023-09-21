@@ -21,7 +21,7 @@ public class SumFixture : IDisposable
     [Fact]
     public void AddedItemsContributeToSum()
     {
-        int sum = 0;
+        var sum = 0;
 
         var accumulator = _source.Connect().Sum(p => p.Age).Subscribe(x => sum = x);
 
@@ -42,7 +42,7 @@ public class SumFixture : IDisposable
     [Fact]
     public void InlineChangeReEvaluatesTotals()
     {
-        int sum = 0;
+        var sum = 0;
 
         var somepropChanged = _source.Connect().WhenValueChanged(p => p.Age);
 
@@ -64,7 +64,7 @@ public class SumFixture : IDisposable
     [Fact]
     public void RemoveProduceCorrectResult()
     {
-        int sum = 0;
+        var sum = 0;
 
         var accumulator = _source.Connect().Sum(p => p.Age).Subscribe(x => sum = x);
 

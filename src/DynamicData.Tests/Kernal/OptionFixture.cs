@@ -24,8 +24,8 @@ public class OptionFixture
     {
         Optional<Person>? source = null;
 
-        bool ifactioninvoked = false;
-        bool elseactioninvoked = false;
+        var ifactioninvoked = false;
+        var elseactioninvoked = false;
 
         source.IfHasValue(p => ifactioninvoked = true).Else(() => elseactioninvoked = true);
 
@@ -38,8 +38,8 @@ public class OptionFixture
     {
         Optional<Person> source = new Person("A", 1);
 
-        bool ifactioninvoked = false;
-        bool elseactioninvoked = false;
+        var ifactioninvoked = false;
+        var elseactioninvoked = false;
 
         source.IfHasValue(p => ifactioninvoked = true).Else(() => elseactioninvoked = true);
 

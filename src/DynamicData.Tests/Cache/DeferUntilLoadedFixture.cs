@@ -14,7 +14,7 @@ public class DeferAnsdSkipFixture
     [Fact]
     public void DeferUntilLoadedDoesNothingUntilDataHasBeenReceived()
     {
-        bool updateReceived = false;
+        var updateReceived = false;
         IChangeSet<Person, string>? result = null;
 
         var cache = new SourceCache<Person, string>(p => p.Name);
@@ -45,7 +45,7 @@ public class DeferAnsdSkipFixture
     [Fact]
     public void SkipInitialDoesNotReturnTheFirstBatchOfData()
     {
-        bool updateReceived = false;
+        var updateReceived = false;
 
         var cache = new SourceCache<Person, string>(p => p.Name);
 

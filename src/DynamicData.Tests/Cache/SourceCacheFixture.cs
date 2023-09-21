@@ -52,8 +52,8 @@ public class SourceCacheFixture : IDisposable
     [Fact]
     public void CountChanged()
     {
-        int count = 0;
-        int invoked = 0;
+        var count = 0;
+        var invoked = 0;
         using (_source.CountChanged.Subscribe(
                    c =>
                    {
@@ -120,9 +120,9 @@ public class SourceCacheFixture : IDisposable
     [Fact]
     public void SubscribesDisposesCorrectly()
     {
-        bool called = false;
-        bool errored = false;
-        bool completed = false;
+        var called = false;
+        var errored = false;
+        var completed = false;
         var subscription = _source.Connect().Finally(() => completed = true).Subscribe(updates => { called = true; }, ex => errored = true, () => completed = true);
         _source.AddOrUpdate(new Person("Adult1", 40));
 

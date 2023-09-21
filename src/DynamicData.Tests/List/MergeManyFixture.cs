@@ -24,7 +24,7 @@ public class MergeManyFixture : IDisposable
     [Fact]
     public void EverythingIsUnsubscribedWhenStreamIsDisposed()
     {
-        bool invoked = false;
+        var invoked = false;
         var stream = _source.Connect().MergeMany(o => o.Observable).Subscribe(o => { invoked = true; });
 
         var item = new ObjectWithObservable(1);
@@ -42,7 +42,7 @@ public class MergeManyFixture : IDisposable
     [Fact]
     public void InvocationOnlyWhenChildIsInvoked()
     {
-        bool invoked = false;
+        var invoked = false;
 
         var stream = _source.Connect().MergeMany(o => o.Observable).Subscribe(o => { invoked = true; });
 
@@ -59,7 +59,7 @@ public class MergeManyFixture : IDisposable
     [Fact]
     public void RemovedItemWillNotCauseInvocation()
     {
-        bool invoked = false;
+        var invoked = false;
         var stream = _source.Connect().MergeMany(o => o.Observable).Subscribe(o => { invoked = true; });
 
         var item = new ObjectWithObservable(1);
