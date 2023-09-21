@@ -18,14 +18,17 @@ public class SortedObservableCollectionAdaptor<TObject, TKey> : ISortedObservabl
     where TKey : notnull
 {
     private readonly int _refreshThreshold;
+    private readonly bool _useReplaceForUpdates;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SortedObservableCollectionAdaptor{TObject, TKey}"/> class.
     /// </summary>
     /// <param name="refreshThreshold">The number of changes before a Reset event is used.</param>
-    public SortedObservableCollectionAdaptor(int refreshThreshold = 25)
+    /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates. </param>
+    public SortedObservableCollectionAdaptor(int refreshThreshold = 25, bool useReplaceForUpdates = true)
     {
         _refreshThreshold = refreshThreshold;
+        _useReplaceForUpdates = useReplaceForUpdates;
     }
 
     /// <summary>
@@ -89,7 +92,7 @@ public class SortedObservableCollectionAdaptor<TObject, TKey> : ISortedObservabl
         }
     }
 
-    private static void DoUpdate(ISortedChangeSet<TObject, TKey> updates, IObservableCollection<TObject> list)
+    private void DoUpdate(ISortedChangeSet<TObject, TKey> updates, IObservableCollection<TObject> list)
     {
         foreach (var update in updates)
         {
@@ -108,7 +111,7 @@ public class SortedObservableCollectionAdaptor<TObject, TKey> : ISortedObservabl
                     break;
 
                 case ChangeReason.Update:
-                    if (update.PreviousIndex != update.CurrentIndex)
+                    if (!_useReplaceForUpdates || update.PreviousIndex != update.CurrentIndex)
                     {
                         list.RemoveAt(update.PreviousIndex);
                         list.Insert(update.CurrentIndex, update.Current);

@@ -196,22 +196,42 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
     [Fact]
     public void UpdateToSourceSendsReplaceIfSortingIsNotAffected()
     {
-        var person1 = new Person("Adult1", 10);
-        var person2 = new Person("Adult2", 11);
+        RunTest(true);
+        RunTest(false);
 
-        NotifyCollectionChangedAction action = default;
-        _source.AddOrUpdate(person1);
-        _source.AddOrUpdate(person2);
 
-        var person2Updated = new Person("Adult2", 12);
-
-        using (_collection.ObserveCollectionChanges().Select(change => change.EventArgs.Action).Subscribe(act => action = act))
+        void RunTest(bool useReplace)
         {
-            _source.AddOrUpdate(person2Updated);
-        }
+            var collection = new ObservableCollectionExtended<Person>();
 
-        action.Should().Be(NotifyCollectionChangedAction.Replace, "The notification type should be Replace");
-        _collection.Should().Equal(person1, person2Updated);
+            using var source = new SourceCache<Person, string>(p => p.Name);
+            using var binder = source.Connect().Sort(_comparer, resetThreshold: 25).Bind(collection, new ObservableCollectionAdaptor<Person, string>(useReplaceForUpdates: useReplace)).Subscribe();
+
+            var person1 = new Person("Adult1", 10);
+            var person2 = new Person("Adult2", 11);
+
+            NotifyCollectionChangedAction action = default;
+            source.AddOrUpdate(person1);
+            source.AddOrUpdate(person2);
+
+            var person2Updated = new Person("Adult2", 12);
+
+            using (collection.ObserveCollectionChanges().Select(x => x.EventArgs.Action).Subscribe(updateType => action = updateType))
+            {
+                source.AddOrUpdate(person2Updated);
+            }
+
+            if (useReplace)
+            {
+                action.Should().Be(NotifyCollectionChangedAction.Replace, "The notification type should be Replace");
+            }
+            else
+            {
+                action.Should().Be(NotifyCollectionChangedAction.Add, "The notification type should be Add");
+            }
+
+            collection.Should().Equal(person1, person2Updated);
+        }
     }
 
     [Fact]
