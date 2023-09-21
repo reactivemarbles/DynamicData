@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -132,6 +132,7 @@ public static class ObservableCollectionEx
     /// <param name="source">The source.</param>
     /// <returns>An observable that emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1146:Use conditional access.", Justification = "net 7.0 has error when conditional access is used.")]
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
         where TCollection : INotifyCollectionChanged, IEnumerable<T>
         where T : notnull
@@ -187,7 +188,7 @@ public static class ObservableCollectionEx
                                     break;
                                 }
 
-                            case NotifyCollectionChangedAction.Replace when changes.NewItems?[0] is T replacedItem:
+                            case NotifyCollectionChangedAction.Replace when changes.NewItems is not null && changes.NewItems[0] is T replacedItem:
                                 list[changes.NewStartingIndex] = replacedItem;
                                 break;
                             case NotifyCollectionChangedAction.Reset:

@@ -93,7 +93,7 @@ public class SizeLimitFixture : IDisposable
     [Fact]
     public void InvokeLimitSizeToWhenOverLimit()
     {
-        bool removesTriggered = false;
+        var removesTriggered = false;
         var subscriber = _source.LimitSizeTo(10, _scheduler).Subscribe(removes => { removesTriggered = true; });
 
         _source.AddOrUpdate(_generator.Take(10).ToArray());
@@ -118,7 +118,7 @@ public class SizeLimitFixture : IDisposable
     [Fact]
     public void OnCompleteIsInvokedWhenSourceIsDisposed()
     {
-        bool completed = false;
+        var completed = false;
 
         var subscriber = _source.LimitSizeTo(10).Finally(() => completed = true).Subscribe(updates => { Console.WriteLine(); });
 

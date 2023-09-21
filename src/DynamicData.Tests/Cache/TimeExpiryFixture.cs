@@ -49,7 +49,7 @@ public class TimeExpiryFixture : IDisposable
         }
 
         const int size = 100;
-        Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name{i}", i)).ToArray();
+        var items = Enumerable.Range(1, size).Select(i => new Person($"Name{i}", i)).ToArray();
         _cache.AddOrUpdate(items);
 
         var xxx = _cache.ExpireAfter(RemoveFunc, _scheduler).Subscribe();
@@ -64,7 +64,7 @@ public class TimeExpiryFixture : IDisposable
     public void CanHandleABatchOfUpdates()
     {
         const int size = 100;
-        Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
+        var items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
 
         _cache.AddOrUpdate(items);
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(150).Ticks);

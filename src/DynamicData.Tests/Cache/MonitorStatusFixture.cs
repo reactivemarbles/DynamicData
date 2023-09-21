@@ -15,7 +15,7 @@ public class MonitorStatusFixture
     [Fact]
     public void InitialiStatusIsLoadding()
     {
-        bool invoked = false;
+        var invoked = false;
         var status = ConnectionStatus.Pending;
         var subscription = new Subject<int>().MonitorStatus().Subscribe(
             s =>
@@ -31,8 +31,8 @@ public class MonitorStatusFixture
     [Fact]
     public void MultipleInvokesDoNotCallLoadedAgain()
     {
-        bool invoked = false;
-        int invocations = 0;
+        var invoked = false;
+        var invocations = 0;
         var subject = new Subject<int>();
         var subscription = subject.MonitorStatus().Where(status => status == ConnectionStatus.Loaded).Subscribe(
             s =>
@@ -53,7 +53,7 @@ public class MonitorStatusFixture
     [Fact]
     public void SetToError()
     {
-        bool invoked = false;
+        var invoked = false;
         var status = ConnectionStatus.Pending;
         var subject = new Subject<int>();
         Exception exception;
@@ -76,7 +76,7 @@ public class MonitorStatusFixture
     [Fact]
     public void SetToLoaded()
     {
-        bool invoked = false;
+        var invoked = false;
         var status = ConnectionStatus.Pending;
         var subject = new Subject<int>();
         var subscription = subject.MonitorStatus().Subscribe(

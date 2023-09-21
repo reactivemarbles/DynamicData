@@ -92,8 +92,8 @@ public class TransformAsyncFixture
     [Fact]
     public async Task RemoveFlowsToTheEnd()
     {
-        int transform = 0;
-        int count = 500;
+        var transform = 0;
+        var count = 500;
         ReadOnlyObservableCollection<Person> collection;
 
         var cache = new SourceCache<Person, string>(p => p.Name);
@@ -140,7 +140,7 @@ public class TransformAsyncFixture
         stub.Results.Messages.Count.Should().Be(2);
         stub.Results.Messages[1].Updates.Should().Be(10);
 
-        for (int i = 1; i <= 10; i++)
+        for (var i = 1; i <= 10; i++)
         {
             var original = stub.Results.Messages[0].ElementAt(i - 1).Current;
             var updated = stub.Results.Messages[1].ElementAt(i - 1).Current;
@@ -163,7 +163,7 @@ public class TransformAsyncFixture
         stub.Results.Messages.Count.Should().Be(2);
         stub.Results.Messages[1].Updates.Should().Be(5);
 
-        for (int i = 1; i <= 5; i++)
+        for (var i = 1; i <= 5; i++)
         {
             var original = stub.Results.Messages[0].ElementAt(i - 1).Current;
             var updated = stub.Results.Messages[1].ElementAt(i - 1).Current;

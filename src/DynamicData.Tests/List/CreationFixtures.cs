@@ -29,7 +29,7 @@ public class ListCreationFixtures
         where T : notnull
     {
         Exception? error = null;
-        bool complete = false;
+        var complete = false;
         IChangeSet<T>? changes = null;
 
         using (var myList = observableChangeset.Finally(() => complete = true).AsObservableList())

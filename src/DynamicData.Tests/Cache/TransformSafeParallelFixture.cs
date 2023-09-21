@@ -26,7 +26,7 @@ public class TransformSafeParallelFixture : IDisposable
             throw new Exception($"Cannot transform {p}");
         }
 
-        string gender = p.Age % 2 == 0 ? "M" : "F";
+        var gender = p.Age % 2 == 0 ? "M" : "F";
         return new PersonWithGender(p, gender);
     };
 

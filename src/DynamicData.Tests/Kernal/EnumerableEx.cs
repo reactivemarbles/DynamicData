@@ -20,7 +20,7 @@ public static class EnumerableEx
         var enumerator = source.GetEnumerator();
         if (enumerator.MoveNext())
         {
-            T curr = enumerator.Current;
+            var curr = enumerator.Current;
 
             while (enumerator.MoveNext())
             {
@@ -48,8 +48,8 @@ public static class EnumerableEx
         var enumerator = source.GetEnumerator();
         if (enumerator.MoveNext())
         {
-            T? prev = default(T);
-            T curr = enumerator.Current;
+            var prev = default(T);
+            var curr = enumerator.Current;
 
             while (enumerator.MoveNext())
             {
@@ -78,8 +78,8 @@ public static class EnumerableEx
         var enumerator = source.GetEnumerator();
         if (enumerator.MoveNext())
         {
-            T? prev = default(T);
-            T curr = enumerator.Current;
+            var prev = default(T);
+            var curr = enumerator.Current;
 
             while (enumerator.MoveNext())
             {

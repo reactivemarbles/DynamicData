@@ -29,7 +29,7 @@ public class RightJoinManyFixture : IDisposable
         var people = Enumerable.Range(1, 10).Select(
             i =>
             {
-                string parent = "Person" + CalculateParent(i, 10);
+                var parent = "Person" + CalculateParent(i, 10);
                 return new Person("Person" + i, i, parentName: parent);
             }).ToArray();
 
@@ -60,7 +60,7 @@ public class RightJoinManyFixture : IDisposable
         var people = Enumerable.Range(1, 10).Select(
             i =>
             {
-                string parent = "Person" + CalculateParent(i, 10);
+                var parent = "Person" + CalculateParent(i, 10);
                 return new Person("Person" + i, i, parentName: parent);
             }).ToArray();
 
@@ -81,7 +81,7 @@ public class RightJoinManyFixture : IDisposable
         var people = Enumerable.Range(1, 10).Select(
             i =>
             {
-                string parent = "Person" + CalculateParent(i, 10);
+                var parent = "Person" + CalculateParent(i, 10);
                 return new Person("Person" + i, i, parentName: parent);
             }).ToArray();
 
@@ -101,7 +101,7 @@ public class RightJoinManyFixture : IDisposable
         var people = Enumerable.Range(1, 10).Select(
             i =>
             {
-                string parent = "Person" + CalculateParent(i, 10);
+                var parent = "Person" + CalculateParent(i, 10);
                 return new Person("Person" + i, i, parentName: parent);
             }).ToArray();
 
@@ -122,7 +122,7 @@ public class RightJoinManyFixture : IDisposable
         var people = Enumerable.Range(1, 10).Select(
             i =>
             {
-                string parent = "Person" + CalculateParent(i, 10);
+                var parent = "Person" + CalculateParent(i, 10);
                 return new Person("Person" + i, i, parentName: parent);
             }).ToArray();
 

@@ -63,7 +63,7 @@ public class PersonWithGender : IEquatable<PersonWithGender>
     {
         unchecked
         {
-            int result = (Name is not null ? Name.GetHashCode() : 0);
+            var result = (Name is not null ? Name.GetHashCode() : 0);
             result = (result * 397) ^ Age;
             result = (result * 397) ^ (Gender is not null ? Gender.GetHashCode() : 0);
             return result;
