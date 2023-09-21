@@ -81,7 +81,7 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         //update once as initial load is always a reset
         _source.AddOrUpdate(new Person("Me", 21));
 
-        bool invoked = false;
+        var invoked = false;
         _collection.CollectionChanged += (sender, e) =>
         {
             invoked = true;
@@ -108,8 +108,8 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
         //update once as initial load is always a reset
         _source.AddOrUpdate(new Person("Me", 21));
 
-        bool invoked = false;
-        bool resetInvoked = false;
+        var invoked = false;
+        var resetInvoked = false;
         _collection.CollectionChanged += (sender, e) =>
         {
             invoked = true;

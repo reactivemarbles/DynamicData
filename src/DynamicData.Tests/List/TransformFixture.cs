@@ -17,7 +17,7 @@ public class TransformFixture : IDisposable
 
     private readonly Func<Person, PersonWithGender> _transformFactory = p =>
     {
-        string gender = p.Age % 2 == 0 ? "M" : "F";
+        var gender = p.Age % 2 == 0 ? "M" : "F";
         return new PersonWithGender(p, gender);
     };
 

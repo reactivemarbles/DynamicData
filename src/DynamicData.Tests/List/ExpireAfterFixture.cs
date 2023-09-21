@@ -31,7 +31,7 @@ public class ExpireAfterFixture : IDisposable
     {
         var remover = _source.ExpireAfter(p => TimeSpan.FromMilliseconds(100), _scheduler).Subscribe();
         const int size = 100;
-        Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
+        var items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
 
         _source.AddRange(items);
         _scheduler.AdvanceBy(TimeSpan.FromMilliseconds(200).Ticks);
@@ -62,7 +62,7 @@ public class ExpireAfterFixture : IDisposable
         }
 
         const int size = 100;
-        Person[] items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
+        var items = Enumerable.Range(1, size).Select(i => new Person($"Name.{i}", i)).ToArray();
         _source.AddRange(items);
 
         var remover = _source.ExpireAfter(RemoveFunc, _scheduler).Subscribe();

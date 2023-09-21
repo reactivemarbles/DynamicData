@@ -23,8 +23,8 @@ public class RefCountFixture : IDisposable
     [Fact]
     public void CanResubscribe()
     {
-        int created = 0;
-        int disposals = 0;
+        var created = 0;
+        var disposals = 0;
 
         //must have data so transform is invoked
         _source.Add(new Person("Name", 10));
@@ -45,8 +45,8 @@ public class RefCountFixture : IDisposable
     [Fact]
     public void ChainIsInvokedOnceForMultipleSubscribers()
     {
-        int created = 0;
-        int disposals = 0;
+        var created = 0;
+        var disposals = 0;
 
         //Some expensive transform (or chain of operations)
         var longChain = _source.Connect().Transform(p => p).Do(_ => created++).Finally(() => disposals++).RefCount();
@@ -82,7 +82,7 @@ public class RefCountFixture : IDisposable
                 _ => Task.Run(
                     () =>
                     {
-                        for (int i = 0; i < 1000; ++i)
+                        for (var i = 0; i < 1000; ++i)
                         {
                             var subscription = refCount.Subscribe();
                             subscription.Dispose();

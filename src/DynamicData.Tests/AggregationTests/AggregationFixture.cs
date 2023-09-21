@@ -47,8 +47,8 @@ public class AggregationFixture : IDisposable
     [Fact]
     public void CanAccumulate()
     {
-        int latest = 0;
-        int counter = 0;
+        var latest = 0;
+        var counter = 0;
 
         var accumulator = _accumulator.Subscribe(
             value =>
@@ -71,8 +71,8 @@ public class AggregationFixture : IDisposable
     [Fact]
     public void CanHandleUpdatedItem()
     {
-        int latest = 0;
-        int counter = 0;
+        var latest = 0;
+        var counter = 0;
 
         var accumulator = _accumulator.Subscribe(
             value =>

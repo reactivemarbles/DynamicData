@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -6,9 +6,8 @@
 namespace DynamicData;
 
 /// <summary>
-///  The reason for an individual change.
-///
-/// Used to signal consumers of any changes to the underlying cache.
+/// <para> The reason for an individual change.</para>
+/// <para>Used to signal consumers of any changes to the underlying cache.</para>
 /// </summary>
 public enum ChangeReason
 {

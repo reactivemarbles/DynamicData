@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2011-2020 Roland Pheasant. All rights reserved.
+﻿// Copyright (c) 2011-2023 Roland Pheasant. All rights reserved.
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
@@ -103,14 +103,14 @@ public static class BindingListEx
             case ListChangeReason.Remove:
                 {
                     var change = item.Item;
-                    bool hasIndex = change.CurrentIndex >= 0;
+                    var hasIndex = change.CurrentIndex >= 0;
                     if (hasIndex)
                     {
                         source.RemoveAt(change.CurrentIndex);
                     }
                     else
                     {
-                        int index = source.IndexOf(change.Current, equalityComparer);
+                        var index = source.IndexOf(change.Current, equalityComparer);
                         if (index > -1)
                         {
                             source.RemoveAt(index);
@@ -129,7 +129,7 @@ public static class BindingListEx
             case ListChangeReason.Moved:
                 {
                     var change = item.Item;
-                    bool hasIndex = change.CurrentIndex >= 0;
+                    var hasIndex = change.CurrentIndex >= 0;
                     if (!hasIndex)
                     {
                         throw new UnspecifiedIndexException("Cannot move as an index was not specified");

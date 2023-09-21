@@ -49,7 +49,7 @@ public class SourceUpdaterFixture
     [Fact]
     public void BatchOfUniqueUpdates()
     {
-        Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
+        var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         _updater.AddOrUpdate(people);
         var updates = _cache.CaptureChanges();
 
@@ -62,7 +62,7 @@ public class SourceUpdaterFixture
     [Fact]
     public void BatchRemoves()
     {
-        Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
+        var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         _updater.AddOrUpdate(people);
         _updater.Remove(people);
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
@@ -76,7 +76,7 @@ public class SourceUpdaterFixture
     [Fact]
     public void BatchSuccessiveUpdates()
     {
-        Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name1", i)).ToArray();
+        var people = Enumerable.Range(1, 100).Select(i => new Person("Name1", i)).ToArray();
         _updater.AddOrUpdate(people);
 
         IChangeSet<Person, string> updates = _cache.CaptureChanges();
@@ -125,7 +125,7 @@ public class SourceUpdaterFixture
     [Fact]
     public void Clear()
     {
-        Person[] people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
+        var people = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
         _updater.AddOrUpdate(people);
         _updater.Clear();
         IChangeSet<Person, string> updates = _cache.CaptureChanges();

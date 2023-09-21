@@ -20,7 +20,7 @@ public class TransformManyObservableCollectionFixture
     {
         var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
-        int childIndex = 0;
+        var childIndex = 0;
         var parents = Enumerable.Range(1, 50).Select(
             i =>
             {
@@ -71,7 +71,7 @@ public class TransformManyObservableCollectionFixture
     {
         var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
-        int childIndex = 0;
+        var childIndex = 0;
         var parents = Enumerable.Range(1, 50).Select(
             i =>
             {
@@ -122,7 +122,7 @@ public class TransformManyObservableCollectionFixture
     {
         var children = Enumerable.Range(1, 100).Select(i => new Person("Name" + i, i)).ToArray();
 
-        int childIndex = 0;
+        var childIndex = 0;
         var parents = Enumerable.Range(1, 50).Select(
             i =>
             {
@@ -192,7 +192,7 @@ public class TransformManyObservableCollectionFixture
     {
         var children = Enumerable.Range(1, 10000).Select(i => new Person("Name" + i, i)).ToArray();
 
-        int childIndex = 0;
+        var childIndex = 0;
         var parents = Enumerable.Range(1, 5000).Select(
             i =>
             {
