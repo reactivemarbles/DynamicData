@@ -86,26 +86,26 @@ public static class OptionExtensions
     }
 
     /// <summary>
-    /// Returns the original optional if it has a value, otherwise returns the result of the fallback selector.
+    /// Returns the original optional if it has a value, otherwise returns the result of the fallback operation.
     /// </summary>
     /// <typeparam name="T">The type of the source.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="fallbackSelector">The fallback converter.</param>
-    /// <returns>The destination optional value.</returns>
+    /// <param name="fallbackOperation">The fallback operation.</param>
+    /// <returns>The original value or the result of the fallback operation.</returns>
     /// <exception cref="System.ArgumentNullException">
     /// converter
     /// or
-    /// fallbackConverter.
+    /// fallbackOperation.
     /// </exception>
-    public static Optional<T> OrElse<T>(this Optional<T> source, Func<Optional<T>> fallbackSelector)
+    public static Optional<T> OrElse<T>(this Optional<T> source, Func<Optional<T>> fallbackOperation)
         where T : notnull
     {
-        if (fallbackSelector is null)
+        if (fallbackOperation is null)
         {
-            throw new ArgumentNullException(nameof(fallbackSelector));
+            throw new ArgumentNullException(nameof(fallbackOperation));
         }
 
-        return source.HasValue ? source : fallbackSelector();
+        return source.HasValue ? source : fallbackOperation();
     }
 
     /// <summary>
