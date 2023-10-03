@@ -35,6 +35,27 @@ public static class OptionExtensions
     }
 
     /// <summary>
+    /// Attempts to converts the specified source, but the conversion might result in a None value.
+    /// </summary>
+    /// <typeparam name="TSource">The type of the source.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="converter">The converter that returns an optional value.</param>
+    /// <returns>The converted value.</returns>
+    /// <exception cref="System.ArgumentNullException">converter.</exception>
+    public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, Optional<TDestination>> converter)
+        where TSource : notnull
+        where TDestination : notnull
+    {
+        if (converter is null)
+        {
+            throw new ArgumentNullException(nameof(converter));
+        }
+
+        return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
+    }
+
+    /// <summary>
     /// Converts the option value if it has a value, otherwise returns the result of the fallback converter.
     /// </summary>
     /// <typeparam name="TSource">The type of the source.</typeparam>
@@ -62,6 +83,29 @@ public static class OptionExtensions
         }
 
         return source.HasValue ? converter(source.Value) : fallbackConverter();
+    }
+
+    /// <summary>
+    /// Returns the original optional if it has a value, otherwise returns the result of the fallback selector.
+    /// </summary>
+    /// <typeparam name="T">The type of the source.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="fallbackSelector">The fallback converter.</param>
+    /// <returns>The destination optional value.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    /// converter
+    /// or
+    /// fallbackConverter.
+    /// </exception>
+    public static Optional<T> OrElse<T>(this Optional<T> source, Func<Optional<T>> fallbackSelector)
+        where T : notnull
+    {
+        if (fallbackSelector is null)
+        {
+            throw new ArgumentNullException(nameof(fallbackSelector));
+        }
+
+        return source.HasValue ? source : fallbackSelector();
     }
 
     /// <summary>
