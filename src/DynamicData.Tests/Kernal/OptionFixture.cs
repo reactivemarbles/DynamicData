@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
 
@@ -81,6 +82,25 @@ public class OptionFixture
     }
 
     [Fact]
+    public void OptionConvertThrowsIfConverterIsNull()
+    {
+        var caught = false;
+
+        Func<string, string>? converter = null;
+
+        try
+        {
+            Optional.None<string>().Convert(converter!);
+        }
+        catch (ArgumentNullException)
+        {
+            caught = true;
+        }
+
+        caught.Should().BeTrue();
+    }
+
+    [Fact]
     public void OptionConvertToOptionalInvokesConverterWithValue()
     {
         var option = Optional.Some(string.Empty);
@@ -137,6 +157,25 @@ public class OptionFixture
         var result = option.Convert(ParseInt);
 
         result.HasValue.Should().BeFalse();
+    }
+
+    [Fact]
+    public void OptionConvertToOptionalThrowsIfConverterIsNull()
+    {
+        var caught = false;
+
+        Func<string, Optional<string>>? converter = null;
+
+        try
+        {
+            Optional.None<string>().Convert(converter!);
+        }
+        catch (ArgumentNullException)
+        {
+            caught = true;
+        }
+
+        caught.Should().BeTrue();
     }
 
     [Fact]
@@ -206,6 +245,23 @@ public class OptionFixture
 
         result.HasValue.Should().BeTrue();
         result.Value.Should().Be(Expected);
+    }
+
+    [Fact]
+    public void OptionOrElseThrowsIfFallbackIsNull()
+    {
+        var caught = false;
+
+        try
+        {
+            Optional.None<string>().OrElse(null!);
+        }
+        catch(ArgumentNullException)
+        {
+            caught = true;
+        }
+
+        caught.Should().BeTrue();
     }
 
     private static Optional<int> ParseInt(string input) =>
