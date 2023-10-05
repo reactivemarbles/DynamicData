@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
@@ -49,6 +50,7 @@ public class FilterOnObservableFixture : IDisposable
         _sourceResults.Data.Count.Should().Be(1);
         invoked.Should().BeTrue();
         val.Should().Be(MagicNumber, "Was value added to cache");
+        Assert.Throws<ArgumentNullException>(() => _source.Connect().FilterOnObservable((Func<Person, IObservable<bool>>)null!));
     }
 
     [Fact]
@@ -72,6 +74,8 @@ public class FilterOnObservableFixture : IDisposable
         _sourceResults.Data.Count.Should().Be(1);
         invoked.Should().BeTrue();
         val.Should().Be(MagicNumber, "Was value added to cache");
+        Assert.Throws<ArgumentNullException>(() => _source.Connect().FilterOnObservable((Func<Person, string, IObservable<bool>>)null!));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.FilterOnObservable(null!, (Func<Person, string, IObservable<bool>>)null!));
     }
 
     [Fact]
