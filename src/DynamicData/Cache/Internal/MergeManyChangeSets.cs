@@ -41,47 +41,26 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
             {
                 var locker = new object();
 
-                // Transform to a merge container.
+                // Transform to an observable cache of merge containers.
                 var sourceCaches = _source.Synchronize(locker)
                                             .IgnoreSameReferenceUpdate()
                                             .Transform((obj, key) => new MergeContainer(_changeSetSelector(obj, key)))
                                             .AsObservableCache();
 
+                var shared = sourceCaches.Connect().Publish();
+
                 // this is manages all of the changes
                 var changeTracker = new ChangeTracker(sourceCaches, _comparer, _equalityComparer);
 
-                var shared = sourceCaches.Connect().Publish();
-
                 // merge the items back together
-                var allChanges = shared.MergeMany(mc => mc.Source).Synchronize(locker).Subscribe(
-                    changes =>
-                    {
-                        changeTracker.ProcessChangeSet(changes);
+                var allChanges = shared.MergeMany(mc => mc.Source).Synchronize(locker).Subscribe(changes => changeTracker.ProcessChangeSet(changes, observer));
 
-                        changeTracker.EmitChanges(observer);
-                    });
+                // when a source item is removed, all of its sub-items need to be removed
+                var removedItems = shared
+                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
+                    .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer)).Subscribe();
 
-                // when an item is removed, all of its sub-items need to be checked
-                var removedItem = shared.OnItemRemoved(
-                    mc =>
-                    {
-                        // Remove items if required
-                        changeTracker.RemoveItems(mc.Cache.KeyValues);
-
-                        changeTracker.EmitChanges(observer);
-                    }).Subscribe();
-
-                // when an item is updated, all of the sub-items from the previous value need to be checked
-                var updateItem = shared.OnItemUpdated(
-                    (_, prev) =>
-                    {
-                        // Remove items from the previous value
-                        changeTracker.RemoveItems(prev.Cache.KeyValues);
-
-                        changeTracker.EmitChanges(observer);
-                    }).Subscribe();
-
-                return new CompositeDisposable(sourceCaches, allChanges, removedItem, updateItem, shared.Connect());
+                return new CompositeDisposable(sourceCaches, allChanges, removedItems, shared.Connect());
             });
     }
 
@@ -100,16 +79,7 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
             _equalityComparer = equalityComparer;
         }
 
-        public void EmitChanges(IObserver<IChangeSet<TDestination, TDestinationKey>> observer)
-        {
-            var changeSet = _resultCache.CaptureChanges();
-            if (changeSet.Count != 0)
-            {
-                observer.OnNext(changeSet);
-            }
-        }
-
-        public void RemoveItems(IEnumerable<KeyValuePair<TDestinationKey, TDestination>> items)
+        public void RemoveItems(IEnumerable<KeyValuePair<TDestinationKey, TDestination>> items, IObserver<IChangeSet<TDestination, TDestinationKey>> observer)
         {
             var sourceCaches = _sourceCache.Items.ToArray();
 
@@ -129,30 +99,45 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
                     OnItemRemoved(sourceCaches, item.Value, item.Key);
                 }
             }
+
+            EmitChanges(observer);
         }
 
-        public void ProcessChangeSet(IChangeSet<TDestination, TDestinationKey> changes)
+        public void ProcessChangeSet(IChangeSet<TDestination, TDestinationKey> changes, IObserver<IChangeSet<TDestination, TDestinationKey>> observer)
         {
             var sourceCaches = _sourceCache.Items.ToArray();
 
             foreach (var change in changes.ToConcreteType())
             {
-                if (change.Reason == ChangeReason.Add)
+                switch (change.Reason)
                 {
-                    OnItemAdded(change.Current, change.Key);
+                    case ChangeReason.Add:
+                        OnItemAdded(change.Current, change.Key);
+                        break;
+
+                    case ChangeReason.Remove:
+                        OnItemRemoved(sourceCaches, change.Current, change.Key);
+                        break;
+
+                    case ChangeReason.Update:
+                        OnItemUpdated(sourceCaches, change.Current, change.Key, change.Previous);
+                        break;
+
+                    case ChangeReason.Refresh:
+                        OnItemRefreshed(sourceCaches, change.Current, change.Key);
+                        break;
                 }
-                else if (change.Reason == ChangeReason.Update)
-                {
-                    OnItemUpdated(sourceCaches, change.Key, change.Previous);
-                }
-                else if (change.Reason == ChangeReason.Remove)
-                {
-                    OnItemRemoved(sourceCaches, change.Current, change.Key);
-                }
-                else if (change.Reason == ChangeReason.Refresh)
-                {
-                    OnItemRefreshed(sourceCaches, change.Current, change.Key);
-                }
+            }
+
+            EmitChanges(observer);
+        }
+
+        private void EmitChanges(IObserver<IChangeSet<TDestination, TDestinationKey>> observer)
+        {
+            var changeSet = _resultCache.CaptureChanges();
+            if (changeSet.Count != 0)
+            {
+                observer.OnNext(changeSet);
             }
         }
 
@@ -160,8 +145,12 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
         {
             var cached = _resultCache.Lookup(key);
 
-            // If no current value or the new value is better, add or update
-            if (!cached.HasValue || CheckCandidate(item, cached.Value))
+            // If no current value, then add it
+            if (!cached.HasValue)
+            {
+                _resultCache.Add(item, key);
+            }
+            else if (ShouldReplace(item, cached.Value))
             {
                 _resultCache.AddOrUpdate(item, key);
             }
@@ -173,22 +162,45 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
 
             Debug.Assert(cached.HasValue, "Should have a value if it is being removed");
 
-            // Determine if the value being removed is the currently published value for this key
-            if (!cached.HasValue || CheckEquality(item, cached.Value))
+            // If the current value is being removed
+            if (CheckEquality(item, cached.Value))
             {
-                PublishBestCandidate(sourceCaches, key, cached);
+                // Perform a full update to select the new downstream value (or remove it)
+                UpdateValue(sourceCaches, key, cached);
             }
         }
 
-        private void OnItemUpdated(MergeContainer[] sources, TDestinationKey key, Optional<TDestination> prev)
+        private void OnItemUpdated(MergeContainer[] sources, TDestination item, TDestinationKey key, Optional<TDestination> prev)
         {
             var cached = _resultCache.Lookup(key);
 
             // Previous and Cached should have a value if there is an update happening
-            // If the values are the same, then the currently published value is being replaced so select a new value to publish.
-            if (!prev.HasValue || !cached.HasValue || CheckEquality(prev.Value, cached.Value))
+            Debug.Assert(prev.HasValue, "Prev should have a value if it is being updated");
+            Debug.Assert(cached.HasValue, "Downstream should have a value if it is being update");
+
+            if (_comparer is null)
             {
-                PublishBestCandidate(sources, key, cached);
+                // If the previous value is the current one, then update to the replacement value
+                if (CheckEquality(prev.Value, cached.Value))
+                {
+                    _resultCache.AddOrUpdate(item, key);
+                }
+            }
+            else
+            {
+                // If the previous value is the current one, then do a full update to select the new value to emit
+                if (CheckEquality(prev.Value, cached.Value))
+                {
+                    UpdateValue(sources, key, cached);
+                }
+                else
+                {
+                    // If the current value isn't being replaced, then just check to see if the replacement is better
+                    if (ShouldReplace(item, cached.Value))
+                    {
+                        _resultCache.AddOrUpdate(item, key);
+                    }
+                }
             }
         }
 
@@ -196,28 +208,39 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
         {
             var cached = _resultCache.Lookup(key);
 
-            // If published value doesn't change after a refresh AND the published value is the one being refreshed
-            if (!PublishBestCandidate(sources, key, cached) && CheckEquality(cached.Value, item))
+            Debug.Assert(cached.HasValue, "Downstream should have a value if it is being refreshed");
+
+            // In the sorting case, a refresh requires doing a full update because any change could alter what the best value is
+            // If we don't care about sorting OR if we do care, but re-selecting the best value didn't change anything
+            // AND the current value is the one being refreshed
+            if (((_comparer is null) || !UpdateValue(sources, key, cached)) && CheckEquality(cached.Value, item))
             {
                 // Emit the refresh downstream
                 _resultCache.Refresh(key);
             }
         }
 
-        private bool PublishBestCandidate(MergeContainer[] sources, TDestinationKey key, Optional<TDestination> current)
+        private bool UpdateValue(MergeContainer[] sources, TDestinationKey key, Optional<TDestination> current)
         {
-            // It is, so see if there is a candidate value or if it should be removed
-            var candidate = FindCandidate(sources, key);
+            // Determine which value should be the one seen downstream
+            var candidate = SelectValue(sources, key);
             if (candidate.HasValue)
             {
-                // If there isn't a current value or if the candidate is different
-                if (!current.HasValue || !CheckEquality(current.Value, candidate.Value))
+                // If there isn't a current value
+                if (!current.HasValue)
+                {
+                    _resultCache.Add(candidate.Value, key);
+                    return true;
+                }
+
+                // If the candidate value isn't the same as the current value
+                if (!CheckEquality(current.Value, candidate.Value))
                 {
                     _resultCache.AddOrUpdate(candidate.Value, key);
                     return true;
                 }
 
-                // The currently published one is already the best choice
+                // The value seen downstream is the one that should be
                 return false;
             }
 
@@ -226,7 +249,7 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
             return true;
         }
 
-        private Optional<TDestination> FindCandidate(MergeContainer[] sources, TDestinationKey key)
+        private Optional<TDestination> SelectValue(MergeContainer[] sources, TDestinationKey key)
         {
             if (sources.Length == 0)
             {
@@ -246,9 +269,8 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
         private bool CheckEquality(TDestination left, TDestination right) =>
             ReferenceEquals(left, right) || (_equalityComparer?.Equals(left, right) ?? (_comparer?.Compare(left, right) == 0));
 
-        // Return true if candidate is better than the current one.
-        // Return false if they're the same not otherwise not better.
-        private bool CheckCandidate(TDestination candidate, TDestination current) =>
+        // Return true if candidate should replace current as the observed downstream value
+        private bool ShouldReplace(TDestination candidate, TDestination current) =>
             !ReferenceEquals(candidate, current) && (_comparer?.Compare(candidate, current) > 0);
     }
 
