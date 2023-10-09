@@ -250,7 +250,7 @@ public class MergeManyChangeSetsFixture : IDisposable
         highPriceResults.Data.Items.Select(cp => cp.MarketId).ToList().ForEach(guid => guid.Should().Be(marketOriginal.Id));
         lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket*2);
         lowPriceResults.Data.Items.Select(cp => cp.MarketId).ToList().ForEach(guid => guid.Should().Be(marketOriginal.Id));
     }
 
