@@ -55,6 +55,10 @@ public class MergeManyChangeSetsFixture : IDisposable
         Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, equalityComparer: null!));
         Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
         Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, null, null));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, equalityComparer: null!));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, null, null));
     }
 
     [Fact]
