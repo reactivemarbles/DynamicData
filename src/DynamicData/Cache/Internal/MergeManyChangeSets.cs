@@ -42,15 +42,17 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
                 var locker = new object();
 
                 // Transform to an observable cache of merge containers.
-                var sourceCaches = _source.Synchronize(locker)
+                var sourceCacheOfCaches = _source
                                             .IgnoreSameReferenceUpdate()
+                                            .WhereReasonsAre(ChangeReason.Add, ChangeReason.Remove, ChangeReason.Update)
+                                            .Synchronize(locker)
                                             .Transform((obj, key) => new MergeContainer(_changeSetSelector(obj, key)))
                                             .AsObservableCache();
 
-                var shared = sourceCaches.Connect().Publish();
+                var shared = sourceCacheOfCaches.Connect().Publish();
 
                 // this is manages all of the changes
-                var changeTracker = new ChangeTracker(sourceCaches, _comparer, _equalityComparer);
+                var changeTracker = new ChangeTracker(sourceCacheOfCaches, _comparer, _equalityComparer);
 
                 // merge the items back together
                 var allChanges = shared.MergeMany<MergeContainer, TKey, IChangeSet<TDestination, TDestinationKey>>(mc => mc.Source)
@@ -61,7 +63,7 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
                     .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer)).Subscribe();
 
-                return new CompositeDisposable(sourceCaches, allChanges, removedItems, shared.Connect());
+                return new CompositeDisposable(sourceCacheOfCaches, allChanges, removedItems, shared.Connect());
             });
     }
 
@@ -181,22 +183,23 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
 
             if (_comparer is null)
             {
-                // If the previous value is the current one, then update to the replacement value
-                if (CheckEquality(prev.Value, cached.Value))
+                // If the current value is being replaced by a different value
+                if (CheckEquality(prev.Value, cached.Value) && !CheckEquality(item, cached.Value))
                 {
+                    // Update to the new value
                     _resultCache.AddOrUpdate(item, key);
                 }
             }
             else
             {
-                // If the previous value is the current one, then do a full update to select the new value to emit
+                // The current value is being replaced, so do a full update to select the best one from all the choices
                 if (CheckEquality(prev.Value, cached.Value))
                 {
                     UpdateValue(sources, key, cached);
                 }
                 else
                 {
-                    // If the current value isn't being replaced, then just check to see if the replacement is better
+                    // If the current value isn't being replaced, so just check to see if the replacement is a better choice
                     if (ShouldReplace(item, cached.Value))
                     {
                         _resultCache.AddOrUpdate(item, key);
@@ -272,14 +275,14 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
 
         // Return true if candidate should replace current as the observed downstream value
         private bool ShouldReplace(TDestination candidate, TDestination current) =>
-            !ReferenceEquals(candidate, current) && (_comparer?.Compare(candidate, current) > 0);
+            !ReferenceEquals(candidate, current) && (_comparer?.Compare(candidate, current) < 0);
     }
 
     private class MergeContainer
     {
         public MergeContainer(IObservable<IChangeSet<TDestination, TDestinationKey>> source)
         {
-            Source = source.Do(Clone);
+            Source = source.IgnoreSameReferenceUpdate().Do(Clone);
         }
 
         public Cache<TDestination, TDestinationKey> Cache { get; } = new();
