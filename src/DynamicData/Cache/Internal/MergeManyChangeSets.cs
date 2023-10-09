@@ -53,7 +53,8 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
                 var changeTracker = new ChangeTracker(sourceCaches, _comparer, _equalityComparer);
 
                 // merge the items back together
-                var allChanges = shared.MergeMany(mc => mc.Source).Synchronize(locker).Subscribe(changes => changeTracker.ProcessChangeSet(changes, observer));
+                var allChanges = shared.MergeMany<MergeContainer, TKey, IChangeSet<TDestination, TDestinationKey>>(mc => mc.Source)
+                                                    .Synchronize(locker).Subscribe(changes => changeTracker.ProcessChangeSet(changes, observer));
 
                 // when a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
