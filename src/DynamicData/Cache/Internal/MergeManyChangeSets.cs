@@ -163,10 +163,8 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
         {
             var cached = _resultCache.Lookup(key);
 
-            Debug.Assert(cached.HasValue, "Should have a value if it is being removed");
-
-            // If the current value is being removed
-            if (CheckEquality(item, cached.Value))
+            // If this key has been observed and the current value is being removed
+            if (cached.HasValue && CheckEquality(item, cached.Value))
             {
                 // Perform a full update to select the new downstream value (or remove it)
                 UpdateValue(sourceCaches, key, cached);
@@ -177,14 +175,18 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
         {
             var cached = _resultCache.Lookup(key);
 
-            // Previous and Cached should have a value if there is an update happening
-            Debug.Assert(prev.HasValue, "Prev should have a value if it is being updated");
-            Debug.Assert(cached.HasValue, "Downstream should have a value if it is being update");
+            // Received an update change for a key that hasn't been seen yet
+            // So use the updated value
+            if (!cached.HasValue)
+            {
+                _resultCache.Add(item, key);
+                return;
+            }
 
             if (_comparer is null)
             {
-                // If the current value is being replaced by a different value
-                if (CheckEquality(prev.Value, cached.Value) && !CheckEquality(item, cached.Value))
+                // If the current value (or there is no way to tell) is being replaced by a different value
+                if ((!prev.HasValue || CheckEquality(prev.Value, cached.Value)) && !CheckEquality(item, cached.Value))
                 {
                     // Update to the new value
                     _resultCache.AddOrUpdate(item, key);
@@ -192,8 +194,8 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
             }
             else
             {
-                // The current value is being replaced, so do a full update to select the best one from all the choices
-                if (CheckEquality(prev.Value, cached.Value))
+                // The current value is being replaced (or there is no way to tell), so do a full update to select the best one from all the choices
+                if (!prev.HasValue || CheckEquality(prev.Value, cached.Value))
                 {
                     UpdateValue(sources, key, cached);
                 }
@@ -212,7 +214,12 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
         {
             var cached = _resultCache.Lookup(key);
 
-            Debug.Assert(cached.HasValue, "Downstream should have a value if it is being refreshed");
+            // Received a refresh change for a key that hasn't been seen yet
+            // Nothing can be done, so ignore it
+            if (!cached.HasValue)
+            {
+                return;
+            }
 
             // In the sorting case, a refresh requires doing a full update because any change could alter what the best value is
             // If we don't care about sorting OR if we do care, but re-selecting the best value didn't change anything
@@ -289,9 +296,6 @@ internal sealed class MergeManyChangeSets<TObject, TKey, TDestination, TDestinat
 
         public IObservable<IChangeSet<TDestination, TDestinationKey>> Source { get; }
 
-        private void Clone(IChangeSet<TDestination, TDestinationKey> changes)
-        {
-            Cache.Clone(changes);
-        }
+        private void Clone(IChangeSet<TDestination, TDestinationKey> changes) => Cache.Clone(changes);
     }
 }
