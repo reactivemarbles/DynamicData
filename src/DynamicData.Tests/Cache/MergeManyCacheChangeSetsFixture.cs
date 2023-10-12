@@ -575,10 +575,29 @@ public class MergeManyCacheChangeSetsFixture : IDisposable
     }
 
     [Fact]
+    public void EveryItemVisibleWhenSequenceCompletes()
+    {
+        // having
+        var markets = Enumerable.Range(0, MarketCount).Select(n => new FixedMarket(Random, n * ItemIdStride, (n * ItemIdStride) + PricesPerMarket)).ToArray();
+
+        // when
+        using var results = markets.AsObservableChangeSet(m => m.MarketId, completable: true)
+                                                                .MergeManyChangeSets(m => m.LatestPrices)
+                                                                .AsAggregator();
+
+        // then
+        results.Data.Count.Should().Be(PricesPerMarket * MarketCount);
+        results.Summary.Overall.Adds.Should().Be(PricesPerMarket*MarketCount);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
+    }
+
+    [Fact]
     public void ObservableCompletesWhenSourceAndAllChildrenComplete()
     {
         // having
-        var markets = Enumerable.Range(0, MarketCount).Select(n => new FixedMarket(Random, n*ItemIdStride, (n*ItemIdStride) + PricesPerMarket)).ToArray();
+        var markets = Enumerable.Range(0, MarketCount).Select(n => new FixedMarket(Random, n * ItemIdStride, (n * ItemIdStride) + PricesPerMarket)).ToArray();
         var hasMainSequenceCompleted = false;
         var hasChildSequenceCompleted = false;
 
@@ -593,6 +612,27 @@ public class MergeManyCacheChangeSetsFixture : IDisposable
         // then
         hasMainSequenceCompleted.Should().BeTrue();
         hasChildSequenceCompleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ObservableNotCompleteChildrenAreNotComplete()
+    {
+        // having
+        var markets = Enumerable.Range(0, MarketCount).Select(n => new FixedMarket(Random, n * ItemIdStride, (n * ItemIdStride) + PricesPerMarket, completable: false)).ToArray();
+        var hasMainSequenceCompleted = false;
+        var hasChildSequenceCompleted = false;
+
+        var observable = markets.AsObservableChangeSet(m => m.MarketId, completable: true)
+                                                                .Do(_ => { }, () => hasMainSequenceCompleted = true)
+                                                                .MergeManyChangeSets(m => m.LatestPrices)
+                                                                .Do(_ => { }, () => hasChildSequenceCompleted = true);
+
+        // when
+        using var cleanup = observable.Subscribe();
+
+        // then
+        hasMainSequenceCompleted.Should().BeTrue();
+        hasChildSequenceCompleted.Should().BeFalse();
     }
 
     public void Dispose()
@@ -731,12 +771,12 @@ public class MergeManyCacheChangeSetsFixture : IDisposable
 
     private class FixedMarket
     {
-        public FixedMarket(Random r, int minId, int maxId)
+        public FixedMarket(Random r, int minId, int maxId, bool completable = true)
         {
             MarketId = Guid.NewGuid();
             LatestPrices = Enumerable.Range(minId, maxId - minId)
                                     .Select(id => new MarketPrice(id, RandomPrice(r), MarketId))
-                                    .AsObservableChangeSet(cp => cp.ItemId, completable: true);
+                                    .AsObservableChangeSet(cp => cp.ItemId, completable: completable);
         }
 
         public Guid MarketId { get; }

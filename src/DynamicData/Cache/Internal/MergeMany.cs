@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace DynamicData.Cache.Internal;
 
@@ -37,31 +39,42 @@ internal class MergeMany<TObject, TKey, TDestination>
         return Observable.Create<TDestination>(
             observer =>
             {
-                var counter = new SubscriptionCounter(observer);
+                var counter = new SubscriptionCounter();
                 var locker = new object();
-                return _source.SubscribeMany((t, key) =>
-                                {
-                                    counter.OnAdded();
-                                    return _observableSelector(t, key).Synchronize(locker).Finally(() => counter.CheckCompleted()).Subscribe(observer.OnNext);
-                                })
-                              .Subscribe(_ => { }, observer.OnError, () => counter.CheckCompleted());
+                var disposable = _source.Concat(counter.DeferCleanup)
+                                                .SubscribeMany((t, key) =>
+                                                {
+                                                    counter.Added();
+                                                    return _observableSelector(t, key).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, _ => { }, () => { });
+                                                })
+                                                .Subscribe(_ => { }, observer.OnCompleted);
+
+                return new CompositeDisposable(disposable, counter);
             });
     }
 
-    private sealed class SubscriptionCounter
+    private sealed class SubscriptionCounter : IDisposable
     {
-        private readonly IObserver<TDestination> _observer;
+        private readonly Subject<IChangeSet<TObject, TKey>> _subject = new();
         private int _subscriptionCount = 1;
 
-        public SubscriptionCounter(IObserver<TDestination> observer) => _observer = observer;
+        public IObservable<IChangeSet<TObject, TKey>> DeferCleanup => Observable.Defer(() =>
+        {
+            CheckCompleted();
+            return _subject.AsObservable();
+        });
 
-        public void OnAdded() => _ = Interlocked.Increment(ref _subscriptionCount);
+        public void Added() => _ = Interlocked.Increment(ref _subscriptionCount);
 
-        public void CheckCompleted()
+        public void Finally() => CheckCompleted();
+
+        public void Dispose() => _subject.Dispose();
+
+        private void CheckCompleted()
         {
             if (Interlocked.Decrement(ref _subscriptionCount) == 0)
             {
-                _observer.OnCompleted();
+                _subject.OnCompleted();
             }
         }
     }
