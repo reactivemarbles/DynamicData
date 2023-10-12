@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Reactive;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
@@ -36,23 +37,32 @@ internal class MergeMany<TObject, TKey, TDestination>
         return Observable.Create<TDestination>(
             observer =>
             {
-                int subscriptionCount = 1;
-
-                void CheckSubscriptionCount()
-                {
-                    if (Interlocked.Decrement(ref subscriptionCount) == 0)
-                    {
-                        observer.OnCompleted();
-                    }
-                }
-
+                var counter = new SubscriptionCounter(observer);
                 var locker = new object();
                 return _source.SubscribeMany((t, key) =>
                                 {
-                                    Interlocked.Increment(ref subscriptionCount);
-                                    return _observableSelector(t, key).Synchronize(locker).Finally(CheckSubscriptionCount).Subscribe(observer.OnNext);
+                                    counter.OnAdded();
+                                    return _observableSelector(t, key).Synchronize(locker).Finally(() => counter.CheckCompleted()).Subscribe(observer.OnNext);
                                 })
-                              .Subscribe(_ => { }, observer.OnError, CheckSubscriptionCount);
+                              .Subscribe(_ => { }, observer.OnError, () => counter.CheckCompleted());
             });
+    }
+
+    private sealed class SubscriptionCounter
+    {
+        private readonly IObserver<TDestination> _observer;
+        private int _subscriptionCount = 1;
+
+        public SubscriptionCounter(IObserver<TDestination> observer) => _observer = observer;
+
+        public void OnAdded() => _ = Interlocked.Increment(ref _subscriptionCount);
+
+        public void CheckCompleted()
+        {
+            if (Interlocked.Decrement(ref _subscriptionCount) == 0)
+            {
+                _observer.OnCompleted();
+            }
+        }
     }
 }
