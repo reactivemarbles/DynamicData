@@ -11,7 +11,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-public class MergeManyChangeSetsFixture : IDisposable
+public class MergeManyCacheChangeSetsFixture : IDisposable
 {
     const int MarketCount = 101;
     const int PricesPerMarket = 103;
@@ -28,7 +28,7 @@ public class MergeManyChangeSetsFixture : IDisposable
 
     private readonly ChangeSetAggregator<Market, Guid> _marketCacheResults;
 
-    public MergeManyChangeSetsFixture()
+    public MergeManyCacheChangeSetsFixture()
     {
         _marketCacheResults = _marketCache.Connect().AsAggregator();
     }
@@ -43,7 +43,7 @@ public class MergeManyChangeSetsFixture : IDisposable
             invoked = true;
             return m.LatestPrices.Connect();
         }
-        using var sub = _marketCache.Connect().MergeMany(factory).Subscribe();
+        using var sub = _marketCache.Connect().MergeManyChangeSets(factory).Subscribe();
 
         // when
         _marketCache.AddOrUpdate(new Market(0));
@@ -51,12 +51,11 @@ public class MergeManyChangeSetsFixture : IDisposable
         // then
         _marketCacheResults.Data.Count.Should().Be(1);
         invoked.Should().BeTrue();
-        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, equalityComparer: null!));
-        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
-        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, null!, null!));
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, equalityComparer: null!));
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, null!, null!));
+        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeManyChangeSets((Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
+        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeManyChangeSets(_ => Observable.Return(ChangeSet<MarketPrice, int>.Empty), comparer: null!));
+        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeManyChangeSets((Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, null!, null!));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeManyChangeSets<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeManyChangeSets<Market, Guid, MarketPrice, int>(null!, (Func<Market, IObservable<IChangeSet<MarketPrice, int>>>)null!, null!, null!));
     }
 
     [Fact]
@@ -69,7 +68,7 @@ public class MergeManyChangeSetsFixture : IDisposable
             invoked = true;
             return m.LatestPrices.Connect();
         }
-        using var sub = _marketCache.Connect().MergeMany(factory).Subscribe();
+        using var sub = _marketCache.Connect().MergeManyChangeSets(factory).Subscribe();
 
         // when
         _marketCache.AddOrUpdate(new Market(0));
@@ -77,14 +76,11 @@ public class MergeManyChangeSetsFixture : IDisposable
         // then
         _marketCacheResults.Data.Count.Should().Be(1);
         invoked.Should().BeTrue();
-        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!));
-        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, equalityComparer: null!));
-        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
-        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeMany((Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, null!, null!));
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany(null!, (Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!));
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany(null!, (Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, equalityComparer: null!));
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany(null!, (Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeMany(null!, (Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, null!, null!));
+        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeManyChangeSets((Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
+        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeManyChangeSets((_, _) => Observable.Return(ChangeSet<MarketPrice, int>.Empty), comparer: null!));
+        Assert.Throws<ArgumentNullException>(() => _marketCache.Connect().MergeManyChangeSets((Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, null!, null!));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeManyChangeSets(null!, (Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, comparer: null!));
+        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.MergeManyChangeSets(null!, (Func<Market, Guid, IObservable<IChangeSet<MarketPrice, int>>>)null!, null!, null!));
     }
 
     [Fact]
@@ -92,7 +88,7 @@ public class MergeManyChangeSetsFixture : IDisposable
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(Random, m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket));
 
         // when
@@ -113,7 +109,7 @@ public class MergeManyChangeSetsFixture : IDisposable
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
 
         // when
@@ -130,11 +126,11 @@ public class MergeManyChangeSetsFixture : IDisposable
     }
 
     [Fact]
-    public void AllRefreshedSubItemsAreRefreshedInResult()
+    public void AllRefreshedSubItemsAreRefreshed()
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
         markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(Random, m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket));
 
@@ -144,7 +140,7 @@ public class MergeManyChangeSetsFixture : IDisposable
         // then
         _marketCacheResults.Data.Count.Should().Be(MarketCount);
         results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
-        results.Messages.Count.Should().Be(MarketCount*2);
+        results.Messages.Count.Should().Be(MarketCount * 2);
         results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(0);
         results.Summary.Overall.Updates.Should().Be(0);
@@ -152,11 +148,11 @@ public class MergeManyChangeSetsFixture : IDisposable
     }
 
     [Fact]
-    public void AnyDuplicateValuesShouldBeHiddenFromResult()
+    public void AnyDuplicateKeyValuesShouldBeHidden()
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
 
         // when
@@ -177,7 +173,7 @@ public class MergeManyChangeSetsFixture : IDisposable
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
         markets[0].AddRandomPrices(Random, 0, PricesPerMarket);
         markets[1].AddRandomPrices(Random, 0, PricesPerMarket);
@@ -195,11 +191,11 @@ public class MergeManyChangeSetsFixture : IDisposable
     }
 
     [Fact]
-    public void AnyDuplicateValuesShouldBeUnhiddenFromResult()
+    public void AnyDuplicateValuesShouldBeUnhiddenWhenOtherIsRemoved()
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
         markets[0].AddRandomPrices(Random, 0, PricesPerMarket);
         markets[1].AddRandomPrices(Random, 0, PricesPerMarket);
@@ -220,7 +216,7 @@ public class MergeManyChangeSetsFixture : IDisposable
     {
         // having
         var markets = Enumerable.Range(0, 2).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
         markets[0].AddRandomPrices(Random, 0, PricesPerMarket);
         markets[1].AddRandomPrices(Random, 0, PricesPerMarket);
@@ -236,11 +232,11 @@ public class MergeManyChangeSetsFixture : IDisposable
     }
 
     [Fact]
-    public void AnyRemovedSubItemIsRemovedFromResult()
+    public void AnyRemovedSubItemIsRemoved()
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
         markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(Random, m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket));
 
@@ -261,7 +257,7 @@ public class MergeManyChangeSetsFixture : IDisposable
     {
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         _marketCache.AddOrUpdate(markets);
         markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(Random, m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket));
 
@@ -279,20 +275,20 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ChangingSourceByUpdateRemovesPreviousAndAddsNewValues()
     {
         // having
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         var market = new Market(0);
-        market.AddRandomPrices(Random, 0, PricesPerMarket*2);
+        market.AddRandomPrices(Random, 0, PricesPerMarket * 2);
         _marketCache.AddOrUpdate(market);
         var updatedMarket = new Market(market);
-        updatedMarket.AddRandomPrices(Random, PricesPerMarket, PricesPerMarket*3);
+        updatedMarket.AddRandomPrices(Random, PricesPerMarket, PricesPerMarket * 3);
 
         // when
         _marketCache.AddOrUpdate(updatedMarket);
 
         // then
         _marketCacheResults.Data.Count.Should().Be(1);
-        results.Data.Count.Should().Be(PricesPerMarket*2);
-        results.Summary.Overall.Adds.Should().Be(PricesPerMarket*3);
+        results.Data.Count.Should().Be(PricesPerMarket * 2);
+        results.Summary.Overall.Adds.Should().Be(PricesPerMarket * 3);
         results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
         results.Data.Items.Zip(updatedMarket.LatestPrices.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
@@ -302,8 +298,8 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ComparerOnlyAddsBetterAddedValues()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
+        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
+        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
         var marketHigh = new Market(2);
@@ -332,8 +328,8 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ComparerOnlyAddsBetterExistingValues()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
+        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
+        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
         var marketHigh = new Market(2);
@@ -362,8 +358,8 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ComparerOnlyAddsBetterValuesOnSourceUpdate()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
+        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
+        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
         var marketLowLow = new Market(marketLow);
@@ -381,7 +377,7 @@ public class MergeManyChangeSetsFixture : IDisposable
         lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket*2);
+        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
         lowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowLow.Id));
         highPriceResults.Data.Count.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
@@ -394,8 +390,8 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ComparerUpdatesToCorrectValueOnRefresh()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
+        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
+        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
         var marketOriginal = new Market(0);
         var marketFlipFlop = new Market(1);
         marketOriginal.AddRandomPrices(Random, 0, PricesPerMarket);
@@ -417,7 +413,7 @@ public class MergeManyChangeSetsFixture : IDisposable
         highPriceResults.Data.Count.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Removes.Should().Be(0);
-        highPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket*2);
+        highPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
         highPriceResults.Summary.Overall.Refreshes.Should().Be(0);
         highPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
     }
@@ -426,9 +422,9 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ComparerUpdatesToCorrectValueOnRemove()
     {
         // having
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
-        using var highPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
+        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
         var marketHigh = new Market(2);
@@ -451,7 +447,7 @@ public class MergeManyChangeSetsFixture : IDisposable
         lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket*2);
+        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
         lowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
         highPriceResults.Data.Count.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
@@ -464,8 +460,8 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ComparerUpdatesToCorrectValueOnUpdate()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
+        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
+        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
         var marketOriginal = new Market(0);
         var marketFlipFlop = new Market(1);
         marketOriginal.AddRandomPrices(Random, 0, PricesPerMarket);
@@ -487,7 +483,7 @@ public class MergeManyChangeSetsFixture : IDisposable
         highPriceResults.Data.Count.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Removes.Should().Be(0);
-        highPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket*2);
+        highPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
         highPriceResults.Summary.Overall.Refreshes.Should().Be(0);
         highPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
     }
@@ -496,8 +492,8 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ComparerOnlyUpdatesVisibleValuesOnUpdate()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
+        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.HighPriceCompare).AsAggregator();
+        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.LowPriceCompare).AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
         marketOriginal.AddRandomPrices(Random, 0, PricesPerMarket);
@@ -513,7 +509,7 @@ public class MergeManyChangeSetsFixture : IDisposable
         lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket*2);
+        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
         lowPriceResults.Summary.Overall.Refreshes.Should().Be(0);
         lowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLow.Id));
         highPriceResults.Data.Count.Should().Be(PricesPerMarket);
@@ -528,8 +524,8 @@ public class MergeManyChangeSetsFixture : IDisposable
     public void ComparerOnlyRefreshesVisibleValues()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer, MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer, MarketPrice.LowPriceCompare).AsAggregator();
+        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer, MarketPrice.HighPriceCompare).AsAggregator();
+        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer, MarketPrice.LowPriceCompare).AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
         marketOriginal.AddRandomPrices(Random, 0, PricesPerMarket);
@@ -561,7 +557,7 @@ public class MergeManyChangeSetsFixture : IDisposable
     {
         // having
         var market = new Market(0);
-        using var results = _marketCache.Connect().MergeMany(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
+        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.Connect(), MarketPrice.EqualityComparer).AsAggregator();
         market.UpdatePrices(0, PricesPerMarket, LowestPrice);
         _marketCache.AddOrUpdate(market);
 
@@ -576,6 +572,27 @@ public class MergeManyChangeSetsFixture : IDisposable
         results.Summary.Overall.Removes.Should().Be(0);
         results.Summary.Overall.Updates.Should().Be(0);
         results.Summary.Overall.Refreshes.Should().Be(0);
+    }
+
+    [Fact]
+    public void ObservableCompletesWhenSourceAndAllChildrenComplete()
+    {
+        // having
+        var markets = Enumerable.Range(0, MarketCount).Select(n => new FixedMarket(Random, n*ItemIdStride, (n*ItemIdStride) + PricesPerMarket)).ToArray();
+        var hasMainSequenceCompleted = false;
+        var hasChildSequenceCompleted = false;
+
+        var observable = markets.AsObservableChangeSet(m => m.MarketId, completable: true)
+                                                                .Do(_ => { }, () => hasMainSequenceCompleted = true)
+                                                                .MergeManyChangeSets(m => m.LatestPrices)
+                                                                .Do(_ => { }, () => hasChildSequenceCompleted = true);
+
+        // when
+        using var cleanup = observable.Subscribe();
+
+        // then
+        hasMainSequenceCompleted.Should().BeTrue();
+        hasChildSequenceCompleted.Should().BeTrue();
     }
 
     public void Dispose()
@@ -642,9 +659,9 @@ public class MergeManyChangeSetsFixture : IDisposable
             LatestPrices.AddOrUpdate(Enumerable.Range(minId, (maxId - minId)).Select(id => CreatePrice(id, newPrice)));
 
         public void Dispose() => LatestPrices.Dispose();
-
-        private static decimal RandomPrice(Random r) => BasePrice + ((decimal)r.NextDouble() * PriceOffset);
     }
+
+    private static decimal RandomPrice(Random r) => BasePrice + ((decimal)r.NextDouble() * PriceOffset);
 
     private class MarketPrice
     {
@@ -711,4 +728,20 @@ public class MergeManyChangeSetsFixture : IDisposable
             }
         }
     }
+
+    private class FixedMarket
+    {
+        public FixedMarket(Random r, int minId, int maxId)
+        {
+            MarketId = Guid.NewGuid();
+            LatestPrices = Enumerable.Range(minId, maxId - minId)
+                                    .Select(id => new MarketPrice(id, RandomPrice(r), MarketId))
+                                    .AsObservableChangeSet(cp => cp.ItemId, completable: true);
+        }
+
+        public Guid MarketId { get; }
+
+        public IObservable<IChangeSet<MarketPrice, int>> LatestPrices { get; }
+    }
+
 }

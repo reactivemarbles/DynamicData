@@ -36,8 +36,23 @@ internal class MergeMany<TObject, TKey, TDestination>
         return Observable.Create<TDestination>(
             observer =>
             {
+                int subscriptionCount = 1;
+
+                void CheckSubscriptionCount()
+                {
+                    if (Interlocked.Decrement(ref subscriptionCount) == 0)
+                    {
+                        observer.OnCompleted();
+                    }
+                }
+
                 var locker = new object();
-                return _source.SubscribeMany((t, key) => _observableSelector(t, key).Synchronize(locker).Subscribe(observer.OnNext, _ => { }, () => { })).Subscribe(_ => { }, observer.OnError);
+                return _source.SubscribeMany((t, key) =>
+                                {
+                                    Interlocked.Increment(ref subscriptionCount);
+                                    return _observableSelector(t, key).Synchronize(locker).Finally(CheckSubscriptionCount).Subscribe(observer.OnNext);
+                                })
+                              .Subscribe(_ => { }, observer.OnError, CheckSubscriptionCount);
             });
     }
 }
