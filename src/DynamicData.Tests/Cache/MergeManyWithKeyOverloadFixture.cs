@@ -103,6 +103,93 @@ public class MergeManyWithKeyOverloadFixture : IDisposable
         failed.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Merged stream does not complete if a child stream is still active.
+    /// </summary>
+    [Fact]
+    public void MergedStreamDoesNotCompleteWhileItemStreamActive()
+    {
+        var streamCompleted = false;
+        var sourceCompleted = false;
+
+        var item = new ObjectWithObservable(1);
+        _source.AddOrUpdate(item);
+
+        using var stream = _source.Connect().Do(_ => { }, () => sourceCompleted = true)
+                .MergeMany((o, i) => o.Observable).Subscribe(_ => { }, () => streamCompleted = true);
+
+        _source.Dispose();
+
+        sourceCompleted.Should().BeTrue();
+        streamCompleted.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Stream completes only when source and all child are complete.
+    /// </summary>
+    [Fact]
+    public void MergedStreamCompletesWhenSourceAndItemsComplete()
+    {
+        var streamCompleted = false;
+        var sourceCompleted = false;
+
+        var item = new ObjectWithObservable(1);
+        _source.AddOrUpdate(item);
+
+        using var stream = _source.Connect().Do(_ => { }, () => sourceCompleted = true)
+                .MergeMany((o, i) => o.Observable).Subscribe(_ => { }, () => streamCompleted = true);
+
+        _source.Dispose();
+        item.CompleteObservable();
+
+        sourceCompleted.Should().BeTrue();
+        streamCompleted.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// Stream completes even if one of the children fails.
+    /// </summary>
+    [Fact]
+    public void MergedStreamCompletesIfLastItemFails()
+    {
+        var receivedError = default(Exception);
+        var streamCompleted = false;
+        var sourceCompleted = false;
+
+        var item = new ObjectWithObservable(1);
+        _source.AddOrUpdate(item);
+
+        using var stream = _source.Connect().Do(_ => { }, () => sourceCompleted = true)
+                .MergeMany((o, i) => o.Observable).Subscribe(_ => { }, err => receivedError = err, () => streamCompleted = true);
+
+        _source.Dispose();
+        item.FailObservable(new Exception("Test exception"));
+
+        receivedError.Should().Be(default);
+        sourceCompleted.Should().BeTrue();
+        streamCompleted.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// If the source stream has an error, the merged steam should also.
+    /// </summary>
+    [Fact]
+    public void MergedStreamFailsWhenSourceFails()
+    {
+        var receivedError = default(Exception);
+        var expectedError = new Exception("Test exception");
+        var throwObservable = Observable.Throw<IChangeSet<ObjectWithObservable, int>>(expectedError);
+        var stream = _source.Connect().Concat(throwObservable)
+                .MergeMany((o, i) => o.Observable).Subscribe(_ => { }, err => receivedError = err);
+
+        var item = new ObjectWithObservable(1);
+        _source.AddOrUpdate(item);
+
+        _source.Dispose();
+
+        receivedError.Should().Be(expectedError);
+    }
+
     private class ObjectWithObservable
     {
         private readonly ISubject<bool> _changed = new Subject<bool>();

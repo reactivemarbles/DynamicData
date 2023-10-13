@@ -73,27 +73,6 @@ public class MergeManyFixture : IDisposable
         stream.Dispose();
     }
 
-    /// <summary>
-    /// Stream completes only when source and all child are complete.
-    /// </summary>
-    [Fact]
-    public void StreamCompletesOnlyIfSourceAndAllChildrenComplete()
-    {
-        var streamCompleted = false;
-        var sourceCompleted = false;
-
-        var item = new ObjectWithObservable(1);
-        var sourceChangeSet = new[] { item }.AsObservableChangeSet(o => o.Id, completable: true).Do(_ => { }, () => sourceCompleted = true);
-
-        using var stream = sourceChangeSet.MergeMany(o => o.Observable).Subscribe(_ => { }, () => streamCompleted = true);
-
-        sourceCompleted.Should().BeTrue();
-        streamCompleted.Should().BeFalse();
-
-        item.CompleteObservable();
-        streamCompleted.Should().BeTrue();
-    }
-
     private class ObjectWithObservable
     {
         private readonly ISubject<bool> _changed = new Subject<bool>();
@@ -113,11 +92,6 @@ public class MergeManyFixture : IDisposable
         {
             _value = value;
             _changed.OnNext(value);
-        }
-
-        public void CompleteObservable()
-        {
-            _changed.OnCompleted();
         }
     }
 }
