@@ -383,33 +383,6 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Converts an Observable of Optional to an Observable ChangeSet that adds/updates when the Observable has a value and Removes when it doesn't.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="keySelector">Key Selection Function for the ChangeSet.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to use for comparing values.</param>
-    /// <returns>An observable cache.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> AsObservableChangeSet<TObject, TKey>(this IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
-
-        return source.Select(optional => optional.Convert(val => new[] { val }).ValueOrDefault() ?? Enumerable.Empty<TObject>()).AsObservableChangeSet(keySelector, equalityComparer);
-    }
-
-    /// <summary>
     /// Automatically refresh downstream operators when any properties change.
     /// </summary>
     /// <typeparam name="TObject">The object of the change set.</typeparam>

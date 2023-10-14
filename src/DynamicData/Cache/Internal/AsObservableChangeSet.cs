@@ -4,6 +4,7 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -12,7 +13,9 @@ internal sealed class AsObservableChangeSet<TObject, TKey>
     where TKey : notnull
 {
     private readonly IObservable<IEnumerable<TObject>> _source;
+
     private readonly IEqualityComparer<TObject> _equalityComparer;
+
     private readonly Func<TObject, TKey> _keySelector;
 
     public AsObservableChangeSet(IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
@@ -22,16 +25,8 @@ internal sealed class AsObservableChangeSet<TObject, TKey>
         _equalityComparer = equalityComparer ?? EqualityComparer<TObject>.Default;
     }
 
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
-            observer =>
-            {
-                var cache = new SourceCache<TObject, TKey>(_keySelector);
-
-                var subscription = _source.Subscribe(coll => cache.EditDiff(coll, _equalityComparer), observer.OnError, observer.OnCompleted);
-
-                return new CompositeDisposable(subscription, cache.Connect().Subscribe(observer.OnNext, _ => { }, () => { }), cache);
-            });
-    }
+    public IObservable<IChangeSet<TObject, TKey>> Run() =>
+        ObservableChangeSet.Create(
+            cache => _source.Subscribe(items => cache.EditDiff(items, _equalityComparer), () => cache.Dispose()),
+            _keySelector);
 }
