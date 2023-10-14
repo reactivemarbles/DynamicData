@@ -16,8 +16,8 @@ public class EditDiffChangeSetFixture
     [Fact]
     public void NullChecksArePerformed()
     {
-        Assert.Throws<ArgumentNullException>(() => Observable.Return(Enumerable.Empty<Person>()).EditDiff<Person, int>(null!));
-        Assert.Throws<ArgumentNullException>(() => Observable.Return<IEnumerable<Person>>(null!).EditDiff<Person, int>(null!));
+        Assert.Throws<ArgumentNullException>(() => Observable.Empty<IEnumerable<Person>>().EditDiff<Person, int>(null!));
+        Assert.Throws<ArgumentNullException>(() => default(IObservable<IEnumerable<Person>>)!.EditDiff<Person, int>(null!));
     }
 
     [Fact]
