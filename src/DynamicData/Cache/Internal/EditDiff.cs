@@ -34,7 +34,7 @@ internal class EditDiff<TObject, TKey>
                 var adds = newItems.Except(originalItems, _keyComparer).ToArray();
 
                 // calculate intersect where the item has changed.
-                var intersect = newItems.Select(kvp => new { Original = innerCache.Lookup(kvp.Key), NewItem = kvp }).Where(x => x.Original.HasValue && !_areEqual(x.Original.Value, x.NewItem.Value)).Select(x => x.NewItem).ToArray();
+                var intersect = newItems.Select(kvp => new { Original = innerCache.Lookup(kvp.Key), NewItem = kvp }).Where(x => x.Original.HasValue && !_areEqual(x.Original.Value, x.NewItem.Value)).Select(x => new KeyValuePair<TKey, TObject>(x.NewItem.Key, x.NewItem.Value)).ToArray();
 
                 innerCache.Remove(removes.Select(kvp => kvp.Key));
                 innerCache.AddOrUpdate(adds.Union(intersect));
