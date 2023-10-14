@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
+using DynamicData.Kernel;
 using FluentAssertions;
 
 using Xunit;
@@ -11,86 +13,146 @@ namespace DynamicData.Tests.Cache;
 
 public class EditDiffChangeSetOptionalFixture
 {
+    private static readonly Optional<Person> s_noPerson = Optional.None<Person>();
+
     private const int MaxItems = 1097;
 
     [Fact]
     public void NullChecksArePerformed()
     {
-        Assert.Throws<ArgumentNullException>(() => Observable.Empty<IEnumerable<Person>>().EditDiff<Person, int>(null!));
-        Assert.Throws<ArgumentNullException>(() => default(IObservable<IEnumerable<Person>>)!.EditDiff<Person, int>(null!));
+        Assert.Throws<ArgumentNullException>(() => Observable.Empty<Optional<Person>>().EditDiff<Person, int>(null!));
+        Assert.Throws<ArgumentNullException>(() => default(IObservable<Optional<Person>>)!.EditDiff<Person, int>(null!));
     }
 
     [Fact]
-    public void ItemsFromEnumerableAreAddedToChangeSet()
+    public void OptionalSomeCreatesAddChange()
     {
         // having
-        var enumerable = CreatePeople(0, MaxItems, "Name");
-        var enumObservable = Observable.Return(enumerable);
+        var optional = CreatePerson(0, "Name");
+        var optObservable = Observable.Return(optional);
 
         // when
-        var observableChangeSet = enumObservable.EditDiff(p => p.Id);
+        var observableChangeSet = optObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(MaxItems);
+        results.Data.Count.Should().Be(1);
         results.Messages.Count.Should().Be(1);
     }
 
     [Fact]
-    public void ItemsRemovedFromEnumerableAreRemovedFromChangeSet()
+    public void OptionalNoneCreatesRemoveChange()
     {
         // having
-        var enumerable = CreatePeople(0, MaxItems, "Name");
-        var enumObservable = new[] {enumerable, Enumerable.Empty<Person>()}.ToObservable();
+        var optional = CreatePerson(0, "Name");
+        var optObservable = new[] {optional, s_noPerson}.ToObservable();
 
         // when
-        var observableChangeSet = enumObservable.EditDiff(p => p.Id);
+        var observableChangeSet = optObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
         results.Data.Count.Should().Be(0);
         results.Messages.Count.Should().Be(2);
-        results.Messages[0].Adds.Should().Be(MaxItems);
-        results.Messages[1].Removes.Should().Be(MaxItems);
+        results.Messages[0].Adds.Should().Be(1);
+        results.Messages[1].Removes.Should().Be(1);
         results.Messages[1].Updates.Should().Be(0);
     }
 
     [Fact]
-    public void ItemsUpdatedAreUpdatedInChangeSet()
+    public void OptionalSomeWithSameKeyCreatesUpdateChange()
     {
         // having
-        var enumerable1 = CreatePeople(0, MaxItems * 2, "Name");
-        var enumerable2 = CreatePeople(MaxItems, MaxItems, "Update");
-        var enumObservable = new[] { enumerable1, enumerable2 }.ToObservable();
+        var optional1 = CreatePerson(0, "Name");
+        var optional2 = CreatePerson(0, "Update");
+        var optObservable = new[] { optional1, optional2 }.ToObservable();
 
         // when
-        var observableChangeSet = enumObservable.EditDiff(p => p.Id);
+        var observableChangeSet = optObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(MaxItems);
+        results.Data.Count.Should().Be(1);
         results.Messages.Count.Should().Be(2);
-        results.Messages[0].Adds.Should().Be(MaxItems * 2);
-        results.Messages[1].Updates.Should().Be(MaxItems);
-        results.Messages[1].Removes.Should().Be(MaxItems);
+        results.Messages[0].Adds.Should().Be(1);
+        results.Messages[1].Removes.Should().Be(0);
+        results.Messages[1].Updates.Should().Be(1);
     }
 
+    [Fact]
+    public void OptionalSomeWithSameReferenceCreatesNoChanges()
+    {
+        // having
+        var optional = CreatePerson(0, "Name");
+        var optObservable = new[] { optional, optional }.ToObservable();
+
+        // when
+        var observableChangeSet = optObservable.EditDiff(p => p.Id);
+        using var results = observableChangeSet.AsAggregator();
+
+        // then
+        results.Data.Count.Should().Be(1);
+        results.Messages.Count.Should().Be(1);
+        results.Summary.Overall.Adds.Should().Be(1);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(0);
+    }
+
+    [Fact]
+    public void OptionalSomeWithSameCreatesNoChanges()
+    {
+        // having
+        var optional1 = CreatePerson(0, "Name");
+        var optional2 = CreatePerson(0, "Name");
+        var optObservable = new[] { optional1, optional2 }.ToObservable();
+
+        // when
+        var observableChangeSet = optObservable.EditDiff(p => p.Id, new PersonComparer());
+        using var results = observableChangeSet.AsAggregator();
+
+        // then
+        results.Data.Count.Should().Be(1);
+        results.Messages.Count.Should().Be(1);
+        results.Summary.Overall.Adds.Should().Be(1);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(0);
+    }
+
+    [Fact]
+    public void OptionalSomeWithDifferentKeyCreatesAddRemoveChanges()
+    {
+        // having
+        var optional1 = CreatePerson(0, "Name");
+        var optional2 = CreatePerson(1, "Update");
+        var optObservable = new[] { optional1, optional2 }.ToObservable();
+
+        // when
+        var observableChangeSet = optObservable.EditDiff(p => p.Id);
+        using var results = observableChangeSet.AsAggregator();
+
+        // then
+        results.Data.Count.Should().Be(1);
+        results.Messages.Count.Should().Be(2);
+        results.Messages[0].Adds.Should().Be(1);
+        results.Messages[1].Removes.Should().Be(1);
+        results.Messages[1].Updates.Should().Be(0);
+    }
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
     public void ResultCompletesIfAndOnlyIfSourceCompletes(bool completeSource)
     {
         // having
-        var enumerable = CreatePeople(0, MaxItems, "Name");
-        var enumObservable = Observable.Return(enumerable);
+        var optional = CreatePerson(0, "Name");
+        var optObservable = Observable.Return(optional);
         if (!completeSource)
         {
-            enumObservable = enumObservable.Concat(Observable.Never<IEnumerable<Person>>());
+            optObservable = optObservable.Concat(Observable.Never<Optional<Person>>());
         }
         bool completed = false;
 
         // when
-        using var results = enumObservable.Subscribe(_ => { }, () => completed = true);
+        using var results = optObservable.Subscribe(_ => { }, () => completed = true);
 
         // then
         completed.Should().Be(completeSource);
@@ -102,17 +164,17 @@ public class EditDiffChangeSetOptionalFixture
     public void ResultFailsIfAndOnlyIfSourceFails (bool failSource)
     {
         // having
-        var enumerable = CreatePeople(0, MaxItems, "Name");
-        var enumObservable = Observable.Return(enumerable);
+        var optional = CreatePerson(0, "Name");
+        var optObservable = Observable.Return(optional);
         var testException = new Exception("Test");
         if (failSource)
         {
-            enumObservable = enumObservable.Concat(Observable.Throw<IEnumerable<Person>>(testException));
+            optObservable = optObservable.Concat(Observable.Throw<Optional<Person>>(testException));
         }
         var receivedError = default(Exception);
 
         // when
-        using var results = enumObservable.Subscribe(_ => { }, err => receivedError = err);
+        using var results = optObservable.Subscribe(_ => { }, err => receivedError = err);
 
         // then
         receivedError.Should().Be(failSource ? testException : default);
@@ -120,44 +182,34 @@ public class EditDiffChangeSetOptionalFixture
 
     [Trait("Performance", "Manual run only")]
     [Theory]
-    [InlineData(7, 3, 5)]
-    [InlineData(233, 113, MaxItems)]
-    [InlineData(233, 0, MaxItems)]
-    [InlineData(233, 233, MaxItems)]
-    [InlineData(2521, 1187, MaxItems)]
-    [InlineData(2521, 0, MaxItems)]
-    [InlineData(2521, 2521, MaxItems)]
-    [InlineData(5081, 2683, MaxItems)]
-    [InlineData(5081, 0, MaxItems)]
-    [InlineData(5081, 5081, MaxItems)]
-    public void Perf(int collectionSize, int updateSize, int maxItems)
+    [InlineData(7)]
+    [InlineData(MaxItems)]
+    public void Perf(int maxItems)
     {
-        Debug.Assert(updateSize <= collectionSize);
-
         // having
-        var enumerables = Enumerable.Range(1, maxItems - 1)
-            .Select(n => n * (collectionSize - updateSize))
-            .Select(index => CreatePeople(index, updateSize, "Overlap")
-                                                            .Concat(CreatePeople(index + updateSize, collectionSize - updateSize, "Name")))
-            .Prepend(CreatePeople(0, collectionSize, "Name"));
-        var enumObservable = enumerables.ToObservable();
+        var optionals = Enumerable.Range(0, maxItems).Select(n => (n % 2) == 0 ? CreatePerson(n, "Name") : s_noPerson);
+        var optObservable = optionals.ToObservable();
 
         // when
-        var observableChangeSet = enumObservable.EditDiff(p => p.Id);
+        var observableChangeSet = optObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(collectionSize);
+        results.Data.Count.Should().Be(1);
         results.Messages.Count.Should().Be(maxItems);
-        results.Summary.Overall.Adds.Should().Be((collectionSize * maxItems) - (updateSize * (maxItems - 1)));
-        results.Summary.Overall.Removes.Should().Be((collectionSize - updateSize) * (maxItems - 1));
-        results.Summary.Overall.Updates.Should().Be(updateSize * (maxItems - 1));
+        results.Summary.Overall.Adds.Should().Be((maxItems / 2) + ((maxItems % 2) == 0 ? 0 : 1));
+        results.Summary.Overall.Removes.Should().Be(maxItems / 2);
+        results.Summary.Overall.Updates.Should().Be(0);
     }
 
-    private static Person CreatePerson(int id, string name) => new(id, name);
+    private static Optional<Person> CreatePerson(int id, string name) => Optional.Some(new Person(id, name));
 
-    private static IEnumerable<Person> CreatePeople(int baseId, int count, string baseName) =>
-        Enumerable.Range(baseId, count).Select(i => CreatePerson(i, baseName + i));
+    private class PersonComparer : IEqualityComparer<Person>
+    {
+        public bool Equals([DisallowNull] Person x, [DisallowNull] Person y) =>
+            EqualityComparer<string>.Default.Equals(x.Name, y.Name) && EqualityComparer<int>.Default.Equals(x.Id, y.Id);
+        public int GetHashCode([DisallowNull] Person obj) => throw new NotImplementedException();
+    }
 
     private class Person
     {
