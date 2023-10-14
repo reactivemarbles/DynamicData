@@ -1280,6 +1280,33 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Converts an Observable Optional to an Observable ChangeSet that adds/removes/updates as the optional changes.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="keySelector">Key Selection Function for the ChangeSet.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to use for comparing values.</param>
+    /// <returns>An observable changeset.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (keySelector is null)
+        {
+            throw new ArgumentNullException(nameof(keySelector));
+        }
+
+        return new EditDiffChangeSetOptional<TObject, TKey>(source, keySelector, equalityComparer).Run();
+    }
+
+    /// <summary>
     /// Signal observers to re-evaluate the specified item.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
