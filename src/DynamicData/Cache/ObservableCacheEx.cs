@@ -356,33 +356,6 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Converts an Observable of Enumerable to an Observable ChangeSet that updates when the enumerables changes.  Counterpart operator to <see cref="ToCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>.
-    /// </summary>
-    /// <typeparam name="TObject">The type of the object.</typeparam>
-    /// <typeparam name="TKey">The type of the key.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="keySelector">Key Selection Function for the ChangeSet.</param>
-    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to use for comparing values.</param>
-    /// <returns>An observable cache.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> AsObservableChangeSet<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
-        where TObject : notnull
-        where TKey : notnull
-    {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
-
-        return new AsObservableChangeSet<TObject, TKey>(source, keySelector, equalityComparer).Run();
-    }
-
-    /// <summary>
     /// Automatically refresh downstream operators when any properties change.
     /// </summary>
     /// <typeparam name="TObject">The object of the change set.</typeparam>
@@ -1304,6 +1277,33 @@ public static class ObservableCacheEx
 
         var editDiff = new EditDiff<TObject, TKey>(source, areItemsEqual);
         editDiff.Edit(allItems);
+    }
+
+    /// <summary>
+    /// Converts an Observable of Enumerable to an Observable ChangeSet that updates when the enumerables changes.  Counterpart operator to <see cref="ToCollection{TObject, TKey}(IObservable{IChangeSet{TObject, TKey}})"/>.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="keySelector">Key Selection Function for the ChangeSet.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to use for comparing values.</param>
+    /// <returns>An observable cache.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (keySelector is null)
+        {
+            throw new ArgumentNullException(nameof(keySelector));
+        }
+
+        return new EditDiffChangeSet<TObject, TKey>(source, keySelector, equalityComparer).Run();
     }
 
     /// <summary>

@@ -3,16 +3,22 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
-
 using FluentAssertions;
 
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-public class AsObservableChangeSetFixture
+public class EditDiffChangeSetFixture
 {
     private const int MaxItems = 1097;
+
+    [Fact]
+    public void NullChecksArePerformed()
+    {
+        Assert.Throws<ArgumentNullException>(() => Observable.Return(Enumerable.Empty<Person>()).EditDiff<Person, int>(null!));
+        Assert.Throws<ArgumentNullException>(() => Observable.Return<IEnumerable<Person>>(null!).EditDiff<Person, int>(null!));
+    }
 
     [Fact]
     public void ItemsFromEnumerableAreAddedToChangeSet()
@@ -22,7 +28,7 @@ public class AsObservableChangeSetFixture
         var enumObservable = Observable.Return(enumerable);
 
         // when
-        var observableChangeSet = enumObservable.AsObservableChangeSet(p => p.Id);
+        var observableChangeSet = enumObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
@@ -38,7 +44,7 @@ public class AsObservableChangeSetFixture
         var enumObservable = new[] {enumerable, Enumerable.Empty<Person>()}.ToObservable();
 
         // when
-        var observableChangeSet = enumObservable.AsObservableChangeSet(p => p.Id);
+        var observableChangeSet = enumObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
@@ -58,7 +64,7 @@ public class AsObservableChangeSetFixture
         var enumObservable = new[] { enumerable1, enumerable2 }.ToObservable();
 
         // when
-        var observableChangeSet = enumObservable.AsObservableChangeSet(p => p.Id);
+        var observableChangeSet = enumObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
@@ -66,7 +72,7 @@ public class AsObservableChangeSetFixture
         results.Messages.Count.Should().Be(2);
         results.Messages[0].Adds.Should().Be(MaxItems * 2);
         results.Messages[1].Updates.Should().Be(MaxItems);
-        results.Messages[1].Removes.Should().Be(0);
+        results.Messages[1].Removes.Should().Be(MaxItems);
     }
 
     [Theory]
@@ -115,34 +121,37 @@ public class AsObservableChangeSetFixture
     [Trait("Performance", "Manual run only")]
     [Theory]
     [InlineData(7, 3, 5)]
+    [InlineData(233, 113, MaxItems)]
+    [InlineData(233, 0, MaxItems)]
+    [InlineData(233, 233, MaxItems)]
     [InlineData(2521, 1187, MaxItems)]
     [InlineData(2521, 0, MaxItems)]
     [InlineData(2521, 2521, MaxItems)]
     [InlineData(5081, 2683, MaxItems)]
     [InlineData(5081, 0, MaxItems)]
     [InlineData(5081, 5081, MaxItems)]
-    public void Perf(int blockSize, int overlapSize, int maxItems)
+    public void Perf(int collectionSize, int updateSize, int maxItems)
     {
-        Debug.Assert(overlapSize <= blockSize);
+        Debug.Assert(updateSize <= collectionSize);
 
         // having
         var enumerables = Enumerable.Range(1, maxItems - 1)
-            .Select(n => new { Start = (n * blockSize) - (n * overlapSize), Overlap = n * blockSize, })
-            .Select(info => CreatePeople(info.Start, overlapSize, "Overlap")
-                                                            .Concat(CreatePeople(info.Start + overlapSize, blockSize - overlapSize, "Name")))
-            .Prepend(CreatePeople(0, blockSize, "Name"));
+            .Select(n => n * (collectionSize - updateSize))
+            .Select(index => CreatePeople(index, updateSize, "Overlap")
+                                                            .Concat(CreatePeople(index + updateSize, collectionSize - updateSize, "Name")))
+            .Prepend(CreatePeople(0, collectionSize, "Name"));
         var enumObservable = enumerables.ToObservable();
 
         // when
-        var observableChangeSet = enumObservable.AsObservableChangeSet(p => p.Id);
+        var observableChangeSet = enumObservable.EditDiff(p => p.Id);
         using var results = observableChangeSet.AsAggregator();
 
         // then
-        results.Data.Count.Should().Be(blockSize);
+        results.Data.Count.Should().Be(collectionSize);
         results.Messages.Count.Should().Be(maxItems);
-        results.Summary.Overall.Adds.Should().Be((blockSize * maxItems) - (overlapSize * (maxItems - 1)));
-        results.Summary.Overall.Removes.Should().Be((blockSize - overlapSize) * (maxItems - 1));
-        results.Summary.Overall.Updates.Should().Be(overlapSize * (maxItems - 1));
+        results.Summary.Overall.Adds.Should().Be((collectionSize * maxItems) - (updateSize * (maxItems - 1)));
+        results.Summary.Overall.Removes.Should().Be((collectionSize - updateSize) * (maxItems - 1));
+        results.Summary.Overall.Updates.Should().Be(updateSize * (maxItems - 1));
     }
 
     private static Person CreatePerson(int id, string name) => new(id, name);

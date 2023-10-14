@@ -8,7 +8,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class AsObservableChangeSet<TObject, TKey>
+internal sealed class EditDiffChangeSet<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
@@ -18,7 +18,7 @@ internal sealed class AsObservableChangeSet<TObject, TKey>
 
     private readonly Func<TObject, TKey> _keySelector;
 
-    public AsObservableChangeSet(IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
+    public EditDiffChangeSet(IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
