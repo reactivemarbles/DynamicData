@@ -4354,6 +4354,57 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Converts an observable change set into an observable optional that emits the value for the given key.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="key">The key value.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance used to determine if an object value has changed.</param>
+    /// <returns>An observable optional.</returns>
+    /// <exception cref="System.ArgumentNullException">source is null.</exception>
+    public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        return new ToObservableOptional<TObject, TKey>(source, key, equalityComparer).Run();
+    }
+
+    /// <summary>
+    /// Converts an observable cache into an observable optional that emits the value for the given key.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="key">The key value.</param>
+    /// <param name="initialOptionalWhenMissing">Indicates if an initial Optional None should be emitted if the value doesn't exist.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance used to determine if an object value has changed.</param>
+    /// <returns>An observable optional.</returns>
+    /// <exception cref="System.ArgumentNullException">source is null.</exception>
+    public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, IEqualityComparer<TObject>? equalityComparer = null)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (initialOptionalWhenMissing)
+        {
+            var seenValue = false;
+            var locker = new object();
+
+            var optional = source.ToObservableOptional(key, equalityComparer).Synchronize(locker).Do(_ => seenValue = true);
+            var missing = Observable.Return(Optional.None<TObject>()).Synchronize(locker).Where(_ => !seenValue);
+
+            return optional.Merge(missing);
+        }
+
+        return source.ToObservableOptional(key, equalityComparer);
+    }
+
+    /// <summary>
     /// Limits the size of the result set to the specified number.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
