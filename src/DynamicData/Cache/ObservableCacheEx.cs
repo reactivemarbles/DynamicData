@@ -2,6 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -2839,6 +2841,104 @@ public static class ObservableCacheEx
         }
 
         return new MergeMany<TObject, TKey, TDestination>(source, observableSelector).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <returns>The result from merging the child changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TDestination> comparer)
+        where TObject : notnull
+        where TKey : notnull
+        where TDestination : notnull
+        where TDestinationKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+
+        return source.MergeManyChangeSets((t, _) => observableSelector(t), comparer);
+    }
+
+    /// <summary>
+    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <returns>The result from merging the child changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IComparer<TDestination> comparer)
+        where TObject : notnull
+        where TKey : notnull
+        where TDestination : notnull
+        where TDestinationKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return source.MergeManyChangeSets(observableSelector, equalityComparer: null, comparer: comparer);
+    }
+
+    /// <summary>
+    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <returns>The result from merging the child changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
+        where TObject : notnull
+        where TKey : notnull
+        where TDestination : notnull
+        where TDestinationKey : notnull
+    {
+        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+
+        return source.MergeManyChangeSets((t, _) => observableSelector(t), equalityComparer, comparer);
+    }
+
+    /// <summary>
+    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <typeparam name="TDestinationKey">The type of the destination key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <returns>The result from merging the child changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TKey, TDestination, TDestinationKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null, IComparer<TDestination>? comparer = null)
+        where TObject : notnull
+        where TKey : notnull
+        where TDestination : notnull
+        where TDestinationKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+
+        return new MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>(source, observableSelector, equalityComparer, comparer).Run();
     }
 
     /// <summary>
