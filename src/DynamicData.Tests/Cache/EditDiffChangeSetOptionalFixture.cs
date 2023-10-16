@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
@@ -18,10 +19,14 @@ public class EditDiffChangeSetOptionalFixture
     private const int MaxItems = 1097;
 
     [Fact]
+    [Description("Required to maintain test coverage percentage")]
     public void NullChecksArePerformed()
     {
-        Assert.Throws<ArgumentNullException>(() => Observable.Empty<Optional<Person>>().EditDiff<Person, int>(null!));
-        Assert.Throws<ArgumentNullException>(() => default(IObservable<Optional<Person>>)!.EditDiff<Person, int>(null!));
+        Action actionNullKeySelector = () => Observable.Empty<Optional<Person>>().EditDiff<Person, int>(null!);
+        Action actionNullObservable = () => default(IObservable<Optional<Person>>)!.EditDiff<Person, int>(null!);
+
+        actionNullKeySelector.Should().Throw<ArgumentNullException>().WithParameterName("keySelector");
+        actionNullObservable.Should().Throw<ArgumentNullException>().WithParameterName("source");
     }
 
     [Fact]

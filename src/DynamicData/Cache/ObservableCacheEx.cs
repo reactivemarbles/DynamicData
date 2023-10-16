@@ -1298,6 +1298,7 @@ public static class ObservableCacheEx
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
+        }
 
         if (keySelector is null)
         {

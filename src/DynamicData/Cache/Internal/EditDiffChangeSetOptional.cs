@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
 
@@ -12,8 +11,6 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    private static readonly IEqualityComparer<TKey> KeyComparer = EqualityComparer<TKey>.Default;
-
     private readonly IObservable<Optional<TObject>> _source;
 
     private readonly IEqualityComparer<TObject> _equalityComparer;
@@ -31,49 +28,65 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>
     {
         return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            var shared = _source.StartWith(Optional.None<TObject>()).Synchronize().Publish();
+            var previous = Optional.None<ValueContainer>();
 
-            var cleanup = shared.Zip(shared.Skip(1)).Select(
-                tuple =>
+            return _source.Synchronize().Subscribe(
+                nextValue =>
                 {
-                    var previous = tuple.First;
-                    var current = tuple.Second;
+                    var current = nextValue.Convert(val => new ValueContainer(val, _keySelector(val)));
 
-                    if (previous.HasValue && current.HasValue)
+                    // Determine the changes
+                    var changes = (previous.HasValue, current.HasValue) switch
                     {
-                        var previousKey = _keySelector(previous.Value);
-                        var currentKey = _keySelector(current.Value);
+                        (true, true) => CreateUpdateChanges(previous.Value, current.Value),
+                        (false, true) => new[] { new Change<TObject, TKey>(ChangeReason.Add, current.Value.Key, current.Value.Object) },
+                        (true, false) => new[] { new Change<TObject, TKey>(ChangeReason.Remove, previous.Value.Key, previous.Value.Object) },
+                        (false, false) => Array.Empty<Change<TObject, TKey>>(),
+                    };
 
-                        if (KeyComparer.Equals(previousKey, currentKey))
-                        {
-                            if (!_equalityComparer.Equals(previous.Value, current.Value))
-                            {
-                                return new[] { new Change<TObject, TKey>(ChangeReason.Update, currentKey, current.Value, previous.Value) };
-                            }
-                        }
-                        else
-                        {
-                            return new[] { new Change<TObject, TKey>(ChangeReason.Remove, previousKey, previous.Value), new Change<TObject, TKey>(ChangeReason.Add, currentKey, current.Value) };
-                        }
-                    }
-                    else if (previous.HasValue)
+                    // Save the value for the next round
+                    previous = current;
+
+                    // If there are changes, emit as a ChangeSet
+                    if (changes.Length > 0)
                     {
-                        var previousKey = _keySelector(previous.Value);
-                        return new[] { new Change<TObject, TKey>(ChangeReason.Remove, previousKey, previous.Value) };
+                        observer.OnNext(new ChangeSet<TObject, TKey>(changes));
                     }
-                    else if (current.HasValue)
-                    {
-                        var currentKey = _keySelector(current.Value);
-                        return new[] { new Change<TObject, TKey>(ChangeReason.Add, currentKey, current.Value) };
-                    }
-
-                    return Array.Empty<Change<TObject, TKey>>();
-                })
-                .Where(changes => changes.Length > 0)
-                .Select(changes => new ChangeSet<TObject, TKey>(changes))
-                .SubscribeSafe(observer);
-
-            return new CompositeDisposable(cleanup, shared.Connect());
+                }, observer.OnError, observer.OnCompleted);
         });
+    }
+
+    private Change<TObject, TKey>[] CreateUpdateChanges(in ValueContainer prev, in ValueContainer curr)
+    {
+        if (EqualityComparer<TKey>.Default.Equals(prev.Key, curr.Key))
+        {
+            // Key is the same, so Update (unless values are equal)
+            if (!_equalityComparer.Equals(prev.Object, curr.Object))
+            {
+                return new[] { new Change<TObject, TKey>(ChangeReason.Update, curr.Key, curr.Object, prev.Object) };
+            }
+
+            return Array.Empty<Change<TObject, TKey>>();
+        }
+
+        // Key Change means Remove/Add
+        return new[]
+        {
+            new Change<TObject, TKey>(ChangeReason.Remove, prev.Key, prev.Object),
+            new Change<TObject, TKey>(ChangeReason.Add, curr.Key, curr.Object)
+        };
+    }
+
+    private readonly struct ValueContainer
+    {
+        public ValueContainer(TObject obj, TKey key)
+        {
+            Object = obj;
+            Key = key;
+        }
+
+        public TObject Object { get; }
+
+        public TKey Key { get; }
     }
 }
