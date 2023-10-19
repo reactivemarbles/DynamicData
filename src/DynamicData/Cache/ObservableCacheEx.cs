@@ -1819,6 +1819,47 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Filters the stream of changes according to an Observable bool that is created for each item using the specified factory function.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="filterFactory">Factory function used to create the observable bool that controls whether that given item passes the filter or not.</param>
+    /// <param name="buffer">Optional time to buffer changes from the observable bools.</param>
+    /// <param name="scheduler">Optional scheduler to use when buffering the changes.</param>
+    /// <returns>An observable changeset that only contains items whose corresponding observable bool has emitted true as its most recent value.</returns>
+    /// <exception cref="ArgumentNullException">One of the given parameters was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<bool>> filterFactory, TimeSpan? buffer = null, IScheduler? scheduler = null)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (filterFactory is null) throw new ArgumentNullException(nameof(filterFactory));
+
+        return new FilterOnObservable<TObject, TKey>(source, filterFactory, buffer, scheduler).Run();
+    }
+
+    /// <summary>
+    /// Filters the stream of changes according to an Observable bool that is created for each item using the specified factory function.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="filterFactory">Factory function used to create the observable bool that controls whether that given item passes the filter or not.</param>
+    /// <param name="buffer">Optional time to buffer changes from the observable bools.</param>
+    /// <param name="scheduler">Optional scheduler to use when buffering the changes.</param>
+    /// <returns>An observable changeset that only contains items whose corresponding observable bool has emitted true as its most recent value.</returns>
+    /// <exception cref="ArgumentNullException">One of the given parameters was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> FilterOnObservable<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<bool>> filterFactory, TimeSpan? buffer = null, IScheduler? scheduler = null)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (filterFactory is null) throw new ArgumentNullException(nameof(filterFactory));
+
+        return source.FilterOnObservable((obj, _) => filterFactory(obj), buffer, scheduler);
+    }
+
+    /// <summary>
     /// Filters source on the specified property using the specified predicate.
     /// The filter will automatically reapply when a property changes.
     /// When there are likely to be a large number of property changes specify a throttle to improve performance.
