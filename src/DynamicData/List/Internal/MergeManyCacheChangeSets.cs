@@ -4,27 +4,27 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Cache.Internal;
 
-namespace DynamicData.Cache.Internal;
+namespace DynamicData.List.Internal;
 
 /// <summary>
 /// Operator that is similiar to MergeMany but intelligently handles Cache ChangeSets.
 /// </summary>
-internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>
+internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinationKey>
     where TObject : notnull
-    where TKey : notnull
     where TDestination : notnull
     where TDestinationKey : notnull
 {
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+    private readonly IObservable<IChangeSet<TObject>> _source;
 
-    private readonly Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> _changeSetSelector;
+    private readonly Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> _changeSetSelector;
 
     private readonly IComparer<TDestination>? _comparer;
 
     private readonly IEqualityComparer<TDestination>? _equalityComparer;
 
-    public MergeManyCacheChangeSets(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> selector, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? comparer)
+    public MergeManyCacheChangeSets(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination, TDestinationKey>>> selector, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? comparer)
     {
         _source = source;
         _changeSetSelector = selector;
@@ -39,18 +39,17 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
             {
                 var locker = new object();
 
-                // Transform to an observable cache of merge containers.
-                var sourceCacheOfCaches = _source
-                                            .IgnoreSameReferenceUpdate()
-                                            .WhereReasonsAre(ChangeReason.Add, ChangeReason.Remove, ChangeReason.Update)
+                // Transform to an observable list of merge containers.
+                var sourceListOfCaches = _source
+                                            .WhereReasonsAreNot(ListChangeReason.Moved, ListChangeReason.Refresh)
                                             .Synchronize(locker)
-                                            .Transform((obj, key) => new MergedCacheChangeTracker<TDestination, TDestinationKey>.MergeContainer(_changeSetSelector(obj, key)))
-                                            .AsObservableCache();
+                                            .Transform(obj => new MergedCacheChangeTracker<TDestination, TDestinationKey>.MergeContainer(_changeSetSelector(obj)))
+                                            .AsObservableList();
 
-                var shared = sourceCacheOfCaches.Connect().Publish();
+                var shared = sourceListOfCaches.Connect().Publish();
 
                 // this is manages all of the changes
-                var changeTracker = new MergedCacheChangeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items.ToArray(), _comparer, _equalityComparer);
+                var changeTracker = new MergedCacheChangeTracker<TDestination, TDestinationKey>(() => sourceListOfCaches.Items.ToArray(), _comparer, _equalityComparer);
 
                 // merge the items back together
                 var allChanges = shared.MergeMany(mc => mc.Source)
@@ -63,10 +62,9 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
                 // when a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.Cache.KeyValues, observer))
-                    .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.Cache.KeyValues, observer))
                     .Subscribe();
 
-                return new CompositeDisposable(sourceCacheOfCaches, allChanges, removedItems, shared.Connect());
+                return new CompositeDisposable(sourceListOfCaches, allChanges, removedItems, shared.Connect());
             });
     }
 }
