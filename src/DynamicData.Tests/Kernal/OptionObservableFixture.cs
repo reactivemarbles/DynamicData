@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Globalization;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reactive.Linq;
 using DynamicData.Kernel;
-using DynamicData.Tests.Domain;
 
 using FluentAssertions;
 
@@ -11,262 +12,272 @@ namespace DynamicData.Tests.Kernal;
 
 public class OptionObservableFixture
 {
-    [Fact]
-    public void ImplictCastHasValue()
-    {
-        var person = new Person("Name", 20);
-        Optional<Person> option = person;
+    private const int NoneCount = 5;
+    private const int SomeCount = 10;
 
-        option.HasValue.Should().BeTrue();
-        ReferenceEquals(person, option.Value).Should().BeTrue();
+    private static Optional<string> NotConvertableToInt { get; } = Optional.Some("NOT AN INT");
+    private static IEnumerable<int> IntEnum { get; } = Enumerable.Range(0, SomeCount);
+    private static IEnumerable<string> StringEnum { get; } = IntEnum.Select(n => n.ToString());
+    private static IEnumerable<Optional<int>> OptIntEnum { get; } = IntEnum.Select(i => Optional.Some(i));
+    private static IEnumerable<Optional<int>> OptNoneIntEnum { get; } = Enumerable.Repeat(Optional.None<int>(), NoneCount);
+    private static IEnumerable<Optional<string>> OptNoneStringEnum { get; } = Enumerable.Repeat(Optional.None<string>(), NoneCount);
+    private static IEnumerable<Optional<string>> OptStringEnum { get; } = StringEnum.Select(str => Optional.Some(str));
+    private static IEnumerable<Optional<string>> OptStringWithNoneEnum { get; } = OptNoneStringEnum.Concat(OptStringEnum);
+    private static IEnumerable<Optional<string>> OptStringWithBadEnum { get; } = OptStringEnum.Prepend(NotConvertableToInt);
+    private static IEnumerable<Optional<string>> OptStringWithBadAndNoneEnum { get; } = OptStringWithNoneEnum.Prepend(NotConvertableToInt);
+
+    [Fact]
+    public void NullChecks()
+    {
+        // having
+        var neverObservable = Observable.Never<Optional<int>>();
+        var nullObservable = (IObservable<Optional<int>>)null!;
+        var nullConverter = (Func<int, double>)null!;
+        var nullOptionalConverter = (Func<int, Optional<double>>)null!;
+        var converter = (Func<int, double>)(i => i);
+        var nullConvertFallback = (Func<double>)null!;
+        var nullOptionalFallback = (Func<Optional<int>>)null!;
+        var action = (Action)null!;
+        var actionVal = (Action<int>)null!;
+        var nullExceptionGenerator = (Func<Exception>)null!;
+
+        // when
+        var convert1 = () => nullObservable.Convert(nullConverter);
+        var convert2 = () => neverObservable.Convert(nullConverter);
+        var convertOpt1 = () => nullObservable.Convert(nullOptionalConverter);
+        var convertOpt2 = () => neverObservable.Convert(nullOptionalConverter);
+        var convertOr1 = () => nullObservable.ConvertOr(nullConverter, nullConvertFallback);
+        var convertOr2 = () => neverObservable.ConvertOr(nullConverter, nullConvertFallback);
+        var convertOr3 = () => neverObservable.ConvertOr(converter, nullConvertFallback);
+        var orElse1 = () => nullObservable.OrElse(nullOptionalFallback);
+        var orElse2 = () => neverObservable.OrElse(nullOptionalFallback);
+        var onHasValue = () => nullObservable.OnHasValue(actionVal);
+        var onHasValue2 = () => neverObservable.OnHasValue(actionVal);
+        var onHasNoValue = () => nullObservable.OnHasNoValue(action);
+        var onHasNoValue2 = () => neverObservable.OnHasNoValue(action);
+        var selectValues = () => nullObservable.SelectValues();
+        var valueOrDefault = () => nullObservable.ValueOrDefault();
+        var valueOrThrow1 = () => nullObservable.ValueOrThrow(nullExceptionGenerator);
+        var valueOrThrow2 = () => neverObservable.ValueOrThrow(nullExceptionGenerator);
+
+        // then
+        convert1.Should().Throw<ArgumentNullException>();
+        convert2.Should().Throw<ArgumentNullException>();
+        convertOpt1.Should().Throw<ArgumentNullException>();
+        convertOpt2.Should().Throw<ArgumentNullException>();
+        convertOr1.Should().Throw<ArgumentNullException>();
+        convertOr2.Should().Throw<ArgumentNullException>();
+        convertOr3.Should().Throw<ArgumentNullException>();
+        orElse1.Should().Throw<ArgumentNullException>();
+        orElse2.Should().Throw<ArgumentNullException>();
+        onHasValue.Should().Throw<ArgumentNullException>();
+        onHasValue2.Should().Throw<ArgumentNullException>();
+        onHasNoValue.Should().Throw<ArgumentNullException>();
+        onHasNoValue2.Should().Throw<ArgumentNullException>();
+        selectValues.Should().Throw<ArgumentNullException>();
+        valueOrDefault.Should().Throw<ArgumentNullException>();
+        valueOrThrow1.Should().Throw<ArgumentNullException>();
+        valueOrThrow2.Should().Throw<ArgumentNullException>();
     }
 
     [Fact]
-    public void OptionElseInvokedIfOptionHasNoValue()
+    public void ConvertWillConvertValues()
     {
-        Optional<Person>? source = null;
+        // having
+        var observable = OptStringEnum.ToObservable();
 
-        var ifactioninvoked = false;
-        var elseactioninvoked = false;
+        // when
+        var results = observable.Convert(ParseInt).ToEnumerable().ToList();
+        var intList = OptIntEnum.ToList();
 
-        source.IfHasValue(p => ifactioninvoked = true).Else(() => elseactioninvoked = true);
-
-        ifactioninvoked.Should().BeFalse();
-        elseactioninvoked.Should().BeTrue();
+        // then
+        results.Should().BeSubsetOf(intList);
+        intList.Should().BeSubsetOf(results);
     }
 
     [Fact]
-    public void OptionIfHasValueInvokedIfOptionHasValue()
+    public void ConvertPreservesNone()
     {
-        Optional<Person> source = new Person("A", 1);
+        // having
+        var enumerable = OptStringWithNoneEnum;
+        var observable = enumerable.ToObservable();
 
-        var ifactioninvoked = false;
-        var elseactioninvoked = false;
+        // when
+        var results = observable.Convert(ParseInt).Where(opt => !opt.HasValue).ToEnumerable().Count();
+        var expected = enumerable.Where(opt => !opt.HasValue).Count();
 
-        source.IfHasValue(p => ifactioninvoked = true).Else(() => elseactioninvoked = true);
-
-        ifactioninvoked.Should().BeTrue();
-        elseactioninvoked.Should().BeFalse();
+        // then
+        results.Should().Be(expected);
+        results.Should().Be(NoneCount);
     }
 
     [Fact]
-    public void OptionNoneHasNoValue()
+    public void ConvertOptionalWillConvertValues()
     {
-        var option = Optional.None<IChangeSet<Person, string>>();
-        option.HasValue.Should().BeFalse();
+        // having
+        var observable = OptStringWithBadEnum.ToObservable();
+
+        // when
+        var results = observable.Convert(ParseIntOpt).ToEnumerable().ToList();
+        var intList = OptIntEnum.ToList();
+
+        // then
+        intList.Should().BeSubsetOf(results);
+        results.Should().Contain(Optional.None<int>());
     }
 
     [Fact]
-    public void OptionSetToNullHasNoValue1()
+    public void ConvertOptionalPreservesNone()
     {
-        Person? person = null;
-        var option = Optional.Some(person);
-        option.HasValue.Should().BeFalse();
+        // having
+        var enumerable = OptStringWithBadAndNoneEnum;
+        var observable = enumerable.ToObservable();
+
+        // when
+        var results = observable.Convert(ParseIntOpt).Where(opt => !opt.HasValue).ToEnumerable().Count();
+        var expected = OptStringWithNoneEnum.Where(opt => !opt.HasValue).Count() + 1;
+
+        // then
+        results.Should().Be(expected);
+        results.Should().BeGreaterThan(1);
     }
 
     [Fact]
-    public void OptionSetToNullHasNoValue2()
+    public void ConvertOrConvertsOrFallsback()
     {
-        Person? person = null;
-        Optional<Person> option = person;
-        option.HasValue.Should().BeFalse();
+        // having
+        var observable = OptStringWithNoneEnum.ToObservable();
+
+        // when
+        var results = observable.ConvertOr(ParseInt, () => -1).ToEnumerable();
+        var intList = IntEnum.Prepend(-1);
+
+        // then
+        results.Should().BeSubsetOf(intList);
+        intList.Should().BeSubsetOf(results);
     }
 
     [Fact]
-    public void OptionSomeHasValue()
+    public void OrElseFallsback()
     {
-        var person = new Person("Name", 20);
-        var option = Optional.Some(person);
-        option.HasValue.Should().BeTrue();
-        ReferenceEquals(person, option.Value).Should().BeTrue();
+        // having
+        var observable = OptIntEnum.ToObservable().StartWith(Optional.None<int>());
+
+        // when
+        var results = observable.OrElse(() => -1).ToEnumerable();
+        var intList = OptIntEnum.Prepend(-1);
+
+        // then
+        results.Should().BeSubsetOf(intList);
+        intList.Should().BeSubsetOf(results);
     }
 
     [Fact]
-    public void OptionConvertThrowsIfConverterIsNull()
+    public void OnHasValueInvokesCorrectAction()
     {
-        var caught = false;
+        // having
+        int value = 0;
+        int noValue = 0;
+        Action<int> onVal = _ => value++;
+        Action onNoVal = () => noValue++;
+        var observable = OptIntEnum.Concat(OptNoneIntEnum).ToObservable().OnHasValue(onVal, onNoVal);
 
-        Func<string, string>? converter = null;
+        // when
+        var results = observable.ToEnumerable().ToList();
 
-        try
-        {
-            Optional.None<string>().Convert(converter!);
-        }
-        catch (ArgumentNullException)
-        {
-            caught = true;
-        }
-
-        caught.Should().BeTrue();
+        // then
+        value.Should().Be(SomeCount);
+        noValue.Should().Be(NoneCount);
     }
 
     [Fact]
-    public void OptionConvertToOptionalInvokesConverterWithValue()
+    public void OnHasNoValueInvokesCorrectAction()
     {
-        var option = Optional.Some(string.Empty);
-        var invoked = false;
+        // having
+        int value = 0;
+        int noValue = 0;
+        Action<int> onVal = _ => value++;
+        Action onNoVal = () => noValue++;
+        var observable = OptIntEnum.Concat(OptNoneIntEnum).ToObservable().OnHasNoValue(onNoVal, onVal);
 
-        Optional<string> Converter(string input)
-        {
-            invoked = true;
-            return Optional.Some(input);
-        }
+        // when
+        var results = observable.ToEnumerable().ToList();
 
-        var result = option.Convert(Converter);
-
-        invoked.Should().BeTrue();
-        result.HasValue.Should().BeTrue();
+        // then
+        value.Should().Be(SomeCount);
+        noValue.Should().Be(NoneCount);
     }
 
     [Fact]
-    public void OptionConvertToOptionalInvokesConverterOnlyWithValue()
+    public void SelectValuesReturnsTheValues()
     {
-        var option = Optional.None<string>();
-        var invoked = false;
+        // having
+        var enumerable = OptIntEnum.Concat(OptNoneIntEnum);
+        var observable = enumerable.ToObservable().SelectValues();
 
-        Optional<string> Converter(string input)
-        {
-            invoked = true;
-            return Optional.Some(input);
-        }
+        // when
+        var expected = enumerable.Where(opt => opt.HasValue).Count();
+        var results = observable.ToEnumerable().Count();
 
-        var result = option.Convert(Converter);
-
-        invoked.Should().BeFalse();
-        result.HasValue.Should().BeFalse();
+        // then
+        expected.Should().Be(results);
+        results.Should().Be(SomeCount);
     }
 
     [Fact]
-    public void OptionConvertToOptionalCanReturnValue()
+    public void ValueOrInvokesSelector()
     {
-        const int TestData = 37;
+        // having
+        int invokeCount = 0;
+        Func<int> selector = () => { invokeCount++; return -1; };
+        var enumerable = OptIntEnum.Concat(OptNoneIntEnum);
+        var observable = enumerable.ToObservable().ValueOr(selector);
 
-        var option = Optional.Some(TestData.ToString());
+        // when
+        var expected = enumerable.Where(opt => !opt.HasValue).Count();
+        var results = observable.ToEnumerable().Where(i => i.Equals(-1)).Count();
 
-        var result = option.Convert(ParseInt);
-
-        result.HasValue.Should().BeTrue();
-        result.Value.Should().Be(TestData);
+        // then
+        expected.Should().Be(results);
+        results.Should().Be(NoneCount);
+        invokeCount.Should().Be(NoneCount);
     }
 
     [Fact]
-    public void OptionConvertToOptionalCanReturnNone()
+    public void ValueOrDefaultReturnsDefaultValues()
     {
-        var option = Optional.Some("Not An Int");
+        // having
+        var enumerable = OptStringWithNoneEnum;
+        var observable = enumerable.ToObservable().ValueOrDefault();
 
-        var result = option.Convert(ParseInt);
+        // when
+        var expected = enumerable.Where(opt => !opt.HasValue).Count();
+        var results = observable.ToEnumerable().Where(str => str == default).Count();
 
-        result.HasValue.Should().BeFalse();
+        // then
+        expected.Should().Be(results);
+        results.Should().Be(NoneCount);
     }
 
     [Fact]
-    public void OptionConvertToOptionalThrowsIfConverterIsNull()
+    public void ValueOrThrowFailsWithGeneratedError()
     {
-        var caught = false;
+        // having
+        var expectedError = new Exception("Nope");
+        var exceptionGenerator = () => expectedError;
+        var enumerable = OptStringWithNoneEnum;
+        var observable = enumerable.ToObservable().ValueOrThrow(exceptionGenerator);
+        var receivedError = default(Exception);
 
-        Func<string, Optional<string>>? converter = null;
+        // when
+        using var cleanup = observable.Subscribe(_ => { }, err => receivedError = err);
 
-        try
-        {
-            Optional.None<string>().Convert(converter!);
-        }
-        catch (ArgumentNullException)
-        {
-            caught = true;
-        }
-
-        caught.Should().BeTrue();
+        // then
+        receivedError.Should().Be(expectedError);
     }
 
-    [Fact]
-    public void OptionOrElseInvokesWithoutValue()
-    {
-        var option = Optional.None<string>();
-        var invoked = false;
-
-        Optional<string> Fallback()
-        {
-            invoked = true;
-            return Optional.None<string>();
-        }
-
-        var result = option.OrElse(Fallback);
-
-        invoked.Should().BeTrue();
-    }
-
-    [Fact]
-    public void OptionOrElseInvokesOnlyWithoutValue()
-    {
-        var option = Optional.Some(string.Empty);
-        var invoked = false;
-
-        Optional<string> Fallback()
-        {
-            invoked = true;
-            return Optional.None<string>();
-        }
-
-        var result = option.OrElse(Fallback);
-
-        invoked.Should().BeFalse();
-    }
-
-    [Fact]
-    public void OptionOrElseCanReturnValue()
-    {
-        const string TestString = nameof(TestString);
-
-        var option = Optional.None<string>();
-        var result = option.OrElse(() => TestString);
-
-        result.HasValue.Should().BeTrue();
-        result.Value.Should().Be(TestString);
-    }
-
-    [Fact]
-    public void OptionOrElseCanReturnNone()
-    {
-        var option = Optional.None<string>();
-        var result = option.OrElse(Optional.None<string>);
-
-        result.HasValue.Should().BeFalse();
-    }
-
-    [Fact]
-    public void OptionOrElseCanBeChained()
-    {
-        const int Expected = unchecked((int)0xc001d00d);
-
-        var option = Optional.None<string>();
-        var result = option.OrElse(Optional.None<string>)
-                                      .OrElse(() => Optional.Some(Expected.ToString("x")))
-                                      .Convert(s => ParseInt(s).OrElse(() => ParseHex(s)));
-
-        result.HasValue.Should().BeTrue();
-        result.Value.Should().Be(Expected);
-    }
-
-    [Fact]
-    public void OptionOrElseThrowsIfFallbackIsNull()
-    {
-        var caught = false;
-
-        try
-        {
-            Optional.None<string>().OrElse(null!);
-        }
-        catch(ArgumentNullException)
-        {
-            caught = true;
-        }
-
-        caught.Should().BeTrue();
-    }
-
-    private static Optional<int> ParseInt(string input) =>
+    private static Optional<int> ParseIntOpt(string input) =>
         int.TryParse(input, out var result) ? Optional.Some(result) : Optional.None<int>();
 
-    private static Optional<int> ParseHex(string input) =>
-        int.TryParse(input, NumberStyles.HexNumber, null, out var result) ? Optional.Some(result) : Optional.None<int>();
+    private static int ParseInt(string input) => int.Parse(input);
 }

@@ -87,7 +87,6 @@ public static class OptionObservableExtensions
     /// or
     /// fallbackConverter.
     /// </exception>
-    /// <remarks>Observable version of <seealso cref="OptionExtensions.ConvertOr{TSource, TDestination}(Optional{TSource}, Func{TSource?, TDestination?}, Func{TDestination?})"/>.</remarks>
     public static IObservable<TDestination?> ConvertOr<TSource, TDestination>(this IObservable<Optional<TSource>> source, Func<TSource, TDestination?> converter, Func<TDestination?> fallbackConverter)
         where TSource : notnull
     {
@@ -119,8 +118,8 @@ public static class OptionObservableExtensions
     /// <exception cref="System.ArgumentNullException">
     /// source
     /// or
-    /// fallbackOperation.
-    /// </exception>
+        /// fallbackOperation.
+        /// </exception>
     /// <remarks>Observable version of <seealso cref="OptionExtensions.OrElse{T}(Optional{T}, Func{Optional{T}})"/>.</remarks>
     public static IObservable<Optional<T>> OrElse<T>(this IObservable<Optional<T>> source, Func<Optional<T>> fallbackOperation)
         where T : notnull
@@ -160,17 +159,7 @@ public static class OptionObservableExtensions
             throw new ArgumentNullException(nameof(action));
         }
 
-        return source.Do(optional =>
-        {
-            if (optional.HasValue)
-            {
-                action(optional.Value);
-            }
-            else
-            {
-                elseAction?.Invoke();
-            }
-        });
+        return source.Do(optional => optional.IfHasValue(action).Else(() => elseAction?.Invoke()));
     }
 
     /// <summary>
@@ -194,17 +183,7 @@ public static class OptionObservableExtensions
             throw new ArgumentNullException(nameof(action));
         }
 
-        return source.Do(optional =>
-        {
-            if (!optional.HasValue)
-            {
-                action();
-            }
-            else
-            {
-                elseAction?.Invoke(optional.Value);
-            }
-        });
+        return source.Do(optional => optional.IfHasValue(val => elseAction?.Invoke(val)).Else(action));
     }
 
     /// <summary>
@@ -284,18 +263,9 @@ public static class OptionObservableExtensions
         }
 
         return Observable.Create<T>(observer =>
-        {
-            return source.Subscribe(optional =>
-            {
-                if (optional.HasValue && optional.Value is not null)
-                {
-                    observer.OnNext(optional.Value);
-                }
-                else
-                {
-                    observer.OnError(exceptionGenerator());
-                }
-            }, observer.OnError, observer.OnCompleted);
-        });
+            source.Subscribe(
+                optional => optional.IfHasValue(val => observer.OnNext(val)).Else(() => observer.OnError(exceptionGenerator())),
+                observer.OnError,
+                observer.OnCompleted));
     }
 }
