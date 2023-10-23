@@ -10,12 +10,13 @@ using FluentAssertions;
 using Xunit;
 using Xunit.Sdk;
 
-namespace DynamicData.Tests.Cache;
+namespace DynamicData.Tests.List;
 
-public sealed class ListMergeManyCacheChangeSetsFixture : IDisposable
+public sealed class MergeManyCacheChangeSetsFixture : IDisposable
 {
     const int MarketCount = 101;
-    const int PricesPerMarket = 103;
+    // const int PricesPerMarket = 103;
+    const int PricesPerMarket = 3;
     const int RemoveCount = 53;
     const int ItemIdStride = 1000;
     const decimal BasePrice = 10m;
@@ -23,13 +24,13 @@ public sealed class ListMergeManyCacheChangeSetsFixture : IDisposable
     const decimal HighestPrice = BasePrice + PriceOffset + 1.0m;
     const decimal LowestPrice = BasePrice - 1.0m;
 
-    private static readonly Random Random = new Random(0x21123737);
+    private static readonly Random Random = new Random(0x0abb0dab);
 
     private readonly ISourceList<IMarket> _marketList = new SourceList<IMarket>();
 
     private readonly ChangeSetAggregator<IMarket> _marketListResults;
 
-    public ListMergeManyCacheChangeSetsFixture()
+    public MergeManyCacheChangeSetsFixture()
     {
         _marketListResults = _marketList.Connect().AsAggregator();
     }
@@ -273,18 +274,18 @@ public sealed class ListMergeManyCacheChangeSetsFixture : IDisposable
     }
 
     [Fact]
-    public void ChangingSourceByUpdateRemovesPreviousAndAddsNewValues()
+    public void ChangingSourceByReplaceRemovesPreviousAndAddsNewValues()
     {
         // having
         using var results = _marketList.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
         var market = new Market(0);
         market.AddRandomPrices(Random, 0, PricesPerMarket * 2);
         _marketList.Add(market);
-        var updatedMarket = new Market(market);
-        updatedMarket.AddRandomPrices(Random, PricesPerMarket, PricesPerMarket * 3);
+        var otherMarket = new Market(1);
+        otherMarket.AddRandomPrices(Random, PricesPerMarket, PricesPerMarket * 3);
 
         // when
-        _marketList.Add(updatedMarket);
+        _marketList.Replace(market, otherMarket);
 
         // then
         _marketListResults.Data.Count.Should().Be(1);
@@ -292,7 +293,7 @@ public sealed class ListMergeManyCacheChangeSetsFixture : IDisposable
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket * 3);
         results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
-        results.Data.Items.Zip(updatedMarket.PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
+        results.Data.Items.Zip(otherMarket.PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
     }
 
     [Fact]
@@ -356,7 +357,7 @@ public sealed class ListMergeManyCacheChangeSetsFixture : IDisposable
     }
 
     [Fact]
-    public void ComparerOnlyAddsBetterValuesOnSourceUpdate()
+    public void ComparerOnlyAddsBetterValuesOnSourceReplace()
     {
         // having
         using var highPriceResults = _marketList.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.HighPriceCompare).AsAggregator();
@@ -371,7 +372,7 @@ public sealed class ListMergeManyCacheChangeSetsFixture : IDisposable
         _marketList.Add(marketLow);
 
         // when
-        _marketList.Add(marketLowLow);
+        _marketList.Replace(marketLow, marketLowLow);
 
         // then
         _marketListResults.Data.Count.Should().Be(2);

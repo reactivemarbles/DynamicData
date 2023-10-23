@@ -2953,7 +2953,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        return others.Prepend(source).ToArray().MergeChangeSets(completable: true, equalityComparer, comparer);
+        return source.EnumerateOne().Concat(others).ToArray().MergeChangeSets(completable: true, equalityComparer, comparer);
     }
 
     /// <summary>
@@ -2972,7 +2972,7 @@ public static class ObservableCacheEx
     {
         if (comparer == null) throw new ArgumentNullException(nameof(comparer));
 
-        return others.Prepend(source).ToArray().MergeChangeSets(completable: true, equalityComparer: null, comparer);
+        return source.EnumerateOne().Concat(others).ToArray().MergeChangeSets(completable: true, equalityComparer: null, comparer);
     }
 
     /// <summary>

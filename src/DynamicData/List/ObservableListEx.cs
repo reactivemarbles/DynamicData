@@ -73,7 +73,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>An observable which emits the change set.</returns>
-    public static IObservable<IChangeSet<TObject>> AddKey<TObject>(this IObservable<IChangeSet<TObject>> source, Func<TObject> keySelector)
+    public static IObservable<IChangeSet<TObject, TKey>> AddKey<TObject, TKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
     {
@@ -87,7 +87,7 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(keySelector));
         }
 
-        return source.Select(changes => new ChangeSet<TObject>(new AddKeyEnumerator<TObject>(changes, keySelector)));
+        return source.Select(changes => new ChangeSet<TObject, TKey>(new AddKeyEnumerator<TObject, TKey>(changes, keySelector)));
     }
 
     /// <summary>
