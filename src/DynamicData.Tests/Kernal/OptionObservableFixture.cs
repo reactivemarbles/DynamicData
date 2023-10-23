@@ -35,6 +35,7 @@ public class OptionObservableFixture
         var nullConverter = (Func<int, double>)null!;
         var nullOptionalConverter = (Func<int, Optional<double>>)null!;
         var converter = (Func<int, double>)(i => i);
+        var nullFallback = (Func<int>)null!;
         var nullConvertFallback = (Func<double>)null!;
         var nullOptionalFallback = (Func<Optional<int>>)null!;
         var action = (Action)null!;
@@ -56,6 +57,7 @@ public class OptionObservableFixture
         var onHasNoValue = () => nullObservable.OnHasNoValue(action);
         var onHasNoValue2 = () => neverObservable.OnHasNoValue(action);
         var selectValues = () => nullObservable.SelectValues();
+        var valueOr = () => nullObservable.ValueOr(nullFallback);
         var valueOrDefault = () => nullObservable.ValueOrDefault();
         var valueOrThrow1 = () => nullObservable.ValueOrThrow(nullExceptionGenerator);
         var valueOrThrow2 = () => neverObservable.ValueOrThrow(nullExceptionGenerator);
@@ -75,6 +77,7 @@ public class OptionObservableFixture
         onHasNoValue.Should().Throw<ArgumentNullException>();
         onHasNoValue2.Should().Throw<ArgumentNullException>();
         selectValues.Should().Throw<ArgumentNullException>();
+        valueOr.Should().Throw<ArgumentNullException>();
         valueOrDefault.Should().Throw<ArgumentNullException>();
         valueOrThrow1.Should().Throw<ArgumentNullException>();
         valueOrThrow2.Should().Throw<ArgumentNullException>();
