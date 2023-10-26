@@ -44,13 +44,13 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
                                             .IgnoreSameReferenceUpdate()
                                             .WhereReasonsAre(ChangeReason.Add, ChangeReason.Remove, ChangeReason.Update)
                                             .Synchronize(locker)
-                                            .Transform((obj, key) => new MergedCacheChangeTracker<TDestination, TDestinationKey>.MergeContainer(_changeSetSelector(obj, key)))
+                                            .Transform((obj, key) => new ChangeSetMergeContainer<TDestination, TDestinationKey>(_changeSetSelector(obj, key)))
                                             .AsObservableCache();
 
                 var shared = sourceCacheOfCaches.Connect().Publish();
 
                 // this is manages all of the changes
-                var changeTracker = new MergedCacheChangeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items.ToArray(), _comparer, _equalityComparer);
+                var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items.ToArray(), _comparer, _equalityComparer);
 
                 // merge the items back together
                 var allChanges = shared.MergeMany(mc => mc.Source)

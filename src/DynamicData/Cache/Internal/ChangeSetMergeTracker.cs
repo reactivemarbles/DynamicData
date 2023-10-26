@@ -2,37 +2,34 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Reactive.Linq;
-using System.Text;
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
-    where TDestination : notnull
-    where TDestinationKey : notnull
+internal class ChangeSetMergeTracker<TObject, TKey>
+    where TObject : notnull
+    where TKey : notnull
 {
-    private readonly ChangeAwareCache<TDestination, TDestinationKey> _resultCache;
-    private readonly Func<MergeContainer[]> _selectContainers;
-    private readonly IComparer<TDestination>? _comparer;
-    private readonly IEqualityComparer<TDestination>? _equalityComparer;
+    private readonly ChangeAwareCache<TObject, TKey> _resultCache;
+    private readonly Func<ChangeSetMergeContainer<TObject, TKey>[]> _selectContainers;
+    private readonly IComparer<TObject>? _comparer;
+    private readonly IEqualityComparer<TObject>? _equalityComparer;
 
-    public MergedCacheChangeTracker(Func<MergeContainer[]> selectContainers, IComparer<TDestination>? comparer, IEqualityComparer<TDestination>? equalityComparer)
+    public ChangeSetMergeTracker(Func<ChangeSetMergeContainer<TObject, TKey>[]> selectContainers, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
     {
-        _resultCache = new ChangeAwareCache<TDestination, TDestinationKey>();
+        _resultCache = new ChangeAwareCache<TObject, TKey>();
         _selectContainers = selectContainers;
         _comparer = comparer;
         _equalityComparer = equalityComparer;
     }
 
-    public void RemoveItems(IEnumerable<KeyValuePair<TDestinationKey, TDestination>> items, IObserver<IChangeSet<TDestination, TDestinationKey>> observer)
+    public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>> observer)
     {
         var sourceCaches = _selectContainers();
 
         // Update the Published Value for each item being removed
-        if (items is IList<KeyValuePair<TDestinationKey, TDestination>> list)
+        if (items is IList<KeyValuePair<TKey, TObject>> list)
         {
             // zero allocation enumerator
             foreach (var item in EnumerableIList.Create(list))
@@ -51,7 +48,7 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         EmitChanges(observer);
     }
 
-    public void ProcessChangeSet(IChangeSet<TDestination, TDestinationKey> changes, IObserver<IChangeSet<TDestination, TDestinationKey>> observer)
+    public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>> observer)
     {
         var sourceCaches = _selectContainers();
 
@@ -80,7 +77,7 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         EmitChanges(observer);
     }
 
-    private void EmitChanges(IObserver<IChangeSet<TDestination, TDestinationKey>> observer)
+    private void EmitChanges(IObserver<IChangeSet<TObject, TKey>> observer)
     {
         var changeSet = _resultCache.CaptureChanges();
         if (changeSet.Count != 0)
@@ -89,7 +86,7 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         }
     }
 
-    private void OnItemAdded(TDestination item, TDestinationKey key)
+    private void OnItemAdded(TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -104,7 +101,7 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         }
     }
 
-    private void OnItemRemoved(MergeContainer[] sourceCaches, TDestination item, TDestinationKey key)
+    private void OnItemRemoved(ChangeSetMergeContainer<TObject, TKey>[] sourceCaches, TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -116,7 +113,7 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         }
     }
 
-    private void OnItemUpdated(MergeContainer[] sources, TDestination item, TDestinationKey key, Optional<TDestination> prev)
+    private void OnItemUpdated(ChangeSetMergeContainer<TObject, TKey>[] sources, TObject item, TKey key, Optional<TObject> prev)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -155,7 +152,7 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         }
     }
 
-    private void OnItemRefreshed(MergeContainer[] sources, TDestination item, TDestinationKey key)
+    private void OnItemRefreshed(ChangeSetMergeContainer<TObject, TKey>[] sources, TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -176,7 +173,7 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         }
     }
 
-    private bool UpdateToBestValue(MergeContainer[] sources, TDestinationKey key, Optional<TDestination> current)
+    private bool UpdateToBestValue(ChangeSetMergeContainer<TObject, TKey>[] sources, TKey key, Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
         var candidate = SelectValue(sources, key);
@@ -205,11 +202,11 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         return true;
     }
 
-    private Optional<TDestination> SelectValue(MergeContainer[] sources, TDestinationKey key)
+    private Optional<TObject> SelectValue(ChangeSetMergeContainer<TObject, TKey>[] sources, TKey key)
     {
         if (sources.Length == 0)
         {
-            return Optional.None<TDestination>();
+            return Optional.None<TObject>();
         }
 
         var values = sources.Select(s => s.Cache.Lookup(key)).Where(opt => opt.HasValue);
@@ -222,24 +219,10 @@ internal class MergedCacheChangeTracker<TDestination, TDestinationKey>
         return values.FirstOrDefault();
     }
 
-    private bool CheckEquality(TDestination left, TDestination right) =>
+    private bool CheckEquality(TObject left, TObject right) =>
         ReferenceEquals(left, right) || (_equalityComparer?.Equals(left, right) ?? (_comparer?.Compare(left, right) == 0));
 
     // Return true if candidate should replace current as the observed downstream value
-    private bool ShouldReplace(TDestination candidate, TDestination current) =>
+    private bool ShouldReplace(TObject candidate, TObject current) =>
         !ReferenceEquals(candidate, current) && (_comparer?.Compare(candidate, current) < 0);
-
-    internal class MergeContainer
-    {
-        public MergeContainer(IObservable<IChangeSet<TDestination, TDestinationKey>> source)
-        {
-            Source = source.IgnoreSameReferenceUpdate().Do(Clone);
-        }
-
-        public Cache<TDestination, TDestinationKey> Cache { get; } = new();
-
-        public IObservable<IChangeSet<TDestination, TDestinationKey>> Source { get; }
-
-        private void Clone(IChangeSet<TDestination, TDestinationKey> changes) => Cache.Clone(changes);
-    }
 }

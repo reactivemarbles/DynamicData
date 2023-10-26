@@ -2984,7 +2984,7 @@ public static class ObservableCacheEx
     /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
     /// <returns>The result from merging the changesets together.</returns>
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer)
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer)
         where TObject : notnull
         where TKey : notnull
     {
@@ -3003,7 +3003,7 @@ public static class ObservableCacheEx
     /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
     /// <returns>The result from merging the changesets together.</returns>
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IComparer<TObject> comparer)
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IComparer<TObject> comparer)
         where TObject : notnull
         where TKey : notnull
     {
@@ -3022,7 +3022,7 @@ public static class ObservableCacheEx
     /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
     /// <returns>The result from merging the changesets together.</returns>
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
         where TObject : notnull
         where TKey : notnull
     {
@@ -3040,13 +3040,13 @@ public static class ObservableCacheEx
     /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
     /// <returns>The result from merging the changesets together.</returns>
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this ICollection<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
         where TObject : notnull
         where TKey : notnull
     {
         if (source == null) throw new ArgumentNullException(nameof(source));
 
-        return new MergeChangeSets<TObject, TKey>(source, completable, equalityComparer, comparer).Run();
+        return new MergeChangeSets<TObject, TKey>(source.ToList(), completable, equalityComparer, comparer).Run();
     }
 
     /// <summary>
