@@ -21,7 +21,7 @@ internal sealed class MergeChangeSets<TObject, TKey>
 
     private readonly IEqualityComparer<TObject>? _equalityComparer;
 
-    public MergeChangeSets(IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IEqualityComparer<TObject>? equalityComparer, IComparer<TObject>? comparer, IScheduler? scheduler = null)
+    public MergeChangeSets(IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject>? equalityComparer, IComparer<TObject>? comparer, bool completable, IScheduler? scheduler = null)
         : this(CreateContainerObservable(source, completable, scheduler), equalityComparer, comparer)
     {
     }
@@ -78,7 +78,7 @@ internal sealed class MergeChangeSets<TObject, TKey>
             {
                 observer.OnNext(new ChangeSet<ChangeSetMergeContainer<TObject, TKey>, int>(source.Select(CreateChange)));
 
-                if (!completable)
+                if (completable)
                 {
                     observer.OnCompleted();
                 }
