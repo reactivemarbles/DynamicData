@@ -165,10 +165,9 @@ internal class ChangeSetMergeTracker<TObject, TKey>
 
         // In the sorting case, a refresh requires doing a full update because any change could alter what the best value is
         // If we don't care about sorting OR if we do care, but re-selecting the best value didn't change anything
-        // AND the current value is the one being refreshed
-        if (((_comparer is null) || !UpdateToBestValue(sources, key, cached)) && CheckEquality(cached.Value, item))
+        // AND the current value is the exact one being refreshed, then emit the refresh downstream
+        if (((_comparer is null) || !UpdateToBestValue(sources, key, cached)) && ReferenceEquals(cached.Value, item))
         {
-            // Emit the refresh downstream
             _resultCache.Refresh(key);
         }
     }
