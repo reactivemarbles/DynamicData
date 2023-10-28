@@ -12,21 +12,21 @@ internal class ChangeSetMergeTracker<TObject, TKey>
     where TKey : notnull
 {
     private readonly ChangeAwareCache<TObject, TKey> _resultCache;
-    private readonly Func<ChangeSetMergeContainer<TObject, TKey>[]> _selectContainers;
+    private readonly Func<IEnumerable<ChangeSetCache<TObject, TKey>>> _selectCaches;
     private readonly IComparer<TObject>? _comparer;
     private readonly IEqualityComparer<TObject>? _equalityComparer;
 
-    public ChangeSetMergeTracker(Func<ChangeSetMergeContainer<TObject, TKey>[]> selectContainers, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
+    public ChangeSetMergeTracker(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
     {
         _resultCache = new ChangeAwareCache<TObject, TKey>();
-        _selectContainers = selectContainers;
+        _selectCaches = selectCaches;
         _comparer = comparer;
         _equalityComparer = equalityComparer;
     }
 
     public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>> observer)
     {
-        var sourceCaches = _selectContainers();
+        var sourceCaches = _selectCaches().ToArray();
 
         // Update the Published Value for each item being removed
         if (items is IList<KeyValuePair<TKey, TObject>> list)
@@ -50,7 +50,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
 
     public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>> observer)
     {
-        var sourceCaches = _selectContainers();
+        var sourceCaches = _selectCaches().ToArray();
 
         foreach (var change in changes.ToConcreteType())
         {
@@ -101,7 +101,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         }
     }
 
-    private void OnItemRemoved(ChangeSetMergeContainer<TObject, TKey>[] sourceCaches, TObject item, TKey key)
+    private void OnItemRemoved(ChangeSetCache<TObject, TKey>[] sourceCaches, TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -113,7 +113,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         }
     }
 
-    private void OnItemUpdated(ChangeSetMergeContainer<TObject, TKey>[] sources, TObject item, TKey key, Optional<TObject> prev)
+    private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, Optional<TObject> prev)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -152,7 +152,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         }
     }
 
-    private void OnItemRefreshed(ChangeSetMergeContainer<TObject, TKey>[] sources, TObject item, TKey key)
+    private void OnItemRefreshed(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -173,7 +173,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         }
     }
 
-    private bool UpdateToBestValue(ChangeSetMergeContainer<TObject, TKey>[] sources, TKey key, Optional<TObject> current)
+    private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
         var candidate = SelectValue(sources, key);
@@ -202,7 +202,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         return true;
     }
 
-    private Optional<TObject> SelectValue(ChangeSetMergeContainer<TObject, TKey>[] sources, TKey key)
+    private Optional<TObject> SelectValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
     {
         if (sources.Length == 0)
         {

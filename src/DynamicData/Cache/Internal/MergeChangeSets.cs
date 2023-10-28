@@ -15,7 +15,7 @@ internal sealed class MergeChangeSets<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<IChangeSet<ChangeSetMergeContainer<TObject, TKey>, int>> _source;
+    private readonly IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> _source;
 
     private readonly IComparer<TObject>? _comparer;
 
@@ -31,7 +31,7 @@ internal sealed class MergeChangeSets<TObject, TKey>
     {
     }
 
-    private MergeChangeSets(IObservable<IChangeSet<ChangeSetMergeContainer<TObject, TKey>, int>> source, IEqualityComparer<TObject>? equalityComparer, IComparer<TObject>? comparer)
+    private MergeChangeSets(IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> source, IEqualityComparer<TObject>? equalityComparer, IComparer<TObject>? comparer)
     {
         _source = source;
         _comparer = comparer;
@@ -45,38 +45,39 @@ internal sealed class MergeChangeSets<TObject, TKey>
             {
                 var locker = new object();
 
-                // Cache a local copy of the Merge Containers
+                // Create a local cache of Merge Containers
                 var localCache = _source.Synchronize(locker).AsObservableCache();
 
                 // Set up the change tracker
-                var changeTracker = new ChangeSetMergeTracker<TObject, TKey>(() => localCache.Items.ToArray(), _comparer, _equalityComparer);
+                var changeTracker = new ChangeSetMergeTracker<TObject, TKey>(() => localCache.Items, _comparer, _equalityComparer);
 
-                // merge all of the changes together
-                var subscription = localCache.Connect().MergeMany(mc => mc.Source).Synchronize(locker)
+                // Merge all of the changeset streams together and Process them with the change tracker which will emit the results
+                var subscription = localCache.Connect().MergeMany(mc => mc.Source)
+                                                        .Synchronize(locker)
                                                         .Subscribe(
                                                                 changes => changeTracker.ProcessChangeSet(changes, observer),
                                                                 observer.OnError,
                                                                 observer.OnCompleted);
 
-                return new CompositeDisposable(subscription, localCache);
+                return new CompositeDisposable(localCache, subscription);
             });
     }
 
     // Can optimize for the Add case because that's the only one that applies
-    private static Change<ChangeSetMergeContainer<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index) =>
-        new(ChangeReason.Add, index, new ChangeSetMergeContainer<TObject, TKey>(source));
+    private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index) =>
+        new(ChangeReason.Add, index, new ChangeSetCache<TObject, TKey>(source));
 
-    // Create a new ChangeSet with a single Add for each new sub-observable
-    private static IObservable<IChangeSet<ChangeSetMergeContainer<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source) =>
-        source.Select((src, index) => new ChangeSet<ChangeSetMergeContainer<TObject, TKey>, int>(new[] { CreateChange(src, index) }));
+    // Create a ChangeSet Observable that produces ChangeSets with a single Add event for each new sub-observable
+    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IObservable<IObservable<IChangeSet<TObject, TKey>>> source) =>
+        source.Select((src, index) => new ChangeSet<ChangeSetCache<TObject, TKey>, int>(new[] { CreateChange(src, index) }));
 
-    // Create a single ChangeSet with adds for all the values in the enum (and then completes, maybe)
-    private static IObservable<IChangeSet<ChangeSetMergeContainer<TObject, TKey>, int>> CreateContainerObservable(IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IScheduler? scheduler = null) =>
-        Observable.Create<IChangeSet<ChangeSetMergeContainer<TObject, TKey>, int>>(observer =>
+    // Create a ChangeSet Observable with a single event that adds all the values in the enum (and then completes, maybe)
+    private static IObservable<IChangeSet<ChangeSetCache<TObject, TKey>, int>> CreateContainerObservable(IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, bool completable, IScheduler? scheduler = null) =>
+        Observable.Create<IChangeSet<ChangeSetCache<TObject, TKey>, int>>(observer =>
         {
             void EmitChanges()
             {
-                observer.OnNext(new ChangeSet<ChangeSetMergeContainer<TObject, TKey>, int>(source.Select(CreateChange)));
+                observer.OnNext(new ChangeSet<ChangeSetCache<TObject, TKey>, int>(source.Select(CreateChange)));
 
                 if (completable)
                 {

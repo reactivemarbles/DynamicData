@@ -2,26 +2,25 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Reactive.Linq;
-using System.Text;
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class ChangeSetMergeContainer<TObject, TKey>
+/// <summary>
+/// Wraps an Observable ChangeSet while maintaining a copy of the aggregated changes.
+/// </summary>
+/// <typeparam name="TObject">ChangeSet Object Type.</typeparam>
+/// <typeparam name="TKey">ChangeSet Key Type.</typeparam>
+internal class ChangeSetCache<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    public ChangeSetMergeContainer(IObservable<IChangeSet<TObject, TKey>> source)
+    public ChangeSetCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
-        Source = source.IgnoreSameReferenceUpdate().Do(Clone);
+        Source = source.IgnoreSameReferenceUpdate().Do(Cache.Clone);
     }
 
     public Cache<TObject, TKey> Cache { get; } = new();
 
     public IObservable<IChangeSet<TObject, TKey>> Source { get; }
-
-    private void Clone(IChangeSet<TObject, TKey> changes) => Cache.Clone(changes);
 }

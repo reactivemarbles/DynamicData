@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
 using FluentAssertions;
-
+using Microsoft.Reactive.Testing;
 using Xunit;
 using Xunit.Sdk;
 
@@ -26,6 +26,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
     const decimal HighestPrice = BasePrice + PriceOffset + 1.0m;
     const decimal LowestPrice = BasePrice - 1.0m;
 
+    private static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
     private static readonly Random Random = new Random(0x12291977);
 
     private readonly List<Market> _marketList = new ();
@@ -38,57 +39,114 @@ public sealed class MergeChangeSetsFixture : IDisposable
     public void NullChecks()
     {
         // having
-        var neverObservable = Observable.Never<Optional<int>>();
-        var nullObservable = (IObservable<Optional<int>>)null!;
-        var nullConverter = (Func<int, double>)null!;
-        var nullOptionalConverter = (Func<int, Optional<double>>)null!;
-        var converter = (Func<int, double>)(i => i);
-        var nullFallback = (Func<int>)null!;
-        var nullConvertFallback = (Func<double>)null!;
-        var nullOptionalFallback = (Func<Optional<int>>)null!;
-        var action = (Action)null!;
-        var actionVal = (Action<int>)null!;
-        var nullExceptionGenerator = (Func<Exception>)null!;
+        var emptyChangeSetObs = Observable.Empty<IChangeSet<int, int>>();
+        var nullChangeSetObs = (IObservable<IChangeSet<int, int>>)null!;
+        var emptyChangeSetObsObs = Observable.Empty< IObservable<IChangeSet<int, int>>>();
+        var nullChangeSetObsObs = (IObservable< IObservable<IChangeSet<int, int>>>)null!;
+        var nullComparer = (IComparer<int>)null!;
+        var nullEqualityComparer = (IEqualityComparer<int>)null!;
+        var nullChangeSetObsEnum = (IEnumerable<IObservable<IChangeSet<int, int>>>)null!;
+        var emptyChangeSetObsEnum = Enumerable.Empty<IObservable<IChangeSet<int, int>>>();
+        var comparer = new NoOpComparer<int>();
+        var equalityComparer = new NoOpEqualityComparer<int>();
 
         // when
-        var convert1 = () => nullObservable.Convert(nullConverter);
-        var convert2 = () => neverObservable.Convert(nullConverter);
-        var convertOpt1 = () => nullObservable.Convert(nullOptionalConverter);
-        var convertOpt2 = () => neverObservable.Convert(nullOptionalConverter);
-        var convertOr1 = () => nullObservable.ConvertOr(nullConverter, nullConvertFallback);
-        var convertOr2 = () => neverObservable.ConvertOr(nullConverter, nullConvertFallback);
-        var convertOr3 = () => neverObservable.ConvertOr(converter, nullConvertFallback);
-        var orElse1 = () => nullObservable.OrElse(nullOptionalFallback);
-        var orElse2 = () => neverObservable.OrElse(nullOptionalFallback);
-        var onHasValue = () => nullObservable.OnHasValue(actionVal);
-        var onHasValue2 = () => neverObservable.OnHasValue(actionVal);
-        var onHasNoValue = () => nullObservable.OnHasNoValue(action);
-        var onHasNoValue2 = () => neverObservable.OnHasNoValue(action);
-        var selectValues = () => nullObservable.SelectValues();
-        var valueOr = () => nullObservable.ValueOr(nullFallback);
-        var valueOrDefault = () => nullObservable.ValueOrDefault();
-        var valueOrThrow1 = () => nullObservable.ValueOrThrow(nullExceptionGenerator);
-        var valueOrThrow2 = () => neverObservable.ValueOrThrow(nullExceptionGenerator);
+        var obsobs = () => nullChangeSetObsObs.MergeChangeSets();
+        var obsobsComp = () => nullChangeSetObsObs.MergeChangeSets(comparer);
+        var obsobsComp1 = () => emptyChangeSetObsObs.MergeChangeSets(nullComparer);
+        var obsobsEq = () => nullChangeSetObsObs.MergeChangeSets(equalityComparer);
+        var obsobsEq1 = () => emptyChangeSetObsObs.MergeChangeSets(nullEqualityComparer);
+        var obsobsEqComp = () => nullChangeSetObsObs.MergeChangeSets(equalityComparer, comparer);
+        var obsobsEqComp1 = () => emptyChangeSetObsObs.MergeChangeSets(nullEqualityComparer, comparer);
+        var obsobsEqComp2 = () => emptyChangeSetObsObs.MergeChangeSets(equalityComparer, nullComparer);
+
+        var obspair = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObs);
+        var obspairB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObs);
+        var obspairComp = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObs, comparer);
+        var obspairCompB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObs, comparer);
+        var obspairComp1 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObs, nullComparer);
+        var obspairEq = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObs, equalityComparer);
+        var obspairEqB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObs, equalityComparer);
+        var obspairEq1 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObs, nullEqualityComparer);
+        var obspairEqComp = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObs, equalityComparer, comparer);
+        var obspairEqCompB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObs, equalityComparer, comparer);
+        var obspairEqComp1 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObs, nullEqualityComparer, comparer);
+        var obspairEqComp2 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObs, equalityComparer, nullComparer);
+        
+        var obsEnum = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum);
+        var obsEnumB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObsEnum);
+        var obsEnumComp = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum, comparer);
+        var obsEnumCompB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObsEnum, comparer);
+        var obsEnumComp1 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum, nullComparer);
+        var obsEnumEq = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum, equalityComparer);
+        var obsEnumEqB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObsEnum, equalityComparer);
+        var obsEnumEq1 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum, nullEqualityComparer);
+        var obsEnumEqComp = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum, equalityComparer, comparer);
+        var obsEnumEqCompB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObsEnum, equalityComparer, comparer);
+        var obsEnumEqComp1 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum, nullEqualityComparer, comparer);
+        var obsEnumEqComp2 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum, equalityComparer, nullComparer);
+
+        var enumObs = () => nullChangeSetObsEnum.MergeChangeSets();
+        var enumObsComp = () => nullChangeSetObsEnum.MergeChangeSets(comparer);
+        var enumObsComp1 = () => emptyChangeSetObsEnum.MergeChangeSets(nullComparer);
+        var enumObsEq = () => nullChangeSetObsEnum.MergeChangeSets(equalityComparer);
+        var enumObsEq1 = () => emptyChangeSetObsEnum.MergeChangeSets(nullEqualityComparer);
+        var enumObsEqComp = () => nullChangeSetObsEnum.MergeChangeSets(equalityComparer, comparer);
+        var enumObsEqComp1 = () => emptyChangeSetObsEnum.MergeChangeSets(nullEqualityComparer, comparer);
+        var enumObsEqComp2 = () => emptyChangeSetObsEnum.MergeChangeSets(equalityComparer, nullComparer);
 
         // then
-        convert1.Should().Throw<ArgumentNullException>();
-        convert2.Should().Throw<ArgumentNullException>();
-        convertOpt1.Should().Throw<ArgumentNullException>();
-        convertOpt2.Should().Throw<ArgumentNullException>();
-        convertOr1.Should().Throw<ArgumentNullException>();
-        convertOr2.Should().Throw<ArgumentNullException>();
-        convertOr3.Should().Throw<ArgumentNullException>();
-        orElse1.Should().Throw<ArgumentNullException>();
-        orElse2.Should().Throw<ArgumentNullException>();
-        onHasValue.Should().Throw<ArgumentNullException>();
-        onHasValue2.Should().Throw<ArgumentNullException>();
-        onHasNoValue.Should().Throw<ArgumentNullException>();
-        onHasNoValue2.Should().Throw<ArgumentNullException>();
-        selectValues.Should().Throw<ArgumentNullException>();
-        valueOr.Should().Throw<ArgumentNullException>();
-        valueOrDefault.Should().Throw<ArgumentNullException>();
-        valueOrThrow1.Should().Throw<ArgumentNullException>();
-        valueOrThrow2.Should().Throw<ArgumentNullException>();
+        emptyChangeSetObs.Should().NotBeNull();
+        emptyChangeSetObsObs.Should().NotBeNull();
+        emptyChangeSetObsEnum.Should().NotBeNull();
+        comparer.Should().NotBeNull();
+        equalityComparer.Should().NotBeNull();
+        nullChangeSetObs.Should().BeNull();
+        nullChangeSetObsObs.Should().BeNull();
+        nullComparer.Should().BeNull();
+        nullEqualityComparer.Should().BeNull();
+        nullChangeSetObsEnum.Should().BeNull();
+
+        obsobs.Should().Throw<ArgumentNullException>();
+        obsobsComp.Should().Throw<ArgumentNullException>();
+        obsobsComp1.Should().Throw<ArgumentNullException>();
+        obsobsEq.Should().Throw<ArgumentNullException>();
+        obsobsEq1.Should().Throw<ArgumentNullException>();
+        obsobsEqComp.Should().Throw<ArgumentNullException>();
+        obsobsEqComp1.Should().Throw<ArgumentNullException>();
+        obsobsEqComp2.Should().Throw<ArgumentNullException>();
+        obspair.Should().Throw<ArgumentNullException>();
+        obspairB.Should().Throw<ArgumentNullException>();
+        obspairComp.Should().Throw<ArgumentNullException>();
+        obspairCompB.Should().Throw<ArgumentNullException>();
+        obspairComp1.Should().Throw<ArgumentNullException>();
+        obspairEq.Should().Throw<ArgumentNullException>();
+        obspairEqB.Should().Throw<ArgumentNullException>();
+        obspairEq1.Should().Throw<ArgumentNullException>();
+        obspairEqComp.Should().Throw<ArgumentNullException>();
+        obspairEqCompB.Should().Throw<ArgumentNullException>();
+        obspairEqComp1.Should().Throw<ArgumentNullException>();
+        obspairEqComp2.Should().Throw<ArgumentNullException>();
+        obsEnum.Should().Throw<ArgumentNullException>();
+        obsEnumB.Should().Throw<ArgumentNullException>();
+        obsEnumComp.Should().Throw<ArgumentNullException>();
+        obsEnumCompB.Should().Throw<ArgumentNullException>();
+        obsEnumComp1.Should().Throw<ArgumentNullException>();
+        obsEnumEq.Should().Throw<ArgumentNullException>();
+        obsEnumEqB.Should().Throw<ArgumentNullException>();
+        obsEnumEq1.Should().Throw<ArgumentNullException>();
+        obsEnumEqComp.Should().Throw<ArgumentNullException>();
+        obsEnumEqCompB.Should().Throw<ArgumentNullException>();
+        obsEnumEqComp1.Should().Throw<ArgumentNullException>();
+        obsEnumEqComp2.Should().Throw<ArgumentNullException>();
+        enumObs.Should().Throw<ArgumentNullException>();
+        enumObsComp.Should().Throw<ArgumentNullException>();
+        enumObsComp1.Should().Throw<ArgumentNullException>();
+        enumObsEq.Should().Throw<ArgumentNullException>();
+        enumObsEq1.Should().Throw<ArgumentNullException>();
+        enumObsEqComp.Should().Throw<ArgumentNullException>();
+        enumObsEqComp1.Should().Throw<ArgumentNullException>();
+        enumObsEqComp2.Should().Throw<ArgumentNullException>();
     }
 
     [Fact]
@@ -96,7 +154,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
     {
         // having
         _marketList.AddRange(Enumerable.Range(0, MarketCount).Select(n => new Market(n)));
-        _marketList.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(Random, m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket));
+        _marketList.ForEach((m, index) => m.AddUniquePrices(Random, index, PricesPerMarket));
 
         // when
         using var pricesCache = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer).AsObservableCache();
@@ -484,6 +542,36 @@ public sealed class MergeChangeSetsFixture : IDisposable
     }
 
     [Fact]
+    public void EqualityComparerAndComparerWorkTogether()
+    {
+        // having
+        var market1 = Add(new Market(0));
+        var market2 = Add(new Market(1));
+
+        var results = market1.LatestPrices.MergeChangeSets(market2.LatestPrices, MarketPrice.EqualityComparer, MarketPrice.LatestPriceCompare).AsAggregator();
+        var resultsTimeStamp = market1.LatestPrices.MergeChangeSets(market2.LatestPrices, MarketPrice.EqualityComparerWithTimeStamp, MarketPrice.LatestPriceCompare).AsAggregator();
+        market1.AddRandomPrices(Random, 0, PricesPerMarket);
+        market2.UpdatePrices(0, PricesPerMarket, LowestPrice);
+
+        // when
+        market2.UpdatePrices(0, PricesPerMarket, LowestPrice);
+
+        // then
+        _marketList.Count.Should().Be(2);
+        results.Data.Count.Should().Be(PricesPerMarket);
+        results.Messages.Count.Should().Be(2);
+        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Refreshes.Should().Be(0);
+        resultsTimeStamp.Messages.Count.Should().Be(3);
+        resultsTimeStamp.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsTimeStamp.Summary.Overall.Removes.Should().Be(0);
+        resultsTimeStamp.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        resultsTimeStamp.Summary.Overall.Refreshes.Should().Be(0);
+    }
+
+    [Fact]
     public void EveryItemVisibleWhenSequenceCompletes()
     {
         // having
@@ -538,6 +626,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
     {
         // having
         _marketList.AddRange(Enumerable.Range(0, MarketCount).Select(n => new Market(n)));
+        _marketList.ForEach((m, index) => m.AddUniquePrices(Random, index, PricesPerMarket));
         var expectedError = new Exception("Test exception");
 
         var observables = _marketList.SkipLast(1).Select(m => m.LatestPrices)
@@ -552,6 +641,48 @@ public sealed class MergeChangeSetsFixture : IDisposable
         _marketList.Sum(m => m.PricesCache.Count).Should().Be(MarketCount * PricesPerMarket);
         results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
         results.Should().Be(expectedError);
+    }
+
+    [Fact]
+    public void ObservableObservableContainsAllAddedValues()
+    {
+        // having
+        var scheduler = new TestScheduler();
+        _marketList.AddRange(Enumerable.Range(0, MarketCount).Select(n => new Market(n)));
+        var marketObs = Observable.Interval(TimeSpan.FromSeconds(1), scheduler).Select(n => _marketList[(int)n]);
+        using var results = marketObs.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer).AsAggregator();
+        Enumerable.Range(0, MarketCount).ForEach(n => scheduler.AdvanceBy(Interval.Ticks));
+
+        // when
+        _marketList.ForEach((m, index) => m.AddUniquePrices(Random, index, PricesPerMarket));
+
+        // then
+        results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
+        results.Messages.Count.Should().Be(MarketCount);
+        results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(0);
+    }
+
+    [Fact]
+    public void ObservableObservableContainsAllExistingValues()
+    {
+        // having
+        var scheduler = new TestScheduler();
+        _marketList.AddRange(Enumerable.Range(0, MarketCount).Select(n => new Market(n)));
+        _marketList.ForEach((m, index) => m.AddUniquePrices(Random, index, PricesPerMarket));
+        var marketObs = Observable.Interval(TimeSpan.FromSeconds(1), scheduler).Select(n => _marketList[(int)n]);
+        using var results = marketObs.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer).AsAggregator();
+
+        // when
+        Enumerable.Range(0, MarketCount).ForEach(n => scheduler.AdvanceBy(Interval.Ticks));
+
+        // then
+        results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
+        results.Messages.Count.Should().Be(MarketCount);
+        results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(0);
     }
 
     public void Dispose()
@@ -602,37 +733,58 @@ public sealed class MergeChangeSetsFixture : IDisposable
 
         public MarketPrice CreatePrice(int itemId, decimal price) => new (itemId, price, Id);
 
-        public void AddRandomIdPrices(Random r, int count, int minId, int maxId) =>
+        public Market AddRandomIdPrices(Random r, int count, int minId, int maxId)
+        {
             _latestPrices.AddOrUpdate(Enumerable.Range(0, int.MaxValue).Select(_ => r.Next(minId, maxId)).Distinct().Take(count).Select(id => CreatePrice(id, RandomPrice(r))));
+            return this;
+        }
 
-        public void AddRandomPrices(Random r, int minId, int maxId) =>
+        public Market AddRandomPrices(Random r, int minId, int maxId)
+        {
             _latestPrices.AddOrUpdate(Enumerable.Range(minId, (maxId - minId)).Select(id => CreatePrice(id, RandomPrice(r))));
+            return this;
+        }
 
-        public void RefreshAllPrices(decimal newPrice) =>
+        public Market AddUniquePrices(Random r, int section, int count) => AddRandomPrices(r, section * ItemIdStride, (section * ItemIdStride) + count);
+
+        public Market RefreshAllPrices(decimal newPrice)
+        {
             _latestPrices.Edit(updater => updater.Items.ForEach(cp =>
             {
                 cp.Price = newPrice;
                 updater.Refresh(cp);
             }));
 
-        public void RefreshAllPrices(Random r) => RefreshAllPrices(RandomPrice(r));
+            return this;
+        }
 
-        public void RefreshPrice(int id, decimal newPrice) =>
+        public Market RefreshAllPrices(Random r) => RefreshAllPrices(RandomPrice(r));
+
+        public Market RefreshPrice(int id, decimal newPrice)
+        {
             _latestPrices.Edit(updater => updater.Lookup(id).IfHasValue(cp =>
             {
                 cp.Price = newPrice;
                 updater.Refresh(cp);
             }));
+            return this;
+        }
 
         public void RemoveAllPrices() => _latestPrices.Clear();
 
         public void RemovePrice(int itemId) => _latestPrices.Remove(itemId);
 
-        public void UpdateAllPrices(decimal newPrice) =>
+        public Market UpdateAllPrices(decimal newPrice)
+        {
             _latestPrices.Edit(updater => updater.AddOrUpdate(updater.Items.Select(cp => CreatePrice(cp.ItemId, newPrice))));
+            return this;
+        }
 
-        public void UpdatePrices(int minId, int maxId, decimal newPrice) =>
+        public Market UpdatePrices(int minId, int maxId, decimal newPrice)
+        {
             _latestPrices.AddOrUpdate(Enumerable.Range(minId, (maxId - minId)).Select(id => CreatePrice(id, newPrice)));
+            return this;
+        }
 
         public void Dispose() => _latestPrices.Dispose();
     }
@@ -642,6 +794,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
     private class MarketPrice
     {
         public static IEqualityComparer<MarketPrice> EqualityComparer { get; } = new CurrentPriceEqualityComparer();
+        public static IEqualityComparer<MarketPrice> EqualityComparerWithTimeStamp { get; } = new TimeStampPriceEqualityComparer();
         public static IComparer<MarketPrice> HighPriceCompare { get; } = new HighestPriceComparer();
         public static IComparer<MarketPrice> LowPriceCompare { get; } = new LowestPriceComparer();
         public static IComparer<MarketPrice> LatestPriceCompare { get; } = new LatestPriceComparer();
@@ -674,6 +827,12 @@ public sealed class MergeChangeSetsFixture : IDisposable
         private class CurrentPriceEqualityComparer : IEqualityComparer<MarketPrice>
         {
             public bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => x.MarketId.Equals(x.MarketId) && (x.ItemId == y.ItemId) && (x.Price == y.Price);
+            public int GetHashCode([DisallowNull] MarketPrice obj) => throw new NotImplementedException();
+        }
+
+        private class TimeStampPriceEqualityComparer : IEqualityComparer<MarketPrice>
+        {
+            public bool Equals([DisallowNull] MarketPrice x, [DisallowNull] MarketPrice y) => x.MarketId.Equals(x.MarketId) && (x.ItemId == y.ItemId) && (x.Price == y.Price) && (x.TimeStamp == y.TimeStamp);
             public int GetHashCode([DisallowNull] MarketPrice obj) => throw new NotImplementedException();
         }
 
@@ -720,6 +879,17 @@ public sealed class MergeChangeSetsFixture : IDisposable
         public string Name => Id.ToString("B");
 
         public Guid Id { get; }
+    }
+
+    class NoOpComparer<T> : IComparer<T>
+    {
+        public int Compare(T x, T y) => throw new NotImplementedException();
+    }
+
+    class NoOpEqualityComparer<T> : IEqualityComparer<T>
+    {
+        public bool Equals(T x, T y) => throw new NotImplementedException();
+        public int GetHashCode([DisallowNull] T obj) => throw new NotImplementedException();
     }
 }
 
