@@ -24,9 +24,9 @@ public sealed class MergeChangeSetsFixture : IDisposable
     const decimal LowestPrice = BasePrice - 1.0m;
 
     public static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
-    public static readonly Random Random = new (0x12291977);
+    public static readonly Random Random = new(0x12291977);
 
-    private readonly List<Market> _marketList = new ();
+    private readonly List<Market> _marketList = new();
 
     public MergeChangeSetsFixture()
     {
@@ -38,8 +38,8 @@ public sealed class MergeChangeSetsFixture : IDisposable
         // having
         var emptyChangeSetObs = Observable.Empty<IChangeSet<int, int>>();
         var nullChangeSetObs = (IObservable<IChangeSet<int, int>>)null!;
-        var emptyChangeSetObsObs = Observable.Empty< IObservable<IChangeSet<int, int>>>();
-        var nullChangeSetObsObs = (IObservable< IObservable<IChangeSet<int, int>>>)null!;
+        var emptyChangeSetObsObs = Observable.Empty<IObservable<IChangeSet<int, int>>>();
+        var nullChangeSetObsObs = (IObservable<IObservable<IChangeSet<int, int>>>)null!;
         var nullComparer = (IComparer<int>)null!;
         var nullEqualityComparer = (IEqualityComparer<int>)null!;
         var nullChangeSetObsEnum = (IEnumerable<IObservable<IChangeSet<int, int>>>)null!;
@@ -69,7 +69,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var obspairEqCompB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObs, equalityComparer, comparer);
         var obspairEqComp1 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObs, nullEqualityComparer, comparer);
         var obspairEqComp2 = () => emptyChangeSetObs.MergeChangeSets(emptyChangeSetObs, equalityComparer, nullComparer);
-        
+
         var obsEnum = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum);
         var obsEnumB = () => emptyChangeSetObs.MergeChangeSets(nullChangeSetObsEnum);
         var obsEnumComp = () => nullChangeSetObs.MergeChangeSets(emptyChangeSetObsEnum, comparer);
@@ -532,7 +532,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
         using var results = pricesCache.Connect().AsAggregator();
 
         // when
-            // Do not advance the scheduler so that nothing happens
+        // Do not advance the scheduler so that nothing happens
 
         // then
         _marketList.Count.Should().Be(MarketCount);
@@ -664,9 +664,9 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var results1 = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer, MarketPrice.LatestPriceCompare).AsAggregator();
         var results2 = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparerWithTimeStamp, MarketPrice.LatestPriceCompare).AsAggregator();
         market1.AddRandomPrices(Random, 0, PricesPerMarket);
-        market2.UpdatePrices(0, PricesPerMarket, LowestPrice-1);
+        market2.UpdatePrices(0, PricesPerMarket, LowestPrice - 1);
         // Update again, but only the timestamp will change, so results1 will ignore
-        market2.UpdatePrices(0, PricesPerMarket, LowestPrice-1);
+        market2.UpdatePrices(0, PricesPerMarket, LowestPrice - 1);
 
         // when
         // results1 will see this as an update because it ignored the last update
@@ -766,7 +766,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
         var scheduler = new TestScheduler();
         _marketList.AddRange(Enumerable.Range(0, MarketCount).Select(n => new Market(n)));
         _marketList.ForEach((m, index) => m.AddUniquePrices(Random, index, PricesPerMarket));
-        var marketObs = Observable.Interval(TimeSpan.FromSeconds(1), scheduler).Select(n => _marketList[(int)n]);
+        var marketObs = Observable.Interval(Interval, scheduler).Select(n => _marketList[(int)n]);
         using var results = marketObs.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer).AsAggregator();
 
         // when
@@ -781,13 +781,31 @@ public sealed class MergeChangeSetsFixture : IDisposable
     }
 
     [Fact]
+    public void MergedObservableWillFailIfAnyChangeChangeSetFails()
+    {
+        // having
+        _marketList.AddRange(Enumerable.Range(0, MarketCount).Select(n => new Market(n)));
+        _marketList.ForEach((m, index) => m.AddUniquePrices(Random, index, PricesPerMarket));
+        var expectedError = new Exception("Test exception");
+        var enumObservable = _marketList.Select(m => m.LatestPrices).Append(Observable.Throw<IChangeSet<MarketPrice, int>>(expectedError));
+
+        // when
+        using var results = enumObservable.MergeChangeSets().AsAggregator();
+
+        // then
+        _marketList.Count.Should().Be(MarketCount);
+        _marketList.Sum(m => m.PricesCache.Count).Should().Be(MarketCount * PricesPerMarket);
+        results.Data.Count.Should().Be(MarketCount * PricesPerMarket);
+        results.Error.Should().Be(expectedError);
+    }
+
+    [Fact]
     public void ObservableObservableWillFailIfSourceFails()
     {
         // having
         _marketList.AddRange(Enumerable.Range(0, MarketCount).Select(n => new Market(n)));
         _marketList.ForEach((m, index) => m.AddUniquePrices(Random, index, PricesPerMarket));
         var expectedError = new Exception("Test exception");
-
         var observables = _marketList.Select(m => m.LatestPrices).ToObservable().Concat(Observable.Throw<IObservable<IChangeSet<MarketPrice, int>>>(expectedError));
 
         // when
@@ -868,7 +886,7 @@ public sealed class MergeChangeSetsFixture : IDisposable
 
         public ISourceCache<MarketPrice, int> PricesCache => _latestPrices;
 
-        public MarketPrice CreatePrice(int itemId, decimal price) => new (itemId, price, Id);
+        public MarketPrice CreatePrice(int itemId, decimal price) => new(itemId, price, Id);
 
         public Market AddRandomIdPrices(Random r, int count, int minId, int maxId)
         {
