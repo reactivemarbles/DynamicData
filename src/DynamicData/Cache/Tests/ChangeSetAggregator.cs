@@ -35,7 +35,7 @@ public class ChangeSetAggregator<TObject, TKey> : IDisposable
 
         Data = published.AsObservableCache();
 
-        var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex);
+        var results = published.Subscribe(updates => Messages.Add(updates), ex => Error = ex, () => Completed = true);
         var summariser = published.CollectUpdateStats().Subscribe(summary => Summary = summary, _ => { });
         var connected = published.Connect();
 
@@ -64,6 +64,14 @@ public class ChangeSetAggregator<TObject, TKey> : IDisposable
     /// The error.
     /// </value>
     public Exception? Error { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether or not the ChangeSet fired OnCompleted.
+    /// </summary>
+    /// <value>
+    /// Boolean Value.
+    /// </value>
+    public bool Completed { get; private set; }
 
     /// <summary>
     /// Gets the messages.
