@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace DynamicData.List.Internal;
 
@@ -25,8 +27,43 @@ internal sealed class MergeMany<T, TDestination>
         return Observable.Create<TDestination>(
             observer =>
             {
+                var counter = new SubscriptionCounter();
                 var locker = new object();
-                return _source.SubscribeMany(t => _observableSelector(t).Synchronize(locker).Subscribe(observer.OnNext)).Subscribe(_ => { }, observer.OnError);
+                var disposable = _source.Concat(counter.DeferCleanup)
+                                                .SubscribeMany(t =>
+                                                {
+                                                    counter.Added();
+                                                    return _observableSelector(t).Synchronize(locker).Finally(() => counter.Finally()).Subscribe(observer.OnNext, _ => { }, () => { });
+                                                })
+                                                .Subscribe(_ => { }, observer.OnError, observer.OnCompleted);
+
+                return new CompositeDisposable(disposable, counter);
             });
+    }
+
+    private sealed class SubscriptionCounter : IDisposable
+    {
+        private readonly Subject<IChangeSet<T>> _subject = new();
+        private int _subscriptionCount = 1;
+
+        public IObservable<IChangeSet<T>> DeferCleanup => Observable.Defer(() =>
+        {
+            CheckCompleted();
+            return _subject.AsObservable();
+        });
+
+        public void Added() => _ = Interlocked.Increment(ref _subscriptionCount);
+
+        public void Finally() => CheckCompleted();
+
+        public void Dispose() => _subject.Dispose();
+
+        private void CheckCompleted()
+        {
+            if (Interlocked.Decrement(ref _subscriptionCount) == 0)
+            {
+                _subject.OnCompleted();
+            }
+        }
     }
 }
