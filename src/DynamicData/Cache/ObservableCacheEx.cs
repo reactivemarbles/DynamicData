@@ -2939,6 +2939,350 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+
+        return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer: null).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject> equalityComparer)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+
+        return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer: null).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject> equalityComparer, IComparer<TObject> comparer)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="other">The Other Observable ChangeSet.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IChangeSet<TObject, TKey>> other, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (other == null) throw new ArgumentNullException(nameof(other));
+
+        return new[] { source, other }.MergeChangeSets(scheduler, completable);
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="other">The Other Observable ChangeSet.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IChangeSet<TObject, TKey>> other, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (other == null) throw new ArgumentNullException(nameof(other));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return new[] { source, other }.MergeChangeSets(comparer, scheduler, completable);
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="other">The Other Observable ChangeSet.</param>
+    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IChangeSet<TObject, TKey>> other, IEqualityComparer<TObject> equalityComparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (other == null) throw new ArgumentNullException(nameof(other));
+        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+
+        return new[] { source, other }.MergeChangeSets(equalityComparer, scheduler, completable);
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  Merges both observable changesets into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="other">The Other Observable ChangeSet.</param>
+    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<IChangeSet<TObject, TKey>> other, IEqualityComparer<TObject> equalityComparer, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (other == null) throw new ArgumentNullException(nameof(other));
+        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return new[] { source, other }.MergeChangeSets(equalityComparer, comparer, scheduler, completable);
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="others">The Other Observable ChangeSets.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IEnumerable<IObservable<IChangeSet<TObject, TKey>>> others, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (others == null) throw new ArgumentNullException(nameof(others));
+
+        return source.EnumerateOne().Concat(others).MergeChangeSets(scheduler, completable);
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="others">The Other Observable ChangeSets.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IEnumerable<IObservable<IChangeSet<TObject, TKey>>> others, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (others == null) throw new ArgumentNullException(nameof(others));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return source.EnumerateOne().Concat(others).MergeChangeSets(comparer, scheduler, completable);
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="others">The Other Observable ChangeSets.</param>
+    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IEnumerable<IObservable<IChangeSet<TObject, TKey>>> others, IEqualityComparer<TObject> equalityComparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (others == null) throw new ArgumentNullException(nameof(others));
+        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+
+        return source.EnumerateOne().Concat(others).MergeChangeSets(equalityComparer, scheduler, completable);
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  Merges the source changeset and the collection of other changesets together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="others">The Other Observable ChangeSets.</param>
+    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IEnumerable<IObservable<IChangeSet<TObject, TKey>>> others, IEqualityComparer<TObject> equalityComparer, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (others == null) throw new ArgumentNullException(nameof(others));
+        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return source.EnumerateOne().Concat(others).MergeChangeSets(equalityComparer, comparer, scheduler, completable);
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+
+        return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer: null, completable, scheduler).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer, completable, scheduler).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject> equalityComparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+
+        return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer: null, completable, scheduler).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to Merge except it is ChangeSet aware.  All of the observable changesets are merged together into a single stream of ChangeSet events that correctly handles multiple Keys.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="equalityComparer"><see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple changesets.</param>
+    /// <param name="scheduler">(Optional) <see cref="IScheduler"/> instance to use when enumerating the collection.</param>
+    /// <param name="completable">Whether or not the result Observable should complete if all the changesets complete.</param>
+    /// <returns>The result from merging the changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IEnumerable<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject> equalityComparer, IComparer<TObject> comparer, IScheduler? scheduler = null, bool completable = true)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer, completable, scheduler).Run();
+    }
+
+    /// <summary>
     /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TObject, TKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
