@@ -42,14 +42,14 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
                 // Transform to an observable list of merge containers.
                 var sourceListOfCaches = _source
                                             .WhereReasonsAreNot(ListChangeReason.Moved, ListChangeReason.Refresh)
+                                            .Transform(obj => new ChangeSetCache<TDestination, TDestinationKey>(_changeSetSelector(obj)))
                                             .Synchronize(locker)
-                                            .Transform(obj => new MergedCacheChangeTracker<TDestination, TDestinationKey>.MergeContainer(_changeSetSelector(obj)))
                                             .AsObservableList();
 
                 var shared = sourceListOfCaches.Connect().Publish();
 
                 // this is manages all of the changes
-                var changeTracker = new MergedCacheChangeTracker<TDestination, TDestinationKey>(() => sourceListOfCaches.Items.ToArray(), _comparer, _equalityComparer);
+                var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceListOfCaches.Items.ToArray(), _comparer, _equalityComparer);
 
                 // when a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
