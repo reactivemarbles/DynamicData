@@ -56,18 +56,17 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         if (keys is IList<TKey> list)
         {
             // zero allocation enumerator
-            foreach (var item in EnumerableIList.Create(list))
+            foreach (var key in EnumerableIList.Create(list))
             {
-                ForceEvaluate(sourceCaches, item.Value, item.Key);
+                ForceEvaluate(sourceCaches, key);
             }
         }
         else
         {
-            foreach (var item in keys)
+            foreach (var key in keys)
             {
-                ForceEvaluate(sourceCaches, item.Key);
+                ForceEvaluate(sourceCaches, key);
             }
-            UpdateToBestValue(sources, key, cached)
         }
 
         EmitChanges(observer);
@@ -150,10 +149,13 @@ internal class ChangeSetMergeTracker<TObject, TKey>
             return;
         }
 
+        // If the Previous value is missing or is the same as the current value
+        bool isUpdatingCurrent = !prev.HasValue || CheckEquality(prev.Value, cached.Value);
+
         if (_comparer is null)
         {
-            // If the current value (or there is no way to tell) is being replaced by a different value
-            if ((!prev.HasValue || CheckEquality(prev.Value, cached.Value)) && !CheckEquality(item, cached.Value))
+            // If not using the comparer and the current value is being replaced by a different value
+            if (isUpdatingCurrent && !CheckEquality(item, cached.Value))
             {
                 // Update to the new value
                 _resultCache.AddOrUpdate(item, key);
@@ -161,14 +163,16 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         }
         else
         {
-            // The current value is being replaced (or there is no way to tell), so do a full update to select the best one from all the choices
-            if (!prev.HasValue || CheckEquality(prev.Value, cached.Value))
+            // If using the comparer and the current value is one being updated
+            if (isUpdatingCurrent)
             {
+                // The known best value has been replaced, so pick a new one from all the choices
                 UpdateToBestValue(sources, key, cached);
             }
             else
             {
-                // If the current value isn't being replaced, check to see if the replacement value is better than the current one
+                // If the current value isn't being replaced, its only required to check to see if the
+                // new value is better than the current one
                 if (ShouldReplace(item, cached.Value))
                 {
                     _resultCache.AddOrUpdate(item, key);
@@ -181,19 +185,33 @@ internal class ChangeSetMergeTracker<TObject, TKey>
     {
         var cached = _resultCache.Lookup(key);
 
-        // Received a refresh change for a key that hasn't been seen yet
-        // Nothing can be done, so ignore it
-        if (!cached.HasValue)
+        // Only proceed if the key has a current value
+        if (cached.HasValue)
         {
-            return;
-        }
+            // If the refreshed value is the current one
+            if (ReferenceEquals(cached.Value, item))
+            {
+                // When using a compare and the current value has changed, so do a full search for
+                // the best value to make sure the current choice is still the best choice
+                if ((_comparer is not null) && UpdateToBestValue(sources, key, cached))
+                {
+                    // A new value was choosen, so there's nothing left to do
+                    return;
+                }
 
-        // In the sorting case, a refresh requires doing a full update because any change could alter what the best value is
-        // If we don't care about sorting OR if we do care, but re-selecting the best value didn't change anything
-        // AND the current value is the exact one being refreshed, then emit the refresh downstream
-        if (((_comparer is null) || !UpdateToBestValue(sources, key, cached)) && ReferenceEquals(cached.Value, item))
-        {
-            _resultCache.Refresh(key);
+                // The current one is still the best choice and it was refreshed, so
+                // emit the Refresh downstream so consumers will see it.
+                _resultCache.Refresh(key);
+            }
+            else
+            {
+                // If the current value isn't being refreshed and using a comparer,
+                // check if the refreshed item is now a better choice
+                if ((_comparer is not null) && ShouldReplace(item, cached.Value))
+                {
+                    _resultCache.AddOrUpdate(item, key);
+                }
+            }
         }
     }
 
@@ -214,7 +232,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
     private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
-        var candidate = SelectValue(sources, key);
+        var candidate = LookupBestValue(sources, key);
         if (candidate.HasValue)
         {
             // If there isn't a current value
@@ -240,7 +258,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         return true;
     }
 
-    private Optional<TObject> SelectValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
+    private Optional<TObject> LookupBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
     {
         if (sources.Length == 0)
         {
