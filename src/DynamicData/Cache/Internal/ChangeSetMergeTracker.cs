@@ -48,6 +48,31 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         EmitChanges(observer);
     }
 
+    public void RefreshItems(IEnumerable<TKey> keys, IObserver<IChangeSet<TObject, TKey>> observer)
+    {
+        var sourceCaches = _selectCaches().ToArray();
+
+        // Update the Published Value for each item being removed
+        if (keys is IList<TKey> list)
+        {
+            // zero allocation enumerator
+            foreach (var item in EnumerableIList.Create(list))
+            {
+                ForceEvaluate(sourceCaches, item.Value, item.Key);
+            }
+        }
+        else
+        {
+            foreach (var item in keys)
+            {
+                ForceEvaluate(sourceCaches, item.Key);
+            }
+            UpdateToBestValue(sources, key, cached)
+        }
+
+        EmitChanges(observer);
+    }
+
     public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>> observer)
     {
         var sourceCaches = _selectCaches().ToArray();
@@ -170,6 +195,20 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         {
             _resultCache.Refresh(key);
         }
+    }
+
+    private void ForceEvaluate(ChangeSetCache<TObject, TKey>[] sources, TKey key)
+    {
+        var cached = _resultCache.Lookup(key);
+
+        // Received a refresh change for a key that hasn't been seen yet
+        // Nothing can be done, so ignore it
+        if (!cached.HasValue)
+        {
+            return;
+        }
+
+        UpdateToBestValue(sources, key, cached);
     }
 
     private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, Optional<TObject> current)
