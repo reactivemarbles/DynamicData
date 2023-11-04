@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
@@ -10,6 +13,8 @@ internal interface IMarket
 {
     public string Name { get; }
 
+    public double Rating { get; set; }
+
     public Guid Id { get; }
 
     public IObservable<IChangeSet<MarketPrice, int>> LatestPrices { get; }
@@ -18,6 +23,8 @@ internal interface IMarket
 internal class Market : IMarket, IDisposable
 {
     private readonly ISourceCache<MarketPrice, int> _latestPrices = new SourceCache<MarketPrice, int>(p => p.ItemId);
+
+    public static IComparer<IMarket> RatingCompare { get; } = new RatingComparer();
 
     private Market(string name, Guid id)
     {
@@ -36,6 +43,8 @@ internal class Market : IMarket, IDisposable
     public string Name { get; }
 
     public Guid Id { get; }
+
+    public double Rating { get; set; }
 
     public IObservable<IChangeSet<MarketPrice, int>> LatestPrices => _latestPrices.Connect();
 
@@ -89,6 +98,15 @@ internal class Market : IMarket, IDisposable
     public Market UpdatePrices(int minId, int maxId, decimal newPrice) => this.With(_ => _latestPrices.AddOrUpdate(Enumerable.Range(minId, maxId - minId).Select(id => CreatePrice(id, newPrice))));
 
     public void Dispose() => _latestPrices.Dispose();
+
+    private class RatingComparer : IComparer<IMarket>
+    {
+        public int Compare([DisallowNull] IMarket x, [DisallowNull] IMarket y)
+        {
+            // Higher ratings go first
+            return y.Rating.CompareTo(x.Rating);
+        }
+    }
 }
 
 
@@ -105,6 +123,8 @@ internal class FixedMarket : IMarket
     public IObservable<IChangeSet<MarketPrice, int>> LatestPrices { get; }
 
     public string Name => Id.ToString("B");
+
+    public double Rating { get; set; }
 
     public Guid Id { get; }
 }

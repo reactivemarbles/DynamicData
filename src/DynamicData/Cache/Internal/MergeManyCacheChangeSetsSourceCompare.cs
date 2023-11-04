@@ -27,11 +27,11 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
     private readonly bool _reevalOnRefresh;
 
-    public MergeManyCacheChangeSetsSourceCompare(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> selector, IComparer<TObject> comparer, IEqualityComparer<TDestination>? equalityComparer, bool reevalOnRefresh = false)
+    public MergeManyCacheChangeSetsSourceCompare(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> selector, IComparer<TObject> parentCompare, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? childCompare, bool reevalOnRefresh = false)
     {
         _source = source;
         _changeSetSelector = (obj, key) => selector(obj, key).Transform(dest => new ParentChildEntry(obj, dest));
-        _comparer = new ParentChildCompare(comparer);
+        _comparer = (childCompare is null) ? new ParentOnlyCompare(parentCompare) : new ParentChildCompare(parentCompare, childCompare);
         _equalityComparer = (equalityComparer != null) ? new ParentChildEqualityCompare(equalityComparer) : null;
         _reevalOnRefresh = reevalOnRefresh;
     }
@@ -93,11 +93,30 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
     private class ParentChildCompare : IComparer<ParentChildEntry>
     {
-        private readonly IComparer<TObject> _comparer;
+        private readonly IComparer<TObject> _comparerParent;
+        private readonly IComparer<TDestination> _comparerChild;
 
-        public ParentChildCompare(IComparer<TObject> comparer) => _comparer = comparer;
+        public ParentChildCompare(IComparer<TObject> comparerParent, IComparer<TDestination> comparerChild)
+        {
+            _comparerParent = comparerParent;
+            _comparerChild = comparerChild;
+        }
 
-        public int Compare(ParentChildEntry x, ParentChildEntry y) => _comparer.Compare(x.Parent, y.Parent);
+        public int Compare(ParentChildEntry x, ParentChildEntry y) =>
+            _comparerParent.Compare(x.Parent, y.Parent) switch
+            {
+                0 => _comparerChild.Compare(x.Child, x.Child),
+                int i => i,
+            };
+    }
+
+    private class ParentOnlyCompare : IComparer<ParentChildEntry>
+    {
+        private readonly IComparer<TObject> _comparerParent;
+
+        public ParentOnlyCompare(IComparer<TObject> comparer) => _comparerParent = comparer;
+
+        public int Compare(ParentChildEntry x, ParentChildEntry y) => _comparerParent.Compare(x.Parent, y.Parent);
     }
 
     private class ParentChildEqualityCompare : IEqualityComparer<ParentChildEntry>
