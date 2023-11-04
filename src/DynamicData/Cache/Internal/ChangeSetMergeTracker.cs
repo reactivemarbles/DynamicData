@@ -185,33 +185,19 @@ internal class ChangeSetMergeTracker<TObject, TKey>
     {
         var cached = _resultCache.Lookup(key);
 
-        // Only proceed if the key has a current value
-        if (cached.HasValue)
+        // Received a refresh change for a key that hasn't been seen yet
+        // Nothing can be done, so ignore it
+        if (!cached.HasValue)
         {
-            // If the refreshed value is the current one
-            if (ReferenceEquals(cached.Value, item))
-            {
-                // When using a compare and the current value has changed, so do a full search for
-                // the best value to make sure the current choice is still the best choice
-                if ((_comparer is not null) && UpdateToBestValue(sources, key, cached))
-                {
-                    // A new value was choosen, so there's nothing left to do
-                    return;
-                }
+            return;
+        }
 
-                // The current one is still the best choice and it was refreshed, so
-                // emit the Refresh downstream so consumers will see it.
-                _resultCache.Refresh(key);
-            }
-            else
-            {
-                // If the current value isn't being refreshed and using a comparer,
-                // check if the refreshed item is now a better choice
-                if ((_comparer is not null) && ShouldReplace(item, cached.Value))
-                {
-                    _resultCache.AddOrUpdate(item, key);
-                }
-            }
+        // In the sorting case, a refresh requires doing a full update because any change could alter what the best value is
+        // If we don't care about sorting OR if we do care, but re-selecting the best value didn't change anything
+        // AND the current value is the exact one being refreshed, then emit the refresh downstream
+        if (((_comparer is null) || !UpdateToBestValue(sources, key, cached)) && ReferenceEquals(cached.Value, item))
+        {
+            _resultCache.Refresh(key);
         }
     }
 
