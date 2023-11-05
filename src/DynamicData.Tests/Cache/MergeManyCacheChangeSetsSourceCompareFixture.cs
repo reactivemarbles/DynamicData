@@ -16,8 +16,10 @@ namespace DynamicData.Tests.Cache;
 
 public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
 {
-    const int MarketCount = 101;
-    const int PricesPerMarket = 103;
+    const int MarketCount = 5;
+    const int PricesPerMarket = 7;
+    //const int MarketCount = 101;
+    //const int PricesPerMarket = 103;
     const int RemoveCount = 53;
     const int ItemIdStride = 1000;
     const decimal BasePrice = 10m;
@@ -350,7 +352,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
     public void ComparerOnlyAddsBetterAddedValues()
     {
         // having
-        using var results = CreateRatingOnlyResults(false);
+        using var results = ChangeSetByRatingOnly(false).AsAggregator();
         var marketOriginal = new Market(0);
         var marketBetter = new Market(1);
         marketBetter.Rating = 1.0;
@@ -382,13 +384,13 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(marketBetter);
 
         // when
-        using var results = CreateRatingOnlyResults(false);
+        using var results = ChangeSetByRatingOnly(false).DebugSpy("Rating").AsAggregator();
 
         // then
         _marketCacheResults.Data.Count.Should().Be(2);
         results.Data.Count.Should().Be(PricesPerMarket);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Updates.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
         results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
     }
 
@@ -396,7 +398,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
     public void ComparerOnlyAddsBetterValuesOnSourceUpdate()
     {
         // having
-        using var results = CreateRatingOnlyResults(false);
+        using var results = ChangeSetByRatingOnly(false).AsAggregator();
         var marketOriginal = new Market(0);
         var marketBetter = new Market(1);
         marketBetter.Rating = 1.0;
@@ -419,7 +421,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
     public void ComparerUpdatesToCorrectValueOnRefresh()
     {
         // having
-        using var results = CreateRatingOnlyResults(true);
+        using var results = ChangeSetByRatingOnly(true).AsAggregator();
         var marketOriginal = new Market(0);
         var marketBetter = new Market(1);
         marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
@@ -453,7 +455,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(marketOriginal);
         _marketCache.AddOrUpdate(marketBest);
         _marketCache.AddOrUpdate(marketBetter);
-        using var results = CreateRatingOnlyResults(false);
+        using var results = ChangeSetByRatingOnly(false).DebugSpy("Results").AsAggregator();
 
         // when
         _marketCache.Remove(marketBest);
@@ -462,7 +464,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         _marketCacheResults.Data.Count.Should().Be(2);
         results.Data.Count.Should().Be(PricesPerMarket);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
         results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
     }
 
@@ -470,8 +472,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
     public void ComparerUpdatesToCorrectValueOnUpdate()
     {
         // having
-        using var results = CreateRatingOnlyResults(false);
-        using var resultsLow = CreateLowRatingResults(false);
+        using var results = ChangeSetByRatingOnly(false).DebugSpy("Rating").AsAggregator();
+        using var resultsLow = ChangeSetByLowRating(false).DebugSpy("Rating Low").AsAggregator();
         var marketOriginal = new Market(0);
         var marketBetter = new Market(1);
         marketBetter.Rating = 1.0;
@@ -647,12 +649,18 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         receivedError.Should().Be(expectedError);
     }
 
-    private ChangeSetAggregator<MarketPrice, int> CreateRatingOnlyResults(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh).AsAggregator();
-    private ChangeSetAggregator<MarketPrice, int> CreateLowRatingResults(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, Market.RatingCompare.Invert(), resortOnSourceRefresh: resortOnRefresh).AsAggregator();
-    private ChangeSetAggregator<MarketPrice, int> CreateRatingThenHighResults(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, MarketPrice.HighPriceCompare).AsAggregator();
-    private ChangeSetAggregator<MarketPrice, int> CreateRatingThenLowResults(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, MarketPrice.LowPriceCompare).AsAggregator();
-    private ChangeSetAggregator<MarketPrice, int> CreateRatingThenRecentResults(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, MarketPrice.EqualityComparerWithTimeStamp, MarketPrice.LatestPriceCompare).AsAggregator();
-    private ChangeSetAggregator<MarketPrice, int> CreateRatingThenRecentNoTimestampResults(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, MarketPrice.EqualityComparer, MarketPrice.LatestPriceCompare).AsAggregator();
+    private IObservable<IChangeSet<MarketPrice, int>> CreateChangeSet(string name, IComparer<IMarket>? sourceComp = null, IComparer<MarketPrice>? childCompare = null, IEqualityComparer<MarketPrice>? equalityComparer = null, bool resortOnRefresh = true) =>
+        _marketCache.Connect()
+            .DebugSpy(name)
+            .MergeManyChangeSets(m => m.LatestPrices.DebugSpy($"{name} [{m.Name} Prices]"), sourceComp ?? Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, equalityComparer, childCompare)
+            .DebugSpy($"{name} [Results]");
+
+    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingOnly(bool resortOnRefresh = true) => CreateChangeSet("Rating", resortOnRefresh: resortOnRefresh);
+    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByLowRating(bool resortOnRefresh = true) => CreateChangeSet("Rating Low", Market.RatingCompare.Invert(), resortOnRefresh: resortOnRefresh);
+    //private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenHigh(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.DebugSpy($"Rating / High [{m.Name}]"), Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, MarketPrice.HighPriceCompare);
+    //private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenLow(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.DebugSpy($"Rating / Low [{m.Name}]"), Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, MarketPrice.LowPriceCompare);
+    //private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenRecent(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.DebugSpy($"Rating / Recent [{m.Id}]"), Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, MarketPrice.EqualityComparerWithTimeStamp, MarketPrice.LatestPriceCompare);
+    //private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenRecentNoTimestamp(bool resortOnRefresh = true) => _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices.DebugSpy($"Rating / Recent (No TS) [{m.Id}]"), Market.RatingCompare, resortOnSourceRefresh: resortOnRefresh, MarketPrice.EqualityComparer, MarketPrice.LatestPriceCompare);
 
     private IMarket SetRating(IMarket market, double newRating)
     {

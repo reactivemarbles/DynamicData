@@ -2,6 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -78,7 +79,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             }).Transform(entry => entry.Child);
     }
 
-    private readonly struct ParentChildEntry
+    private class ParentChildEntry
     {
         public ParentChildEntry(TObject parent, TDestination child)
         {
@@ -102,12 +103,15 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             _comparerChild = comparerChild;
         }
 
-        public int Compare(ParentChildEntry x, ParentChildEntry y) =>
-            _comparerParent.Compare(x.Parent, y.Parent) switch
-            {
-                0 => _comparerChild.Compare(x.Child, x.Child),
-                int i => i,
-            };
+        public int Compare(ParentChildEntry? x, ParentChildEntry? y) =>
+            (x is null && y is null) ? 0
+                : (x is null) ? 1
+                : (y is null) ? -1
+                : _comparerParent.Compare(x.Parent, y.Parent) switch
+                    {
+                        0 => _comparerChild.Compare(x.Child, x.Child),
+                        int i => i,
+                    };
     }
 
     private class ParentOnlyCompare : IComparer<ParentChildEntry>
@@ -116,7 +120,11 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
         public ParentOnlyCompare(IComparer<TObject> comparer) => _comparerParent = comparer;
 
-        public int Compare(ParentChildEntry x, ParentChildEntry y) => _comparerParent.Compare(x.Parent, y.Parent);
+        public int Compare(ParentChildEntry? x, ParentChildEntry? y) =>
+            (x is null && y is null) ? 0
+                : (x is null) ? 1
+                : (y is null) ? -1
+                : _comparerParent.Compare(x.Parent, y.Parent);
     }
 
     private class ParentChildEqualityCompare : IEqualityComparer<ParentChildEntry>
@@ -125,7 +133,10 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
         public ParentChildEqualityCompare(IEqualityComparer<TDestination> comparer) => _comparer = comparer;
 
-        public bool Equals(ParentChildEntry x, ParentChildEntry y) => _comparer.Equals(x.Child, y.Child);
+        public bool Equals(ParentChildEntry? x, ParentChildEntry? y) =>
+            (x is null && y is null) ? true
+                : (x is null || y is null) ? false
+                : _comparer.Equals(x.Child, y.Child);
 
         public int GetHashCode(ParentChildEntry obj) => _comparer.GetHashCode(obj.Child);
     }

@@ -262,7 +262,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
     }
 
     private bool CheckEquality(TObject left, TObject right) =>
-        ReferenceEquals(left, right) || (_equalityComparer?.Equals(left, right) ?? (_comparer?.Compare(left, right) == 0));
+        ReferenceEquals(left, right) || (_equalityComparer?.Equals(left, right) ?? false);
 
     // Return true if candidate should replace current as the observed downstream value
     private bool ShouldReplace(TObject candidate, TObject current) =>
