@@ -79,7 +79,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             }).Transform(entry => entry.Child);
     }
 
-    private class ParentChildEntry
+    private sealed class ParentChildEntry
     {
         public ParentChildEntry(TObject parent, TDestination child)
         {
@@ -92,7 +92,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
         public TDestination Child { get; }
     }
 
-    private class ParentChildCompare : IComparer<ParentChildEntry>
+    private sealed class ParentChildCompare : Comparer<ParentChildEntry>
     {
         private readonly IComparer<TObject> _comparerParent;
         private readonly IComparer<TDestination> _comparerChild;
@@ -103,41 +103,47 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
             _comparerChild = comparerChild;
         }
 
-        public int Compare(ParentChildEntry? x, ParentChildEntry? y) =>
-            (x is null && y is null) ? 0
-                : (x is null) ? 1
-                : (y is null) ? -1
-                : _comparerParent.Compare(x.Parent, y.Parent) switch
-                    {
-                        0 => _comparerChild.Compare(x.Child, x.Child),
-                        int i => i,
-                    };
+        public override int Compare(ParentChildEntry? x, ParentChildEntry? y) => (x, y) switch
+        {
+            (not null, not null) => _comparerParent.Compare(x.Parent, y.Parent) switch
+                                    {
+                                        0 => _comparerChild.Compare(x.Child, x.Child),
+                                        int i => i,
+                                    },
+            (null, null) => 0,
+            (null, not null) => 1,
+            (not null, null) => -1,
+        };
     }
 
-    private class ParentOnlyCompare : IComparer<ParentChildEntry>
+    private sealed class ParentOnlyCompare : Comparer<ParentChildEntry>
     {
         private readonly IComparer<TObject> _comparerParent;
 
         public ParentOnlyCompare(IComparer<TObject> comparer) => _comparerParent = comparer;
 
-        public int Compare(ParentChildEntry? x, ParentChildEntry? y) =>
-            (x is null && y is null) ? 0
-                : (x is null) ? 1
-                : (y is null) ? -1
-                : _comparerParent.Compare(x.Parent, y.Parent);
+        public override int Compare(ParentChildEntry? x, ParentChildEntry? y) => (x, y) switch
+        {
+            (not null, not null) => _comparerParent.Compare(x.Parent, x.Parent),
+            (null, null) => 0,
+            (null, not null) => 1,
+            (not null, null) => -1,
+        };
     }
 
-    private class ParentChildEqualityCompare : IEqualityComparer<ParentChildEntry>
+    private sealed class ParentChildEqualityCompare : EqualityComparer<ParentChildEntry>
     {
         private readonly IEqualityComparer<TDestination> _comparer;
 
         public ParentChildEqualityCompare(IEqualityComparer<TDestination> comparer) => _comparer = comparer;
 
-        public bool Equals(ParentChildEntry? x, ParentChildEntry? y) =>
-            (x is null && y is null) ? true
-                : (x is null || y is null) ? false
-                : _comparer.Equals(x.Child, y.Child);
+        public override bool Equals(ParentChildEntry? x, ParentChildEntry? y) => (x, y) switch
+        {
+            (not null, not null) => _comparer.Equals(x.Child, y.Child),
+            (null, null) => true,
+            _ => false,
+        };
 
-        public int GetHashCode(ParentChildEntry obj) => _comparer.GetHashCode(obj.Child);
+        public override int GetHashCode(ParentChildEntry obj) => _comparer.GetHashCode(obj.Child);
     }
 }
