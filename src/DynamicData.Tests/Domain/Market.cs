@@ -58,44 +58,43 @@ internal class Market : IMarket, IDisposable
         return this;
     }
 
-    public Market AddRandomPrices(int minId, int maxId, Func<decimal> randPrices)
-    {
-        _latestPrices.AddOrUpdate(Enumerable.Range(minId, maxId - minId).Select(id => CreatePrice(id, randPrices())));
-        return this;
-    }
+    public Market AddUniquePrices(int section, int count, int stride, Func<decimal> getPrice) => SetPrices(section * stride, section * stride + count, getPrice);
 
-    public Market AddUniquePrices(int section, int count, int stride, Func<decimal> randPrices) => AddRandomPrices(section * stride, section * stride + count, randPrices);
-
-    public Market RefreshAllPrices(decimal newPrice)
-    {
-        _latestPrices.Edit(updater => updater.Items.ForEach(cp =>
-        {
-            cp.Price = newPrice;
-            updater.Refresh(cp);
-        }));
-
-        return this;
-    }
-
-    public Market RefreshAllPrices(Func<decimal> randPrices) => RefreshAllPrices(randPrices());
-
-    public Market RefreshPrice(int id, decimal newPrice)
-    {
+    public Market RefreshPrice(int id, decimal newPrice) => this.With(_ =>
         _latestPrices.Edit(updater => updater.Lookup(id).IfHasValue(cp =>
         {
             cp.Price = newPrice;
             updater.Refresh(cp);
-        }));
-        return this;
-    }
+        })));
+
+    public Market RefreshAllPrices(Func<int, decimal> getNewPrice) => this.With(_ =>
+        _latestPrices.Edit(updater => updater.Items.ForEach(cp =>
+        {
+            cp.Price = getNewPrice(cp.ItemId);
+            updater.Refresh(cp);
+        })));
+
+    public Market RefreshAllPrices(Func<decimal> getNewPrice) => RefreshAllPrices(_ => getNewPrice());
+    
+    public Market RefreshAllPrices(decimal newPrice) => RefreshAllPrices(_ => newPrice);
 
     public void RemoveAllPrices() => this.With(_ => _latestPrices.Clear());
 
     public void RemovePrice(int itemId) => this.With(_ => _latestPrices.Remove(itemId));
 
-    public Market UpdateAllPrices(decimal newPrice) => this.With(_ => _latestPrices.Edit(updater => updater.AddOrUpdate(updater.Items.Select(cp => CreatePrice(cp.ItemId, newPrice)))));
+    public Market UpdateAllPrices(Func<int, decimal> getNewPrice) => this.With(_ =>
+        _latestPrices.Edit(updater => updater.AddOrUpdate(updater.Items.Select(cp => CreatePrice(cp.ItemId, getNewPrice(cp.ItemId))))));
 
-    public Market SetPrices(int minId, int maxId, decimal newPrice) => this.With(_ => _latestPrices.AddOrUpdate(Enumerable.Range(minId, maxId - minId).Select(id => CreatePrice(id, newPrice))));
+    public Market UpdateAllPrices(Func<decimal> getNewPrice) => UpdateAllPrices(_ => getNewPrice());
+
+    public Market UpdateAllPrices(decimal newPrice) => UpdateAllPrices(_ => newPrice);
+
+    public Market SetPrices(int minId, int maxId, Func<int, decimal> getPrice) => this.With(_ =>
+        _latestPrices.AddOrUpdate(Enumerable.Range(minId, maxId - minId).Select(id => CreatePrice(id, getPrice(id)))));
+
+    public Market SetPrices(int minId, int maxId, Func<decimal> getPrice) => SetPrices(minId, maxId, i => getPrice());
+
+    public Market SetPrices(int minId, int maxId, decimal newPrice) => SetPrices(minId, maxId, _ => newPrice);
 
     public void Dispose() => _latestPrices.Dispose();
 

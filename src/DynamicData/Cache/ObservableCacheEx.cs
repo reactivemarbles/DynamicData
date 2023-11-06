@@ -27,7 +27,7 @@ namespace DynamicData;
 public static class ObservableCacheEx
 {
     private const int DefaultSortResetThreshold = 100;
-    private const bool DefaultResortOnSourceRefresh = false;
+    private const bool DefaultResortOnSourceRefresh = true;
 
     /// <summary>
     /// Inject side effects into the stream using the specified adaptor.

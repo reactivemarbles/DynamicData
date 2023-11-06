@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Kernel;
@@ -10,25 +8,28 @@ using DynamicData.Tests.Utilities;
 using FluentAssertions;
 
 using Xunit;
-using Xunit.Sdk;
 
 namespace DynamicData.Tests.Cache;
 
 public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
 {
+#if DEBUG
     const int MarketCount = 5;
     const int PricesPerMarket = 7;
     const int RemoveCount = 3;
-    //const int MarketCount = 101;
-    //const int PricesPerMarket = 103;
-    //const int RemoveCount = 53;
+#else
+    const int MarketCount = 101;
+    const int PricesPerMarket = 103;
+    const int RemoveCount = 53;
+#endif
+
     const int ItemIdStride = 1000;
     const decimal BasePrice = 10m;
     const decimal PriceOffset = 10m;
     const decimal HighestPrice = BasePrice + PriceOffset + 1.0m;
     const decimal LowestPrice = BasePrice - 1.0m;
 
-    private static readonly Random Random = new Random(0x21123737);
+    private static readonly Random Random = new (0x10012022);
 
     private static decimal GetRandomPrice() => MarketPrice.RandomPrice(Random, BasePrice, PriceOffset);
 
@@ -138,7 +139,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         // having
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = ChangeSetByRating().AsAggregator();
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
 
         // when
         _marketCache.AddOrUpdate(markets);
@@ -151,6 +152,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(0);
         results.Summary.Overall.Updates.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
     }
 
     [Fact]
@@ -162,7 +164,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(markets);
 
         // when
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
 
         // then
         _marketCacheResults.Data.Count.Should().Be(MarketCount);
@@ -172,6 +174,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(0);
         results.Summary.Overall.Updates.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
     }
 
     [Fact]
@@ -181,7 +184,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = ChangeSetByRating().AsAggregator();
         _marketCache.AddOrUpdate(markets);
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
 
         // when
         markets.ForEach(m => m.RefreshAllPrices(GetRandomPrice));
@@ -206,8 +209,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         _marketCache.AddOrUpdate(markets);
 
         // when
-        markets[0].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        markets[1].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[0].SetPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[1].SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // then
         _marketCacheResults.Data.Count.Should().Be(2);
@@ -227,8 +230,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         using var results = ChangeSetByRating().AsAggregator();
         markets[0].Rating = 1.0;
         _marketCache.AddOrUpdate(markets);
-        markets[0].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        markets[1].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[0].SetPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[1].SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // when
         markets[1].RemoveAllPrices();
@@ -251,8 +254,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         using var results = ChangeSetByRating().AsAggregator();
         markets[0].Rating = 1.0;
         _marketCache.AddOrUpdate(markets);
-        markets[0].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        markets[1].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[0].SetPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[1].SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // when
         _marketCache.Remove(markets[0]);
@@ -277,8 +280,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         using var results = ChangeSetByRating().AsAggregator();
         markets[0].Rating = 1.0;
         _marketCache.AddOrUpdate(markets);
-        markets[0].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        markets[1].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[0].SetPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[1].SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // when
         markets[1].RefreshAllPrices(GetRandomPrice);
@@ -302,8 +305,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         using var results = ChangeSetByRating().AsAggregator();
         markets[0].Rating = 1.0;
         _marketCache.AddOrUpdate(markets);
-        markets[0].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        markets[1].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[0].SetPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[1].SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // when
         SetRating(markets[1], 2.0);
@@ -326,8 +329,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         using var results = ChangeSetByRating(resortOnRefresh: false).AsAggregator();
         markets[0].Rating = 1.0;
         _marketCache.AddOrUpdate(markets);
-        markets[0].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        markets[1].AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[0].SetPrices(0, PricesPerMarket, GetRandomPrice);
+        markets[1].SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // when
         SetRating(markets[1], 2.0);
@@ -349,7 +352,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = ChangeSetByRating().AsAggregator();
         _marketCache.AddOrUpdate(markets);
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
 
         // when
         markets.ForEach(m => m.PricesCache.Edit(updater => updater.RemoveKeys(updater.Keys.Take(RemoveCount))));
@@ -372,7 +375,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
         using var results = ChangeSetByRating().AsAggregator();
         _marketCache.AddOrUpdate(markets);
-        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.AddRandomPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
+        markets.Select((m, index) => new { Market = m, Index = index }).ForEach(m => m.Market.SetPrices(m.Index * ItemIdStride, (m.Index * ItemIdStride) + PricesPerMarket, GetRandomPrice));
 
         // when
         _marketCache.Edit(updater => updater.RemoveKeys(updater.Keys.Take(RemoveCount)));
@@ -392,10 +395,10 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
         var market = new Market(0);
-        market.AddRandomPrices(0, PricesPerMarket * 2, GetRandomPrice);
+        market.SetPrices(0, PricesPerMarket * 2, GetRandomPrice);
         _marketCache.AddOrUpdate(market);
         var updatedMarket = new Market(market);
-        updatedMarket.AddRandomPrices(PricesPerMarket, PricesPerMarket * 3, GetRandomPrice);
+        updatedMarket.SetPrices(PricesPerMarket, PricesPerMarket * 3, GetRandomPrice);
 
         // when
         _marketCache.AddOrUpdate(updatedMarket);
@@ -406,6 +409,7 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket * 3);
         results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
         results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Refreshes.Should().Be(0);
         results.Data.Items.Zip(updatedMarket.PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
     }
 
@@ -417,24 +421,26 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         var market = new Market(0);
         var marketWorse = new Market(1);
         SetRating(marketWorse, -1);
-        market.AddRandomPrices(0, PricesPerMarket * 2, GetRandomPrice);
-        marketWorse.AddRandomPrices(0, PricesPerMarket * 2, GetRandomPrice);
+        market.SetPrices(0, PricesPerMarket * 2, GetRandomPrice);
+        marketWorse.SetPrices(0, PricesPerMarket * 2, GetRandomPrice);
         _marketCache.AddOrUpdate(market);
         _marketCache.AddOrUpdate(marketWorse);
 
         var updatedMarket = new Market(market);
-        updatedMarket.AddRandomPrices(PricesPerMarket, PricesPerMarket * 3, GetRandomPrice);
+        updatedMarket.SetPrices(PricesPerMarket, PricesPerMarket * 3, GetRandomPrice);
 
         // when
         _marketCache.AddOrUpdate(updatedMarket);
 
         // then
         _marketCacheResults.Data.Count.Should().Be(2);
-        results.Data.Count.Should().Be(PricesPerMarket * 2);
+        results.Data.Count.Should().Be(PricesPerMarket * 3);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket * 3);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
-        results.Data.Items.Zip(updatedMarket.PricesCache.Items).ForEach(pair => pair.First.Should().Be(pair.Second));
+        results.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
+        results.Data.Items.Take(PricesPerMarket).Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketWorse.Id));
+        results.Data.Items.Skip(PricesPerMarket).Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(updatedMarket.Id));
     }
 
     [Fact]
@@ -446,9 +452,9 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         var marketBest = new Market(2);
         marketBetter.Rating = 1.0;
         marketBest.Rating = 5.0;
-        marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketBetter.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketBest.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        marketBetter.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        marketBest.SetPrices(0, PricesPerMarket, GetRandomPrice);
         _marketCache.AddOrUpdate(marketOriginal);
         _marketCache.AddOrUpdate(marketBest);
         _marketCache.AddOrUpdate(marketBetter);
@@ -462,6 +468,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         results.Data.Count.Should().Be(PricesPerMarket);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         results.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
         results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
     }
 
@@ -474,8 +482,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         var marketOriginal = new Market(0);
         var marketBetter = new Market(1);
         marketBetter.Rating = 1.0;
-        marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketBetter.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        marketBetter.SetPrices(0, PricesPerMarket, GetRandomPrice);
         _marketCache.AddOrUpdate(marketOriginal);
 
         // when
@@ -486,10 +494,14 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         results.Data.Count.Should().Be(PricesPerMarket);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
         results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
         resultsLow.Data.Count.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Updates.Should().Be(0);
+        resultsLow.Summary.Overall.Removes.Should().Be(0);
+        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
         resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
     }
 
@@ -500,8 +512,8 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         var marketOriginal = new Market(0);
         var marketBetter = new Market(1);
         marketBetter.Rating = 1.0;
-        marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketBetter.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        marketBetter.SetPrices(0, PricesPerMarket, GetRandomPrice);
         _marketCache.AddOrUpdate(marketOriginal);
         _marketCache.AddOrUpdate(marketBetter);
 
@@ -514,10 +526,14 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         results.Data.Count.Should().Be(PricesPerMarket);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
         results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
         resultsLow.Data.Count.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Updates.Should().Be(0);
+        resultsLow.Summary.Overall.Removes.Should().Be(0);
+        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
         resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
     }
 
@@ -530,22 +546,26 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         var marketOriginal = new Market(0);
         var marketBetter = new Market(1);
         marketBetter.Rating = 1.0;
-        marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
         _marketCache.AddOrUpdate(marketOriginal);
         _marketCache.AddOrUpdate(marketBetter);
 
         // when
-        marketBetter.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        marketBetter.SetPrices(0, PricesPerMarket, GetRandomPrice);
 
         // then
         _marketCacheResults.Data.Count.Should().Be(2);
         results.Data.Count.Should().Be(PricesPerMarket);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
         results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
         resultsLow.Data.Count.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Updates.Should().Be(0);
+        resultsLow.Summary.Overall.Removes.Should().Be(0);
+        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
         resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
     }
 
@@ -555,26 +575,45 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         // having
         using var results = ChangeSetByRating(false).AsAggregator();
         using var resultsLow = ChangeSetByLowRating(false).AsAggregator();
+        using var resultsRefresh = ChangeSetByRating(true).AsAggregator();
+        using var resultsLowRefresh = ChangeSetByLowRating(true).AsAggregator();
         var marketOriginal = new Market(0);
         var marketBetter = new Market(1);
-        marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketBetter.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        marketBetter.Rating = -1.0;
+        marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        marketBetter.SetPrices(0, PricesPerMarket, GetRandomPrice);
         _marketCache.AddOrUpdate(marketOriginal);
         _marketCache.AddOrUpdate(marketBetter);
 
         // when
-        SetRating(marketBetter, 1.0);
+        SetRating(marketBetter, 2.0);
 
         // then
         _marketCacheResults.Data.Count.Should().Be(2);
+        _marketCacheResults.Summary.Overall.Refreshes.Should().Be(1);
         results.Data.Count.Should().Be(PricesPerMarket);
         results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
+        results.Summary.Overall.Updates.Should().Be(0);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
+        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
         resultsLow.Data.Count.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLow.Summary.Overall.Updates.Should().Be(0);
-        resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        resultsLow.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        resultsLow.Summary.Overall.Removes.Should().Be(0);
+        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
+        resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
+        resultsRefresh.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsRefresh.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        resultsRefresh.Summary.Overall.Removes.Should().Be(0);
+        resultsRefresh.Summary.Overall.Refreshes.Should().Be(0);
+        resultsRefresh.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketBetter.Id));
+        resultsLowRefresh.Data.Count.Should().Be(PricesPerMarket);
+        resultsLowRefresh.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsLowRefresh.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        resultsLowRefresh.Summary.Overall.Removes.Should().Be(0);
+        resultsLowRefresh.Summary.Overall.Refreshes.Should().Be(0);
+        resultsLowRefresh.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
     }
 
     [Fact]
@@ -582,15 +621,15 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
     {
         // having
         using var resultsLow = ChangeSetByLowRating(false).AsAggregator();
-        using var resultsLowPrice = ChangeSetByRatingThenLow(false).AsAggregator();
-        using var resultsHighPrice = ChangeSetByRatingThenHigh(false).AsAggregator();
+        using var resultsLowPrice = ChangeSetByRatingThenLowPrice(false).AsAggregator();
+        using var resultsHighPrice = ChangeSetByRatingThenHighPrice(false).AsAggregator();
         var marketOriginal = new Market(0);
         var marketHighest = new Market(1);
         var marketLowest = new Market(2);
         marketLowest.Rating = marketHighest.Rating = 1.0;
-        marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
         marketHighest.SetPrices(0, PricesPerMarket, HighestPrice);
-        marketLowest.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
+        marketLowest.SetPrices(0, PricesPerMarket, GetRandomPrice);
         _marketCache.AddOrUpdate(marketOriginal);
         _marketCache.AddOrUpdate(marketHighest);
         _marketCache.AddOrUpdate(marketLowest);
@@ -603,84 +642,112 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
         resultsLow.Data.Count.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         resultsLow.Summary.Overall.Updates.Should().Be(0);
+        resultsLow.Summary.Overall.Removes.Should().Be(0);
+        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
         resultsLow.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
 
         resultsLowPrice.Data.Count.Should().Be(PricesPerMarket);
         resultsLowPrice.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsLowPrice.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        resultsLowPrice.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
+        resultsLowPrice.Summary.Overall.Removes.Should().Be(0);
+        resultsLowPrice.Summary.Overall.Refreshes.Should().Be(0);
         resultsLowPrice.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowest.Id));
 
         resultsHighPrice.Data.Count.Should().Be(PricesPerMarket);
         resultsHighPrice.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        resultsHighPrice.Summary.Overall.Updates.Should().Be(0);
+        resultsHighPrice.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        resultsHighPrice.Summary.Overall.Removes.Should().Be(0);
+        resultsHighPrice.Summary.Overall.Refreshes.Should().Be(0);
         resultsHighPrice.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketHighest.Id));
     }
 
-#if false
     [Fact]
-    public void ComparerOnlyUpdatesVisibleValuesOnUpdate()
+    public void ChildComparerOnlyUpdatesVisibleValuesOnUpdate()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.LowPriceCompare).AsAggregator();
+        using var results = ChangeSetByRating(false).AsAggregator();
+        using var lowRatingLowPriceResults = ChangeSetByLowRatingThenLowPrice(false).AsAggregator();
+        using var lowRatingHighPriceResults = ChangeSetByLowRatingThenHighPrice(false).AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
-        marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        var marketLowest = new Market(2);
+
+        marketLowest.Rating = marketLow.Rating = -1;
+        marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
+        marketLowest.SetPrices(0, PricesPerMarket, GetRandomPrice);
         _marketCache.AddOrUpdate(marketOriginal);
         _marketCache.AddOrUpdate(marketLow);
+        _marketCache.AddOrUpdate(marketLowest);
 
         // when
-        marketLow.UpdateAllPrices(LowestPrice - 1);
+        marketLowest.UpdateAllPrices(LowestPrice - 1);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
-        lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        lowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
-        lowPriceResults.Summary.Overall.Refreshes.Should().Be(0);
-        lowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLow.Id));
-        highPriceResults.Data.Count.Should().Be(PricesPerMarket);
-        highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        highPriceResults.Summary.Overall.Removes.Should().Be(0);
-        highPriceResults.Summary.Overall.Updates.Should().Be(0);
-        highPriceResults.Summary.Overall.Refreshes.Should().Be(0);
-        highPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        _marketCacheResults.Data.Count.Should().Be(3);
+        results.Data.Count.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
+        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        lowRatingLowPriceResults.Data.Count.Should().Be(PricesPerMarket);
+        lowRatingLowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        lowRatingLowPriceResults.Summary.Overall.Removes.Should().Be(0);
+        lowRatingLowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        lowRatingLowPriceResults.Summary.Overall.Refreshes.Should().Be(0);
+        lowRatingLowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowest.Id));
+        lowRatingHighPriceResults.Data.Count.Should().Be(PricesPerMarket);
+        lowRatingHighPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        lowRatingHighPriceResults.Summary.Overall.Removes.Should().Be(0);
+        lowRatingHighPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
+        lowRatingHighPriceResults.Summary.Overall.Refreshes.Should().Be(0);
+        lowRatingHighPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLow.Id));
     }
 
     [Fact]
-    public void ComparerOnlyRefreshesVisibleValues()
+    public void ChildComparerOnlyRefreshesVisibleValues()
     {
         // having
-        using var highPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer, MarketPrice.HighPriceCompare).AsAggregator();
-        using var lowPriceResults = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer, MarketPrice.LowPriceCompare).AsAggregator();
+        using var results = ChangeSetByRating(false).AsAggregator();
+        using var lowRatingLowPriceResults = ChangeSetByLowRatingThenLowPrice(false).AsAggregator();
+        using var lowRatingHighPriceResults = ChangeSetByLowRatingThenHighPrice(false).AsAggregator();
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
-        marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        var marketLowest = new Market(2);
+
+        marketLowest.Rating = marketLow.Rating = -1;
+        marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        marketLow.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        marketLowest.SetPrices(0, PricesPerMarket, LowestPrice);
         _marketCache.AddOrUpdate(marketOriginal);
         _marketCache.AddOrUpdate(marketLow);
+        _marketCache.AddOrUpdate(marketLowest);
 
         // when
-        marketLow.RefreshAllPrices(LowestPrice - 1);
+        marketLowest.RefreshAllPrices(LowestPrice - 1);
 
         // then
-        _marketCacheResults.Data.Count.Should().Be(2);
-        lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
-        lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        lowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        lowPriceResults.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
-        lowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLow.Id));
-        highPriceResults.Data.Count.Should().Be(PricesPerMarket);
-        highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
-        highPriceResults.Summary.Overall.Removes.Should().Be(0);
-        highPriceResults.Summary.Overall.Updates.Should().Be(0);
-        highPriceResults.Summary.Overall.Refreshes.Should().Be(0);
-        highPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        _marketCacheResults.Data.Count.Should().Be(3);
+        results.Data.Count.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(0);
+        results.Summary.Overall.Updates.Should().Be(0);
+        results.Summary.Overall.Refreshes.Should().Be(0);
+        results.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketOriginal.Id));
+        lowRatingLowPriceResults.Data.Count.Should().Be(PricesPerMarket);
+        lowRatingLowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        lowRatingLowPriceResults.Summary.Overall.Removes.Should().Be(0);
+        lowRatingLowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        lowRatingLowPriceResults.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
+        lowRatingLowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowest.Id));
+        lowRatingHighPriceResults.Data.Count.Should().Be(PricesPerMarket);
+        lowRatingHighPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        lowRatingHighPriceResults.Summary.Overall.Removes.Should().Be(0);
+        lowRatingHighPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket);
+        lowRatingHighPriceResults.Summary.Overall.Refreshes.Should().Be(0);
+        lowRatingHighPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLow.Id));
     }
-#endif
 
     [Fact]
     public void EqualityComparerHidesUpdatesWithoutChanges()
@@ -705,13 +772,138 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
     }
 
     [Fact]
+    public void EqualityComparerAndChildComparerWorkTogetherForUpdates()
+    {
+        // having
+        using var resultsLow = ChangeSetByLowRating().AsAggregator();
+        using var resultsRecent = ChangeSetByRatingThenRecent().AsAggregator();
+        using var resultsTimeStamp = ChangeSetByRatingThenTimeStamp().AsAggregator();
+        var marketLow = new Market(0);
+        var market = new Market(1);
+        marketLow.Rating = -1;
+        marketLow.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        market.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        _marketCache.AddOrUpdate(marketLow);
+        _marketCache.AddOrUpdate(market);
+        market.SetPrices(0, PricesPerMarket, LowestPrice);
+
+        // when
+        market.UpdateAllPrices(LowestPrice);
+
+        // then
+        _marketCacheResults.Data.Count.Should().Be(2);
+        resultsLow.Data.Count.Should().Be(PricesPerMarket);
+        resultsLow.Messages.Count.Should().Be(1);
+        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsLow.Summary.Overall.Removes.Should().Be(0);
+        resultsLow.Summary.Overall.Updates.Should().Be(0);
+        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
+        resultsRecent.Messages.Count.Should().Be(3);
+        resultsRecent.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsRecent.Summary.Overall.Removes.Should().Be(0);
+        resultsRecent.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        resultsRecent.Summary.Overall.Refreshes.Should().Be(0);
+        resultsTimeStamp.Messages.Count.Should().Be(4);
+        resultsTimeStamp.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsTimeStamp.Summary.Overall.Removes.Should().Be(0);
+        resultsTimeStamp.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
+        resultsTimeStamp.Summary.Overall.Refreshes.Should().Be(0);
+    }
+
+    [Fact]
+    public void EqualityComparerAndChildComparerWorkTogetherForRefreshes()
+    {
+        // having
+        using var resultsLow = ChangeSetByLowRating().AsAggregator();
+        using var resultsRecent = ChangeSetByRatingThenRecent().AsAggregator();
+        using var resultsTimeStamp = ChangeSetByRatingThenTimeStamp().AsAggregator();
+        var marketLow = new Market(0);
+        var market = new Market(1);
+        marketLow.Rating = -1;
+        marketLow.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        market.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        _marketCache.AddOrUpdate(marketLow);
+        _marketCache.AddOrUpdate(market);
+        market.SetPrices(0, PricesPerMarket, LowestPrice);
+        // Update again, but only the timestamp will change, so resultsRecent will ignore
+        market.SetPrices(0, PricesPerMarket, LowestPrice);
+
+        // when
+        // resultsRecent won't see the refresh because it ignored the update
+        // resultsTimeStamp will see the refreshes because it didn't
+        market.RefreshAllPrices(LowestPrice);
+
+        // then
+        _marketCacheResults.Data.Count.Should().Be(2);
+        resultsLow.Data.Count.Should().Be(PricesPerMarket);
+        resultsLow.Messages.Count.Should().Be(1);
+        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsLow.Summary.Overall.Removes.Should().Be(0);
+        resultsLow.Summary.Overall.Updates.Should().Be(0);
+        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
+        resultsRecent.Messages.Count.Should().Be(3);
+        resultsRecent.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsRecent.Summary.Overall.Removes.Should().Be(0);
+        resultsRecent.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        resultsRecent.Summary.Overall.Refreshes.Should().Be(0);
+        resultsTimeStamp.Messages.Count.Should().Be(5);
+        resultsTimeStamp.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsTimeStamp.Summary.Overall.Removes.Should().Be(0);
+        resultsTimeStamp.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
+        resultsTimeStamp.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
+    }
+
+    [Fact]
+    public void EqualityComparerAndChildComparerRefreshesBecomeUpdates()
+    {
+        // having
+        using var resultsLow = ChangeSetByLowRating().AsAggregator();
+        using var resultsRecent = ChangeSetByRatingThenRecent().AsAggregator();
+        using var resultsTimeStamp = ChangeSetByRatingThenTimeStamp().AsAggregator();
+        var marketLow = new Market(0);
+        var market = new Market(1);
+        marketLow.Rating = -1;
+        marketLow.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        market.SetPrices(0, PricesPerMarket, GetRandomPrice);
+        _marketCache.AddOrUpdate(marketLow);
+        _marketCache.AddOrUpdate(market);
+        market.SetPrices(0, PricesPerMarket, LowestPrice);
+        // Update again, but only the timestamp will change, so resultsRecent will ignore
+        market.SetPrices(0, PricesPerMarket, LowestPrice);
+
+        // when
+        // resultsRecent won't see the refresh because it ignored the update
+        // resultsTimeStamp will see the refreshes because it didn't
+        market.RefreshAllPrices(GetRandomPrice);
+
+        // then
+        _marketCacheResults.Data.Count.Should().Be(2);
+        resultsLow.Data.Count.Should().Be(PricesPerMarket);
+        resultsLow.Messages.Count.Should().Be(1);
+        resultsLow.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsLow.Summary.Overall.Removes.Should().Be(0);
+        resultsLow.Summary.Overall.Updates.Should().Be(0);
+        resultsLow.Summary.Overall.Refreshes.Should().Be(0);
+        resultsRecent.Messages.Count.Should().Be(4);
+        resultsRecent.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsRecent.Summary.Overall.Removes.Should().Be(0);
+        resultsRecent.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
+        resultsRecent.Summary.Overall.Refreshes.Should().Be(0);
+        resultsTimeStamp.Messages.Count.Should().Be(5);
+        resultsTimeStamp.Summary.Overall.Adds.Should().Be(PricesPerMarket);
+        resultsTimeStamp.Summary.Overall.Removes.Should().Be(0);
+        resultsTimeStamp.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
+        resultsTimeStamp.Summary.Overall.Refreshes.Should().Be(PricesPerMarket);
+    }
+
+    [Fact]
     public void EveryItemVisibleWhenSequenceCompletes()
     {
         // having
         _marketCache.AddOrUpdate(Enumerable.Range(0, MarketCount).Select(n => new FixedMarket(GetRandomPrice, n * ItemIdStride, (n * ItemIdStride) + PricesPerMarket)));
 
         // when
-        using var results = _marketCache.Connect().MergeManyChangeSets(m => m.LatestPrices, Market.RatingCompare).AsAggregator();
+        using var results = ChangeSetByRating(false).AsAggregator();
         DisposeMarkets();
 
         // then
@@ -775,11 +967,13 @@ public sealed class MergeManyCacheChangeSetsSourceCompareFixture : IDisposable
             .DebugSpy($"{name} [Results]");
 
     private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRating(bool resortOnRefresh = true) => CreateChangeSet("Rating", resortOnRefresh: resortOnRefresh);
-    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByLowRating(bool resortOnRefresh = true) => CreateChangeSet("Low Rating", Market.RatingCompare.Invert(), resortOnRefresh: resortOnRefresh);
-    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenHigh(bool resortOnRefresh = true) => CreateChangeSet("Rating | High", Market.RatingCompare, MarketPrice.HighPriceCompare, resortOnRefresh: resortOnRefresh);
-    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenLow(bool resortOnRefresh = true) => CreateChangeSet("Rating | Low", Market.RatingCompare, MarketPrice.LowPriceCompare, resortOnRefresh: resortOnRefresh);
+    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenHighPrice(bool resortOnRefresh = true) => CreateChangeSet("Rating | High", Market.RatingCompare, MarketPrice.HighPriceCompare, resortOnRefresh: resortOnRefresh);
+    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenLowPrice(bool resortOnRefresh = true) => CreateChangeSet("Rating | Low", Market.RatingCompare, MarketPrice.LowPriceCompare, resortOnRefresh: resortOnRefresh);
     private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenRecent(bool resortOnRefresh = true) => CreateChangeSet("Rating | Recent", Market.RatingCompare, MarketPrice.LatestPriceCompare, equalityComparer: MarketPrice.EqualityComparer, resortOnRefresh: resortOnRefresh);
-    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenTimestamp(bool resortOnRefresh = true) => CreateChangeSet("Rating | Timestamp", Market.RatingCompare, MarketPrice.LatestPriceCompare, equalityComparer: MarketPrice.EqualityComparerWithTimeStamp, resortOnRefresh: resortOnRefresh);
+    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByRatingThenTimeStamp(bool resortOnRefresh = true) => CreateChangeSet("Rating | Timestamp", Market.RatingCompare, MarketPrice.LatestPriceCompare, equalityComparer: MarketPrice.EqualityComparerWithTimeStamp, resortOnRefresh: resortOnRefresh);
+    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByLowRating(bool resortOnRefresh = true) => CreateChangeSet("Low Rating", Market.RatingCompare.Invert(), resortOnRefresh: resortOnRefresh);
+    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByLowRatingThenHighPrice(bool resortOnRefresh = true) => CreateChangeSet("Low Rating | High", Market.RatingCompare.Invert(), MarketPrice.HighPriceCompare, resortOnRefresh: resortOnRefresh);
+    private IObservable<IChangeSet<MarketPrice, int>> ChangeSetByLowRatingThenLowPrice(bool resortOnRefresh = true) => CreateChangeSet("Low Rating | Low", Market.RatingCompare.Invert(), MarketPrice.LowPriceCompare, resortOnRefresh: resortOnRefresh);
 
     private IMarket SetRating(IMarket market, double newRating)
     {
