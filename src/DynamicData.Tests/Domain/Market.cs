@@ -95,9 +95,11 @@ internal class Market : IMarket, IDisposable
 
     public Market UpdateAllPrices(decimal newPrice) => this.With(_ => _latestPrices.Edit(updater => updater.AddOrUpdate(updater.Items.Select(cp => CreatePrice(cp.ItemId, newPrice)))));
 
-    public Market UpdatePrices(int minId, int maxId, decimal newPrice) => this.With(_ => _latestPrices.AddOrUpdate(Enumerable.Range(minId, maxId - minId).Select(id => CreatePrice(id, newPrice))));
+    public Market SetPrices(int minId, int maxId, decimal newPrice) => this.With(_ => _latestPrices.AddOrUpdate(Enumerable.Range(minId, maxId - minId).Select(id => CreatePrice(id, newPrice))));
 
     public void Dispose() => _latestPrices.Dispose();
+
+    public override string ToString() => $"Market '{Name}' [{Id}] (Rating: {Rating})";
 
     private class RatingComparer : IComparer<IMarket>
     {
@@ -127,4 +129,6 @@ internal class FixedMarket : IMarket
     public double Rating { get; set; }
 
     public Guid Id { get; }
+
+    public override string ToString() => $"Fixed Market '{Name}' (Rating: {Rating})";
 }

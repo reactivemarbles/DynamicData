@@ -324,8 +324,8 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
 
         // when
-        marketLow.UpdatePrices(0, PricesPerMarket, LowestPrice);
-        marketHigh.UpdatePrices(0, PricesPerMarket, HighestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
+        marketHigh.SetPrices(0, PricesPerMarket, HighestPrice);
 
         // then
         _marketList.Count.Should().Be(3);
@@ -348,8 +348,8 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         var marketHigh = Add(new Market(2));
         var others = new[] { marketLow.LatestPrices, marketHigh.LatestPrices };
         marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdatePrices(0, PricesPerMarket, LowestPrice);
-        marketHigh.UpdatePrices(0, PricesPerMarket, HighestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
+        marketHigh.SetPrices(0, PricesPerMarket, HighestPrice);
 
         // when
         using var highPriceResults = marketOriginal.LatestPrices.MergeChangeSets(others, MarketPrice.HighPriceCompare).AsAggregator();
@@ -376,7 +376,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var highPriceResults = marketOriginal.LatestPrices.MergeChangeSets(marketFlipFlop.LatestPrices, MarketPrice.HighPriceCompare).AsAggregator();
         using var lowPriceResults = marketOriginal.LatestPrices.MergeChangeSets(marketFlipFlop.LatestPrices, MarketPrice.LowPriceCompare).AsAggregator();
         marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketFlipFlop.UpdatePrices(0, PricesPerMarket, HighestPrice);
+        marketFlipFlop.SetPrices(0, PricesPerMarket, HighestPrice);
 
         // when
         marketFlipFlop.RefreshAllPrices(LowestPrice);
@@ -408,8 +408,8 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var lowPriceResults = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.LowPriceCompare).AsAggregator();
         using var highPriceResults = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.HighPriceCompare).AsAggregator();
         marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdatePrices(0, PricesPerMarket, LowestPrice);
-        marketHigh.UpdatePrices(0, PricesPerMarket, HighestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
+        marketHigh.SetPrices(0, PricesPerMarket, HighestPrice);
 
         // when
         marketLow.RemoveAllPrices();
@@ -441,7 +441,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var highPriceResults = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.HighPriceCompare).AsAggregator();
         using var lowPriceResults = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.LowPriceCompare).AsAggregator();
         marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketFlipFlop.UpdatePrices(0, PricesPerMarket, HighestPrice);
+        marketFlipFlop.SetPrices(0, PricesPerMarket, HighestPrice);
 
         // when
         marketFlipFlop.UpdateAllPrices(LowestPrice);
@@ -471,7 +471,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var highPriceResults = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.HighPriceCompare).AsAggregator();
         using var lowPriceResults = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.LowPriceCompare).AsAggregator();
         marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
 
         // when
         marketLow.UpdateAllPrices(LowestPrice - 1);
@@ -501,7 +501,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         using var highPriceResults = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer, MarketPrice.HighPriceCompare).AsAggregator();
         using var lowPriceResults = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer, MarketPrice.LowPriceCompare).AsAggregator();
         marketOriginal.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
 
         // when
         marketLow.RefreshAllPrices(LowestPrice - 1);
@@ -576,10 +576,10 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         // having
         var market = Add(new Market(0));
         using var results = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer).AsAggregator();
-        market.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        market.SetPrices(0, PricesPerMarket, LowestPrice);
 
         // when
-        market.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        market.SetPrices(0, PricesPerMarket, LowestPrice);
 
         // then
         _marketList.Count.Should().Be(1);
@@ -601,10 +601,10 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         var results = market1.LatestPrices.MergeChangeSets(market2.LatestPrices, MarketPrice.EqualityComparer, MarketPrice.LatestPriceCompare).AsAggregator();
         var resultsTimeStamp = market1.LatestPrices.MergeChangeSets(market2.LatestPrices, MarketPrice.EqualityComparerWithTimeStamp, MarketPrice.LatestPriceCompare).AsAggregator();
         market1.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        market2.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        market2.SetPrices(0, PricesPerMarket, LowestPrice);
 
         // when
-        market2.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        market2.SetPrices(0, PricesPerMarket, LowestPrice);
 
         // then
         _marketList.Count.Should().Be(2);
@@ -631,9 +631,9 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         var results1 = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer, MarketPrice.LatestPriceCompare).AsAggregator();
         var results2 = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparerWithTimeStamp, MarketPrice.LatestPriceCompare).AsAggregator();
         market1.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        market2.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        market2.SetPrices(0, PricesPerMarket, LowestPrice);
         // Update again, but only the timestamp will change, so results1 will ignore
-        market2.UpdatePrices(0, PricesPerMarket, LowestPrice);
+        market2.SetPrices(0, PricesPerMarket, LowestPrice);
 
         // when
         // results1 won't see the refresh because it ignored the update
@@ -665,9 +665,9 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         var results1 = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparer, MarketPrice.LatestPriceCompare).AsAggregator();
         var results2 = _marketList.Select(m => m.LatestPrices).MergeChangeSets(MarketPrice.EqualityComparerWithTimeStamp, MarketPrice.LatestPriceCompare).AsAggregator();
         market1.AddRandomPrices(0, PricesPerMarket, GetRandomPrice);
-        market2.UpdatePrices(0, PricesPerMarket, LowestPrice - 1);
+        market2.SetPrices(0, PricesPerMarket, LowestPrice - 1);
         // Update again, but only the timestamp will change, so results1 will ignore
-        market2.UpdatePrices(0, PricesPerMarket, LowestPrice - 1);
+        market2.SetPrices(0, PricesPerMarket, LowestPrice - 1);
 
         // when
         // results1 will see this as an update because it ignored the last update

@@ -107,7 +107,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
         {
             (not null, not null) => _comparerParent.Compare(x.Parent, y.Parent) switch
                                     {
-                                        0 => _comparerChild.Compare(x.Child, x.Child),
+                                        0 => _comparerChild.Compare(x.Child, y.Child),
                                         int i => i,
                                     },
             (null, null) => 0,
@@ -124,7 +124,7 @@ internal sealed class MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDest
 
         public override int Compare(ParentChildEntry? x, ParentChildEntry? y) => (x, y) switch
         {
-            (not null, not null) => _comparerParent.Compare(x.Parent, x.Parent),
+            (not null, not null) => _comparerParent.Compare(x.Parent, y.Parent),
             (null, null) => 0,
             (null, not null) => 1,
             (not null, null) => -1,
