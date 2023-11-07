@@ -49,7 +49,7 @@ internal sealed class DisposeMany<TObject, TKey>
 
     private void RegisterForRemoval(IChangeSet<TObject, TKey> changes, Cache<TObject, TKey> cache)
     {
-        changes.ForEach(
+        changes.ToConcreteType().ForEach(
             change =>
             {
                 switch (change.Reason)

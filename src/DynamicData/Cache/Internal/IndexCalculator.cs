@@ -47,7 +47,7 @@ internal sealed class IndexCalculator<TObject, TKey>
         var result = new List<Change<TObject, TKey>>(changes.Count);
         var refreshes = new List<Change<TObject, TKey>>(changes.Refreshes);
 
-        foreach (var u in changes)
+        foreach (var u in changes.ToConcreteType())
         {
             var current = new KeyValuePair<TKey, TObject>(u.Key, u.Current);
 

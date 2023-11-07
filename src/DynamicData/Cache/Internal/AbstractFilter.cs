@@ -59,11 +59,11 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
 
     public IChangeSet<TObject, TKey> Update(IChangeSet<TObject, TKey> updates)
     {
-        var withFilter = GetChangesWithFilter(updates);
+        var withFilter = GetChangesWithFilter(updates.ToConcreteType());
         return ProcessResult(withFilter);
     }
 
-    protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates);
+    protected abstract IEnumerable<UpdateWithFilter> GetChangesWithFilter(ChangeSet<TObject, TKey> updates);
 
     protected abstract IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
 

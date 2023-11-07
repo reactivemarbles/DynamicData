@@ -106,7 +106,7 @@ internal sealed class Combiner<TObject, TKey>
     private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
     {
         // child caches have been updated before we reached this point.
-        foreach (var update in updates)
+        foreach (var update in updates.ToConcreteType())
         {
             TKey key = update.Key;
             switch (update.Reason)

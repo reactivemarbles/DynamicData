@@ -207,7 +207,7 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
 
         public IEnumerator<Change<TDestination, TDestinationKey>> GetEnumerator()
         {
-            foreach (var change in _changes)
+            foreach (var change in _changes.ToConcreteType())
             {
                 switch (change.Reason)
                 {

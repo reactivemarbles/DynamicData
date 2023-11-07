@@ -47,7 +47,7 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey>
             throw new ArgumentNullException(nameof(changes));
         }
 
-        foreach (var item in changes)
+        foreach (var item in changes.ToConcreteType())
         {
             switch (item.Reason)
             {

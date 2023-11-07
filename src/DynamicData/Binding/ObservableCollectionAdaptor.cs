@@ -4,7 +4,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-
+using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
@@ -128,7 +128,7 @@ public class ObservableCollectionAdaptor<TObject, TKey> : IObservableCollectionA
 
     private void DoUpdate(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> list)
     {
-        void Amend(Change<TObject, TKey> change)
+        foreach (Change<TObject, TKey> change in changes.ToConcreteType())
         {
             switch (change.Reason)
             {
@@ -154,22 +154,6 @@ public class ObservableCollectionAdaptor<TObject, TKey> : IObservableCollectionA
                     }
 
                     break;
-            }
-        }
-
-        if (changes is IList<Change<TObject, TKey>> iList)
-        {
-            // allocation free enumeration
-            foreach (var change in EnumerableIList.Create(iList))
-            {
-                Amend(change);
-            }
-        }
-        else
-        {
-            foreach (var update in changes)
-            {
-                Amend(update);
             }
         }
     }

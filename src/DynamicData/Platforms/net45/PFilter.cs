@@ -51,7 +51,7 @@ namespace DynamicData.PLinq
                 _parallelisationOptions = parallelisationOptions;
             }
 
-            protected override IEnumerable<UpdateWithFilter> GetChangesWithFilter(IChangeSet<TObject, TKey> updates)
+            protected override IEnumerable<UpdateWithFilter> GetChangesWithFilter(ChangeSet<TObject, TKey> updates)
             {
                 if (updates.ShouldParallelise(_parallelisationOptions))
                 {
