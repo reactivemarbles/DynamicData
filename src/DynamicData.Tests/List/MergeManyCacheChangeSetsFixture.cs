@@ -14,19 +14,22 @@ namespace DynamicData.Tests.List;
 
 public sealed class MergeManyCacheChangeSetsFixture : IDisposable
 {
-    // const int MarketCount = 101;
-    // const int PricesPerMarket = 103;
-    // const int RemoveCount = 53;
+#if DEBUG
     const int MarketCount = 3;
     const int PricesPerMarket = 5;
     const int RemoveCount = 2;
+#else
+     const int MarketCount = 101;
+     const int PricesPerMarket = 103;
+     const int RemoveCount = 53;
+#endif
     const int ItemIdStride = 1000;
     const decimal BasePrice = 10m;
     const decimal PriceOffset = 10m;
     const decimal HighestPrice = BasePrice + PriceOffset + 1.0m;
     const decimal LowestPrice = BasePrice - 1.0m;
 
-    private static readonly Random Random = new Random(0x10012023);
+    private static readonly Random Random = new (0x03251976);
 
     private readonly ISourceList<IMarket> _marketList = new SourceList<IMarket>();
 
@@ -351,9 +354,6 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         // then
         _marketListResults.Data.Count.Should().Be(1);
         results.Data.Count.Should().Be(PricesPerMarket * 2);
-        //results.Summary.Overall.Adds.Should().Be(PricesPerMarket * 3);
-        //results.Summary.Overall.Updates.Should().Be(PricesPerMarket);
-        //results.Summary.Overall.Removes.Should().Be(PricesPerMarket);
         results.Data.Items.Should().BeSubsetOf(otherMarket.PricesCache.Items);
         otherMarket.PricesCache.Items.Should().BeSubsetOf(results.Data.Items);
     }
