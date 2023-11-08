@@ -6201,7 +6201,7 @@ public static class ObservableCacheEx
 
         IEnumerable<Change<TObject, TKey>> ReplaceMoves(IChangeSet<TObject, TKey> items)
         {
-            foreach (var change in items.ToConcreteType()))
+            foreach (var change in items.ToConcreteType())
             {
                 if (change.Reason == ChangeReason.Moved)
                 {
