@@ -30,7 +30,7 @@ internal class AddKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject, TKe
     /// </returns>
     public IEnumerator<Change<TObject, TKey>> GetEnumerator()
     {
-        foreach (var change in _source.ToConcreteType())
+        foreach (var change in _source)
         {
             switch (change.Reason)
             {
