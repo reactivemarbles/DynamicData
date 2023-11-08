@@ -24,17 +24,4 @@ internal static class CacheChangeSetEx
         where TObject : notnull
         where TKey : notnull =>
             changeSet as ChangeSet<TObject, TKey> ?? throw new NotSupportedException("Dynamic Data does not support a custom implementation of IChangeSet");
-
-    /// <summary>
-    /// SortedChangeSet version of <see cref="ToConcreteType{TObject, TKey}(IChangeSet{TObject, TKey})"/>.
-    /// </summary>
-    /// <typeparam name="TObject">ChangeSet Object Type.</typeparam>
-    /// <typeparam name="TKey">ChangeSet Key Type.</typeparam>
-    /// <param name="changeSet">ChangeSet to be converted.</param>
-    /// <returns>Concrete Instance of the ChangeSet.</returns>
-    /// <exception cref="NotSupportedException">A custom implementation was found.</exception>
-    public static SortedChangeSet<TObject, TKey> ToConcreteType<TObject, TKey>(this ISortedChangeSet<TObject, TKey> changeSet)
-        where TObject : notnull
-        where TKey : notnull =>
-            changeSet as SortedChangeSet<TObject, TKey> ?? throw new NotSupportedException("Dynamic Data does not support a custom implementation of IChangeSet");
 }
