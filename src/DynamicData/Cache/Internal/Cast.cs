@@ -30,7 +30,7 @@ internal class Cast<TSource, TKey, TDestination>
         return _source.Select(
             changes =>
             {
-                var transformed = changes.Select(change => new Change<TDestination, TKey>(change.Reason, change.Key, _converter(change.Current), change.Previous.Convert(_converter), change.CurrentIndex, change.PreviousIndex));
+                var transformed = changes.ToConcreteType().Select(change => new Change<TDestination, TKey>(change.Reason, change.Key, _converter(change.Current), change.Previous.Convert(_converter), change.CurrentIndex, change.PreviousIndex));
                 return new ChangeSet<TDestination, TKey>(transformed);
             });
     }

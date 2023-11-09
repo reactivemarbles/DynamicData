@@ -5,6 +5,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using DynamicData.Cache;
 
 namespace DynamicData.Aggregation;
 
@@ -68,11 +69,11 @@ internal class AggregateEnumerator<TObject, TKey> : IAggregateChangeSet<TObject>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IChangeSet<TObject, TKey> _source;
+    private readonly ChangeSet<TObject, TKey> _source;
 
     public AggregateEnumerator(IChangeSet<TObject, TKey> source)
     {
-        _source = source;
+        _source = source.ToConcreteType();
     }
 
     public IEnumerator<AggregateItem<TObject>> GetEnumerator()

@@ -36,7 +36,7 @@ internal class RemoveKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject>>
     /// </returns>
     public IEnumerator<Change<TObject>> GetEnumerator()
     {
-        foreach (var change in _source)
+        foreach (var change in _source.ToConcreteType())
         {
             switch (change.Reason)
             {

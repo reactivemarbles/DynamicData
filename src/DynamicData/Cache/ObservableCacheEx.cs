@@ -14,6 +14,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 using DynamicData.Binding;
+using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 using DynamicData.Kernel;
 
@@ -1058,7 +1059,7 @@ public static class ObservableCacheEx
         return source.Do(
             changes =>
             {
-                foreach (var item in changes)
+                foreach (var item in changes.ToConcreteType())
                 {
                     switch (item.Reason)
                     {
@@ -6200,7 +6201,7 @@ public static class ObservableCacheEx
 
         IEnumerable<Change<TObject, TKey>> ReplaceMoves(IChangeSet<TObject, TKey> items)
         {
-            foreach (var change in items)
+            foreach (var change in items.ToConcreteType())
             {
                 if (change.Reason == ChangeReason.Moved)
                 {
