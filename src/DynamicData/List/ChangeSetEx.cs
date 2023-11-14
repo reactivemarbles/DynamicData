@@ -106,10 +106,7 @@ public static class ChangeSetEx
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of changes.</returns>
     public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
-        where T : notnull
-    {
-        return new WithoutIndexEnumerator<T>(source);
-    }
+        where T : notnull => new WithoutIndexEnumerator<T>(source);
 
     /// <summary>
     /// Returns a flattened source.

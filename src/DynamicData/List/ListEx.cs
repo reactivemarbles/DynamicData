@@ -2,10 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 
 using DynamicData.Kernel;
 
@@ -170,10 +167,7 @@ public static class ListEx
     /// <param name="list">The list to be searched.</param>
     /// <param name="value">The value to search for.</param>
     /// <returns>The index of the specified value in the specified array, if value is found; otherwise, a negative number.</returns>
-    public static int BinarySearch<TItem>(this IList<TItem> list, TItem value)
-    {
-        return BinarySearch(list, value, Comparer<TItem>.Default);
-    }
+    public static int BinarySearch<TItem>(this IList<TItem> list, TItem value) => BinarySearch(list, value, Comparer<TItem>.Default);
 
     /// <summary>
     /// Performs a binary search on the specified collection.
@@ -307,10 +301,7 @@ public static class ListEx
     /// <param name="source">The source enumerable.</param>
     /// <param name="item">The item to get the index of.</param>
     /// <returns>The index.</returns>
-    public static int IndexOf<T>(this IEnumerable<T> source, T item)
-    {
-        return IndexOf(source, item, EqualityComparer<T>.Default);
-    }
+    public static int IndexOf<T>(this IEnumerable<T> source, T item) => IndexOf(source, item, EqualityComparer<T>.Default);
 
     /// <summary>
     /// Finds the index of the current item using the specified equality comparer.

@@ -160,10 +160,8 @@ public static class BindingListEx
     /// </summary>
     /// <param name="source">The source list.</param>
     /// <returns>An observable which emits event pattern changed event args.</returns>
-    public static IObservable<EventPattern<ListChangedEventArgs>> ObserveCollectionChanges(this IBindingList source)
-    {
-        return Observable.FromEventPattern<ListChangedEventHandler, ListChangedEventArgs>(h => source.ListChanged += h, h => source.ListChanged -= h);
-    }
+    public static IObservable<EventPattern<ListChangedEventArgs>> ObserveCollectionChanges(this IBindingList source) =>
+        Observable.FromEventPattern<ListChangedEventHandler, ListChangedEventArgs>(h => source.ListChanged += h, h => source.ListChanged -= h);
 
     /// <summary>
     /// Convert a binding list into an observable change set.

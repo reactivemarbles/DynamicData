@@ -2,11 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -15,20 +12,12 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
+internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IEnumerable<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector, Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>>? childChanges = null)
     where TDestination : notnull
     where TDestinationKey : notnull
     where TSource : notnull
     where TSourceKey : notnull
 {
-    private readonly Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>>? _childChanges;
-
-    private readonly Func<TDestination, TDestinationKey> _keySelector;
-
-    private readonly Func<TSource, IEnumerable<TDestination>> _manySelector;
-
-    private readonly IObservable<IChangeSet<TSource, TSourceKey>> _source;
-
     public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector)
         : this(
             source,
@@ -88,33 +77,19 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
     {
     }
 
-    public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IEnumerable<TDestination>> manySelector, Func<TDestination, TDestinationKey> keySelector, Func<TSource, IObservable<IChangeSet<TDestination, TDestinationKey>>>? childChanges = null)
-    {
-        _source = source;
-        _manySelector = manySelector;
-        _keySelector = keySelector;
-        _childChanges = childChanges;
-    }
+    public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => childChanges is null ? Create() : CreateWithChangeSet();
 
-    public IObservable<IChangeSet<TDestination, TDestinationKey>> Run()
-    {
-        return _childChanges is null ? Create() : CreateWithChangeSet();
-    }
-
-    private IObservable<IChangeSet<TDestination, TDestinationKey>> Create()
-    {
-        return _source.Transform(
+    private IObservable<IChangeSet<TDestination, TDestinationKey>> Create() => source.Transform(
             (t, _) =>
             {
-                var destination = _manySelector(t).Select(m => new DestinationContainer(m, _keySelector(m))).ToArray();
+                var destination = manySelector(t).Select(m => new DestinationContainer(m, keySelector(m))).ToArray();
                 return new ManyContainer(() => destination);
             },
             true).Select(changes => new ChangeSet<TDestination, TDestinationKey>(new DestinationEnumerator(changes)));
-    }
 
     private IObservable<IChangeSet<TDestination, TDestinationKey>> CreateWithChangeSet()
     {
-        if (_childChanges is null)
+        if (childChanges is null)
         {
             throw new InvalidOperationException("The childChanges is null and should not be.");
         }
@@ -124,19 +99,19 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
             {
                 var result = new ChangeAwareCache<TDestination, TDestinationKey>();
 
-                var transformed = _source.Transform(
+                var transformed = source.Transform(
                     (t, _) =>
                     {
                         // Only skip initial for first time Adds where there is initial data records
                         var locker = new object();
-                        var changes = _childChanges(t).Synchronize(locker).Skip(1);
+                        var changes = childChanges(t).Synchronize(locker).Skip(1);
                         return new ManyContainer(
                             () =>
                             {
-                                var collection = _manySelector(t);
+                                var collection = manySelector(t);
                                 lock (locker)
                                 {
-                                    return collection.Select(m => new DestinationContainer(m, _keySelector(m))).ToArray();
+                                    return collection.Select(m => new DestinationContainer(m, keySelector(m))).ToArray();
                                 }
                             },
                             changes);
@@ -158,19 +133,13 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
             });
     }
 
-    private sealed class DestinationContainer
+    private sealed class DestinationContainer(TDestination item, TDestinationKey key)
     {
-        public DestinationContainer(TDestination item, TDestinationKey key)
-        {
-            Item = item;
-            Key = key;
-        }
-
         public static IEqualityComparer<DestinationContainer> KeyComparer { get; } = new KeyEqualityComparer();
 
-        public TDestination Item { get; }
+        public TDestination Item { get; } = item;
 
-        public TDestinationKey Key { get; }
+        public TDestinationKey Key { get; } = key;
 
         private sealed class KeyEqualityComparer : IEqualityComparer<DestinationContainer>
         {
@@ -189,25 +158,15 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
                 return EqualityComparer<TDestinationKey?>.Default.Equals(x.Key, y.Key);
             }
 
-            public int GetHashCode(DestinationContainer obj)
-            {
-                return EqualityComparer<TDestinationKey?>.Default.GetHashCode(obj.Key);
-            }
+            public int GetHashCode(DestinationContainer obj) => EqualityComparer<TDestinationKey?>.Default.GetHashCode(obj.Key);
         }
     }
 
-    private sealed class DestinationEnumerator : IEnumerable<Change<TDestination, TDestinationKey>>
+    private sealed class DestinationEnumerator(IChangeSet<ManyContainer, TSourceKey> changes) : IEnumerable<Change<TDestination, TDestinationKey>>
     {
-        private readonly IChangeSet<ManyContainer, TSourceKey> _changes;
-
-        public DestinationEnumerator(IChangeSet<ManyContainer, TSourceKey> changes)
-        {
-            _changes = changes;
-        }
-
         public IEnumerator<Change<TDestination, TDestinationKey>> GetEnumerator()
         {
-            foreach (var change in _changes.ToConcreteType())
+            foreach (var change in changes.ToConcreteType())
             {
                 switch (change.Reason)
                 {
@@ -259,24 +218,13 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    private sealed class ManyContainer
+    private sealed class ManyContainer(Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>>? changes = null)
     {
-        private readonly Func<IEnumerable<DestinationContainer>> _initial;
+        public IObservable<IChangeSet<TDestination, TDestinationKey>> Changes { get; } = changes ?? Observable.Empty<IChangeSet<TDestination, TDestinationKey>>();
 
-        public ManyContainer(Func<IEnumerable<DestinationContainer>> initial, IObservable<IChangeSet<TDestination, TDestinationKey>>? changes = null)
-        {
-            _initial = initial;
-            Changes = changes ?? Observable.Empty<IChangeSet<TDestination, TDestinationKey>>();
-        }
-
-        public IObservable<IChangeSet<TDestination, TDestinationKey>> Changes { get; }
-
-        public IEnumerable<DestinationContainer> Destination => _initial();
+        public IEnumerable<DestinationContainer> Destination => initial();
     }
 }

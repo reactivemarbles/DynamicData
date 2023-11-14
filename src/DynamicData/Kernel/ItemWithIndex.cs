@@ -2,38 +2,29 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 namespace DynamicData.Kernel;
 
 /// <summary>
 /// Container for an item and it's index from a list.
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
-public readonly struct ItemWithIndex<T> : IEquatable<ItemWithIndex<T>>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ItemWithIndex{T}"/> struct.
+/// Initializes a new instance of the <see cref="ItemWithIndex{T}"/> class.
+/// </remarks>
+/// <param name="item">The item.</param>
+/// <param name="index">The index.</param>
+public readonly struct ItemWithIndex<T>(T item, int index) : IEquatable<ItemWithIndex<T>>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ItemWithIndex{T}"/> struct.
-    /// Initializes a new instance of the <see cref="ItemWithIndex{T}"/> class.
-    /// </summary>
-    /// <param name="item">The item.</param>
-    /// <param name="index">The index.</param>
-    public ItemWithIndex(T item, int index)
-    {
-        Item = item;
-        Index = index;
-    }
-
     /// <summary>
     /// Gets the item.
     /// </summary>
-    public T Item { get; }
+    public T Item { get; } = item;
 
     /// <summary>
     /// Gets the index.
     /// </summary>
-    public int Index { get; }
+    public int Index { get; } = index;
 
     /// <summary>Returns a value that indicates whether the values of two <see cref="ItemWithIndex{T}" /> objects are equal.</summary>
     /// <param name="left">The first value to compare.</param>
@@ -54,10 +45,7 @@ public readonly struct ItemWithIndex<T> : IEquatable<ItemWithIndex<T>>
     }
 
     /// <inheritdoc />
-    public bool Equals(ItemWithIndex<T> other)
-    {
-        return EqualityComparer<T>.Default.Equals(Item, other.Item);
-    }
+    public bool Equals(ItemWithIndex<T> other) => EqualityComparer<T>.Default.Equals(Item, other.Item);
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
@@ -72,14 +60,8 @@ public readonly struct ItemWithIndex<T> : IEquatable<ItemWithIndex<T>>
 
     /// <summary>Returns the hash code for this instance.</summary>
     /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
-    public override int GetHashCode()
-    {
-        return Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
-    }
+    public override int GetHashCode() => Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"{Item} ({Index})";
-    }
+    public override string ToString() => $"{Item} ({Index})";
 }

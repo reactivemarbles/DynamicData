@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -11,24 +9,13 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class OnBeingRemoved<T>
+internal sealed class OnBeingRemoved<T>(IObservable<IChangeSet<T>> source, Action<T> callback, bool invokeOnUnsubscribe)
     where T : notnull
 {
-    private readonly Action<T> _callback;
-    private readonly bool _invokeOnUnsubscribe;
+    private readonly Action<T> _callback = callback ?? throw new ArgumentNullException(nameof(callback));
+    private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly IObservable<IChangeSet<T>> _source;
-
-    public OnBeingRemoved(IObservable<IChangeSet<T>> source, Action<T> callback, bool invokeOnUnsubscribe)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _callback = callback ?? throw new ArgumentNullException(nameof(callback));
-        _invokeOnUnsubscribe = invokeOnUnsubscribe;
-    }
-
-    public IObservable<IChangeSet<T>> Run()
-    {
-        return Observable.Create<IChangeSet<T>>(
+    public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
                 var locker = new object();
@@ -40,13 +27,12 @@ internal sealed class OnBeingRemoved<T>
                     {
                         subscriber.Dispose();
 
-                        if (_invokeOnUnsubscribe)
+                        if (invokeOnUnsubscribe)
                         {
                             items.ForEach(t => _callback(t));
                         }
                     });
             });
-    }
 
     private void RegisterForRemoval(IList<T> items, IChangeSet<T> changes)
     {

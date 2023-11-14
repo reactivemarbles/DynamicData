@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -440,10 +438,7 @@ public static class ObservableCacheEx
     /// <returns>An observable change set with additional refresh changes.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> AutoRefreshOnObservable<TObject, TKey, TAny>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.AutoRefreshOnObservable((t, _) => reevaluator(t), changeSetBuffer, scheduler);
-    }
+        where TKey : notnull => source.AutoRefreshOnObservable((t, _) => reevaluator(t), changeSetBuffer, scheduler);
 
     /// <summary>
     /// Automatically refresh downstream operator. The refresh is triggered when the observable receives a notification.
@@ -510,10 +505,7 @@ public static class ObservableCacheEx
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, IScheduler? scheduler = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return BatchIf(source, pauseIfTrueSelector, false, scheduler);
-    }
+        where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, scheduler);
 
     /// <summary>
     /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
@@ -529,10 +521,7 @@ public static class ObservableCacheEx
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, IScheduler? scheduler = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, scheduler: scheduler).Run();
-    }
+        where TKey : notnull => new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, scheduler: scheduler).Run();
 
     /// <summary>
     /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
@@ -548,10 +537,7 @@ public static class ObservableCacheEx
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut = null, IScheduler? scheduler = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return BatchIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
-    }
+        where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
 
     /// <summary>
     /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
@@ -598,10 +584,7 @@ public static class ObservableCacheEx
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, IObservable<Unit>? timer = null, IScheduler? scheduler = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, timer, scheduler).Run();
-    }
+        where TKey : notnull => new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, timer, scheduler).Run();
 
     /// <summary>
     ///  Binds the results to the specified observable collection using the default update algorithm.
@@ -878,16 +861,13 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> BufferInitial<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TimeSpan initialBuffer, IScheduler? scheduler = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.DeferUntilLoaded().Publish(
+        where TKey : notnull => source.DeferUntilLoaded().Publish(
             shared =>
             {
                 var initial = shared.Buffer(initialBuffer, scheduler ?? Scheduler.Default).FlattenBufferResult().Take(1);
 
                 return initial.Concat(shared);
             });
-    }
 
     /// <summary>
     /// Cast the object to the specified type.
@@ -1531,10 +1511,7 @@ public static class ObservableCacheEx
     /// </exception>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return ExpireAfter(source, timeSelector, Scheduler.Default);
-    }
+        where TKey : notnull => ExpireAfter(source, timeSelector, Scheduler.Default);
 
     /// <summary>
     /// Automatically removes items from the stream after the time specified by
@@ -1585,10 +1562,7 @@ public static class ObservableCacheEx
     /// timeSelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return ExpireAfter(source, timeSelector, pollingInterval, Scheduler.Default);
-    }
+        where TKey : notnull => ExpireAfter(source, timeSelector, pollingInterval, Scheduler.Default);
 
     /// <summary>
     /// Automatically removes items from the stream on the next poll after the time specified by
@@ -1638,10 +1612,7 @@ public static class ObservableCacheEx
     /// timeSelector.</exception>
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, IScheduler? scheduler = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.ExpireAfter(timeSelector, null, scheduler);
-    }
+        where TKey : notnull => source.ExpireAfter(timeSelector, null, scheduler);
 
     /// <summary>
     /// Automatically removes items from the cache after the time specified by
@@ -1660,10 +1631,7 @@ public static class ObservableCacheEx
     /// timeSelector.</exception>
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return ExpireAfter(source, timeSelector, interval, Scheduler.Default);
-    }
+        where TKey : notnull => ExpireAfter(source, timeSelector, interval, Scheduler.Default);
 
     /// <summary>
     /// Ensures there are no duplicated keys in the observable changeset.
@@ -2374,10 +2342,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits change sets and ignores equal value changes.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> IgnoreSameReferenceUpdate<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.IgnoreUpdateWhen((c, p) => ReferenceEquals(c, p));
-    }
+        where TKey : notnull => source.IgnoreUpdateWhen((c, p) => ReferenceEquals(c, p));
 
     /// <summary>
     /// Ignores the update when the condition is met.
@@ -2390,9 +2355,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits change sets and ignores updates equal to the lambda.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> IgnoreUpdateWhen<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TObject, bool> ignoreFunction)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.Select(
+        where TKey : notnull => source.Select(
             updates =>
             {
                 var result = updates.Where(
@@ -2407,7 +2370,6 @@ public static class ObservableCacheEx
                     });
                 return new ChangeSet<TObject, TKey>(result);
             }).NotEmpty();
-    }
 
     /// <summary>
     /// Only includes the update when the condition is met.
@@ -2625,10 +2587,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> InvokeEvaluate<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : IEvaluateAware
-        where TKey : notnull
-    {
-        return source.Do(changes => changes.Where(u => u.Reason == ChangeReason.Refresh).ForEach(u => u.Current.Evaluate()));
-    }
+        where TKey : notnull => source.Do(changes => changes.Where(u => u.Reason == ChangeReason.Refresh).ForEach(u => u.Current.Evaluate()));
 
     /// <summary>
     /// Joins the left and right observable data sources, taking all left values and combining any matching right values.
@@ -3424,10 +3383,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
-        where TDestinationKey : notnull
-    {
-        return source.MergeManyChangeSets(observableSelector, sourceComparer, DefaultResortOnSourceRefresh, equalityComparer: null, childComparer);
-    }
+        where TDestinationKey : notnull => source.MergeManyChangeSets(observableSelector, sourceComparer, DefaultResortOnSourceRefresh, equalityComparer: null, childComparer);
 
     /// <summary>
     /// Overload of <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> that
@@ -3474,10 +3430,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
-        where TDestinationKey : notnull
-    {
-        return source.MergeManyChangeSets(observableSelector, sourceComparer, resortOnSourceRefresh, equalityComparer: null, childComparer);
-    }
+        where TDestinationKey : notnull => source.MergeManyChangeSets(observableSelector, sourceComparer, resortOnSourceRefresh, equalityComparer: null, childComparer);
 
     /// <summary>
     /// Overload of <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> that
@@ -3524,10 +3477,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
-        where TDestinationKey : notnull
-    {
-        return source.MergeManyChangeSets(observableSelector, sourceComparer, DefaultResortOnSourceRefresh, equalityComparer, childComparer);
-    }
+        where TDestinationKey : notnull => source.MergeManyChangeSets(observableSelector, sourceComparer, DefaultResortOnSourceRefresh, equalityComparer, childComparer);
 
     /// <summary>
     /// Overload of <see cref="MergeManyChangeSets{TObject, TKey, TDestination, TDestinationKey}(IObservable{IChangeSet{TObject, TKey}}, Func{TObject, IObservable{IChangeSet{TDestination, TDestinationKey}}}, IEqualityComparer{TDestination}?, IComparer{TDestination}?)"/> that
@@ -3652,10 +3602,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which monitors the status of the observable.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<ConnectionStatus> MonitorStatus<T>(this IObservable<T> source)
-    {
-        return new StatusMonitor<T>(source).Run();
-    }
+    public static IObservable<ConnectionStatus> MonitorStatus<T>(this IObservable<T> source) => new StatusMonitor<T>(source).Run();
 
     /// <summary>
     /// Suppresses updates which are empty.
@@ -4763,10 +4710,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.StartWith(ChangeSet<TObject, TKey>.Empty);
-    }
+        where TKey : notnull => source.StartWith(ChangeSet<TObject, TKey>.Empty);
 
     /// <summary>
     /// Prepends an empty change set to the source.
@@ -4777,10 +4721,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits sorted change sets.</returns>
     public static IObservable<ISortedChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.StartWith(SortedChangeSet<TObject, TKey>.Empty);
-    }
+        where TKey : notnull => source.StartWith(SortedChangeSet<TObject, TKey>.Empty);
 
     /// <summary>
     /// Prepends an empty change set to the source.
@@ -4791,10 +4732,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits virtual change sets.</returns>
     public static IObservable<IVirtualChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<IVirtualChangeSet<TObject, TKey>> source)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.StartWith(VirtualChangeSet<TObject, TKey>.Empty);
-    }
+        where TKey : notnull => source.StartWith(VirtualChangeSet<TObject, TKey>.Empty);
 
     /// <summary>
     /// Prepends an empty change set to the source.
@@ -4805,10 +4743,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits paged change sets.</returns>
     public static IObservable<IPagedChangeSet<TObject, TKey>> StartWithEmpty<TObject, TKey>(this IObservable<IPagedChangeSet<TObject, TKey>> source)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.StartWith(PagedChangeSet<TObject, TKey>.Empty);
-    }
+        where TKey : notnull => source.StartWith(PagedChangeSet<TObject, TKey>.Empty);
 
     /// <summary>
     /// Prepends an empty change set to the source.
@@ -4821,10 +4756,7 @@ public static class ObservableCacheEx
     public static IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> StartWithEmpty<TObject, TKey, TGroupKey>(this IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> source)
         where TObject : notnull
         where TKey : notnull
-        where TGroupKey : notnull
-    {
-        return source.StartWith(GroupChangeSet<TObject, TKey, TGroupKey>.Empty);
-    }
+        where TGroupKey : notnull => source.StartWith(GroupChangeSet<TObject, TKey, TGroupKey>.Empty);
 
     /// <summary>
     /// Prepends an empty change set to the source.
@@ -4837,10 +4769,7 @@ public static class ObservableCacheEx
     public static IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> StartWithEmpty<TObject, TKey, TGroupKey>(this IObservable<IImmutableGroupChangeSet<TObject, TKey, TGroupKey>> source)
         where TObject : notnull
         where TKey : notnull
-        where TGroupKey : notnull
-    {
-        return source.StartWith(ImmutableGroupChangeSet<TObject, TKey, TGroupKey>.Empty);
-    }
+        where TGroupKey : notnull => source.StartWith(ImmutableGroupChangeSet<TObject, TKey, TGroupKey>.Empty);
 
     /// <summary>
     /// Prepends an empty change set to the source.
@@ -4848,10 +4777,7 @@ public static class ObservableCacheEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source read only collection.</param>
     /// <returns>A read only collection.</returns>
-    public static IObservable<IReadOnlyCollection<T>> StartWithEmpty<T>(this IObservable<IReadOnlyCollection<T>> source)
-    {
-        return source.StartWith(ReadOnlyCollectionLight<T>.Empty);
-    }
+    public static IObservable<IReadOnlyCollection<T>> StartWithEmpty<T>(this IObservable<IReadOnlyCollection<T>> source) => source.StartWith(ReadOnlyCollectionLight<T>.Empty);
 
     /// <summary>
     /// The equivalent of rx StartsWith operator, but wraps the item in a change where reason is ChangeReason.Add.
@@ -4966,10 +4892,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits change sets.</returns>
     public static IObservable<IChangeSet<TObject, TKey>> SuppressRefresh<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.WhereReasonsAreNot(ChangeReason.Refresh);
-    }
+        where TKey : notnull => source.WhereReasonsAreNot(ChangeReason.Refresh);
 
     /// <summary>
     /// Transforms an observable sequence of observable caches into a single sequence
@@ -5028,10 +4951,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items));
-    }
+        where TKey : notnull => source.QueryWhenChanged(query => new ReadOnlyCollectionLight<TObject>(query.Items));
 
     /// <summary>
     /// Converts the observable to an observable change set.
@@ -5221,10 +5141,7 @@ public static class ObservableCacheEx
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey, TSortKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
         where TObject : notnull
         where TKey : notnull
-        where TSortKey : notnull
-    {
-        return source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending ? new ReadOnlyCollectionLight<TObject>(query.Items.OrderBy(sort)) : new ReadOnlyCollectionLight<TObject>(query.Items.OrderByDescending(sort)));
-    }
+        where TSortKey : notnull => source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending ? new ReadOnlyCollectionLight<TObject>(query.Items.OrderBy(sort)) : new ReadOnlyCollectionLight<TObject>(query.Items.OrderByDescending(sort)));
 
     /// <summary>
     /// Converts the change set into a fully formed sorted collection. Each change in the source results in a new sorted collection.
@@ -5236,16 +5153,13 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.QueryWhenChanged(
+        where TKey : notnull => source.QueryWhenChanged(
             query =>
             {
                 var items = query.Items.AsList();
                 items.Sort(comparer);
                 return new ReadOnlyCollectionLight<TObject>(items);
             });
-    }
 
     /// <summary>
     /// Projects each update item to a new form using the specified transform function.
@@ -5468,10 +5382,7 @@ public static class ObservableCacheEx
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Unit> forceTransform)
         where TDestination : notnull
         where TSource : notnull
-        where TKey : notnull
-    {
-        return source.Transform((cur, _, _) => transformFactory(cur), forceTransform.ForForced<TSource, TKey>());
-    }
+        where TKey : notnull => source.Transform((cur, _, _) => transformFactory(cur), forceTransform.ForForced<TSource, TKey>());
 
     /// <summary>
     /// Projects each update item to a new form using the specified transform function.
@@ -5663,10 +5574,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
-        where TSourceKey : notnull
-    {
-        return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
-    }
+        where TSourceKey : notnull => new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
 
     /// <summary>
     /// Flatten the nested observable collection, and subsequently observe observable collection changes.
@@ -5683,10 +5591,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
-        where TSourceKey : notnull
-    {
-        return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
-    }
+        where TSourceKey : notnull => new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
 
     /// <summary>
     /// Flatten the nested observable collection, and subsequently observe observable collection changes.
@@ -5703,10 +5608,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
-        where TSourceKey : notnull
-    {
-        return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
-    }
+        where TSourceKey : notnull => new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
 
     /// <summary>
     /// Flatten the nested observable cache, and subsequently observe observable cache changes.
@@ -5723,10 +5625,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
-        where TSourceKey : notnull
-    {
-        return new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
-    }
+        where TSourceKey : notnull => new TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>(source, manySelector, keySelector).Run();
 
     /// <summary>
     /// Projects each update item to a new form using the specified transform function,
@@ -5873,10 +5772,7 @@ public static class ObservableCacheEx
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
         where TDestination : notnull
         where TSource : notnull
-        where TKey : notnull
-    {
-        return source.TransformSafe((cur, _, _) => transformFactory(cur), errorHandler, forceTransform.ForForced<TSource, TKey>());
-    }
+        where TKey : notnull => source.TransformSafe((cur, _, _) => transformFactory(cur), errorHandler, forceTransform.ForForced<TSource, TKey>());
 
     /// <summary>
     /// Projects each update item to a new form using the specified transform function,
@@ -6237,10 +6133,7 @@ public static class ObservableCacheEx
     public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
-        where TValue : notnull
-    {
-        return source.TrueFor(observableSelector, items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
-    }
+        where TValue : notnull => source.TrueFor(observableSelector, items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
 
     /// <summary>
     /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
@@ -6260,10 +6153,7 @@ public static class ObservableCacheEx
     public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TObject, TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
-        where TValue : notnull
-    {
-        return source.TrueFor(observableSelector, items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.Item, o.LatestValue.Value)));
-    }
+        where TValue : notnull => source.TrueFor(observableSelector, items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.Item, o.LatestValue.Value)));
 
     /// <summary>
     /// Produces a boolean observable indicating whether the resulting value of whether any of the specified observables matches
@@ -6288,10 +6178,7 @@ public static class ObservableCacheEx
     public static IObservable<bool> TrueForAny<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TObject, TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
-        where TValue : notnull
-    {
-        return source.TrueFor(observableSelector, items => items.Any(o => o.LatestValue.HasValue && equalityCondition(o.Item, o.LatestValue.Value)));
-    }
+        where TValue : notnull => source.TrueFor(observableSelector, items => items.Any(o => o.LatestValue.HasValue && equalityCondition(o.Item, o.LatestValue.Value)));
 
     /// <summary>
     /// Produces a boolean observable indicating whether the resulting value of whether any of the specified observables matches
@@ -6345,10 +6232,7 @@ public static class ObservableCacheEx
     /// <returns>An observable which emits the sorted change set.</returns>
     public static IObservable<ISortedChangeSet<TObject, TKey>> UpdateIndex<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source)
         where TObject : IIndexAware
-        where TKey : notnull
-    {
-        return source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index }).ForEach(u => u.update.Value.Index = u.index));
-    }
+        where TKey : notnull => source.Do(changes => changes.SortedItems.Select((update, index) => new { update, index }).ForEach(u => u.update.Value.Index = u.index));
 
     /// <summary>
     /// Virtualises the underlying data from the specified source.
@@ -6704,10 +6588,7 @@ public static class ObservableCacheEx
     /// timeSelector.</exception>
     internal static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ForExpiry<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval, IScheduler scheduler)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return new TimeExpirer<TObject, TKey>(source, timeSelector, interval, scheduler).ForExpiry();
-    }
+        where TKey : notnull => new TimeExpirer<TObject, TKey>(source, timeSelector, interval, scheduler).ForExpiry();
 
     private static IObservable<IChangeSet<TObject, TKey>> Combine<TObject, TKey>(this IObservableList<IObservableCache<TObject, TKey>> source, CombineOperator type)
         where TObject : notnull
@@ -6842,32 +6723,23 @@ public static class ObservableCacheEx
     }
 
     private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Unit>? source)
-        where TKey : notnull
-    {
-        return source?.Select(
+        where TKey : notnull => source?.Select(
             _ =>
             {
                 bool Transformer(TSource item, TKey key) => true;
                 return (Func<TSource, TKey, bool>)Transformer;
             });
-    }
 
     private static IObservable<Func<TSource, TKey, bool>>? ForForced<TSource, TKey>(this IObservable<Func<TSource, bool>>? source)
-        where TKey : notnull
-    {
-        return source?.Select(
+        where TKey : notnull => source?.Select(
             condition =>
             {
                 bool Transformer(TSource item, TKey key) => condition(item);
                 return (Func<TSource, TKey, bool>)Transformer;
             });
-    }
 
     private static IObservable<bool> TrueFor<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<IEnumerable<ObservableWithValue<TObject, TValue>>, bool> collectionMatcher)
         where TObject : notnull
         where TKey : notnull
-        where TValue : notnull
-    {
-        return new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
-    }
+        where TValue : notnull => new TrueFor<TObject, TKey, TValue>(source, observableSelector, collectionMatcher).Run();
 }

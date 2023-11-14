@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Disposables;
 
 using DynamicData.Kernel;
@@ -14,7 +11,7 @@ namespace DynamicData.Cache.Internal;
 /// <summary>
 ///     Combines multiple caches using logical operators.
 /// </summary>
-internal sealed class Combiner<TObject, TKey>
+internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChangeSet<TObject, TKey>> updatedCallback)
     where TObject : notnull
     where TKey : notnull
 {
@@ -23,16 +20,6 @@ internal sealed class Combiner<TObject, TKey>
     private readonly object _locker = new();
 
     private readonly IList<Cache<TObject, TKey>> _sourceCaches = new List<Cache<TObject, TKey>>();
-
-    private readonly CombineOperator _type;
-
-    private readonly Action<IChangeSet<TObject, TKey>> _updatedCallback;
-
-    public Combiner(CombineOperator type, Action<IChangeSet<TObject, TKey>> updatedCallback)
-    {
-        _type = type;
-        _updatedCallback = updatedCallback;
-    }
 
     public IDisposable Subscribe(IObservable<IChangeSet<TObject, TKey>>[] source)
     {
@@ -55,7 +42,7 @@ internal sealed class Combiner<TObject, TKey>
 
     private bool MatchesConstraint(TKey key)
     {
-        switch (_type)
+        switch (type)
         {
             case CombineOperator.And:
                 {
@@ -99,7 +86,7 @@ internal sealed class Combiner<TObject, TKey>
 
         if (notifications.Count != 0)
         {
-            _updatedCallback(notifications);
+            updatedCallback(notifications);
         }
     }
 

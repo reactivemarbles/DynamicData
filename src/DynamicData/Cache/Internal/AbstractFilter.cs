@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
@@ -67,7 +64,7 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
 
     protected abstract IEnumerable<Change<TObject, TKey>> Refresh(IEnumerable<KeyValuePair<TKey, TObject>> items, Func<KeyValuePair<TKey, TObject>, Optional<Change<TObject, TKey>>> factory);
 
-    private IChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> source)
+    private ChangeSet<TObject, TKey> ProcessResult(IEnumerable<UpdateWithFilter> source)
     {
         // Have to process one item at a time as an item can be included multiple
         // times in any batch
@@ -137,22 +134,16 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
         return _cache.CaptureChanges();
     }
 
-    protected readonly struct UpdateWithFilter
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateWithFilter"/> struct.
+    /// Initializes a new instance of the <see cref="object"/> class.
+    /// </summary>
+    /// <param name="isMatch">If the filter is a match.</param>
+    /// <param name="change">The change.</param>
+    protected readonly struct UpdateWithFilter(bool isMatch, Change<TObject, TKey> change)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UpdateWithFilter"/> struct.
-        /// Initializes a new instance of the <see cref="object"/> class.
-        /// </summary>
-        /// <param name="isMatch">If the filter is a match.</param>
-        /// <param name="change">The change.</param>
-        public UpdateWithFilter(bool isMatch, Change<TObject, TKey> change)
-        {
-            IsMatch = isMatch;
-            Change = change;
-        }
+        public Change<TObject, TKey> Change { get; } = change;
 
-        public Change<TObject, TKey> Change { get; }
-
-        public bool IsMatch { get; }
+        public bool IsMatch { get; } = isMatch;
     }
 }

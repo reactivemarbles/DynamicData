@@ -7,54 +7,44 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class EditDiffChangeSetOptional<TObject, TKey>
+internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<Optional<TObject>> _source;
+    private readonly IObservable<Optional<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly IEqualityComparer<TObject> _equalityComparer;
+    private readonly IEqualityComparer<TObject> _equalityComparer = equalityComparer ?? EqualityComparer<TObject>.Default;
 
-    private readonly Func<TObject, TKey> _keySelector;
+    private readonly Func<TObject, TKey> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
 
-    public EditDiffChangeSetOptional(IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-        _equalityComparer = equalityComparer ?? EqualityComparer<TObject>.Default;
-    }
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+                                                                {
+                                                                    var previous = Optional.None<ValueContainer>();
 
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(observer =>
-        {
-            var previous = Optional.None<ValueContainer>();
+                                                                    return _source.Synchronize().Subscribe(
+                                                                        nextValue =>
+                                                                        {
+                                                                            var current = nextValue.Convert(val => new ValueContainer(val, _keySelector(val)));
 
-            return _source.Synchronize().Subscribe(
-                nextValue =>
-                {
-                    var current = nextValue.Convert(val => new ValueContainer(val, _keySelector(val)));
+                                                                            // Determine the changes
+                                                                            var changes = (previous.HasValue, current.HasValue) switch
+                                                                            {
+                                                                                (true, true) => CreateUpdateChanges(previous.Value, current.Value),
+                                                                                (false, true) => new[] { new Change<TObject, TKey>(ChangeReason.Add, current.Value.Key, current.Value.Object) },
+                                                                                (true, false) => new[] { new Change<TObject, TKey>(ChangeReason.Remove, previous.Value.Key, previous.Value.Object) },
+                                                                                (false, false) => Array.Empty<Change<TObject, TKey>>(),
+                                                                            };
 
-                    // Determine the changes
-                    var changes = (previous.HasValue, current.HasValue) switch
-                    {
-                        (true, true) => CreateUpdateChanges(previous.Value, current.Value),
-                        (false, true) => new[] { new Change<TObject, TKey>(ChangeReason.Add, current.Value.Key, current.Value.Object) },
-                        (true, false) => new[] { new Change<TObject, TKey>(ChangeReason.Remove, previous.Value.Key, previous.Value.Object) },
-                        (false, false) => Array.Empty<Change<TObject, TKey>>(),
-                    };
+                                                                            // Save the value for the next round
+                                                                            previous = current;
 
-                    // Save the value for the next round
-                    previous = current;
-
-                    // If there are changes, emit as a ChangeSet
-                    if (changes.Length > 0)
-                    {
-                        observer.OnNext(new ChangeSet<TObject, TKey>(changes));
-                    }
-                }, observer.OnError, observer.OnCompleted);
-        });
-    }
+                                                                            // If there are changes, emit as a ChangeSet
+                                                                            if (changes.Length > 0)
+                                                                            {
+                                                                                observer.OnNext(new ChangeSet<TObject, TKey>(changes));
+                                                                            }
+                                                                        }, observer.OnError, observer.OnCompleted);
+                                                                });
 
     private Change<TObject, TKey>[] CreateUpdateChanges(in ValueContainer prev, in ValueContainer curr)
     {
@@ -77,16 +67,10 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>
         };
     }
 
-    private readonly struct ValueContainer
+    private readonly struct ValueContainer(TObject obj, TKey key)
     {
-        public ValueContainer(TObject obj, TKey key)
-        {
-            Object = obj;
-            Key = key;
-        }
+        public TObject Object { get; } = obj;
 
-        public TObject Object { get; }
-
-        public TKey Key { get; }
+        public TKey Key { get; } = key;
     }
 }

@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -33,9 +32,7 @@ internal class SubscribeMany<TObject, TKey>
         _subscriptionFactory = subscriptionFactory ?? throw new ArgumentNullException(nameof(subscriptionFactory));
     }
 
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
                 var published = _source.Publish();
@@ -43,5 +40,4 @@ internal class SubscribeMany<TObject, TKey>
 
                 return new CompositeDisposable(subscriptions, published.SubscribeSafe(observer), published.Connect());
             });
-    }
 }

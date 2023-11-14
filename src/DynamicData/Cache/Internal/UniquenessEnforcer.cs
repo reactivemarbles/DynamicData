@@ -6,24 +6,19 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class UniquenessEnforcer<TObject, TKey>
+internal class UniquenessEnforcer<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-    public UniquenessEnforcer(IObservable<IChangeSet<TObject, TKey>> source) => _source = source;
-
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
+    public IObservable<IChangeSet<TObject, TKey>> Run() =>
         /*
-         * If we handle refreshes, we cannot use .Last() as the last in the groupd may be a refresh,
-         * and a previous in the group may add or update. Suddenly this scenario becomes very complicated
-         * so for this phase we'll ignore these.
-         *
-         */
+* If we handle refreshes, we cannot use .Last() as the last in the groupd may be a refresh,
+* and a previous in the group may add or update. Suddenly this scenario becomes very complicated
+* so for this phase we'll ignore these.
+*
+*/
 
-        return _source
+        source
             .WhereReasonsAreNot(ChangeReason.Refresh, ChangeReason.Moved)
             .Scan(
                 new ChangeAwareCache<TObject, TKey>(),
@@ -48,5 +43,4 @@ internal class UniquenessEnforcer<TObject, TKey>
                     return cache;
                 })
             .Select(state => state.CaptureChanges());
-    }
 }

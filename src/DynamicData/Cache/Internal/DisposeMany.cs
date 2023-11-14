@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -10,23 +9,15 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class DisposeMany<TObject, TKey>
+internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Action<TObject> _removeAction;
+    private readonly Action<TObject> _removeAction = removeAction ?? throw new ArgumentNullException(nameof(removeAction));
 
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public DisposeMany(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _removeAction = removeAction ?? throw new ArgumentNullException(nameof(removeAction));
-    }
-
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
                 var locker = new object();
@@ -45,7 +36,6 @@ internal sealed class DisposeMany<TObject, TKey>
                         }
                     });
             });
-    }
 
     private void RegisterForRemoval(IChangeSet<TObject, TKey> changes, Cache<TObject, TKey> cache)
     {

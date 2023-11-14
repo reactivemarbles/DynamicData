@@ -2,10 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace DynamicData.Cache.Internal;
 
@@ -44,13 +41,7 @@ internal class KeyValueCollection<TObject, TKey> : IKeyValueCollection<TObject, 
 
     public KeyValuePair<TKey, TObject> this[int index] => _items.ElementAt(index);
 
-    public IEnumerator<KeyValuePair<TKey, TObject>> GetEnumerator()
-    {
-        return _items.GetEnumerator();
-    }
+    public IEnumerator<KeyValuePair<TKey, TObject>> GetEnumerator() => _items.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

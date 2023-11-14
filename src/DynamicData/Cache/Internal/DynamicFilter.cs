@@ -2,35 +2,20 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class DynamicFilter<TObject, TKey>
+internal class DynamicFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit>? refilterObservable = null, bool suppressEmptyChangeSets = true)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<Func<TObject, bool>> _predicateChanged;
+    private readonly IObservable<Func<TObject, bool>> _predicateChanged = predicateChanged ?? throw new ArgumentNullException(nameof(predicateChanged));
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly IObservable<Unit>? _refilterObservable;
-    private readonly bool _suppressEmptyChangeSets;
-
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-    public DynamicFilter(IObservable<IChangeSet<TObject, TKey>> source, IObservable<Func<TObject, bool>> predicateChanged, IObservable<Unit>? refilterObservable = null, bool suppressEmptyChangeSets = true)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _predicateChanged = predicateChanged ?? throw new ArgumentNullException(nameof(predicateChanged));
-        _refilterObservable = refilterObservable;
-        _suppressEmptyChangeSets = suppressEmptyChangeSets;
-    }
-
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
                 var allData = new Cache<TObject, TKey>();
@@ -63,16 +48,13 @@ internal class DynamicFilter<TObject, TKey>
                     });
 
                 var source = refresher.Merge(dataChanged);
-                if (_suppressEmptyChangeSets)
+                if (suppressEmptyChangeSets)
                     source = source.NotEmpty();
 
                 return source.SubscribeSafe(observer);
             });
-    }
 
-    private IObservable<Func<TObject, bool>> LatestPredicateObservable()
-    {
-        return Observable.Create<Func<TObject, bool>>(
+    private IObservable<Func<TObject, bool>> LatestPredicateObservable() => Observable.Create<Func<TObject, bool>>(
             observable =>
             {
                 Func<TObject, bool> latest = _ => false;
@@ -86,9 +68,8 @@ internal class DynamicFilter<TObject, TKey>
                         observable.OnNext(latest);
                     });
 
-                var reapplier = _refilterObservable is null ? Disposable.Empty : _refilterObservable.Subscribe(_ => observable.OnNext(latest));
+                var reapplier = refilterObservable is null ? Disposable.Empty : refilterObservable.Subscribe(_ => observable.OnNext(latest));
 
                 return new CompositeDisposable(predicateChanged, reapplier);
             });
-    }
 }

@@ -2,25 +2,17 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace DynamicData.List.Linq;
 
-internal class AddKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject, TKey>>
+internal class AddKeyEnumerator<TObject, TKey>(IChangeSet<TObject> source, Func<TObject, TKey> keySelector) : IEnumerable<Change<TObject, TKey>>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Func<TObject, TKey> _keySelector;
+    private readonly Func<TObject, TKey> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
 
-    private readonly IChangeSet<TObject> _source;
-
-    public AddKeyEnumerator(IChangeSet<TObject> source, Func<TObject, TKey> keySelector)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-    }
+    private readonly IChangeSet<TObject> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     /// <summary>
     /// Returns an enumerator that iterates through the collection.
@@ -111,8 +103,5 @@ internal class AddKeyEnumerator<TObject, TKey> : IEnumerable<Change<TObject, TKe
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

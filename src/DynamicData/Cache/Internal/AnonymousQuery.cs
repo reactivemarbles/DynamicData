@@ -2,19 +2,15 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class AnonymousQuery<TObject, TKey> : IQuery<TObject, TKey>
+internal sealed class AnonymousQuery<TObject, TKey>(Cache<TObject, TKey> cache) : IQuery<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Cache<TObject, TKey> _cache;
-
-    public AnonymousQuery(Cache<TObject, TKey> cache) => _cache = cache.Clone();
+    private readonly Cache<TObject, TKey> _cache = cache.Clone();
 
     public int Count => _cache.Count;
 

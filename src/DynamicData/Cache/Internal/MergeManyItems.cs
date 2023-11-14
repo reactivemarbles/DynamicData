@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Linq;
 
 using DynamicData.Kernel;
@@ -34,8 +33,5 @@ internal class MergeManyItems<TObject, TKey, TDestination>
         _observableSelector = (t, _) => observableSelector(t);
     }
 
-    public IObservable<ItemWithValue<TObject, TDestination>> Run()
-    {
-        return Observable.Create<ItemWithValue<TObject, TDestination>>(observer => _source.SubscribeMany((t, v) => _observableSelector(t, v).Select(z => new ItemWithValue<TObject, TDestination>(t, z)).SubscribeSafe(observer)).Subscribe());
-    }
+    public IObservable<ItemWithValue<TObject, TDestination>> Run() => Observable.Create<ItemWithValue<TObject, TDestination>>(observer => _source.SubscribeMany((t, v) => _observableSelector(t, v).Select(z => new ItemWithValue<TObject, TDestination>(t, z)).SubscribeSafe(observer)).Subscribe());
 }

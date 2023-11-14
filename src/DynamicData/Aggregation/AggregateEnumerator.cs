@@ -3,25 +3,17 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using DynamicData.Cache;
 
 namespace DynamicData.Aggregation;
 
-internal class AggregateEnumerator<T> : IAggregateChangeSet<T>
+internal class AggregateEnumerator<T>(IChangeSet<T> source) : IAggregateChangeSet<T>
     where T : notnull
 {
-    private readonly IChangeSet<T> _source;
-
-    public AggregateEnumerator(IChangeSet<T> source)
-    {
-        _source = source;
-    }
-
     public IEnumerator<AggregateItem<T>> GetEnumerator()
     {
-        foreach (var change in _source)
+        foreach (var change in source)
         {
             switch (change.Reason)
             {
@@ -58,23 +50,15 @@ internal class AggregateEnumerator<T> : IAggregateChangeSet<T>
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same name, different generics.")]
-internal class AggregateEnumerator<TObject, TKey> : IAggregateChangeSet<TObject>
+internal class AggregateEnumerator<TObject, TKey>(IChangeSet<TObject, TKey> source) : IAggregateChangeSet<TObject>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly ChangeSet<TObject, TKey> _source;
-
-    public AggregateEnumerator(IChangeSet<TObject, TKey> source)
-    {
-        _source = source.ToConcreteType();
-    }
+    private readonly ChangeSet<TObject, TKey> _source = source.ToConcreteType();
 
     public IEnumerator<AggregateItem<TObject>> GetEnumerator()
     {
@@ -101,8 +85,5 @@ internal class AggregateEnumerator<TObject, TKey> : IAggregateChangeSet<TObject>
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

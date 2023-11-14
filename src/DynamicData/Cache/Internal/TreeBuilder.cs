@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -13,28 +11,19 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class TreeBuilder<TObject, TKey>
+internal class TreeBuilder<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
     where TObject : class
     where TKey : notnull
 {
-    private readonly Func<TObject, TKey> _pivotOn;
+    private readonly Func<TObject, TKey> _pivotOn = pivotOn ?? throw new ArgumentNullException(nameof(pivotOn));
 
-    private readonly IObservable<Func<Node<TObject, TKey>, bool>> _predicateChanged;
+    private readonly IObservable<Func<Node<TObject, TKey>, bool>> _predicateChanged = predicateChanged ?? Observable.Return(DefaultPredicate);
 
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-    public TreeBuilder(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey> pivotOn, IObservable<Func<Node<TObject, TKey>, bool>>? predicateChanged)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _pivotOn = pivotOn ?? throw new ArgumentNullException(nameof(pivotOn));
-        _predicateChanged = predicateChanged ?? Observable.Return(DefaultPredicate);
-    }
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     private static Func<Node<TObject, TKey>, bool> DefaultPredicate => node => node.IsRoot;
 
-    public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(
+    public IObservable<IChangeSet<Node<TObject, TKey>, TKey>> Run() => Observable.Create<IChangeSet<Node<TObject, TKey>, TKey>>(
             observer =>
             {
                 var locker = new object();
@@ -224,5 +213,4 @@ internal class TreeBuilder<TObject, TKey>
                         reFilterObservable.OnCompleted();
                     });
             });
-    }
 }

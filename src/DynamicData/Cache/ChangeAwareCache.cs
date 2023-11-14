@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 using DynamicData.Cache;
 using DynamicData.Kernel;
 
@@ -175,10 +171,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <summary>
     /// Raises an evaluate change for all items in the cache.
     /// </summary>
-    public void Refresh()
-    {
-        _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
-    }
+    public void Refresh() => _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
 
     /// <summary>
     /// Raises an evaluate change for the specified key.

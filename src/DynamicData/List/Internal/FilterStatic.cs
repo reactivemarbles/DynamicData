@@ -2,38 +2,27 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
 using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal class FilterStatic<T>
+internal class FilterStatic<T>(IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
     where T : notnull
 {
-    private readonly Func<T, bool> _predicate;
+    private readonly Func<T, bool> _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
 
-    private readonly IObservable<IChangeSet<T>> _source;
+    private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public FilterStatic(IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
-    }
-
-    public IObservable<IChangeSet<T>> Run()
-    {
-        return Observable.Defer(() =>
-        {
-            return _source.Scan(
-                new ChangeAwareList<T>(),
-                (state, changes) =>
-                {
-                    Process(state, changes);
-                    return state;
-                }).Select(filtered => filtered.CaptureChanges()).NotEmpty();
-        });
-    }
+    public IObservable<IChangeSet<T>> Run() => Observable.Defer(() =>
+                                                    {
+                                                        return _source.Scan(
+                                                            new ChangeAwareList<T>(),
+                                                            (state, changes) =>
+                                                            {
+                                                                Process(state, changes);
+                                                                return state;
+                                                            }).Select(filtered => filtered.CaptureChanges()).NotEmpty();
+                                                    });
 
     private void Process(ChangeAwareList<T> filtered, IChangeSet<T> changes)
     {

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -106,10 +103,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// </summary>
     /// <param name="other">The other.</param>
     /// <returns>If the value is equal.</returns>
-    public bool Equals(ItemChange<T> other)
-    {
-        return EqualityComparer<T>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
-    }
+    public bool Equals(ItemChange<T> other) => EqualityComparer<T>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
 
     /// <summary>
     /// Determines whether the specified <see cref="object" />, is equal to this instance.
@@ -152,8 +146,5 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// <returns>
     /// A <see cref="string" /> that represents this instance.
     /// </returns>
-    public override string ToString()
-    {
-        return $"Current: {Current}, Previous: {Previous}";
-    }
+    public override string ToString() => $"Current: {Current}, Previous: {Previous}";
 }

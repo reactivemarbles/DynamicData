@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData.Tests;
 
@@ -19,8 +17,5 @@ public static class ListTextEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <returns>The change set aggregator.</returns>
     public static ChangeSetAggregator<T> AsAggregator<T>(this IObservable<IChangeSet<T>> source)
-        where T : notnull
-    {
-        return new(source);
-    }
+        where T : notnull => new(source);
 }

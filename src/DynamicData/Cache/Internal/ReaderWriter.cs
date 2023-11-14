@@ -2,26 +2,19 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class ReaderWriter<TObject, TKey>
+internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelector = null)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Func<TObject, TKey>? _keySelector;
-
     private readonly object _locker = new();
 
     private CacheUpdater<TObject, TKey>? _activeUpdater;
 
     private Dictionary<TKey, TObject> _data = new(); // could do with priming this on first time load
-
-    public ReaderWriter(Func<TObject, TKey>? keySelector = null) => _keySelector = keySelector;
 
     public int Count
     {
@@ -164,7 +157,7 @@ internal sealed class ReaderWriter<TObject, TKey>
                 var copy = new Dictionary<TKey, TObject>(_data);
                 var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
 
-                _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
+                _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, keySelector);
                 updateAction(_activeUpdater);
                 _activeUpdater = null;
 
@@ -181,14 +174,14 @@ internal sealed class ReaderWriter<TObject, TKey>
             {
                 var changeAwareCache = new ChangeAwareCache<TObject, TKey>(_data);
 
-                _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, _keySelector);
+                _activeUpdater = new CacheUpdater<TObject, TKey>(changeAwareCache, keySelector);
                 updateAction(_activeUpdater);
                 _activeUpdater = null;
 
                 return changeAwareCache.CaptureChanges();
             }
 
-            _activeUpdater = new CacheUpdater<TObject, TKey>(_data, _keySelector);
+            _activeUpdater = new CacheUpdater<TObject, TKey>(_data, keySelector);
             updateAction(_activeUpdater);
             _activeUpdater = null;
 

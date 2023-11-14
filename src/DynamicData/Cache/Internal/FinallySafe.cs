@@ -2,27 +2,18 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class FinallySafe<T>
+internal class FinallySafe<T>(IObservable<T> source, Action finallyAction)
 {
-    private readonly Action _finallyAction;
+    private readonly Action _finallyAction = finallyAction ?? throw new ArgumentNullException(nameof(finallyAction));
 
-    private readonly IObservable<T> _source;
+    private readonly IObservable<T> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public FinallySafe(IObservable<T> source, Action finallyAction)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _finallyAction = finallyAction ?? throw new ArgumentNullException(nameof(finallyAction));
-    }
-
-    public IObservable<T> Run()
-    {
-        return Observable.Create<T>(
+    public IObservable<T> Run() => Observable.Create<T>(
             o =>
             {
                 var finallyOnce = Disposable.Create(_finallyAction);
@@ -54,5 +45,4 @@ internal class FinallySafe<T>
 
                 return new CompositeDisposable(subscription, finallyOnce);
             });
-    }
 }

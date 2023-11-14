@@ -8,28 +8,14 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal class ToObservableChangeSet<T>
+internal class ToObservableChangeSet<T>(IObservable<IEnumerable<T>> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
     where T : notnull
 {
-    private readonly Func<T, TimeSpan?>? _expireAfter;
-
-    private readonly int _limitSizeTo;
-
-    private readonly IScheduler _scheduler;
-
-    private readonly IObservable<IEnumerable<T>> _source;
+    private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
 
     public ToObservableChangeSet(IObservable<T> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
         : this(source.Select(t => new[] { t }), expireAfter, limitSizeTo, scheduler)
     {
-    }
-
-    public ToObservableChangeSet(IObservable<IEnumerable<T>> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
-    {
-        _source = source;
-        _expireAfter = expireAfter;
-        _limitSizeTo = limitSizeTo;
-        _scheduler = scheduler ?? Scheduler.Default;
     }
 
     public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
@@ -40,17 +26,17 @@ internal class ToObservableChangeSet<T>
                 var dataSource = new SourceList<T>();
 
                 // load local data source with current items
-                var populator = _source.Synchronize(locker)
+                var populator = source.Synchronize(locker)
                     .Subscribe(items =>
                     {
                         dataSource.Edit(innerList =>
                         {
                             innerList.AddRange(items);
 
-                            if (_limitSizeTo > 0 && innerList.Count > _limitSizeTo)
+                            if (limitSizeTo > 0 && innerList.Count > limitSizeTo)
                             {
                                 // remove oldest items [these will always be the first x in the list]
-                                var toRemove = innerList.Count - _limitSizeTo;
+                                var toRemove = innerList.Count - limitSizeTo;
                                 innerList.RemoveRange(0, toRemove);
                             }
                         });
@@ -62,12 +48,12 @@ internal class ToObservableChangeSet<T>
 
                 DateTime Trim(DateTime date, long ticks) => new(date.Ticks - (date.Ticks % ticks), date.Kind);
 
-                if (_expireAfter is not null)
+                if (expireAfter is not null)
                 {
                     var expiry = dataSource.Connect()
                         .Transform(t =>
                         {
-                            var removeAt = _expireAfter?.Invoke(t);
+                            var removeAt = expireAfter?.Invoke(t);
 
                             if (removeAt is null)
                                 return (Item: t, ExpireAt: DateTime.MaxValue);

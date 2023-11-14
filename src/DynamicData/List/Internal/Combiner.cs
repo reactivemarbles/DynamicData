@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -12,24 +9,14 @@ using DynamicData.Cache.Internal;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class Combiner<T>
+internal sealed class Combiner<T>(ICollection<IObservable<IChangeSet<T>>> source, CombineOperator type)
     where T : notnull
 {
     private readonly object _locker = new();
 
-    private readonly ICollection<IObservable<IChangeSet<T>>> _source;
+    private readonly ICollection<IObservable<IChangeSet<T>>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly CombineOperator _type;
-
-    public Combiner(ICollection<IObservable<IChangeSet<T>>> source, CombineOperator type)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _type = type;
-    }
-
-    public IObservable<IChangeSet<T>> Run()
-    {
-        return Observable.Create<IChangeSet<T>>(
+    public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
                 var disposable = new CompositeDisposable();
@@ -59,7 +46,6 @@ internal sealed class Combiner<T>
 
                 return disposable;
             });
-    }
 
     private static void CloneSourceList(ReferenceCountTracker<T> tracker, IChangeSet<T> changes)
     {
@@ -102,7 +88,7 @@ internal sealed class Combiner<T>
 
     private bool MatchesConstraint(List<ReferenceCountTracker<T>> sourceLists, T item)
     {
-        switch (_type)
+        switch (type)
         {
             case CombineOperator.And:
                 {

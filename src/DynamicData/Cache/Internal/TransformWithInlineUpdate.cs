@@ -5,39 +5,20 @@
 using System.Reactive.Linq;
 
 using DynamicData.Kernel;
-using DynamicData.List.Internal;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
+internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IObservable<IChangeSet<TSource, TKey>> source,
+                                 Func<TSource, TDestination> transformFactory,
+                                 Action<TDestination, TSource> updateAction,
+                                 Action<Error<TSource, TKey>>? exceptionCallback = null)
     where TDestination : class
     where TSource : notnull
     where TKey : notnull
 {
-    private readonly Action<Error<TSource, TKey>>? _exceptionCallback;
-
-    private readonly IObservable<IChangeSet<TSource, TKey>> _source;
-
-    private readonly Func<TSource, TDestination> _transformFactory;
-
-    private readonly Action<TDestination, TSource> _updateAction;
-
-    public TransformWithInlineUpdate(IObservable<IChangeSet<TSource, TKey>> source,
-                                     Func<TSource, TDestination> transformFactory,
-                                     Action<TDestination, TSource> updateAction,
-                                     Action<Error<TSource, TKey>>? exceptionCallback = null)
-    {
-        _source = source;
-        _exceptionCallback = exceptionCallback;
-        _updateAction = updateAction;
-        _transformFactory = transformFactory;
-    }
-
     public IObservable<IChangeSet<TDestination, TKey>> Run() => Observable.Defer(RunImpl);
 
-    private IObservable<IChangeSet<TDestination, TKey>> RunImpl()
-    {
-        return _source.Scan(
+    private IObservable<IChangeSet<TDestination, TKey>> RunImpl() => source.Scan(
                 (ChangeAwareCache<TDestination, TKey>?)null,
                 (cache, changes) =>
                 {
@@ -73,26 +54,25 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
                 })
             .Where(x => x is not null)
             .Select(cache => cache!.CaptureChanges());
-    }
 
     private void Transform(ChangeAwareCache<TDestination, TKey> cache, Change<TSource, TKey> change)
     {
         TDestination transformed;
-        if (_exceptionCallback is not null)
+        if (exceptionCallback is not null)
         {
             try
             {
-                transformed = _transformFactory(change.Current);
+                transformed = transformFactory(change.Current);
                 cache.AddOrUpdate(transformed, change.Key);
             }
             catch (Exception ex)
             {
-                _exceptionCallback(new Error<TSource, TKey>(ex, change.Current, change.Key));
+                exceptionCallback(new Error<TSource, TKey>(ex, change.Current, change.Key));
             }
         }
         else
         {
-            transformed = _transformFactory(change.Current);
+            transformed = transformFactory(change.Current);
             cache.AddOrUpdate(transformed, change.Key);
         }
     }
@@ -101,20 +81,20 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>
     {
         var previous = cache.Lookup(change.Key)
                                 .ValueOrThrow(() => new MissingKeyException($"{change.Key} is not found."));
-        if (_exceptionCallback is not null)
+        if (exceptionCallback is not null)
         {
             try
             {
-                _updateAction(previous, change.Current);
+                updateAction(previous, change.Current);
             }
             catch (Exception ex)
             {
-                _exceptionCallback(new Error<TSource, TKey>(ex, change.Current, change.Key));
+                exceptionCallback(new Error<TSource, TKey>(ex, change.Current, change.Key));
             }
         }
         else
         {
-            _updateAction(previous, change.Current);
+            updateAction(previous, change.Current);
         }
 
         cache.Refresh(change.Key);

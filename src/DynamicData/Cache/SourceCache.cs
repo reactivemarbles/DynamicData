@@ -14,23 +14,17 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
+/// <remarks>
+/// Initializes a new instance of the <see cref="SourceCache{TObject, TKey}"/> class.
+/// </remarks>
+/// <param name="keySelector">The key selector.</param>
+/// <exception cref="System.ArgumentNullException">keySelector.</exception>
 [DebuggerDisplay("SourceCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
-public sealed class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey>
+public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) : ISourceCache<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly ObservableCache<TObject, TKey> _innerCache;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SourceCache{TObject, TKey}"/> class.
-    /// </summary>
-    /// <param name="keySelector">The key selector.</param>
-    /// <exception cref="System.ArgumentNullException">keySelector.</exception>
-    public SourceCache(Func<TObject, TKey> keySelector)
-    {
-        KeySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
-        _innerCache = new ObservableCache<TObject, TKey>(keySelector);
-    }
+    private readonly ObservableCache<TObject, TKey> _innerCache = new(keySelector);
 
     /// <inheritdoc />
     public int Count => _innerCache.Count;
@@ -45,7 +39,7 @@ public sealed class SourceCache<TObject, TKey> : ISourceCache<TObject, TKey>
     public IEnumerable<TKey> Keys => _innerCache.Keys;
 
     /// <inheritdoc/>
-    public Func<TObject, TKey> KeySelector { get; }
+    public Func<TObject, TKey> KeySelector { get; } = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
 
     /// <inheritdoc />
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;

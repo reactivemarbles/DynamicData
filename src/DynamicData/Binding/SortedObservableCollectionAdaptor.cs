@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
-
 namespace DynamicData.Binding;
 
 /// <summary>
@@ -13,24 +10,15 @@ namespace DynamicData.Binding;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
-public class SortedObservableCollectionAdaptor<TObject, TKey> : ISortedObservableCollectionAdaptor<TObject, TKey>
+/// <remarks>
+/// Initializes a new instance of the <see cref="SortedObservableCollectionAdaptor{TObject, TKey}"/> class.
+/// </remarks>
+/// <param name="refreshThreshold">The number of changes before a Reset event is used.</param>
+/// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates. </param>
+public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 25, bool useReplaceForUpdates = true) : ISortedObservableCollectionAdaptor<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly int _refreshThreshold;
-    private readonly bool _useReplaceForUpdates;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SortedObservableCollectionAdaptor{TObject, TKey}"/> class.
-    /// </summary>
-    /// <param name="refreshThreshold">The number of changes before a Reset event is used.</param>
-    /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates. </param>
-    public SortedObservableCollectionAdaptor(int refreshThreshold = 25, bool useReplaceForUpdates = true)
-    {
-        _refreshThreshold = refreshThreshold;
-        _useReplaceForUpdates = useReplaceForUpdates;
-    }
-
     /// <summary>
     /// Maintains the specified collection from the changes.
     /// </summary>
@@ -61,7 +49,7 @@ public class SortedObservableCollectionAdaptor<TObject, TKey> : ISortedObservabl
                 break;
 
             case SortReason.DataChanged:
-                if (changes.Count - changes.Refreshes > _refreshThreshold)
+                if (changes.Count - changes.Refreshes > refreshThreshold)
                 {
                     using (collection.SuspendNotifications())
                     {
@@ -111,7 +99,7 @@ public class SortedObservableCollectionAdaptor<TObject, TKey> : ISortedObservabl
                     break;
 
                 case ChangeReason.Update:
-                    if (!_useReplaceForUpdates || update.PreviousIndex != update.CurrentIndex)
+                    if (!useReplaceForUpdates || update.PreviousIndex != update.CurrentIndex)
                     {
                         list.RemoveAt(update.PreviousIndex);
                         list.Insert(update.CurrentIndex, update.Current);

@@ -3,7 +3,7 @@
 <Project>
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591;1701;1702;1705;VSX1000</NoWarn>
+    <NoWarn>$(NoWarn);1591;1701;1702;1705;VSX1000;SA1010</NoWarn>
     <Platform>AnyCPU</Platform>
     <IsTestProject>$(MSBuildProjectName.Contains('Tests'))</IsTestProject>
     <IsBenchmarkProject>$(MSBuildProjectName.Contains('Benchmarks'))</IsBenchmarkProject>
@@ -65,7 +65,7 @@
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.507" PrivateAssets="all" />
-    <PackageReference Include="Roslynator.Analyzers" Version="4.5.0" PrivateAssets="All" />
+    <PackageReference Include="Roslynator.Analyzers" Version="4.6.1" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup Condition="!$(IsTestProject) AND !$(IsBenchmarkProject)">
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
