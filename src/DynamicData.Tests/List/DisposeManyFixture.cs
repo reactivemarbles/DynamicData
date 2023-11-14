@@ -59,6 +59,24 @@ public sealed class DisposeManyFixture : IDisposable
     }
 
     [Fact]
+    // Verifies https://github.com/reactivemarbles/DynamicData/issues/668
+    public void ErrorsArePropagated()
+    {
+        var error = new Exception("Test Exception");
+
+        var source = Observable.Throw<IChangeSet<object>>(error)
+            .DisposeMany();
+
+        FluentActions.Invoking(() => source.Subscribe()).Should().Throw<Exception>().Which.Should().BeSameAs(error);
+
+        var receivedError = null as Exception;
+        source.Subscribe(
+            onNext: static _ => { },
+            onError: error => receivedError = error);
+        receivedError.Should().BeSameAs(error);
+    }
+
+    [Fact]
     public void ItemsAreDisposedAfterRemovalOrReplacement()
     {
         var items = Enumerable.Range(1, 10)
