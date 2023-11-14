@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 using System;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -27,7 +28,13 @@ internal sealed class SubscribeMany<T>
             observer =>
             {
                 var shared = _source.Publish();
-                var subscriptions = shared.Transform(t => _subscriptionFactory(t)).DisposeMany().Subscribe();
+                var subscriptions = shared
+                    .Transform(t => _subscriptionFactory(t))
+                    .DisposeMany()
+                    .SubscribeSafe(Observer.Create<IChangeSet<IDisposable>>(
+                        onNext: static _ => { },
+                        onError: observer.OnError,
+                        onCompleted: static () => { }));
 
                 return new CompositeDisposable(subscriptions, shared.SubscribeSafe(observer), shared.Connect());
             });

@@ -2,11 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Reactive.Disposables;
+using System.Reactive;
 using System.Reactive.Linq;
-
-using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
@@ -14,57 +11,55 @@ internal sealed class DisposeMany<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Action<TObject> _removeAction;
-
     private readonly IObservable<IChangeSet<TObject, TKey>> _source;
 
-    public DisposeMany(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _removeAction = removeAction ?? throw new ArgumentNullException(nameof(removeAction));
-    }
+    public DisposeMany(IObservable<IChangeSet<TObject, TKey>> source)
+        => _source = source;
 
     public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
-            observer =>
-            {
-                var locker = new object();
-                var cache = new Cache<TObject, TKey>();
-                var subscriber = _source.Synchronize(locker).Do(changes => RegisterForRemoval(changes, cache), observer.OnError).SubscribeSafe(observer);
+        => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
+        {
+            var cachedItems = new Cache<TObject, TKey>();
 
-                return Disposable.Create(
-                    () =>
-                    {
-                        subscriber.Dispose();
-
-                        lock (locker)
-                        {
-                            cache.Items.ForEach(t => _removeAction(t));
-                            cache.Clear();
-                        }
-                    });
-            });
-    }
-
-    private void RegisterForRemoval(IChangeSet<TObject, TKey> changes, Cache<TObject, TKey> cache)
-    {
-        changes.ToConcreteType().ForEach(
-            change =>
-            {
-                switch (change.Reason)
+            return _source.SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(
+                onNext: changeSet =>
                 {
-                    case ChangeReason.Update:
-                        // ReSharper disable once InconsistentlySynchronizedField
-                        change.Previous.IfHasValue(t => _removeAction(t));
-                        break;
+                    observer.OnNext(changeSet);
 
-                    case ChangeReason.Remove:
-                        // ReSharper disable once InconsistentlySynchronizedField
-                        _removeAction(change.Current);
-                        break;
-                }
-            });
-        cache.Clone(changes);
-    }
+                    foreach (var change in changeSet.ToConcreteType())
+                    {
+                        switch (change.Reason)
+                        {
+                            case ChangeReason.Update:
+                                if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
+                                    (change.Previous.Value as IDisposable)?.Dispose();
+                                break;
+
+                            case ChangeReason.Remove:
+                                (change.Current as IDisposable)?.Dispose();
+                                break;
+                        }
+                    }
+
+                    cachedItems.Clone(changeSet);
+                },
+                onError: error =>
+                {
+                    observer.OnError(error);
+
+                    foreach (var item in cachedItems.Items)
+                        (item as IDisposable)?.Dispose();
+
+                    cachedItems.Clear();
+                },
+                onCompleted: () =>
+                {
+                    observer.OnCompleted();
+
+                    foreach (var item in cachedItems.Items)
+                        (item as IDisposable)?.Dispose();
+
+                    cachedItems.Clear();
+                }));
+        });
 }
