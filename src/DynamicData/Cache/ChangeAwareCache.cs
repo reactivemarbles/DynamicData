@@ -27,8 +27,8 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// </summary>
     public ChangeAwareCache()
     {
-        _changes = new ChangeSet<TObject, TKey>();
-        _data = new Dictionary<TKey, TObject>();
+        _changes = [];
+        _data = [];
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     public ChangeAwareCache(Dictionary<TKey, TObject> data)
     {
         _data = data ?? throw new ArgumentNullException(nameof(data));
-        _changes = new ChangeSet<TObject, TKey>();
+        _changes = [];
     }
 
     /// <inheritdoc />
@@ -90,11 +90,11 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     {
         if (_changes.Count == 0)
         {
-            return ChangeSet<TObject, TKey>.Empty;
+            return [];
         }
 
         var copy = _changes;
-        _changes = new ChangeSet<TObject, TKey>();
+        _changes = [];
         return copy;
     }
 
