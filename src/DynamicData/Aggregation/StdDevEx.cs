@@ -186,6 +186,13 @@ public static class StdDevEx
 
     private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction, Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction, Func<StdDev<TValue>, TResult> resultAction)
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
+        ArgumentNullException.ThrowIfNull(addAction);
+        ArgumentNullException.ThrowIfNull(removeAction);
+        ArgumentNullException.ThrowIfNull(resultAction);
+#else
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
@@ -210,6 +217,7 @@ public static class StdDevEx
         {
             throw new ArgumentNullException(nameof(resultAction));
         }
+#endif
 
         return source.Scan(default(StdDev<TValue>), (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>

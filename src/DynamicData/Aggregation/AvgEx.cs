@@ -409,6 +409,13 @@ public static class AvgEx
 
     private static IObservable<TResult> AvgCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<Avg<TValue>, TValue, Avg<TValue>> addAction, Func<Avg<TValue>, TValue, Avg<TValue>> removeAction, Func<Avg<TValue>, TResult> resultAction)
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
+        ArgumentNullException.ThrowIfNull(addAction);
+        ArgumentNullException.ThrowIfNull(removeAction);
+        ArgumentNullException.ThrowIfNull(resultAction);
+#else
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
@@ -433,6 +440,7 @@ public static class AvgEx
         {
             throw new ArgumentNullException(nameof(resultAction));
         }
+#endif
 
         return source.Scan(default(Avg<TValue>), (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>
