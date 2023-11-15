@@ -1,5 +1,9 @@
 ﻿using System;
+using DynamicData.Cache.Internal;
 using System.Collections.Generic;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Security.Cryptography;
 using DynamicData.Kernel;
 using Xunit;
@@ -41,6 +45,26 @@ namespace DynamicData.Tests
             fixture.Clear();
 
             Assert.True(fixture.Count == 0);
+        }
+
+        [Fact]
+        public void ExceptionTests()
+        {
+            var exSubject = new Subject<Exception>();
+
+            object exceptionRecived = default!;
+            exSubject.ObserveOn(ImmediateScheduler.Instance).Subscribe(ex => { exceptionRecived = ex; });
+            exSubject.OnNext(new UnspecifiedIndexException());
+
+            Assert.IsType<UnspecifiedIndexException>(exceptionRecived);
+
+            exSubject.OnNext(new KeySelectorException());
+
+            Assert.IsType<KeySelectorException>(exceptionRecived);
+
+            exSubject.OnNext(new MissingKeyException());
+
+            Assert.IsType<MissingKeyException>(exceptionRecived);            
         }
     }
 }
