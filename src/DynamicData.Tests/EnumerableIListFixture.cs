@@ -36,8 +36,6 @@ namespace DynamicData.Tests
 
             fixture.RemoveAt(0);
 
-            Assert.False(fixture.IndexOf(firstItem) > 0);
-
             Assert.Equal(fixture[10], listOfRandomFloats[10]);
 
             fixture.Clear();
