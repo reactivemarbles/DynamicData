@@ -18,7 +18,7 @@ internal sealed class DisposeMany<T>
     public IObservable<IChangeSet<T>> Run()
         => Observable.Create<IChangeSet<T>>(observer =>
         {
-            var cachedItems = new ChangeAwareList<T>();
+            var cachedItems = new List<T>();
 
             return _source.SubscribeSafe(Observer.Create<IChangeSet<T>>(
                 onNext: changeSet =>
@@ -56,19 +56,21 @@ internal sealed class DisposeMany<T>
                 {
                     observer.OnError(error);
 
-                    foreach (var item in cachedItems)
-                        (item as IDisposable)?.Dispose();
-
-                    cachedItems.Clear();
+                    ProcessFinalization(cachedItems);
                 },
                 onCompleted: () =>
                 {
                     observer.OnCompleted();
 
-                    foreach (var item in cachedItems)
-                        (item as IDisposable)?.Dispose();
-
-                    cachedItems.Clear();
+                    ProcessFinalization(cachedItems);
                 }));
         });
+
+    private static void ProcessFinalization(List<T> cachedItems)
+    {
+        foreach (var item in cachedItems)
+            (item as IDisposable)?.Dispose();
+
+        cachedItems.Clear();
+    }
 }

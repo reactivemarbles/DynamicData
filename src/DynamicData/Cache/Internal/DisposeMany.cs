@@ -19,7 +19,7 @@ internal sealed class DisposeMany<TObject, TKey>
     public IObservable<IChangeSet<TObject, TKey>> Run()
         => Observable.Create<IChangeSet<TObject, TKey>>(observer =>
         {
-            var cachedItems = new Cache<TObject, TKey>();
+            var cachedItems = new Dictionary<TKey, TObject>();
 
             return _source.SubscribeSafe(Observer.Create<IChangeSet<TObject, TKey>>(
                 onNext: changeSet =>
@@ -47,19 +47,21 @@ internal sealed class DisposeMany<TObject, TKey>
                 {
                     observer.OnError(error);
 
-                    foreach (var item in cachedItems.Items)
-                        (item as IDisposable)?.Dispose();
-
-                    cachedItems.Clear();
+                    ProcessFinalization(cachedItems);
                 },
                 onCompleted: () =>
                 {
                     observer.OnCompleted();
 
-                    foreach (var item in cachedItems.Items)
-                        (item as IDisposable)?.Dispose();
-
-                    cachedItems.Clear();
+                    ProcessFinalization(cachedItems);
                 }));
         });
+
+    private static void ProcessFinalization(Dictionary<TKey, TObject> cachedItems)
+    {
+        foreach (var pair in cachedItems)
+            (pair.Value as IDisposable)?.Dispose();
+
+        cachedItems.Clear();
+    }
 }
