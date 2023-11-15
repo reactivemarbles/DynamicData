@@ -216,17 +216,18 @@ public static class StdDevEx
                 aggregateItem.Type == AggregateType.Add ? addAction(current, valueSelector(aggregateItem.Item)) : removeAction(current, valueSelector(aggregateItem.Item)))).Select(values => values.Count < 2 ? fallbackValue : resultAction(values));
     }
 
-    private static decimal Sqrt(decimal x, decimal? guess = null)
+    private static decimal Sqrt(decimal x, decimal epsilon = 0.0M)
     {
-        var ourGuess = guess ?? x / 2m;
-        var result = x / ourGuess;
-        var average = (ourGuess + result) / 2m;
+        if (x < 0) throw new OverflowException("Cannot calculate square root from a negative number");
 
-        if (average == ourGuess) // This checks for the maximum precision possible with a decimal.
+        decimal current = (decimal)Math.Sqrt((double)x), previous;
+        do
         {
-            return average;
+            previous = current;
+            if (previous == 0.0M) return 0;
+            current = (previous + (x / previous)) / 2;
         }
-
-        return Sqrt(x, average);
+        while (Math.Abs(previous - current) > epsilon);
+        return current;
     }
 }
