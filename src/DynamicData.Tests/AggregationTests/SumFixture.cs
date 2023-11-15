@@ -34,6 +34,150 @@ public class SumFixture : IDisposable
         accumulator.Dispose();
     }
 
+    [Fact]
+    public void AddedItemsContributeToSumLong()
+    {
+        long sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => Convert.ToInt64(p.Age)).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumFloat()
+    {
+        float sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => Convert.ToSingle(p.Age)).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumDouble()
+    {
+        double sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => Convert.ToDouble(p.Age)).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumDecimal()
+    {
+        decimal sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => Convert.ToDecimal(p.Age)).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumNullable()
+    {
+        var sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => p.AgeNullable).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumLongNullable()
+    {
+        long sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => (long?)(p.AgeNullable.HasValue ? Convert.ToInt64(p.AgeNullable) : default)).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumFloatNullable()
+    {
+        float sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => (float?)(p.AgeNullable.HasValue ? Convert.ToSingle(p.AgeNullable) : default)).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumDoubleNullable()
+    {
+        double sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => (double?)(p.AgeNullable.HasValue ? Convert.ToDouble(p.AgeNullable) : default)).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumDecimalNullable()
+    {
+        decimal sum = 0;
+
+        var accumulator = _source.Connect().Sum(p => (decimal?)(p.AgeNullable.HasValue ? Convert.ToDecimal(p.AgeNullable) : default)).Subscribe(x => sum = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        sum.Should().Be(60, "Accumulated value should be 60");
+
+        accumulator.Dispose();
+    }
+
     public void Dispose()
     {
         _source.Dispose();
