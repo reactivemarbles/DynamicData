@@ -19,10 +19,12 @@ namespace DynamicData.Tests
 
             var inputData = new byte[39];
             var lastItem = data[data.Length - 1];
-            Array.Copy(data, inputData, 39);
+            var firstItem = data[0];
+            Array.Copy(data, 1, inputData, 0, 38);
             var listOfRandomFloats = new List<byte>(inputData);
             var fixture = EnumerableIList.Create(listOfRandomFloats);
             fixture.Add(lastItem);
+            fixture.Insert(0, firstItem);
 
             Assert.Equal(fixture.Count, listOfRandomFloats.Count);
 
@@ -32,11 +34,9 @@ namespace DynamicData.Tests
 
             Assert.Equal(fixture.Count, listOfRandomFloats.Count);
 
-            var valueBeforeRemoval = listOfRandomFloats[0];
-
             fixture.RemoveAt(0);
 
-            Assert.False(fixture.Contains(valueBeforeRemoval));
+            Assert.False(fixture.IndexOf(firstItem) > 0);
 
             Assert.Equal(fixture[10], listOfRandomFloats[10]);
 

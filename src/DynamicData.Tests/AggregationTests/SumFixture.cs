@@ -105,9 +105,9 @@ public class SumFixture : IDisposable
 
         var accumulator = _source.Connect().Sum(p => p.AgeNullable).Subscribe(x => sum = x);
 
-        _source.AddOrUpdate(new Person("A", 10));
-        _source.AddOrUpdate(new Person("B", 20));
-        _source.AddOrUpdate(new Person("C", 30));
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
         sum.Should().Be(60, "Accumulated value should be 60");
 
@@ -121,9 +121,9 @@ public class SumFixture : IDisposable
 
         var accumulator = _source.Connect().Sum(p => (long?)(p.AgeNullable.HasValue ? Convert.ToInt64(p.AgeNullable) : default)).Subscribe(x => sum = x);
 
-        _source.AddOrUpdate(new Person("A", 10));
-        _source.AddOrUpdate(new Person("B", 20));
-        _source.AddOrUpdate(new Person("C", 30));
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
         sum.Should().Be(60, "Accumulated value should be 60");
 
@@ -137,9 +137,9 @@ public class SumFixture : IDisposable
 
         var accumulator = _source.Connect().Sum(p => (float?)(p.AgeNullable.HasValue ? Convert.ToSingle(p.AgeNullable) : default)).Subscribe(x => sum = x);
 
-        _source.AddOrUpdate(new Person("A", 10));
-        _source.AddOrUpdate(new Person("B", 20));
-        _source.AddOrUpdate(new Person("C", 30));
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
         sum.Should().Be(60, "Accumulated value should be 60");
 
@@ -153,9 +153,9 @@ public class SumFixture : IDisposable
 
         var accumulator = _source.Connect().Sum(p => (double?)(p.AgeNullable.HasValue ? Convert.ToDouble(p.AgeNullable) : default)).Subscribe(x => sum = x);
 
-        _source.AddOrUpdate(new Person("A", 10));
-        _source.AddOrUpdate(new Person("B", 20));
-        _source.AddOrUpdate(new Person("C", 30));
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
         sum.Should().Be(60, "Accumulated value should be 60");
 
@@ -169,9 +169,9 @@ public class SumFixture : IDisposable
 
         var accumulator = _source.Connect().Sum(p => (decimal?)(p.AgeNullable.HasValue ? Convert.ToDecimal(p.AgeNullable) : default)).Subscribe(x => sum = x);
 
-        _source.AddOrUpdate(new Person("A", 10));
-        _source.AddOrUpdate(new Person("B", 20));
-        _source.AddOrUpdate(new Person("C", 30));
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
 
         sum.Should().Be(60, "Accumulated value should be 60");
 
