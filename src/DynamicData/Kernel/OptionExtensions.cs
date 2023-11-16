@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace DynamicData.Kernel;
 
 /// <summary>
@@ -237,10 +233,7 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of the selected items.</returns>
     public static IEnumerable<T> SelectValues<T>(this IEnumerable<Optional<T>> source)
-        where T : notnull
-    {
-        return source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
-    }
+        where T : notnull => source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
 
     /// <summary>
     /// Returns the value if the nullable has a value, otherwise returns the result of the value selector.
@@ -250,10 +243,7 @@ public static class OptionExtensions
     /// <param name="defaultValue">The default value.</param>
     /// <returns>The value or the default value.</returns>
     public static T ValueOr<T>(this T? source, T defaultValue)
-        where T : struct
-    {
-        return source ?? defaultValue;
-    }
+        where T : struct => source ?? defaultValue;
 
     /// <summary>
     /// Returns the value if the optional has a value, otherwise returns the result of the value selector.

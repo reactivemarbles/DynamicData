@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 
 using DynamicData.Kernel;
@@ -177,17 +174,11 @@ internal sealed class Transformer<TSource, TDestination>
         }
     }
 
-    internal sealed class TransformedItemContainer : IEquatable<TransformedItemContainer>
+    internal sealed class TransformedItemContainer(TSource source, TDestination destination) : IEquatable<TransformedItemContainer>
     {
-        public TransformedItemContainer(TSource source, TDestination destination)
-        {
-            Source = source;
-            Destination = destination;
-        }
+        public TDestination Destination { get; } = destination;
 
-        public TDestination Destination { get; }
-
-        public TSource Source { get; }
+        public TSource Source { get; } = source;
 
         public static bool operator ==(TransformedItemContainer left, TransformedItemContainer right) => Equals(left, right);
 

@@ -2,34 +2,23 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class SpecifiedGrouper<TObject, TKey, TGroupKey>
+internal class SpecifiedGrouper<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelector, IObservable<IDistinctChangeSet<TGroupKey>> resultGroupSource)
     where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {
-    private readonly Func<TObject, TGroupKey> _groupSelector;
+    private readonly Func<TObject, TGroupKey> _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
 
-    private readonly IObservable<IDistinctChangeSet<TGroupKey>> _resultGroupSource;
+    private readonly IObservable<IDistinctChangeSet<TGroupKey>> _resultGroupSource = resultGroupSource ?? throw new ArgumentNullException(nameof(resultGroupSource));
 
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public SpecifiedGrouper(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelector, IObservable<IDistinctChangeSet<TGroupKey>> resultGroupSource)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
-        _resultGroupSource = resultGroupSource ?? throw new ArgumentNullException(nameof(resultGroupSource));
-    }
-
-    public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run()
-    {
-        return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(
+    public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
                 var locker = new object();
@@ -82,5 +71,4 @@ internal class SpecifiedGrouper<TObject, TKey, TGroupKey>
                         updatesFromChildren.Dispose();
                     });
             });
-    }
 }

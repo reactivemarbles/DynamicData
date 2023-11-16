@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -13,26 +10,17 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class GroupOn<TObject, TGroupKey>
+internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? regrouper)
     where TObject : notnull
     where TGroupKey : notnull
 {
-    private readonly Func<TObject, TGroupKey> _groupSelector;
+    private readonly Func<TObject, TGroupKey> _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
 
-    private readonly IObservable<Unit>? _regrouper;
+    private readonly IObservable<Unit>? _regrouper = regrouper;
 
-    private readonly IObservable<IChangeSet<TObject>> _source;
+    private readonly IObservable<IChangeSet<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public GroupOn(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? regrouper)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
-        _regrouper = regrouper;
-    }
-
-    public IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> Run()
-    {
-        return Observable.Create<IChangeSet<IGroup<TObject, TGroupKey>>>(
+    public IObservable<IChangeSet<IGroup<TObject, TGroupKey>>> Run() => Observable.Create<IChangeSet<IGroup<TObject, TGroupKey>>>(
             observer =>
             {
                 var groupings = new ChangeAwareList<IGroup<TObject, TGroupKey>>();
@@ -55,7 +43,6 @@ internal sealed class GroupOn<TObject, TGroupKey>
 
                 return new CompositeDisposable(publisher, shared.Connect());
             });
-    }
 
     private static GroupWithAddIndicator GetCache(IDictionary<TGroupKey, Group<TObject, TGroupKey>> groupCaches, TGroupKey key)
     {
@@ -249,20 +236,13 @@ internal sealed class GroupOn<TObject, TGroupKey>
         public bool WasCreated { get; }
     }
 
-    private sealed class ItemWithGroupKey : IEquatable<ItemWithGroupKey>
+    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
     {
-        public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup)
-        {
-            Item = item;
-            Group = group;
-            PreviousGroup = previousGroup;
-        }
+        public TGroupKey Group { get; set; } = group;
 
-        public TGroupKey Group { get; set; }
+        public TObject Item { get; } = item;
 
-        public TObject Item { get; }
-
-        public Optional<TGroupKey> PreviousGroup { get; }
+        public Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
 
         /// <summary>Returns a value that indicates whether the values of two <see cref="GroupOn{TObject, TGroupKey}.ItemWithGroupKey" /> objects are equal.</summary>
         /// <param name="left">The first value to compare.</param>
@@ -312,10 +292,7 @@ internal sealed class GroupOn<TObject, TGroupKey>
             return obj is ItemWithGroupKey value && Equals(value);
         }
 
-        public override int GetHashCode()
-        {
-            return Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
-        }
+        public override int GetHashCode() => Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
 
         public override string ToString() => $"{Item} ({Group})";
     }

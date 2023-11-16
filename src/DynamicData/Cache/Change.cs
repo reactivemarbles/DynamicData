@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Kernel;
 
 // ReSharper disable once CheckNamespace
@@ -157,10 +154,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     }
 
     /// <inheritdoc />
-    public bool Equals(Change<TObject, TKey> other)
-    {
-        return EqualityComparer<TKey>.Default.Equals(Key, other.Key) && Reason == other.Reason && EqualityComparer<TObject?>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
-    }
+    public bool Equals(Change<TObject, TKey> other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key) && Reason == other.Reason && EqualityComparer<TObject?>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
@@ -189,8 +183,5 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     }
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"{Reason}, Key: {Key}, Current: {Current}, Previous: {Previous}";
-    }
+    public override string ToString() => $"{Reason}, Key: {Key}, Current: {Current}, Previous: {Previous}";
 }

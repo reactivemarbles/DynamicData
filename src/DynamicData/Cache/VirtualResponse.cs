@@ -2,40 +2,30 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
 /// <summary>
 /// Defines values used to virtualise the result set.
 /// </summary>
-internal sealed class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualResponse
+internal sealed class VirtualResponse(int size, int startIndex, int totalSize) : IEquatable<IVirtualResponse>, IVirtualResponse
 {
-    public VirtualResponse(int size, int startIndex, int totalSize)
-    {
-        Size = size;
-        StartIndex = startIndex;
-        TotalSize = totalSize;
-    }
-
     public static IEqualityComparer<IVirtualResponse?> DefaultComparer { get; } = new TotalSizeStartIndexSizeEqualityComparer();
 
     /// <summary>
     /// Gets the requested size of the virtualised data.
     /// </summary>
-    public int Size { get; }
+    public int Size { get; } = size;
 
     /// <summary>
     /// Gets the starting index.
     /// </summary>
-    public int StartIndex { get; }
+    public int StartIndex { get; } = startIndex;
 
     /// <summary>
     /// Gets the total size of the underlying cache.
     /// </summary>
-    public int TotalSize { get; }
+    public int TotalSize { get; } = totalSize;
 
     /// <summary>
     ///     Indicates whether the current object is equal to another object of the same type.
@@ -44,10 +34,7 @@ internal sealed class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualRe
     ///     true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.
     /// </returns>
     /// <param name="other">An object to compare with this object.</param>
-    public bool Equals(IVirtualResponse? other)
-    {
-        return DefaultComparer.Equals(this, other);
-    }
+    public bool Equals(IVirtualResponse? other) => DefaultComparer.Equals(this, other);
 
     /// <summary>
     ///     Determines whether the specified <see cref="object" /> is equal to the current <see cref="object" />.
@@ -56,10 +43,7 @@ internal sealed class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualRe
     ///     true if the specified object  is equal to the current object; otherwise, false.
     /// </returns>
     /// <param name="obj">The object to compare with the current object. </param>
-    public override bool Equals(object? obj)
-    {
-        return obj is IVirtualResponse item && Equals(item);
-    }
+    public override bool Equals(object? obj) => obj is IVirtualResponse item && Equals(item);
 
     /// <summary>
     ///     Serves as a hash function for a particular type.
@@ -84,10 +68,7 @@ internal sealed class VirtualResponse : IEquatable<IVirtualResponse>, IVirtualRe
     /// <returns>
     /// A <see cref="string"/> that represents the current <see cref="object"/>.
     /// </returns>
-    public override string ToString()
-    {
-        return $"Size: {Size}, StartIndex: {StartIndex}, TotalSize: {TotalSize}";
-    }
+    public override string ToString() => $"Size: {Size}, StartIndex: {StartIndex}, TotalSize: {TotalSize}";
 
     private sealed class TotalSizeStartIndexSizeEqualityComparer : IEqualityComparer<IVirtualResponse?>
     {

@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 
@@ -58,10 +56,8 @@ public static class AggregationEx
     /// <param name="source">The source.</param>
     /// <param name="invalidate">The invalidate.</param>
     /// <returns>An observable which emits the value.</returns>
-    public static IObservable<T> InvalidateWhen<T>(this IObservable<T> source, IObservable<Unit> invalidate)
-    {
-        return invalidate.StartWith(Unit.Default).Select(_ => source).Switch().DistinctUntilChanged();
-    }
+    public static IObservable<T> InvalidateWhen<T>(this IObservable<T> source, IObservable<Unit> invalidate) =>
+        invalidate.StartWith(Unit.Default).Select(_ => source).Switch().DistinctUntilChanged();
 
     /// <summary>
     /// Used to invalidate an aggregating stream. Used when there has been an inline change.
@@ -71,10 +67,8 @@ public static class AggregationEx
     /// <param name="source">The source.</param>
     /// <param name="invalidate">The invalidate.</param>
     /// <returns>An observable which emits the value.</returns>
-    public static IObservable<T> InvalidateWhen<T, TTrigger>(this IObservable<T> source, IObservable<TTrigger?> invalidate)
-    {
-        return invalidate.StartWith(default(TTrigger)).Select(_ => source).Switch().DistinctUntilChanged();
-    }
+    public static IObservable<T> InvalidateWhen<T, TTrigger>(this IObservable<T> source, IObservable<TTrigger?> invalidate) =>
+        invalidate.StartWith(default(TTrigger)).Select(_ => source).Switch().DistinctUntilChanged();
 
     /// <summary>
     /// Applies an accumulator when items are added to and removed from specified stream,
@@ -89,10 +83,7 @@ public static class AggregationEx
     /// <param name="removeAction">The remove action.</param>
     /// <returns>An observable with the accumulated value.</returns>
     internal static IObservable<TResult> Accumulate<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
-        where TObject : notnull
-    {
-        return source.ForAggregation().Accumulate(seed, accessor, addAction, removeAction);
-    }
+        where TObject : notnull => source.ForAggregation().Accumulate(seed, accessor, addAction, removeAction);
 
     /// <summary>
     /// Applies an accumulator when items are added to and removed from specified stream,
@@ -109,10 +100,7 @@ public static class AggregationEx
     /// <returns>An observable with the accumulated value.</returns>
     internal static IObservable<TResult> Accumulate<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.ForAggregation().Accumulate(seed, accessor, addAction, removeAction);
-    }
+        where TKey : notnull => source.ForAggregation().Accumulate(seed, accessor, addAction, removeAction);
 
     /// <summary>
     /// Applies an accumulator when items are added to and removed from specified stream,
@@ -148,6 +136,8 @@ public static class AggregationEx
             throw new ArgumentNullException(nameof(removeAction));
         }
 
-        return source.Scan(seed, (state, changes) => { return changes.Aggregate(state, (current, aggregateItem) => aggregateItem.Type == AggregateType.Add ? addAction(current, accessor(aggregateItem.Item)) : removeAction(current, accessor(aggregateItem.Item))); });
+        return source.Scan(seed, (state, changes) =>
+            changes.Aggregate(state, (current, aggregateItem) =>
+                aggregateItem.Type == AggregateType.Add ? addAction(current, accessor(aggregateItem.Item)) : removeAction(current, accessor(aggregateItem.Item))));
     }
 }

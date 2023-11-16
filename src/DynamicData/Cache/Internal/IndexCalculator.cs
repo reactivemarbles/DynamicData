@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Linq;
-
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
@@ -13,29 +10,20 @@ namespace DynamicData.Cache.Internal;
 /// This enables the binding infrastructure to simply iterate the change set
 /// and apply indexed changes with no need to apply ant expensive IndexOf() operations.
 /// </summary>
-internal sealed class IndexCalculator<TObject, TKey>
+/// <remarks>
+/// Initializes a new instance of the <see cref="IndexCalculator{TObject, TKey}"/> class.
+/// </remarks>
+/// <param name="comparer">The comparer to use.</param>
+/// <param name="optimisations">Selected indexing optimisations.</param>
+internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, TKey> comparer, SortOptimisations optimisations)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly SortOptimisations _optimisations;
-
-    private KeyValueComparer<TObject, TKey> _comparer;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="IndexCalculator{TObject, TKey}"/> class.
-    /// </summary>
-    /// <param name="comparer">The comparer to use.</param>
-    /// <param name="optimisations">Selected indexing optimisations.</param>
-    public IndexCalculator(KeyValueComparer<TObject, TKey> comparer, SortOptimisations optimisations)
-    {
-        _comparer = comparer;
-        _optimisations = optimisations;
-        List = new List<KeyValuePair<TKey, TObject>>();
-    }
+    private KeyValueComparer<TObject, TKey> _comparer = comparer;
 
     public IComparer<KeyValuePair<TKey, TObject>> Comparer => _comparer;
 
-    public List<KeyValuePair<TKey, TObject>> List { get; private set; }
+    public List<KeyValuePair<TKey, TObject>> List { get; private set; } = new List<KeyValuePair<TKey, TObject>>();
 
     /// <summary>
     /// Dynamic calculation of moved items which produce a result which can be enumerated through in order.
@@ -99,7 +87,7 @@ internal sealed class IndexCalculator<TObject, TKey>
         // for evaluates, check whether the change forces a new position
         var evaluates = refreshes.OrderByDescending(x => new KeyValuePair<TKey, TObject>(x.Key, x.Current), _comparer).ToList();
 
-        if (evaluates.Count != 0 && _optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
+        if (evaluates.Count != 0 && optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
         {
             // reorder entire sequence and do not calculate moves
             List = List.OrderBy(kv => kv, _comparer).ToList();
@@ -162,7 +150,7 @@ internal sealed class IndexCalculator<TObject, TKey>
     {
         var result = new List<Change<TObject, TKey>>();
 
-        if (_optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
+        if (optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
         {
             // reorder entire sequence and do not calculate moves
             List = List.OrderBy(kv => kv, _comparer).ToList();
@@ -198,16 +186,13 @@ internal sealed class IndexCalculator<TObject, TKey>
     /// Initialises the specified changes.
     /// </summary>
     /// <param name="cache">The cache.</param>
-    public void Reset(ChangeAwareCache<TObject, TKey> cache)
-    {
-        List = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
-    }
+    public void Reset(ChangeAwareCache<TObject, TKey> cache) => List = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
 
     private int GetCurrentPosition(KeyValuePair<TKey, TObject> item)
     {
         int index;
 
-        if (_optimisations.HasFlag(SortOptimisations.ComparesImmutableValuesOnly))
+        if (optimisations.HasFlag(SortOptimisations.ComparesImmutableValuesOnly))
         {
             index = List.BinarySearch(item, _comparer);
 

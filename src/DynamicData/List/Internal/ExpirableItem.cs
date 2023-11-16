@@ -2,25 +2,15 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 namespace DynamicData.List.Internal;
 
-internal sealed class ExpirableItem<TObject> : IEquatable<ExpirableItem<TObject>>
+internal sealed class ExpirableItem<TObject>(TObject value, DateTime dateTime, long index) : IEquatable<ExpirableItem<TObject>>
 {
-    public ExpirableItem(TObject value, DateTime dateTime, long index)
-    {
-        Item = value;
-        ExpireAt = dateTime;
-        Index = index;
-    }
+    public DateTime ExpireAt { get; } = dateTime;
 
-    public DateTime ExpireAt { get; }
+    public long Index { get; } = index;
 
-    public long Index { get; }
-
-    public TObject Item { get; }
+    public TObject Item { get; } = value;
 
     public static bool operator ==(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
     {
@@ -73,8 +63,5 @@ internal sealed class ExpirableItem<TObject> : IEquatable<ExpirableItem<TObject>
         }
     }
 
-    public override string ToString()
-    {
-        return $"{Item} @ {ExpireAt}";
-    }
+    public override string ToString() => $"{Item} @ {ExpireAt}";
 }

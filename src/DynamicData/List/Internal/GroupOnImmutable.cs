@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -13,26 +10,17 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class GroupOnImmutable<TObject, TGroupKey>
+internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? reGrouper)
     where TObject : notnull
     where TGroupKey : notnull
 {
-    private readonly Func<TObject, TGroupKey> _groupSelector;
+    private readonly Func<TObject, TGroupKey> _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
 
-    private readonly IObservable<Unit>? _reGrouper;
+    private readonly IObservable<Unit>? _reGrouper = reGrouper;
 
-    private readonly IObservable<IChangeSet<TObject>> _source;
+    private readonly IObservable<IChangeSet<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public GroupOnImmutable(IObservable<IChangeSet<TObject>> source, Func<TObject, TGroupKey> groupSelector, IObservable<Unit>? reGrouper)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _groupSelector = groupSelector ?? throw new ArgumentNullException(nameof(groupSelector));
-        _reGrouper = reGrouper;
-    }
-
-    public IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> Run()
-    {
-        return Observable.Create<IChangeSet<IGrouping<TObject, TGroupKey>>>(
+    public IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> Run() => Observable.Create<IChangeSet<IGrouping<TObject, TGroupKey>>>(
             observer =>
             {
                 var groupings = new ChangeAwareList<IGrouping<TObject, TGroupKey>>();
@@ -57,7 +45,6 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>
 
                 return new CompositeDisposable(publisher, shared.Connect());
             });
-    }
 
     private static IChangeSet<IGrouping<TObject, TGroupKey>> CreateChangeSet(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IDictionary<TGroupKey, IGrouping<TObject, TGroupKey>> initialStateOfGroups)
     {
@@ -105,15 +92,9 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>
         return newcache;
     }
 
-    private static IGrouping<TObject, TGroupKey> GetGroupState(GroupContainer grouping)
-    {
-        return new ImmutableGroup<TObject, TGroupKey>(grouping.Key, grouping.List);
-    }
+    private static IGrouping<TObject, TGroupKey> GetGroupState(GroupContainer grouping) => new ImmutableGroup<TObject, TGroupKey>(grouping.Key, grouping.List);
 
-    private static IGrouping<TObject, TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list)
-    {
-        return new ImmutableGroup<TObject, TGroupKey>(key, list);
-    }
+    private static IGrouping<TObject, TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list) => new ImmutableGroup<TObject, TGroupKey>(key, list);
 
     private static IChangeSet<IGrouping<TObject, TGroupKey>> Process(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IChangeSet<ItemWithGroupKey> changes)
     {
@@ -271,32 +252,20 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>
         return CreateChangeSet(result, allGroupings, initialStateOfGroups);
     }
 
-    private class GroupContainer
+    private class GroupContainer(TGroupKey key)
     {
-        public GroupContainer(TGroupKey key)
-        {
-            Key = key;
-        }
-
-        public TGroupKey Key { get; }
+        public TGroupKey Key { get; } = key;
 
         public IList<TObject> List { get; } = new List<TObject>();
     }
 
-    private sealed class ItemWithGroupKey : IEquatable<ItemWithGroupKey>
+    private sealed class ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup) : IEquatable<ItemWithGroupKey>
     {
-        public ItemWithGroupKey(TObject item, TGroupKey group, Optional<TGroupKey> previousGroup)
-        {
-            Item = item;
-            Group = group;
-            PreviousGroup = previousGroup;
-        }
+        public TGroupKey Group { get; set; } = group;
 
-        public TGroupKey Group { get; set; }
+        public TObject Item { get; } = item;
 
-        public TObject Item { get; }
-
-        public Optional<TGroupKey> PreviousGroup { get; }
+        public Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
 
         public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right)
         {
@@ -323,19 +292,10 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>
             return EqualityComparer<TObject>.Default.Equals(Item, other.Item);
         }
 
-        public override bool Equals(object? obj)
-        {
-            return obj is ItemWithGroupKey value && Equals(value);
-        }
+        public override bool Equals(object? obj) => obj is ItemWithGroupKey value && Equals(value);
 
-        public override int GetHashCode()
-        {
-            return Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
-        }
+        public override int GetHashCode() => Item is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Item);
 
-        public override string ToString()
-        {
-            return $"{Item} ({Group})";
-        }
+        public override string ToString() => $"{Item} ({Group})";
     }
 }

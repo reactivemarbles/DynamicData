@@ -2,10 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -26,13 +23,13 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     where TKey : notnull
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<IChangeSet<TObject, TKey>> _changes = new Subject<IChangeSet<TObject, TKey>>();
+    private readonly Subject<IChangeSet<TObject, TKey>> _changes = new();
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<IChangeSet<TObject, TKey>> _changesPreview = new Subject<IChangeSet<TObject, TKey>>();
+    private readonly Subject<IChangeSet<TObject, TKey>> _changesPreview = new();
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly Subject<int> _countChanged = new Subject<int>();
+    private readonly Subject<int> _countChanged = new();
 
     private readonly IDisposable _cleanUp;
 
@@ -96,9 +93,7 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _innerCache.KeyValues;
 
     /// <inheritdoc />
-    public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true)
-    {
-        return Observable.Defer(
+    public IObservable<IChangeSet<TObject, TKey>> Connect(Func<TObject, bool>? predicate = null, bool suppressEmptyChangeSets = true) => Observable.Defer(
             () =>
             {
                 var initial = InternalEx.Return(() => _innerCache.GetInitialUpdates(predicate));
@@ -115,7 +110,6 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
 
                 return changes;
             });
-    }
 
     /// <inheritdoc />
     public void Dispose() => _cleanUp.Dispose();
@@ -143,25 +137,17 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
     /// <remarks>
     /// Fast indexed lookup.
     /// </remarks>
-    public Optional<TObject> Lookup(TKey key)
-    {
-        return _innerCache.Lookup(key);
-    }
+    public Optional<TObject> Lookup(TKey key) => _innerCache.Lookup(key);
 
     /// <inheritdoc />
-    public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
-    {
-        return predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
-    }
+    public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
 
     /// <summary>
     /// Returns an observable of any changes which match the specified key. The sequence starts with the initial item in the cache (if there is one).
     /// </summary>
     /// <param name="key">The key.</param>
     /// <returns>An observable that emits the changes.</returns>
-    public IObservable<Change<TObject, TKey>> Watch(TKey key)
-    {
-        return Observable.Create<Change<TObject, TKey>>(
+    public IObservable<Change<TObject, TKey>> Watch(TKey key) => Observable.Create<Change<TObject, TKey>>(
             observer =>
             {
                 var initial = _innerCache.Lookup(key);
@@ -183,5 +169,4 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
                         }
                     });
             });
-    }
 }

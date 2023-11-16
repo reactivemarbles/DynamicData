@@ -7,26 +7,15 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class ChangeSetMergeTracker<TObject, TKey>
+internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly ChangeAwareCache<TObject, TKey> _resultCache;
-    private readonly Func<IEnumerable<ChangeSetCache<TObject, TKey>>> _selectCaches;
-    private readonly IComparer<TObject>? _comparer;
-    private readonly IEqualityComparer<TObject>? _equalityComparer;
-
-    public ChangeSetMergeTracker(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
-    {
-        _resultCache = new ChangeAwareCache<TObject, TKey>();
-        _selectCaches = selectCaches;
-        _comparer = comparer;
-        _equalityComparer = equalityComparer;
-    }
+    private readonly ChangeAwareCache<TObject, TKey> _resultCache = new();
 
     public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>> observer)
     {
-        var sourceCaches = _selectCaches().ToArray();
+        var sourceCaches = selectCaches().ToArray();
 
         // Update the Published Value for each item being removed
         if (items is IList<KeyValuePair<TKey, TObject>> list)
@@ -50,7 +39,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
 
     public void RefreshItems(IEnumerable<TKey> keys, IObserver<IChangeSet<TObject, TKey>> observer)
     {
-        var sourceCaches = _selectCaches().ToArray();
+        var sourceCaches = selectCaches().ToArray();
 
         // Update the Published Value for each item being removed
         if (keys is IList<TKey> list)
@@ -74,7 +63,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
 
     public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>> observer)
     {
-        var sourceCaches = _selectCaches().ToArray();
+        var sourceCaches = selectCaches().ToArray();
 
         foreach (var change in changes.ToConcreteType())
         {
@@ -152,7 +141,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         // If the Previous value is missing or is the same as the current value
         bool isUpdatingCurrent = !prev.HasValue || CheckEquality(prev.Value, cached.Value);
 
-        if (_comparer is null)
+        if (comparer is null)
         {
             // If not using the comparer and the current value is being replaced by a different value
             if (isUpdatingCurrent && !CheckEquality(item, cached.Value))
@@ -195,7 +184,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         // In the sorting case, a refresh requires doing a full update because any change could alter what the best value is
         // If we don't care about sorting OR if we do care, but re-selecting the best value didn't change anything
         // AND the current value is the exact one being refreshed, then emit the refresh downstream
-        if (((_comparer is null) || !UpdateToBestValue(sources, key, cached)) && ReferenceEquals(cached.Value, item))
+        if (((comparer is null) || !UpdateToBestValue(sources, key, cached)) && ReferenceEquals(cached.Value, item))
         {
             _resultCache.Refresh(key);
         }
@@ -253,18 +242,18 @@ internal class ChangeSetMergeTracker<TObject, TKey>
 
         var values = sources.Select(s => s.Cache.Lookup(key)).Where(opt => opt.HasValue);
 
-        if (_comparer is not null)
+        if (comparer is not null)
         {
-            values = values.OrderBy(opt => opt.Value, _comparer);
+            values = values.OrderBy(opt => opt.Value, comparer);
         }
 
         return values.FirstOrDefault();
     }
 
     private bool CheckEquality(TObject left, TObject right) =>
-        ReferenceEquals(left, right) || (_equalityComparer?.Equals(left, right) ?? false);
+        ReferenceEquals(left, right) || (equalityComparer?.Equals(left, right) ?? false);
 
     // Return true if candidate should replace current as the observed downstream value
     private bool ShouldReplace(TObject candidate, TObject current) =>
-        !ReferenceEquals(candidate, current) && (_comparer?.Compare(candidate, current) < 0);
+        !ReferenceEquals(candidate, current) && (comparer?.Compare(candidate, current) < 0);
 }

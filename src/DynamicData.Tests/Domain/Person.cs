@@ -8,6 +8,7 @@ namespace DynamicData.Tests.Domain;
 public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
 {
     private int _age;
+    private int? _ageNullable;
 
     public Person()
         : this("unknown", 0, "none")
@@ -27,6 +28,14 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
         ParentName = parentName ?? string.Empty;
     }
 
+    public Person(string name, int? age, string gender = "F", string? parentName = null)
+    {
+        Name = name;
+        _ageNullable = age;
+        Gender = gender;
+        ParentName = parentName ?? string.Empty;
+    }
+
     public static IEqualityComparer<Person> AgeComparer { get; } = new AgeEqualityComparer();
 
     public static IEqualityComparer<Person> NameAgeGenderComparer { get; } = new NameAgeGenderEqualityComparer();
@@ -35,6 +44,12 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
     {
         get => _age;
         set => SetAndRaise(ref _age, value);
+    }
+
+    public int? AgeNullable
+    {
+        get => _ageNullable;
+        set => SetAndRaise(ref _ageNullable, value);
     }
 
     public string Gender { get; }

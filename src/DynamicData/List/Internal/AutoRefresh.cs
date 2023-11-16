@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -12,28 +10,13 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal class AutoRefresh<TObject, TAny>
+internal class AutoRefresh<TObject, TAny>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
     where TObject : notnull
 {
-    private readonly TimeSpan? _buffer;
+    private readonly Func<TObject, IObservable<TAny>> _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
+    private readonly IObservable<IChangeSet<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly Func<TObject, IObservable<TAny>> _reEvaluator;
-
-    private readonly IScheduler? _scheduler;
-
-    private readonly IObservable<IChangeSet<TObject>> _source;
-
-    public AutoRefresh(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
-        _buffer = buffer;
-        _scheduler = scheduler;
-    }
-
-    public IObservable<IChangeSet<TObject>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject>>(
+    public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
                 var locker = new object();
@@ -47,9 +30,9 @@ internal class AutoRefresh<TObject, TAny>
                 var itemHasChanged = shared.MergeMany((t) => _reEvaluator(t).Select(_ => t));
 
                 // create a change set, either buffered or one item at the time
-                IObservable<IEnumerable<TObject>> itemsChanged = _buffer is null ?
+                IObservable<IEnumerable<TObject>> itemsChanged = buffer is null ?
                     itemHasChanged.Select(t => new[] { t }) :
-                    itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
+                    itemHasChanged.Buffer(buffer.Value, scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
 
                 IObservable<IChangeSet<TObject>> requiresRefresh = itemsChanged.Synchronize(locker).Select(
                     items =>
@@ -63,5 +46,4 @@ internal class AutoRefresh<TObject, TAny>
 
                 return new CompositeDisposable(publisher, shared.Connect());
             });
-    }
 }

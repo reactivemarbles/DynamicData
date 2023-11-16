@@ -12,17 +12,12 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class TransformMany<TSource, TDestination>
+internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null, Func<TSource, IObservable<IChangeSet<TDestination>>>? childChanges = null)
     where TSource : notnull
     where TDestination : notnull
 {
-    private readonly Func<TSource, IObservable<IChangeSet<TDestination>>>? _childChanges;
-
-    private readonly IEqualityComparer<TDestination> _equalityComparer;
-
-    private readonly Func<TSource, IEnumerable<TDestination>> _manySelector;
-
-    private readonly IObservable<IChangeSet<TSource>> _source;
+    private readonly IEqualityComparer<TDestination> _equalityComparer = equalityComparer ?? EqualityComparer<TDestination>.Default;
+    private readonly IObservable<IChangeSet<TSource>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     public TransformMany(IObservable<IChangeSet<TSource>> source, Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         : this(
@@ -84,17 +79,9 @@ internal sealed class TransformMany<TSource, TDestination>
     {
     }
 
-    public TransformMany(IObservable<IChangeSet<TSource>> source, Func<TSource, IEnumerable<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null, Func<TSource, IObservable<IChangeSet<TDestination>>>? childChanges = null)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _manySelector = manySelector;
-        _childChanges = childChanges;
-        _equalityComparer = equalityComparer ?? EqualityComparer<TDestination>.Default;
-    }
-
     public IObservable<IChangeSet<TDestination>> Run()
     {
-        if (_childChanges is not null)
+        if (childChanges is not null)
         {
             return CreateWithChangeSet();
         }
@@ -105,7 +92,7 @@ internal sealed class TransformMany<TSource, TDestination>
                 // NB: ChangeAwareList is used internally by dd to capture changes to a list and ensure they can be replayed by subsequent operators
                 var result = new ChangeAwareList<TDestination>();
 
-                return _source.Transform(item => new ManyContainer(_manySelector(item).ToArray()), true).Select(
+                return _source.Transform(item => new ManyContainer(manySelector(item).ToArray()), true).Select(
                     changes =>
                     {
                         var destinationChanges = new DestinationEnumerator(changes, _equalityComparer);
@@ -117,7 +104,7 @@ internal sealed class TransformMany<TSource, TDestination>
 
     private IObservable<IChangeSet<TDestination>> CreateWithChangeSet()
     {
-        if (_childChanges is null)
+        if (childChanges is null)
         {
             throw new InvalidOperationException("_childChanges must not be null.");
         }
@@ -131,8 +118,8 @@ internal sealed class TransformMany<TSource, TDestination>
                     t =>
                     {
                         var locker = new object();
-                        var collection = _manySelector(t);
-                        var changes = _childChanges(t).Synchronize(locker).Skip(1);
+                        var collection = manySelector(t);
+                        var changes = childChanges(t).Synchronize(locker).Skip(1);
                         return new ManyContainer(collection, changes);
                     }).Publish();
 
@@ -162,21 +149,11 @@ internal sealed class TransformMany<TSource, TDestination>
     }
 
     // make this an instance
-    private sealed class DestinationEnumerator : IEnumerable<Change<TDestination>>
+    private sealed class DestinationEnumerator(IChangeSet<ManyContainer> changes, IEqualityComparer<TDestination> equalityComparer) : IEnumerable<Change<TDestination>>
     {
-        private readonly IChangeSet<ManyContainer> _changes;
-
-        private readonly IEqualityComparer<TDestination> _equalityComparer;
-
-        public DestinationEnumerator(IChangeSet<ManyContainer> changes, IEqualityComparer<TDestination> equalityComparer)
-        {
-            _changes = changes;
-            _equalityComparer = equalityComparer;
-        }
-
         public IEnumerator<Change<TDestination>> GetEnumerator()
         {
-            foreach (var change in _changes)
+            foreach (var change in changes)
             {
                 switch (change.Reason)
                 {
@@ -203,10 +180,10 @@ internal sealed class TransformMany<TSource, TDestination>
                             var currentItems = change.Item.Current.Destination.AsArray();
                             var previousItems = change.Item.Previous.Value.Destination.AsArray();
 
-                            var adds = currentItems.Except(previousItems, _equalityComparer);
+                            var adds = currentItems.Except(previousItems, equalityComparer);
 
                             // I am not sure whether it is possible to translate the original change into a replace
-                            foreach (var destination in previousItems.Except(currentItems, _equalityComparer))
+                            foreach (var destination in previousItems.Except(currentItems, equalityComparer))
                             {
                                 yield return new Change<TDestination>(ListChangeReason.Remove, destination);
                             }
@@ -255,39 +232,22 @@ internal sealed class TransformMany<TSource, TDestination>
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    private sealed class ManyContainer
+    private sealed class ManyContainer(IEnumerable<TDestination> destination, IObservable<IChangeSet<TDestination>>? changes = null)
     {
-        public ManyContainer(IEnumerable<TDestination> destination, IObservable<IChangeSet<TDestination>>? changes = null)
-        {
-            Destination = destination;
-            Changes = changes ?? Observable.Empty<IChangeSet<TDestination>>();
-        }
+        public IObservable<IChangeSet<TDestination>> Changes { get; } = changes ?? Observable.Empty<IChangeSet<TDestination>>();
 
-        public IObservable<IChangeSet<TDestination>> Changes { get; }
-
-        public IEnumerable<TDestination> Destination { get; }
+        public IEnumerable<TDestination> Destination { get; } = destination;
     }
 
-    private class ManySelectorFunc : IEnumerable<TDestination>
+    private class ManySelectorFunc(TSource source, Func<TSource, IEnumerable<TDestination>> selector) : IEnumerable<TDestination>
     {
-        private readonly TSource _source;
+        private readonly Func<TSource, IEnumerable<TDestination>> _selector = selector ?? throw new ArgumentNullException(nameof(selector));
 
-        private readonly Func<TSource, IEnumerable<TDestination>> _selector;
+        public IEnumerator<TDestination> GetEnumerator() => _selector(source).GetEnumerator();
 
-        public ManySelectorFunc(TSource source, Func<TSource, IEnumerable<TDestination>> selector)
-        {
-            _source = source;
-            _selector = selector ?? throw new ArgumentNullException(nameof(selector));
-        }
-
-        public IEnumerator<TDestination> GetEnumerator() => _selector(_source).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => _selector(_source).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _selector(source).GetEnumerator();
     }
 }

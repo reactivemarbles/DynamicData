@@ -86,8 +86,5 @@ public class ChangeSummary
     /// <inheritdoc />
     public override string ToString() => $"CurrentIndex: {_index}, Latest Count: {Latest.Count}, Overall Count: {Overall.Count}";
 
-    private bool Equals(ChangeSummary other)
-    {
-        return _index == other._index && Equals(Latest, other.Latest) && Equals(Overall, other.Overall);
-    }
+    private bool Equals(ChangeSummary other) => _index == other._index && Equals(Latest, other.Latest) && Equals(Overall, other.Overall);
 }

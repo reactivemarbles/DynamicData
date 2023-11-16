@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -13,27 +10,18 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class GroupOn<TObject, TKey, TGroupKey>
+internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper)
     where TObject : notnull
     where TKey : notnull
     where TGroupKey : notnull
 {
-    private readonly Func<TObject, TGroupKey> _groupSelectorKey;
+    private readonly Func<TObject, TGroupKey> _groupSelectorKey = groupSelectorKey ?? throw new ArgumentNullException(nameof(groupSelectorKey));
 
-    private readonly IObservable<Unit> _regrouper;
+    private readonly IObservable<Unit> _regrouper = regrouper ?? Observable.Never<Unit>();
 
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public GroupOn(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TGroupKey> groupSelectorKey, IObservable<Unit>? regrouper)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _groupSelectorKey = groupSelectorKey ?? throw new ArgumentNullException(nameof(groupSelectorKey));
-        _regrouper = regrouper ?? Observable.Never<Unit>();
-    }
-
-    public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run()
-    {
-        return Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(
+    public IObservable<IGroupChangeSet<TObject, TKey, TGroupKey>> Run() => Observable.Create<IGroupChangeSet<TObject, TKey, TGroupKey>>(
             observer =>
             {
                 var locker = new object();
@@ -57,18 +45,11 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>
                         subscriber.Dispose();
                     });
             });
-    }
 
-    private sealed class Grouper
+    private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)
     {
         private readonly Dictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>> _groupCache = new();
-        private readonly Func<TObject, TGroupKey> _groupSelectorKey;
         private readonly Dictionary<TKey, ChangeWithGroup> _itemCache = new();
-
-        public Grouper(Func<TObject, TGroupKey> groupSelectorKey)
-        {
-            _groupSelectorKey = groupSelectorKey;
-        }
 
         public IGroupChangeSet<TObject, TKey, TGroupKey> Regroup()
         {
@@ -77,10 +58,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>
             return HandleUpdates(new ChangeSet<TObject, TKey>(items), true);
         }
 
-        public IGroupChangeSet<TObject, TKey, TGroupKey> Update(IChangeSet<TObject, TKey> updates)
-        {
-            return HandleUpdates(updates);
-        }
+        public IGroupChangeSet<TObject, TKey, TGroupKey> Update(IChangeSet<TObject, TKey> updates) => HandleUpdates(updates);
 
         private (ManagedGroup<TObject, TKey, TGroupKey> group, bool wasCreated) GetCache(TGroupKey key)
         {
@@ -98,7 +76,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>
             var result = new List<Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>>();
 
             // Group all items
-            var grouped = changes.Select(u => new ChangeWithGroup(u, _groupSelectorKey)).GroupBy(c => c.GroupKey);
+            var grouped = changes.Select(u => new ChangeWithGroup(u, groupSelectorKey)).GroupBy(c => c.GroupKey);
 
             // 1. iterate and maintain child caches (_groupCache)
             // 2. maintain which group each item belongs to (_itemCache)
@@ -234,23 +212,15 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>
             return new GroupChangeSet<TObject, TKey, TGroupKey>(result);
         }
 
-        private readonly struct ChangeWithGroup : IEquatable<ChangeWithGroup>
+        private readonly struct ChangeWithGroup(Change<TObject, TKey> change, Func<TObject, TGroupKey> keySelector) : IEquatable<ChangeWithGroup>
         {
-            public ChangeWithGroup(Change<TObject, TKey> change, Func<TObject, TGroupKey> keySelector)
-            {
-                GroupKey = keySelector(change.Current);
-                Item = change.Current;
-                Key = change.Key;
-                Reason = change.Reason;
-            }
+            public TObject Item { get; } = change.Current;
 
-            public TObject Item { get; }
+            public TKey Key { get; } = change.Key;
 
-            public TKey Key { get; }
+            public TGroupKey GroupKey { get; } = keySelector(change.Current);
 
-            public TGroupKey GroupKey { get; }
-
-            public ChangeReason Reason { get; }
+            public ChangeReason Reason { get; } = change.Reason;
 
             public static bool operator ==(ChangeWithGroup left, ChangeWithGroup right)
             {
@@ -262,20 +232,11 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>
                 return !left.Equals(right);
             }
 
-            public bool Equals(ChangeWithGroup other)
-            {
-                return EqualityComparer<TKey>.Default.Equals(Key, other.Key);
-            }
+            public bool Equals(ChangeWithGroup other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key);
 
-            public override bool Equals(object? obj)
-            {
-                return obj is ChangeWithGroup group && Equals(group);
-            }
+            public override bool Equals(object? obj) => obj is ChangeWithGroup group && Equals(group);
 
-            public override int GetHashCode()
-            {
-                return Key.GetHashCode();
-            }
+            public override int GetHashCode() => Key.GetHashCode();
 
             public override string ToString() => $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";
         }

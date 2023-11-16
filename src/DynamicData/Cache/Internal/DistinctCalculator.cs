@@ -2,15 +2,13 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class DistinctCalculator<TObject, TKey, TValue>
+internal sealed class DistinctCalculator<TObject, TKey, TValue>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
     where TObject : notnull
     where TKey : notnull
     where TValue : notnull
@@ -18,23 +16,11 @@ internal sealed class DistinctCalculator<TObject, TKey, TValue>
     private readonly IDictionary<TKey, TValue> _itemCache = new Dictionary<TKey, TValue>();
 
     private readonly IDictionary<TKey, int> _keyCounters = new Dictionary<TKey, int>();
-
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
     private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
 
-    private readonly Func<TObject, TValue> _valueSelector;
+    private readonly Func<TObject, TValue> _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
 
-    public DistinctCalculator(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
-    {
-        _source = source;
-        _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
-    }
-
-    public IObservable<DistinctChangeSet<TValue>> Run()
-    {
-        return _source.Select(Calculate).Where(updates => updates.Count != 0);
-    }
+    public IObservable<DistinctChangeSet<TValue>> Run() => source.Select(Calculate).Where(updates => updates.Count != 0);
 
     private DistinctChangeSet<TValue> Calculate(IChangeSet<TObject, TKey> changes)
     {

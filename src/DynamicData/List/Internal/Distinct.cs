@@ -2,32 +2,21 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class Distinct<T, TValue>
+internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Func<T, TValue> valueSelector)
     where T : notnull
     where TValue : notnull
 {
-    private readonly IObservable<IChangeSet<T>> _source;
+    private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly Func<T, TValue> _valueSelector;
+    private readonly Func<T, TValue> _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
 
-    public Distinct(IObservable<IChangeSet<T>> source, Func<T, TValue> valueSelector)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
-    }
-
-    public IObservable<IChangeSet<TValue>> Run()
-    {
-        return Observable.Create<IChangeSet<TValue>>(
+    public IObservable<IChangeSet<TValue>> Run() => Observable.Create<IChangeSet<TValue>>(
             observer =>
             {
                 var valueCounters = new Dictionary<TValue, int>();
@@ -42,7 +31,6 @@ internal sealed class Distinct<T, TValue>
                     },
                     true).Select(changes => Process(valueCounters, result, changes)).NotEmpty().SubscribeSafe(observer);
             });
-    }
 
     private static IChangeSet<TValue> Process(Dictionary<TValue, int> values, ChangeAwareList<TValue> result, IChangeSet<ItemWithMatch> changes)
     {
@@ -149,20 +137,13 @@ internal sealed class Distinct<T, TValue>
         return result.CaptureChanges();
     }
 
-    private sealed class ItemWithMatch : IEquatable<ItemWithMatch>
+    private sealed class ItemWithMatch(T item, TValue value, TValue? previousValue) : IEquatable<ItemWithMatch>
     {
-        public ItemWithMatch(T item, TValue value, TValue? previousValue)
-        {
-            Item = item;
-            Value = value;
-            Previous = previousValue;
-        }
+        public T Item { get; } = item;
 
-        public T Item { get; }
+        public TValue? Previous { get; } = previousValue;
 
-        public TValue? Previous { get; }
-
-        public TValue Value { get; }
+        public TValue Value { get; } = value;
 
         /// <summary>Returns a value that indicates whether the values of two <see cref="Filter{T}.ItemWithMatch" /> objects are equal.</summary>
         /// <param name="left">The first value to compare.</param>
@@ -217,14 +198,8 @@ internal sealed class Distinct<T, TValue>
             return Equals((ItemWithMatch)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
-        }
+        public override int GetHashCode() => Item is null ? 0 : EqualityComparer<T>.Default.GetHashCode(Item);
 
-        public override string ToString()
-        {
-            return $"{nameof(Item)}: {Item}, {nameof(Value)}: {Value}, {nameof(Previous)}: {Previous}";
-        }
+        public override string ToString() => $"{nameof(Item)}: {Item}, {nameof(Value)}: {Value}, {nameof(Previous)}: {Previous}";
     }
 }

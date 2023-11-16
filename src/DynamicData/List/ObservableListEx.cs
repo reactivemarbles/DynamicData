@@ -99,10 +99,7 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
-        where T : notnull
-    {
-        return source.Combine(CombineOperator.And, others);
-    }
+        where T : notnull => source.Combine(CombineOperator.And, others);
 
     /// <summary>
     /// Apply a logical And operator between the collections.
@@ -112,10 +109,7 @@ public static class ObservableListEx
     /// <param name="sources">The sources.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.And);
-    }
+        where T : notnull => sources.Combine(CombineOperator.And);
 
     /// <summary>
     /// Dynamically apply a logical And operator between the items in the outer observable list.
@@ -125,10 +119,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.And);
-    }
+        where T : notnull => sources.Combine(CombineOperator.And);
 
     /// <summary>
     /// Dynamically apply a logical And operator between the items in the outer observable list.
@@ -138,10 +129,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<IObservableList<T>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.And);
-    }
+        where T : notnull => sources.Combine(CombineOperator.And);
 
     /// <summary>
     /// Dynamically apply a logical And operator between the items in the outer observable list.
@@ -151,10 +139,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservableList<ISourceList<T>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.And);
-    }
+        where T : notnull => sources.Combine(CombineOperator.And);
 
     /// <summary>
     /// Converts the source list to an read only observable list.
@@ -384,10 +369,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        return BufferIf(source, pauseIfTrueSelector, false, scheduler);
-    }
+        where T : notnull => BufferIf(source, pauseIfTrueSelector, false, scheduler);
 
     /// <summary>
     /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
@@ -428,10 +410,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        return BufferIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
-    }
+        where T : notnull => BufferIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
 
     /// <summary>
     /// Batches the underlying updates if a pause signal (i.e when the buffer selector return true) has been received.
@@ -470,16 +449,13 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler to buffer on.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TObject>> BufferInitial<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan initialBuffer, IScheduler? scheduler = null)
-        where TObject : notnull
-    {
-        return source.DeferUntilLoaded().Publish(
+        where TObject : notnull => source.DeferUntilLoaded().Publish(
             shared =>
             {
                 var initial = shared.Buffer(initialBuffer, scheduler ?? Scheduler.Default).FlattenBufferResult().Take(1);
 
                 return initial.Concat(shared);
             });
-    }
 
     /// <summary>
     /// Cast the changes to another form.
@@ -532,10 +508,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<object>> CastToObject<T>(this IObservable<IChangeSet<T>> source)
-        where T : class
-    {
-        return source.Select(changes => changes.Transform(t => (object)t));
-    }
+        where T : class => source.Select(changes => changes.Transform(t => (object)t));
 
     /// <summary>
     /// Clones the target list as a side effect of the stream.
@@ -629,15 +602,12 @@ public static class ObservableListEx
     /// <returns>A continuation of the original stream.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
-        where T : notnull
-    {
-        return source.OnItemRemoved(
+        where T : notnull => source.OnItemRemoved(
             t =>
             {
                 var d = t as IDisposable;
                 d?.Dispose();
             });
-    }
 
     /// <summary>
     /// Selects distinct values from the source, using the specified value selector.
@@ -678,10 +648,7 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
-        where T : notnull
-    {
-        return source.Combine(CombineOperator.Except, others);
-    }
+        where T : notnull => source.Combine(CombineOperator.Except, others);
 
     /// <summary>
     /// Apply a logical Except operator between the collections.
@@ -691,10 +658,7 @@ public static class ObservableListEx
     /// <param name="sources">The sources.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Except);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Except);
 
     /// <summary>
     /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
@@ -703,10 +667,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Except);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Except);
 
     /// <summary>
     /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
@@ -715,10 +676,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<IObservableList<T>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Except);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Except);
 
     /// <summary>
     /// Dynamically apply a logical Except operator. Items from the first observable list are included when an equivalent item does not exist in the other sources.
@@ -727,10 +685,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservableList<ISourceList<T>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Except);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Except);
 
     /// <summary>
     /// Removes items from the cache according to the value specified by the time selector function.
@@ -741,10 +696,7 @@ public static class ObservableListEx
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the enumerable of items.</returns>
     public static IObservable<IEnumerable<T>> ExpireAfter<T>(this ISourceList<T> source, Func<T, TimeSpan?> timeSelector, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        return source.ExpireAfter(timeSelector, null, scheduler);
-    }
+        where T : notnull => source.ExpireAfter(timeSelector, null, scheduler);
 
     /// <summary>
     /// Removes items from the cache according to the value specified by the time selector function.
@@ -889,10 +841,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> FlattenBufferResult<T>(this IObservable<IList<IChangeSet<T>>> source)
-        where T : notnull
-    {
-        return source.Where(x => x.Count != 0).Select(updates => new ChangeSet<T>(updates.SelectMany(u => u)));
-    }
+        where T : notnull => source.Where(x => x.Count != 0).Select(updates => new ChangeSet<T>(updates.SelectMany(u => u)));
 
     /// <summary>
     /// Provides a call back for each item change.
@@ -1230,10 +1179,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Or);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Or);
 
     /// <summary>
     /// Apply a logical Or operator between the collections.
@@ -1244,10 +1190,7 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
-        where T : notnull
-    {
-        return source.Combine(CombineOperator.Or, others);
-    }
+        where T : notnull => source.Combine(CombineOperator.Or, others);
 
     /// <summary>
     /// Dynamically apply a logical Or operator between the items in the outer observable list.
@@ -1257,10 +1200,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Or);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Or);
 
     /// <summary>
     /// Dynamically apply a logical Or operator between the items in the outer observable list.
@@ -1270,10 +1210,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<IObservableList<T>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Or);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Or);
 
     /// <summary>
     /// Dynamically apply a logical Or operator between the items in the outer observable list.
@@ -1283,10 +1220,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservableList<ISourceList<T>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Or);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Or);
 
     /// <summary>
     /// Applies paging to the data source.
@@ -1529,10 +1463,7 @@ public static class ObservableListEx
     /// <param name="source">The source observable of change set values.</param>
     /// <returns>An observable which emits a change set.</returns>
     public static IObservable<IChangeSet<T>> StartWithEmpty<T>(this IObservable<IChangeSet<T>> source)
-        where T : notnull
-    {
-        return source.StartWith(ChangeSet<T>.Empty);
-    }
+        where T : notnull => source.StartWith(ChangeSet<T>.Empty);
 
     /// <summary>
     /// Subscribes to each item when it is added to the stream and unsubscribes when it is removed.  All items will be unsubscribed when the stream is disposed.
@@ -1637,10 +1568,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
-        where TObject : notnull
-    {
-        return source.QueryWhenChanged(items => items);
-    }
+        where TObject : notnull => source.QueryWhenChanged(items => items);
 
     /// <summary>
     /// Converts the observable to an observable change set.
@@ -1751,10 +1679,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        return ToObservableChangeSet<T>(source, null, -1, scheduler);
-    }
+        where T : notnull => ToObservableChangeSet<T>(source, null, -1, scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing size and time limit to be specified.
@@ -1769,10 +1694,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, int limitSizeTo, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        return ToObservableChangeSet<T>(source, null, limitSizeTo, scheduler);
-    }
+        where T : notnull => ToObservableChangeSet<T>(source, null, limitSizeTo, scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing size to be specified.
@@ -1787,10 +1709,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
-        where T : notnull
-    {
-        return ToObservableChangeSet(source, expireAfter, 0, scheduler);
-    }
+        where T : notnull => ToObservableChangeSet(source, expireAfter, 0, scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing size and time limit to be specified.
@@ -1849,10 +1768,7 @@ public static class ObservableListEx
     /// <param name="sortOrder">The sort order. Defaults to ascending.</param>
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject, TSortKey>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TSortKey> sort, SortDirection sortOrder = SortDirection.Ascending)
-        where TObject : notnull
-    {
-        return source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending ? new ReadOnlyCollectionLight<TObject>(query.OrderBy(sort)) : new ReadOnlyCollectionLight<TObject>(query.OrderByDescending(sort)));
-    }
+        where TObject : notnull => source.QueryWhenChanged(query => sortOrder == SortDirection.Ascending ? new ReadOnlyCollectionLight<TObject>(query.OrderBy(sort)) : new ReadOnlyCollectionLight<TObject>(query.OrderByDescending(sort)));
 
     /// <summary>
     /// Converts the change set into a fully formed sorted collection. Each change in the source results in a new sorted collection.
@@ -1862,16 +1778,13 @@ public static class ObservableListEx
     /// <param name="comparer">The sort comparer.</param>
     /// <returns>An observable which emits the read only collection.</returns>
     public static IObservable<IReadOnlyCollection<TObject>> ToSortedCollection<TObject>(this IObservable<IChangeSet<TObject>> source, IComparer<TObject> comparer)
-        where TObject : notnull
-    {
-        return source.QueryWhenChanged(
+        where TObject : notnull => source.QueryWhenChanged(
             query =>
             {
                 var items = query.AsList();
                 items.Sort(comparer);
                 return new ReadOnlyCollectionLight<TObject>(items);
             });
-    }
 
     /// <summary>
     /// Projects each update item to a new form using the specified transform function.
@@ -2175,10 +2088,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
-        where TSource : notnull
-    {
-        return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
-    }
+        where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
 
     /// <summary>
     /// Flatten the nested observable collection, and  observe subsequently observable collection changes.
@@ -2191,10 +2101,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, ReadOnlyObservableCollection<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
-        where TSource : notnull
-    {
-        return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
-    }
+        where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
 
     /// <summary>
     /// Flatten the nested observable list, and observe subsequent observable collection changes.
@@ -2207,10 +2114,7 @@ public static class ObservableListEx
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<TDestination>> TransformMany<TDestination, TSource>(this IObservable<IChangeSet<TSource>> source, Func<TSource, IObservableList<TDestination>> manySelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TDestination : notnull
-        where TSource : notnull
-    {
-        return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
-    }
+        where TSource : notnull => new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
 
     /// <summary>
     /// Virtualises the source using parameters provided via the requests observable.
@@ -2374,10 +2278,7 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
-        where T : notnull
-    {
-        return source.Combine(CombineOperator.Xor, others);
-    }
+        where T : notnull => source.Combine(CombineOperator.Xor, others);
 
     /// <summary>
     /// Apply a logical Xor operator between the collections.
@@ -2387,10 +2288,7 @@ public static class ObservableListEx
     /// <param name="sources">The sources.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this ICollection<IObservable<IChangeSet<T>>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Xor);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Xor);
 
     /// <summary>
     /// Dynamically apply a logical Xor operator between the items in the outer observable list.
@@ -2400,10 +2298,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<IObservable<IChangeSet<T>>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Xor);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Xor);
 
     /// <summary>
     /// Dynamically apply a logical Xor operator between the items in the outer observable list.
@@ -2413,10 +2308,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<IObservableList<T>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Xor);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Xor);
 
     /// <summary>
     /// Dynamically apply a logical Xor operator between the items in the outer observable list.
@@ -2426,10 +2318,7 @@ public static class ObservableListEx
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservableList<ISourceList<T>> sources)
-        where T : notnull
-    {
-        return sources.Combine(CombineOperator.Xor);
-    }
+        where T : notnull => sources.Combine(CombineOperator.Xor);
 
     private static IObservable<IChangeSet<T>> Combine<T>(this ICollection<IObservable<IChangeSet<T>>> sources, CombineOperator type)
         where T : notnull

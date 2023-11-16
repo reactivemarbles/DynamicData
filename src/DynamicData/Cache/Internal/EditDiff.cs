@@ -6,25 +6,17 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class EditDiff<TObject, TKey>
+internal class EditDiff<TObject, TKey>(ISourceCache<TObject, TKey> source, Func<TObject, TObject, bool> areEqual)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Func<TObject, TObject, bool> _areEqual;
+    private readonly Func<TObject, TObject, bool> _areEqual = areEqual ?? throw new ArgumentNullException(nameof(areEqual));
 
     private readonly IEqualityComparer<KeyValuePair<TKey, TObject>> _keyComparer = new KeyComparer<TObject, TKey>();
 
-    private readonly ISourceCache<TObject, TKey> _source;
+    private readonly ISourceCache<TObject, TKey> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public EditDiff(ISourceCache<TObject, TKey> source, Func<TObject, TObject, bool> areEqual)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _areEqual = areEqual ?? throw new ArgumentNullException(nameof(areEqual));
-    }
-
-    public void Edit(IEnumerable<TObject> items)
-    {
-        _source.Edit(
+    public void Edit(IEnumerable<TObject> items) => _source.Edit(
             innerCache =>
             {
                 var originalItems = innerCache.KeyValues.AsArray();
@@ -39,5 +31,4 @@ internal class EditDiff<TObject, TKey>
                 innerCache.Remove(removes.Select(kvp => kvp.Key));
                 innerCache.AddOrUpdate(adds.Union(intersect));
             });
-    }
 }

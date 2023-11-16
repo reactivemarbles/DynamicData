@@ -186,10 +186,7 @@ public sealed class SourceList<T> : ISourceList<T>
         }
     }
 
-    private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source)
-    {
-        return source.Synchronize(_locker).Finally(OnCompleted).Select(_readerWriter.Write).Subscribe(InvokeNext, OnError, OnCompleted);
-    }
+    private IDisposable LoadFromSource(IObservable<IChangeSet<T>> source) => source.Synchronize(_locker).Finally(OnCompleted).Select(_readerWriter.Write).Subscribe(InvokeNext, OnError, OnCompleted);
 
     private void OnCompleted()
     {

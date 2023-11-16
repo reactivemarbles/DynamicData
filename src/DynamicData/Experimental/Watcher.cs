@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -54,14 +53,9 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
             });
     }
 
-    public void Dispose()
-    {
-        _disposer.Dispose();
-    }
+    public void Dispose() => _disposer.Dispose();
 
-    public IObservable<Change<TObject, TKey>> Watch(TKey key)
-    {
-        return Observable.Create<Change<TObject, TKey>>(
+    public IObservable<Change<TObject, TKey>> Watch(TKey key) => Observable.Create<Change<TObject, TKey>>(
             observer =>
             {
                 lock (_locker)
@@ -106,5 +100,4 @@ internal sealed class Watcher<TObject, TKey> : IWatcher<TObject, TKey>
                         });
                 }
             });
-    }
 }

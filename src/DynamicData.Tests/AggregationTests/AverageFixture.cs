@@ -34,6 +34,150 @@ public class AverageFixture : IDisposable
         accumulator.Dispose();
     }
 
+    [Fact]
+    public void AddedItemsContributeToSumLong()
+    {
+        double avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => Convert.ToInt64(p.Age)).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumFloat()
+    {
+        double avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => Convert.ToSingle(p.Age)).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumDouble()
+    {
+        double avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => Convert.ToDouble(p.Age)).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumDecimal()
+    {
+        decimal avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => Convert.ToDecimal(p.Age)).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", 10));
+        _source.AddOrUpdate(new Person("B", 20));
+        _source.AddOrUpdate(new Person("C", 30));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumNullable()
+    {
+        double avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => p.AgeNullable).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumNullableLong()
+    {
+        double avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => (long?)(p.AgeNullable.HasValue ? Convert.ToInt64(p.AgeNullable) : default)).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumNullableFloat()
+    {
+        double avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => (float?)(p.AgeNullable.HasValue ? Convert.ToSingle(p.AgeNullable) : default)).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumNullableDouble()
+    {
+        double avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => (double?)(p.AgeNullable.HasValue ? Convert.ToDouble(p.AgeNullable) : default)).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
+    [Fact]
+    public void AddedItemsContributeToSumNullableDecimal()
+    {
+        decimal avg = 0;
+
+        var accumulator = _source.Connect().Avg(p => (decimal?)(p.AgeNullable.HasValue ? Convert.ToDecimal(p.AgeNullable) : default)).Subscribe(x => avg = x);
+
+        _source.AddOrUpdate(new Person("A", new int?(10), "F", null));
+        _source.AddOrUpdate(new Person("B", new int?(20), "F", null));
+        _source.AddOrUpdate(new Person("C", new int?(30), "F", null));
+
+        avg.Should().Be(20, "Average value should be 20");
+
+        accumulator.Dispose();
+    }
+
     public void Dispose()
     {
         _source.Dispose();

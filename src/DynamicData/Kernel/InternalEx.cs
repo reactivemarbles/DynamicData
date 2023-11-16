@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
@@ -57,16 +56,13 @@ public static class InternalEx
     /// <param name="interval">The interval.</param>
     /// <param name="action">The action.</param>
     /// <returns>A disposable that will stop the schedule.</returns>
-    public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, TimeSpan interval, Action action)
-    {
-        return scheduler.Schedule(
+    public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, TimeSpan interval, Action action) => scheduler.Schedule(
             interval,
             scheduleNext =>
             {
                 action();
                 scheduleNext(interval);
             });
-    }
 
     /// <summary>
     /// Schedules a recurring action.
@@ -99,10 +95,7 @@ public static class InternalEx
             });
     }
 
-    internal static void OnNext(this ISubject<Unit> source)
-    {
-        source.OnNext(Unit.Default);
-    }
+    internal static void OnNext(this ISubject<Unit> source) => source.OnNext(Unit.Default);
 
     internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2)
     {
@@ -111,10 +104,7 @@ public static class InternalEx
         t2 = temp;
     }
 
-    internal static IObservable<Unit> ToUnit<T>(this IObservable<T> source)
-    {
-        return source.Select(_ => Unit.Default);
-    }
+    internal static IObservable<Unit> ToUnit<T>(this IObservable<T> source) => source.Select(_ => Unit.Default);
 
     /// <summary>
     /// Observable.Return without the memory leak.

@@ -2,10 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -17,8 +14,7 @@ internal class ObservablePropertyFactory<TObject, TProperty>
 {
     private readonly Func<TObject, bool, IObservable<PropertyValue<TObject, TProperty>>> _factory;
 
-    public ObservablePropertyFactory(Func<TObject, TProperty> valueAccessor, ObservablePropertyPart[] chain)
-    {
+    public ObservablePropertyFactory(Func<TObject, TProperty> valueAccessor, ObservablePropertyPart[] chain) =>
         _factory = (t, notifyInitial) =>
         {
             // 1) notify when values have changed
@@ -31,7 +27,6 @@ internal class ObservablePropertyFactory<TObject, TProperty>
 
             return valueHasChanged.Select(_ => GetPropertyValue(t, chain, valueAccessor));
         };
-    }
 
     public ObservablePropertyFactory(Expression<Func<TObject, TProperty>> expression)
     {
@@ -55,10 +50,7 @@ internal class ObservablePropertyFactory<TObject, TProperty>
         };
     }
 
-    public IObservable<PropertyValue<TObject, TProperty>> Create(TObject source, bool notifyInitial)
-    {
-        return _factory(source, notifyInitial);
-    }
+    public IObservable<PropertyValue<TObject, TProperty>> Create(TObject source, bool notifyInitial) => _factory(source, notifyInitial);
 
     // create notifier for all parts of the property path
     private static IEnumerable<IObservable<Unit>> GetNotifiers(TObject source, IEnumerable<ObservablePropertyPart> chain)

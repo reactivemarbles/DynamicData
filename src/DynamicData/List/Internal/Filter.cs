@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 
 using DynamicData.Kernel;
@@ -36,9 +33,7 @@ internal class Filter<T>
         _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
     }
 
-    public IObservable<IChangeSet<T>> Run()
-    {
-        return Observable.Create<IChangeSet<T>>(
+    public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
                 var locker = new object();
@@ -94,7 +89,6 @@ internal class Filter<T>
                     .Select(changes => changes.Transform(iwm => iwm.Item)) // use convert, not transform
                     .SubscribeSafe(observer);
             });
-    }
 
     private static IChangeSet<ItemWithMatch> Process(ChangeAwareList<ItemWithMatch> filtered, IChangeSet<ItemWithMatch> changes)
     {
@@ -249,20 +243,13 @@ internal class Filter<T>
         return filtered.CaptureChanges();
     }
 
-    private class ItemWithMatch : IEquatable<ItemWithMatch>
+    private class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
     {
-        public T Item { get; }
+        public T Item { get; } = item;
 
-        public bool IsMatch { get; set; }
+        public bool IsMatch { get; set; } = isMatch;
 
-        public bool WasMatch { get; set; }
-
-        public ItemWithMatch(T item, bool isMatch, bool wasMatch = false)
-        {
-            Item = item;
-            IsMatch = isMatch;
-            WasMatch = wasMatch;
-        }
+        public bool WasMatch { get; set; } = wasMatch;
 
         public bool Equals(ItemWithMatch? other)
         {
@@ -279,10 +266,7 @@ internal class Filter<T>
             return Equals((ItemWithMatch)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return EqualityComparer<T>.Default.GetHashCode(Item!);
-        }
+        public override int GetHashCode() => EqualityComparer<T>.Default.GetHashCode(Item!);
 
         public static bool operator ==(ItemWithMatch? left, ItemWithMatch? right)
         {

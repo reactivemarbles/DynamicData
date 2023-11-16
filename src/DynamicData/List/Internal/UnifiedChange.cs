@@ -2,14 +2,11 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal readonly struct UnifiedChange<T> : IEquatable<UnifiedChange<T>>
+internal readonly struct UnifiedChange<T>(ListChangeReason reason, T current, Optional<T> previous) : IEquatable<UnifiedChange<T>>
     where T : notnull
 {
     public UnifiedChange(ListChangeReason reason, T current)
@@ -17,18 +14,11 @@ internal readonly struct UnifiedChange<T> : IEquatable<UnifiedChange<T>>
     {
     }
 
-    public UnifiedChange(ListChangeReason reason, T current, Optional<T> previous)
-    {
-        Reason = reason;
-        Current = current;
-        Previous = previous;
-    }
+    public ListChangeReason Reason { get; } = reason;
 
-    public ListChangeReason Reason { get; }
+    public T Current { get; } = current;
 
-    public T Current { get; }
-
-    public Optional<T> Previous { get; }
+    public Optional<T> Previous { get; } = previous;
 
     public static bool operator ==(UnifiedChange<T> left, UnifiedChange<T> right)
     {
@@ -40,10 +30,7 @@ internal readonly struct UnifiedChange<T> : IEquatable<UnifiedChange<T>>
         return !left.Equals(right);
     }
 
-    public bool Equals(UnifiedChange<T> other)
-    {
-        return Reason == other.Reason && EqualityComparer<T>.Default.Equals(Current, other.Current) && Previous.Equals(other.Previous);
-    }
+    public bool Equals(UnifiedChange<T> other) => Reason == other.Reason && EqualityComparer<T>.Default.Equals(Current, other.Current) && Previous.Equals(other.Previous);
 
     public override bool Equals(object? obj)
     {
@@ -66,8 +53,5 @@ internal readonly struct UnifiedChange<T> : IEquatable<UnifiedChange<T>>
         }
     }
 
-    public override string ToString()
-    {
-        return $"Reason: {Reason}, Current: {Current}, Previous: {Previous}";
-    }
+    public override string ToString() => $"Reason: {Reason}, Current: {Current}, Previous: {Previous}";
 }
