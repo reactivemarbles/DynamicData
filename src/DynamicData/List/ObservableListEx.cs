@@ -594,20 +594,21 @@ public static class ObservableListEx
     /// <summary>
     /// Disposes each item when no longer required.
     ///
-    /// Individual items are disposed when removed or replaced. All items
-    /// are disposed when the stream is disposed.
+    /// Individual items are disposed after removal or replacement changes have been sent downstream.
+    /// All items previously-published on the stream are disposed after the stream finalizes.
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>A continuation of the original stream.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
-        where T : notnull => source.OnItemRemoved(
-            t =>
-            {
-                var d = t as IDisposable;
-                d?.Dispose();
-            });
+        where T : notnull
+    {
+        if (source is null)
+            throw new ArgumentNullException(nameof(source));
+
+        return new DisposeMany<T>(source).Run();
+    }
 
     /// <summary>
     /// Selects distinct values from the source, using the specified value selector.

@@ -1141,8 +1141,8 @@ public static class ObservableCacheEx
     /// <summary>
     /// Disposes each item when no longer required.
     ///
-    /// Individual items are disposed when removed or replaced. All items
-    /// are disposed when the stream is disposed.
+    /// Individual items are disposed after removal or replacement changes have been sent downstream.
+    /// All items previously-published on the stream are disposed after the stream finalizes.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -1158,13 +1158,7 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(source));
         }
 
-        return new DisposeMany<TObject, TKey>(
-            source,
-            t =>
-            {
-                var d = t as IDisposable;
-                d?.Dispose();
-            }).Run();
+        return new DisposeMany<TObject, TKey>(source).Run();
     }
 
     /// <summary>

@@ -3,10 +3,7 @@
 // See the LICENSE file in the project root for full license information.
 
 #if SUPPORTS_BINDINGLIST
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 
 namespace DynamicData.Binding
 {

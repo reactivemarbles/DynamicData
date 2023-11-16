@@ -64,7 +64,15 @@ internal class MergeMany<TObject, TKey, TDestination>
 
         public void Finally() => CheckCompleted();
 
-        public void Dispose() => _subject.Dispose();
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _subscriptionCount, 0) != 0)
+            {
+                _subject.OnCompleted();
+            }
+
+            _subject.Dispose();
+        }
 
         private void CheckCompleted()
         {
