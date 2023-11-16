@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Reactive.Disposables;
 
 using DynamicData.Kernel;
@@ -181,10 +179,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <summary>Serves as the default hash function. </summary>
     /// <returns>A hash code for the current object.</returns>
     /// <filterpriority>2.</filterpriority>
-    public override int GetHashCode()
-    {
-        return EqualityComparer<TKey>.Default.GetHashCode(Key);
-    }
+    public override int GetHashCode() => EqualityComparer<TKey>.Default.GetHashCode(Key);
 
     /// <summary>
     /// Returns a <see cref="string" /> that represents this instance.
@@ -198,10 +193,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
         return $"{Item}{count}";
     }
 
-    internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction)
-    {
-        _children.Edit(updateAction);
-    }
+    internal void Update(Action<ISourceUpdater<Node<TObject, TKey>, TKey>> updateAction) => _children.Edit(updateAction);
 
     /// <summary>
     /// Disposes any managed or unmanaged resources.

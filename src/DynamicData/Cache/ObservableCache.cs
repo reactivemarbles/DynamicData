@@ -130,10 +130,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     public Optional<TObject> Lookup(TKey key) => _readerWriter.Lookup(key);
 
-    public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null)
-    {
-        return predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
-    }
+    public IObservable<IChangeSet<TObject, TKey>> Preview(Func<TObject, bool>? predicate = null) => predicate is null ? _changesPreview : _changesPreview.Filter(predicate);
 
     public IObservable<Change<TObject, TKey>> Watch(TKey key) =>
         Observable.Create<Change<TObject, TKey>>(

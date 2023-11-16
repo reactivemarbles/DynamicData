@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -34,9 +33,7 @@ internal class MergeMany<TObject, TKey, TDestination>
         _observableSelector = (t, _) => observableSelector(t);
     }
 
-    public IObservable<TDestination> Run()
-    {
-        return Observable.Create<TDestination>(
+    public IObservable<TDestination> Run() => Observable.Create<TDestination>(
             observer =>
             {
                 var counter = new SubscriptionCounter();
@@ -51,7 +48,6 @@ internal class MergeMany<TObject, TKey, TDestination>
 
                 return new CompositeDisposable(disposable, counter);
             });
-    }
 
     private sealed class SubscriptionCounter : IDisposable
     {

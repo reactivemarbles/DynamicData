@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace DynamicData.Kernel;
 
@@ -27,13 +25,7 @@ internal sealed class ReadOnlyCollectionLight<T> : IReadOnlyCollection<T>
 
     public int Count { get; }
 
-    public IEnumerator<T> GetEnumerator()
-    {
-        return _items.GetEnumerator();
-    }
+    public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

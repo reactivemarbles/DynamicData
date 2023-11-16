@@ -1,8 +1,6 @@
 name: Build
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -16,53 +14,37 @@ jobs:
     outputs:
       nbgv: ${{ steps.nbgv.outputs.SemVer2 }}
     steps:        
-    - name: Get Current Visual Studio Information
-      shell: bash
-      run: |
-        dotnet tool update -g dotnet-vs
-        echo "## About RELEASE ##"
-        vs where release
-
-    - name: Update Visual Studio Latest Release
-      shell: bash
-      run: |
-        echo "## Update RELEASE ##"
-        vs update release Enterprise
-        vs modify release Enterprise +mobile +desktop +uwp +web
-        echo "## About RELEASE Updated ##"
-        vs where release
-        echo "##vso[task.prependpath]$(vs where release --prop=InstallationPath)\MSBuild\Current\Bin"
-        
+       
     - name: Checkout
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
         lfs: true
 
-    - name: Install .NET 6 & .NET 7
+    - name: Setup .NET 6/7
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: |
             6.0.x
             7.0.x
+            8.0.x
 
     - name: NBGV
       id: nbgv
       uses: dotnet/nbgv@master
       with:
         setAllVars: true
-
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.3.1
-      with:
-        vs-prerelease: true
         
     - name: NuGet Restore
-      run: msbuild /t:restore /v:minimal /m
+      run: dotnet restore DynamicData.sln
       working-directory: src
       
     - name: Build
-      run: msbuild /t:build,pack /maxcpucount /p:NoPackageAnalysis=true /verbosity:minimal /p:Configuration=${{ env.configuration }}
+      run: dotnet build --no-restore --configuration Release DynamicData.sln
+      working-directory: src
+
+    - name: Pack
+      run: dotnet pack --no-restore --configuration Release DynamicData.sln
       working-directory: src
       
     - name: Run Unit Tests and Generate Coverage

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
-using System.Collections.Generic;
 
 namespace DynamicData.List.Linq;
 
@@ -12,19 +11,12 @@ namespace DynamicData.List.Linq;
 /// Otherwise these operators could break subsequent operators when the subsequent operator relies on the index.
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
-internal class WithoutIndexEnumerator<T> : IEnumerable<Change<T>>
+internal class WithoutIndexEnumerator<T>(IEnumerable<Change<T>> changeSet) : IEnumerable<Change<T>>
     where T : notnull
 {
-    private readonly IEnumerable<Change<T>> _changeSet;
-
-    public WithoutIndexEnumerator(IEnumerable<Change<T>> changeSet)
-    {
-        _changeSet = changeSet;
-    }
-
     public IEnumerator<Change<T>> GetEnumerator()
     {
-        foreach (var change in _changeSet)
+        foreach (var change in changeSet)
         {
             if (change.Reason == ListChangeReason.Moved)
             {
@@ -43,8 +35,5 @@ internal class WithoutIndexEnumerator<T> : IEnumerable<Change<T>>
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

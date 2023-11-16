@@ -2,47 +2,34 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class AutoRefresh<TObject, TKey, TAny>
+internal class AutoRefresh<TObject, TKey, TAny>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly TimeSpan? _buffer;
+    private readonly Func<TObject, TKey, IObservable<TAny>> _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
 
-    private readonly Func<TObject, TKey, IObservable<TAny>> _reEvaluator;
+    private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
 
-    private readonly IScheduler _scheduler;
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-    public AutoRefresh(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TAny>> reEvaluator, TimeSpan? buffer = null, IScheduler? scheduler = null)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _reEvaluator = reEvaluator ?? throw new ArgumentNullException(nameof(reEvaluator));
-        _buffer = buffer;
-        _scheduler = scheduler ?? Scheduler.Default;
-    }
-
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
                 var shared = _source.Publish();
 
                 // monitor each item observable and create change
-                var changes = shared.MergeMany((t, k) => { return _reEvaluator(t, k).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, k, t)); });
+                var changes = shared.MergeMany((t, k) => _reEvaluator(t, k).Select(_ => new Change<TObject, TKey>(ChangeReason.Refresh, k, t)));
 
                 // create a change set, either buffered or one item at the time
-                IObservable<IChangeSet<TObject, TKey>> refreshChanges = _buffer is null ?
+                IObservable<IChangeSet<TObject, TKey>> refreshChanges = buffer is null ?
                     changes.Select(c => new ChangeSet<TObject, TKey>(new[] { c })) :
-                    changes.Buffer(_buffer.Value, _scheduler).Where(list => list.Count > 0).Select(items => new ChangeSet<TObject, TKey>(items));
+                    changes.Buffer(buffer.Value, _scheduler).Where(list => list.Count > 0).Select(items => new ChangeSet<TObject, TKey>(items));
 
                 // publish refreshes and underlying changes
                 var locker = new object();
@@ -50,5 +37,4 @@ internal class AutoRefresh<TObject, TKey, TAny>
 
                 return new CompositeDisposable(publisher, shared.Connect());
             });
-    }
 }

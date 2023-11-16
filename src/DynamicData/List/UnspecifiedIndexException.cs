@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -36,16 +34,6 @@ public class UnspecifiedIndexException : Exception
     /// <param name="innerException">The exception that is the cause of the current exception, or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
     public UnspecifiedIndexException(string message, Exception innerException)
         : base(message, innerException)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UnspecifiedIndexException"/> class.
-    /// </summary>
-    /// <param name="serializationInfo">The serialization info.</param>
-    /// <param name="streamingContext">The serialization context.</param>
-    protected UnspecifiedIndexException(System.Runtime.Serialization.SerializationInfo serializationInfo, System.Runtime.Serialization.StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 }

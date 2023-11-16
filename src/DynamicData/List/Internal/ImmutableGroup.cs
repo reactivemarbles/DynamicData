@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
@@ -65,13 +62,7 @@ internal sealed class ImmutableGroup<TObject, TGroupKey> : IGrouping<TObject, TG
         return obj is ImmutableGroup<TObject, TGroupKey> value && Equals(value);
     }
 
-    public override int GetHashCode()
-    {
-        return Key is null ? 0 : EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
-    }
+    public override int GetHashCode() => Key is null ? 0 : EqualityComparer<TGroupKey>.Default.GetHashCode(Key);
 
-    public override string ToString()
-    {
-        return $"Grouping for: {Key} ({Count} items)";
-    }
+    public override string ToString() => $"Grouping for: {Key} ({Count} items)";
 }

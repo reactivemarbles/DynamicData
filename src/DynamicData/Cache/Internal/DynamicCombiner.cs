@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -12,23 +9,13 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class DynamicCombiner<TObject, TKey>
+internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservableList<IObservable<IChangeSet<TObject, TKey>>> _source;
+    private readonly IObservableList<IObservable<IChangeSet<TObject, TKey>>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly CombineOperator _type;
-
-    public DynamicCombiner(IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, CombineOperator type)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _type = type;
-    }
-
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
                 var locker = new object();
@@ -63,7 +50,7 @@ internal sealed class DynamicCombiner<TObject, TKey>
                         // Remove items if required
                         ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Cache.KeyValues);
 
-                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                        if (type == CombineOperator.And || type == CombineOperator.Except)
                         {
                             var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Cache.KeyValues);
                             ProcessChanges(resultCache, sourceLists.Items.AsArray(), itemsToCheck);
@@ -82,7 +69,7 @@ internal sealed class DynamicCombiner<TObject, TKey>
                     {
                         ProcessChanges(resultCache, sourceLists.Items.AsArray(), mc.Current.Cache.KeyValues);
 
-                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                        if (type == CombineOperator.And || type == CombineOperator.Except)
                         {
                             ProcessChanges(resultCache, sourceLists.Items.AsArray(), resultCache.KeyValues.ToArray());
                         }
@@ -96,7 +83,6 @@ internal sealed class DynamicCombiner<TObject, TKey>
 
                 return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged, sharedLists.Connect());
             });
-    }
 
     private bool MatchesConstraint(MergeContainer[] sources, TKey key)
     {
@@ -105,7 +91,7 @@ internal sealed class DynamicCombiner<TObject, TKey>
             return false;
         }
 
-        switch (_type)
+        switch (type)
         {
             case CombineOperator.And:
                 {
@@ -198,9 +184,6 @@ internal sealed class DynamicCombiner<TObject, TKey>
 
         public IObservable<IChangeSet<TObject, TKey>> Source { get; }
 
-        private void Clone(IChangeSet<TObject, TKey> changes)
-        {
-            Cache.Clone(changes);
-        }
+        private void Clone(IChangeSet<TObject, TKey> changes) => Cache.Clone(changes);
     }
 }

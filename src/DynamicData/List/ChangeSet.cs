@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Linq;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -116,8 +113,5 @@ public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     /// <returns>
     /// A <see cref="string" /> that represents this instance.
     /// </returns>
-    public override string ToString()
-    {
-        return $"ChangeSet<{typeof(T).Name}>. Count={Count}";
-    }
+    public override string ToString() => $"ChangeSet<{typeof(T).Name}>. Count={Count}";
 }

@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class DisposeMany<TObject, TKey>
+internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
     where TObject : notnull
     where TKey : notnull
 {

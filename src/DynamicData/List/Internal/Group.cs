@@ -2,17 +2,12 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 namespace DynamicData.List.Internal;
 
-internal class Group<TObject, TGroup> : IGroup<TObject, TGroup>, IDisposable, IEquatable<Group<TObject, TGroup>>
+internal class Group<TObject, TGroup>(TGroup groupKey) : IGroup<TObject, TGroup>, IDisposable, IEquatable<Group<TObject, TGroup>>
     where TObject : notnull
 {
-    public Group(TGroup groupKey) => GroupKey = groupKey;
-
-    public TGroup GroupKey { get; }
+    public TGroup GroupKey { get; } = groupKey;
 
     public IObservableList<TObject> List => Source;
 
@@ -47,15 +42,9 @@ internal class Group<TObject, TGroup> : IGroup<TObject, TGroup>, IDisposable, IE
         return EqualityComparer<TGroup>.Default.Equals(GroupKey, other.GroupKey);
     }
 
-    public override bool Equals(object? obj)
-    {
-        return obj is Group<TObject, TGroup> value && Equals(value);
-    }
+    public override bool Equals(object? obj) => obj is Group<TObject, TGroup> value && Equals(value);
 
-    public override int GetHashCode()
-    {
-        return GroupKey is null ? 0 : EqualityComparer<TGroup>.Default.GetHashCode(GroupKey);
-    }
+    public override int GetHashCode() => GroupKey is null ? 0 : EqualityComparer<TGroup>.Default.GetHashCode(GroupKey);
 
     public override string ToString() => $"Group of {GroupKey} ({List.Count} records)";
 }

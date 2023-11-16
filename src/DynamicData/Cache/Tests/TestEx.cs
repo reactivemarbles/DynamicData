@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData.Tests;
 
@@ -21,10 +19,7 @@ public static class TestEx
     /// <returns>The change set aggregator.</returns>
     public static ChangeSetAggregator<TObject, TKey> AsAggregator<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return new(source);
-    }
+        where TKey : notnull => new(source);
 
     /// <summary>
     /// Aggregates all events and statistics for a distinct change set to help assertions when testing.

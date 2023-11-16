@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 namespace DynamicData.Binding;
 
 /// <summary>
@@ -18,20 +15,14 @@ public class SortExpressionComparer<T> : List<SortExpression<T>>, IComparer<T>
     /// </summary>
     /// <param name="expression">The expression.</param>
     /// <returns>A comparer in ascending order.</returns>
-    public static SortExpressionComparer<T> Ascending(Func<T, IComparable> expression)
-    {
-        return new SortExpressionComparer<T> { new(expression) };
-    }
+    public static SortExpressionComparer<T> Ascending(Func<T, IComparable> expression) => new() { new(expression) };
 
     /// <summary>
     /// Create an descending sort expression.
     /// </summary>
     /// <param name="expression">The expression.</param>
     /// <returns>A comparer in descending order.</returns>
-    public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression)
-    {
-        return new SortExpressionComparer<T> { new(expression, SortDirection.Descending) };
-    }
+    public static SortExpressionComparer<T> Descending(Func<T, IComparable> expression) => new() { new(expression, SortDirection.Descending) };
 
     /// <inheritdoc/>
     public int Compare(T? x, T? y)
@@ -71,7 +62,7 @@ public class SortExpressionComparer<T> : List<SortExpression<T>>, IComparer<T>
                 return 1;
             }
 
-            int result = xValue.CompareTo(yValue);
+            var result = xValue.CompareTo(yValue);
             if (result == 0)
             {
                 continue;

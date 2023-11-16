@@ -3,26 +3,17 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 // Lifted from here https://github.com/benaadams/Ben.Enumerable. Many thanks to the genius of the man.
 namespace DynamicData.Kernel;
 
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics.")]
-internal struct EnumeratorIList<T> : IEnumerator<T>
+internal struct EnumeratorIList<T>(IList<T> list) : IEnumerator<T>
 {
-    private readonly IList<T> _list;
+    private int _index = -1;
 
-    private int _index;
-
-    public EnumeratorIList(IList<T> list)
-    {
-        _index = -1;
-        _list = list;
-    }
-
-    public T Current => _list[_index];
+    public T Current => list[_index];
 
     object? IEnumerator.Current => Current;
 
@@ -30,7 +21,7 @@ internal struct EnumeratorIList<T> : IEnumerator<T>
     {
         _index++;
 
-        return _index < _list.Count;
+        return _index < list.Count;
     }
 
     public void Dispose()

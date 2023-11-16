@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 
@@ -12,34 +9,16 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class Sort<T>
+internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? comparer, SortOptions sortOptions, IObservable<Unit>? resort, IObservable<IComparer<T>>? comparerObservable, int resetThreshold)
     where T : notnull
 {
-    private readonly IObservable<IComparer<T>> _comparerObservable;
+    private readonly IObservable<IComparer<T>> _comparerObservable = comparerObservable ?? Observable.Never<IComparer<T>>();
+    private readonly IObservable<Unit> _resort = resort ?? Observable.Never<Unit>();
+    private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly int _resetThreshold;
+    private IComparer<T> _comparer = comparer ?? Comparer<T>.Default;
 
-    private readonly IObservable<Unit> _resort;
-
-    private readonly SortOptions _sortOptions;
-
-    private readonly IObservable<IChangeSet<T>> _source;
-
-    private IComparer<T> _comparer;
-
-    public Sort(IObservable<IChangeSet<T>> source, IComparer<T>? comparer, SortOptions sortOptions, IObservable<Unit>? resort, IObservable<IComparer<T>>? comparerObservable, int resetThreshold)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _resort = resort ?? Observable.Never<Unit>();
-        _comparerObservable = comparerObservable ?? Observable.Never<IComparer<T>>();
-        _comparer = comparer ?? Comparer<T>.Default;
-        _sortOptions = sortOptions;
-        _resetThreshold = resetThreshold;
-    }
-
-    public IObservable<IChangeSet<T>> Run()
-    {
-        return Observable.Create<IChangeSet<T>>(
+    public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
                 var locker = new object();
@@ -49,24 +28,23 @@ internal sealed class Sort<T>
                 var dataChanged = _source.Synchronize(locker).Select(
                     changes =>
                     {
-                        if (_resetThreshold > 1)
+                        if (resetThreshold > 1)
                         {
                             original.Clone(changes);
                         }
 
-                        return changes.TotalChanges > _resetThreshold ? Reset(original, target) : Process(target, changes);
+                        return changes.TotalChanges > resetThreshold ? Reset(original, target) : Process(target, changes);
                     });
                 var resort = _resort.Synchronize(locker).Select(_ => Reorder(target));
                 var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
 
                 return changeComparer.Merge(resort).Merge(dataChanged).Where(changes => changes.Count != 0).SubscribeSafe(observer);
             });
-    }
 
     private IChangeSet<T> ChangeComparer(ChangeAwareList<T> target, IComparer<T> comparer)
     {
         _comparer = comparer;
-        if (_resetThreshold > 0 && target.Count <= _resetThreshold)
+        if (resetThreshold > 0 && target.Count <= resetThreshold)
         {
             return Reorder(target);
         }
@@ -79,7 +57,7 @@ internal sealed class Sort<T>
 
     private int GetCurrentPosition(ChangeAwareList<T> target, T item)
     {
-        var index = _sortOptions == SortOptions.UseBinarySearch ? target.BinarySearch(item, _comparer) : target.IndexOf(item);
+        var index = sortOptions == SortOptions.UseBinarySearch ? target.BinarySearch(item, _comparer) : target.IndexOf(item);
 
         if (index < 0)
         {
@@ -89,10 +67,7 @@ internal sealed class Sort<T>
         return index;
     }
 
-    private int GetInsertPosition(ChangeAwareList<T> target, T item)
-    {
-        return _sortOptions == SortOptions.UseBinarySearch ? GetInsertPositionBinary(target, item) : GetInsertPositionLinear(target, item);
-    }
+    private int GetInsertPosition(ChangeAwareList<T> target, T item) => sortOptions == SortOptions.UseBinarySearch ? GetInsertPositionBinary(target, item) : GetInsertPositionLinear(target, item);
 
     private int GetInsertPositionBinary(ChangeAwareList<T> target, T item)
     {

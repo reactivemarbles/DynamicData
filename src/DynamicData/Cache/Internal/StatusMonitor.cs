@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -11,18 +10,9 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class StatusMonitor<T>
+internal class StatusMonitor<T>(IObservable<T> source)
 {
-    private readonly IObservable<T> _source;
-
-    public StatusMonitor(IObservable<T> source)
-    {
-        _source = source;
-    }
-
-    public IObservable<ConnectionStatus> Run()
-    {
-        return Observable.Create<ConnectionStatus>(
+    public IObservable<ConnectionStatus> Run() => Observable.Create<ConnectionStatus>(
             observer =>
             {
                 var statusSubject = new Subject<ConnectionStatus>();
@@ -57,7 +47,7 @@ internal class StatusMonitor<T>
                     statusSubject.OnNext(status);
                 }
 
-                var monitor = _source.Subscribe(_ => Updated(), Error, Completion);
+                var monitor = source.Subscribe(_ => Updated(), Error, Completion);
 
                 var subscriber = statusSubject.StartWith(status).DistinctUntilChanged().SubscribeSafe(observer);
 
@@ -69,5 +59,4 @@ internal class StatusMonitor<T>
                         subscriber.Dispose();
                     });
             });
-    }
 }

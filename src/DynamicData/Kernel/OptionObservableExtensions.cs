@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 
 namespace DynamicData.Kernel;
@@ -195,10 +192,7 @@ public static class OptionObservableExtensions
     /// <returns>An Observable with the Values.</returns>
     /// <remarks>Observable version of <seealso cref="OptionExtensions.SelectValues{T}(IEnumerable{Optional{T}})"/>.</remarks>
     public static IObservable<T> SelectValues<T>(this IObservable<Optional<T>> source)
-        where T : notnull
-    {
-        return source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
-    }
+        where T : notnull => source.Where(t => t.HasValue && t.Value is not null).Select(t => t.Value!);
 
     /// <summary>
     /// Converts an Observable of <see cref="Optional{T}"/> into an IObservable of <typeparamref name="T"/> by extracting the

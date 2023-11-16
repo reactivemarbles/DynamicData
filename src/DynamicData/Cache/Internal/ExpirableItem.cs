@@ -2,28 +2,17 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 namespace DynamicData.Cache.Internal;
 
-internal readonly struct ExpirableItem<TObject, TKey> : IEquatable<ExpirableItem<TObject, TKey>>
+internal readonly struct ExpirableItem<TObject, TKey>(TObject value, TKey key, DateTime dateTime, long index = 0) : IEquatable<ExpirableItem<TObject, TKey>>
 {
-    public ExpirableItem(TObject value, TKey key, DateTime dateTime, long index = 0)
-    {
-        Value = value;
-        Key = key;
-        ExpireAt = dateTime;
-        Index = index;
-    }
+    public TObject Value { get; } = value;
 
-    public TObject Value { get; }
+    public TKey Key { get; } = key;
 
-    public TKey Key { get; }
+    public DateTime ExpireAt { get; } = dateTime;
 
-    public DateTime ExpireAt { get; }
-
-    public long Index { get; }
+    public long Index { get; } = index;
 
     public static bool operator ==(ExpirableItem<TObject, TKey> left, ExpirableItem<TObject, TKey> right)
     {
@@ -36,16 +25,10 @@ internal readonly struct ExpirableItem<TObject, TKey> : IEquatable<ExpirableItem
     }
 
     /// <inheritdoc />
-    public bool Equals(ExpirableItem<TObject, TKey> other)
-    {
-        return EqualityComparer<TKey>.Default.Equals(Key, other.Key) && ExpireAt.Equals(other.ExpireAt);
-    }
+    public bool Equals(ExpirableItem<TObject, TKey> other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key) && ExpireAt.Equals(other.ExpireAt);
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        return obj is ExpirableItem<TObject, TKey> value && Equals(value);
-    }
+    public override bool Equals(object? obj) => obj is ExpirableItem<TObject, TKey> value && Equals(value);
 
     /// <inheritdoc />
     public override int GetHashCode()
@@ -56,8 +39,5 @@ internal readonly struct ExpirableItem<TObject, TKey> : IEquatable<ExpirableItem
         }
     }
 
-    public override string ToString()
-    {
-        return $"Key: {Key}, Expire At: {ExpireAt}";
-    }
+    public override string ToString() => $"Key: {Key}, Expire At: {ExpireAt}";
 }

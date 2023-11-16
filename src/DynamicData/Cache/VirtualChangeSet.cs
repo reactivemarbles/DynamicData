@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Cache.Internal;
 
 // ReSharper disable once CheckNamespace
@@ -58,10 +55,7 @@ internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>
         return Response.Equals(other.Response) && Equals(SortedItems, other.SortedItems);
     }
 
-    public override bool Equals(object? obj)
-    {
-        return obj is VirtualChangeSet<TObject, TKey> item && Equals(item);
-    }
+    public override bool Equals(object? obj) => obj is VirtualChangeSet<TObject, TKey> item && Equals(item);
 
     public override int GetHashCode()
     {

@@ -15,10 +15,8 @@ internal class ChangeSetCache<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    public ChangeSetCache(IObservable<IChangeSet<TObject, TKey>> source)
-    {
+    public ChangeSetCache(IObservable<IChangeSet<TObject, TKey>> source) =>
         Source = source.IgnoreSameReferenceUpdate().Do(Cache.Clone);
-    }
 
     public Cache<TObject, TKey> Cache { get; } = new();
 

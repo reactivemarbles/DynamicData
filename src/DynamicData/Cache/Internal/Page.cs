@@ -2,42 +2,27 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class Page<TObject, TKey>
+internal class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<IPageRequest> _pageRequests;
-
-    private readonly IObservable<ISortedChangeSet<TObject, TKey>> _source;
-
-    public Page(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IPageRequest> pageRequests)
-    {
-        _source = source;
-        _pageRequests = pageRequests;
-    }
-
-    public IObservable<IPagedChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IPagedChangeSet<TObject, TKey>>(
+    public IObservable<IPagedChangeSet<TObject, TKey>> Run() => Observable.Create<IPagedChangeSet<TObject, TKey>>(
             observer =>
             {
                 var locker = new object();
                 var paginator = new Paginator();
-                var request = _pageRequests.Synchronize(locker).Select(paginator.Paginate);
-                var dataChange = _source.Synchronize(locker).Select(paginator.Update);
+                var request = pageRequests.Synchronize(locker).Select(paginator.Paginate);
+                var dataChange = source.Synchronize(locker).Select(paginator.Update);
 
                 return request.Merge(dataChange)
                     .Where(updates => updates is not null)
                     .Select(x => x!)
                     .SubscribeSafe(observer);
             });
-    }
 
     private sealed class Paginator
     {

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Linq;
 
 namespace DynamicData.Aggregation;
@@ -34,10 +31,7 @@ public static class MaxEx
     /// </returns>
     public static IObservable<TResult> Maximum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
-        where TResult : struct, IComparable<TResult>
-    {
-        return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
-    }
+        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
 
     /// <summary>
     /// Continually calculates the maximum value from the underlying data source.
@@ -54,10 +48,7 @@ public static class MaxEx
     public static IObservable<TResult> Maximum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
         where TKey : notnull
-        where TResult : struct, IComparable<TResult>
-    {
-        return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
-    }
+        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Max, emptyValue);
 
     /// <summary>
     /// Continually calculates the minimum value from the underlying data source.
@@ -70,10 +61,7 @@ public static class MaxEx
     /// <returns>A distinct observable of the minimums item.</returns>
     public static IObservable<TResult> Minimum<TObject, TResult>(this IObservable<IChangeSet<TObject>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
-        where TResult : struct, IComparable<TResult>
-    {
-        return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
-    }
+        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
 
     /// <summary>
     /// Continually calculates the minimum value from the underlying data source.
@@ -90,14 +78,15 @@ public static class MaxEx
     public static IObservable<TResult> Minimum<TObject, TKey, TResult>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TResult> valueSelector, TResult emptyValue = default)
         where TObject : notnull
         where TKey : notnull
-        where TResult : struct, IComparable<TResult>
-    {
-        return source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
-    }
+        where TResult : struct, IComparable<TResult> => source.ToChangesAndCollection().Calculate(valueSelector, MaxOrMin.Min, emptyValue);
 
     private static IObservable<TResult> Calculate<TObject, TResult>(this IObservable<ChangesAndCollection<TObject>> source, Func<TObject, TResult> valueSelector, MaxOrMin maxOrMin, TResult emptyValue = default)
         where TResult : struct, IComparable<TResult>
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(valueSelector);
+#else
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
@@ -107,6 +96,7 @@ public static class MaxEx
         {
             throw new ArgumentNullException(nameof(valueSelector));
         }
+#endif
 
         return source.Scan(
             default(TResult?),
@@ -169,10 +159,14 @@ public static class MaxEx
         where TObject : notnull
         where TKey : notnull
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(source);
+#else
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
         }
+#endif
 
         return source.Publish(
             shared =>
@@ -186,10 +180,14 @@ public static class MaxEx
     private static IObservable<ChangesAndCollection<TObject>> ToChangesAndCollection<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(source);
+#else
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
         }
+#endif
 
         return source.Publish(
             shared =>
@@ -200,16 +198,10 @@ public static class MaxEx
             });
     }
 
-    private class ChangesAndCollection<T>
+    private class ChangesAndCollection<T>(IAggregateChangeSet<T> changes, IReadOnlyCollection<T> collection)
     {
-        public ChangesAndCollection(IAggregateChangeSet<T> changes, IReadOnlyCollection<T> collection)
-        {
-            Changes = changes;
-            Collection = collection;
-        }
+        public IAggregateChangeSet<T> Changes { get; } = changes;
 
-        public IAggregateChangeSet<T> Changes { get; }
-
-        public IReadOnlyCollection<T> Collection { get; }
+        public IReadOnlyCollection<T> Collection { get; } = collection;
     }
 }

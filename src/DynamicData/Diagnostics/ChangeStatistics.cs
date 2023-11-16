@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-
 namespace DynamicData.Diagnostics;
 
 /// <summary>
@@ -143,10 +141,7 @@ public class ChangeStatistics : IEquatable<ChangeStatistics>
     }
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        return obj is ChangeStatistics change && Equals(change);
-    }
+    public override bool Equals(object? obj) => obj is ChangeStatistics change && Equals(change);
 
     /// <inheritdoc />
     public override int GetHashCode()
@@ -166,8 +161,5 @@ public class ChangeStatistics : IEquatable<ChangeStatistics>
     }
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"CurrentIndex: {Index}, Adds: {Adds}, Updates: {Updates}, Removes: {Removes}, Refreshes: {Refreshes}, Count: {Count}, Timestamp: {LastUpdated}";
-    }
+    public override string ToString() => $"CurrentIndex: {Index}, Adds: {Adds}, Updates: {Updates}, Removes: {Removes}, Refreshes: {Refreshes}, Count: {Count}, Timestamp: {LastUpdated}";
 }

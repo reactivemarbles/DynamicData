@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
@@ -154,25 +150,13 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
         }
     }
 
-    public void AddOrUpdate(KeyValuePair<TKey, TObject> item)
-    {
-        _cache.AddOrUpdate(item.Value, item.Key);
-    }
+    public void AddOrUpdate(KeyValuePair<TKey, TObject> item) => _cache.AddOrUpdate(item.Value, item.Key);
 
-    public void AddOrUpdate(TObject item, TKey key)
-    {
-        _cache.AddOrUpdate(item, key);
-    }
+    public void AddOrUpdate(TObject item, TKey key) => _cache.AddOrUpdate(item, key);
 
-    public void Clear()
-    {
-        _cache.Clear();
-    }
+    public void Clear() => _cache.Clear();
 
-    public void Clone(IChangeSet<TObject, TKey> changes)
-    {
-        _cache.Clone(changes);
-    }
+    public void Clone(IChangeSet<TObject, TKey> changes) => _cache.Clone(changes);
 
     [Obsolete(Constants.EvaluateIsDead)]
     public void Evaluate(IEnumerable<TKey> keys) => Refresh(keys);
@@ -184,16 +168,10 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
     public void Evaluate(TObject item) => Refresh(item);
 
     [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate()
-    {
-        Refresh();
-    }
+    public void Evaluate() => Refresh();
 
     [Obsolete(Constants.EvaluateIsDead)]
-    public void Evaluate(TKey key)
-    {
-        Refresh(key);
-    }
+    public void Evaluate(TKey key) => Refresh(key);
 
     public TKey GetKey(TObject item)
     {
@@ -239,14 +217,11 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
             throw new KeySelectorException("A key selector must be specified");
         }
 
-        TKey key = _keySelector(item);
+        var key = _keySelector(item);
         return Lookup(key);
     }
 
-    public void Refresh()
-    {
-        _cache.Refresh();
-    }
+    public void Refresh() => _cache.Refresh();
 
     public void Refresh(IEnumerable<TObject> items)
     {
@@ -307,10 +282,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
         _cache.Refresh(key);
     }
 
-    public void Refresh(TKey key)
-    {
-        _cache.Refresh(key);
-    }
+    public void Refresh(TKey key) => _cache.Refresh(key);
 
     public void Remove(IEnumerable<TObject> items)
     {
@@ -371,10 +343,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
         _cache.Remove(key);
     }
 
-    public void Remove(TKey key)
-    {
-        _cache.Remove(key);
-    }
+    public void Remove(TKey key) => _cache.Remove(key);
 
     public void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items)
     {
@@ -400,15 +369,9 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
         }
     }
 
-    public void Remove(KeyValuePair<TKey, TObject> item)
-    {
-        Remove(item.Key);
-    }
+    public void Remove(KeyValuePair<TKey, TObject> item) => Remove(item.Key);
 
-    public void RemoveKey(TKey key)
-    {
-        Remove(key);
-    }
+    public void RemoveKey(TKey key) => Remove(key);
 
     public void RemoveKeys(IEnumerable<TKey> keys)
     {
@@ -420,8 +383,5 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
         _cache.Remove(keys);
     }
 
-    public void Update(IChangeSet<TObject, TKey> changes)
-    {
-        _cache.Clone(changes);
-    }
+    public void Update(IChangeSet<TObject, TKey> changes) => _cache.Clone(changes);
 }

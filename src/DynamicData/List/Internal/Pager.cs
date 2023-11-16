@@ -5,26 +5,16 @@
 using System.Collections;
 using System.Reactive.Linq;
 
-using DynamicData.Kernel;
-
 namespace DynamicData.List.Internal;
 
-internal class Pager<T>
+internal class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
     where T : notnull
 {
-    private readonly IObservable<IPageRequest> _requests;
+    private readonly IObservable<IPageRequest> _requests = requests ?? throw new ArgumentNullException(nameof(requests));
 
-    private readonly IObservable<IChangeSet<T>> _source;
+    private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public Pager(IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _requests = requests ?? throw new ArgumentNullException(nameof(requests));
-    }
-
-    public IObservable<IPageChangeSet<T>> Run()
-    {
-        return Observable.Create<IPageChangeSet<T>>(
+    public IObservable<IPageChangeSet<T>> Run() => Observable.Create<IPageChangeSet<T>>(
             observer =>
             {
                 var locker = new object();
@@ -50,7 +40,6 @@ internal class Pager<T>
                     .Select(x => x!)
                     .SubscribeSafe(observer);
             });
-    }
 
     private static int CalculatePages(ICollection all, IPageRequest? request)
     {

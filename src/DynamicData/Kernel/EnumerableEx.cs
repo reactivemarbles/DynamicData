@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace DynamicData.Kernel;
 
 /// <summary>
@@ -77,10 +73,7 @@ public static class EnumerableEx
     /// <returns>
     /// A result as specified by the result selector.
     /// </returns>
-    public static IEnumerable<ItemWithIndex<T>> IndexOfMany<T>(this IEnumerable<T> source, IEnumerable<T> itemsToFind)
-    {
-        return source.IndexOfMany(itemsToFind, (t, idx) => new ItemWithIndex<T>(t, idx));
-    }
+    public static IEnumerable<ItemWithIndex<T>> IndexOfMany<T>(this IEnumerable<T> source, IEnumerable<T> itemsToFind) => source.IndexOfMany(itemsToFind, (t, idx) => new ItemWithIndex<T>(t, idx));
 
     /// <summary>
     /// Finds the index of many items as specified in the secondary enumerable.
@@ -112,10 +105,7 @@ public static class EnumerableEx
         return itemsToFind.Join(indexed, left => left, right => right.Element, (_, right) => right).Select(x => resultSelector(x.Element, x.Index));
     }
 
-    internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source)
-    {
-        return source ?? Enumerable.Empty<T>();
-    }
+    internal static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T>? source) => source ?? Enumerable.Empty<T>();
 
     internal static IEnumerable<T> EnumerateOne<T>(this T source)
     {
@@ -141,10 +131,7 @@ public static class EnumerableEx
     }
 
 #if !WINDOWS_UWP
-    internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)
-    {
-        return new(source);
-    }
+    internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new(source);
 
 #endif
 
@@ -154,8 +141,5 @@ public static class EnumerableEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>The enumerable of items with their indexes.</returns>
-    internal static IEnumerable<ItemWithIndex<T>> WithIndex<T>(this IEnumerable<T> source)
-    {
-        return source.Select((item, index) => new ItemWithIndex<T>(item, index));
-    }
+    internal static IEnumerable<ItemWithIndex<T>> WithIndex<T>(this IEnumerable<T> source) => source.Select((item, index) => new ItemWithIndex<T>(item, index));
 }

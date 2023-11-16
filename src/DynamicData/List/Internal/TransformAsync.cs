@@ -3,8 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
-using DynamicData.Binding;
 using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;

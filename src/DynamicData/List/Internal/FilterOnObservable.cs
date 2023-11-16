@@ -2,37 +2,19 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal class FilterOnObservable<TObject>
+internal class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<bool>> filter, TimeSpan? buffer = null, IScheduler? scheduler = null)
     where TObject : notnull
 {
-    private readonly TimeSpan? _buffer;
+    private readonly Func<TObject, IObservable<bool>> _filter = filter ?? throw new ArgumentNullException(nameof(filter));
+    private readonly IObservable<IChangeSet<TObject>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly Func<TObject, IObservable<bool>> _filter;
-
-    private readonly IScheduler? _scheduler;
-
-    private readonly IObservable<IChangeSet<TObject>> _source;
-
-    public FilterOnObservable(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<bool>> filter, TimeSpan? buffer = null, IScheduler? scheduler = null)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _filter = filter ?? throw new ArgumentNullException(nameof(filter));
-        _buffer = buffer;
-        _scheduler = scheduler;
-    }
-
-    public IObservable<IChangeSet<TObject>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject>>(
+    public IObservable<IChangeSet<TObject>> Run() => Observable.Create<IChangeSet<TObject>>(
             observer =>
             {
                 var locker = new object();
@@ -47,9 +29,9 @@ internal class FilterOnObservable<TObject>
                 var itemHasChanged = shared.MergeMany(v => _filter(v.Obj).Select(prop => new ObjWithFilterValue(v.Obj, prop)));
 
                 // create a change set, either buffered or one item at the time
-                var itemsChanged = _buffer is null ?
+                var itemsChanged = buffer is null ?
                     itemHasChanged.Select(t => new[] { t }) :
-                    itemHasChanged.Buffer(_buffer.Value, _scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
+                    itemHasChanged.Buffer(buffer.Value, scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
 
                 var requiresRefresh = itemsChanged.Synchronize(locker).Select(
                     items =>
@@ -67,7 +49,6 @@ internal class FilterOnObservable<TObject>
 
                 return new CompositeDisposable(publisher, shared.Connect());
             });
-    }
 
     private static IEnumerable<TResult> IndexOfMany<TObj, TObjectProp, TResult>(IEnumerable<TObj> source, IEnumerable<TObj> itemsToFind, Func<TObj, TObjectProp> objectPropertyFunc, Func<TObj, int, TResult> resultSelector)
     {
@@ -90,42 +71,24 @@ internal class FilterOnObservable<TObject>
         return itemsToFind.Join(indexed, objectPropertyFunc, right => objectPropertyFunc(right.Element), (left, right) => resultSelector(left, right.Index));
     }
 
-    private readonly struct ObjWithFilterValue : IEquatable<ObjWithFilterValue>
+    private readonly struct ObjWithFilterValue(TObject obj, bool filter) : IEquatable<ObjWithFilterValue>
     {
-        public readonly TObject Obj;
+        public readonly TObject Obj = obj;
 
-        public readonly bool Filter;
-
-        public ObjWithFilterValue(TObject obj, bool filter)
-        {
-            Obj = obj;
-            Filter = filter;
-        }
+        public readonly bool Filter = filter;
 
         private static IEqualityComparer<ObjWithFilterValue> ObjComparer { get; } = new ObjEqualityComparer();
 
-        public bool Equals(ObjWithFilterValue other)
-        {
-            // default equality does _not_ include Filter value, as that would cause the Filter operator that is used later to fail
-            return ObjComparer.Equals(this, other);
-        }
+        public bool Equals(ObjWithFilterValue other) =>
+            ObjComparer.Equals(this, other); // default equality does _not_ include Filter value, as that would cause the Filter operator that is used later to fail
 
-        public override bool Equals(object? obj)
-        {
-            return obj is ObjWithFilterValue value && Equals(value);
-        }
+        public override bool Equals(object? obj) => obj is ObjWithFilterValue value && Equals(value);
 
-        public override int GetHashCode()
-        {
-            return ObjComparer.GetHashCode(this);
-        }
+        public override int GetHashCode() => ObjComparer.GetHashCode(this);
 
         private sealed class ObjEqualityComparer : IEqualityComparer<ObjWithFilterValue>
         {
-            public bool Equals(ObjWithFilterValue x, ObjWithFilterValue y)
-            {
-                return EqualityComparer<TObject>.Default.Equals(x.Obj, y.Obj);
-            }
+            public bool Equals(ObjWithFilterValue x, ObjWithFilterValue y) => EqualityComparer<TObject>.Default.Equals(x.Obj, y.Obj);
 
             public int GetHashCode(ObjWithFilterValue obj)
             {

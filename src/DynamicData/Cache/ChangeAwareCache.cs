@@ -2,10 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 using DynamicData.Cache;
 using DynamicData.Kernel;
 
@@ -31,8 +27,8 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// </summary>
     public ChangeAwareCache()
     {
-        _changes = new ChangeSet<TObject, TKey>();
-        _data = new Dictionary<TKey, TObject>();
+        _changes = [];
+        _data = [];
     }
 
     /// <summary>
@@ -52,7 +48,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     public ChangeAwareCache(Dictionary<TKey, TObject> data)
     {
         _data = data ?? throw new ArgumentNullException(nameof(data));
-        _changes = new ChangeSet<TObject, TKey>();
+        _changes = [];
     }
 
     /// <inheritdoc />
@@ -94,11 +90,11 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     {
         if (_changes.Count == 0)
         {
-            return ChangeSet<TObject, TKey>.Empty;
+            return [];
         }
 
         var copy = _changes;
-        _changes = new ChangeSet<TObject, TKey>();
+        _changes = [];
         return copy;
     }
 
@@ -175,10 +171,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <summary>
     /// Raises an evaluate change for all items in the cache.
     /// </summary>
-    public void Refresh()
-    {
-        _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
-    }
+    public void Refresh() => _changes.AddRange(_data.Select(t => new Change<TObject, TKey>(ChangeReason.Refresh, t.Key, t.Value)));
 
     /// <summary>
     /// Raises an evaluate change for the specified key.

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -55,16 +52,10 @@ public class VirtualRequest : IEquatable<IVirtualRequest>, IVirtualRequest
     public int StartIndex { get; }
 
     /// <inheritdoc />
-    public bool Equals(IVirtualRequest? other)
-    {
-        return StartIndexSizeComparer.Equals(this, other);
-    }
+    public bool Equals(IVirtualRequest? other) => StartIndexSizeComparer.Equals(this, other);
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        return obj is IVirtualRequest item && Equals(item);
-    }
+    public override bool Equals(object? obj) => obj is IVirtualRequest item && Equals(item);
 
     /// <inheritdoc />
     public override int GetHashCode()

@@ -1,7 +1,7 @@
 ﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Profile")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.ReactiveUI")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Tests")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v6.0", FrameworkDisplayName=".NET 6.0")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v8.0", FrameworkDisplayName=".NET 8.0")]
 namespace DynamicData.Aggregation
 {
     public readonly struct AggregateItem<TObject> : System.IEquatable<DynamicData.Aggregation.AggregateItem<TObject>>

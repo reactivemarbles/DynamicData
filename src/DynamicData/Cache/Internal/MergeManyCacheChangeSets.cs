@@ -10,47 +10,29 @@ namespace DynamicData.Cache.Internal;
 /// <summary>
 /// Operator that is similiar to MergeMany but intelligently handles Cache ChangeSets.
 /// </summary>
-internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>
+internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> selector, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? comparer)
     where TObject : notnull
     where TKey : notnull
     where TDestination : notnull
     where TDestinationKey : notnull
 {
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-    private readonly Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> _changeSetSelector;
-
-    private readonly IComparer<TDestination>? _comparer;
-
-    private readonly IEqualityComparer<TDestination>? _equalityComparer;
-
-    public MergeManyCacheChangeSets(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination, TDestinationKey>>> selector, IEqualityComparer<TDestination>? equalityComparer, IComparer<TDestination>? comparer)
-    {
-        _source = source;
-        _changeSetSelector = selector;
-        _comparer = comparer;
-        _equalityComparer = equalityComparer;
-    }
-
-    public IObservable<IChangeSet<TDestination, TDestinationKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
+    public IObservable<IChangeSet<TDestination, TDestinationKey>> Run() => Observable.Create<IChangeSet<TDestination, TDestinationKey>>(
             observer =>
             {
                 var locker = new object();
 
                 // Transform to an observable cache of merge containers.
-                var sourceCacheOfCaches = _source
+                var sourceCacheOfCaches = source
                                             .IgnoreSameReferenceUpdate()
                                             .WhereReasonsAre(ChangeReason.Add, ChangeReason.Remove, ChangeReason.Update)
-                                            .Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(_changeSetSelector(obj, key)))
+                                            .Transform((obj, key) => new ChangeSetCache<TDestination, TDestinationKey>(selector(obj, key)))
                                             .Synchronize(locker)
                                             .AsObservableCache();
 
                 var shared = sourceCacheOfCaches.Connect().Publish();
 
                 // this is manages all of the changes
-                var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items, _comparer, _equalityComparer);
+                var changeTracker = new ChangeSetMergeTracker<TDestination, TDestinationKey>(() => sourceCacheOfCaches.Items, comparer, equalityComparer);
 
                 // merge the items back together
                 var allChanges = shared.MergeMany(mc => mc.Source)
@@ -68,5 +50,4 @@ internal sealed class MergeManyCacheChangeSets<TObject, TKey, TDestination, TDes
 
                 return new CompositeDisposable(sourceCacheOfCaches, allChanges, removedItems, shared.Connect());
             });
-    }
 }

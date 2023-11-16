@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 namespace DynamicData.List.Internal;
 
 /// <summary>
@@ -44,15 +41,9 @@ internal class ReferenceCountTracker<T>
         return false;
     }
 
-    public void Clear()
-    {
-        ReferenceCounts.Clear();
-    }
+    public void Clear() => ReferenceCounts.Clear();
 
-    public bool Contains(T item)
-    {
-        return ReferenceCounts.ContainsKey(item);
-    }
+    public bool Contains(T item) => ReferenceCounts.ContainsKey(item);
 
     /// <summary>
     ///     Decrements the reference count for the item.  Returns true when reference count goes from 1 to 0.

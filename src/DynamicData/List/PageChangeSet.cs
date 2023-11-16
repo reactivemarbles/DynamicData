@@ -2,32 +2,23 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 
 using DynamicData.Operators;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
-internal sealed class PageChangeSet<T> : IPageChangeSet<T>
+internal sealed class PageChangeSet<T>(IChangeSet<T> virtualChangeSet, IPageResponse response) : IPageChangeSet<T>
     where T : notnull
 {
-    private readonly IChangeSet<T> _virtualChangeSet;
-
-    public PageChangeSet(IChangeSet<T> virtualChangeSet, IPageResponse response)
-    {
-        _virtualChangeSet = virtualChangeSet ?? throw new ArgumentNullException(nameof(virtualChangeSet));
-
-        Response = response ?? throw new ArgumentNullException(nameof(response));
-    }
+    private readonly IChangeSet<T> _virtualChangeSet = virtualChangeSet ?? throw new ArgumentNullException(nameof(virtualChangeSet));
 
     public int Count => _virtualChangeSet.Count;
 
     public int Refreshes => _virtualChangeSet.Refreshes;
 
-    public IPageResponse Response { get; }
+    public IPageResponse Response { get; } = response ?? throw new ArgumentNullException(nameof(response));
 
     int IChangeSet.Adds => _virtualChangeSet.Adds;
 
@@ -45,13 +36,7 @@ internal sealed class PageChangeSet<T> : IPageChangeSet<T>
 
     int IChangeSet<T>.TotalChanges => _virtualChangeSet.TotalChanges;
 
-    public IEnumerator<Change<T>> GetEnumerator()
-    {
-        return _virtualChangeSet.GetEnumerator();
-    }
+    public IEnumerator<Change<T>> GetEnumerator() => _virtualChangeSet.GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

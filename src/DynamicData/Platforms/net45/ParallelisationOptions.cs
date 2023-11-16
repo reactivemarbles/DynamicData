@@ -9,7 +9,13 @@ namespace DynamicData.PLinq
     /// <summary>
     /// Options to specify parallelisation of stream operations.  Only applicable for .Net4 and .Net45 builds.
     /// </summary>
-    public class ParallelisationOptions
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="ParallelisationOptions"/> class.
+    /// </remarks>
+    /// <param name="type">The type of parallel operation.</param>
+    /// <param name="threshold">The threshold before making the operation parallel.</param>
+    /// <param name="maxDegreeOfParallelisation">The maximum degrees of parallelism.</param>
+    public class ParallelisationOptions(ParallelType type = ParallelType.None, int threshold = 0, int maxDegreeOfParallelisation = 0)
     {
         /// <summary>
         /// The default parallelisation options.
@@ -22,32 +28,19 @@ namespace DynamicData.PLinq
         public static readonly ParallelisationOptions None = new();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ParallelisationOptions"/> class.
-        /// </summary>
-        /// <param name="type">The type of parallel operation.</param>
-        /// <param name="threshold">The threshold before making the operation parallel.</param>
-        /// <param name="maxDegreeOfParallelisation">The maximum degrees of parallelism.</param>
-        public ParallelisationOptions(ParallelType type = ParallelType.None, int threshold = 0, int maxDegreeOfParallelisation = 0)
-        {
-            Type = type;
-            Threshold = threshold;
-            MaxDegreeOfParallelisation = maxDegreeOfParallelisation;
-        }
-
-        /// <summary>
         /// Gets the maximum degree of parallelisation.
         /// </summary>
-        public int MaxDegreeOfParallelisation { get; }
+        public int MaxDegreeOfParallelisation { get; } = maxDegreeOfParallelisation;
 
         /// <summary>
         /// Gets the threshold.
         /// </summary>
-        public int Threshold { get; }
+        public int Threshold { get; } = threshold;
 
         /// <summary>
         /// Gets the type.
         /// </summary>
-        public ParallelType Type { get; }
+        public ParallelType Type { get; } = type;
     }
 }
 

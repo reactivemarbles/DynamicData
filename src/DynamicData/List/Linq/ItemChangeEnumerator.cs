@@ -3,25 +3,17 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
-using System.Collections.Generic;
 
 namespace DynamicData.List.Linq;
 
-internal class ItemChangeEnumerator<T> : IEnumerable<ItemChange<T>>
+internal class ItemChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<ItemChange<T>>
     where T : notnull
 {
-    private readonly IChangeSet<T> _changeSet;
-
-    public ItemChangeEnumerator(IChangeSet<T> changeSet)
-    {
-        _changeSet = changeSet;
-    }
-
     public IEnumerator<ItemChange<T>> GetEnumerator()
     {
         var lastKnownIndex = 0;
 
-        foreach (var change in _changeSet)
+        foreach (var change in changeSet)
         {
             if (change.Type == ChangeType.Item)
             {
@@ -59,8 +51,5 @@ internal class ItemChangeEnumerator<T> : IEnumerable<ItemChange<T>>
         }
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

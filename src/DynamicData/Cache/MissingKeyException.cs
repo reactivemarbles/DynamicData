@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -36,16 +34,6 @@ public class MissingKeyException : Exception
     /// <param name="innerException">A inner exception with further information.</param>
     public MissingKeyException(string message, Exception innerException)
         : base(message, innerException)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MissingKeyException"/> class.
-    /// </summary>
-    /// <param name="serializationInfo">The serialization info.</param>
-    /// <param name="streamingContext">The serialization context.</param>
-    protected MissingKeyException(System.Runtime.Serialization.SerializationInfo serializationInfo, System.Runtime.Serialization.StreamingContext streamingContext)
-        : base(serializationInfo, streamingContext)
     {
     }
 }
