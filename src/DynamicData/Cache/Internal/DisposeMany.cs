@@ -7,14 +7,11 @@ using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Action<TObject> removeAction)
+internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-    public DisposeMany(IObservable<IChangeSet<TObject, TKey>> source)
-        => _source = source;
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source;
 
     public IObservable<IChangeSet<TObject, TKey>> Run()
         => Observable.Create<IChangeSet<TObject, TKey>>(observer =>

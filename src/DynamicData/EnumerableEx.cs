@@ -4,6 +4,7 @@
 
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using DynamicData.Cache.Internal;
 
 namespace DynamicData;
 
@@ -29,6 +30,11 @@ public static class EnumerableEx
         where TObject : notnull
         where TKey : notnull
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(source);
+
+        ArgumentNullException.ThrowIfNull(keySelector);
+#else
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
@@ -38,6 +44,7 @@ public static class EnumerableEx
         {
             throw new ArgumentNullException(nameof(keySelector));
         }
+#endif
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             obs =>
@@ -66,10 +73,14 @@ public static class EnumerableEx
     public static IObservable<IChangeSet<TObject>> AsObservableChangeSet<TObject>(this IEnumerable<TObject> source, bool completable = false)
         where TObject : notnull
     {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(source);
+#else
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));
         }
+#endif
 
         return Observable.Create<IChangeSet<TObject>>(
             obs =>
