@@ -2,29 +2,19 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Linq;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal sealed class Virtualise<TObject, TKey>
+internal sealed class Virtualise<TObject, TKey>(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly IObservable<ISortedChangeSet<TObject, TKey>> _source;
+    private readonly IObservable<ISortedChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly IObservable<IVirtualRequest> _virtualRequests;
+    private readonly IObservable<IVirtualRequest> _virtualRequests = virtualRequests ?? throw new ArgumentNullException(nameof(virtualRequests));
 
-    public Virtualise(IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _virtualRequests = virtualRequests ?? throw new ArgumentNullException(nameof(virtualRequests));
-    }
-
-    public IObservable<IVirtualChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IVirtualChangeSet<TObject, TKey>>(
+    public IObservable<IVirtualChangeSet<TObject, TKey>> Run() => Observable.Create<IVirtualChangeSet<TObject, TKey>>(
             observer =>
             {
                 var virtualiser = new Virtualiser();
@@ -34,9 +24,8 @@ internal sealed class Virtualise<TObject, TKey>
                 var dataChange = _source.Synchronize(locker).Select(virtualiser.Update).Where(x => x is not null).Select(x => x!);
                 return request.Merge(dataChange).Where(updates => updates is not null).SubscribeSafe(observer);
             });
-    }
 
-    private sealed class Virtualiser
+    private sealed class Virtualiser(VirtualRequest? request = null)
     {
         private IKeyValueCollection<TObject, TKey> _all = new KeyValueCollection<TObject, TKey>();
 
@@ -44,12 +33,7 @@ internal sealed class Virtualise<TObject, TKey>
 
         private bool _isLoaded;
 
-        private IVirtualRequest _parameters;
-
-        public Virtualiser(VirtualRequest? request = null)
-        {
-            _parameters = request ?? new VirtualRequest();
-        }
+        private IVirtualRequest _parameters = request ?? new VirtualRequest();
 
         public IVirtualChangeSet<TObject, TKey>? Update(ISortedChangeSet<TObject, TKey> updates)
         {

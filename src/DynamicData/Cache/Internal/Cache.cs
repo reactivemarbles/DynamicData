@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 using DynamicData.Kernel;
@@ -19,10 +17,8 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey>
 
     private readonly Dictionary<TKey, TObject> _data;
 
-    public Cache(int capacity = -1)
-    {
-        _data = capacity > 1 ? new Dictionary<TKey, TObject>(capacity) : new Dictionary<TKey, TObject>();
-    }
+    public Cache(int capacity = -1) =>
+        _data = capacity > 1 ? new Dictionary<TKey, TObject>(capacity) : [];
 
     public Cache(Dictionary<TKey, TObject> data) => _data = data;
 
@@ -47,7 +43,7 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey>
             throw new ArgumentNullException(nameof(changes));
         }
 
-        foreach (var item in changes)
+        foreach (var item in changes.ToConcreteType())
         {
             switch (item.Reason)
             {
@@ -66,10 +62,7 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey>
         }
     }
 
-    public Optional<TObject> Lookup(TKey key)
-    {
-        return _data.Lookup(key);
-    }
+    public Optional<TObject> Lookup(TKey key) => _data.Lookup(key);
 
     /// <summary>
     /// Sends a signal for operators to recalculate it's state.
@@ -112,11 +105,5 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey>
         }
     }
 
-    public void Remove(TKey key)
-    {
-        if (_data.ContainsKey(key))
-        {
-            _data.Remove(key);
-        }
-    }
+    public void Remove(TKey key) => _data.Remove(key);
 }

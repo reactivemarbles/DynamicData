@@ -2,10 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 
 using DynamicData.Kernel;
 
@@ -116,10 +113,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// Adds the item to the end of the collection.
     /// </summary>
     /// <param name="item">The item to add.</param>
-    public void Add(T item)
-    {
-        InsertItem(_innerList.Count, item);
-    }
+    public void Add(T item) => InsertItem(_innerList.Count, item);
 
     /// <summary>
     /// Adds the elements of the specified collection to the end of the collection.
@@ -401,10 +395,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     }
 
     /// <inheritdoc />
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     /// Clears the changes (for testing).

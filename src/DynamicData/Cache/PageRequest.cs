@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 // ReSharper disable once CheckNamespace
@@ -74,16 +72,10 @@ public sealed class PageRequest : IPageRequest, IEquatable<IPageRequest>
     public int Size { get; } = 25;
 
     /// <inheritdoc />
-    public bool Equals(IPageRequest? other)
-    {
-        return DefaultComparer.Equals(this, other);
-    }
+    public bool Equals(IPageRequest? other) => DefaultComparer.Equals(this, other);
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        return obj is IPageRequest value && Equals(value);
-    }
+    public override bool Equals(object? obj) => obj is IPageRequest value && Equals(value);
 
     /// <inheritdoc />
     public override int GetHashCode()

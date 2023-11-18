@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 #if P_LINQ
-using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 

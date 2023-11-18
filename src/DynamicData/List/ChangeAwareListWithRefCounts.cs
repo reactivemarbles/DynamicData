@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-
 using DynamicData.Kernel;
 using DynamicData.List.Internal;
 
@@ -21,10 +19,7 @@ internal class ChangeAwareListWithRefCounts<T> : ChangeAwareList<T>
         base.Clear();
     }
 
-    public override bool Contains(T item)
-    {
-        return _tracker.Contains(item);
-    }
+    public override bool Contains(T item) => _tracker.Contains(item);
 
     protected override void InsertItem(int index, T item)
     {
@@ -32,15 +27,9 @@ internal class ChangeAwareListWithRefCounts<T> : ChangeAwareList<T>
         base.InsertItem(index, item);
     }
 
-    protected override void OnInsertItems(int startIndex, IEnumerable<T> items)
-    {
-        items.ForEach(t => _tracker.Add(t));
-    }
+    protected override void OnInsertItems(int startIndex, IEnumerable<T> items) => items.ForEach(t => _tracker.Add(t));
 
-    protected override void OnRemoveItems(int startIndex, IEnumerable<T> items)
-    {
-        items.ForEach(t => _tracker.Remove(t));
-    }
+    protected override void OnRemoveItems(int startIndex, IEnumerable<T> items) => items.ForEach(t => _tracker.Remove(t));
 
     protected override void OnSetItem(int index, T newItem, T oldItem)
     {

@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 
@@ -41,9 +38,7 @@ internal sealed class Sort<TObject, TKey>
         _resetThreshold = resetThreshold;
     }
 
-    public IObservable<ISortedChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<ISortedChangeSet<TObject, TKey>>(
+    public IObservable<ISortedChangeSet<TObject, TKey>> Run() => Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
             {
                 var sorter = new Sorter(_sortOptimisations, _comparer, _resetThreshold);
@@ -63,32 +58,19 @@ internal sealed class Sort<TObject, TKey>
 
                 return comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
             });
-    }
 
-    private class Sorter
+    private class Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)
     {
         private readonly ChangeAwareCache<TObject, TKey> _cache = new();
-
-        private readonly SortOptimisations _optimisations;
-
-        private readonly int _resetThreshold;
-
         private IndexCalculator<TObject, TKey>? _calculator;
 
-        private KeyValueComparer<TObject, TKey> _comparer;
+        private KeyValueComparer<TObject, TKey> _comparer = new(comparer);
 
         private bool _haveReceivedData;
 
         private bool _initialised;
 
         private IKeyValueCollection<TObject, TKey> _sorted = new KeyValueCollection<TObject, TKey>();
-
-        public Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)
-        {
-            _optimisations = optimisations;
-            _resetThreshold = resetThreshold;
-            _comparer = new KeyValueComparer<TObject, TKey>(comparer);
-        }
 
         /// <summary>
         /// Sorts the specified changes. Will return null if there are no changes.
@@ -140,7 +122,7 @@ internal sealed class Sort<TObject, TKey>
                 sortReason = SortReason.InitialLoad;
                 _initialised = true;
             }
-            else if (changes is not null && (_resetThreshold > 0 && changes.Count >= _resetThreshold))
+            else if (changes is not null && (resetThreshold > 0 && changes.Count >= resetThreshold))
             {
                 sortReason = SortReason.Reset;
             }
@@ -152,7 +134,7 @@ internal sealed class Sort<TObject, TKey>
                     {
                         // For the first batch, changes may have arrived before the comparer was set.
                         // therefore infer the first batch of changes from the cache
-                        _calculator = new IndexCalculator<TObject, TKey>(_comparer, _optimisations);
+                        _calculator = new IndexCalculator<TObject, TKey>(_comparer, optimisations);
                         changeSet = _calculator.Load(_cache);
                     }
 
@@ -196,7 +178,7 @@ internal sealed class Sort<TObject, TKey>
                         }
 
                         changeSet = _calculator.ChangeComparer(_comparer);
-                        if (_resetThreshold > 0 && _cache.Count >= _resetThreshold)
+                        if (resetThreshold > 0 && _cache.Count >= resetThreshold)
                         {
                             sortReason = SortReason.Reset;
                             _calculator.Reset(_cache);
@@ -241,7 +223,7 @@ internal sealed class Sort<TObject, TKey>
                 return null;
             }
 
-            _sorted = new KeyValueCollection<TObject, TKey>(_calculator.List.ToList(), _comparer, sortReason, _optimisations);
+            _sorted = new KeyValueCollection<TObject, TKey>(_calculator.List.ToList(), _comparer, sortReason, optimisations);
             return new SortedChangeSet<TObject, TKey>(_sorted, changeSet);
         }
     }

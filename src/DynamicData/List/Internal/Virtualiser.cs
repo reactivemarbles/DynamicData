@@ -7,22 +7,14 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class Virtualiser<T>
+internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObservable<IVirtualRequest> requests)
     where T : notnull
 {
-    private readonly IObservable<IVirtualRequest> _requests;
+    private readonly IObservable<IVirtualRequest> _requests = requests ?? throw new ArgumentNullException(nameof(requests));
 
-    private readonly IObservable<IChangeSet<T>> _source;
+    private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public Virtualiser(IObservable<IChangeSet<T>> source, IObservable<IVirtualRequest> requests)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _requests = requests ?? throw new ArgumentNullException(nameof(requests));
-    }
-
-    public IObservable<IVirtualChangeSet<T>> Run()
-    {
-        return Observable.Create<IVirtualChangeSet<T>>(
+    public IObservable<IVirtualChangeSet<T>> Run() => Observable.Create<IVirtualChangeSet<T>>(
             observer =>
             {
                 var locker = new object();
@@ -45,7 +37,6 @@ internal sealed class Virtualiser<T>
                     .Select(x => x!)
                     .Select(changes => new VirtualChangeSet<T>(changes, new VirtualResponse(virtualised.Count, parameters.StartIndex, all.Count))).SubscribeSafe(observer);
             });
-    }
 
     private static IChangeSet<T>? CheckParamsAndVirtualise(IList<T> all, ChangeAwareList<T> virtualised, IVirtualRequest? request)
     {

@@ -5,7 +5,7 @@
 #if SUPPORTS_BINDINGLIST
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-
+using DynamicData.Cache;
 using DynamicData.Cache.Internal;
 
 namespace DynamicData.Binding
@@ -108,7 +108,7 @@ namespace DynamicData.Binding
 
         private static void DoUpdate(IChangeSet<TObject, TKey> changes, BindingList<TObject> list)
         {
-            foreach (var update in changes)
+            foreach (var update in changes.ToConcreteType())
             {
                 switch (update.Reason)
                 {

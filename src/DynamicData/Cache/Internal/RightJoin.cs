@@ -2,7 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -10,32 +9,22 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
+internal class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TRightKey, Optional<TLeft>, TRight, TDestination> resultSelector)
     where TLeft : notnull
     where TLeftKey : notnull
     where TRight : notnull
     where TRightKey : notnull
     where TDestination : notnull
 {
-    private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left;
+    private readonly IObservable<IChangeSet<TLeft, TLeftKey>> _left = left ?? throw new ArgumentNullException(nameof(left));
 
-    private readonly Func<TRightKey, Optional<TLeft>, TRight, TDestination> _resultSelector;
+    private readonly Func<TRightKey, Optional<TLeft>, TRight, TDestination> _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
 
-    private readonly IObservable<IChangeSet<TRight, TRightKey>> _right;
+    private readonly IObservable<IChangeSet<TRight, TRightKey>> _right = right ?? throw new ArgumentNullException(nameof(right));
 
-    private readonly Func<TRight, TLeftKey> _rightKeySelector;
+    private readonly Func<TRight, TLeftKey> _rightKeySelector = rightKeySelector ?? throw new ArgumentNullException(nameof(rightKeySelector));
 
-    public RightJoin(IObservable<IChangeSet<TLeft, TLeftKey>> left, IObservable<IChangeSet<TRight, TRightKey>> right, Func<TRight, TLeftKey> rightKeySelector, Func<TRightKey, Optional<TLeft>, TRight, TDestination> resultSelector)
-    {
-        _left = left ?? throw new ArgumentNullException(nameof(left));
-        _right = right ?? throw new ArgumentNullException(nameof(right));
-        _rightKeySelector = rightKeySelector ?? throw new ArgumentNullException(nameof(rightKeySelector));
-        _resultSelector = resultSelector ?? throw new ArgumentNullException(nameof(resultSelector));
-    }
-
-    public IObservable<IChangeSet<TDestination, TRightKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TDestination, TRightKey>>(
+    public IObservable<IChangeSet<TDestination, TRightKey>> Run() => Observable.Create<IChangeSet<TDestination, TRightKey>>(
             observer =>
             {
                 var locker = new object();
@@ -125,5 +114,4 @@ internal class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>
 
                 return new CompositeDisposable(leftLoader.Merge(rightLoader).SubscribeSafe(observer), leftCache, rightCache, rightShare.Connect());
             });
-    }
 }

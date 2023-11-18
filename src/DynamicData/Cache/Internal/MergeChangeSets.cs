@@ -38,9 +38,7 @@ internal sealed class MergeChangeSets<TObject, TKey>
         _equalityComparer = equalityComparer;
     }
 
-    public IObservable<IChangeSet<TObject, TKey>> Run()
-    {
-        return Observable.Create<IChangeSet<TObject, TKey>>(
+    public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
             {
                 var locker = new object();
@@ -61,7 +59,6 @@ internal sealed class MergeChangeSets<TObject, TKey>
 
                 return new CompositeDisposable(localCache, subscription);
             });
-    }
 
     // Can optimize for the Add case because that's the only one that applies
     private static Change<ChangeSetCache<TObject, TKey>, int> CreateChange(IObservable<IChangeSet<TObject, TKey>> source, int index) =>

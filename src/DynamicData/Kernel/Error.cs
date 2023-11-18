@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 #pragma warning disable 1591
 
 namespace DynamicData.Kernel;
@@ -14,36 +11,29 @@ namespace DynamicData.Kernel;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
-public sealed class Error<TObject, TKey> : IKeyValue<TObject, TKey>, IEquatable<Error<TObject, TKey>>
+/// <remarks>
+/// Initializes a new instance of the <see cref="Error{TObject, TKey}"/> class.
+/// </remarks>
+/// <param name="exception">The exception that caused the error.</param>
+/// <param name="value">The value for the error.</param>
+/// <param name="key">The key for the error.</param>
+public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TKey key) : IKeyValue<TObject, TKey>, IEquatable<Error<TObject, TKey>>
     where TKey : notnull
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="Error{TObject, TKey}"/> class.
-    /// </summary>
-    /// <param name="exception">The exception that caused the error.</param>
-    /// <param name="value">The value for the error.</param>
-    /// <param name="key">The key for the error.</param>
-    public Error(Exception? exception, TObject value, TKey key)
-    {
-        Exception = exception;
-        Value = value;
-        Key = key;
-    }
-
-    /// <summary>
     /// Gets the exception.
     /// </summary>
-    public Exception? Exception { get; }
+    public Exception? Exception { get; } = exception;
 
     /// <summary>
     /// Gets the key.
     /// </summary>
-    public TKey Key { get; }
+    public TKey Key { get; } = key;
 
     /// <summary>
     /// Gets the object.
     /// </summary>
-    public TObject Value { get; }
+    public TObject Value { get; } = value;
 
     public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right)
     {
@@ -100,8 +90,5 @@ public sealed class Error<TObject, TKey> : IKeyValue<TObject, TKey>, IEquatable<
     }
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"Key: {Key}, Value: {Value}, Exception: {Exception}";
-    }
+    public override string ToString() => $"Key: {Key}, Value: {Value}, Exception: {Exception}";
 }

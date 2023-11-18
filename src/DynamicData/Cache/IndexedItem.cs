@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
@@ -13,41 +10,31 @@ namespace DynamicData;
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>
-public sealed class IndexedItem<TObject, TKey> : IEquatable<IndexedItem<TObject, TKey>> // : IIndexedItem<TObject, TKey>
+/// <remarks>
+/// Initializes a new instance of the <see cref="IndexedItem{TObject, TKey}"/> class.
+/// </remarks>
+/// <param name="value">The value.</param>
+/// <param name="key">The key.</param>
+/// <param name="index">The index.</param>
+public sealed class IndexedItem<TObject, TKey>(TObject value, TKey key, int index) : IEquatable<IndexedItem<TObject, TKey>> // : IIndexedItem<TObject, TKey>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="IndexedItem{TObject, TKey}"/> class.
-    /// </summary>
-    /// <param name="value">The value.</param>
-    /// <param name="key">The key.</param>
-    /// <param name="index">The index.</param>
-    public IndexedItem(TObject value, TKey key, int index)
-    {
-        Index = index;
-        Value = value;
-        Key = key;
-    }
-
     /// <summary>
     /// Gets the index.
     /// </summary>
-    public int Index { get; }
+    public int Index { get; } = index;
 
     /// <summary>
     /// Gets the key.
     /// </summary>
-    public TKey Key { get; }
+    public TKey Key { get; } = key;
 
     /// <summary>
     /// Gets the value.
     /// </summary>
-    public TObject Value { get; }
+    public TObject Value { get; } = value;
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        return obj is IndexedItem<TObject, TKey> key && Equals(key);
-    }
+    public override bool Equals(object? obj) => obj is IndexedItem<TObject, TKey> key && Equals(key);
 
     /// <inheritdoc />
     public override int GetHashCode()

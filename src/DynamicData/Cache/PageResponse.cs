@@ -2,33 +2,22 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using DynamicData.Operators;
 
 // ReSharper disable once CheckNamespace
 namespace DynamicData;
 
-internal sealed class PageResponse : IEquatable<IPageResponse>, IPageResponse
+internal sealed class PageResponse(int pageSize, int totalSize, int page, int pages) : IEquatable<IPageResponse>, IPageResponse
 {
-    public PageResponse(int pageSize, int totalSize, int page, int pages)
-    {
-        PageSize = pageSize;
-        TotalSize = totalSize;
-        Page = page;
-        Pages = pages;
-    }
-
     public static IEqualityComparer<IPageResponse?> DefaultComparer { get; } = new PageResponseEqualityComparer();
 
-    public int Page { get; }
+    public int Page { get; } = page;
 
-    public int Pages { get; }
+    public int Pages { get; } = pages;
 
-    public int PageSize { get; }
+    public int PageSize { get; } = pageSize;
 
-    public int TotalSize { get; }
+    public int TotalSize { get; } = totalSize;
 
     /// <summary>
     /// Indicates whether the current object is equal to another object of the same type.
@@ -37,10 +26,7 @@ internal sealed class PageResponse : IEquatable<IPageResponse>, IPageResponse
     /// true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
     /// </returns>
     /// <param name="other">An object to compare with this object.</param>
-    public bool Equals(IPageResponse? other)
-    {
-        return DefaultComparer.Equals(this, other);
-    }
+    public bool Equals(IPageResponse? other) => DefaultComparer.Equals(this, other);
 
     /// <summary>
     /// Determines whether the specified <see cref="object"/> is equal to the current <see cref="object"/>.
@@ -88,10 +74,7 @@ internal sealed class PageResponse : IEquatable<IPageResponse>, IPageResponse
     /// <returns>
     /// A <see cref="string"/> that represents the current <see cref="object"/>.
     /// </returns>
-    public override string ToString()
-    {
-        return $"Page: {Page}, PageSize: {PageSize}, Pages: {Pages}, TotalSize: {TotalSize}";
-    }
+    public override string ToString() => $"Page: {Page}, PageSize: {PageSize}, Pages: {Pages}, TotalSize: {TotalSize}";
 
     private sealed class PageResponseEqualityComparer : IEqualityComparer<IPageResponse?>
     {

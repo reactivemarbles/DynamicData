@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Reactive;
 
 using DynamicData.Kernel;
@@ -71,10 +69,7 @@ public static class ObservableCacheAlias
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
-        where TKey : notnull
-    {
-        return source.Transform(transformFactory, forceTransform);
-    }
+        where TKey : notnull => source.Transform(transformFactory, forceTransform);
 
     /// <summary>
     /// Projects each update item to a new form using the specified transform function.
@@ -94,10 +89,7 @@ public static class ObservableCacheAlias
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Unit> forceTransform)
         where TDestination : notnull
         where TSource : notnull
-        where TKey : notnull
-    {
-        return source.Transform(transformFactory, forceTransform);
-    }
+        where TKey : notnull => source.Transform(transformFactory, forceTransform);
 
     /// <summary>
     /// Projects each update item to a new form using the specified transform function.
@@ -147,10 +139,7 @@ public static class ObservableCacheAlias
         where TDestination : notnull
         where TDestinationKey : notnull
         where TSource : notnull
-        where TSourceKey : notnull
-    {
-        return source.TransformMany(manySelector, keySelector);
-    }
+        where TSourceKey : notnull => source.TransformMany(manySelector, keySelector);
 
     /// <summary>
     /// Projects each update item to a new form using the specified transform function,
@@ -305,10 +294,7 @@ public static class ObservableCacheAlias
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
         where TDestination : notnull
         where TSource : notnull
-        where TKey : notnull
-    {
-        return source.TransformSafe(transformFactory, errorHandler, forceTransform);
-    }
+        where TKey : notnull => source.TransformSafe(transformFactory, errorHandler, forceTransform);
 
     /// <summary>
     /// Transforms the object to a fully recursive tree, create a hierarchy based on the pivot function.

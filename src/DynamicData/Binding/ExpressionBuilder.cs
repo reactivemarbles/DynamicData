@@ -2,10 +2,7 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -111,8 +108,7 @@ internal static class ExpressionBuilder
 
     internal static PropertyInfo GetProperty<TObject, TProperty>(this Expression<Func<TObject, TProperty>> expression)
     {
-        var property = expression.GetMember() as PropertyInfo;
-        if (property is null)
+        if (expression.GetMember() is not PropertyInfo property)
         {
             throw new ArgumentException("Not a property expression");
         }
@@ -122,8 +118,7 @@ internal static class ExpressionBuilder
 
     internal static PropertyInfo GetProperty(this MemberExpression expression)
     {
-        var property = expression.Member as PropertyInfo;
-        if (property is null)
+        if (expression.Member is not PropertyInfo property)
         {
             throw new ArgumentException("Not a property expression");
         }

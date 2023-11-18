@@ -7,26 +7,15 @@ using DynamicData.Kernel;
 
 namespace DynamicData.Cache.Internal;
 
-internal class ChangeSetMergeTracker<TObject, TKey>
+internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly ChangeAwareCache<TObject, TKey> _resultCache;
-    private readonly Func<IEnumerable<ChangeSetCache<TObject, TKey>>> _selectCaches;
-    private readonly IComparer<TObject>? _comparer;
-    private readonly IEqualityComparer<TObject>? _equalityComparer;
-
-    public ChangeSetMergeTracker(Func<IEnumerable<ChangeSetCache<TObject, TKey>>> selectCaches, IComparer<TObject>? comparer, IEqualityComparer<TObject>? equalityComparer)
-    {
-        _resultCache = new ChangeAwareCache<TObject, TKey>();
-        _selectCaches = selectCaches;
-        _comparer = comparer;
-        _equalityComparer = equalityComparer;
-    }
+    private readonly ChangeAwareCache<TObject, TKey> _resultCache = new();
 
     public void RemoveItems(IEnumerable<KeyValuePair<TKey, TObject>> items, IObserver<IChangeSet<TObject, TKey>> observer)
     {
-        var sourceCaches = _selectCaches().ToArray();
+        var sourceCaches = selectCaches().ToArray();
 
         // Update the Published Value for each item being removed
         if (items is IList<KeyValuePair<TKey, TObject>> list)
@@ -48,9 +37,33 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         EmitChanges(observer);
     }
 
+    public void RefreshItems(IEnumerable<TKey> keys, IObserver<IChangeSet<TObject, TKey>> observer)
+    {
+        var sourceCaches = selectCaches().ToArray();
+
+        // Update the Published Value for each item being removed
+        if (keys is IList<TKey> list)
+        {
+            // zero allocation enumerator
+            foreach (var key in EnumerableIList.Create(list))
+            {
+                ForceEvaluate(sourceCaches, key);
+            }
+        }
+        else
+        {
+            foreach (var key in keys)
+            {
+                ForceEvaluate(sourceCaches, key);
+            }
+        }
+
+        EmitChanges(observer);
+    }
+
     public void ProcessChangeSet(IChangeSet<TObject, TKey> changes, IObserver<IChangeSet<TObject, TKey>> observer)
     {
-        var sourceCaches = _selectCaches().ToArray();
+        var sourceCaches = selectCaches().ToArray();
 
         foreach (var change in changes.ToConcreteType())
         {
@@ -125,10 +138,13 @@ internal class ChangeSetMergeTracker<TObject, TKey>
             return;
         }
 
-        if (_comparer is null)
+        // If the Previous value is missing or is the same as the current value
+        bool isUpdatingCurrent = !prev.HasValue || CheckEquality(prev.Value, cached.Value);
+
+        if (comparer is null)
         {
-            // If the current value (or there is no way to tell) is being replaced by a different value
-            if ((!prev.HasValue || CheckEquality(prev.Value, cached.Value)) && !CheckEquality(item, cached.Value))
+            // If not using the comparer and the current value is being replaced by a different value
+            if (isUpdatingCurrent && !CheckEquality(item, cached.Value))
             {
                 // Update to the new value
                 _resultCache.AddOrUpdate(item, key);
@@ -136,14 +152,16 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         }
         else
         {
-            // The current value is being replaced (or there is no way to tell), so do a full update to select the best one from all the choices
-            if (!prev.HasValue || CheckEquality(prev.Value, cached.Value))
+            // If using the comparer and the current value is one being updated
+            if (isUpdatingCurrent)
             {
+                // The known best value has been replaced, so pick a new one from all the choices
                 UpdateToBestValue(sources, key, cached);
             }
             else
             {
-                // If the current value isn't being replaced, check to see if the replacement value is better than the current one
+                // If the current value isn't being replaced, its only required to check to see if the
+                // new value is better than the current one
                 if (ShouldReplace(item, cached.Value))
                 {
                     _resultCache.AddOrUpdate(item, key);
@@ -166,16 +184,30 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         // In the sorting case, a refresh requires doing a full update because any change could alter what the best value is
         // If we don't care about sorting OR if we do care, but re-selecting the best value didn't change anything
         // AND the current value is the exact one being refreshed, then emit the refresh downstream
-        if (((_comparer is null) || !UpdateToBestValue(sources, key, cached)) && ReferenceEquals(cached.Value, item))
+        if (((comparer is null) || !UpdateToBestValue(sources, key, cached)) && ReferenceEquals(cached.Value, item))
         {
             _resultCache.Refresh(key);
         }
     }
 
+    private void ForceEvaluate(ChangeSetCache<TObject, TKey>[] sources, TKey key)
+    {
+        var cached = _resultCache.Lookup(key);
+
+        // Received a refresh change for a key that hasn't been seen yet
+        // Nothing can be done, so ignore it
+        if (!cached.HasValue)
+        {
+            return;
+        }
+
+        UpdateToBestValue(sources, key, cached);
+    }
+
     private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
-        var candidate = SelectValue(sources, key);
+        var candidate = LookupBestValue(sources, key);
         if (candidate.HasValue)
         {
             // If there isn't a current value
@@ -201,7 +233,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>
         return true;
     }
 
-    private Optional<TObject> SelectValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
+    private Optional<TObject> LookupBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key)
     {
         if (sources.Length == 0)
         {
@@ -210,18 +242,18 @@ internal class ChangeSetMergeTracker<TObject, TKey>
 
         var values = sources.Select(s => s.Cache.Lookup(key)).Where(opt => opt.HasValue);
 
-        if (_comparer is not null)
+        if (comparer is not null)
         {
-            values = values.OrderBy(opt => opt.Value, _comparer);
+            values = values.OrderBy(opt => opt.Value, comparer);
         }
 
         return values.FirstOrDefault();
     }
 
     private bool CheckEquality(TObject left, TObject right) =>
-        ReferenceEquals(left, right) || (_equalityComparer?.Equals(left, right) ?? (_comparer?.Compare(left, right) == 0));
+        ReferenceEquals(left, right) || (equalityComparer?.Equals(left, right) ?? false);
 
     // Return true if candidate should replace current as the observed downstream value
     private bool ShouldReplace(TObject candidate, TObject current) =>
-        !ReferenceEquals(candidate, current) && (_comparer?.Compare(candidate, current) < 0);
+        !ReferenceEquals(candidate, current) && (comparer?.Compare(candidate, current) < 0);
 }

@@ -3,10 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 #if P_LINQ
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
@@ -17,36 +13,20 @@ namespace DynamicData.PLinq
     {
         internal static ParallelQuery<Change<TObject, TKey>> Parallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
             where TObject : notnull
-            where TKey : notnull
-        {
-            switch (option.Type)
+            where TKey : notnull => option.Type switch
             {
-                case ParallelType.Parallelise:
-                    return source.AsParallel();
-
-                case ParallelType.Ordered:
-                    return source.AsParallel().AsOrdered();
-
-                default:
-                    throw new ArgumentException("Should not parallelise!  Call ShouldParallelise() first");
-            }
-        }
+                ParallelType.Parallelise => source.AsParallel(),
+                ParallelType.Ordered => source.AsParallel().AsOrdered(),
+                _ => throw new ArgumentException("Should not parallelise!  Call ShouldParallelise() first"),
+            };
 
         internal static ParallelQuery<KeyValuePair<TKey, TObject>> Parallelise<TObject, TKey>(this IEnumerable<KeyValuePair<TKey, TObject>> source, ParallelisationOptions option)
-            where TKey : notnull
-        {
-            switch (option.Type)
+            where TKey : notnull => option.Type switch
             {
-                case ParallelType.Parallelise:
-                    return source.AsParallel();
-
-                case ParallelType.Ordered:
-                    return source.AsParallel().AsOrdered();
-
-                default:
-                    throw new ArgumentException("Should not parallelise!  Call ShouldParallelise() first");
-            }
-        }
+                ParallelType.Parallelise => source.AsParallel(),
+                ParallelType.Ordered => source.AsParallel().AsOrdered(),
+                _ => throw new ArgumentException("Should not parallelise!  Call ShouldParallelise() first"),
+            };
 
         internal static IEnumerable<T> Parallelise<T>(this IEnumerable<T> source, ParallelisationOptions option)
         {
@@ -81,16 +61,10 @@ namespace DynamicData.PLinq
 
         internal static bool ShouldParallelise<TObject, TKey>(this IChangeSet<TObject, TKey> source, ParallelisationOptions option)
             where TObject : notnull
-            where TKey : notnull
-        {
-            return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered) && (option.Threshold >= 0 && source.Count >= option.Threshold);
-        }
+            where TKey : notnull => (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered) && (option.Threshold >= 0 && source.Count >= option.Threshold);
 
         internal static bool ShouldParallelise<TObject, TKey>(this IEnumerable<KeyValuePair<TKey, TObject>> source, ParallelisationOptions option)
-            where TKey : notnull
-        {
-            return (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered) && (option.Threshold >= 0 && source.Skip(option.Threshold).Any());
-        }
+            where TKey : notnull => (option.Type == ParallelType.Parallelise || option.Type == ParallelType.Ordered) && (option.Threshold >= 0 && source.Skip(option.Threshold).Any());
     }
 }
 

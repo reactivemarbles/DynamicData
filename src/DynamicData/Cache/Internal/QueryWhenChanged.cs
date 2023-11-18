@@ -2,28 +2,19 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
 using System.Reactive.Linq;
 
 namespace DynamicData.Cache.Internal;
 
-internal class QueryWhenChanged<TObject, TKey, TValue>
+internal class QueryWhenChanged<TObject, TKey, TValue>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>>? itemChangedTrigger = null)
     where TObject : notnull
     where TKey : notnull
 {
-    private readonly Func<TObject, IObservable<TValue>>? _itemChangedTrigger;
-
-    private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-    public QueryWhenChanged(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>>? itemChangedTrigger = null)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _itemChangedTrigger = itemChangedTrigger;
-    }
+    private readonly IObservable<IChangeSet<TObject, TKey>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
     public IObservable<IQuery<TObject, TKey>> Run()
     {
-        if (_itemChangedTrigger is null)
+        if (itemChangedTrigger is null)
         {
             return Observable.Defer(() =>
                 {
@@ -46,7 +37,7 @@ internal class QueryWhenChanged<TObject, TKey, TValue>
                 var locker = new object();
                 var state = new Cache<TObject, TKey>();
 
-                var inlineChange = shared.MergeMany(_itemChangedTrigger).Synchronize(locker).Select(_ => new AnonymousQuery<TObject, TKey>(state));
+                var inlineChange = shared.MergeMany(itemChangedTrigger).Synchronize(locker).Select(_ => new AnonymousQuery<TObject, TKey>(state));
 
                 var sourceChanged = shared.Synchronize(locker).Scan(
                     state,

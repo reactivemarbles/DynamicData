@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 namespace DynamicData.Binding;
 
 /// <summary>
@@ -55,10 +52,7 @@ public sealed class PropertyValue<TObject, TValue> : IEquatable<PropertyValue<TO
     /// <returns>
     /// The result of the operator.
     /// </returns>
-    public static bool operator ==(PropertyValue<TObject, TValue>? left, PropertyValue<TObject, TValue>? right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(PropertyValue<TObject, TValue>? left, PropertyValue<TObject, TValue>? right) => Equals(left, right);
 
     /// <summary>
     /// Implements the operator !=.
@@ -68,10 +62,7 @@ public sealed class PropertyValue<TObject, TValue> : IEquatable<PropertyValue<TO
     /// <returns>
     /// The result of the operator.
     /// </returns>
-    public static bool operator !=(PropertyValue<TObject, TValue>? left, PropertyValue<TObject, TValue>? right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(PropertyValue<TObject, TValue>? left, PropertyValue<TObject, TValue>? right) => !Equals(left, right);
 
     /// <inheritdoc />
     public bool Equals(PropertyValue<TObject, TValue>? other)
@@ -100,10 +91,7 @@ public sealed class PropertyValue<TObject, TValue> : IEquatable<PropertyValue<TO
     }
 
     /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        return obj is PropertyValue<TObject, TValue> propertyValue && Equals(propertyValue);
-    }
+    public override bool Equals(object? obj) => obj is PropertyValue<TObject, TValue> propertyValue && Equals(propertyValue);
 
     /// <inheritdoc />
     public override int GetHashCode()
@@ -115,8 +103,5 @@ public sealed class PropertyValue<TObject, TValue> : IEquatable<PropertyValue<TO
     }
 
     /// <inheritdoc />
-    public override string ToString()
-    {
-        return $"{Sender} ({Value})";
-    }
+    public override string ToString() => $"{Sender} ({Value})";
 }

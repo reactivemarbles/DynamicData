@@ -2,9 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -13,24 +10,14 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class DynamicCombiner<T>
+internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<T>>> source, CombineOperator type)
     where T : notnull
 {
     private readonly object _locker = new();
 
-    private readonly IObservableList<IObservable<IChangeSet<T>>> _source;
+    private readonly IObservableList<IObservable<IChangeSet<T>>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    private readonly CombineOperator _type;
-
-    public DynamicCombiner(IObservableList<IObservable<IChangeSet<T>>> source, CombineOperator type)
-    {
-        _source = source ?? throw new ArgumentNullException(nameof(source));
-        _type = type;
-    }
-
-    public IObservable<IChangeSet<T>> Run()
-    {
-        return Observable.Create<IChangeSet<T>>(
+    public IObservable<IChangeSet<T>> Run() => Observable.Create<IChangeSet<T>>(
             observer =>
             {
                 // this is the resulting list which produces all notifications
@@ -64,7 +51,7 @@ internal sealed class DynamicCombiner<T>
                         }
 
                         // On some operators, items not in the removed list can also be affected.
-                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                        if (type == CombineOperator.And || type == CombineOperator.Except)
                         {
                             var itemsToCheck = sourceLists.Items.SelectMany(mc2 => mc2.Tracker.Items).ToArray();
                             var notification2 = UpdateItemSetMemberships(sourceLists.Items.AsArray(), resultList, itemsToCheck);
@@ -86,7 +73,7 @@ internal sealed class DynamicCombiner<T>
                         }
 
                         // On some operators, items not in the new list can also be affected.
-                        if (_type == CombineOperator.And || _type == CombineOperator.Except)
+                        if (type == CombineOperator.And || type == CombineOperator.Except)
                         {
                             var notification2 = UpdateItemSetMemberships(sourceLists.Items.AsArray(), resultList, resultList.ToArray());
                             if (notification2.Count != 0)
@@ -98,7 +85,6 @@ internal sealed class DynamicCombiner<T>
 
                 return new CompositeDisposable(sourceLists, allChanges, removedItem, sourceChanged);
             });
-    }
 
     private bool MatchesConstraint(MergeContainer[] sourceLists, T item)
     {
@@ -107,7 +93,7 @@ internal sealed class DynamicCombiner<T>
             return false;
         }
 
-        switch (_type)
+        switch (type)
         {
             case CombineOperator.And:
                 {
@@ -132,7 +118,7 @@ internal sealed class DynamicCombiner<T>
                 }
 
             default:
-                throw new IndexOutOfRangeException("Unknown CombineOperator " + _type);
+                throw new IndexOutOfRangeException("Unknown CombineOperator " + type);
         }
     }
 

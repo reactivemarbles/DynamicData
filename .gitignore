@@ -365,7 +365,7 @@ FodyWeavers.xsd
 .DS_Store	
 
 # API Tests
-src/*.Tests/**/ApiApprovalTests*.received.txt	
+src/*.Tests/API/ApiApprovalTests.*.received.txt
 
 # JetBrains
 .idea/
