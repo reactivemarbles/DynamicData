@@ -5,7 +5,7 @@
 namespace DynamicData.List.Internal;
 
 /// <summary>
-/// <para>Ripped and adapted from https://clinq.codeplex.com/</para>
+/// <para>Ripped and adapted from https://clinq.codeplex.com/.</para>
 /// <para>Thanks dudes.</para>
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>

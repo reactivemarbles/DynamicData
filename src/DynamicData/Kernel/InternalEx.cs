@@ -68,8 +68,8 @@ public static class InternalEx
     /// Schedules a recurring action.
     /// </summary>
     /// <remarks>
-    /// <para> I took this from</para>
-    /// <para>https://www.zerobugbuild.com/?p=259</para>
+    /// <para> I took this from.</para>
+    /// <para>https://www.zerobugbuild.com/?p=259.</para>
     /// <para>and adapted it to receive.</para>
     /// </remarks>
     /// <param name="scheduler">The scheduler.</param>

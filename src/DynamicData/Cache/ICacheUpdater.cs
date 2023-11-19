@@ -6,7 +6,7 @@
 namespace DynamicData;
 
 /// <summary>
-/// <para>Api for updating  an intermediate cache</para>
+/// <para>Api for updating  an intermediate cache.</para>
 /// <para>Use edit to produce singular change set.</para>
 /// <para>
 /// NB:The evaluate method is used to signal to any observing operators

@@ -475,7 +475,7 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// <para>Cast the changes to another form</para>
+    /// <para>Cast the changes to another form.</para>
     /// <para>Alas, I had to add the converter due to type inference issues. The converter can be avoided by CastToObject() first.</para>
     /// </summary>
     /// <typeparam name="TSource">The type of the object.</typeparam>
@@ -1877,7 +1877,7 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// <para>Projects each update item to a new form using the specified transform function</para>
+    /// <para>Projects each update item to a new form using the specified transform function.</para>
     /// <para>*** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails.</para>
     /// </summary>
     /// <typeparam name="TSource">The type of the source.</typeparam>

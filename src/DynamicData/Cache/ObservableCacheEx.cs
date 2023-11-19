@@ -6107,7 +6107,7 @@ public static class ObservableCacheEx
     /// <summary>
     /// <para>
     /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
-    /// the equality condition. The observable is re-evaluated whenever
+    /// the equality condition. The observable is re-evaluated whenever.
     /// </para>
     /// <para>
     /// i) The cache changes
@@ -6130,7 +6130,7 @@ public static class ObservableCacheEx
     /// <summary>
     /// <para>
     /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
-    /// the equality condition. The observable is re-evaluated whenever
+    /// the equality condition. The observable is re-evaluated whenever.
     /// </para>
     /// <para>
     /// i) The cache changes
