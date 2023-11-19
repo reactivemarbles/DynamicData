@@ -6,13 +6,13 @@
 namespace DynamicData;
 
 /// <summary>
-/// Api for updating  an intermediate cache
-///
-/// Use edit to produce singular change set.
-///
+/// <para>Api for updating  an intermediate cache</para>
+/// <para>Use edit to produce singular change set.</para>
+/// <para>
 /// NB:The evaluate method is used to signal to any observing operators
 /// to  reevaluate whether the object still matches downstream operators.
 /// This is primarily targeted to inline object changes such as datetime and calculated fields.
+/// </para>
 ///
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>

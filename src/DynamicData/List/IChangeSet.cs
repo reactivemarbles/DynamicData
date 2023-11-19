@@ -6,9 +6,8 @@
 namespace DynamicData;
 
 /// <summary>
-/// A collection of changes.
-///
-/// Changes are always published in the order.
+/// <para>A collection of changes.</para>
+/// <para>Changes are always published in the order.</para>
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 public interface IChangeSet<TObject> : IEnumerable<Change<TObject>>, IChangeSet

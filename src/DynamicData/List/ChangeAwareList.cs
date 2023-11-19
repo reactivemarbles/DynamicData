@@ -9,9 +9,8 @@ using DynamicData.Kernel;
 namespace DynamicData;
 
 /// <summary>
-/// A list which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point the changes are cleared.
-///
-/// Used for creating custom operators.
+/// <para>A list which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point the changes are cleared.</para>
+/// <para>Used for creating custom operators.</para>
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
 /// <seealso cref="DynamicData.IExtendedList{T}" />
@@ -282,9 +281,8 @@ public class ChangeAwareList<T> : IExtendedList<T>
     }
 
     /// <summary>
-    /// Add a Refresh change of the item at the specified index to the list of changes.
-    ///
-    /// This is to notify downstream operators to refresh.
+    /// <para>Add a Refresh change of the item at the specified index to the list of changes.</para>
+    /// <para>This is to notify downstream operators to refresh.</para>
     /// </summary>
     /// <param name="item">The item to refresh.</param>
     /// <param name="index">The index to refresh.</param>
@@ -322,9 +320,8 @@ public class ChangeAwareList<T> : IExtendedList<T>
     }
 
     /// <summary>
-    /// Add a Refresh change of the item at the specified index to the list of changes.
-    ///
-    /// This is to notify downstream operators to refresh.
+    /// <para>Add a Refresh change of the item at the specified index to the list of changes.</para>
+    /// <para>This is to notify downstream operators to refresh.</para>
     /// </summary>
     /// <param name="index">The index to refresh.</param>
     public void RefreshAt(int index)

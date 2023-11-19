@@ -11,9 +11,8 @@ namespace DynamicData;
 public static class SourceListEx
 {
     /// <summary>
-    /// Connects to the list, and converts the changes to another form
-    ///
-    /// Alas, I had to add the converter due to type inference issues.
+    /// <para>Connects to the list, and converts the changes to another form</para>
+    /// <para>Alas, I had to add the converter due to type inference issues.</para>
     /// </summary>
     /// <typeparam name="TSource">The type of the object.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>

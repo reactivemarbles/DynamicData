@@ -475,9 +475,8 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Cast the changes to another form
-    ///
-    /// Alas, I had to add the converter due to type inference issues. The converter can be avoided by CastToObject() first.
+    /// <para>Cast the changes to another form</para>
+    /// <para>Alas, I had to add the converter due to type inference issues. The converter can be avoided by CastToObject() first.</para>
     /// </summary>
     /// <typeparam name="TSource">The type of the object.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -530,9 +529,8 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Convert the object using the specified conversion function.
-    ///
-    /// This is a lighter equivalent of Transform and is designed to be used with non-disposable objects.
+    /// <para>Convert the object using the specified conversion function.</para>
+    /// <para>This is a lighter equivalent of Transform and is designed to be used with non-disposable objects.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -592,10 +590,11 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Disposes each item when no longer required.
-    ///
+    /// <para>Disposes each item when no longer required.</para>
+    /// <para>
     /// Individual items are disposed after removal or replacement changes have been sent downstream.
     /// All items previously-published on the stream are disposed after the stream finalizes.
+    /// </para>
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
@@ -779,9 +778,8 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Filters source on the specified observable property using the specified predicate.
-    ///
-    /// The filter will automatically reapply when a property changes.
+    /// <para>Filters source on the specified observable property using the specified predicate.</para>
+    /// <para>The filter will automatically reapply when a property changes.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
@@ -801,9 +799,8 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Filters source on the specified property using the specified predicate.
-    ///
-    /// The filter will automatically reapply when a property changes.
+    /// <para>Filters source on the specified property using the specified predicate.</para>
+    /// <para>The filter will automatically reapply when a property changes.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TProperty">The type of the property.</typeparam>
@@ -868,9 +865,8 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Provides a call back for each item change.
-    ///
-    /// Range changes are flattened, so there is only need to check for Add, Replace, Remove and Clear.
+    /// <para>Provides a call back for each item change.</para>
+    /// <para>Range changes are flattened, so there is only need to check for Add, Replace, Remove and Clear.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
@@ -1339,9 +1335,8 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Removes the index from all changes.
-    ///
-    /// NB: This operator has been introduced as a temporary fix for creating an Or operator using merge many.
+    /// <para>Removes the index from all changes.</para>
+    /// <para>NB: This operator has been introduced as a temporary fix for creating an Or operator using merge many.</para>
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
@@ -1850,9 +1845,8 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Projects each update item to a new form using the specified transform function.
-    ///
-    /// *** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails.
+    /// <para>Projects each update item to a new form using the specified transform function.</para>
+    /// <para>*** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails.</para>
     /// </summary>
     /// <typeparam name="TSource">The type of the source.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -1883,9 +1877,8 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Projects each update item to a new form using the specified transform function
-    ///
-    /// *** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails.
+    /// <para>Projects each update item to a new form using the specified transform function</para>
+    /// <para>*** Annoyingly when using this overload you will have to explicitly specify the generic type arguments as type inference fails.</para>
     /// </summary>
     /// <typeparam name="TSource">The type of the source.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
