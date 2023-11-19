@@ -1,8 +1,7 @@
-[assembly: System.Reflection.AssemblyMetadata("RepositoryUrl", "https://github.com/reactiveui/DynamicData")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Profile")]
+﻿[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Profile")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.ReactiveUI")]
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicData.Tests")]
-[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v7.0", FrameworkDisplayName=".NET 7.0")]
+[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v6.0", FrameworkDisplayName=".NET 6.0")]
 namespace DynamicData.Aggregation
 {
     public readonly struct AggregateItem<TObject> : System.IEquatable<DynamicData.Aggregation.AggregateItem<TObject>>
