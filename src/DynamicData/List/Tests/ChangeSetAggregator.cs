@@ -29,7 +29,10 @@ public class ChangeSetAggregator<TObject> : IDisposable
 
         Data = published.AsObservableList();
 
-        var results = published.Subscribe(updates => Messages.Add(updates), ex => Exception = ex);
+        var results = published.Subscribe(
+            onNext: Messages.Add,
+            onError: error => Exception = error,
+            onCompleted: () => IsCompleted = true);
         var connected = published.Connect();
 
         _disposer = Disposable.Create(
@@ -50,6 +53,11 @@ public class ChangeSetAggregator<TObject> : IDisposable
     /// Gets a clone of the data.
     /// </summary>
     public IObservableList<TObject> Data { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the source stream emitted a completion.
+    /// </summary>
+    public bool IsCompleted { get; private set; }
 
     /// <summary>
     /// Gets all message received.

@@ -2638,6 +2638,7 @@ namespace DynamicData.Tests
         public ChangeSetAggregator(System.IObservable<DynamicData.IChangeSet<TObject>> source) { }
         public DynamicData.IObservableList<TObject> Data { get; }
         public System.Exception? Exception { get; set; }
+        public bool IsCompleted { get; }
         public System.Collections.Generic.IList<DynamicData.IChangeSet<TObject>> Messages { get; }
         public void Dispose() { }
         protected virtual void Dispose(bool isDisposing) { }
