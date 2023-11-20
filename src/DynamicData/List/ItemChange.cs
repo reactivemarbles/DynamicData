@@ -69,16 +69,14 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     public int CurrentIndex { get; }
 
     /// <summary>
-    /// Gets the previous change.
-    ///
-    /// This is only when Reason==ChangeReason.Replace.
+    /// <para>Gets the previous change.</para>
+    /// <para>This is only when Reason==ChangeReason.Replace.</para>
     /// </summary>
     public Optional<T> Previous { get; }
 
     /// <summary>
-    /// Gets the previous index.
-    ///
-    /// This is only when Reason==ChangeReason.Replace or ChangeReason.Move.
+    /// <para>Gets the previous index.</para>
+    /// <para>This is only when Reason==ChangeReason.Replace or ChangeReason.Move.</para>
     /// </summary>
     public int PreviousIndex { get; }
 

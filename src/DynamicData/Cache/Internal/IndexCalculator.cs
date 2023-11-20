@@ -5,10 +5,11 @@
 namespace DynamicData.Cache.Internal;
 
 /// <summary>
-/// Calculates a sequential change set.
-///
+/// <para>Calculates a sequential change set.</para>
+/// <para>
 /// This enables the binding infrastructure to simply iterate the change set
 /// and apply indexed changes with no need to apply ant expensive IndexOf() operations.
+/// </para>
 /// </summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="IndexCalculator{TObject, TKey}"/> class.
