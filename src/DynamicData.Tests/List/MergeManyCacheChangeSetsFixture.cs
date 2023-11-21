@@ -436,18 +436,18 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
         marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
         marketLowLow.SetPrices(0, PricesPerMarket, LowestPrice - 1);
-        _marketList.Insert(0, marketOriginal);
-        _marketList.Insert(1, marketLow);
+        _marketList.Add(marketOriginal);
+        _marketList.Add(marketLow);
 
         // when
-        _marketList.ReplaceAt(1, marketLowLow);
+        _marketList.Replace(marketLow, marketLowLow);
 
         // then
         _marketListResults.Data.Count.Should().Be(2);
         lowPriceResults.Data.Count.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);
         lowPriceResults.Summary.Overall.Removes.Should().Be(0);
-        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 2);
+        lowPriceResults.Summary.Overall.Updates.Should().Be(PricesPerMarket * 3);
         lowPriceResults.Data.Items.Select(cp => cp.MarketId).ForEach(guid => guid.Should().Be(marketLowLow.Id));
         highPriceResults.Data.Count.Should().Be(PricesPerMarket);
         highPriceResults.Summary.Overall.Adds.Should().Be(PricesPerMarket);

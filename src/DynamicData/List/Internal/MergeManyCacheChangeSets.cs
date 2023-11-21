@@ -41,7 +41,6 @@ internal sealed class MergeManyCacheChangeSets<TObject, TDestination, TDestinati
 
                 // Transform to an observable list of merge containers.
                 var sourceListOfCaches = _source
-                                            .WhereReasonsAreNot(ListChangeReason.Moved, ListChangeReason.Refresh)
                                             .Transform(obj => new ChangeSetCache<TDestination, TDestinationKey>(_changeSetSelector(obj)))
                                             .Synchronize(locker)
                                             .AsObservableList();
