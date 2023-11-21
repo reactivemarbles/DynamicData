@@ -153,6 +153,23 @@ public sealed class DisposeManyFixture : IDisposable
         _results.Data.Items.All(item => item.IsDisposed).Should().BeTrue("items remaining in the list should be disposed");
     }
 
+    [Fact]
+    public void RemainingItemsAreDisposedAfterUnsubscription()
+    {
+        var items = new[]
+        {
+            new DisposableObject(1),
+            new DisposableObject(2),
+            new DisposableObject(3)
+        };
+
+        _itemsSource.AddOrUpdate(items);
+
+        _results.Dispose();
+
+        items.All(item => item.IsDisposed).Should().BeTrue("Items remaining in the list should be disposed");
+    }
+
     private class DisposableObject : IDisposable
     {
         public DisposableObject(int id)
