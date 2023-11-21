@@ -379,8 +379,8 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         _marketList.Add(marketHigh);
 
         // when
-        marketLow.UpdateAllPrices(LowestPrice);
-        marketHigh.UpdateAllPrices(HighestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
+        marketHigh.SetPrices(0, PricesPerMarket, HighestPrice);
 
         // then
         _marketListResults.Data.Count.Should().Be(3);
@@ -405,8 +405,8 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var marketHigh = new Market(2);
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
         _marketList.Add(marketOriginal);
-        marketLow.UpdateAllPrices(LowestPrice);
-        marketHigh.UpdateAllPrices(HighestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
+        marketHigh.SetPrices(0, PricesPerMarket, HighestPrice);
 
         // when
         _marketList.Add(marketLow);
@@ -434,8 +434,8 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var marketLow = new Market(1);
         var marketLowLow = new Market(marketLow);
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdateAllPrices(LowestPrice);
-        marketLowLow.UpdateAllPrices(LowestPrice - 1);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
+        marketLowLow.SetPrices(0, PricesPerMarket, LowestPrice - 1);
         _marketList.Insert(0, marketOriginal);
         _marketList.Insert(1, marketLow);
 
@@ -465,7 +465,7 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var marketOriginal = new Market(0);
         var marketFlipFlop = new Market(1);
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
-        marketFlipFlop.UpdateAllPrices(HighestPrice);
+        marketFlipFlop.SetPrices(0, PricesPerMarket, HighestPrice);
         _marketList.Add(marketOriginal);
         _marketList.Add(marketFlipFlop);
 
@@ -502,8 +502,8 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         _marketList.Add(marketOriginal);
         _marketList.Add(marketLow);
         _marketList.Add(marketHigh);
-        marketLow.UpdateAllPrices(LowestPrice);
-        marketHigh.UpdateAllPrices(HighestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
+        marketHigh.SetPrices(0, PricesPerMarket, HighestPrice);
 
         // when
         _marketList.Remove(marketLow);
@@ -535,7 +535,7 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var marketOriginal = new Market(0);
         var marketFlipFlop = new Market(1);
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
-        marketFlipFlop.UpdateAllPrices(HighestPrice);
+        marketFlipFlop.SetPrices(0, PricesPerMarket, HighestPrice);
         _marketList.Add(marketOriginal);
         _marketList.Add(marketFlipFlop);
 
@@ -567,7 +567,7 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdateAllPrices(LowestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
         _marketList.Add(marketOriginal);
         _marketList.Add(marketLow);
 
@@ -599,7 +599,7 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var marketOriginal = new Market(0);
         var marketLow = new Market(1);
         marketOriginal.SetPrices(0, PricesPerMarket, GetRandomPrice);
-        marketLow.UpdateAllPrices(LowestPrice);
+        marketLow.SetPrices(0, PricesPerMarket, LowestPrice);
         _marketList.Add(marketOriginal);
         _marketList.Add(marketLow);
 
@@ -628,7 +628,7 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         // having
         var market = new Market(0);
         using var results = _marketList.Connect().MergeManyChangeSets(m => m.LatestPrices, MarketPrice.EqualityComparer).AsAggregator();
-        market.UpdateAllPrices(LowestPrice);
+        market.SetPrices(0, PricesPerMarket, LowestPrice);
         _marketList.Add(market);
 
         // when
