@@ -188,9 +188,8 @@ public static class ListEx
     }
 
     /// <summary>
-    /// Performs a binary search on the specified collection.
-    ///
-    /// Thanks to https://stackoverflow.com/questions/967047/how-to-perform-a-binary-search-on-ilistt.
+    /// <para>Performs a binary search on the specified collection.</para>
+    /// <para>Thanks to https://stackoverflow.com/questions/967047/how-to-perform-a-binary-search-on-ilistt.</para>
     /// </summary>
     /// <typeparam name="TItem">The type of the item.</typeparam>
     /// <typeparam name="TSearch">The type of the searched item.</typeparam>
@@ -540,9 +539,8 @@ public static class ListEx
     }
 
     /// <summary>
-    /// Clears the collection if the number of items in the range is the same as the source collection. Otherwise a  remove many operation is applied.
-    ///
-    /// NB: This is because an observable change set may be a composite of multiple change sets in which case if one of them has clear operation applied it should not clear the entire result.
+    /// <para>Clears the collection if the number of items in the range is the same as the source collection. Otherwise a  remove many operation is applied.</para>
+    /// <para>NB: This is because an observable change set may be a composite of multiple change sets in which case if one of them has clear operation applied it should not clear the entire result.</para>
     /// </summary>
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>

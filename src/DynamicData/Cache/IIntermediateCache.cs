@@ -6,9 +6,8 @@
 namespace DynamicData;
 
 /// <summary>
-/// An observable cache which exposes an update API.
-///
-/// Intended to be used as a helper for creating custom operators.
+/// <para>An observable cache which exposes an update API.</para>
+/// <para>Intended to be used as a helper for creating custom operators.</para>
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>

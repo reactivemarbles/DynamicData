@@ -6,9 +6,8 @@
 namespace DynamicData;
 
 /// <summary>
-/// A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.
-///
-/// Used for creating custom operators.
+/// <para>A cache which captures all changes which are made to it. These changes are recorded until CaptureChanges() at which point thw changes are cleared.</para>
+/// <para>Used for creating custom operators.</para>
 /// </summary>
 /// <typeparam name="TObject">The type of the object.</typeparam>
 /// <typeparam name="TKey">The type of the key.</typeparam>

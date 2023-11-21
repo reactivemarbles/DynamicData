@@ -118,16 +118,14 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     public int CurrentIndex { get; }
 
     /// <summary>
-    /// Gets the previous change.
-    ///
-    /// This is only when Reason==ChangeReason.Replace.
+    /// <para>Gets the previous change.</para>
+    /// <para>This is only when Reason==ChangeReason.Replace.</para>
     /// </summary>
     public Optional<TObject> Previous { get; }
 
     /// <summary>
-    /// Gets the previous change.
-    ///
-    /// This is only when Reason==ChangeReason.Update or ChangeReason.Move.
+    /// <para>Gets the previous change.</para>
+    /// <para>This is only when Reason==ChangeReason.Update or ChangeReason.Move.</para>
     /// </summary>
     public int PreviousIndex { get; }
 

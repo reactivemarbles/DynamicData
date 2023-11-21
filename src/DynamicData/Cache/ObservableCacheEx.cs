@@ -1139,10 +1139,11 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Disposes each item when no longer required.
-    ///
+    /// <para>Disposes each item when no longer required.</para>
+    /// <para>
     /// Individual items are disposed after removal or replacement changes have been sent downstream.
     /// All items previously-published on the stream are disposed after the stream finalizes.
+    /// </para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2231,9 +2232,8 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.
-    ///
-    /// When there are likely to be a large number of group property changes specify a throttle to improve performance.
+    /// <para>Groups the source using the property specified by the property selector. Groups are re-applied when the property value changed.</para>
+    /// <para>When there are likely to be a large number of group property changes specify a throttle to improve performance.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -2262,9 +2262,8 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Groups the source using the property specified by the property selector. Each update produces immutable grouping. Groups are re-applied when the property value changed.
-    ///
-    /// When there are likely to be a large number of group property changes specify a throttle to improve performance.
+    /// <para>Groups the source using the property specified by the property selector. Each update produces immutable grouping. Groups are re-applied when the property value changed.</para>
+    /// <para>When there are likely to be a large number of group property changes specify a throttle to improve performance.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -4153,9 +4152,8 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Removes the specified item from the cache.
-    ///
-    /// If the item is not contained in the cache then the operation does nothing.
+    /// <para>Removes the specified item from the cache.</para>
+    /// <para>If the item is not contained in the cache then the operation does nothing.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -4196,9 +4194,8 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Removes the specified items from the cache.
-    ///
-    /// Any items not contained in the cache are ignored.
+    /// <para>Removes the specified items from the cache.</para>
+    /// <para>Any items not contained in the cache are ignored.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -4218,9 +4215,8 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Removes the specified keys from the cache.
-    ///
-    /// Any keys not contained in the cache are ignored.
+    /// <para>Removes the specified keys from the cache.</para>
+    /// <para>Any keys not contained in the cache are ignored.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -4261,9 +4257,8 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
-    /// Removes the specified keys from the cache.
-    ///
-    /// Any keys not contained in the cache are ignored.
+    /// <para>Removes the specified keys from the cache.</para>
+    /// <para>Any keys not contained in the cache are ignored.</para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -6110,11 +6105,14 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// <para>
     /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
-    /// the equality condition. The observable is re-evaluated whenever
-    ///
+    /// the equality condition. The observable is re-evaluated whenever.
+    /// </para>
+    /// <para>
     /// i) The cache changes
     /// or ii) The inner observable changes.
+    /// </para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
@@ -6130,11 +6128,14 @@ public static class ObservableCacheEx
         where TValue : notnull => source.TrueFor(observableSelector, items => items.All(o => o.LatestValue.HasValue && equalityCondition(o.LatestValue.Value)));
 
     /// <summary>
+    /// <para>
     /// Produces a boolean observable indicating whether the latest resulting value from all of the specified observables matches
-    /// the equality condition. The observable is re-evaluated whenever
-    ///
+    /// the equality condition. The observable is re-evaluated whenever.
+    /// </para>
+    /// <para>
     /// i) The cache changes
     /// or ii) The inner observable changes.
+    /// </para>
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
