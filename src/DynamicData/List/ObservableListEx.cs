@@ -2254,6 +2254,13 @@ public static class ObservableListEx
             throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
         }
 
+        // Optimization that avoids removing the indexes if only refreshes are removed
+        if (reasons.Length == 1 && reasons[0] == ListChangeReason.Refresh)
+        {
+            // Caller probably meant to call this instead, so help them out.
+            return source.SuppressRefresh().NotEmpty();
+        }
+
         var matches = new HashSet<ListChangeReason>(reasons);
         return source.Select(
             updates =>

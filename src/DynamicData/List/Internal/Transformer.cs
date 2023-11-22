@@ -82,14 +82,26 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Refresh:
                     {
                         var change = item.Item;
+                        var index = change.CurrentIndex;
+                        if (index < 0)
+                        {
+                            // Find the corresponding index
+                            var current = transformed.FirstOrDefault(x => x.Source.Equals(change.Current));
+                            index = transformed.IndexOf(current) switch
+                            {
+                                int i when i >= 0 => i,
+                                _ => throw new UnspecifiedIndexException($"Cannot find index of {change.Current}")
+                            };
+                        }
+
                         if (_transformOnRefresh)
                         {
-                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
-                            transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
+                            Optional<TDestination> previous = transformed[index].Destination;
+                            transformed[index] = _containerFactory(change.Current, previous, index);
                         }
                         else
                         {
-                            transformed.RefreshAt(change.CurrentIndex);
+                            transformed.RefreshAt(index);
                         }
 
                         break;
