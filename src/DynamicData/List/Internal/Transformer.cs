@@ -87,10 +87,10 @@ internal sealed class Transformer<TSource, TDestination>
                         {
                             // Find the corresponding index
                             var current = transformed.FirstOrDefault(x => x.Source.Equals(change.Current));
-                            index = transformed.IndexOf(current) switch
+                            index = current switch
                             {
-                                int i when i >= 0 => i,
-                                _ => throw new UnspecifiedIndexException($"Cannot find index of {change.Current}")
+                                TransformedItemContainer tic when transformed.IndexOf(tic) is int i && (i >= 0) => i,
+                                _ => throw new UnspecifiedIndexException($"Cannot find index of {change.Current}"),
                             };
                         }
 
