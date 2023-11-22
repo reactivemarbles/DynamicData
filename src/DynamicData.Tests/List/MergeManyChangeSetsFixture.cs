@@ -1,3 +1,4 @@
+using System.Linq;
 using FluentAssertions;
 
 using Xunit;
@@ -39,5 +40,16 @@ public class MergeManyChangeSetsFixture
         // Fails below
         d.Count.Should().Be(2);
         new[] { 1, 2 }.Should().BeEquivalentTo(d.Items);
+
+        a.ReplaceAt(0,100);
+        new[] { 2, 100 }.Should().BeEquivalentTo(d.Items);
+
+
+        var f = new SourceList<int>();
+        f.AddRange(Enumerable.Range(10,5));
+        parent.ReplaceAt(2,f);
+
+
+        new[] { 2, 100, 10,11,12,13,14 }.Should().BeEquivalentTo(d.Items);
     }
 }

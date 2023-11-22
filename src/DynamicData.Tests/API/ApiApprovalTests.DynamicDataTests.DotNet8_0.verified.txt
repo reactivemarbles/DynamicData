@@ -2079,6 +2079,14 @@ namespace DynamicData
             where T :  notnull { }
         public static System.IObservable<TDestination> MergeMany<T, TDestination>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, System.IObservable<TDestination>> observableSelector)
             where T :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>>> observableSelector, System.Collections.Generic.IComparer<TDestination> comparer)
+            where TObject :  notnull
+            where TDestination :  notnull
+            where TDestinationKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>>> observableSelector, System.Collections.Generic.IEqualityComparer<TDestination>? equalityComparer = null, System.Collections.Generic.IComparer<TDestination>? comparer = null)
+            where TObject :  notnull
+            where TDestination :  notnull
+            where TDestinationKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> NotEmpty<T>(this System.IObservable<DynamicData.IChangeSet<T>> source)
             where T :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<T>> OnItemAdded<T>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Action<T> addAction)
