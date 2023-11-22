@@ -4,7 +4,6 @@ using System.Linq;
 using DynamicData.Tests.Domain;
 
 using FluentAssertions;
-
 using Xunit;
 
 namespace DynamicData.Tests.List;
@@ -185,5 +184,41 @@ public class TransformFixture : IDisposable
         results.Messages.Count.Should().Be(5);
 
         results.Messages.Last().First().Reason.Should().Be(ListChangeReason.Replace);
+    }
+
+    [Fact]
+    public void TransformOnReplace()
+    {
+        // Arrange
+        var person1 = new Person("Bob", 37);
+        var person2 = new Person("Bob", 38);
+
+        _source.Add(person1);
+
+        // Act
+        _source.Replace(person1, person2);
+
+        // Assert
+        _results.Messages.Count.Should().Be(2, "Should be 2 messages");
+        _results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        _results.Data.Items.First().Should().Be(_transformFactory(person2), "Should be same person");
+    }
+
+    [Fact]
+    public void TransformOnReplaceWithoutIndex()
+    {
+        // Arrange
+        var person1 = new Person("Bob", 37);
+        var person2 = new Person("Bob", 38);
+        var results = _source.Connect().RemoveIndex().Transform(_transformFactory).AsAggregator();
+        _source.Add(person1);
+
+        // Act
+        _source.Replace(person1, person2);
+
+        // Assert
+        results.Messages.Count.Should().Be(2, "Should be 2 messages");
+        results.Data.Count.Should().Be(1, "Should be 1 item in the cache");
+        results.Data.Items.First().Should().Be(_transformFactory(person2), "Should be same person");
     }
 }
