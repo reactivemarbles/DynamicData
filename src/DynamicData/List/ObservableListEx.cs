@@ -1543,19 +1543,7 @@ public static class ObservableListEx
     /// <param name="source">The source observable change set.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> SuppressRefresh<T>(this IObservable<IChangeSet<T>> source)
-        where T : notnull
-    {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        return source.Select(changes =>
-        {
-            var filtered = changes.Where(c => c.Reason != ListChangeReason.Refresh);
-            return new ChangeSet<T>(filtered);
-        });
-    }
+        where T : notnull => source.WhereReasonsAreNot(ListChangeReason.Refresh);
 
     /// <summary>
     /// Transforms an observable sequence of observable lists into a single sequence
@@ -2298,6 +2286,16 @@ public static class ObservableListEx
         if (reasons.Length == 0)
         {
             throw new ArgumentException("Must enter at least 1 reason", nameof(reasons));
+        }
+
+        if (reasons.Length == 1 && reasons[0] == ListChangeReason.Refresh)
+        {
+            // If only refresh changes are removed, then there's no need to remove the indexes
+            return source.Select(changes =>
+            {
+                var filtered = changes.Where(c => c.Reason != ListChangeReason.Refresh);
+                return new ChangeSet<T>(filtered);
+            }).NotEmpty();
         }
 
         var matches = new HashSet<ListChangeReason>(reasons);

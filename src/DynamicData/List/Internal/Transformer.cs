@@ -82,14 +82,26 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Refresh:
                     {
                         var change = item.Item;
+                        var index = change.CurrentIndex;
+                        if (index < 0)
+                        {
+                            // Find the corresponding index
+                            var current = transformed.FirstOrDefault(x => x.Source.Equals(change.Current));
+                            index = current switch
+                            {
+                                TransformedItemContainer tic when transformed.IndexOf(tic) is int i and (>= 0) => i,
+                                _ => throw new UnspecifiedIndexException($"Cannot find index of {change.Current}"),
+                            };
+                        }
+
                         if (_transformOnRefresh)
                         {
-                            Optional<TDestination> previous = transformed[change.CurrentIndex].Destination;
-                            transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
+                            Optional<TDestination> previous = transformed[index].Destination;
+                            transformed[index] = _containerFactory(change.Current, previous, index);
                         }
                         else
                         {
-                            transformed.RefreshAt(change.CurrentIndex);
+                            transformed.RefreshAt(index);
                         }
 
                         break;
@@ -98,15 +110,31 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Replace:
                     {
                         var change = item.Item;
-                        Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
-                        if (change.CurrentIndex == change.PreviousIndex)
+
+                        if (change.CurrentIndex == -1 || change.PreviousIndex == -1)
                         {
-                            transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
+                            // Find the original, with it's corresponding index
+                            var previous = transformed.First(x => x.Source.Equals(change.Previous.Value));
+                            var index = transformed.IndexOf(previous);
+                            if (index == -1)
+                            {
+                                throw new UnspecifiedIndexException($"Cannot find index of {change.Previous.Value}");
+                            }
+
+                            transformed[index] = _containerFactory(change.Current, previous.Destination, index);
                         }
                         else
                         {
-                            transformed.RemoveAt(change.PreviousIndex);
-                            transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
+                            Optional<TDestination> previous = transformed[change.PreviousIndex].Destination;
+                            if (change.CurrentIndex == change.PreviousIndex)
+                            {
+                                transformed[change.CurrentIndex] = _containerFactory(change.Current, previous, change.CurrentIndex);
+                            }
+                            else
+                            {
+                                transformed.RemoveAt(change.PreviousIndex);
+                                transformed.Insert(change.CurrentIndex, _containerFactory(change.Current, Optional<TDestination>.None, change.CurrentIndex));
+                            }
                         }
 
                         break;
