@@ -49,6 +49,8 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var nullChangeSetObs = (IObservable<IChangeSet<int>>)null!;
         var emptySelector = new Func<int, IObservable<IChangeSet<string, string>>>(i => Observable.Empty<IChangeSet<string, string>>());
         var nullSelector = (Func<int, IObservable<IChangeSet<string, string>>>)null!;
+        var nullListOfCacheChangeSets = (ISourceList<IObservable<IChangeSet<string, string>>>)null!;
+        var emptyListOfCacheChangeSets = new SourceList<IObservable<IChangeSet<string, string>>>();
         var nullChildComparer = (IComparer<string>)null!;
         var emptyChildComparer = new NoOpComparer<string>() as IComparer<string>;
         var emptyEqualityComparer = new NoOpEqualityComparer<string>() as IEqualityComparer<string>;
@@ -59,15 +61,18 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var actionComparer0 = () => nullChangeSetObs.MergeManyChangeSets(emptySelector, comparer: emptyChildComparer);
         var actionComparer1 = () => emptyChangeSetObs.MergeManyChangeSets(nullSelector, comparer: emptyChildComparer);
         var actionComparer2 = () => emptyChangeSetObs.MergeManyChangeSets(emptySelector, comparer: nullChildComparer);
+        var actionMergeChangeSets0 = () => nullListOfCacheChangeSets.MergeChangeSets(comparer: emptyChildComparer);
 
         // then
         emptyChangeSetObs.Should().NotBeNull();
         emptyChildComparer.Should().NotBeNull();
         emptyEqualityComparer.Should().NotBeNull();
         emptySelector.Should().NotBeNull();
+        emptyListOfCacheChangeSets.Should().NotBeNull();
         nullChangeSetObs.Should().BeNull();
         nullChildComparer.Should().BeNull();
         nullSelector.Should().BeNull();
+        nullListOfCacheChangeSets.Should().BeNull();
 
         actionDefault0.Should().Throw<ArgumentNullException>();
         actionDefault1.Should().Throw<ArgumentNullException>();
@@ -706,6 +711,29 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
 
         // then
         receivedError.Should().Be(expectedError);
+    }
+
+    [Fact]
+    public void SourceListMergeCacheChangeSets()
+    {
+        // having
+        var markets = Enumerable.Range(0, MarketCount).Select(n => new Market(n)).ToArray();
+        using var changeSetList = _marketList.Connect().Transform(m => m.LatestPrices).AsObservableList();
+        using var results = changeSetList.MergeChangeSets(MarketPrice.EqualityComparer).AsAggregator();
+        _marketList.AddRange(markets);
+        markets.ForEach((m, index) => m.AddUniquePrices(index, PricesPerMarket, ItemIdStride, GetRandomPrice));
+
+        // when
+        markets.ForEach(m => _marketList.Remove(m));
+
+        // then
+        _marketListResults.Data.Count.Should().Be(0);
+        markets.Sum(m => m.PricesCache.Count).Should().Be(MarketCount * PricesPerMarket);
+        results.Data.Count.Should().Be(0);
+        results.Messages.Count.Should().Be(MarketCount * 2);
+        results.Summary.Overall.Adds.Should().Be(MarketCount * PricesPerMarket);
+        results.Summary.Overall.Removes.Should().Be(MarketCount * PricesPerMarket);
+        results.Summary.Overall.Updates.Should().Be(0);
     }
 
     public void Dispose()
