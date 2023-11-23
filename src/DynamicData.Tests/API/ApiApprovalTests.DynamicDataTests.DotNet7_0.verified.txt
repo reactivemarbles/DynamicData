@@ -2080,7 +2080,13 @@ namespace DynamicData
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this DynamicData.IObservableList<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IComparer<TObject> comparer)
             where TObject :  notnull
             where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>>> source, System.Collections.Generic.IComparer<TObject> comparer)
+            where TObject :  notnull
+            where TKey :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this DynamicData.IObservableList<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>> source, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null, System.Collections.Generic.IComparer<TObject>? comparer = null)
+            where TObject :  notnull
+            where TKey :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this System.IObservable<DynamicData.IChangeSet<System.IObservable<DynamicData.IChangeSet<TObject, TKey>>>> source, System.Collections.Generic.IEqualityComparer<TObject>? equalityComparer = null, System.Collections.Generic.IComparer<TObject>? comparer = null)
             where TObject :  notnull
             where TKey :  notnull { }
         public static System.IObservable<TDestination> MergeMany<T, TDestination>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, System.IObservable<TDestination>> observableSelector)

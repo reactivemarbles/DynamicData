@@ -1081,13 +1081,11 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
-
-        return source.MergeChangeSets(comparer: comparer);
+        return source.Connect().MergeChangeSets(comparer: comparer);
     }
 
     /// <summary>
-    /// Merges each Observable ChangeSet in the ObservableList into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Merges all of the Cache Observable ChangeSets into a single ChangeSets while correctly handling multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the object key.</typeparam>
@@ -1100,9 +1098,44 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
+        return source.Connect().MergeChangeSets(equalityComparer, comparer);
+    }
+
+    /// <summary>
+    /// Merges all of the Cache Observable ChangeSets into a single ChangeSets while correctly handling multiple Keys and removal of the parent items.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the object key.</typeparam>
+    /// <param name="source">The List Observable ChangeSet of Cache Observable ChangeSets.</param>
+    /// <param name="comparer"><see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <returns>The result from merging the child changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<IObservable<IChangeSet<TObject, TKey>>>> source, IComparer<TObject> comparer)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+
+        return source.MergeChangeSets(comparer: comparer);
+    }
+
+    /// <summary>
+    /// Merges each Observable ChangeSet in the ObservableList into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the object key.</typeparam>
+    /// <param name="source">The List Observable ChangeSet of Cache Observable ChangeSets.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
+    /// <param name="comparer">Optional <see cref="IComparer{T}"/> instance to determine which element to emit if the same key is emitted from multiple child changesets.</param>
+    /// <returns>The result from merging the child changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservable<IChangeSet<IObservable<IChangeSet<TObject, TKey>>>> source, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
+        where TObject : notnull
+        where TKey : notnull
+    {
         if (source == null) throw new ArgumentNullException(nameof(source));
 
-        return source.Connect().MergeManyChangeSets(static src => src, equalityComparer, comparer);
+        return source.MergeManyChangeSets(static src => src, equalityComparer, comparer);
     }
 
     /// <summary>
