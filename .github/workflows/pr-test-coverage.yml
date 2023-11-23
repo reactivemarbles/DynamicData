@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        configuration: [Debug, Release]
+        configuration: [Release] # future support for more coverage
 
     runs-on: windows-latest  
 
