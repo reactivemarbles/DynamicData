@@ -67,9 +67,6 @@ jobs:
       run: dotnet restore DynamicData.sln
       working-directory: src
 
-    - name: Build
-      working-directory: src
-
     - name: Run coverage tests
       run: |
         dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.dotcover.reportsPaths=dotCover.Output.html /d:sonar.hc
