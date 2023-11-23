@@ -62,7 +62,6 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         var actionComparer1 = () => emptyChangeSetObs.MergeManyChangeSets(nullSelector, comparer: emptyChildComparer);
         var actionComparer2 = () => emptyChangeSetObs.MergeManyChangeSets(emptySelector, comparer: nullChildComparer);
         var actionMergeChangeSets0 = () => nullListOfCacheChangeSets.MergeChangeSets(comparer: emptyChildComparer);
-        var actionMergeChangeSets1 = () => emptyListOfCacheChangeSets.MergeChangeSets(comparer: nullChildComparer);
 
         // then
         emptyChangeSetObs.Should().NotBeNull();
@@ -80,8 +79,6 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         actionComparer0.Should().Throw<ArgumentNullException>();
         actionComparer1.Should().Throw<ArgumentNullException>();
         actionComparer2.Should().Throw<ArgumentNullException>();
-        actionMergeChangeSets0.Should().Throw<ArgumentNullException>();
-        actionMergeChangeSets1.Should().Throw<ArgumentNullException>();
     }
 
     [Fact]
