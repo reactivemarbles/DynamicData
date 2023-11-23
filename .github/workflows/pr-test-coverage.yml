@@ -43,4 +43,5 @@ jobs:
         dotnet dotcover test --dcReportType=HTML
         dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
       env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}       
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      working-directory: src
