@@ -69,7 +69,7 @@ jobs:
 
     - name: Run coverage tests
       run: |
-        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.dotcover.reportsPaths=dotCover.Output.html /d:sonar.hc /d:sonar.projectBaseDir="$GITHUB_WORKSPACE\src"
+        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.dotcover.reportsPaths=dotCover.Output.html /d:sonar.hc /d:sonar.projectBaseDir="${{ github.workspace }}/src"
         dotnet build --no-restore --no-incremental --configuration ${{ matrix.configuration }} DynamicData.sln 
         dotnet dotcover test --dcReportType=HTML --no-restore --configuration ${{ matrix.configuration }}
         dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
