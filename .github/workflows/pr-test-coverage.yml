@@ -1,0 +1,66 @@
+name: Test Coverage and Quality
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    strategy:
+      matrix:
+        configuration: [Release] # future support for more coverage
+
+    runs-on: windows-latest  
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: |
+          21
+        distribution: 'zulu' # Alternative distribution options are available.
+
+    # Install the .NET Core workload
+    - name: Install .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: | 
+          6.0.x
+          7.0.x
+          8.0.x
+
+    - name: Cache SonarCloud packages
+      uses: actions/cache@v3
+      with:
+        path: ~\sonar\cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+
+    - name: Install SonarCloud scanner
+      run: |
+        dotnet tool install -g dotnet-sonarscanner
+
+    - name: Install JetBrains DotCover
+      run: dotnet tool install --global JetBrains.dotCover.GlobalTool
+
+    - name: NuGet Restore
+      run: dotnet restore DynamicData.sln
+      working-directory: src
+
+    - name: Run coverage tests
+      run: |
+        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.dotcover.reportsPaths=dotCover.Output.html /d:sonar.host.url="https://sonarcloud.io"
+        dotnet build --no-restore --no-incremental --configuration ${{ matrix.configuration }} DynamicData.sln 
+        dotnet dotcover test --dcReportType=HTML --no-restore --configuration ${{ matrix.configuration }}
+        dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      working-directory: src
