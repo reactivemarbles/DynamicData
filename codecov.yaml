@@ -1,5 +1,0 @@
-codecov:
-  coverage:
-  status:           #Code coverage status will be posted to pull requests based on targets defined below.
-    comments: off   #Optional. Details are off by default.
-  flags: []
