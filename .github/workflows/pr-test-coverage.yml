@@ -25,7 +25,6 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: |
-          17
           21
         distribution: 'zulu' # Alternative distribution options are available.
 
@@ -58,7 +57,7 @@ jobs:
 
     - name: Run coverage tests
       run: |
-        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.dotcover.reportsPaths=dotCover.Output.html /d:sonar.hc /d:sonar.projectBaseDir="${{ github.workspace }}/src"
+        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.dotcover.reportsPaths=dotCover.Output.html /d:sonar.host.url="https://sonarcloud.io"
         dotnet build --no-restore --no-incremental --configuration ${{ matrix.configuration }} DynamicData.sln 
         dotnet dotcover test --dcReportType=HTML --no-restore --configuration ${{ matrix.configuration }}
         dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
