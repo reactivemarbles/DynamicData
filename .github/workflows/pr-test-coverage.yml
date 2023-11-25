@@ -48,8 +48,6 @@ jobs:
     - name: Install tools
       run: |
         dotnet tool install -g dotnet-sonarscanner
-        dotnet tool install -g JetBrains.dotCover.GlobalTool
-        dotnet tool install -g dotnet-reportgenerator-globaltool
 
     - name: NuGet Restore
       run: dotnet restore DynamicData.sln
@@ -57,10 +55,9 @@ jobs:
 
     - name: Run coverage tests
       run: |
-        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.coverageReportPaths=coverage/SonarQube.xml /d:sonar.host.url="https://sonarcloud.io"
-        dotnet build --no-restore --no-incremental --configuration ${{ matrix.configuration }} DynamicData.sln 
-        dotnet dotcover test --dcReportType=DetailedXml --no-restore --configuration ${{ matrix.configuration }}
-        reportgenerator "-reports:.\dotcover.Output.xml" -targetdir:coverage "-reporttypes:SonarQube"
+        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.opencover.reportsPaths=./**/coverage.opencover.xml /d:sonar.host.url="https://sonarcloud.io"
+        dotnet build --no-restore --no-incremental --configuration ${{ matrix.configuration }} -p:ContinuousIntegrationBuild=false DynamicData.sln
+        dotnet test --no-build --configuration ${{ matrix.configuration }} --collect:"XPlat Code Coverage" --settings coverlet.xml
         dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
