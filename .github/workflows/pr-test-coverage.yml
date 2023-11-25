@@ -57,11 +57,12 @@ jobs:
 
     - name: Run coverage tests
       run: |
-        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.cs.dotcover.reportsPaths=coverage/SonarQube.xml /d:sonar.host.url="https://sonarcloud.io"
+        dotnet sonarscanner begin /k:"reactivemarbles_DynamicData" /o:"reactivemarbles" /d:sonar.token="${{ env.SONAR_TOKEN }}" /d:sonar.coverageReportPaths=coverage/SonarQube.xml /d:sonar.host.url="https://sonarcloud.io"
         dotnet build --no-restore --no-incremental --configuration ${{ matrix.configuration }} DynamicData.sln 
         dotnet dotcover test --dcReportType=DetailedXml --no-restore --configuration ${{ matrix.configuration }}
         reportgenerator "-reports:.\dotcover.Output.xml" -targetdir:coverage "-reporttypes:SonarQube"
         dotnet sonarscanner end /d:sonar.token="${{ env.SONAR_TOKEN }}"
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
       working-directory: src
