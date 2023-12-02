@@ -377,12 +377,12 @@ var myDistinctObservable = myPeopleObservable.DistinctValues(person => person.Ag
 
 #### Virtualisation
 
-Visualise data to restrict by index and segment size
+Virtualise data to restrict by index and segment size
 ```cs
 IObservable<IVirtualRequest> request; //request stream
 var virtualisedStream = someDynamicDataSource.Virtualise(request)
 ```
-Visualise data to restrict by index and page size
+Virtualise data to restrict by index and page size
 ```cs
 IObservable<IPageRequest> request; //request stream
 var pagedStream = someDynamicDataSource.Page(request)
