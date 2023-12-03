@@ -1142,10 +1142,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.Connect().MergeChangeSets(comparer: comparer);
-    }
+        where TKey : notnull => source.Connect().MergeChangeSets(comparer: comparer);
 
     /// <summary>
     /// Merges all of the Cache Observable ChangeSets into a single ChangeSets while correctly handling multiple Keys and removal of the parent items.
@@ -1159,10 +1156,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.Connect().MergeChangeSets(equalityComparer, comparer);
-    }
+        where TKey : notnull => source.Connect().MergeChangeSets(equalityComparer, comparer);
 
     /// <summary>
     /// Merges all of the Cache Observable ChangeSets into a single ChangeSets while correctly handling multiple Keys and removal of the parent items.
@@ -1317,7 +1311,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> OnItemRefreshed<TObject>(this IObservable<IChangeSet<TObject>> source, Action<TObject> refreshAction)
         where TObject : notnull
     {
-        Action<TObject> refreshAction2 = refreshAction;
+        var refreshAction2 = refreshAction;
         if (source == null)
         {
             throw new ArgumentNullException(nameof(source));
@@ -1328,13 +1322,8 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(refreshAction));
         }
 
-        return source.Do(delegate(IChangeSet<TObject> changes)
-        {
-            changes.Where((Change<TObject> c) => c.Reason == ListChangeReason.Refresh).ForEach(delegate(Change<TObject> c)
-            {
-                refreshAction2(c.Item.Current);
-            });
-        });
+        return source.Do((IChangeSet<TObject> changes) =>
+            changes.Where((Change<TObject> c) => c.Reason == ListChangeReason.Refresh).ForEach((Change<TObject> c) => refreshAction2(c.Item.Current)));
     }
 
     /// <summary>

@@ -115,7 +115,7 @@ internal class ToObservableChangeSet<TObject, TKey>
                         Queue = new()
                     };
 
-                _itemStatesByKey = new();
+                _itemStatesByKey = [];
             }
 
             _sourceSubscription = source
@@ -174,7 +174,7 @@ internal class ToObservableChangeSet<TObject, TKey>
                         _hasSourceCompleted = true;
 
                         // If there are pending expirations scheduled, wait to complete the stream until they're done
-                        if (_expirationState is null or { Queue: { Count: 0 } })
+                        if (_expirationState is null or { Queue.Count: 0 })
                             observer.OnCompleted();
                     }));
         }

@@ -132,16 +132,22 @@ internal class ToObservableChangeSet<TObject>
                             if (items is IReadOnlyList<TObject> itemsList)
                             {
                                 for (var i = 0; i < itemsList.Count; ++i)
+                                {
                                     HandleIncomingItem(itemsList[i], now, changeSet, ref hasExpirationQueueChanged);
+                                }
                             }
                             else
                             {
                                 foreach (var item in items)
+                                {
                                     HandleIncomingItem(item, now, changeSet, ref hasExpirationQueueChanged);
+                                }
                             }
 
                             if (hasExpirationQueueChanged)
+                            {
                                 OnExpirationQueueChanged();
+                            }
 
                             observer.OnNext(changeSet);
                         }
@@ -163,8 +169,10 @@ internal class ToObservableChangeSet<TObject>
                         _hasSourceCompleted = true;
 
                         // If there are pending expirations scheduled, wait to complete the stream until they're done
-                        if (_expirationState is null or { Queue: { Count: 0 } })
+                        if (_expirationState is null or { Queue.Count: 0 })
+                        {
                             observer.OnCompleted();
+                        }
                     }));
         }
 
@@ -192,7 +200,9 @@ internal class ToObservableChangeSet<TObject>
             {
                 // Backwards compatibility
                 if (evictionState.LimitSizeTo is 0)
+                {
                     return;
+                }
 
                 // If our size limit has been reached, evict the oldest item before adding a new one.
                 // Repeat removals until we drop below the limit, since items in the queue might have already expired.
@@ -242,7 +252,9 @@ internal class ToObservableChangeSet<TObject>
 
                     var insertionIndex = expirationState.Queue.BinarySearch(expireAt, CompareExpireAtToExpiration);
                     if (insertionIndex < 0)
+                    {
                         insertionIndex = ~insertionIndex;
+                    }
 
                     expirationState.Queue.Insert(
                         index: insertionIndex,
@@ -276,7 +288,9 @@ internal class ToObservableChangeSet<TObject>
             foreach (var expiration in expirationState.Queue)
             {
                 if (expiration.ExpireAt > now)
+                {
                     break;
+                }
 
                 expirationState.RemovalsBuffer.Add(new(
                     key: expiration.Index,
@@ -310,7 +324,10 @@ internal class ToObservableChangeSet<TObject>
                     {
                         var expiration = expirationState.Queue[j];
                         if (expiration.Index > indexToRemove)
+                        {
                             --expiration.Index;
+                        }
+
                         expirationState.Queue[j] = expiration;
                     }
 
@@ -335,7 +352,9 @@ internal class ToObservableChangeSet<TObject>
             if (expirationState.Queue.Count is 0)
             {
                 if (_hasSourceCompleted)
+                {
                     _observer.OnCompleted();
+                }
             }
             else
             {
