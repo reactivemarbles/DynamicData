@@ -285,7 +285,7 @@ public static class ObservableListEx
     /// or
     /// targetCollection.
     /// </exception>
-    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, IObservableCollection<T> targetCollection, int resetThreshold = 25)
+    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, IObservableCollection<T> targetCollection, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
         if (source is null)
@@ -300,9 +300,9 @@ public static class ObservableListEx
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
-        var defaults = DynamicDataOptions.BindingOptions;
+        var defaults = DynamicDataOptions.Binding;
 
-        var options = resetThreshold == 25
+        var options = resetThreshold == BindingOptions.DefaultResetThreshold
             ? defaults
             : defaults with { ResetThreshold = resetThreshold };
 
@@ -347,7 +347,7 @@ public static class ObservableListEx
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>A continuation of the source stream.</returns>
-    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = 25)
+    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
         if (source is null)
@@ -357,8 +357,8 @@ public static class ObservableListEx
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
-        var defaults = DynamicDataOptions.BindingOptions;
-        var options = resetThreshold == 25
+        var defaults = DynamicDataOptions.Binding;
+        var options = resetThreshold == BindingOptions.DefaultResetThreshold
             ? defaults
             : defaults with { ResetThreshold = resetThreshold };
 
@@ -403,7 +403,7 @@ public static class ObservableListEx
     /// targetCollection.
     /// </exception>
     /// <returns>An observable which emits the change set.</returns>
-    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, BindingList<T> bindingList, int resetThreshold = 25)
+    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, BindingList<T> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
         if (source is null)

@@ -20,7 +20,12 @@ namespace DynamicData.Binding;
 /// <param name="allowReplace"> Use replace instead of remove / add for updates. </param>
 /// <param name="resetOnFirstTimeLoad"> Should a reset be fired for a first time load.This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.</param>
 /// <exception cref="System.ArgumentNullException">collection.</exception>
-public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection, int refreshThreshold, bool allowReplace = true, bool resetOnFirstTimeLoad = true) : IChangeSetAdaptor<T>
+public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection, int refreshThreshold,
+#pragma warning disable CS9113 // Parameter is unread.
+    bool allowReplace = true,
+#pragma warning restore CS9113 // Parameter is unread.
+    bool resetOnFirstTimeLoad = true) : IChangeSetAdaptor<T>
+
     where T : notnull
 {
     private readonly IObservableCollection<T> _collection = collection ?? throw new ArgumentNullException(nameof(collection));
@@ -31,7 +36,7 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// </summary>
     /// <param name="collection">The collection.</param>
     public ObservableCollectionAdaptor(IObservableCollection<T> collection)
-        : this(collection, DynamicDataOptions.BindingOptions)
+        : this(collection, DynamicDataOptions.Binding)
     {
     }
 
@@ -41,7 +46,7 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// <param name="options"> The binding options.</param>
     /// <param name="collection">The collection.</param>
     public ObservableCollectionAdaptor(IObservableCollection<T> collection, BindingOptions options)
-        : this(collection, options.ResetThreshold, options.UseReplaceForUpdates, options.UseReplaceForUpdates)
+        : this(collection, options.ResetThreshold, options.UseReplaceForUpdates, options.ResetOnFirstTimeLoad)
     {
     }
 
@@ -97,7 +102,7 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
     /// </summary>
     /// <param name="options"> The binding options.</param>
     public ObservableCollectionAdaptor(BindingOptions options)
-        : this(options.ResetThreshold, options.UseReplaceForUpdates, options.UseReplaceForUpdates)
+        : this(options.ResetThreshold, options.UseReplaceForUpdates, options.ResetOnFirstTimeLoad)
     {
     }
 

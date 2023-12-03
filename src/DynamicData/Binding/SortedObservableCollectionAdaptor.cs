@@ -33,7 +33,7 @@ public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThresho
     /// </summary>
     /// <param name="options"> The binding options.</param>
     public SortedObservableCollectionAdaptor(BindingOptions options)
-        : this(options.ResetThreshold, options.UseReplaceForUpdates, options.UseReplaceForUpdates)
+        : this(options.ResetThreshold, options.UseReplaceForUpdates, options.ResetOnFirstTimeLoad)
     {
     }
 
@@ -58,7 +58,16 @@ public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThresho
         {
             case SortReason.ComparerChanged:
             case SortReason.Reset:
-                using (collection.SuspendNotifications())
+
+                // Multiply items count by 2 as we need to clear existing items
+                if (changes.SortedItems.Count * 2 > refreshThreshold)
+                {
+                    using (collection.SuspendNotifications())
+                    {
+                        collection.Load(changes.SortedItems.Select(kv => kv.Value));
+                    }
+                }
+                else
                 {
                     collection.Load(changes.SortedItems.Select(kv => kv.Value));
                 }
