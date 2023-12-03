@@ -36,7 +36,7 @@ internal static class ObservableSpy
 
         logger("Creating Observable");
 
-        int subscriptionCounter = 0;
+        var subscriptionCounter = 0;
         return Observable.Create<T>(obs =>
         {
             var valueCounter = 0;
@@ -77,7 +77,7 @@ internal static class ObservableSpy
                         }
                     }
                     subscription?.Dispose();
-                    int count = Interlocked.Decrement(ref subscriptionCounter);
+                    var count = Interlocked.Decrement(ref subscriptionCounter);
                     if (showSubs)
                     {
                         logger($"Dispose Completed! ({count} Active Subscriptions)");
@@ -86,7 +86,7 @@ internal static class ObservableSpy
             }
             finally
             {
-                int count = Interlocked.Increment(ref subscriptionCounter);
+                var count = Interlocked.Increment(ref subscriptionCounter);
                 if (showSubs)
                 {
                     logger($"Subscription Created!  ({count} Active Subscriptions)");
@@ -102,7 +102,7 @@ internal static class ObservableSpy
         where T : notnull
         where TKey : notnull
     {
-        formatter = formatter ?? (t => t?.ToString() ?? "{Null}");
+        formatter ??= (t => t?.ToString() ?? "{Null}");
         return Spy(source, opName, logger, cs => "[Cache Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing,
             cs.Select((change, n) => $"#{n} [{change.Reason}] {change.Key}: {FormatChange(formatter!, change)}")), showSubs, showTimestamps);
     }
@@ -113,7 +113,7 @@ internal static class ObservableSpy
                                                                       bool showTimestamps = true)
                                                                       where T : notnull
     {
-        formatter = formatter ?? (t => t?.ToString() ?? "{Null}");
+        formatter ??= (t => t?.ToString() ?? "{Null}");
         return Spy(source, opName, logger, cs => "[List Change Set]" + ChangeSetEntrySpacing + string.Join(ChangeSetEntrySpacing,
             cs.Select(change => $"[{change.Reason}] {FormatChange(formatter!, change)}")), showSubs, showTimestamps);
     }
@@ -124,7 +124,7 @@ internal static class ObservableSpy
 #if DEBUG
         source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
 #else
-        return source;
+        source;
 #endif
 
 
@@ -137,7 +137,7 @@ internal static class ObservableSpy
 #if DEBUG
         source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
 #else
-        return source;
+        source;
 #endif
 
 
@@ -149,7 +149,7 @@ internal static class ObservableSpy
 #if DEBUG
         source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
 #else
-        return source;
+        source;
 #endif
 
 
@@ -172,7 +172,7 @@ internal static class ObservableSpy
         };
 
     private static Action<string> CreateLogger(Action<string> baseLogger, Func<string> timeStamper, string opName) =>
-            msg => baseLogger($"{timeStamper()}[{Thread.CurrentThread.ManagedThreadId:X2}] |{opName}| {msg}");
+            msg => baseLogger($"{timeStamper()}[{Environment.CurrentManagedThreadId:X2}] |{opName}| {msg}");
 
 #if DEBUG
     static void DebugLogger(string str) => Debug.WriteLine(str);
