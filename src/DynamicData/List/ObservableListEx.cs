@@ -298,7 +298,44 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(targetCollection));
         }
 
-        var adaptor = new ObservableCollectionAdaptor<T>(targetCollection, resetThreshold);
+        // if user has not specified different defaults, use system wide defaults instead.
+        // This is a hack to retro fit system wide defaults which override the hard coded defaults above
+        var defaults = DynamicDataOptions.BindingOptions;
+
+        var options = resetThreshold == 25
+            ? defaults
+            : defaults with { ResetThreshold = resetThreshold };
+
+        return source.Bind(targetCollection, options);
+    }
+
+    /// <summary>
+    /// Binds a clone of the observable change set to the target observable collection.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="targetCollection">The target collection.</param>
+    /// <param name="options">The binding options.</param>
+    /// <returns>An observable which emits the change set.</returns>
+    /// <exception cref="System.ArgumentNullException">
+    /// source
+    /// or
+    /// targetCollection.
+    /// </exception>
+    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, IObservableCollection<T> targetCollection, BindingOptions options)
+        where T : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (targetCollection is null)
+        {
+            throw new ArgumentNullException(nameof(targetCollection));
+        }
+
+        var adaptor = new ObservableCollectionAdaptor<T>(targetCollection, options);
         return source.Adapt(adaptor);
     }
 
@@ -318,9 +355,35 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(source));
         }
 
+        // if user has not specified different defaults, use system wide defaults instead.
+        // This is a hack to retro fit system wide defaults which override the hard coded defaults above
+        var defaults = DynamicDataOptions.BindingOptions;
+        var options = resetThreshold == 25
+            ? defaults
+            : defaults with { ResetThreshold = resetThreshold };
+
+        return source.Bind(out readOnlyObservableCollection, options);
+    }
+
+    /// <summary>
+    /// Creates a binding to a readonly observable collection which is specified as an 'out' parameter.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="options">The binding options.</param>
+    /// <returns>A continuation of the source stream.</returns>
+    public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, BindingOptions options)
+        where T : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
         var target = new ObservableCollectionExtended<T>();
         var result = new ReadOnlyObservableCollection<T>(target);
-        var adaptor = new ObservableCollectionAdaptor<T>(target, resetThreshold);
+        var adaptor = new ObservableCollectionAdaptor<T>(target, options);
         readOnlyObservableCollection = result;
         return source.Adapt(adaptor);
     }

@@ -28,6 +28,7 @@ dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
 dotnet_style_prefer_compound_assignment = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
+dotnet_style_prefer_collection_expression = true:suggestion
 
 [project.json]
 indent_size = 2
@@ -492,7 +493,7 @@ dotnet_diagnostic.SA1202.severity = silent
 
 dotnet_diagnostic.SA1203.severity = error
 
-dotnet_diagnostic.SA1204.severity = error
+dotnet_diagnostic.SA1204.severity = none
 
 dotnet_diagnostic.SA1205.severity = error
 
@@ -548,7 +549,7 @@ dotnet_diagnostic.SA1400.severity = error
 
 dotnet_diagnostic.SA1401.severity = error
 
-dotnet_diagnostic.SA1402.severity = error
+dotnet_diagnostic.SA1402.severity = none
 
 dotnet_diagnostic.SA1403.severity = error
 
@@ -697,6 +698,7 @@ dotnet_diagnostic.SX1309S.severity=silent
 csharp_style_namespace_declarations = block_scoped:silent
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_prefer_top_level_statements = true:silent
+csharp_style_prefer_primary_constructors = true:suggestion
 
 # C++ Files
 [*.{cpp,h,in}]
