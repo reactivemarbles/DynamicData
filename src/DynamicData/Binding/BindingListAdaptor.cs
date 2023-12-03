@@ -28,7 +28,7 @@ namespace DynamicData.Binding
         /// </summary>
         /// <param name="list">The list of items to add to the adapter.</param>
         /// <param name="refreshThreshold">The threshold before a reset is issued.</param>
-        public BindingListAdaptor(BindingList<T> list, int refreshThreshold = 25)
+        public BindingListAdaptor(BindingList<T> list, int refreshThreshold = BindingOptions.DefaultResetThreshold)
         {
             _list = list ?? throw new ArgumentNullException(nameof(list));
             _refreshThreshold = refreshThreshold;
@@ -80,7 +80,7 @@ namespace DynamicData.Binding
         /// </summary>
         /// <param name="list">The list of items to adapt.</param>
         /// <param name="refreshThreshold">The threshold before the refresh is triggered.</param>
-        public BindingListAdaptor(BindingList<TObject> list, int refreshThreshold = 25)
+        public BindingListAdaptor(BindingList<TObject> list, int refreshThreshold = BindingOptions.DefaultResetThreshold)
         {
             _list = list ?? throw new ArgumentNullException(nameof(list));
             _refreshThreshold = refreshThreshold;
