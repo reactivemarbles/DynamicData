@@ -60,19 +60,13 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
 
     public string ParentName { get; }
 
-    public static bool operator ==(Person left, Person right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(Person left, Person right) => Equals(left, right);
 
-    public static bool operator !=(Person left, Person right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(Person left, Person right) => !Equals(left, right);
 
     public bool Equals(Person? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -87,7 +81,7 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -105,15 +99,9 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
         return Equals((Person)obj);
     }
 
-    public override int GetHashCode()
-    {
-        return (Name is not null ? Name.GetHashCode() : 0);
-    }
+    public override int GetHashCode() => (Name is not null ? Name.GetHashCode() : 0);
 
-    public override string ToString()
-    {
-        return $"{Name}. {Age}";
-    }
+    public override string ToString() => $"{Name}. {Age}";
 
     private sealed class AgeEqualityComparer : IEqualityComparer<Person>
     {
@@ -124,12 +112,12 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
                 return true;
             }
 
-            if (ReferenceEquals(x, null))
+            if (x is null)
             {
                 return false;
             }
 
-            if (ReferenceEquals(y, null))
+            if (y is null)
             {
                 return false;
             }
@@ -142,10 +130,7 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
             return x._age == y._age;
         }
 
-        public int GetHashCode(Person obj)
-        {
-            return obj._age;
-        }
+        public int GetHashCode(Person obj) => obj._age;
     }
 
     private sealed class NameAgeGenderEqualityComparer : IEqualityComparer<Person>
@@ -157,12 +142,12 @@ public class Person : AbstractNotifyPropertyChanged, IEquatable<Person>
                 return true;
             }
 
-            if (ReferenceEquals(x, null))
+            if (x is null)
             {
                 return false;
             }
 
-            if (ReferenceEquals(y, null))
+            if (y is null)
             {
                 return false;
             }

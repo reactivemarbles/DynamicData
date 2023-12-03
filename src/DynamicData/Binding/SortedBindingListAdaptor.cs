@@ -107,9 +107,13 @@ namespace DynamicData.Binding
                         {
                             var previousIndex = _list.IndexOf(change.Previous.Value);
                             if (previousIndex >= 0)
+                            {
                                 _list[previousIndex] = change.Current;
+                            }
                             else
+                            {
                                 _list.Add(change.Current);
+                            }
                         }
 
                         break;
@@ -117,7 +121,10 @@ namespace DynamicData.Binding
                     case ChangeReason.Refresh:
                         var index = _list.IndexOf(change.Current);
                         if (index != -1)
+                        {
                             _list.ResetItem(index);
+                        }
+
                         break;
                 }
             }

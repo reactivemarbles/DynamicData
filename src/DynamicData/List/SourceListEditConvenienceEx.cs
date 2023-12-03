@@ -151,7 +151,7 @@ public static class SourceListEditConvenienceEx
     public static bool Remove<T>(this ISourceList<T> source, T item)
         where T : notnull
     {
-        bool removed = false;
+        var removed = false;
         if (source is null)
         {
             throw new ArgumentNullException(nameof(source));

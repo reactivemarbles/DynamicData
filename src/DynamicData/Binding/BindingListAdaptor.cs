@@ -123,15 +123,23 @@ namespace DynamicData.Binding
                     case ChangeReason.Update:
                         var previousIndex = list.IndexOf(update.Previous.Value);
                         if (previousIndex >= 0)
+                        {
                             list[previousIndex] = update.Current;
+                        }
                         else
+                        {
                             list.Add(update.Current);
+                        }
+
                         break;
 
                     case ChangeReason.Refresh:
                         var index = list.IndexOf(update.Current);
                         if (index != -1)
+                        {
                             list.ResetItem(index);
+                        }
+
                         break;
                 }
             }

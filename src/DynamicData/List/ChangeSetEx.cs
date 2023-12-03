@@ -37,26 +37,12 @@ public static class ChangeSetEx
     /// </summary>
     /// <param name="source">The source.</param>
     /// <returns>The change type.</returns>
-    public static ChangeType GetChangeType(this ListChangeReason source)
+    public static ChangeType GetChangeType(this ListChangeReason source) => source switch
     {
-        switch (source)
-        {
-            case ListChangeReason.Add:
-            case ListChangeReason.Refresh:
-            case ListChangeReason.Replace:
-            case ListChangeReason.Moved:
-            case ListChangeReason.Remove:
-                return ChangeType.Item;
-
-            case ListChangeReason.AddRange:
-            case ListChangeReason.RemoveRange:
-            case ListChangeReason.Clear:
-                return ChangeType.Range;
-
-            default:
-                throw new ArgumentOutOfRangeException(nameof(source));
-        }
-    }
+        ListChangeReason.Add or ListChangeReason.Refresh or ListChangeReason.Replace or ListChangeReason.Moved or ListChangeReason.Remove => ChangeType.Item,
+        ListChangeReason.AddRange or ListChangeReason.RemoveRange or ListChangeReason.Clear => ChangeType.Range,
+        _ => throw new ArgumentOutOfRangeException(nameof(source)),
+    };
 
     /// <summary>
     /// Transforms the change set into a different type using the specified transform function.
@@ -106,7 +92,15 @@ public static class ChangeSetEx
     /// <param name="source">The source.</param>
     /// <returns>An enumerable of changes.</returns>
     public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
-        where T : notnull => new WithoutIndexEnumerator<T>(source);
+        where T : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        return new WithoutIndexEnumerator<T>(source);
+    }
 
     /// <summary>
     /// Returns a flattened source.

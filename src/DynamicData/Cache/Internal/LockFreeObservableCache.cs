@@ -101,11 +101,11 @@ public sealed class LockFreeObservableCache<TObject, TKey> : IObservableCache<TO
 
                 if (predicate != null)
                 {
-                    changes = changes.Filter(predicate, suppressEmptyChangeSets);
+                    return changes.Filter(predicate, suppressEmptyChangeSets);
                 }
                 else if (suppressEmptyChangeSets)
                 {
-                    changes = changes.NotEmpty();
+                    return changes.NotEmpty();
                 }
 
                 return changes;

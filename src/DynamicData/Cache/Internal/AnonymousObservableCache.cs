@@ -13,6 +13,7 @@ internal sealed class AnonymousObservableCache<TObject, TKey> : IObservableCache
     where TObject : notnull
     where TKey : notnull
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed through _cleanUp")]
     private readonly IObservableCache<TObject, TKey> _cache;
     private readonly IDisposable _cleanUp;
 

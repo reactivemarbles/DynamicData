@@ -34,7 +34,7 @@ internal readonly struct UnifiedChange<T>(ListChangeReason reason, T current, Op
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

@@ -70,7 +70,7 @@ internal class TimeExpirer<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>>
                     {
                         var toRemove = autoRemover.KeyValues.Where(kv => kv.Value.ExpireAt <= scheduler.Now.UtcDateTime).ToList();
 
-                        observer.OnNext(toRemove.Select(kv => new KeyValuePair<TKey, TObject>(kv.Key, kv.Value.Value)).ToList());
+                        observer.OnNext(toRemove.ConvertAll(kv => new KeyValuePair<TKey, TObject>(kv.Key, kv.Value.Value)));
                     }
                     catch (Exception ex)
                     {

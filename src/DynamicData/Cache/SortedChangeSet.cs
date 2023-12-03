@@ -14,15 +14,9 @@ internal class SortedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, ISorte
     public static readonly new ISortedChangeSet<TObject, TKey> Empty = new SortedChangeSet<TObject, TKey>();
 
     public SortedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates)
-        : base(updates)
-    {
-        SortedItems = sortedItems;
-    }
+        : base(updates) => SortedItems = sortedItems;
 
-    private SortedChangeSet()
-    {
-        SortedItems = new KeyValueCollection<TObject, TKey>();
-    }
+    private SortedChangeSet() => SortedItems = new KeyValueCollection<TObject, TKey>();
 
     public IKeyValueCollection<TObject, TKey> SortedItems { get; }
 

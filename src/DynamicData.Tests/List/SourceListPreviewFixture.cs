@@ -9,10 +9,7 @@ public class SourceListPreviewFixture : IDisposable
 {
     private readonly ISourceList<int> _source;
 
-    public SourceListPreviewFixture()
-    {
-        _source = new SourceList<int>();
-    }
+    public SourceListPreviewFixture() => _source = new SourceList<int>();
 
     [Fact]
     public void ChangesAreNotYetAppliedDuringPreview()
@@ -24,7 +21,7 @@ public class SourceListPreviewFixture : IDisposable
             _ =>
             {
                 Assert.True(_source.Count == 0);
-                Assert.True(_source.Items.Count() == 0);
+                Assert.True(_source.Items.Any() == false);
             });
 
         // Trigger a change
@@ -55,10 +52,7 @@ public class SourceListPreviewFixture : IDisposable
         aggregator.Dispose();
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void FormNewListFromChanges()
@@ -89,7 +83,7 @@ public class SourceListPreviewFixture : IDisposable
     public void NoChangesAllowedDuringPreview()
     {
         // On preview, try adding an arbitrary item
-        var d = _source.Preview().Subscribe(_ => { Assert.Throws<InvalidOperationException>(() => _source.Add(1)); });
+        var d = _source.Preview().Subscribe(_ => Assert.Throws<InvalidOperationException>(() => _source.Add(1)));
 
         // Trigger a change
         _source.Add(1);

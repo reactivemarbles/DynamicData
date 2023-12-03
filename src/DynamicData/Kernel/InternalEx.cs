@@ -33,7 +33,7 @@ public static class InternalEx
             source.Catch<TSource, TException>(
                 error =>
                 {
-                    TimeSpan? delay = backOffStrategy(error, failureCount);
+                    var delay = backOffStrategy(error, failureCount);
                     if (!delay.HasValue)
                     {
                         return Observable.Throw<TSource>(error);
@@ -97,7 +97,7 @@ public static class InternalEx
 
     internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2)
     {
-        TSwap temp = t1;
+        var temp = t1;
         t1 = t2;
         t2 = temp;
     }

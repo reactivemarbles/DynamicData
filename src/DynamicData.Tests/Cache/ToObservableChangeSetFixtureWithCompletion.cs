@@ -16,13 +16,13 @@ public class ToObservableChangeSetFixtureWithCompletion : IDisposable
 
     private readonly List<Person> _target;
 
-    private bool _hasCompleted = false;
+    private bool _hasCompleted;
 
     public ToObservableChangeSetFixtureWithCompletion()
     {
         _observable = new Subject<Person>();
 
-        _target = new List<Person>();
+        _target = [];
 
         _disposable = _observable.ToObservableChangeSet(p => p.Key).Clone(_target).Subscribe(x => { }, () => _hasCompleted = true);
     }

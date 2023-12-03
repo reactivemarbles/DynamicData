@@ -24,7 +24,7 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
 
     public IComparer<KeyValuePair<TKey, TObject>> Comparer => _comparer;
 
-    public List<KeyValuePair<TKey, TObject>> List { get; private set; } = new List<KeyValuePair<TKey, TObject>>();
+    public List<KeyValuePair<TKey, TObject>> List { get; private set; } = [];
 
     /// <summary>
     /// Dynamic calculation of moved items which produce a result which can be enumerated through in order.
@@ -91,7 +91,7 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
         if (evaluates.Count != 0 && optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
         {
             // reorder entire sequence and do not calculate moves
-            List = List.OrderBy(kv => kv, _comparer).ToList();
+            List = [.. List.OrderBy(kv => kv, _comparer)];
         }
         else
         {
@@ -106,7 +106,7 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
                     continue;
                 }
 
-                int newPosition = GetInsertPositionLinear(List, current);
+                var newPosition = GetInsertPositionLinear(List, current);
 
                 if (old < newPosition)
                 {
@@ -142,7 +142,7 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
     {
         // for the first batch of changes may have arrived before the comparer was set.
         // therefore infer the first batch of changes from the cache
-        List = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
+        List = [.. cache.KeyValues.OrderBy(kv => kv, _comparer)];
         var initialItems = List.Select((t, index) => new Change<TObject, TKey>(ChangeReason.Add, t.Key, t.Value, index));
         return new ChangeSet<TObject, TKey>(initialItems);
     }
@@ -154,18 +154,18 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
         if (optimisations.HasFlag(SortOptimisations.IgnoreEvaluates))
         {
             // reorder entire sequence and do not calculate moves
-            List = List.OrderBy(kv => kv, _comparer).ToList();
+            List = [.. List.OrderBy(kv => kv, _comparer)];
         }
         else
         {
-            int index = -1;
+            var index = -1;
             foreach (var item in List.OrderBy(t => t, _comparer).ToList())
             {
-                KeyValuePair<TKey, TObject> current = item;
+                var current = item;
                 index++;
 
                 // Cannot use binary search as Resort is implicit of a mutable change
-                KeyValuePair<TKey, TObject> existing = List[index];
+                var existing = List[index];
                 var areEqual = EqualityComparer<TKey>.Default.Equals(current.Key, existing.Key);
                 if (areEqual)
                 {
@@ -187,7 +187,7 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
     /// Initialises the specified changes.
     /// </summary>
     /// <param name="cache">The cache.</param>
-    public void Reset(ChangeAwareCache<TObject, TKey> cache) => List = cache.KeyValues.OrderBy(kv => kv, _comparer).ToList();
+    public void Reset(ChangeAwareCache<TObject, TKey> cache) => List = [.. cache.KeyValues.OrderBy(kv => kv, _comparer)];
 
     private int GetCurrentPosition(KeyValuePair<TKey, TObject> item)
     {
@@ -217,7 +217,7 @@ internal sealed class IndexCalculator<TObject, TKey>(KeyValueComparer<TObject, T
 
     private int GetInsertPositionBinary(KeyValuePair<TKey, TObject> item)
     {
-        int index = List.BinarySearch(item, _comparer);
+        var index = List.BinarySearch(item, _comparer);
 
         if (index > 0)
         {

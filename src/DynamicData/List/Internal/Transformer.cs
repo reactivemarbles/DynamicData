@@ -143,7 +143,7 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Remove:
                     {
                         var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
+                        var hasIndex = change.CurrentIndex >= 0;
 
                         if (hasIndex)
                         {
@@ -189,7 +189,7 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Moved:
                     {
                         var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
+                        var hasIndex = change.CurrentIndex >= 0;
                         if (!hasIndex)
                         {
                             throw new UnspecifiedIndexException("Cannot move as an index was not specified");
@@ -214,7 +214,7 @@ internal sealed class Transformer<TSource, TDestination>
 
         public bool Equals(TransformedItemContainer? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -229,7 +229,7 @@ internal sealed class Transformer<TSource, TDestination>
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }

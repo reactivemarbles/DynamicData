@@ -24,7 +24,7 @@ public interface IExtendedList<T> : IList<T>
     /// <param name="collection">The items to insert.</param>
     /// <param name="index">The zero-based index at which the new elements should be inserted.</param>
     /// <exception cref="ArgumentNullException"><paramref name="collection" /> is null.</exception>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <see cref="System.Collections.Generic.List{T}.Count" />.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="index" /> is less than 0.-or-<paramref name="index" /> is greater than <see cref="List{T}.Count" />.</exception>
     void InsertRange(IEnumerable<T> collection, int index);
 
     /// <summary>

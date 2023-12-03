@@ -31,7 +31,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="adaptor">The adaptor.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// adaptor.
@@ -147,7 +147,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable list.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservableList<T> AsObservableList<T>(this ISourceList<T> source)
         where T : notnull
     {
@@ -165,7 +165,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable list.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservableList<T> AsObservableList<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -280,7 +280,7 @@ public static class ObservableListEx
     /// <param name="targetCollection">The target collection.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// targetCollection.
@@ -334,7 +334,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="bindingList">The target binding list.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// targetCollection.
@@ -367,7 +367,7 @@ public static class ObservableListEx
     /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, IScheduler? scheduler = null)
         where T : notnull => BufferIf(source, pauseIfTrueSelector, false, scheduler);
 
@@ -381,7 +381,7 @@ public static class ObservableListEx
     /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IScheduler? scheduler = null)
         where T : notnull
     {
@@ -408,7 +408,7 @@ public static class ObservableListEx
     /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut, IScheduler? scheduler = null)
         where T : notnull => BufferIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
 
@@ -423,7 +423,7 @@ public static class ObservableListEx
     /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, TimeSpan? timeOut, IScheduler? scheduler = null)
         where T : notnull
     {
@@ -516,7 +516,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="target">The target of the clone.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> Clone<T>(this IObservable<IChangeSet<T>> source, IList<T> target)
         where T : notnull
     {
@@ -599,12 +599,14 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>A continuation of the original stream.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
         if (source is null)
+        {
             throw new ArgumentNullException(nameof(source));
+        }
 
         return new DisposeMany<T>(source).Run();
     }
@@ -617,7 +619,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="valueSelector">The transform factory.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
@@ -733,7 +735,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="predicate">The valueSelector.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
         where T : notnull
     {
@@ -758,7 +760,7 @@ public static class ObservableListEx
     /// <param name="predicate">The predicate which indicates which items should be included.</param>
     /// <param name="filterPolicy">Should the filter clear and replace, or calculate a diff-set.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// filterController.</exception>
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
@@ -898,7 +900,7 @@ public static class ObservableListEx
     /// <param name="regrouper">Force the grouping function to recalculate the group value.
     /// For example if you have a time based grouping with values like `Last Minute', 'Last Hour', 'Today' etc regrouper is used to refresh these groupings.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// groupSelector.
@@ -988,7 +990,7 @@ public static class ObservableListEx
     /// <param name="regrouper">Force the grouping function to recalculate the group value.
     /// For example if you have a time based grouping with values like `Last Minute', 'Last Hour', 'Today' etc regrouper is used to refresh these groupings.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// groupSelectorKey.
@@ -1049,7 +1051,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="observableSelector">The observable selector.</param>
     /// <returns>An observable which emits the destination value.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// observableSelector.</exception>
     public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
@@ -1081,6 +1083,11 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
         return source.Connect().MergeChangeSets(comparer: comparer);
     }
 
@@ -1098,6 +1105,11 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
         return source.Connect().MergeChangeSets(equalityComparer, comparer);
     }
 
@@ -1114,7 +1126,10 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return source.MergeChangeSets(comparer: comparer);
     }
@@ -1133,7 +1148,10 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
 
         return source.MergeManyChangeSets(static src => src, equalityComparer, comparer);
     }
@@ -1154,9 +1172,20 @@ public static class ObservableListEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return source.MergeManyChangeSets(observableSelector, equalityComparer: null, comparer: comparer);
     }
@@ -1178,8 +1207,15 @@ public static class ObservableListEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return new MergeManyCacheChangeSets<TObject, TDestination, TDestinationKey>(source, observableSelector, equalityComparer, comparer).Run();
     }
@@ -1190,7 +1226,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> NotEmpty<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1235,7 +1271,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> OnItemRefreshed<TObject>(this IObservable<IChangeSet<TObject>> source, Action<TObject> refreshAction)
         where TObject : notnull
     {
-        Action<TObject> refreshAction2 = refreshAction;
+        var refreshAction2 = refreshAction;
         if (source == null)
         {
             throw new ArgumentNullException(nameof(source));
@@ -1246,13 +1282,9 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(refreshAction));
         }
 
-        return source.Do(delegate(IChangeSet<TObject> changes)
-        {
-            changes.Where((Change<TObject> c) => c.Reason == ListChangeReason.Refresh).ForEach(delegate(Change<TObject> c)
-            {
-                refreshAction2(c.Item.Current);
-            });
-        });
+        return source.Do((IChangeSet<TObject> changes) =>
+            changes.Where((Change<TObject> c) =>
+                c.Reason == ListChangeReason.Refresh).ForEach((Change<TObject> c) => refreshAction2(c.Item.Current)));
     }
 
     /// <summary>
@@ -1263,7 +1295,7 @@ public static class ObservableListEx
     /// <param name="removeAction">The remove action.</param>
     /// <param name="invokeOnUnsubscribe"> Should the remove action be invoked when the subscription is disposed.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// removeAction.
@@ -1394,7 +1426,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="resultSelector">The result selector.</param>
     /// <returns>An observable which emits the destination value.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// resultSelector.
@@ -1421,7 +1453,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the read only collection.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IReadOnlyCollection<T>> QueryWhenChanged<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1474,7 +1506,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// comparer.
@@ -1497,7 +1529,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
@@ -1520,7 +1552,7 @@ public static class ObservableListEx
     /// <param name="comparerChanged">An observable comparer used to change the comparer on which the sorted list i.</param>
     /// <param name="resetThreshold">Since sorting can be slow for large record sets, the reset threshold is used to force the list re-ordered. </param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// comparer.</exception>
     public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions options = SortOptions.None, IObservable<Unit>? resort = null, IObservable<IComparer<T>>? comparerChanged = null, int resetThreshold = 50)
@@ -1549,7 +1581,7 @@ public static class ObservableListEx
     /// <param name="resort">OnNext of this observable causes data to resort. This is required when the value which is sorted on mutable.</param>
     /// <param name="resetThreshold">Since sorting can be slow for large record sets, the reset threshold is used to force the list re-ordered. </param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// comparer.</exception>
     public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IObservable<IComparer<T>> comparerChanged, SortOptions options = SortOptions.None, IObservable<Unit>? resort = null, int resetThreshold = 50)
@@ -1584,7 +1616,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="subscriptionFactory">The subscription function.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// subscriptionFactory.</exception>
     /// <remarks>
@@ -1678,7 +1710,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, IScheduler? scheduler = null)
@@ -1701,7 +1733,7 @@ public static class ObservableListEx
     /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
@@ -1729,7 +1761,7 @@ public static class ObservableListEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, int limitSizeTo, IScheduler? scheduler = null)
@@ -1753,7 +1785,7 @@ public static class ObservableListEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
@@ -1775,7 +1807,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, IScheduler? scheduler = null)
@@ -1790,7 +1822,7 @@ public static class ObservableListEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, int limitSizeTo, IScheduler? scheduler = null)
@@ -1805,7 +1837,7 @@ public static class ObservableListEx
     /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
@@ -1821,7 +1853,7 @@ public static class ObservableListEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
@@ -1895,7 +1927,7 @@ public static class ObservableListEx
     /// <param name="transformFactory">The transform factory.</param>
     /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
@@ -1926,7 +1958,7 @@ public static class ObservableListEx
     /// <param name="transformFactory">The transform function.</param>
     /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
@@ -1958,7 +1990,7 @@ public static class ObservableListEx
     /// <param name="transformFactory">The transform function.</param>
     /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
@@ -1990,7 +2022,7 @@ public static class ObservableListEx
     /// <param name="transformFactory">The transform factory.</param>
     /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
@@ -2021,13 +2053,15 @@ public static class ObservableListEx
     /// <param name="transformFactory">The transform factory.</param>
     /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
     /// </exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
-        this IObservable<IChangeSet<TSource>> source, Func<TSource, Task<TDestination>> transformFactory,
+        this IObservable<IChangeSet<TSource>> source,
+        Func<TSource, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -2054,13 +2088,15 @@ public static class ObservableListEx
     /// <param name="transformFactory">The transform factory.</param>
     /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
     /// </exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
-        this IObservable<IChangeSet<TSource>> source, Func<TSource, int, Task<TDestination>> transformFactory,
+        this IObservable<IChangeSet<TSource>> source,
+        Func<TSource, int, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -2087,13 +2123,15 @@ public static class ObservableListEx
     /// <param name="transformFactory">The transform factory.</param>
     /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
     /// </exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
-        this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, Task<TDestination>> transformFactory,
+        this IObservable<IChangeSet<TSource>> source,
+        Func<TSource, Optional<TDestination>, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -2120,13 +2158,15 @@ public static class ObservableListEx
     /// <param name="transformFactory">The transform factory.</param>
     /// <param name="transformOnRefresh">Should a new transform be applied when a refresh event is received.</param>
     /// <returns>A an observable change set of the transformed object.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
     /// </exception>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination>> TransformAsync<TSource, TDestination>(
-        this IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory,
+        this IObservable<IChangeSet<TSource>> source,
+        Func<TSource, Optional<TDestination>, int, Task<TDestination>> transformFactory,
         bool transformOnRefresh = false)
         where TSource : notnull
         where TDestination : notnull
@@ -2153,7 +2193,7 @@ public static class ObservableListEx
     /// <param name="manySelector">The selector function which selects the enumerable.</param>
     /// <param name="equalityComparer">Used when an item has been replaced to determine whether child items are the same as previous children.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// manySelector.
@@ -2314,7 +2354,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="reasons">The reasons.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentException">Must enter at least 1 reason.</exception>
+    /// <exception cref="ArgumentException">Must enter at least 1 reason.</exception>
     public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
@@ -2344,7 +2384,7 @@ public static class ObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="reasons">The reasons.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentException">Must enter at least 1 reason.</exception>
+    /// <exception cref="ArgumentException">Must enter at least 1 reason.</exception>
     public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {

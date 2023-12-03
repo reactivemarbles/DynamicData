@@ -29,7 +29,7 @@ internal class Group<TObject, TGroup>(TGroup groupKey) : IGroup<TObject, TGroup>
 
     public bool Equals(Group<TObject, TGroup>? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }

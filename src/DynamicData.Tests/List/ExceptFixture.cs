@@ -10,10 +10,7 @@ namespace DynamicData.Tests.List;
 
 public class ExceptFixture : ExceptFixtureBase
 {
-    protected override IObservable<IChangeSet<int>> CreateObservable()
-    {
-        return Source1.Connect().Except(Source2.Connect());
-    }
+    protected override IObservable<IChangeSet<int>> CreateObservable() => Source1.Connect().Except(Source2.Connect());
 }
 
 public class ExceptCollectionFixture : ExceptFixtureBase
@@ -33,6 +30,7 @@ public abstract class ExceptFixtureBase : IDisposable
 
     private readonly ChangeSetAggregator<int> _results;
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2214:Do not call overridable methods in constructors", Justification = "Accepted as part of a test.")]
     protected ExceptFixtureBase()
     {
         Source1 = new SourceList<int>();

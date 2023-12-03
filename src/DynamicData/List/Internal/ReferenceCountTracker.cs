@@ -55,7 +55,7 @@ internal class ReferenceCountTracker<T>
             throw new ArgumentNullException(nameof(item));
         }
 
-        int currentCount = ReferenceCounts[item];
+        var currentCount = ReferenceCounts[item];
 
         if (currentCount == 1)
         {

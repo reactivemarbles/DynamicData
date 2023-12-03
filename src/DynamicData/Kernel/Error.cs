@@ -48,7 +48,7 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     /// <inheritdoc />
     public bool Equals(Error<TObject, TKey>? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -64,7 +64,7 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -82,7 +82,7 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     {
         unchecked
         {
-            int hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
+            var hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
             hashCode = (hashCode * 397) ^ (Value is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Value));
             hashCode = (hashCode * 397) ^ (Exception is not null ? Exception.GetHashCode() : 0);
             return hashCode;

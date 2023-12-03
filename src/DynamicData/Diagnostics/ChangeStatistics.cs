@@ -12,10 +12,7 @@ public class ChangeStatistics : IEquatable<ChangeStatistics>
     /// <summary>
     ///     Initializes a new instance of the <see cref="ChangeStatistics"/> class.
     /// </summary>
-    public ChangeStatistics()
-    {
-        Index = -1;
-    }
+    public ChangeStatistics() => Index = -1;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ChangeStatistics"/> class.
@@ -127,7 +124,7 @@ public class ChangeStatistics : IEquatable<ChangeStatistics>
     /// <inheritdoc />
     public bool Equals(ChangeStatistics? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }

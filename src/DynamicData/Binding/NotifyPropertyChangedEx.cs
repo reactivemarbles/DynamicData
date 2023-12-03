@@ -373,7 +373,7 @@ public static class NotifyPropertyChangedEx
     /// For example when observing Parent.Child.Age, if Child is null the value is unobtainable as Age is a struct and cannot be set to Null.
     /// For an object like Parent.Child.Sibling, sibling is an object so if Child is null, the value null and obtainable and is returned as null.</param>
     /// <returns>A observable which also notifies when the property value changes.</returns>
-    /// <exception cref="System.ArgumentNullException">propertyAccessor.</exception>
+    /// <exception cref="ArgumentNullException">propertyAccessor.</exception>
     public static IObservable<PropertyValue<TObject, TProperty>> WhenPropertyChanged<TObject, TProperty>(this TObject source, Expression<Func<TObject, TProperty>> propertyAccessor, bool notifyOnInitialValue = true, Func<TProperty?>? fallbackValue = null)
         where TObject : INotifyPropertyChanged
     {

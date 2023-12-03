@@ -22,10 +22,7 @@ public class ToObservableOptionalFixture : IDisposable
     private readonly ISourceCache<KeyValuePair, string> _source = new SourceCache<KeyValuePair, string>(kvp => kvp.Key);
     private readonly ChangeSetAggregator<KeyValuePair, string> _results;
 
-    public ToObservableOptionalFixture()
-    {
-        _results = _source.Connect().AsAggregator();
-    }
+    public ToObservableOptionalFixture() => _results = _source.Connect().AsAggregator();
 
     public void Dispose()
     {
@@ -34,10 +31,7 @@ public class ToObservableOptionalFixture : IDisposable
     }
 
     [Fact]
-    public void NullChecks()
-    {
-        Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.ToObservableOptional<KeyValuePair, string>(null!, string.Empty));
-    }
+    public void NullChecks() => Assert.Throws<ArgumentNullException>(() => ObservableCacheEx.ToObservableOptional<KeyValuePair, string>(null!, string.Empty));
 
     [Fact]
     public void AddingToCacheEmitsOptionalSome()
@@ -290,31 +284,25 @@ public class ToObservableOptionalFixture : IDisposable
         receivedError.Should().Be(failSource ? testException : default);
     }
 
-    private static KeyValuePair Create(string key, string value) => new KeyValuePair(key, value);
+    private static KeyValuePair Create(string key, string value) => new(key, value);
 
-    private class KeyValueCompare : IEqualityComparer<KeyValuePair>
+    private class KeyValueCompare(IEqualityComparer<string> stringComparer) : IEqualityComparer<KeyValuePair>
     {
-        private IEqualityComparer<string> _stringComparer;
-        public KeyValueCompare(IEqualityComparer<string> stringComparer) => _stringComparer = stringComparer;
+        private IEqualityComparer<string> _stringComparer = stringComparer;
+
         public bool Equals([DisallowNull] KeyValuePair x, [DisallowNull] KeyValuePair y) => _stringComparer.Equals(x.Value, y.Value);
         public int GetHashCode([DisallowNull] KeyValuePair obj) => throw new NotImplementedException();
     }
 
-    private static KeyValueCompare CaseInsensitiveComparer => new KeyValueCompare(StringComparer.OrdinalIgnoreCase);
+    private static KeyValueCompare CaseInsensitiveComparer => new(StringComparer.OrdinalIgnoreCase);
 
-    private static KeyValueCompare CaseSensitiveComparer => new KeyValueCompare(StringComparer.Ordinal);
+    private static KeyValueCompare CaseSensitiveComparer => new(StringComparer.Ordinal);
 
-    private class KeyValuePair
+    private class KeyValuePair(string key, string value)
     {
-        public KeyValuePair(string key, string value)
-        {
-            Key = key;
-            Value = value;
-        }
+        public string Key { get; } = key;
 
-        public string Key { get; }
-
-        public string Value { get; }
+        public string Value { get; } = value;
     }
 }
 

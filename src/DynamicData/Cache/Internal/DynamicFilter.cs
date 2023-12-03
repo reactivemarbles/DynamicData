@@ -49,7 +49,9 @@ internal class DynamicFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey
 
                 var source = refresher.Merge(dataChanged);
                 if (suppressEmptyChangeSets)
+                {
                     source = source.NotEmpty();
+                }
 
                 return source.SubscribeSafe(observer);
             });

@@ -74,7 +74,7 @@ public class IObservableListBindCacheFixture : IDisposable
 
         person.Age = 60;
 
-        _listNotifications.Messages.Count().Should().Be(2);
+        _listNotifications.Messages.Count.Should().Be(2);
         _listNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
     }
 

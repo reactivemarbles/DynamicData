@@ -7,15 +7,12 @@ public class SelfObservingPerson : IDisposable
 {
     private readonly IDisposable _cleanUp;
 
-    public SelfObservingPerson(IObservable<Person> observable)
-    {
-        _cleanUp = observable.Finally(() => Completed = true).Subscribe(
+    public SelfObservingPerson(IObservable<Person> observable) => _cleanUp = observable.Finally(() => Completed = true).Subscribe(
             p =>
             {
                 Person = p;
                 UpdateCount++;
             });
-    }
 
     public bool Completed { get; private set; }
 
@@ -26,8 +23,5 @@ public class SelfObservingPerson : IDisposable
     /// <summary>
     ///put here the code to dispose all managed and unmanaged resources
     /// </summary>
-    public void Dispose()
-    {
-        _cleanUp.Dispose();
-    }
+    public void Dispose() => _cleanUp.Dispose();
 }

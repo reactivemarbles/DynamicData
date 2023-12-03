@@ -165,7 +165,7 @@ internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Fun
 
         public bool Equals(ItemWithMatch? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -180,7 +180,7 @@ internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Fun
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }

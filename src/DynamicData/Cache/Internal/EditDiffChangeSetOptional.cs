@@ -30,9 +30,9 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optio
                                                                             var changes = (previous.HasValue, current.HasValue) switch
                                                                             {
                                                                                 (true, true) => CreateUpdateChanges(previous.Value, current.Value),
-                                                                                (false, true) => new[] { new Change<TObject, TKey>(ChangeReason.Add, current.Value.Key, current.Value.Object) },
-                                                                                (true, false) => new[] { new Change<TObject, TKey>(ChangeReason.Remove, previous.Value.Key, previous.Value.Object) },
-                                                                                (false, false) => Array.Empty<Change<TObject, TKey>>(),
+                                                                                (false, true) => [new Change<TObject, TKey>(ChangeReason.Add, current.Value.Key, current.Value.Object)],
+                                                                                (true, false) => [new Change<TObject, TKey>(ChangeReason.Remove, previous.Value.Key, previous.Value.Object)],
+                                                                                (false, false) => [],
                                                                             };
 
                                                                             // Save the value for the next round
@@ -43,7 +43,9 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optio
                                                                             {
                                                                                 observer.OnNext(new ChangeSet<TObject, TKey>(changes));
                                                                             }
-                                                                        }, observer.OnError, observer.OnCompleted);
+                                                                        },
+                                                                        observer.OnError,
+                                                                        observer.OnCompleted);
                                                                 });
 
     private Change<TObject, TKey>[] CreateUpdateChanges(in ValueContainer prev, in ValueContainer curr)
@@ -53,18 +55,18 @@ internal sealed class EditDiffChangeSetOptional<TObject, TKey>(IObservable<Optio
             // Key is the same, so Update (unless values are equal)
             if (!_equalityComparer.Equals(prev.Object, curr.Object))
             {
-                return new[] { new Change<TObject, TKey>(ChangeReason.Update, curr.Key, curr.Object, prev.Object) };
+                return [new Change<TObject, TKey>(ChangeReason.Update, curr.Key, curr.Object, prev.Object)];
             }
 
-            return Array.Empty<Change<TObject, TKey>>();
+            return [];
         }
 
         // Key Change means Remove/Add
-        return new[]
-        {
+        return
+        [
             new Change<TObject, TKey>(ChangeReason.Remove, prev.Key, prev.Object),
             new Change<TObject, TKey>(ChangeReason.Add, curr.Key, curr.Object)
-        };
+        ];
     }
 
     private readonly struct ValueContainer(TObject obj, TKey key)

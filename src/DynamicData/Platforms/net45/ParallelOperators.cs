@@ -22,7 +22,7 @@ namespace DynamicData.PLinq
         /// <param name="filter">The filter.</param>
         /// <param name="parallelisationOptions">The parallelisation options.</param>
         /// <returns>An observable which emits a change set.</returns>
-        /// <exception cref="System.ArgumentNullException">source.</exception>
+        /// <exception cref="ArgumentNullException">source.</exception>
         public static IObservable<IChangeSet<TObject, TKey>> Filter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
             where TObject : notnull
             where TKey : notnull
@@ -44,7 +44,7 @@ namespace DynamicData.PLinq
         /// <param name="subscriptionFactory">The subscription function.</param>
         /// <param name="parallelisationOptions">The parallelisation options.</param>
         /// <returns>An observable which emits a change set.</returns>
-        /// <exception cref="System.ArgumentNullException">source
+        /// <exception cref="ArgumentNullException">source
         /// or
         /// subscriptionFactory.</exception>
         /// <remarks>
@@ -81,7 +81,7 @@ namespace DynamicData.PLinq
         /// <param name="subscriptionFactory">The subscription function.</param>
         /// <param name="parallelisationOptions">The parallelisation options.</param>
         /// <returns>An observable which emits a change set.</returns>
-        /// <exception cref="System.ArgumentNullException">source
+        /// <exception cref="ArgumentNullException">source
         /// or
         /// subscriptionFactory.</exception>
         /// <remarks>
@@ -121,7 +121,7 @@ namespace DynamicData.PLinq
         /// <returns>
         /// A transformed update collection.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">source
+        /// <exception cref="ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, ParallelisationOptions parallelisationOptions)
@@ -159,7 +159,7 @@ namespace DynamicData.PLinq
         /// <returns>
         /// A transformed update collection.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">source
+        /// <exception cref="ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, ParallelisationOptions parallelisationOptions)
@@ -186,7 +186,7 @@ namespace DynamicData.PLinq
         /// <returns>
         /// A transformed update collection.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">source
+        /// <exception cref="ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, ParallelisationOptions parallelisationOptions)
@@ -233,7 +233,7 @@ namespace DynamicData.PLinq
         /// <returns>
         /// A transformed update collection.
         /// </returns>
-        /// <exception cref="System.ArgumentNullException">source
+        /// <exception cref="ArgumentNullException">source
         /// or
         /// transformFactory.</exception>
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, ParallelisationOptions parallelisationOptions)

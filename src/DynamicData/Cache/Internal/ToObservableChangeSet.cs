@@ -20,7 +20,8 @@ internal class ToObservableChangeSet<TObject, TKey>(IObservable<IEnumerable<TObj
     private readonly Func<TObject, TKey> _keySelector = keySelector ?? throw new ArgumentNullException(nameof(keySelector));
     private readonly IScheduler _scheduler = scheduler ?? Scheduler.Default;
 
-    public ToObservableChangeSet(IObservable<TObject> source,
+    public ToObservableChangeSet(
+        IObservable<TObject> source,
         Func<TObject, TKey> keySelector,
         Func<TObject, TimeSpan?>? expireAfter,
         int limitSizeTo,
@@ -53,7 +54,10 @@ internal class ToObservableChangeSet<TObject, TKey>(IObservable<IEnumerable<TObj
                                                                         var transformedRemoved = transformed.Connect()
                                                                             .Subscribe(_ =>
                                                                             {
-                                                                                if (transformed.Count <= limitSizeTo) return;
+                                                                                if (transformed.Count <= limitSizeTo)
+                                                                                {
+                                                                                    return;
+                                                                                }
 
                                                                                 // remove oldest items
                                                                                 var itemsToRemove = transformed.KeyValues
@@ -72,7 +76,7 @@ internal class ToObservableChangeSet<TObject, TKey>(IObservable<IEnumerable<TObj
                                                                     // handle time expiration
                                                                     var timeExpiryDisposer = new CompositeDisposable();
 
-                                                                    DateTime Trim(DateTime date, long ticks) => new(date.Ticks - (date.Ticks % ticks), date.Kind);
+                                                                    static DateTime Trim(DateTime date, long ticks) => new(date.Ticks - (date.Ticks % ticks), date.Kind);
 
                                                                     if (expireAfter is not null)
                                                                     {
@@ -82,7 +86,9 @@ internal class ToObservableChangeSet<TObject, TKey>(IObservable<IEnumerable<TObj
                                                                                 var removeAt = expireAfter?.Invoke(t);
 
                                                                                 if (removeAt is null)
+                                                                                {
                                                                                     return (Item: t, ExpireAt: DateTime.MaxValue);
+                                                                                }
 
                                                                                 // get absolute expiry, and round by milliseconds to we can attempt to batch as many items into a single group
                                                                                 var expireTime = Trim(_scheduler.Now.UtcDateTime.Add(removeAt.Value), TimeSpan.TicksPerMillisecond);

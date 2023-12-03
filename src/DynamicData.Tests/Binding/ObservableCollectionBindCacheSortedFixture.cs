@@ -17,11 +17,11 @@ public class ObservableCollectionBindCacheSortedFixture : IDisposable
 {
     private readonly IDisposable _binder;
 
-    private readonly ObservableCollectionExtended<Person> _collection = new ObservableCollectionExtended<Person>();
+    private readonly ObservableCollectionExtended<Person> _collection = new();
 
     private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name);
 
-    private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+    private readonly RandomPersonGenerator _generator = new();
 
     private readonly ISourceCache<Person, string> _source;
 

@@ -22,7 +22,7 @@ namespace DynamicData.Tests.Binding
 
         private readonly IComparer<Person> _comparer = SortExpressionComparer<Person>.Ascending(p => p.Name);
 
-        private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+        private readonly RandomPersonGenerator _generator = new();
 
         private readonly ISourceCache<Person, string> _source;
 

@@ -20,7 +20,7 @@ public static class ListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// items.
@@ -96,7 +96,7 @@ public static class ListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// items.
@@ -209,13 +209,13 @@ public static class ListEx
             throw new ArgumentNullException(nameof(comparer));
         }
 
-        int lower = 0;
-        int upper = list.Count - 1;
+        var lower = 0;
+        var upper = list.Count - 1;
 
         while (lower <= upper)
         {
-            int middle = lower + ((upper - lower) / 2);
-            int comparisonResult = comparer(value, list[middle]);
+            var middle = lower + ((upper - lower) / 2);
+            var comparisonResult = comparer(value, list[middle]);
             if (comparisonResult < 0)
             {
                 upper = middle - 1;
@@ -239,7 +239,7 @@ public static class ListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="changes">The changes.</param>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// changes.
@@ -254,7 +254,7 @@ public static class ListEx
     /// <param name="source">The source.</param>
     /// <param name="changes">The changes.</param>
     /// <param name="equalityComparer">An equality comparer to match items in the changes.</param>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// changes.
@@ -269,7 +269,7 @@ public static class ListEx
     /// <param name="source">The source.</param>
     /// <param name="changes">The changes.</param>
     /// <param name="equalityComparer">An equality comparer to match items in the changes.</param>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// changes.
@@ -322,7 +322,7 @@ public static class ListEx
             throw new ArgumentNullException(nameof(equalityComparer));
         }
 
-        int i = 0;
+        var i = 0;
         foreach (var candidate in source)
         {
             if (equalityComparer.Equals(item, candidate))
@@ -357,7 +357,7 @@ public static class ListEx
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// items.
@@ -429,7 +429,7 @@ public static class ListEx
     /// <param name="source">The source.</param>
     /// <param name="original">The original.</param>
     /// <param name="replaceWith">The value to replace with.</param>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// items.</exception>
     public static void Replace<T>(this IList<T> source, T original, T replaceWith)
@@ -466,7 +466,7 @@ public static class ListEx
     /// <param name="original">The item which is to be replaced. If not in the list and argument exception will be thrown.</param>
     /// <param name="replaceWith">The new item.</param>
     /// <param name="comparer">The equality comparer to be used to find the original item in the list.</param>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// items.</exception>
     public static void Replace<T>(this IList<T> source, T original, T replaceWith, IEqualityComparer<T> comparer)
@@ -658,14 +658,14 @@ public static class ListEx
             case ListChangeReason.Remove:
                 {
                     var change = item.Item;
-                    bool hasIndex = change.CurrentIndex >= 0;
+                    var hasIndex = change.CurrentIndex >= 0;
                     if (hasIndex)
                     {
                         source.RemoveAt(change.CurrentIndex);
                     }
                     else
                     {
-                        int index = source.IndexOf(change.Current, equalityComparer);
+                        var index = source.IndexOf(change.Current, equalityComparer);
                         if (index > -1)
                         {
                             source.RemoveAt(index);
@@ -695,7 +695,7 @@ public static class ListEx
             case ListChangeReason.Moved:
                 {
                     var change = item.Item;
-                    bool hasIndex = change.CurrentIndex >= 0;
+                    var hasIndex = change.CurrentIndex >= 0;
                     if (!hasIndex)
                     {
                         throw new UnspecifiedIndexException("Cannot move as an index was not specified");
@@ -728,7 +728,7 @@ public static class ListEx
     /// <param name="source">The source.</param>
     /// <param name="index">The index.</param>
     /// <param name="count">The count.</param>
-    /// <exception cref="System.NotSupportedException">Cannot remove range.</exception>
+    /// <exception cref="NotSupportedException">Cannot remove range.</exception>
     private static void RemoveRange<T>(this IList<T> source, int index, int count)
     {
         if (source is null)

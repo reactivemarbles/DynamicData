@@ -35,7 +35,10 @@ internal sealed class DisposeMany<T>
                             {
                                 case ListChangeReason.Clear:
                                     foreach (var item in cachedItems)
+                                    {
                                         (item as IDisposable)?.Dispose();
+                                    }
+
                                     break;
 
                                 case ListChangeReason.Remove:
@@ -44,12 +47,18 @@ internal sealed class DisposeMany<T>
 
                                 case ListChangeReason.RemoveRange:
                                     foreach (var item in change.Range)
+                                    {
                                         (item as IDisposable)?.Dispose();
+                                    }
+
                                     break;
 
                                 case ListChangeReason.Replace:
                                     if (change.Item.Previous.HasValue)
+                                    {
                                         (change.Item.Previous.Value as IDisposable)?.Dispose();
+                                    }
+
                                     break;
                             }
                         }
@@ -74,14 +83,18 @@ internal sealed class DisposeMany<T>
                 sourceSubscription.Dispose();
 
                 lock (cachedItems)
+                {
                     ProcessFinalization(cachedItems);
+                }
             });
         });
 
     private static void ProcessFinalization(List<T> cachedItems)
     {
         foreach (var item in cachedItems)
+        {
             (item as IDisposable)?.Dispose();
+        }
 
         cachedItems.Clear();
     }

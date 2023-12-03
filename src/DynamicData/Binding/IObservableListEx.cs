@@ -22,7 +22,7 @@ public static class IObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="observableList">The output observable list.</param>
     /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject>> BindToObservableList<TObject>(this IObservable<IChangeSet<TObject>> source, out IObservableList<TObject> observableList)
         where TObject : notnull
     {
@@ -53,7 +53,7 @@ public static class IObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="observableList">The observable list which is the output.</param>
     /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out IObservableList<TObject> observableList)
         where TObject : notnull
         where TKey : notnull
@@ -85,7 +85,7 @@ public static class IObservableListEx
     /// <param name="source">The source.</param>
     /// <param name="observableList">The output observable list.</param>
     /// <returns>The <paramref name="source"/> change set for continued chaining.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<ISortedChangeSet<TObject, TKey>> BindToObservableList<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out IObservableList<TObject> observableList)
         where TObject : notnull
         where TKey : notnull

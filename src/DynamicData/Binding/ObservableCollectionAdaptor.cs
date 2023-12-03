@@ -17,7 +17,7 @@ namespace DynamicData.Binding;
 /// </remarks>
 /// <param name="collection">The collection.</param>
 /// <param name="refreshThreshold">The refresh threshold.</param>
-/// <exception cref="System.ArgumentNullException">collection.</exception>
+/// <exception cref="ArgumentNullException">collection.</exception>
 public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection, int refreshThreshold = 25) : IChangeSetAdaptor<T>
     where T : notnull
 {

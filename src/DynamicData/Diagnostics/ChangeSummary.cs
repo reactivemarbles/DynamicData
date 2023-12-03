@@ -58,7 +58,7 @@ public class ChangeSummary
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -76,7 +76,7 @@ public class ChangeSummary
     {
         unchecked
         {
-            int hashCode = _index;
+            var hashCode = _index;
             hashCode = (hashCode * 397) ^ Latest.GetHashCode();
             hashCode = (hashCode * 397) ^ Overall.GetHashCode();
             return hashCode;

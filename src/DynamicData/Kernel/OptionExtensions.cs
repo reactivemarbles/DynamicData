@@ -17,8 +17,8 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="converter">The converter.</param>
     /// <returns>The converted value.</returns>
-    /// <exception cref="System.ArgumentNullException">converter.</exception>
-    public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, TDestination> converter)
+    /// <exception cref="ArgumentNullException">converter.</exception>
+    public static Optional<TDestination> Convert<TSource, TDestination>(this in Optional<TSource> source, Func<TSource, TDestination> converter)
         where TSource : notnull
         where TDestination : notnull
     {
@@ -38,8 +38,8 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="converter">The converter that returns an optional value.</param>
     /// <returns>The converted value.</returns>
-    /// <exception cref="System.ArgumentNullException">converter.</exception>
-    public static Optional<TDestination> Convert<TSource, TDestination>(this Optional<TSource> source, Func<TSource, Optional<TDestination>> converter)
+    /// <exception cref="ArgumentNullException">converter.</exception>
+    public static Optional<TDestination> Convert<TSource, TDestination>(this in Optional<TSource> source, Func<TSource, Optional<TDestination>> converter)
         where TSource : notnull
         where TDestination : notnull
     {
@@ -60,12 +60,12 @@ public static class OptionExtensions
     /// <param name="converter">The converter.</param>
     /// <param name="fallbackConverter">The fallback converter.</param>
     /// <returns>The destination value.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// converter
     /// or
     /// fallbackConverter.
     /// </exception>
-    public static TDestination? ConvertOr<TSource, TDestination>(this Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
+    public static TDestination? ConvertOr<TSource, TDestination>(this in Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
         where TSource : notnull
     {
         if (converter is null)
@@ -88,12 +88,12 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="fallbackOperation">The fallback operation.</param>
     /// <returns>The original value or the result of the fallback operation.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// converter
     /// or
     /// fallbackOperation.
     /// </exception>
-    public static Optional<T> OrElse<T>(this Optional<T> source, Func<Optional<T>> fallbackOperation)
+    public static Optional<T> OrElse<T>(this in Optional<T> source, Func<Optional<T>> fallbackOperation)
         where T : notnull
     {
         if (fallbackOperation is null)
@@ -121,7 +121,12 @@ public static class OptionExtensions
             throw new ArgumentNullException(nameof(source));
         }
 
-        foreach (T item in source)
+        if (selector is null)
+        {
+            throw new ArgumentNullException(nameof(selector));
+        }
+
+        foreach (var item in source)
         {
             if (selector(item))
             {
@@ -139,7 +144,7 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="action">The action.</param>
     /// <returns>The optional else extension.</returns>
-    public static OptionElse IfHasValue<T>(this Optional<T> source, Action<T> action)
+    public static OptionElse IfHasValue<T>(this in Optional<T> source, Action<T> action)
         where T : notnull
     {
         if (!source.HasValue || source.Value is null)
@@ -203,7 +208,7 @@ public static class OptionExtensions
             throw new ArgumentNullException(nameof(source));
         }
 
-        bool result = source.TryGetValue(key, out var contained);
+        var result = source.TryGetValue(key, out var contained);
         return result ? contained : Optional.None<TValue>();
     }
 
@@ -252,8 +257,8 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="valueSelector">The value selector.</param>
     /// <returns>If the value or a provided default.</returns>
-    /// <exception cref="System.ArgumentNullException">valueSelector.</exception>
-    public static T ValueOr<T>(this Optional<T> source, Func<T> valueSelector)
+    /// <exception cref="ArgumentNullException">valueSelector.</exception>
+    public static T ValueOr<T>(this in Optional<T> source, Func<T> valueSelector)
         where T : notnull
     {
         if (valueSelector is null)
@@ -270,7 +275,7 @@ public static class OptionExtensions
     /// <typeparam name="T">The type of the item.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>The value or default.</returns>
-    public static T? ValueOrDefault<T>(this Optional<T> source)
+    public static T? ValueOrDefault<T>(this in Optional<T> source)
         where T : notnull
     {
         if (source.HasValue)
@@ -288,8 +293,8 @@ public static class OptionExtensions
     /// <param name="source">The source.</param>
     /// <param name="exceptionGenerator">The exception generator.</param>
     /// <returns>The value.</returns>
-    /// <exception cref="System.ArgumentNullException">exceptionGenerator.</exception>
-    public static T ValueOrThrow<T>(this Optional<T> source, Func<Exception> exceptionGenerator)
+    /// <exception cref="ArgumentNullException">exceptionGenerator.</exception>
+    public static T ValueOrThrow<T>(this in Optional<T> source, Func<Exception> exceptionGenerator)
         where T : notnull
     {
         if (exceptionGenerator is null)

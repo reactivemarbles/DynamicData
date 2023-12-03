@@ -78,10 +78,7 @@ public class TransformWithInlineUpdateFixture
 
     private class TransformWithInlineUpdateFixtureStub : IDisposable
     {
-        public TransformWithInlineUpdateFixtureStub()
-        {
-            Results = new ChangeSetAggregator<Person, string>(Source.Connect().TransformWithInlineUpdate(TransformFactory, UpdateAction));
-        }
+        public TransformWithInlineUpdateFixtureStub() => Results = new ChangeSetAggregator<Person, string>(Source.Connect().TransformWithInlineUpdate(TransformFactory, UpdateAction));
 
         public ChangeSetAggregator<Person, string> Results { get; }
 

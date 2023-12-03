@@ -43,10 +43,7 @@ namespace DynamicData.PLinq
             private readonly ParallelisationOptions _parallelisationOptions;
 
             public PLinqFilteredUpdater(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
-                : base(new ChangeAwareCache<TObject, TKey>(), filter)
-            {
-                _parallelisationOptions = parallelisationOptions;
-            }
+                : base(new ChangeAwareCache<TObject, TKey>(), filter) => _parallelisationOptions = parallelisationOptions;
 
             protected override IEnumerable<UpdateWithFilter> GetChangesWithFilter(ChangeSet<TObject, TKey> updates)
             {

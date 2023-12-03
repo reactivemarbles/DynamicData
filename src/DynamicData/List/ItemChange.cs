@@ -112,7 +112,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// </returns>
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

@@ -27,9 +27,8 @@ internal class ToObservableChangeSet<T>(IObservable<IEnumerable<T>> source, Func
 
                 // load local data source with current items
                 var populator = source.Synchronize(locker)
-                    .Subscribe(items =>
-                    {
-                        dataSource.Edit(innerList =>
+                    .Subscribe(
+                        items => dataSource.Edit(innerList =>
                         {
                             innerList.AddRange(items);
 
@@ -39,14 +38,13 @@ internal class ToObservableChangeSet<T>(IObservable<IEnumerable<T>> source, Func
                                 var toRemove = innerList.Count - limitSizeTo;
                                 innerList.RemoveRange(0, toRemove);
                             }
-                        });
-
-                    }, observer.OnError);
+                        }),
+                        observer.OnError);
 
                 // handle time expiration
                 var timeExpiryDisposer = new CompositeDisposable();
 
-                DateTime Trim(DateTime date, long ticks) => new(date.Ticks - (date.Ticks % ticks), date.Kind);
+                static DateTime Trim(DateTime date, long ticks) => new(date.Ticks - (date.Ticks % ticks), date.Kind);
 
                 if (expireAfter is not null)
                 {
@@ -56,7 +54,9 @@ internal class ToObservableChangeSet<T>(IObservable<IEnumerable<T>> source, Func
                             var removeAt = expireAfter?.Invoke(t);
 
                             if (removeAt is null)
+                            {
                                 return (Item: t, ExpireAt: DateTime.MaxValue);
+                            }
 
                             // get absolute expiry, and round by milliseconds to we can attempt to batch as many items into a single group
                             var expireTime = Trim(_scheduler.Now.UtcDateTime.Add(removeAt.Value), TimeSpan.TicksPerMillisecond);
@@ -67,10 +67,7 @@ internal class ToObservableChangeSet<T>(IObservable<IEnumerable<T>> source, Func
                         .GroupWithImmutableState(ei => ei.ExpireAt)
                         .MergeMany(grouping => Observable.Timer(grouping.Key, _scheduler).Select(_ => grouping.Items.Select(x => x.Item).ToArray()))
                         .Synchronize(locker)
-                        .Subscribe(items =>
-                        {
-                            dataSource.RemoveMany(items);
-                        });
+                        .Subscribe(items => dataSource.RemoveMany(items));
 
                     timeExpiryDisposer.Add(expiry);
                 }

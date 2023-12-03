@@ -25,7 +25,7 @@ public static class ObservableCacheAlias
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
@@ -63,7 +63,7 @@ public static class ObservableCacheAlias
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -83,7 +83,7 @@ public static class ObservableCacheAlias
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Unit> forceTransform)
@@ -103,7 +103,7 @@ public static class ObservableCacheAlias
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Select<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Func<TSource, bool>>? forceTransform = null)
@@ -157,7 +157,7 @@ public static class ObservableCacheAlias
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
@@ -204,7 +204,7 @@ public static class ObservableCacheAlias
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, bool>>? forceTransform = null)
@@ -246,7 +246,7 @@ public static class ObservableCacheAlias
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -288,7 +288,7 @@ public static class ObservableCacheAlias
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> SelectSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)

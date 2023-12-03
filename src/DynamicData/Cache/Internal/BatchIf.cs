@@ -76,17 +76,14 @@ internal sealed class BatchIf<TObject, TKey>(IObservable<IChangeSet<TObject, TKe
 
                             ResumeAction();
                         }
-                        else
+                        else if (timeOut.HasValue)
                         {
-                            if (timeOut.HasValue)
-                            {
-                                timeoutDisposer.Disposable = Observable.Timer(timeOut.Value, _scheduler).Synchronize(locker).Subscribe(
-                                    _ =>
-                                    {
-                                        paused = false;
-                                        ResumeAction();
-                                    });
-                            }
+                            timeoutDisposer.Disposable = Observable.Timer(timeOut.Value, _scheduler).Synchronize(locker).Subscribe(
+                                _ =>
+                                {
+                                    paused = false;
+                                    ResumeAction();
+                                });
                         }
                     });
 

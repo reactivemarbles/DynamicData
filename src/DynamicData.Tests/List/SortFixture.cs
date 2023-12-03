@@ -41,14 +41,9 @@ public class SortChangedFixture
     }
 
 
-    private class ListItem : IComparable<ListItem>
+    private class ListItem(int number) : IComparable<ListItem>
     {
-        public int Number { get; }
-
-        public ListItem(int number)
-        {
-            Number = number;
-        }
+        public int Number { get; } = number;
 
         public int CompareTo(ListItem? other) => DefaultComparer.Compare(this, other);
             

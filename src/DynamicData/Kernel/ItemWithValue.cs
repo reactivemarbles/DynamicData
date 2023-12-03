@@ -59,7 +59,7 @@ public readonly struct ItemWithValue<TObject, TValue>(TObject item, TValue value
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

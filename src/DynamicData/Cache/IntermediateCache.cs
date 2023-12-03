@@ -25,7 +25,7 @@ public sealed class IntermediateCache<TObject, TKey> : IIntermediateCache<TObjec
     /// Initializes a new instance of the <see cref="IntermediateCache{TObject, TKey}"/> class.
     /// </summary>
     /// <param name="source">The source.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public IntermediateCache(IObservable<IChangeSet<TObject, TKey>> source)
     {
         if (source is null)
@@ -39,10 +39,7 @@ public sealed class IntermediateCache<TObject, TKey> : IIntermediateCache<TObjec
     /// <summary>
     /// Initializes a new instance of the <see cref="IntermediateCache{TObject, TKey}"/> class.
     /// </summary>
-    public IntermediateCache()
-    {
-        _innerCache = new ObservableCache<TObject, TKey>();
-    }
+    public IntermediateCache() => _innerCache = new ObservableCache<TObject, TKey>();
 
     /// <inheritdoc />
     public int Count => _innerCache.Count;

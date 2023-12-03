@@ -36,7 +36,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <param name="current">The current.</param>
     /// <param name="currentIndex">The CurrentIndex.</param>
     /// <param name="previousIndex">CurrentIndex of the previous.</param>
-    /// <exception cref="System.ArgumentException">
+    /// <exception cref="ArgumentException">
     /// CurrentIndex must be greater than or equal to zero
     /// or
     /// PreviousIndex must be greater than or equal to zero.
@@ -71,7 +71,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <param name="previous">The previous.</param>
     /// <param name="currentIndex">Value of the current.</param>
     /// <param name="previousIndex">Value of the previous.</param>
-    /// <exception cref="System.ArgumentException">
+    /// <exception cref="ArgumentException">
     /// For ChangeReason.Add, a previous value cannot be specified
     /// or
     /// For ChangeReason.Change, must supply previous value.
@@ -157,7 +157,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

@@ -27,7 +27,7 @@ internal sealed class ManagedGroup<TObject, TKey, TGroupKey>(TGroupKey groupKey)
     /// <param name="obj">The <see cref="object"/> to compare with the current <see cref="object"/>. </param>
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

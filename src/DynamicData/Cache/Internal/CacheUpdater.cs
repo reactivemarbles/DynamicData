@@ -41,8 +41,15 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void AddOrUpdate(IEnumerable<TObject> items)
     {
-        if (items is null) throw new ArgumentNullException(nameof(items));
-        if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
+        if (items is null)
+        {
+            throw new ArgumentNullException(nameof(items));
+        }
+
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
+        }
 
         if (items is IList<TObject> list)
         {
@@ -63,9 +70,20 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void AddOrUpdate(IEnumerable<TObject> items, IEqualityComparer<TObject> comparer)
     {
-        if (items is null) throw new ArgumentNullException(nameof(items));
-        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
-        if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
+        if (items is null)
+        {
+            throw new ArgumentNullException(nameof(items));
+        }
+
+        if (comparer is null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
+
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
+        }
 
         void AddOrUpdateImpl(TObject item)
         {
@@ -74,7 +92,10 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
             if (oldItem.HasValue)
             {
-                if (comparer.Equals(oldItem.Value, item)) return;
+                if (comparer.Equals(oldItem.Value, item))
+                {
+                    return;
+                }
 
                 _cache.AddOrUpdate(item, key);
             }
@@ -88,12 +109,16 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
         {
             // zero allocation enumerator
             foreach (var item in EnumerableIList.Create(list))
+            {
                 AddOrUpdateImpl(item);
+            }
         }
         else
         {
             foreach (var item in items)
+            {
                 AddOrUpdateImpl(item);
+            }
         }
     }
 

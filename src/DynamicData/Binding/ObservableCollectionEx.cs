@@ -28,7 +28,7 @@ public static class ObservableCollectionEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ObservableCollection<T> source)
         where T : notnull
     {
@@ -49,7 +49,7 @@ public static class ObservableCollectionEx
     /// <param name="source">The source.</param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
@@ -76,7 +76,7 @@ public static class ObservableCollectionEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReadOnlyObservableCollection<T> source)
         where T : notnull
     {
@@ -97,7 +97,7 @@ public static class ObservableCollectionEx
     /// <param name="source">The source.</param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ReadOnlyObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
@@ -125,7 +125,7 @@ public static class ObservableCollectionEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1146:Use conditional access.", Justification = "net 7.0 has error when conditional access is used.")]
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
         where TCollection : INotifyCollectionChanged, IEnumerable<T>

@@ -17,7 +17,7 @@ public static class ObservableListAlias
     /// <param name="source">The source.</param>
     /// <param name="transformFactory">The transform factory.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// valueSelector.
@@ -72,7 +72,7 @@ public static class ObservableListAlias
     /// <param name="source">The source.</param>
     /// <param name="predicate">The valueSelector.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
         where T : notnull
     {
@@ -96,7 +96,7 @@ public static class ObservableListAlias
     /// <param name="source">The source.</param>
     /// <param name="predicate">The predict for deciding on items to filter.</param>
     /// <returns>An observable which emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// filterController.</exception>
     public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate)

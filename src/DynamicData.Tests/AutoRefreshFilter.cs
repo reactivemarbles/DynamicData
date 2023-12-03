@@ -150,19 +150,13 @@ public class AutoRefreshFilter
     }
 }
 
-public class Item : INotifyPropertyChanged
+public class Item(string name) : INotifyPropertyChanged
 {
-    private string _name;
-
-    public Item(string name)
-    {
-        Id = Guid.NewGuid();
-        _name = name;
-    }
+    private string _name = name;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public Guid Id { get; }
+    public Guid Id { get; } = Guid.NewGuid();
 
     public string Name
     {

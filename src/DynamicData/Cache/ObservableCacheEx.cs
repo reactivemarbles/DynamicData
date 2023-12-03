@@ -22,7 +22,7 @@ namespace DynamicData;
 /// <summary>
 /// Extensions for dynamic data.
 /// </summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "SA1137: Avoid different indentations", Justification = "Deliberate")]
+[SuppressMessage("Design", "SA1137: Avoid different indentations", Justification = "Deliberate")]
 public static class ObservableCacheEx
 {
     private const int DefaultSortResetThreshold = 100;
@@ -36,7 +36,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="adaptor">The adaptor.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// destination.
@@ -66,7 +66,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="adaptor">The adaptor.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// destination.
@@ -95,7 +95,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="item">The item.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         where TObject : notnull
         where TKey : notnull
@@ -116,7 +116,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="item">The item.</param>
     /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item, IEqualityComparer<TObject> equalityComparer)
         where TObject : notnull
         where TKey : notnull
@@ -138,7 +138,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
         where TKey : notnull
@@ -161,7 +161,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
     /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void AddOrUpdate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items, IEqualityComparer<TObject> equalityComparer)
         where TObject : notnull
         where TKey : notnull
@@ -182,7 +182,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source cache.</param>
     /// <param name="item">The item to add or update.</param>
     /// <param name="key">The key to add or update.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void AddOrUpdate<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TObject item, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -209,7 +209,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source or others.</exception>
+    /// <exception cref="ArgumentNullException">source or others.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> And<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params IObservable<IChangeSet<TObject, TKey>>[] others)
         where TObject : notnull
         where TKey : notnull
@@ -234,7 +234,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// others.
@@ -318,7 +318,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable cache.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservableCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -339,7 +339,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="applyLocking">if set to <c>true</c> all methods are synchronised. There is no need to apply locking when the consumer can be sure the read / write operations are already synchronised.</param>
     /// <returns>An observable cache.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservableCache<TObject, TKey> AsObservableCache<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, bool applyLocking = true)
         where TObject : notnull
         where TKey : notnull
@@ -477,7 +477,7 @@ public static class ObservableCacheEx
     /// <param name="timeSpan">The time span.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// scheduler.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Batch<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TimeSpan timeSpan, IScheduler? scheduler = null)
@@ -502,7 +502,7 @@ public static class ObservableCacheEx
     /// <param name="pauseIfTrueSelector">When true, observable begins to buffer and when false, window closes and buffered result if notified.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, scheduler);
@@ -518,7 +518,7 @@ public static class ObservableCacheEx
     /// <param name="initialPauseState">if set to <c>true</c> [initial pause state].</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, scheduler: scheduler).Run();
@@ -534,7 +534,7 @@ public static class ObservableCacheEx
     /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long. On completion buffering will cease.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, TimeSpan? timeOut = null, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => BatchIf(source, pauseIfTrueSelector, false, timeOut, scheduler);
@@ -551,7 +551,7 @@ public static class ObservableCacheEx
     /// <param name="timeOut">Specify a time to ensure the buffer window does not stay open for too long. On completion buffering will cease.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, TimeSpan? timeOut = null, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull
@@ -581,7 +581,7 @@ public static class ObservableCacheEx
     /// <param name="timer">Specify a time observable. The buffer will be emptied each time the timer produces a value and when it completes. On completion buffering will cease.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> BatchIf<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState = false, IObservable<Unit>? timer = null, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull => new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, null, initialPauseState, timer, scheduler).Run();
@@ -595,7 +595,7 @@ public static class ObservableCacheEx
     /// <param name="destination">The destination.</param>
     /// <param name="refreshThreshold">The number of changes before a reset notification is triggered.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, int refreshThreshold = 25)
         where TObject : notnull
         where TKey : notnull
@@ -622,7 +622,7 @@ public static class ObservableCacheEx
     /// <param name="destination">The destination.</param>
     /// <param name="updater">The updater.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, IObservableCollectionAdaptor<TObject, TKey> updater)
         where TObject : notnull
         where TKey : notnull
@@ -663,7 +663,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="destination">The destination.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination)
         where TObject : notnull
         where TKey : notnull
@@ -691,7 +691,7 @@ public static class ObservableCacheEx
     /// <param name="destination">The destination.</param>
     /// <param name="updater">The updater.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, ISortedObservableCollectionAdaptor<TObject, TKey> updater)
         where TObject : notnull
         where TKey : notnull
@@ -735,7 +735,7 @@ public static class ObservableCacheEx
     /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
     /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, bool useReplaceForUpdates = true, ISortedObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
         where TObject : notnull
         where TKey : notnull
@@ -763,7 +763,7 @@ public static class ObservableCacheEx
     /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
     /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, bool useReplaceForUpdates = false, IObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
         where TObject : notnull
         where TKey : notnull
@@ -791,7 +791,7 @@ public static class ObservableCacheEx
     /// <param name="bindingList">The target binding list.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// targetCollection.
@@ -826,7 +826,7 @@ public static class ObservableCacheEx
     /// <param name="bindingList">The target binding list.</param>
     /// <param name="resetThreshold">The reset threshold.</param>
     /// <returns>An observable which will emit change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// targetCollection.
@@ -933,7 +933,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="keySelector">The key selector eg. (key, item) => newKey.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TDestinationKey>> ChangeKey<TObject, TSourceKey, TDestinationKey>(this IObservable<IChangeSet<TObject, TSourceKey>> source, Func<TSourceKey, TObject, TDestinationKey> keySelector)
         where TObject : notnull
         where TSourceKey : notnull
@@ -963,7 +963,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Clear<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -982,7 +982,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Clear<TObject, TKey>(this IIntermediateCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -1001,7 +1001,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Clear<TObject, TKey>(this LockFreeObservableCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -1149,7 +1149,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>A continuation of the original stream.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> DisposeMany<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
@@ -1174,7 +1174,7 @@ public static class ObservableCacheEx
     /// <remarks>
     /// Due to it's nature only adds or removes can be returned.
     /// </remarks>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IDistinctChangeSet<TValue>> DistinctValues<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TValue> valueSelector)
         where TObject : notnull
         where TKey : notnull
@@ -1202,7 +1202,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="allItems">The items to add, update or delete.</param>
     /// <param name="equalityComparer">The equality comparer used to determine whether a new item is the same as an existing cached item.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void EditDiff<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> allItems, IEqualityComparer<TObject> equalityComparer)
         where TObject : notnull
         where TKey : notnull
@@ -1234,7 +1234,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="allItems">The items to compare and add, update or delete.</param>
     /// <param name="areItemsEqual">Expression to determine whether an item's value is equal to the old value (current, previous) => current.Version == previous.Version.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void EditDiff<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> allItems, Func<TObject, TObject, bool> areItemsEqual)
         where TObject : notnull
         where TKey : notnull
@@ -1267,7 +1267,7 @@ public static class ObservableCacheEx
     /// <param name="keySelector">Key Selection Function for the ChangeSet.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to use for comparing values.</param>
     /// <returns>An observable cache.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -1294,7 +1294,7 @@ public static class ObservableCacheEx
     /// <param name="keySelector">Key Selection Function for the ChangeSet.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to use for comparing values.</param>
     /// <returns>An observable changeset.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> EditDiff<TObject, TKey>(this IObservable<Optional<TObject>> source, Func<TObject, TKey> keySelector, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -1319,7 +1319,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="item">The item.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     [Obsolete(Constants.EvaluateIsDead)]
     public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         where TObject : notnull
@@ -1340,7 +1340,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     [Obsolete(Constants.EvaluateIsDead)]
     public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
@@ -1360,7 +1360,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     [Obsolete(Constants.EvaluateIsDead)]
     public static void Evaluate<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         where TObject : notnull
@@ -1383,7 +1383,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// others.
@@ -1413,7 +1413,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="sources">The sources.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// others.
@@ -1499,7 +1499,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="timeSelector">The time selector.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// timeSelector.
@@ -1518,7 +1518,7 @@ public static class ObservableCacheEx
     /// <param name="timeSelector">The time selector.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// timeSelector.
@@ -1552,7 +1552,7 @@ public static class ObservableCacheEx
     /// This will result in a loss of accuracy of the time which the item is expired but is less computationally expensive.
     /// </param>
     /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval)
@@ -1572,7 +1572,7 @@ public static class ObservableCacheEx
     /// </param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ExpireAfter<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? pollingInterval, IScheduler scheduler)
@@ -1602,7 +1602,7 @@ public static class ObservableCacheEx
     /// <param name="timeSelector">The time selector.  Return null if the item should never be removed.</param>
     /// <param name="scheduler">The scheduler to perform the work on.</param>
     /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, IScheduler? scheduler = null)
@@ -1621,7 +1621,7 @@ public static class ObservableCacheEx
     /// it may be worth setting the interval .
     /// </param>
     /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ExpireAfter<TObject, TKey>(this ISourceCache<TObject, TKey> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval = null)
@@ -1660,7 +1660,7 @@ public static class ObservableCacheEx
     /// </param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
     [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Deliberate capture.")]
@@ -1719,7 +1719,10 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
 
         return new StaticFilter<TObject, TKey>(source, filter, suppressEmptyChangeSets).Run();
     }
@@ -1737,8 +1740,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (predicateChanged is null) throw new ArgumentNullException(nameof(predicateChanged));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (predicateChanged is null)
+        {
+            throw new ArgumentNullException(nameof(predicateChanged));
+        }
 
         return source.Filter(predicateChanged, Observable.Empty<Unit>(), suppressEmptyChangeSets);
     }
@@ -1756,8 +1766,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (reapplyFilter is null) throw new ArgumentNullException(nameof(reapplyFilter));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (reapplyFilter is null)
+        {
+            throw new ArgumentNullException(nameof(reapplyFilter));
+        }
 
         return source.Filter(Observable.Empty<Func<TObject, bool>>(), reapplyFilter, suppressEmptyChangeSets);
     }
@@ -1776,9 +1793,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (predicateChanged is null) throw new ArgumentNullException(nameof(predicateChanged));
-        if (reapplyFilter is null) throw new ArgumentNullException(nameof(reapplyFilter));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (predicateChanged is null)
+        {
+            throw new ArgumentNullException(nameof(predicateChanged));
+        }
+
+        if (reapplyFilter is null)
+        {
+            throw new ArgumentNullException(nameof(reapplyFilter));
+        }
 
         return new DynamicFilter<TObject, TKey>(source, predicateChanged, reapplyFilter, suppressEmptyChangeSets).Run();
     }
@@ -1798,8 +1826,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (filterFactory is null) throw new ArgumentNullException(nameof(filterFactory));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (filterFactory is null)
+        {
+            throw new ArgumentNullException(nameof(filterFactory));
+        }
 
         return new FilterOnObservable<TObject, TKey>(source, filterFactory, buffer, scheduler).Run();
     }
@@ -1819,7 +1854,10 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (filterFactory is null) throw new ArgumentNullException(nameof(filterFactory));
+        if (filterFactory is null)
+        {
+            throw new ArgumentNullException(nameof(filterFactory));
+        }
 
         return source.FilterOnObservable((obj, _) => filterFactory(obj), buffer, scheduler);
     }
@@ -1868,7 +1906,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="finallyAction">The finally action.</param>
     /// <returns>An observable which has always a finally action applied.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     [Obsolete("This can cause unhandled exception issues so do not use")]
     public static IObservable<T> FinallySafe<T>(this IObservable<T> source, Action finallyAction)
     {
@@ -1892,7 +1930,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits change set values on a flatten result.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<Change<TObject, TKey>> Flatten<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
@@ -2201,7 +2239,7 @@ public static class ObservableCacheEx
     /// <param name="groupSelectorKey">The group selector key.</param>
     /// <param name="regrouper">Invoke to  the for the grouping to be re-evaluated.</param>
     /// <returns>An observable which will emit group change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// groupSelectorKey
@@ -2301,7 +2339,7 @@ public static class ObservableCacheEx
     /// <param name="groupSelectorKey">The group selector key.</param>
     /// <param name="regrouper">Invoke to  the for the grouping to be re-evaluated.</param>
     /// <returns>An observable which will emit immutable group change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// groupSelectorKey
@@ -2765,8 +2803,8 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="size">The size.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    /// <exception cref="System.ArgumentException">size cannot be zero.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentException">size cannot be zero.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> LimitSizeTo<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, int size)
         where TObject : notnull
         where TKey : notnull
@@ -2794,8 +2832,8 @@ public static class ObservableCacheEx
     /// <param name="sizeLimit">The size limit.</param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable which emits the key value pairs.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    /// <exception cref="System.ArgumentException">Size limit must be greater than zero.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentException">Size limit must be greater than zero.</exception>
     public static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> LimitSizeTo<TObject, TKey>(this ISourceCache<TObject, TKey> source, int sizeLimit, IScheduler? scheduler = null)
         where TObject : notnull
         where TKey : notnull
@@ -2842,7 +2880,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="observableSelector">The observable selector.</param>
     /// <returns>An observable which emits the transformed value.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// observableSelector.</exception>
     public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
@@ -2872,7 +2910,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="observableSelector">The observable selector.</param>
     /// <returns>An observable which emits the transformed value.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// observableSelector.</exception>
     public static IObservable<TDestination> MergeMany<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
@@ -2904,7 +2942,10 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer: null).Run();
     }
@@ -2922,8 +2963,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer).Run();
     }
@@ -2941,8 +2989,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (equalityComparer == null)
+        {
+            throw new ArgumentNullException(nameof(equalityComparer));
+        }
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer: null).Run();
     }
@@ -2961,9 +3016,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (equalityComparer == null)
+        {
+            throw new ArgumentNullException(nameof(equalityComparer));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer).Run();
     }
@@ -2983,8 +3049,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (other == null) throw new ArgumentNullException(nameof(other));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (other == null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
 
         return new[] { source, other }.MergeChangeSets(scheduler, completable);
     }
@@ -3005,9 +3078,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (other == null) throw new ArgumentNullException(nameof(other));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (other == null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return new[] { source, other }.MergeChangeSets(comparer, scheduler, completable);
     }
@@ -3028,9 +3112,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (other == null) throw new ArgumentNullException(nameof(other));
-        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (other == null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+
+        if (equalityComparer == null)
+        {
+            throw new ArgumentNullException(nameof(equalityComparer));
+        }
 
         return new[] { source, other }.MergeChangeSets(equalityComparer, scheduler, completable);
     }
@@ -3052,10 +3147,25 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (other == null) throw new ArgumentNullException(nameof(other));
-        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (other == null)
+        {
+            throw new ArgumentNullException(nameof(other));
+        }
+
+        if (equalityComparer == null)
+        {
+            throw new ArgumentNullException(nameof(equalityComparer));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return new[] { source, other }.MergeChangeSets(equalityComparer, comparer, scheduler, completable);
     }
@@ -3075,8 +3185,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (others == null) throw new ArgumentNullException(nameof(others));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (others == null)
+        {
+            throw new ArgumentNullException(nameof(others));
+        }
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(scheduler, completable);
     }
@@ -3097,9 +3214,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (others == null) throw new ArgumentNullException(nameof(others));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (others == null)
+        {
+            throw new ArgumentNullException(nameof(others));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(comparer, scheduler, completable);
     }
@@ -3120,9 +3248,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (others == null) throw new ArgumentNullException(nameof(others));
-        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (others == null)
+        {
+            throw new ArgumentNullException(nameof(others));
+        }
+
+        if (equalityComparer == null)
+        {
+            throw new ArgumentNullException(nameof(equalityComparer));
+        }
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(equalityComparer, scheduler, completable);
     }
@@ -3144,10 +3283,25 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (others == null) throw new ArgumentNullException(nameof(others));
-        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (others == null)
+        {
+            throw new ArgumentNullException(nameof(others));
+        }
+
+        if (equalityComparer == null)
+        {
+            throw new ArgumentNullException(nameof(equalityComparer));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return source.EnumerateOne().Concat(others).MergeChangeSets(equalityComparer, comparer, scheduler, completable);
     }
@@ -3166,7 +3320,10 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer: null, completable, scheduler).Run();
     }
@@ -3186,8 +3343,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer, completable, scheduler).Run();
     }
@@ -3207,8 +3371,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (equalityComparer == null)
+        {
+            throw new ArgumentNullException(nameof(equalityComparer));
+        }
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer: null, completable, scheduler).Run();
     }
@@ -3229,9 +3400,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (equalityComparer == null)
+        {
+            throw new ArgumentNullException(nameof(equalityComparer));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer, comparer, completable, scheduler).Run();
     }
@@ -3254,7 +3436,10 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), comparer);
     }
@@ -3277,9 +3462,20 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
-        if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
+
+        if (comparer == null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
 
         return source.MergeManyChangeSets(observableSelector, equalityComparer: null, comparer: comparer);
     }
@@ -3303,7 +3499,10 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), equalityComparer, comparer);
     }
@@ -3327,8 +3526,15 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return new MergeManyCacheChangeSets<TObject, TKey, TDestination, TDestinationKey>(source, observableSelector, equalityComparer, comparer).Run();
     }
@@ -3353,7 +3559,10 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), sourceComparer, DefaultResortOnSourceRefresh, equalityComparer: null, childComparer);
     }
@@ -3399,7 +3608,10 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), sourceComparer, resortOnSourceRefresh, equalityComparer: null, childComparer);
     }
@@ -3446,7 +3658,10 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), sourceComparer, DefaultResortOnSourceRefresh, equalityComparer, childComparer);
     }
@@ -3494,7 +3709,10 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return source.MergeManyChangeSets((t, _) => observableSelector(t), sourceComparer, resortOnSourceRefresh, equalityComparer, childComparer);
     }
@@ -3521,9 +3739,20 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
-        if (sourceComparer == null) throw new ArgumentNullException(nameof(sourceComparer));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
+
+        if (sourceComparer == null)
+        {
+            throw new ArgumentNullException(nameof(sourceComparer));
+        }
 
         return new MergeManyCacheChangeSetsSourceCompare<TObject, TKey, TDestination, TDestinationKey>(source, observableSelector, sourceComparer, equalityComparer, childComparer, resortOnSourceRefresh).Run();
     }
@@ -3538,7 +3767,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="observableSelector">The observable selector.</param>
     /// <returns>An observable which emits the item with the value.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// observableSelector.</exception>
     public static IObservable<ItemWithValue<TObject, TDestination>> MergeManyItems<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
@@ -3568,7 +3797,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="observableSelector">The observable selector.</param>
     /// <returns>An observable which emits the item with the value.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// observableSelector.</exception>
     public static IObservable<ItemWithValue<TObject, TDestination>> MergeManyItems<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<TDestination>> observableSelector)
@@ -3594,7 +3823,7 @@ public static class ObservableCacheEx
     /// <typeparam name="T">The type of the source observable.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which monitors the status of the observable.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<ConnectionStatus> MonitorStatus<T>(this IObservable<T> source) => new StatusMonitor<T>(source).Run();
 
     /// <summary>
@@ -3604,7 +3833,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits change set values when not empty.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> NotEmpty<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
@@ -3654,7 +3883,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        Action<TObject> refreshAction2 = refreshAction;
+        var refreshAction2 = refreshAction;
         if (source == null)
         {
             throw new ArgumentNullException(nameof(source));
@@ -3683,7 +3912,7 @@ public static class ObservableCacheEx
     /// <param name="removeAction">The remove action.</param>
     /// <param name="invokeOnUnsubscribe"> Should the remove action be invoked when the subscription is disposed.</param>
     /// <returns>An observable which emits a change set with items being removed.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// removeAction.
@@ -3692,8 +3921,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (removeAction is null) throw new ArgumentNullException(nameof(removeAction));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (removeAction is null)
+        {
+            throw new ArgumentNullException(nameof(removeAction));
+        }
 
         return new OnBeingRemoved<TObject, TKey>(source, removeAction, invokeOnUnsubscribe).Run();
     }
@@ -3731,7 +3967,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// others.
@@ -3760,7 +3996,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// others.
@@ -3870,7 +4106,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="observable">The observable.</param>
     /// <returns>A disposable which will unsubscribe from the source.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// keySelector.
@@ -3895,7 +4131,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="observable">The observable.</param>
     /// <returns>A disposable which will unsubscribe from the source.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// keySelector.
@@ -3920,7 +4156,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="destination">The destination.</param>
     /// <returns>A disposable which will unsubscribe from the source.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// destination.
@@ -3950,7 +4186,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="destination">The destination.</param>
     /// <returns>A disposable which will unsubscribe from the source.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// destination.</exception>
     public static IDisposable PopulateInto<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IIntermediateCache<TObject, TKey> destination)
@@ -4004,7 +4240,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="resultSelector">The result selector.</param>
     /// <returns>An observable which emits the destination values.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// resultSelector.
@@ -4033,7 +4269,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits the query.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
@@ -4055,7 +4291,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="itemChangedTrigger">Should the query be triggered for observables on individual items.</param>
     /// <returns>An observable that emits the query.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IQuery<TObject, TKey>> QueryWhenChanged<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> itemChangedTrigger)
         where TObject : notnull
         where TKey : notnull
@@ -4099,7 +4335,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="item">The item.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         where TObject : notnull
         where TKey : notnull
@@ -4119,7 +4355,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
         where TKey : notnull
@@ -4138,7 +4374,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Refresh<TObject, TKey>(this ISourceCache<TObject, TKey> source)
         where TObject : notnull
         where TKey : notnull
@@ -4159,7 +4395,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="item">The item.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TObject item)
         where TObject : notnull
         where TKey : notnull
@@ -4180,7 +4416,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -4201,7 +4437,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TObject> items)
         where TObject : notnull
         where TKey : notnull
@@ -4222,7 +4458,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="keys">The keys.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Remove<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
         where TKey : notnull
@@ -4243,7 +4479,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -4264,7 +4500,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="keys">The keys.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void Remove<TObject, TKey>(this IIntermediateCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
         where TKey : notnull
@@ -4312,7 +4548,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void RemoveKey<TObject, TKey>(this ISourceCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -4333,7 +4569,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="keys">The keys.</param>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static void RemoveKeys<TObject, TKey>(this ISourceCache<TObject, TKey> source, IEnumerable<TKey> keys)
         where TObject : notnull
         where TKey : notnull
@@ -4527,7 +4763,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> SkipInitial<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source)
         where TObject : notnull
         where TKey : notnull
@@ -4552,7 +4788,7 @@ public static class ObservableCacheEx
     /// <param name="sortOptimisations">Sort optimisation flags. Specify one or more sort optimisations.</param>
     /// <param name="resetThreshold">The number of updates before the entire list is resorted (rather than inline sort).</param>
     /// <returns>An observable which emits change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// comparer.
@@ -4818,7 +5054,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="subscriptionFactory">The subscription function.</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// subscriptionFactory.</exception>
     /// <remarks>
@@ -4849,7 +5085,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="subscriptionFactory">The subscription function.</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// subscriptionFactory.</exception>
     /// <remarks>
@@ -4954,7 +5190,7 @@ public static class ObservableCacheEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which will emit changes.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<TObject> source, Func<TObject, TKey> keySelector, Func<TObject, TimeSpan?>? expireAfter = null, int limitSizeTo = -1, IScheduler? scheduler = null)
@@ -4986,7 +5222,7 @@ public static class ObservableCacheEx
     /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this IObservable<IEnumerable<TObject>> source, Func<TObject, TKey> keySelector, Func<TObject, TimeSpan?>? expireAfter = null, int limitSizeTo = -1, IScheduler? scheduler = null)
@@ -5015,7 +5251,7 @@ public static class ObservableCacheEx
     /// <param name="key">The key value.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance used to determine if an object value has changed.</param>
     /// <returns>An observable optional.</returns>
-    /// <exception cref="System.ArgumentNullException">source is null.</exception>
+    /// <exception cref="ArgumentNullException">source is null.</exception>
     public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -5038,7 +5274,7 @@ public static class ObservableCacheEx
     /// <param name="initialOptionalWhenMissing">Indicates if an initial Optional None should be emitted if the value doesn't exist.</param>
     /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance used to determine if an object value has changed.</param>
     /// <returns>An observable optional.</returns>
-    /// <exception cref="System.ArgumentNullException">source is null.</exception>
+    /// <exception cref="ArgumentNullException">source is null.</exception>
     public static IObservable<Optional<TObject>> ToObservableOptional<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key, bool initialOptionalWhenMissing, IEqualityComparer<TObject>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
@@ -5065,8 +5301,8 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="size">The size.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    /// <exception cref="System.ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
     public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, int size)
         where TObject : notnull
         where TKey : notnull
@@ -5093,8 +5329,8 @@ public static class ObservableCacheEx
     /// <param name="comparer">The comparer.</param>
     /// <param name="size">The size.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
-    /// <exception cref="System.ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">size;Size should be greater than zero.</exception>
     public static IObservable<IVirtualChangeSet<TObject, TKey>> Top<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IComparer<TObject> comparer, int size)
         where TObject : notnull
         where TKey : notnull
@@ -5162,7 +5398,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, bool transformOnRefresh)
@@ -5195,7 +5431,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, bool transformOnRefresh)
@@ -5228,7 +5464,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, bool transformOnRefresh)
@@ -5261,7 +5497,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Func<TSource, bool>>? forceTransform = null)
@@ -5294,7 +5530,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5327,7 +5563,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5365,7 +5601,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, IObservable<Unit> forceTransform)
@@ -5385,7 +5621,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
@@ -5423,7 +5659,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, IObservable<Unit> forceTransform)
@@ -5461,7 +5697,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5494,7 +5730,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5527,7 +5763,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5630,7 +5866,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, bool>>? forceTransform = null)
@@ -5670,7 +5906,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5710,7 +5946,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5755,7 +5991,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
@@ -5777,7 +6013,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
@@ -5817,7 +6053,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Unit> forceTransform)
@@ -5856,7 +6092,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5895,7 +6131,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5934,7 +6170,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
@@ -5998,7 +6234,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction)
@@ -6037,7 +6273,7 @@ public static class ObservableCacheEx
     /// <returns>
     /// A transformed update collection.
     /// </returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
     public static IObservable<IChangeSet<TDestination, TKey>> TransformWithInlineUpdate<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, Action<TDestination, TSource> updateAction, Action<Error<TSource, TKey>> errorHandler)
@@ -6121,7 +6357,7 @@ public static class ObservableCacheEx
     /// <param name="observableSelector">Selector which returns the target observable.</param>
     /// <param name="equalityCondition">The equality condition.</param>
     /// <returns>An observable which boolean values indicating if true.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
@@ -6144,7 +6380,7 @@ public static class ObservableCacheEx
     /// <param name="observableSelector">Selector which returns the target observable.</param>
     /// <param name="equalityCondition">The equality condition.</param>
     /// <returns>An observable which boolean values indicating if true.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<bool> TrueForAll<TObject, TKey, TValue>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TValue>> observableSelector, Func<TObject, TValue, bool> equalityCondition)
         where TObject : notnull
         where TKey : notnull
@@ -6163,7 +6399,7 @@ public static class ObservableCacheEx
     /// <param name="observableSelector">The observable selector.</param>
     /// <param name="equalityCondition">The equality condition.</param>
     /// <returns>An observable which boolean values indicating if true.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// observableSelector
@@ -6188,7 +6424,7 @@ public static class ObservableCacheEx
     /// <param name="observableSelector">The observable selector.</param>
     /// <param name="equalityCondition">The equality condition.</param>
     /// <returns>An observable which boolean values indicating if true.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// observableSelector
@@ -6237,7 +6473,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="virtualRequests">The virirtualising requests.</param>
     /// <returns>An observable which will emit virtual change sets.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IVirtualChangeSet<TObject, TKey>> Virtualise<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservable<IVirtualRequest> virtualRequests)
         where TObject : notnull
         where TKey : notnull
@@ -6283,7 +6519,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
     /// <returns>An observable which emits the object value.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservableCache<TObject, TKey> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -6304,7 +6540,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="key">The key.</param>
     /// <returns>An observable which emits the object value.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<TObject> WatchValue<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, TKey key)
         where TObject : notnull
         where TKey : notnull
@@ -6399,8 +6635,8 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="reasons">The reasons.</param>
     /// <returns>An observable which emits a change set with items matching the reasons.</returns>
-    /// <exception cref="System.ArgumentNullException">reasons.</exception>
-    /// <exception cref="System.ArgumentException">Must select at least on reason.</exception>
+    /// <exception cref="ArgumentNullException">reasons.</exception>
+    /// <exception cref="ArgumentException">Must select at least on reason.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> WhereReasonsAre<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params ChangeReason[] reasons)
         where TObject : notnull
         where TKey : notnull
@@ -6428,8 +6664,8 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="reasons">The reasons.</param>
     /// <returns>An observable which emits a change set with items not matching the reasons.</returns>
-    /// <exception cref="System.ArgumentNullException">reasons.</exception>
-    /// <exception cref="System.ArgumentException">Must select at least on reason.</exception>
+    /// <exception cref="ArgumentNullException">reasons.</exception>
+    /// <exception cref="ArgumentException">Must select at least on reason.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> WhereReasonsAreNot<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, params ChangeReason[] reasons)
         where TObject : notnull
         where TKey : notnull
@@ -6458,7 +6694,7 @@ public static class ObservableCacheEx
     /// <param name="source">The source.</param>
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// others.
@@ -6488,7 +6724,7 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="sources">The source.</param>
     /// <returns>An observable which emits a change set.</returns>
-    /// <exception cref="System.ArgumentNullException">
+    /// <exception cref="ArgumentNullException">
     /// source
     /// or
     /// others.
@@ -6578,7 +6814,7 @@ public static class ObservableCacheEx
     /// </param>
     /// <param name="scheduler">The scheduler.</param>
     /// <returns>An observable of enumerable of the key values which has been removed.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// timeSelector.</exception>
     internal static IObservable<IEnumerable<KeyValuePair<TKey, TObject>>> ForExpiry<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TimeSpan?> timeSelector, TimeSpan? interval, IScheduler scheduler)
@@ -6657,7 +6893,7 @@ public static class ObservableCacheEx
                     }
                 }
 
-                IDisposable subscriber = Disposable.Empty;
+                var subscriber = Disposable.Empty;
                 try
                 {
                     var combiner = new Combiner<TObject, TKey>(type, UpdateAction);
@@ -6698,7 +6934,7 @@ public static class ObservableCacheEx
                     }
                 }
 
-                IDisposable subscriber = Disposable.Empty;
+                var subscriber = Disposable.Empty;
                 try
                 {
                     var list = combineTarget.ToList();

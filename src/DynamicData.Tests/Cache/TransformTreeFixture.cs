@@ -78,7 +78,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void BuildTreeFromMixedData()
     {
-        _sourceCache.AddOrUpdate(CreateEmployees());
+        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
         _result.Count.Should().Be(2);
 
         var firstNode = _result.Items.First();
@@ -91,7 +91,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void ChangeParent()
     {
-        _sourceCache.AddOrUpdate(CreateEmployees());
+        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
 
         _sourceCache.AddOrUpdate(
             new EmployeeDto(4)
@@ -117,12 +117,13 @@ public class TransformTreeFixture : IDisposable
     {
         _sourceCache.Dispose();
         _result.Dispose();
+        _filter.Dispose();
     }
 
     [Fact]
     public void RemoveAChildNodeWillPushOrphansUpTheHierachy()
     {
-        _sourceCache.AddOrUpdate(CreateEmployees());
+        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
         _sourceCache.Remove(4);
 
         //we expect the children of node 4  to be pushed up become new roots
@@ -135,7 +136,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void RemoveARootNodeWillPushOrphansUpTheHierachy()
     {
-        _sourceCache.AddOrUpdate(CreateEmployees());
+        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
         _sourceCache.Remove(1);
 
         //we expect the original children nodes to be pushed up become new roots
@@ -145,7 +146,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void UpdateAParentNode()
     {
-        _sourceCache.AddOrUpdate(CreateEmployees());
+        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
 
         var changed = new EmployeeDto(1)
         {
@@ -164,7 +165,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void UpdateChildNode()
     {
-        _sourceCache.AddOrUpdate(CreateEmployees());
+        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
 
         var changed = new EmployeeDto(2)
         {
@@ -185,7 +186,7 @@ public class TransformTreeFixture : IDisposable
     [Fact]
     public void UseCustomFilter()
     {
-        _sourceCache.AddOrUpdate(CreateEmployees());
+        _sourceCache.AddOrUpdate(TransformTreeFixture.CreateEmployees());
 
         _result.Count.Should().Be(2);
 
@@ -202,7 +203,7 @@ public class TransformTreeFixture : IDisposable
         _result.Count.Should().Be(2);
     }
 
-    private IEnumerable<EmployeeDto> CreateEmployees()
+    private static IEnumerable<EmployeeDto> CreateEmployees()
     {
         yield return new EmployeeDto(1)
         {
@@ -253,32 +254,21 @@ public class TransformTreeFixture : IDisposable
         };
     }
 
-    public class EmployeeDto : IEquatable<EmployeeDto>
+    public class EmployeeDto(int id) : IEquatable<EmployeeDto>
     {
-        public EmployeeDto(int id)
-        {
-            Id = id;
-        }
-
         public int BossId { get; set; }
 
-        public int Id { get; set; }
+        public int Id { get; set; } = id;
 
         public string? Name { get; set; }
 
-        public static bool operator ==(EmployeeDto left, EmployeeDto right)
-        {
-            return Equals(left, right);
-        }
+        public static bool operator ==(EmployeeDto left, EmployeeDto right) => Equals(left, right);
 
-        public static bool operator !=(EmployeeDto left, EmployeeDto right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(EmployeeDto left, EmployeeDto right) => !Equals(left, right);
 
         public bool Equals(EmployeeDto? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -293,7 +283,7 @@ public class TransformTreeFixture : IDisposable
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -311,14 +301,8 @@ public class TransformTreeFixture : IDisposable
             return Equals((EmployeeDto)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return Id;
-        }
+        public override int GetHashCode() => Id;
 
-        public override string ToString()
-        {
-            return $"Name: {Name}, Id: {Id}, BossId: {BossId}";
-        }
+        public override string ToString() => $"Name: {Name}, Id: {Id}, BossId: {BossId}";
     }
 }

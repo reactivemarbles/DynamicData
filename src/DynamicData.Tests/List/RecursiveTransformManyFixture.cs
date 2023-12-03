@@ -40,6 +40,7 @@ public class RecursiveTransformManyFixture : IDisposable
     public void Dispose()
     {
         _source.Dispose();
+        _results.Dispose();
     }
 
     [Fact]

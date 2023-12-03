@@ -23,7 +23,7 @@ public static class EnumerableEx
     /// <param name="keySelector">The key selector.</param>
     /// <param name="completable">Optionally emit an OnComplete.</param>
     /// <returns>An observable change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> AsObservableChangeSet<TObject, TKey>(this IEnumerable<TObject> source, Func<TObject, TKey> keySelector, bool completable = false)
@@ -69,7 +69,7 @@ public static class EnumerableEx
     /// <param name="source">The source.</param>
     /// <param name="completable">Optionally emit an OnComplete.</param>
     /// <returns>An observable change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<TObject>> AsObservableChangeSet<TObject>(this IEnumerable<TObject> source, bool completable = false)
         where TObject : notnull
     {

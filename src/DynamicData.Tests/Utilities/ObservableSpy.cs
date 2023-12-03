@@ -120,41 +120,38 @@ internal static class ObservableSpy
 
     public static IObservable<T> DebugSpy<T>(this IObservable<T> source, string? opName = null,
                                                                   Func<T, string?>? formatter = null, bool showSubs = true,
-                                                                  bool showTimestamps = true)
-    {
+                                                                  bool showTimestamps = true) =>
 #if DEBUG
-        return source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
+        source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
 #else
         return source;
 #endif
-    }
+
 
     public static IObservable<IChangeSet<T, TKey>> DebugSpy<T, TKey>(this IObservable<IChangeSet<T, TKey>> source,
                                                                     string? opName = null,
                                                                     Func<T, string?>? formatter = null, bool showSubs = true,
                                                                       bool showTimestamps = true)
         where T : notnull
-        where TKey : notnull
-    {
+        where TKey : notnull =>
 #if DEBUG
-        return source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
+        source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
 #else
         return source;
 #endif
-    }
+
 
     public static IObservable<IChangeSet<T>> DebugSpy<T>(this IObservable<IChangeSet<T>> source,
                                                                     string? opName = null,
                                                                     Func<T, string?>? formatter = null, bool showSubs = true,
                                                                       bool showTimestamps = true)
-                                                                      where T : notnull
-    {
+                                                                      where T : notnull =>
 #if DEBUG
-        return source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
+        source.Spy(opName, DebugLogger, formatter, showSubs, showTimestamps);
 #else
         return source;
 #endif
-    }
+
 
     private static string FormatChange<T, TKey>(Func<T, string> formatter, Change<T, TKey> change)
         where T : notnull

@@ -139,7 +139,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCa
         }
 
         // If the Previous value is missing or is the same as the current value
-        bool isUpdatingCurrent = !prev.HasValue || CheckEquality(prev.Value, cached.Value);
+        var isUpdatingCurrent = !prev.HasValue || CheckEquality(prev.Value, cached.Value);
 
         if (comparer is null)
         {

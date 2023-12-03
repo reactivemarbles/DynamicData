@@ -162,6 +162,8 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
     //  [Fact]
     //  [Trait("Manual run for benchmarking","xx")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Manual run for benchmarking")]
     private void StressIt()
     {
         var list = new SourceList<ClassA>();
@@ -177,9 +179,7 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         if (items.Length > 1 && items[1].Child is not null)
         {
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
             items[1].Child.Age = -1;
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
         }
         else
         {
@@ -211,23 +211,17 @@ public class DeeplyNestedNotifyPropertyChangedFixture
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
-        public static bool operator ==(ClassA left, ClassA right)
-        {
-            return Equals(left, right);
-        }
+        public static bool operator ==(ClassA left, ClassA right) => Equals(left, right);
 
         /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.Tests.Binding.DeeplyNestedNotifyPropertyChangedFixture: IDisposable.ClassA" /> objects have different values.</summary>
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
-        public static bool operator !=(ClassA left, ClassA right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(ClassA left, ClassA right) => !Equals(left, right);
 
         public bool Equals(ClassA? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -242,7 +236,7 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -268,10 +262,7 @@ public class DeeplyNestedNotifyPropertyChangedFixture
             }
         }
 
-        public override string ToString()
-        {
-            return $"ClassA: Name={Name}, {nameof(Child)}: {Child}";
-        }
+        public override string ToString() => $"ClassA: Name={Name}, {nameof(Child)}: {Child}";
     }
 
     public class ClassB : AbstractNotifyPropertyChanged, IEquatable<ClassB>
@@ -288,23 +279,17 @@ public class DeeplyNestedNotifyPropertyChangedFixture
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
-        public static bool operator ==(ClassB left, ClassB right)
-        {
-            return Equals(left, right);
-        }
+        public static bool operator ==(ClassB left, ClassB right) => Equals(left, right);
 
         /// <summary>Returns a value that indicates whether two <see cref="T:DynamicData.Tests.Binding.DeeplyNestedNotifyPropertyChangedFixture: IDisposable.ClassB" /> objects have different values.</summary>
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
-        public static bool operator !=(ClassB left, ClassB right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(ClassB left, ClassB right) => !Equals(left, right);
 
         public bool Equals(ClassB? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -319,7 +304,7 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -337,14 +322,8 @@ public class DeeplyNestedNotifyPropertyChangedFixture
             return Equals((ClassB)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return _age;
-        }
+        public override int GetHashCode() => _age;
 
-        public override string ToString()
-        {
-            return $"{nameof(Age)}: {Age}";
-        }
+        public override string ToString() => $"{nameof(Age)}: {Age}";
     }
 }

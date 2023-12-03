@@ -64,7 +64,9 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
         {
             var cache = _groupCache.Lookup(key);
             if (cache.HasValue)
+            {
                 return (cache.Value, false);
+            }
 
             var newcache = new ManagedGroup<TObject, TKey, TGroupKey>(key);
             _groupCache[key] = newcache;
@@ -204,7 +206,11 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
                             }
                         });
 
-                    if (groupCache.Count != 0) return;
+                    if (groupCache.Count != 0)
+                    {
+                        return;
+                    }
+
                     _groupCache.RemoveIfContained(@group.Key);
                     result.Add(new Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>(ChangeReason.Remove, @group.Key, groupCache));
                 });

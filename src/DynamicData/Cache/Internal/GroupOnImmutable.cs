@@ -35,8 +35,8 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
 
     private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)
     {
-        private readonly IDictionary<TGroupKey, GroupCache> _allGroupings = new Dictionary<TGroupKey, GroupCache>();
-        private readonly IDictionary<TKey, ChangeWithGroup> _itemCache = new Dictionary<TKey, ChangeWithGroup>();
+        private readonly Dictionary<TGroupKey, GroupCache> _allGroupings = [];
+        private readonly Dictionary<TKey, ChangeWithGroup> _itemCache = [];
 
         public IImmutableGroupChangeSet<TObject, TKey, TGroupKey> Regroup()
         {
@@ -47,17 +47,17 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
 
         public IImmutableGroupChangeSet<TObject, TKey, TGroupKey> Update(IChangeSet<TObject, TKey> updates) => HandleUpdates(updates);
 
-        private static Exception CreateMissingKeyException(ChangeReason reason, TKey key)
+        private static MissingKeyException CreateMissingKeyException(ChangeReason reason, TKey key)
         {
-            var message = $"{key} is missing from previous group on {reason}." + $"{Environment.NewLine}Object type {typeof(TObject)}, Key type {typeof(TKey)}, Group key type {typeof(TGroupKey)}";
+            var message = $"{key} is missing from previous group on {reason}.{Environment.NewLine}Object type {typeof(TObject)}, Key type {typeof(TKey)}, Group key type {typeof(TGroupKey)}";
             return new MissingKeyException(message);
         }
 
-        private static IGrouping<TObject, TKey, TGroupKey> GetGroupState(GroupCache grouping) => new ImmutableGroup<TObject, TKey, TGroupKey>(grouping.Key, grouping.Cache);
+        private static ImmutableGroup<TObject, TKey, TGroupKey> GetGroupState(GroupCache grouping) => new(grouping.Key, grouping.Cache);
 
-        private static IGrouping<TObject, TKey, TGroupKey> GetGroupState(TGroupKey key, ICache<TObject, TKey> cache) => new ImmutableGroup<TObject, TKey, TGroupKey>(key, cache);
+        private static ImmutableGroup<TObject, TKey, TGroupKey> GetGroupState(TGroupKey key, ICache<TObject, TKey> cache) => new(key, cache);
 
-        private IImmutableGroupChangeSet<TObject, TKey, TGroupKey> CreateChangeSet(IDictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>> initialGroupState)
+        private ImmutableGroupChangeSet<TObject, TKey, TGroupKey> CreateChangeSet(IDictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>> initialGroupState)
         {
             var result = new List<Change<IGrouping<TObject, TKey, TGroupKey>, TGroupKey>>();
             foreach (var initialGroup in initialGroupState)
@@ -101,7 +101,7 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
             return Tuple.Create(newcache, true);
         }
 
-        private IImmutableGroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IEnumerable<Change<TObject, TKey>> changes)
+        private ImmutableGroupChangeSet<TObject, TKey, TGroupKey> HandleUpdates(IEnumerable<Change<TObject, TKey>> changes)
         {
             // need to keep track of effected groups to calculate correct notifications
             var initialStateOfGroups = new Dictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>>();
@@ -189,10 +189,7 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
                                             cacheToModify.AddOrUpdate(current.Item, current.Key);
                                         }).Else(
                                         () =>
-                                        {
-                                            // must be created due to addition
-                                            cacheToModify.AddOrUpdate(current.Item, current.Key);
-                                        });
+                                            cacheToModify.AddOrUpdate(current.Item, current.Key)); // must be created due to addition
 
                                     _itemCache[current.Key] = current;
                                     break;
@@ -205,7 +202,8 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
             return CreateChangeSet(initialStateOfGroups);
         }
 
-        private void RemoveFromOldGroup(IDictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>> groupState, TGroupKey groupKey, TKey currentKey) => _allGroupings.Lookup(groupKey).IfHasValue(
+        private void RemoveFromOldGroup(Dictionary<TGroupKey, IGrouping<TObject, TKey, TGroupKey>> groupState, TGroupKey groupKey, TKey currentKey) =>
+            _allGroupings.Lookup(groupKey).IfHasValue(
                 g =>
                 {
                     if (!groupState.ContainsKey(g.Key))
@@ -226,15 +224,11 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
 
             public ChangeReason Reason { get; } = change.Reason;
 
-            public static bool operator ==(ChangeWithGroup left, ChangeWithGroup right)
-            {
-                return left.Equals(right);
-            }
+            public static bool operator ==(in ChangeWithGroup left, in ChangeWithGroup right) =>
+                left.Equals(right);
 
-            public static bool operator !=(ChangeWithGroup left, ChangeWithGroup right)
-            {
-                return !left.Equals(right);
-            }
+            public static bool operator !=(in ChangeWithGroup left, in ChangeWithGroup right) =>
+                !left.Equals(right);
 
             public bool Equals(ChangeWithGroup other) => Key.Equals(other.Key);
 

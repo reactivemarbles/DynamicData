@@ -42,7 +42,7 @@ internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>
 
     public bool Equals(VirtualChangeSet<TObject, TKey>? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -61,7 +61,7 @@ internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>
     {
         unchecked
         {
-            int hashCode = Response.GetHashCode();
+            var hashCode = Response.GetHashCode();
             hashCode = (hashCode * 397) ^ SortedItems.GetHashCode();
             return hashCode;
         }

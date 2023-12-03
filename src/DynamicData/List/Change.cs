@@ -54,7 +54,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// <param name="current">The current.</param>
     /// <param name="currentIndex">The CurrentIndex.</param>
     /// <param name="previousIndex">CurrentIndex of the previous.</param>
-    /// <exception cref="System.ArgumentException">
+    /// <exception cref="ArgumentException">
     /// CurrentIndex must be greater than or equal to zero
     /// or
     /// PreviousIndex must be greater than or equal to zero.
@@ -142,7 +142,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// <inheritdoc />
     public bool Equals(Change<T>? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -158,7 +158,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

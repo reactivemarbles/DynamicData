@@ -12,15 +12,9 @@ public class MergeManyFixture : IDisposable
 {
     private readonly ISourceList<ObjectWithObservable> _source;
 
-    public MergeManyFixture()
-    {
-        _source = new SourceList<ObjectWithObservable>();
-    }
+    public MergeManyFixture() => _source = new SourceList<ObjectWithObservable>();
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void EverythingIsUnsubscribedWhenStreamIsDisposed()
@@ -160,30 +154,19 @@ public class MergeManyFixture : IDisposable
         receivedError.Should().Be(expectedError);
     }
 
-    private class ObjectWithObservable
+    private class ObjectWithObservable(int id)
     {
         private readonly ISubject<bool> _changed = new Subject<bool>();
 
         private bool _value;
 
-        public ObjectWithObservable(int id)
-        {
-            Id = id;
-        }
-
-        public int Id { get; }
+        public int Id { get; } = id;
 
         public IObservable<bool> Observable => _changed;
 
-        public void CompleteObservable()
-        {
-            _changed.OnCompleted();
-        }
+        public void CompleteObservable() => _changed.OnCompleted();
 
-        public void FailObservable(Exception ex)
-        {
-            _changed.OnError(ex);
-        }
+        public void FailObservable(Exception ex) => _changed.OnError(ex);
 
         public void InvokeObservable(bool value)
         {

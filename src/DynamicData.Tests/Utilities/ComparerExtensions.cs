@@ -16,11 +16,9 @@ internal class NoOpEqualityComparer<T> : IEqualityComparer<T>
 }
 
 
-internal class InvertedComparer<T> : IComparer<T>
+internal class InvertedComparer<T>(IComparer<T> original) : IComparer<T>
 {
-    private readonly IComparer<T> _original;
-
-    public InvertedComparer(IComparer<T> original) => _original = original;
+    private readonly IComparer<T> _original = original;
 
     public int Compare(T x, T y) => _original.Compare(x, y) * -1;
 }

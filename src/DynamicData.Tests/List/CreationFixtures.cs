@@ -13,7 +13,7 @@ public class ListCreationFixtures
     [Fact]
     public void Create()
     {
-        Task<T> CreateTask<T>(T value) => Task.FromResult(value);
+        static Task<T> CreateTask<T>(T value) => Task.FromResult(value);
 
         SubscribeAndAssert(
             ObservableChangeSet.Create<int>(
@@ -25,6 +25,7 @@ public class ListCreationFixtures
                 }));
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private void SubscribeAndAssert<T>(IObservable<IChangeSet<T>> observableChangeset, bool expectsError = false)
         where T : notnull
     {

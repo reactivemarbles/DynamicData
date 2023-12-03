@@ -101,11 +101,9 @@ internal class Market : IMarket, IDisposable
 
     private class RatingComparer : IComparer<IMarket>
     {
-        public int Compare([DisallowNull] IMarket x, [DisallowNull] IMarket y)
-        {
+        public int Compare([DisallowNull] IMarket x, [DisallowNull] IMarket y) =>
             // Higher ratings go first
-            return y.Rating.CompareTo(x.Rating);
-        }
+            y.Rating.CompareTo(x.Rating);
     }
 }
 

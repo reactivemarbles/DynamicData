@@ -2504,34 +2504,34 @@ namespace DynamicData.Kernel
     }
     public static class OptionExtensions
     {
-        public static DynamicData.Kernel.Optional<TDestination> Convert<TSource, TDestination>(this DynamicData.Kernel.Optional<TSource> source, System.Func<TSource, DynamicData.Kernel.Optional<TDestination>> converter)
+        public static DynamicData.Kernel.Optional<TDestination> Convert<TSource, TDestination>(in this DynamicData.Kernel.Optional<TSource> source, System.Func<TSource, DynamicData.Kernel.Optional<TDestination>> converter)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static DynamicData.Kernel.Optional<TDestination> Convert<TSource, TDestination>(this DynamicData.Kernel.Optional<TSource> source, System.Func<TSource, TDestination> converter)
+        public static DynamicData.Kernel.Optional<TDestination> Convert<TSource, TDestination>(in this DynamicData.Kernel.Optional<TSource> source, System.Func<TSource, TDestination> converter)
             where TSource :  notnull
             where TDestination :  notnull { }
-        public static TDestination? ConvertOr<TSource, TDestination>(this DynamicData.Kernel.Optional<TSource> source, System.Func<TSource?, TDestination?> converter, System.Func<TDestination?> fallbackConverter)
+        public static TDestination? ConvertOr<TSource, TDestination>(in this DynamicData.Kernel.Optional<TSource> source, System.Func<TSource?, TDestination?> converter, System.Func<TDestination?> fallbackConverter)
             where TSource :  notnull { }
         public static DynamicData.Kernel.Optional<T> FirstOrOptional<T>(this System.Collections.Generic.IEnumerable<T> source, System.Func<T, bool> selector)
             where T :  notnull { }
-        public static DynamicData.Kernel.OptionElse IfHasValue<T>(this DynamicData.Kernel.Optional<T> source, System.Action<T> action)
+        public static DynamicData.Kernel.OptionElse IfHasValue<T>(in this DynamicData.Kernel.Optional<T> source, System.Action<T> action)
             where T :  notnull { }
         public static DynamicData.Kernel.OptionElse IfHasValue<T>(this DynamicData.Kernel.Optional<T>? source, System.Action<T> action)
             where T :  notnull { }
         public static DynamicData.Kernel.Optional<TValue> Lookup<TValue, TKey>(this System.Collections.Generic.IDictionary<TKey, TValue> source, TKey key)
             where TValue :  notnull { }
-        public static DynamicData.Kernel.Optional<T> OrElse<T>(this DynamicData.Kernel.Optional<T> source, System.Func<DynamicData.Kernel.Optional<T>> fallbackOperation)
+        public static DynamicData.Kernel.Optional<T> OrElse<T>(in this DynamicData.Kernel.Optional<T> source, System.Func<DynamicData.Kernel.Optional<T>> fallbackOperation)
             where T :  notnull { }
         public static bool RemoveIfContained<TValue, TKey>(this System.Collections.Generic.IDictionary<TKey, TValue> source, TKey key) { }
         public static System.Collections.Generic.IEnumerable<T> SelectValues<T>(this System.Collections.Generic.IEnumerable<DynamicData.Kernel.Optional<T>> source)
             where T :  notnull { }
-        public static T ValueOr<T>(this DynamicData.Kernel.Optional<T> source, System.Func<T> valueSelector)
+        public static T ValueOr<T>(in this DynamicData.Kernel.Optional<T> source, System.Func<T> valueSelector)
             where T :  notnull { }
         public static T ValueOr<T>(this T? source, T defaultValue)
             where T :  struct { }
-        public static T? ValueOrDefault<T>(this DynamicData.Kernel.Optional<T> source)
+        public static T? ValueOrDefault<T>(in this DynamicData.Kernel.Optional<T> source)
             where T :  notnull { }
-        public static T ValueOrThrow<T>(this DynamicData.Kernel.Optional<T> source, System.Func<System.Exception> exceptionGenerator)
+        public static T ValueOrThrow<T>(in this DynamicData.Kernel.Optional<T> source, System.Func<System.Exception> exceptionGenerator)
             where T :  notnull { }
     }
     public static class OptionObservableExtensions

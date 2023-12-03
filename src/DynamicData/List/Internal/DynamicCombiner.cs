@@ -183,10 +183,7 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
 
     private sealed class MergeContainer
     {
-        public MergeContainer(IObservable<IChangeSet<T>> source)
-        {
-            Source = source.Do(Clone);
-        }
+        public MergeContainer(IObservable<IChangeSet<T>> source) => Source = source.Do(Clone);
 
         public IObservable<IChangeSet<T>> Source { get; }
 

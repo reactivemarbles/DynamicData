@@ -41,7 +41,7 @@ public sealed class IndexedItem<TObject, TKey>(TObject value, TKey key, int inde
     {
         unchecked
         {
-            int hashCode = Key is null ? 0 : EqualityComparer<TKey>.Default.GetHashCode(Key);
+            var hashCode = Key is null ? 0 : EqualityComparer<TKey>.Default.GetHashCode(Key);
             hashCode = (hashCode * 397) ^ (Value is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Value));
             hashCode = (hashCode * 397) ^ Index;
             return hashCode;

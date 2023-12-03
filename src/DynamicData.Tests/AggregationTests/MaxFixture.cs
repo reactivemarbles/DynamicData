@@ -13,10 +13,7 @@ public class MaxFixture : IDisposable
 {
     private readonly SourceCache<Person, string> _source;
 
-    public MaxFixture()
-    {
-        _source = new SourceCache<Person, string>(p => p.Name);
-    }
+    public MaxFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
     [Fact]
     public void AddItems()
@@ -34,10 +31,7 @@ public class MaxFixture : IDisposable
         accumulator.Dispose();
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void InlineChangeReEvaluatesTotals()

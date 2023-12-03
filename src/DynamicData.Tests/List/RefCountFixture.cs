@@ -15,10 +15,7 @@ public class RefCountFixture : IDisposable
 {
     private readonly ISourceList<Person> _source;
 
-    public RefCountFixture()
-    {
-        _source = new SourceList<Person>();
-    }
+    public RefCountFixture() => _source = new SourceList<Person>();
 
     [Fact]
     public void CanResubscribe()
@@ -64,10 +61,7 @@ public class RefCountFixture : IDisposable
         disposals.Should().Be(1);
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     // This test is probabilistic, it could be cool to be able to prove RefCount's thread-safety
     // more accurately but I don't think that there is an easy way to do this.

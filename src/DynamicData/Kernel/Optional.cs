@@ -25,7 +25,7 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>
     /// <param name="value">The value.</param>
     internal Optional(T? value)
     {
-        if (ReferenceEquals(value, null))
+        if (value is null)
         {
             HasValue = false;
             _value = default;
@@ -140,7 +140,7 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

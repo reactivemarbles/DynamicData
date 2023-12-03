@@ -122,7 +122,7 @@ public static class EnumerableEx
 
     internal static void ForEach<TObject>(this IEnumerable<TObject> source, Action<TObject, int> action)
     {
-        int i = 0;
+        var i = 0;
         foreach (var item in source)
         {
             action(item, i);

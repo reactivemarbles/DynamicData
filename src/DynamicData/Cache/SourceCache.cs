@@ -18,7 +18,7 @@ namespace DynamicData;
 /// Initializes a new instance of the <see cref="SourceCache{TObject, TKey}"/> class.
 /// </remarks>
 /// <param name="keySelector">The key selector.</param>
-/// <exception cref="System.ArgumentNullException">keySelector.</exception>
+/// <exception cref="ArgumentNullException">keySelector.</exception>
 [DebuggerDisplay("SourceCache<{typeof(TObject).Name}, {typeof(TKey).Name}> ({Count} Items)")]
 public sealed class SourceCache<TObject, TKey>(Func<TObject, TKey> keySelector) : ISourceCache<TObject, TKey>
     where TObject : notnull

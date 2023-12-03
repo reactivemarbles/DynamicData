@@ -24,7 +24,7 @@ internal sealed class ExpirableItem<TObject>(TObject value, DateTime dateTime, l
 
     public bool Equals(ExpirableItem<TObject>? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -39,7 +39,7 @@ internal sealed class ExpirableItem<TObject>(TObject value, DateTime dateTime, l
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

@@ -11,6 +11,7 @@ namespace DynamicData.List.Internal;
 internal sealed class AnonymousObservableList<T> : IObservableList<T>
     where T : notnull
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed through _cleanUp")]
     private readonly ISourceList<T> _sourceList;
     private readonly IDisposable _cleanUp;
 

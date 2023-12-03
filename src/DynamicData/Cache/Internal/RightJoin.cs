@@ -74,7 +74,7 @@ internal class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObse
                 {
                     foreach (var change in changes.ToConcreteType())
                     {
-                        TLeft left = change.Current;
+                        var left = change.Current;
                         var right = rightGrouped.Lookup(change.Key);
 
                         if (right.HasValue)

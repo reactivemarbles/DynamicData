@@ -164,6 +164,7 @@ public class FullJoinManyFixture : IDisposable
             });
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private int CalculateParent(int index, int totalPeople)
     {
         if (index < 5)

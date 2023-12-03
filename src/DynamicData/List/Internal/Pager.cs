@@ -48,8 +48,8 @@ internal class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequ
             return 1;
         }
 
-        int pages = all.Count / request.Size;
-        int overlap = all.Count % request.Size;
+        var pages = all.Count / request.Size;
+        var overlap = all.Count % request.Size;
 
         if (overlap == 0)
         {
@@ -78,9 +78,9 @@ internal class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequ
 
         var previous = paged;
 
-        int pages = CalculatePages(all, request);
-        int page = request.Page > pages ? pages : request.Page;
-        int skip = request.Size * (page - 1);
+        var pages = CalculatePages(all, request);
+        var page = request.Page > pages ? pages : request.Page;
+        var skip = request.Size * (page - 1);
 
         var current = all.Distinct().Skip(skip)
             .Take(request.Size)

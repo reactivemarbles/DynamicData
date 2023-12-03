@@ -110,8 +110,8 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
 
             case CombineOperator.Except:
                 {
-                    bool first = sources.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
-                    bool others = sources.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
+                    var first = sources.Take(1).Any(s => s.Cache.Lookup(key).HasValue);
+                    var others = sources.Skip(1).Any(s => s.Cache.Lookup(key).HasValue);
                     return first && !others;
                 }
 
@@ -156,12 +156,9 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
                 target.AddOrUpdate(item, key);
             }
         }
-        else
+        else if (cached.HasValue)
         {
-            if (cached.HasValue)
-            {
-                target.Remove(key);
-            }
+            target.Remove(key);
         }
     }
 
@@ -175,10 +172,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
 
     private class MergeContainer
     {
-        public MergeContainer(IObservable<IChangeSet<TObject, TKey>> source)
-        {
-            Source = source.Do(Clone);
-        }
+        public MergeContainer(IObservable<IChangeSet<TObject, TKey>> source) => Source = source.Do(Clone);
 
         public Cache<TObject, TKey> Cache { get; } = new();
 

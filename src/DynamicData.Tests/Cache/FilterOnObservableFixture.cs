@@ -183,7 +183,7 @@ public class FilterOnObservableFixture : IDisposable
         filterStats.Summary.Overall.Adds.Should().Be(MagicNumber);
     }
 
-    private static Person NewPerson(int n) => new Person("Name" + n, n);
+    private static Person NewPerson(int n) => new("Name" + n, n);
 
     private IEnumerable<Person> AddPeople(int count)
     {
