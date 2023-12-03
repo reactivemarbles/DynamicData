@@ -12,6 +12,11 @@ namespace DynamicData.List.Internal;
 internal class ToObservableChangeSet<TObject>
     where TObject : notnull
 {
+    private readonly Func<TObject, TimeSpan?>? _expireAfter;
+    private readonly int _limitSizeTo;
+    private readonly IScheduler _scheduler;
+    private readonly IObservable<IEnumerable<TObject>> _source;
+
     public ToObservableChangeSet(
         IObservable<TObject> source,
         Func<TObject, TimeSpan?>? expireAfter,
@@ -58,14 +63,20 @@ internal class ToObservableChangeSet<TObject>
             observer: observer,
             scheduler: _scheduler));
 
-    private readonly Func<TObject, TimeSpan?>? _expireAfter;
-    private readonly int _limitSizeTo;
-    private readonly IScheduler _scheduler;
-    private readonly IObservable<IEnumerable<TObject>> _source;
-
     private sealed class Subscription
         : IDisposable
     {
+        private readonly EvictionState? _evictionState;
+        private readonly ExpirationState? _expirationState;
+        private readonly IObserver<IChangeSet<TObject>> _observer;
+        private readonly IScheduler _scheduler;
+        private readonly IDisposable _sourceSubscription;
+        private readonly object _synchronizationGate;
+
+        private int _currentItemCount;
+        private bool _hasSourceCompleted;
+        private ScheduledExpiration? _scheduledExpiration;
+
         public Subscription(
             IObservable<IEnumerable<TObject>> source,
             Func<TObject, TimeSpan?>? expireAfter,
@@ -403,17 +414,6 @@ internal class ToObservableChangeSet<TObject>
 
             _expirationState?.Queue.Clear();
         }
-
-        private readonly EvictionState? _evictionState;
-        private readonly ExpirationState? _expirationState;
-        private readonly IObserver<IChangeSet<TObject>> _observer;
-        private readonly IScheduler _scheduler;
-        private readonly IDisposable _sourceSubscription;
-        private readonly object _synchronizationGate;
-
-        private int _currentItemCount;
-        private bool _hasSourceCompleted;
-        private ScheduledExpiration? _scheduledExpiration;
 
         private struct EvictionState
         {

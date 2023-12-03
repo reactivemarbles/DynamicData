@@ -13,6 +13,12 @@ internal class ToObservableChangeSet<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    private readonly Func<TObject, TimeSpan?>? _expireAfter;
+    private readonly Func<TObject, TKey> _keySelector;
+    private readonly int _limitSizeTo;
+    private readonly IScheduler _scheduler;
+    private readonly IObservable<IEnumerable<TObject>> _source;
+
     public ToObservableChangeSet(
         IObservable<TObject> source,
         Func<TObject, TKey> keySelector,
@@ -64,15 +70,20 @@ internal class ToObservableChangeSet<TObject, TKey>
             observer: observer,
             scheduler: _scheduler));
 
-    private readonly Func<TObject, TimeSpan?>? _expireAfter;
-    private readonly Func<TObject, TKey> _keySelector;
-    private readonly int _limitSizeTo;
-    private readonly IScheduler _scheduler;
-    private readonly IObservable<IEnumerable<TObject>> _source;
-
     private sealed class Subscription
         : IDisposable
     {
+        private readonly EvictionState? _evictionState;
+        private readonly ExpirationState? _expirationState;
+        private readonly Dictionary<TKey, ItemState> _itemStatesByKey;
+        private readonly Func<TObject, TKey> _keySelector;
+        private readonly IObserver<IChangeSet<TObject, TKey>> _observer;
+        private readonly IScheduler _scheduler;
+        private readonly IDisposable _sourceSubscription;
+
+        private bool _hasSourceCompleted;
+        private ScheduledExpiration? _scheduledExpiration;
+
         public Subscription(
             IObservable<IEnumerable<TObject>> source,
             Func<TObject, TimeSpan?>? expireAfter,
@@ -388,17 +399,6 @@ internal class ToObservableChangeSet<TObject, TKey>
 
             _expirationState?.Queue.Clear();
         }
-
-        private readonly EvictionState? _evictionState;
-        private readonly ExpirationState? _expirationState;
-        private readonly Dictionary<TKey, ItemState> _itemStatesByKey;
-        private readonly Func<TObject, TKey> _keySelector;
-        private readonly IObserver<IChangeSet<TObject, TKey>> _observer;
-        private readonly IScheduler _scheduler;
-        private readonly IDisposable _sourceSubscription;
-
-        private bool _hasSourceCompleted;
-        private ScheduledExpiration? _scheduledExpiration;
 
         private struct ItemState
         {
