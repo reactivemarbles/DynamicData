@@ -34,11 +34,11 @@ internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
-                var regrouper = _regrouper is null ?
+                var regrouperFunc = _regrouper is null ?
                     Observable.Never<IChangeSet<IGroup<TObject, TGroupKey>>>() :
                     _regrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 
-                var publisher = grouper.Merge(regrouper).DisposeMany() // dispose removes as the grouping is disposable
+                var publisher = grouper.Merge(regrouperFunc).DisposeMany() // dispose removes as the grouping is disposable
                     .NotEmpty().SubscribeSafe(observer);
 
                 return new CompositeDisposable(publisher, shared.Connect());

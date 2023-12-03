@@ -35,10 +35,10 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
 
                         return changes.TotalChanges > resetThreshold ? Reset(original, target) : Process(target, changes);
                     });
-                var resort = _resort.Synchronize(locker).Select(_ => Reorder(target));
+                var resortSync = _resort.Synchronize(locker).Select(_ => Reorder(target));
                 var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
 
-                return changeComparer.Merge(resort).Merge(dataChanged).Where(changes => changes.Count != 0).SubscribeSafe(observer);
+                return changeComparer.Merge(resortSync).Merge(dataChanged).Where(changes => changes.Count != 0).SubscribeSafe(observer);
             });
 
     private IChangeSet<T> ChangeComparer(ChangeAwareList<T> target, IComparer<T> comparer)

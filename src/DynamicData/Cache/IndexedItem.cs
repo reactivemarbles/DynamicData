@@ -34,7 +34,7 @@ public sealed class IndexedItem<TObject, TKey>(TObject value, TKey key, int inde
     public TObject Value { get; } = value;
 
     /// <inheritdoc />
-    public override bool Equals(object? obj) => obj is IndexedItem<TObject, TKey> key && Equals(key);
+    public override bool Equals(object? obj) => obj is IndexedItem<TObject, TKey> indexedKey && Equals(indexedKey);
 
     /// <inheritdoc />
     public bool Equals(IndexedItem<TObject, TKey>? other)
