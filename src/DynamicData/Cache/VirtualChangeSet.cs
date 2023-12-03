@@ -30,15 +30,9 @@ internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>
 
     public IKeyValueCollection<TObject, TKey> SortedItems { get; }
 
-    public static bool operator ==(VirtualChangeSet<TObject, TKey> left, VirtualChangeSet<TObject, TKey> right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(VirtualChangeSet<TObject, TKey> left, VirtualChangeSet<TObject, TKey> right) => Equals(left, right);
 
-    public static bool operator !=(VirtualChangeSet<TObject, TKey> left, VirtualChangeSet<TObject, TKey> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(VirtualChangeSet<TObject, TKey> left, VirtualChangeSet<TObject, TKey> right) => !Equals(left, right);
 
     public bool Equals(VirtualChangeSet<TObject, TKey>? other)
     {

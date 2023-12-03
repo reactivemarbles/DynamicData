@@ -12,8 +12,8 @@ namespace DynamicData.Aggregation
         public bool Equals(DynamicData.Aggregation.AggregateItem<TObject> other) { }
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }
-        public static bool operator !=(DynamicData.Aggregation.AggregateItem<TObject> left, DynamicData.Aggregation.AggregateItem<TObject> right) { }
-        public static bool operator ==(DynamicData.Aggregation.AggregateItem<TObject> left, DynamicData.Aggregation.AggregateItem<TObject> right) { }
+        public static bool operator !=(in DynamicData.Aggregation.AggregateItem<TObject> left, in DynamicData.Aggregation.AggregateItem<TObject> right) { }
+        public static bool operator ==(in DynamicData.Aggregation.AggregateItem<TObject> left, in DynamicData.Aggregation.AggregateItem<TObject> right) { }
     }
     public enum AggregateType
     {
@@ -316,14 +316,14 @@ namespace DynamicData.Binding
         where T :  notnull
     {
         public BindingListAdaptor(System.ComponentModel.BindingList<T> list, int refreshThreshold = 25) { }
-        public void Adapt(DynamicData.IChangeSet<T> changes) { }
+        public void Adapt(DynamicData.IChangeSet<T> change) { }
     }
     public class BindingListAdaptor<TObject, TKey> : DynamicData.IChangeSetAdaptor<TObject, TKey>
         where TObject :  notnull
         where TKey :  notnull
     {
         public BindingListAdaptor(System.ComponentModel.BindingList<TObject> list, int refreshThreshold = 25) { }
-        public void Adapt(DynamicData.IChangeSet<TObject, TKey> changes) { }
+        public void Adapt(DynamicData.IChangeSet<TObject, TKey> change) { }
     }
     public static class BindingListEx
     {
@@ -403,7 +403,7 @@ namespace DynamicData.Binding
         where T :  notnull
     {
         public ObservableCollectionAdaptor(DynamicData.Binding.IObservableCollection<T> collection, int refreshThreshold = 25) { }
-        public void Adapt(DynamicData.IChangeSet<T> changes) { }
+        public void Adapt(DynamicData.IChangeSet<T> change) { }
     }
     public class ObservableCollectionAdaptor<TObject, TKey> : DynamicData.Binding.IObservableCollectionAdaptor<TObject, TKey>
         where TObject :  notnull
@@ -648,7 +648,7 @@ namespace DynamicData
         public Change(DynamicData.ListChangeReason reason, System.Collections.Generic.IEnumerable<T> items, int index = -1) { }
         public Change(DynamicData.ListChangeReason reason, T current, int index = -1) { }
         public Change(T current, int currentIndex, int previousIndex) { }
-        public Change(DynamicData.ListChangeReason reason, T current, DynamicData.Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1) { }
+        public Change(DynamicData.ListChangeReason reason, T current, in DynamicData.Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1) { }
         public DynamicData.ItemChange<T> Item { get; }
         public DynamicData.RangeChange<T> Range { get; }
         public DynamicData.ListChangeReason Reason { get; }
@@ -666,7 +666,7 @@ namespace DynamicData
     {
         public Change(DynamicData.ChangeReason reason, TKey key, TObject current, int index = -1) { }
         public Change(TKey key, TObject current, int currentIndex, int previousIndex) { }
-        public Change(DynamicData.ChangeReason reason, TKey key, TObject current, DynamicData.Kernel.Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1) { }
+        public Change(DynamicData.ChangeReason reason, TKey key, TObject current, in DynamicData.Kernel.Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1) { }
         public TObject Current { get; }
         public int CurrentIndex { get; }
         public TKey Key { get; }
@@ -677,8 +677,8 @@ namespace DynamicData
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }
         public override string ToString() { }
-        public static bool operator !=(DynamicData.Change<TObject, TKey> left, DynamicData.Change<TObject, TKey> right) { }
-        public static bool operator ==(DynamicData.Change<TObject, TKey> left, DynamicData.Change<TObject, TKey> right) { }
+        public static bool operator !=(in DynamicData.Change<TObject, TKey> left, in DynamicData.Change<TObject, TKey> right) { }
+        public static bool operator ==(in DynamicData.Change<TObject, TKey> left, in DynamicData.Change<TObject, TKey> right) { }
     }
     public static class EnumerableEx
     {
@@ -975,7 +975,7 @@ namespace DynamicData
     {
         public static readonly DynamicData.ItemChange<T> Empty;
         public ItemChange(DynamicData.ListChangeReason reason, T current, int currentIndex) { }
-        public ItemChange(DynamicData.ListChangeReason reason, T current, DynamicData.Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1) { }
+        public ItemChange(DynamicData.ListChangeReason reason, T current, in DynamicData.Kernel.Optional<T> previous, int currentIndex = -1, int previousIndex = -1) { }
         public T Current { get; }
         public int CurrentIndex { get; }
         public DynamicData.Kernel.Optional<T> Previous { get; }
@@ -985,8 +985,8 @@ namespace DynamicData
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }
         public override string ToString() { }
-        public static bool operator !=(DynamicData.ItemChange<T> left, DynamicData.ItemChange<T> right) { }
-        public static bool operator ==(DynamicData.ItemChange<T> left, DynamicData.ItemChange<T> right) { }
+        public static bool operator !=(in DynamicData.ItemChange<T> left, in DynamicData.ItemChange<T> right) { }
+        public static bool operator ==(in DynamicData.ItemChange<T> left, in DynamicData.ItemChange<T> right) { }
     }
     public enum ListChangeReason
     {
@@ -1040,7 +1040,7 @@ namespace DynamicData
         where TKey :  notnull
     {
         public Node(TObject item, TKey key) { }
-        public Node(TObject item, TKey key, DynamicData.Kernel.Optional<DynamicData.Node<TObject, TKey>> parent) { }
+        public Node(TObject item, TKey key, in DynamicData.Kernel.Optional<DynamicData.Node<TObject, TKey>> parent) { }
         public DynamicData.IObservableCache<DynamicData.Node<TObject, TKey>, TKey> Children { get; }
         public int Depth { get; }
         public bool IsRoot { get; }
@@ -2483,8 +2483,8 @@ namespace DynamicData.Kernel
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }
         public override string ToString() { }
-        public static bool operator !=(DynamicData.Kernel.ItemWithIndex<T> left, DynamicData.Kernel.ItemWithIndex<T> right) { }
-        public static bool operator ==(DynamicData.Kernel.ItemWithIndex<T> left, DynamicData.Kernel.ItemWithIndex<T> right) { }
+        public static bool operator !=(in DynamicData.Kernel.ItemWithIndex<T> left, in DynamicData.Kernel.ItemWithIndex<T> right) { }
+        public static bool operator ==(in DynamicData.Kernel.ItemWithIndex<T> left, in DynamicData.Kernel.ItemWithIndex<T> right) { }
     }
     public readonly struct ItemWithValue<TObject, TValue> : System.IEquatable<DynamicData.Kernel.ItemWithValue<TObject, TValue>>
     {
@@ -2495,8 +2495,8 @@ namespace DynamicData.Kernel
         public override bool Equals(object? obj) { }
         public override int GetHashCode() { }
         public override string ToString() { }
-        public static bool operator !=(DynamicData.Kernel.ItemWithValue<TObject, TValue> left, DynamicData.Kernel.ItemWithValue<TObject, TValue> right) { }
-        public static bool operator ==(DynamicData.Kernel.ItemWithValue<TObject, TValue> left, DynamicData.Kernel.ItemWithValue<TObject, TValue> right) { }
+        public static bool operator !=(in DynamicData.Kernel.ItemWithValue<TObject, TValue> left, in DynamicData.Kernel.ItemWithValue<TObject, TValue> right) { }
+        public static bool operator ==(in DynamicData.Kernel.ItemWithValue<TObject, TValue> left, in DynamicData.Kernel.ItemWithValue<TObject, TValue> right) { }
     }
     public sealed class OptionElse
     {
@@ -2577,12 +2577,12 @@ namespace DynamicData.Kernel
         public override int GetHashCode() { }
         public override string? ToString() { }
         public static DynamicData.Kernel.Optional<T> Create(T? value) { }
-        public static T? FromOptional(DynamicData.Kernel.Optional<T> value) { }
+        public static T? FromOptional(in DynamicData.Kernel.Optional<T> value) { }
         public static DynamicData.Kernel.Optional<T> ToOptional(T? value) { }
-        public static T? op_Explicit(DynamicData.Kernel.Optional<T> value) { }
+        public static T? op_Explicit(in DynamicData.Kernel.Optional<T> value) { }
         public static DynamicData.Kernel.Optional<T> op_Implicit(T? value) { }
-        public static bool operator !=(DynamicData.Kernel.Optional<T> left, DynamicData.Kernel.Optional<T> right) { }
-        public static bool operator ==(DynamicData.Kernel.Optional<T> left, DynamicData.Kernel.Optional<T> right) { }
+        public static bool operator !=(in DynamicData.Kernel.Optional<T> left, in DynamicData.Kernel.Optional<T> right) { }
+        public static bool operator ==(in DynamicData.Kernel.Optional<T> left, in DynamicData.Kernel.Optional<T> right) { }
     }
 }
 namespace DynamicData.List

@@ -25,12 +25,12 @@ public readonly struct AggregateItem<TObject>(AggregateType type, TObject item) 
     /// </summary>
     public TObject Item { get; } = item;
 
-    public static bool operator ==(AggregateItem<TObject> left, AggregateItem<TObject> right) => left.Equals(right);
+    public static bool operator ==(in AggregateItem<TObject> left, in AggregateItem<TObject> right) => left.Equals(right);
 
-    public static bool operator !=(AggregateItem<TObject> left, AggregateItem<TObject> right) => !(left == right);
+    public static bool operator !=(in AggregateItem<TObject> left, in AggregateItem<TObject> right) => !(left == right);
 
     /// <inheritdoc/>
-    public override bool Equals(object? obj) => obj is AggregateItem<TObject> item && Equals(item);
+    public override bool Equals(object? obj) => obj is AggregateItem<TObject> aggItem && Equals(aggItem);
 
     /// <inheritdoc/>
     public bool Equals(AggregateItem<TObject> other) =>

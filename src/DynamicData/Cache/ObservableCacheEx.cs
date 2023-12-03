@@ -1681,9 +1681,7 @@ public static class ObservableCacheEx
         scheduler ??= Scheduler.Default;
 
         return Observable.Create<IEnumerable<KeyValuePair<TKey, TObject>>>(
-            observer =>
-            {
-                return source.Connect().ForExpiry(timeSelector, pollingInterval, scheduler).Finally(observer.OnCompleted).Subscribe(
+            observer => source.Connect().ForExpiry(timeSelector, pollingInterval, scheduler).Finally(observer.OnCompleted).Subscribe(
                     toRemove =>
                     {
                         try
@@ -1702,8 +1700,7 @@ public static class ObservableCacheEx
                         {
                             observer.OnError(ex);
                         }
-                    });
-            });
+                    }));
     }
 
     /// <summary>
@@ -3894,13 +3891,9 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(refreshAction));
         }
 
-        return source.Do(delegate(IChangeSet<TObject, TKey> changes)
-        {
-            changes.Where((Change<TObject, TKey> c) => c.Reason == ChangeReason.Refresh).ForEach(delegate(Change<TObject, TKey> c)
-            {
-                refreshAction2(c.Current);
-            });
-        });
+        return source.Do((IChangeSet<TObject, TKey> changes) =>
+            changes.Where((Change<TObject, TKey> c) =>
+                c.Reason == ChangeReason.Refresh).ForEach((Change<TObject, TKey> c) => refreshAction2(c.Current)));
     }
 
     /// <summary>
@@ -5700,6 +5693,7 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
@@ -5733,6 +5727,7 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
@@ -5766,6 +5761,7 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
@@ -6095,6 +6091,7 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
@@ -6134,6 +6131,7 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
@@ -6173,6 +6171,7 @@ public static class ObservableCacheEx
     /// <exception cref="ArgumentNullException">source
     /// or
     /// transformFactory.</exception>
+    [SuppressMessage("Roslynator", "RCS1047:Non-asynchronous method name should not end with 'Async'.", Justification = "By Design.")]
     public static IObservable<IChangeSet<TDestination, TKey>> TransformSafeAsync<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, Optional<TSource>, TKey, Task<TDestination>> transformFactory, Action<Error<TSource, TKey>> errorHandler, IObservable<Func<TSource, TKey, bool>>? forceTransform = null)
         where TDestination : notnull
         where TSource : notnull
@@ -6320,7 +6319,7 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(source));
         }
 
-        IEnumerable<Change<TObject, TKey>> ReplaceMoves(IChangeSet<TObject, TKey> items)
+        static IEnumerable<Change<TObject, TKey>> ReplaceMoves(IChangeSet<TObject, TKey> items)
         {
             foreach (var change in items.ToConcreteType())
             {
@@ -6897,7 +6896,7 @@ public static class ObservableCacheEx
                 try
                 {
                     var combiner = new Combiner<TObject, TKey>(type, UpdateAction);
-                    subscriber = combiner.Subscribe(sources.ToArray());
+                    subscriber = combiner.Subscribe([.. sources]);
                 }
                 catch (Exception ex)
                 {
@@ -6941,7 +6940,7 @@ public static class ObservableCacheEx
                     list.Insert(0, source);
 
                     var combiner = new Combiner<TObject, TKey>(type, UpdateAction);
-                    subscriber = combiner.Subscribe(list.ToArray());
+                    subscriber = combiner.Subscribe([.. list]);
                 }
                 catch (Exception ex)
                 {
@@ -6957,7 +6956,7 @@ public static class ObservableCacheEx
         where TKey : notnull => source?.Select(
             _ =>
             {
-                bool Transformer(TSource item, TKey key) => true;
+                static bool Transformer(TSource item, TKey key) => true;
                 return (Func<TSource, TKey, bool>)Transformer;
             });
 

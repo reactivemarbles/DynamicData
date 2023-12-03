@@ -13,15 +13,9 @@ internal class Group<TObject, TGroup>(TGroup groupKey) : IGroup<TObject, TGroup>
 
     private ISourceList<TObject> Source { get; } = new SourceList<TObject>();
 
-    public static bool operator ==(Group<TObject, TGroup> left, Group<TObject, TGroup> right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(Group<TObject, TGroup> left, Group<TObject, TGroup> right) => Equals(left, right);
 
-    public static bool operator !=(Group<TObject, TGroup> left, Group<TObject, TGroup> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(Group<TObject, TGroup> left, Group<TObject, TGroup> right) => !Equals(left, right);
 
     public void Dispose() => Source.Dispose();
 

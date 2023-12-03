@@ -50,9 +50,9 @@ internal class RightJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObse
                             case ChangeReason.Add:
                             case ChangeReason.Update:
                                 // Update with right (and right if it is presents)
-                                var right = change.Current;
-                                var left = leftCache.Lookup(leftKey);
-                                joinedCache.AddOrUpdate(_resultSelector(change.Key, left, right), change.Key);
+                                var rightCurrent = change.Current;
+                                var leftLookup = leftCache.Lookup(leftKey);
+                                joinedCache.AddOrUpdate(_resultSelector(change.Key, leftLookup, rightCurrent), change.Key);
                                 break;
 
                             case ChangeReason.Remove:

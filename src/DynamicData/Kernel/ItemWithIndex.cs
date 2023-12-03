@@ -30,19 +30,13 @@ public readonly struct ItemWithIndex<T>(T item, int index) : IEquatable<ItemWith
     /// <param name="left">The first value to compare.</param>
     /// <param name="right">The second value to compare.</param>
     /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
-    public static bool operator ==(ItemWithIndex<T> left, ItemWithIndex<T> right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(in ItemWithIndex<T> left, in ItemWithIndex<T> right) => left.Equals(right);
 
     /// <summary>Returns a value that indicates whether two <see cref="ItemWithIndex{T}" /> objects have different values.</summary>
     /// <param name="left">The first value to compare.</param>
     /// <param name="right">The second value to compare.</param>
     /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
-    public static bool operator !=(ItemWithIndex<T> left, ItemWithIndex<T> right)
-    {
-        return !left.Equals(right);
-    }
+    public static bool operator !=(in ItemWithIndex<T> left, in ItemWithIndex<T> right) => !left.Equals(right);
 
     /// <inheritdoc />
     public bool Equals(ItemWithIndex<T> other) => EqualityComparer<T>.Default.Equals(Item, other.Item);

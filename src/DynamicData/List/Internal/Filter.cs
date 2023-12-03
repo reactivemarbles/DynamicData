@@ -248,7 +248,7 @@ internal class Filter<T>
         return filtered.CaptureChanges();
     }
 
-    private class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
+    private sealed class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
     {
         public T Item { get; } = item;
 

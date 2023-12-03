@@ -22,15 +22,9 @@ internal sealed class ImmutableGroup<TObject, TGroupKey> : IGrouping<TObject, TG
 
     public TGroupKey Key { get; }
 
-    public static bool operator ==(ImmutableGroup<TObject, TGroupKey> left, ImmutableGroup<TObject, TGroupKey> right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(ImmutableGroup<TObject, TGroupKey> left, ImmutableGroup<TObject, TGroupKey> right) => Equals(left, right);
 
-    public static bool operator !=(ImmutableGroup<TObject, TGroupKey> left, ImmutableGroup<TObject, TGroupKey> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(ImmutableGroup<TObject, TGroupKey> left, ImmutableGroup<TObject, TGroupKey> right) => !Equals(left, right);
 
     public bool Equals(ImmutableGroup<TObject, TGroupKey>? other)
     {

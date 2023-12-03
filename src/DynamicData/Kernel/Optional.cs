@@ -84,11 +84,11 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>The optional value.</returns>
-    public static explicit operator T?(Optional<T> value) => FromOptional(value);
+    public static explicit operator T?(in Optional<T> value) => FromOptional(value);
 
-    public static bool operator ==(Optional<T> left, Optional<T> right) => left.Equals(right);
+    public static bool operator ==(in Optional<T> left, in Optional<T> right) => left.Equals(right);
 
-    public static bool operator !=(Optional<T> left, Optional<T> right) => !left.Equals(right);
+    public static bool operator !=(in Optional<T> left, in Optional<T> right) => !left.Equals(right);
 
     /// <summary>
     /// Creates the specified value.
@@ -102,7 +102,7 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>
     /// </summary>
     /// <param name="value">The optional value.</param>
     /// <returns>The value.</returns>
-    public static T? FromOptional(Optional<T> value) => value.Value;
+    public static T? FromOptional(in Optional<T> value) => value.Value;
 
     /// <summary>
     /// Gets the optional from a value.

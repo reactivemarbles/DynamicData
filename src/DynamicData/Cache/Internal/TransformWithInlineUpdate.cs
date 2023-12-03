@@ -55,7 +55,7 @@ internal sealed class TransformWithInlineUpdate<TDestination, TSource, TKey>(IOb
             .Where(x => x is not null)
             .Select(cache => cache!.CaptureChanges());
 
-    private void Transform(ChangeAwareCache<TDestination, TKey> cache, Change<TSource, TKey> change)
+    private void Transform(ChangeAwareCache<TDestination, TKey> cache, in Change<TSource, TKey> change)
     {
         TDestination transformed;
         if (exceptionCallback is not null)

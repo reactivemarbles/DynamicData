@@ -47,13 +47,13 @@ internal class DynamicFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey
                         return filteredData.CaptureChanges();
                     });
 
-                var source = refresher.Merge(dataChanged);
+                var sourceMerged = refresher.Merge(dataChanged);
                 if (suppressEmptyChangeSets)
                 {
-                    source = source.NotEmpty();
+                    sourceMerged = sourceMerged.NotEmpty();
                 }
 
-                return source.SubscribeSafe(observer);
+                return sourceMerged.SubscribeSafe(observer);
             });
 
     private IObservable<Func<TObject, bool>> LatestPredicateObservable() => Observable.Create<Func<TObject, bool>>(
@@ -63,7 +63,7 @@ internal class DynamicFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey
 
                 observable.OnNext(latest);
 
-                var predicateChanged = _predicateChanged.Subscribe(
+                var predicateChangedDisposable = _predicateChanged.Subscribe(
                     predicate =>
                     {
                         latest = predicate;
@@ -72,6 +72,6 @@ internal class DynamicFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey
 
                 var reapplier = refilterObservable is null ? Disposable.Empty : refilterObservable.Subscribe(_ => observable.OnNext(latest));
 
-                return new CompositeDisposable(predicateChanged, reapplier);
+                return new CompositeDisposable(predicateChangedDisposable, reapplier);
             });
 }

@@ -72,13 +72,13 @@ internal sealed class Virtualiser<T>(IObservable<IChangeSet<T>> source, IObserva
 
         if (changeSet is not null && changeSet.Count != 0)
         {
-            var moves = changeSet.EmptyIfNull().Where(change => change.Reason == ListChangeReason.Moved && change.MovedWithinRange(request.StartIndex, request.StartIndex + request.Size));
+            var changes = changeSet.EmptyIfNull().Where(change => change.Reason == ListChangeReason.Moved && change.MovedWithinRange(request.StartIndex, request.StartIndex + request.Size)).Select(x => x.Item);
 
-            foreach (var change in moves)
+            foreach (var itemChange in changes)
             {
                 // check whether an item has moved within the same page
-                var currentIndex = change.Item.CurrentIndex - request.StartIndex;
-                var previousIndex = change.Item.PreviousIndex - request.StartIndex;
+                var currentIndex = itemChange.CurrentIndex - request.StartIndex;
+                var previousIndex = itemChange.PreviousIndex - request.StartIndex;
                 virtualised.Move(previousIndex, currentIndex);
             }
         }

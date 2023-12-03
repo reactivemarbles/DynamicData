@@ -20,15 +20,9 @@ internal readonly struct UnifiedChange<T>(ListChangeReason reason, T current, Op
 
     public Optional<T> Previous { get; } = previous;
 
-    public static bool operator ==(UnifiedChange<T> left, UnifiedChange<T> right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(in UnifiedChange<T> left, in UnifiedChange<T> right) => left.Equals(right);
 
-    public static bool operator !=(UnifiedChange<T> left, UnifiedChange<T> right)
-    {
-        return !left.Equals(right);
-    }
+    public static bool operator !=(in UnifiedChange<T> left, in UnifiedChange<T> right) => !left.Equals(right);
 
     public bool Equals(UnifiedChange<T> other) => Reason == other.Reason && EqualityComparer<T>.Default.Equals(Current, other.Current) && Previous.Equals(other.Previous);
 

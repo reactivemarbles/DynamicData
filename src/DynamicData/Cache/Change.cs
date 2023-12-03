@@ -76,7 +76,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// or
     /// For ChangeReason.Change, must supply previous value.
     /// </exception>
-    public Change(ChangeReason reason, TKey key, TObject current, Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1)
+    public Change(ChangeReason reason, TKey key, TObject current, in Optional<TObject> previous, int currentIndex = -1, int previousIndex = -1)
         : this()
     {
         Current = current;
@@ -135,10 +135,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <param name="left">The left value to compare.</param>
     /// <param name="right">The right value to compare.</param>
     /// <returns>If the two values are equal to each other.</returns>
-    public static bool operator ==(Change<TObject, TKey> left, Change<TObject, TKey> right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(in Change<TObject, TKey> left, in Change<TObject, TKey> right) => left.Equals(right);
 
     /// <summary>
     ///  Determines whether the specified objects are equal.
@@ -146,10 +143,7 @@ public readonly struct Change<TObject, TKey> : IEquatable<Change<TObject, TKey>>
     /// <param name="left">The left value to compare.</param>
     /// <param name="right">The right value to compare.</param>
     /// <returns>If the two values are not equal to each other.</returns>
-    public static bool operator !=(Change<TObject, TKey> left, Change<TObject, TKey> right)
-    {
-        return !left.Equals(right);
-    }
+    public static bool operator !=(in Change<TObject, TKey> left, in Change<TObject, TKey> right) => !left.Equals(right);
 
     /// <inheritdoc />
     public bool Equals(Change<TObject, TKey> other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key) && Reason == other.Reason && EqualityComparer<TObject?>.Default.Equals(Current, other.Current) && CurrentIndex == other.CurrentIndex && Previous.Equals(other.Previous) && PreviousIndex == other.PreviousIndex;

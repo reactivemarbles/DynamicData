@@ -228,15 +228,9 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
 
             public ChangeReason Reason { get; } = change.Reason;
 
-            public static bool operator ==(ChangeWithGroup left, ChangeWithGroup right)
-            {
-                return left.Equals(right);
-            }
+            public static bool operator ==(in ChangeWithGroup left, in ChangeWithGroup right) => left.Equals(right);
 
-            public static bool operator !=(ChangeWithGroup left, ChangeWithGroup right)
-            {
-                return !left.Equals(right);
-            }
+            public static bool operator !=(in ChangeWithGroup left, in ChangeWithGroup right) => !left.Equals(right);
 
             public bool Equals(ChangeWithGroup other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key);
 

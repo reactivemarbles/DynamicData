@@ -2,6 +2,8 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+using System.Linq;
+
 namespace DynamicData.Kernel;
 
 /// <summary>
@@ -126,12 +128,9 @@ public static class OptionExtensions
             throw new ArgumentNullException(nameof(selector));
         }
 
-        foreach (var item in source)
+        foreach (var item in source.Where(item => selector(item)))
         {
-            if (selector(item))
-            {
-                return Optional<T>.Create(item);
-            }
+            return Optional<T>.Create(item);
         }
 
         return Optional.None<T>();

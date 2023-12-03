@@ -12,15 +12,9 @@ internal sealed class ExpirableItem<TObject>(TObject value, DateTime dateTime, l
 
     public TObject Item { get; } = value;
 
-    public static bool operator ==(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(ExpirableItem<TObject> left, ExpirableItem<TObject> right) => Equals(left, right);
 
-    public static bool operator !=(ExpirableItem<TObject> left, ExpirableItem<TObject> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(ExpirableItem<TObject> left, ExpirableItem<TObject> right) => !Equals(left, right);
 
     public bool Equals(ExpirableItem<TObject>? other)
     {

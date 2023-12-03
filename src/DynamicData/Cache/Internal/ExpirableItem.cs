@@ -14,21 +14,15 @@ internal readonly struct ExpirableItem<TObject, TKey>(TObject value, TKey key, D
 
     public long Index { get; } = index;
 
-    public static bool operator ==(ExpirableItem<TObject, TKey> left, ExpirableItem<TObject, TKey> right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(in ExpirableItem<TObject, TKey> left, in ExpirableItem<TObject, TKey> right) => left.Equals(right);
 
-    public static bool operator !=(ExpirableItem<TObject, TKey> left, ExpirableItem<TObject, TKey> right)
-    {
-        return !left.Equals(right);
-    }
+    public static bool operator !=(in ExpirableItem<TObject, TKey> left, in ExpirableItem<TObject, TKey> right) => !left.Equals(right);
 
     /// <inheritdoc />
     public bool Equals(ExpirableItem<TObject, TKey> other) => EqualityComparer<TKey>.Default.Equals(Key, other.Key) && ExpireAt.Equals(other.ExpireAt);
 
     /// <inheritdoc />
-    public override bool Equals(object? obj) => obj is ExpirableItem<TObject, TKey> value && Equals(value);
+    public override bool Equals(object? obj) => obj is ExpirableItem<TObject, TKey> expItem && Equals(expItem);
 
     /// <inheritdoc />
     public override int GetHashCode()

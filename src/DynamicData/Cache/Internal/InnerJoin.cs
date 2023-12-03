@@ -41,24 +41,24 @@ internal class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObse
                 {
                     foreach (var change in changes.ToConcreteType())
                     {
-                        var left = change.Current;
-                        var right = rightGrouped.Lookup(change.Key);
+                        var leftCurent = change.Current;
+                        var rightLookup = rightGrouped.Lookup(change.Key);
 
-                        if (right.HasValue)
+                        if (rightLookup.HasValue)
                         {
                             switch (change.Reason)
                             {
                                 case ChangeReason.Add:
                                 case ChangeReason.Update:
-                                    foreach (var keyvalue in right.Value.KeyValues)
+                                    foreach (var keyvalue in rightLookup.Value.KeyValues)
                                     {
-                                        joinedCache.AddOrUpdate(_resultSelector((change.Key, keyvalue.Key), left, keyvalue.Value), (change.Key, keyvalue.Key));
+                                        joinedCache.AddOrUpdate(_resultSelector((change.Key, keyvalue.Key), leftCurent, keyvalue.Value), (change.Key, keyvalue.Key));
                                     }
 
                                     break;
 
                                 case ChangeReason.Remove:
-                                    foreach (var keyvalue in right.Value.KeyValues)
+                                    foreach (var keyvalue in rightLookup.Value.KeyValues)
                                     {
                                         joinedCache.Remove((change.Key, keyvalue.Key));
                                     }
@@ -66,7 +66,7 @@ internal class InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObse
                                     break;
 
                                 case ChangeReason.Refresh:
-                                    foreach (var key in right.Value.Keys)
+                                    foreach (var key in rightLookup.Value.Keys)
                                     {
                                         joinedCache.Refresh((change.Key, key));
                                     }

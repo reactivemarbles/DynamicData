@@ -41,7 +41,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="item">The item.</param>
     /// <param name="key">The key.</param>
     /// <param name="parent">The parent.</param>
-    public Node(TObject item, TKey key, Optional<Node<TObject, TKey>> parent)
+    public Node(TObject item, TKey key, in Optional<Node<TObject, TKey>> parent)
     {
         Item = item ?? throw new ArgumentNullException(nameof(item));
         Key = key;
@@ -109,10 +109,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="left">The left value to compare.</param>
     /// <param name="right">The right value to compare.</param>
     /// <returns>If the two values are equal.</returns>
-    public static bool operator ==(Node<TObject, TKey>? left, Node<TObject, TKey>? right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(Node<TObject, TKey>? left, Node<TObject, TKey>? right) => Equals(left, right);
 
     /// <summary>
     ///  Determines whether the specified objects are not equal.
@@ -120,10 +117,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="left">The left value to compare.</param>
     /// <param name="right">The right value to compare.</param>
     /// <returns>If the two values are not equal.</returns>
-    public static bool operator !=(Node<TObject, TKey> left, Node<TObject, TKey> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(Node<TObject, TKey> left, Node<TObject, TKey> right) => !Equals(left, right);
 
     /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
     /// <filterpriority>2.</filterpriority>

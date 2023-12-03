@@ -35,15 +35,9 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
     /// </summary>
     public TObject Value { get; } = value;
 
-    public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(Error<TObject, TKey> left, Error<TObject, TKey> right) => Equals(left, right);
 
-    public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(Error<TObject, TKey> left, Error<TObject, TKey> right) => !Equals(left, right);
 
     /// <inheritdoc />
     public bool Equals(Error<TObject, TKey>? other)

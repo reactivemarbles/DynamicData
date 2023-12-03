@@ -11,39 +11,20 @@ using DynamicData.Kernel;
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
-    internal class PFilter<TObject, TKey>
+    internal class PFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
         where TObject : notnull
         where TKey : notnull
     {
-        private readonly Func<TObject, bool> _filter;
-
-        private readonly ParallelisationOptions _parallelisationOptions;
-
-        private readonly IObservable<IChangeSet<TObject, TKey>> _source;
-
-        public PFilter(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
-        {
-            _source = source;
-            _filter = filter;
-            _parallelisationOptions = parallelisationOptions;
-        }
-
-        public IObservable<IChangeSet<TObject, TKey>> Run()
-        {
-            return Observable.Create<IChangeSet<TObject, TKey>>(
+        public IObservable<IChangeSet<TObject, TKey>> Run() => Observable.Create<IChangeSet<TObject, TKey>>(
                 observer =>
                     {
-                        var filterer = new PLinqFilteredUpdater(_filter, _parallelisationOptions);
-                        return _source.Select(filterer.Update).NotEmpty().SubscribeSafe(observer);
+                        var filterer = new PLinqFilteredUpdater(filter, parallelisationOptions);
+                        return source.Select(filterer.Update).NotEmpty().SubscribeSafe(observer);
                     });
-        }
 
-        private class PLinqFilteredUpdater : AbstractFilter<TObject, TKey>
+        private sealed class PLinqFilteredUpdater(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions) : AbstractFilter<TObject, TKey>(new ChangeAwareCache<TObject, TKey>(), filter)
         {
-            private readonly ParallelisationOptions _parallelisationOptions;
-
-            public PLinqFilteredUpdater(Func<TObject, bool> filter, ParallelisationOptions parallelisationOptions)
-                : base(new ChangeAwareCache<TObject, TKey>(), filter) => _parallelisationOptions = parallelisationOptions;
+            private readonly ParallelisationOptions _parallelisationOptions = parallelisationOptions;
 
             protected override IEnumerable<UpdateWithFilter> GetChangesWithFilter(ChangeSet<TObject, TKey> updates)
             {

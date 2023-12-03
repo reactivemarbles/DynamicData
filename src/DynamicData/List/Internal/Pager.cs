@@ -101,15 +101,15 @@ internal class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequ
 
         if (changeSet is not null && changeSet.Count != 0)
         {
-            var moves = changeSet
+            var changes = changeSet
                 .Where(change => change.Reason == ListChangeReason.Moved
-                                 && change.MovedWithinRange(startIndex, startIndex + request.Size));
+                                 && change.MovedWithinRange(startIndex, startIndex + request.Size)).Select(x => x.Item);
 
-            foreach (var change in moves)
+            foreach (var itemChange in changes)
             {
                 // check whether an item has moved within the same page
-                var currentIndex = change.Item.CurrentIndex - startIndex;
-                var previousIndex = change.Item.PreviousIndex - startIndex;
+                var currentIndex = itemChange.CurrentIndex - startIndex;
+                var previousIndex = itemChange.PreviousIndex - startIndex;
                 paged.Move(previousIndex, currentIndex);
             }
         }

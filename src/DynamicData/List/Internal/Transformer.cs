@@ -57,7 +57,7 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Add:
                     {
                         var change = item.Item;
-                        if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
+                        if (change.CurrentIndex < 0 || change.CurrentIndex >= transformed.Count)
                         {
                             transformed.Add(_containerFactory(change.Current, Optional<TDestination>.None, transformed.Count));
                         }

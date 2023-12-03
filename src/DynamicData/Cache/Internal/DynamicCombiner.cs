@@ -170,7 +170,7 @@ internal sealed class DynamicCombiner<TObject, TKey>(IObservableList<IObservable
         }
     }
 
-    private class MergeContainer
+    private sealed class MergeContainer
     {
         public MergeContainer(IObservable<IChangeSet<TObject, TKey>> source) => Source = source.Do(Clone);
 

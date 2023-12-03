@@ -35,10 +35,7 @@ public readonly struct ItemWithValue<TObject, TValue>(TObject item, TValue value
     /// <returns>
     /// The result of the operator.
     /// </returns>
-    public static bool operator ==(ItemWithValue<TObject, TValue> left, ItemWithValue<TObject, TValue> right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(in ItemWithValue<TObject, TValue> left, in ItemWithValue<TObject, TValue> right) => Equals(left, right);
 
     /// <summary>
     /// Implements the operator !=.
@@ -48,10 +45,7 @@ public readonly struct ItemWithValue<TObject, TValue>(TObject item, TValue value
     /// <returns>
     /// The result of the operator.
     /// </returns>
-    public static bool operator !=(ItemWithValue<TObject, TValue> left, ItemWithValue<TObject, TValue> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(in ItemWithValue<TObject, TValue> left, in ItemWithValue<TObject, TValue> right) => !Equals(left, right);
 
     /// <inheritdoc />
     public bool Equals(ItemWithValue<TObject, TValue> other) => EqualityComparer<TObject>.Default.Equals(Item, other.Item) && EqualityComparer<TValue>.Default.Equals(Value, other.Value);

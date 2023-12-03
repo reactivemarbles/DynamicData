@@ -27,7 +27,7 @@ internal class ToObservableOptional<TObject, TKey>(IObservable<IChangeSet<TObjec
 
     private bool ShouldEmitChange(Change<TObject, TKey> change) => change switch
     {
-        { Key: TKey key } when !key.Equals(_key) => false,
+        { Key: TKey thekey } when !thekey.Equals(_key) => false,
         { Reason: ChangeReason.Add } => true,
         { Reason: ChangeReason.Remove } => true,
         { Reason: ChangeReason.Update, Previous.HasValue: false } => true,

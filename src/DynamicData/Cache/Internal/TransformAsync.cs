@@ -138,7 +138,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(IObservable<IChangeSe
 
     private sealed class TransformResult
     {
-        public TransformResult(Change<TSource, TKey> change, TransformedItemContainer container)
+        public TransformResult(in Change<TSource, TKey> change, in TransformedItemContainer container)
         {
             Change = change;
             Container = container;
@@ -146,7 +146,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(IObservable<IChangeSe
             Key = change.Key;
         }
 
-        public TransformResult(Change<TSource, TKey> change)
+        public TransformResult(in Change<TSource, TKey> change)
         {
             Change = change;
             Container = Optional<TransformedItemContainer>.None;
@@ -154,7 +154,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(IObservable<IChangeSe
             Key = change.Key;
         }
 
-        public TransformResult(Change<TSource, TKey> change, Exception error)
+        public TransformResult(in Change<TSource, TKey> change, Exception error)
         {
             Change = change;
             Error = error;

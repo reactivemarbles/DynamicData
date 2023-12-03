@@ -105,10 +105,7 @@ public class ChangeStatistics : IEquatable<ChangeStatistics>
     /// <param name="left">The left side to compare.</param>
     /// <param name="right">The right side to compare.</param>
     /// <returns>If the two sides are equal.</returns>
-    public static bool operator ==(ChangeStatistics left, ChangeStatistics right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(ChangeStatistics left, ChangeStatistics right) => Equals(left, right);
 
     /// <summary>
     /// Checks to see if both sides are not equal.
@@ -116,10 +113,7 @@ public class ChangeStatistics : IEquatable<ChangeStatistics>
     /// <param name="left">The left side to compare.</param>
     /// <param name="right">The right side to compare.</param>
     /// <returns>If the two sides are not equal.</returns>
-    public static bool operator !=(ChangeStatistics left, ChangeStatistics right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(ChangeStatistics left, ChangeStatistics right) => !Equals(left, right);
 
     /// <inheritdoc />
     public bool Equals(ChangeStatistics? other)

@@ -90,7 +90,7 @@ public sealed class Change<T> : IEquatable<Change<T>>
     /// or
     /// For ChangeReason.Change, must supply previous value.
     /// </exception>
-    public Change(ListChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
+    public Change(ListChangeReason reason, T current, in Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
     {
         if (reason == ListChangeReason.Add && previous.HasValue)
         {

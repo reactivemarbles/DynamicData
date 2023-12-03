@@ -37,6 +37,17 @@ public sealed class IndexedItem<TObject, TKey>(TObject value, TKey key, int inde
     public override bool Equals(object? obj) => obj is IndexedItem<TObject, TKey> key && Equals(key);
 
     /// <inheritdoc />
+    public bool Equals(IndexedItem<TObject, TKey>? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        return EqualityComparer<TKey?>.Default.Equals(Key, other.Key) && EqualityComparer<TObject?>.Default.Equals(Value, other.Value) && Index == other.Index;
+    }
+
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         unchecked
@@ -50,15 +61,4 @@ public sealed class IndexedItem<TObject, TKey>(TObject value, TKey key, int inde
 
     /// <inheritdoc />
     public override string ToString() => $"Value: {Value}, Key: {Key}, CurrentIndex: {Index}";
-
-    /// <inheritdoc />
-    public bool Equals(IndexedItem<TObject, TKey>? other)
-    {
-        if (other is null)
-        {
-            return false;
-        }
-
-        return EqualityComparer<TKey?>.Default.Equals(Key, other.Key) && EqualityComparer<TObject?>.Default.Equals(Value, other.Value) && Index == other.Index;
-    }
 }

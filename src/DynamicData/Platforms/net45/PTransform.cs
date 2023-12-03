@@ -110,7 +110,7 @@ namespace DynamicData.PLinq
 
         private readonly struct TransformResult
         {
-            public TransformResult(Change<TSource, TKey> change, TDestination destination)
+            public TransformResult(in Change<TSource, TKey> change, TDestination destination)
                 : this()
             {
                 Change = change;
@@ -119,7 +119,7 @@ namespace DynamicData.PLinq
                 Key = change.Key;
             }
 
-            public TransformResult(Change<TSource, TKey> change)
+            public TransformResult(in Change<TSource, TKey> change)
                 : this()
             {
                 Change = change;
@@ -128,7 +128,7 @@ namespace DynamicData.PLinq
                 Key = change.Key;
             }
 
-            public TransformResult(Change<TSource, TKey> change, Exception error)
+            public TransformResult(in Change<TSource, TKey> change, Exception error)
                 : this()
             {
                 Change = change;

@@ -248,19 +248,13 @@ internal sealed class GroupOn<TObject, TGroupKey>(IObservable<IChangeSet<TObject
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
-        public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right)
-        {
-            return Equals(left, right);
-        }
+        public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right) => Equals(left, right);
 
         /// <summary>Returns a value that indicates whether two <see cref="GroupOn{TObject, TGroupKey}.ItemWithGroupKey" /> objects have different values.</summary>
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
-        public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right) => !Equals(left, right);
 
         public bool Equals(ItemWithGroupKey? other)
         {

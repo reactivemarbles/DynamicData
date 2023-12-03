@@ -239,7 +239,7 @@ internal sealed class GroupOnImmutable<TObject, TKey, TGroupKey>(IObservable<ICh
             public override string ToString() => $"Key: {Key}, GroupKey: {GroupKey}, Item: {Item}";
         }
 
-        private class GroupCache(TGroupKey key)
+        private sealed class GroupCache(TGroupKey key)
         {
             public Cache<TObject, TKey> Cache { get; } = new Cache<TObject, TKey>();
 

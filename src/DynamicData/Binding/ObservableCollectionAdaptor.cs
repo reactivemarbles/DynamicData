@@ -27,25 +27,25 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// <summary>
     /// Maintains the specified collection from the changes.
     /// </summary>
-    /// <param name="changes">The changes.</param>
-    public void Adapt(IChangeSet<T> changes)
+    /// <param name="change">The changes.</param>
+    public void Adapt(IChangeSet<T> change)
     {
-        if (changes is null)
+        if (change is null)
         {
-            throw new ArgumentNullException(nameof(changes));
+            throw new ArgumentNullException(nameof(change));
         }
 
-        if (changes.TotalChanges - changes.Refreshes > refreshThreshold || !_loaded)
+        if (change.TotalChanges - change.Refreshes > refreshThreshold || !_loaded)
         {
             using (_collection.SuspendNotifications())
             {
-                _collection.Clone(changes);
+                _collection.Clone(change);
                 _loaded = true;
             }
         }
         else
         {
-            _collection.Clone(changes);
+            _collection.Clone(change);
         }
     }
 }

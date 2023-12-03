@@ -198,7 +198,7 @@ public static class MaxEx
             });
     }
 
-    private class ChangesAndCollection<T>(IAggregateChangeSet<T> changes, IReadOnlyCollection<T> collection)
+    private sealed class ChangesAndCollection<T>(IAggregateChangeSet<T> changes, IReadOnlyCollection<T> collection)
     {
         public IAggregateChangeSet<T> Changes { get; } = changes;
 

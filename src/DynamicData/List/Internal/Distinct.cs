@@ -149,19 +149,13 @@ internal sealed class Distinct<T, TValue>(IObservable<IChangeSet<T>> source, Fun
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if the <paramref name="left" /> and <paramref name="right" /> parameters have the same value; otherwise, false.</returns>
-        public static bool operator ==(ItemWithMatch left, ItemWithMatch right)
-        {
-            return Equals(left, right);
-        }
+        public static bool operator ==(ItemWithMatch left, ItemWithMatch right) => Equals(left, right);
 
         /// <summary>Returns a value that indicates whether two <see cref="Filter{T}.ItemWithMatch" /> objects have different values.</summary>
         /// <param name="left">The first value to compare.</param>
         /// <param name="right">The second value to compare.</param>
         /// <returns>true if <paramref name="left" /> and <paramref name="right" /> are not equal; otherwise, false.</returns>
-        public static bool operator !=(ItemWithMatch left, ItemWithMatch right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(ItemWithMatch left, ItemWithMatch right) => !Equals(left, right);
 
         public bool Equals(ItemWithMatch? other)
         {
