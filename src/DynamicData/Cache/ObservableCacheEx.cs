@@ -596,21 +596,42 @@ public static class ObservableCacheEx
     /// <param name="refreshThreshold">The number of changes before a reset notification is triggered.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, int refreshThreshold = 25)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, int refreshThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
 
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
+        // if user has not specified different defaults, use system wide defaults instead.
+        // This is a hack to retro fit system wide defaults which override the hard coded defaults above
+        var defaults = DynamicDataOptions.Binding;
 
-        return source.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(refreshThreshold));
+        var options = refreshThreshold == BindingOptions.DefaultResetThreshold
+            ? defaults
+            : defaults with { ResetThreshold = refreshThreshold };
+
+        return source.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(options));
+    }
+
+    /// <summary>
+    ///  Binds the results to the specified observable collection using the default update algorithm.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="destination">The destination.</param>
+    /// <param name="options"> The binding options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, BindingOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
+
+        return source.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(options));
     }
 
     /// <summary>
@@ -627,20 +648,9 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
-
-        if (updater is null)
-        {
-            throw new ArgumentNullException(nameof(updater));
-        }
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
+        if (updater is null) throw new ArgumentNullException(nameof(updater));
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -656,6 +666,69 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Binds the results to the specified readonly observable collection using the default update algorithm.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="options"> The binding options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, BindingOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        var target = new ObservableCollectionExtended<TObject>();
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(target);
+        return source.Bind(target, new ObservableCollectionAdaptor<TObject, TKey>(options));
+    }
+
+    /// <summary>
+    /// Binds the results to the specified readonly observable collection using the default update algorithm.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
+    /// <param name="resetThreshold">The number of changes before a reset notification is triggered.</param>
+    /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
+    /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = BindingOptions.DefaultResetThreshold, bool useReplaceForUpdates = BindingOptions.DefaultUseReplaceForUpdates, IObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (adaptor is not null)
+        {
+            var target = new ObservableCollectionExtended<TObject>();
+            readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(target);
+            return source.Bind(target, adaptor);
+        }
+
+        // if user has not specified different defaults, use system wide defaults instead.
+        // This is a hack to retro fit system wide defaults which override the hard coded defaults above
+        var defaults = DynamicDataOptions.Binding;
+
+        var options = resetThreshold == BindingOptions.DefaultResetThreshold && useReplaceForUpdates == BindingOptions.DefaultUseReplaceForUpdates
+            ? defaults
+            : defaults with { ResetThreshold = resetThreshold, UseReplaceForUpdates = useReplaceForUpdates };
+
+        return source.Bind(out readOnlyObservableCollection, options);
+    }
+
+    /// <summary>
     ///  Binds the results to the specified observable collection using the default update algorithm.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
@@ -668,17 +741,30 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
 
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
+        return source.Bind(destination, DynamicDataOptions.Binding);
+    }
 
-        var updater = new SortedObservableCollectionAdaptor<TObject, TKey>();
+    /// <summary>
+    ///  Binds the results to the specified observable collection using the default update algorithm.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <param name="source">The source.</param>
+    /// <param name="destination">The destination.</param>
+    /// <param name="options"> The binding options.</param>
+    /// <returns>An observable which will emit change sets.</returns>
+    /// <exception cref="System.ArgumentNullException">source.</exception>
+    public static IObservable<ISortedChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, IObservableCollection<TObject> destination, BindingOptions options)
+        where TObject : notnull
+        where TKey : notnull
+    {
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
+
+        var updater = new SortedObservableCollectionAdaptor<TObject, TKey>(options);
         return source.Bind(destination, updater);
     }
 
@@ -696,20 +782,9 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
-
-        if (updater is null)
-        {
-            throw new ArgumentNullException(nameof(updater));
-        }
+        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (destination is null) throw new ArgumentNullException(nameof(destination));
+        if (updater is null) throw new ArgumentNullException(nameof(updater));
 
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
@@ -731,12 +806,10 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection.</param>
-    /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
-    /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection.</param>
+    /// <param name="options"> The binding options.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, bool useReplaceForUpdates = true, ISortedObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, BindingOptions options)
         where TObject : notnull
         where TKey : notnull
     {
@@ -747,7 +820,7 @@ public static class ObservableCacheEx
 
         var target = new ObservableCollectionExtended<TObject>();
         var result = new ReadOnlyObservableCollection<TObject>(target);
-        var updater = adaptor ?? new SortedObservableCollectionAdaptor<TObject, TKey>(resetThreshold, useReplaceForUpdates);
+        var updater = new SortedObservableCollectionAdaptor<TObject, TKey>(options);
         readOnlyObservableCollection = result;
         return source.Bind(target, updater);
     }
@@ -759,25 +832,29 @@ public static class ObservableCacheEx
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="readOnlyObservableCollection">The resulting read only observable collection.</param>
-    /// <param name="resetThreshold">The number of changes before a reset notification is triggered.</param>
+    /// <param name="resetThreshold">The number of changes before a reset event is called on the observable collection.</param>
     /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates.  NB: Some platforms to not support replace notifications for binding.</param>
     /// <param name="adaptor">Specify an adaptor to change the algorithm to update the target collection.</param>
     /// <returns>An observable which will emit change sets.</returns>
     /// <exception cref="System.ArgumentNullException">source.</exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = 25, bool useReplaceForUpdates = false, IObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, out ReadOnlyObservableCollection<TObject> readOnlyObservableCollection, int resetThreshold = BindingOptions.DefaultResetThreshold, bool useReplaceForUpdates = BindingOptions.DefaultUseReplaceForUpdates, ISortedObservableCollectionAdaptor<TObject, TKey>? adaptor = null)
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        if (source is null) throw new ArgumentNullException(nameof(source));
+
+        // if user has not specified different defaults, use system wide defaults instead.
+        // This is a hack to retro fit system wide defaults which override the hard coded defaults above
+        var defaults = DynamicDataOptions.Binding;
+        var options = resetThreshold == BindingOptions.DefaultResetThreshold && useReplaceForUpdates == BindingOptions.DefaultUseReplaceForUpdates
+            ? defaults
+            : defaults with { ResetThreshold = resetThreshold, UseReplaceForUpdates = useReplaceForUpdates };
+
+        adaptor ??= new SortedObservableCollectionAdaptor<TObject, TKey>(options);
 
         var target = new ObservableCollectionExtended<TObject>();
-        var result = new ReadOnlyObservableCollection<TObject>(target);
-        var updater = adaptor ?? new ObservableCollectionAdaptor<TObject, TKey>(resetThreshold, useReplaceForUpdates);
-        readOnlyObservableCollection = result;
-        return source.Bind(target, updater);
+        readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(target);
+        return source.Bind(target, adaptor);
     }
 
 #if SUPPORTS_BINDINGLIST
@@ -796,7 +873,7 @@ public static class ObservableCacheEx
     /// or
     /// targetCollection.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = 25)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<IChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
         where TKey : notnull
     {
@@ -813,10 +890,6 @@ public static class ObservableCacheEx
         return source.Adapt(new BindingListAdaptor<TObject, TKey>(bindingList, resetThreshold));
     }
 
-#endif
-
-#if SUPPORTS_BINDINGLIST
-
     /// <summary>
     /// Binds a clone of the observable change set to the target observable collection.
     /// </summary>
@@ -831,7 +904,7 @@ public static class ObservableCacheEx
     /// or
     /// targetCollection.
     /// </exception>
-    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = 25)
+    public static IObservable<IChangeSet<TObject, TKey>> Bind<TObject, TKey>(this IObservable<ISortedChangeSet<TObject, TKey>> source, BindingList<TObject> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where TObject : notnull
         where TKey : notnull
     {
@@ -3665,12 +3738,14 @@ public static class ObservableCacheEx
             throw new ArgumentNullException(nameof(refreshAction));
         }
 
-        return source.Do(delegate(IChangeSet<TObject, TKey> changes)
+        return source.Do(changes =>
         {
-            changes.Where((Change<TObject, TKey> c) => c.Reason == ChangeReason.Refresh).ForEach(delegate(Change<TObject, TKey> c)
+            foreach (var change in changes.ToConcreteType())
             {
-                refreshAction2(c.Current);
-            });
+                if (change.Reason != ChangeReason.Refresh) continue;
+
+                refreshAction2(change.Current);
+            }
         });
     }
 
