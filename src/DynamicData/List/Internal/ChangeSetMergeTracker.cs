@@ -48,9 +48,9 @@ internal class ChangeSetMergeTracker<TObject>
         EmitChanges(observer);
     }
 
-    public void RemoveItems(IList<TObject> sourceList, IObserver<IChangeSet<TObject>> observer)
+    public void RemoveItems(IEnumerable<TObject> removeItems, IObserver<IChangeSet<TObject>> observer)
     {
-        _resultList.Remove(sourceList);
+        _resultList.Remove(removeItems);
         EmitChanges(observer);
     }
 

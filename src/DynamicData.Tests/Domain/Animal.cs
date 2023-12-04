@@ -15,18 +15,11 @@ public enum AnimalFamily
     Bird
 }
 
-public class Animal : AbstractNotifyPropertyChanged
+public class Animal(string name, string type, AnimalFamily family, bool include = true) : AbstractNotifyPropertyChanged
 {
-    private bool _includeInResults;
+    private bool _includeInResults = include;
 
-    public Animal(string name, string type, AnimalFamily family)
-    {
-        Name = name;
-        Type = type;
-        Family = family;
-    }
-
-    public AnimalFamily Family { get; }
+    public AnimalFamily Family { get; } = family;
 
     public bool IncludeInResults
     {
@@ -34,7 +27,7 @@ public class Animal : AbstractNotifyPropertyChanged
         set => SetAndRaise(ref _includeInResults, value);
     }
 
-    public string Name { get; }
+    public string Name { get; } = name;
 
-    public string Type { get; }
+    public string Type { get; } = type;
 }

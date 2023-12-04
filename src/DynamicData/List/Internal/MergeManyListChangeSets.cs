@@ -11,7 +11,8 @@ internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChang
     where TObject : notnull
     where TDestination : notnull
 {
-    public IObservable<IChangeSet<TDestination>> Run() => Observable.Create<IChangeSet<TDestination>>(
+    public IObservable<IChangeSet<TDestination>> Run() =>
+        Observable.Create<IChangeSet<TDestination>>(
             observer =>
             {
                 var locker = new object();
