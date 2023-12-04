@@ -900,7 +900,7 @@ namespace DynamicData
         where TObject :  notnull
         where TKey :  notnull
     {
-        void Adapt(DynamicData.ISortedChangeSet<TObject, TKey> change);
+        void Adapt(DynamicData.ISortedChangeSet<TObject, TKey> changes);
     }
     public interface ISortedChangeSet<TObject, TKey> : DynamicData.IChangeSet, DynamicData.IChangeSet<TObject, TKey>, System.Collections.Generic.IEnumerable<DynamicData.Change<TObject, TKey>>, System.Collections.IEnumerable
         where TObject :  notnull
