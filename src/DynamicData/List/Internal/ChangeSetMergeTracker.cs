@@ -42,6 +42,10 @@ internal class ChangeSetMergeTracker<TObject>
                 case ListChangeReason.Clear:
                     OnClear(change);
                     break;
+
+                case ListChangeReason.Moved:
+                    // Ignore move changes because nothing can be done due to the indexes being different in the merged result
+                    break;
             }
         }
 
@@ -76,5 +80,4 @@ internal class ChangeSetMergeTracker<TObject>
             observer.OnNext(changeSet);
         }
     }
-
 }
