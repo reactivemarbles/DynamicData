@@ -16,13 +16,39 @@ namespace DynamicData.Binding;
 /// Initializes a new instance of the <see cref="ObservableCollectionAdaptor{T}"/> class.
 /// </remarks>
 /// <param name="collection">The collection.</param>
-/// <param name="refreshThreshold">The refresh threshold.</param>
-/// <exception cref="ArgumentNullException">collection.</exception>
-public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection, int refreshThreshold = 25) : IChangeSetAdaptor<T>
+/// <param name="refreshThreshold">The number of changes before a Reset event is used.</param>
+/// <param name="allowReplace"> Use replace instead of remove / add for updates. </param>
+/// <param name="resetOnFirstTimeLoad"> Should a reset be fired for a first time load.This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.</param>
+/// <exception cref="System.ArgumentNullException">collection.</exception>
+public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection, int refreshThreshold,
+#pragma warning disable CS9113 // Parameter is unread.
+    bool allowReplace = true,
+#pragma warning restore CS9113 // Parameter is unread.
+    bool resetOnFirstTimeLoad = true) : IChangeSetAdaptor<T>
+
     where T : notnull
 {
     private readonly IObservableCollection<T> _collection = collection ?? throw new ArgumentNullException(nameof(collection));
     private bool _loaded;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObservableCollectionAdaptor{TObject}"/> class.
+    /// </summary>
+    /// <param name="collection">The collection.</param>
+    public ObservableCollectionAdaptor(IObservableCollection<T> collection)
+        : this(collection, DynamicDataOptions.Binding)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObservableCollectionAdaptor{TObject}"/> class.
+    /// </summary>
+    /// <param name="options"> The binding options.</param>
+    /// <param name="collection">The collection.</param>
+    public ObservableCollectionAdaptor(IObservableCollection<T> collection, BindingOptions options)
+        : this(collection, options.ResetThreshold, options.UseReplaceForUpdates, options.ResetOnFirstTimeLoad)
+    {
+    }
 
     /// <summary>
     /// Maintains the specified collection from the changes.
@@ -35,7 +61,7 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
             throw new ArgumentNullException(nameof(change));
         }
 
-        if (change.TotalChanges - change.Refreshes > refreshThreshold || !_loaded)
+        if (changes.TotalChanges - changes.Refreshes > refreshThreshold || (!_loaded && resetOnFirstTimeLoad))
         {
             using (_collection.SuspendNotifications())
             {
@@ -45,7 +71,8 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
         }
         else
         {
-            _collection.Clone(change);
+            // TODO: pass in allowReplace to handle replace vs remove / add
+            _collection.Clone(changes);
         }
     }
 }
@@ -61,13 +88,23 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
 /// </remarks>
 /// <param name="refreshThreshold">The threshold before a reset notification is triggered.</param>
 /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates. </param>
+/// <param name="resetOnFirstTimeLoad"> Should a reset be fired for a first time load.This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.</param>
 [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, only generic difference.")]
-public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 25, bool useReplaceForUpdates = false) : IObservableCollectionAdaptor<TObject, TKey>
+public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 25, bool useReplaceForUpdates = true, bool resetOnFirstTimeLoad = true) : IObservableCollectionAdaptor<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
     private readonly Cache<TObject, TKey> _cache = new();
     private bool _loaded;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObservableCollectionAdaptor{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="options"> The binding options.</param>
+    public ObservableCollectionAdaptor(BindingOptions options)
+        : this(options.ResetThreshold, options.UseReplaceForUpdates, options.ResetOnFirstTimeLoad)
+    {
+    }
 
     /// <summary>
     /// Maintains the specified collection from the changes.
@@ -88,7 +125,7 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
 
         _cache.Clone(changes);
 
-        if (changes.Count - changes.Refreshes > refreshThreshold || !_loaded)
+        if (changes.Count - changes.Refreshes > refreshThreshold || (!_loaded && resetOnFirstTimeLoad))
         {
             _loaded = true;
             using (collection.SuspendNotifications())

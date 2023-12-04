@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Linq;
@@ -27,6 +28,99 @@ public class ObservableCollectionBindCacheFixture : IDisposable
         _source = new SourceCache<Person, string>(p => p.Name);
         _binder = _source.Connect().Bind(_collection).Subscribe();
     }
+
+    [Fact]
+    public void ResetThresholdsForBinding_ObservableCollection()
+    {
+        var people = _generator.Take(100).ToArray();
+
+
+
+        // check whether reset is fired with different params
+        var test1 = Test();
+        var test2 = Test(new BindingOptions(95));
+        var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
+        var test4 = Test(BindingOptions.NeverFireReset());
+
+
+        test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
+        test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
+        test3.action.Should().Be(NotifyCollectionChangedAction.Add);
+        test4.action.Should().Be(NotifyCollectionChangedAction.Add);
+
+        return;
+
+        (NotifyCollectionChangedAction action, ObservableCollectionExtended<Person> list) Test(BindingOptions? options = null)
+        {
+            _source.Clear();
+
+            NotifyCollectionChangedAction? result = null;
+
+            var list = new ObservableCollectionExtended<Person>();
+            using var listEvents = list.ObserveCollectionChanges().Take(1)
+                .Select(e => e.EventArgs.Action)
+                .Subscribe(events =>
+                {
+                    result = events;
+                });
+
+
+            var binder = options == null
+                ? _source.Connect().Bind(list).Subscribe()
+                : _source.Connect().Bind(list, options.Value).Subscribe();
+
+            _source.AddOrUpdate(people);
+            binder.Dispose();
+
+            return (result!.Value, list);
+        }
+    }
+
+    [Fact]
+    public void ResetThresholdsForBinding_ReadonlyObservableCollection()
+    {
+        var people = _generator.Take(100).ToArray();
+
+
+        // check whether reset is fired with different params
+        var test1 = Test();
+        var test2 = Test(new BindingOptions(95));
+        var test3 = Test(new BindingOptions(105, ResetOnFirstTimeLoad: false));
+        var test4 = Test(BindingOptions.NeverFireReset());
+
+
+        test1.action.Should().Be(NotifyCollectionChangedAction.Reset);
+        test2.action.Should().Be(NotifyCollectionChangedAction.Reset);
+        test3.action.Should().Be(NotifyCollectionChangedAction.Add);
+        test4.action.Should().Be(NotifyCollectionChangedAction.Add);
+
+        return;
+
+        (NotifyCollectionChangedAction action, ReadOnlyObservableCollection<Person> list) Test(BindingOptions? options = null)
+        {
+            _source.Clear();
+
+            NotifyCollectionChangedAction? result = null;
+            ReadOnlyObservableCollection<Person> list;
+            //var list = new ObservableCollectionExtended<Person>();
+
+            var binder = options == null
+                ? _source.Connect().Bind(out list).Subscribe()
+                : _source.Connect().Bind(out list, options.Value).Subscribe();
+
+            using var listEvents = list.ObserveCollectionChanges().Take(1)
+                .Select(e => e.EventArgs.Action)
+                .Subscribe(events =>
+                {
+                    result = events;
+                });
+
+            _source.AddOrUpdate(people);
+            binder.Dispose();
+            return (result!.Value, list);
+        }
+    }
+
 
     [Fact]
     public void AddToSourceAddsToDestination()

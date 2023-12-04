@@ -15,10 +15,28 @@ namespace DynamicData.Binding;
 /// </remarks>
 /// <param name="refreshThreshold">The number of changes before a Reset event is used.</param>
 /// <param name="useReplaceForUpdates"> Use replace instead of remove / add for updates. </param>
-public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 25, bool useReplaceForUpdates = true) : ISortedObservableCollectionAdaptor<TObject, TKey>
+/// <param name="resetOnFirstTimeLoad"> Should a reset be fired for a first time load.This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.</param>
+public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold, bool useReplaceForUpdates = true, bool resetOnFirstTimeLoad = true) : ISortedObservableCollectionAdaptor<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortedObservableCollectionAdaptor{TObject, TKey}"/> class.
+    /// </summary>
+    public SortedObservableCollectionAdaptor()
+        : this(DynamicDataOptions.Binding)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SortedObservableCollectionAdaptor{TObject, TKey}"/> class.
+    /// </summary>
+    /// <param name="options"> The binding options.</param>
+    public SortedObservableCollectionAdaptor(BindingOptions options)
+        : this(options.ResetThreshold, options.UseReplaceForUpdates, options.ResetOnFirstTimeLoad)
+    {
+    }
+
     /// <summary>
     /// Maintains the specified collection from the changes.
     /// </summary>
@@ -38,16 +56,41 @@ public class SortedObservableCollectionAdaptor<TObject, TKey>(int refreshThresho
 
         switch (changes.SortedItems.SortReason)
         {
-            case SortReason.InitialLoad:
             case SortReason.ComparerChanged:
             case SortReason.Reset:
-                using (collection.SuspendNotifications())
+
+                // Multiply items count by 2 as we need to clear existing items
+                if (changes.SortedItems.Count * 2 > refreshThreshold)
+                {
+                    using (collection.SuspendNotifications())
+                    {
+                        collection.Load(changes.SortedItems.Select(kv => kv.Value));
+                    }
+                }
+                else
                 {
                     collection.Load(changes.SortedItems.Select(kv => kv.Value));
                 }
 
                 break;
 
+            case SortReason.InitialLoad:
+                if (resetOnFirstTimeLoad && (changes.Count - changes.Refreshes > refreshThreshold))
+                {
+                    using (collection.SuspendNotifications())
+                    {
+                        collection.Load(changes.SortedItems.Select(kv => kv.Value));
+                    }
+                }
+                else
+                {
+                    using (collection.SuspendCount())
+                    {
+                        DoUpdate(changes, collection);
+                    }
+                }
+
+                break;
             case SortReason.DataChanged:
                 if (changes.Count - changes.Refreshes > refreshThreshold)
                 {
