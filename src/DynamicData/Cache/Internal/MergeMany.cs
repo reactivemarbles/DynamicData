@@ -24,10 +24,7 @@ internal class MergeMany<TObject, TKey, TDestination>
 
     public MergeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<TDestination>> observableSelector)
     {
-        if (observableSelector is null)
-        {
-            throw new ArgumentNullException(nameof(observableSelector));
-        }
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _observableSelector = (t, _) => observableSelector(t);

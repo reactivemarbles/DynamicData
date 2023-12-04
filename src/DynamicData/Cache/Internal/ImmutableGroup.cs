@@ -11,7 +11,7 @@ internal sealed class ImmutableGroup<TObject, TKey, TGroupKey> : IGrouping<TObje
     where TKey : notnull
     where TGroupKey : notnull
 {
-    private readonly ICache<TObject, TKey> _cache;
+    private readonly Cache<TObject, TKey> _cache;
 
     internal ImmutableGroup(TGroupKey key, ICache<TObject, TKey> cache)
     {

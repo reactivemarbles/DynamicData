@@ -161,8 +161,7 @@ public static class StdDevEx
     /// <param name="fallbackValue">The fallback value.</param>
     /// <returns>An observable which emits the standard deviation value.</returns>
     public static IObservable<decimal> StdDev<T>(this IObservable<IAggregateChangeSet<T>> source, Func<T, decimal> valueSelector, decimal fallbackValue = 0M) =>
-     //// throw new NotImplementedException("For some reason there is a problem with decimal value inference");
-     source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<decimal>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<decimal>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Sqrt(values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) * (1.0M / (values.Count - 1)));
+        source.StdDevCalc(valueSelector, fallbackValue, (current, item) => new StdDev<decimal>(current.Count + 1, current.SumOfItems + item, current.SumOfSquares + (item * item)), (current, item) => new StdDev<decimal>(current.Count - 1, current.SumOfItems - item, current.SumOfSquares - (item * item)), values => Sqrt(values.SumOfSquares - ((values.SumOfItems * values.SumOfItems) / values.Count)) * (1.0M / (values.Count - 1)));
 
     /// <summary>
     /// Continual computation of the standard deviation of the  values in the underlying data source.
@@ -186,38 +185,11 @@ public static class StdDevEx
 
     private static IObservable<TResult> StdDevCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<StdDev<TValue>, TValue, StdDev<TValue>> addAction, Func<StdDev<TValue>, TValue, StdDev<TValue>> removeAction, Func<StdDev<TValue>, TResult> resultAction)
     {
-#if NET6_0_OR_GREATER
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(valueSelector);
-        ArgumentNullException.ThrowIfNull(addAction);
-        ArgumentNullException.ThrowIfNull(removeAction);
-        ArgumentNullException.ThrowIfNull(resultAction);
-#else
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (valueSelector is null)
-        {
-            throw new ArgumentNullException(nameof(valueSelector));
-        }
-
-        if (addAction is null)
-        {
-            throw new ArgumentNullException(nameof(addAction));
-        }
-
-        if (removeAction is null)
-        {
-            throw new ArgumentNullException(nameof(removeAction));
-        }
-
-        if (resultAction is null)
-        {
-            throw new ArgumentNullException(nameof(resultAction));
-        }
-#endif
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
+        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
+        resultAction.ThrowArgumentNullExceptionIfNull(nameof(resultAction));
 
         return source.Scan(default(StdDev<TValue>), (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>

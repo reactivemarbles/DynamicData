@@ -45,15 +45,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (adaptor is null)
-        {
-            throw new ArgumentNullException(nameof(adaptor));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        adaptor.ThrowArgumentNullExceptionIfNull(nameof(adaptor));
 
         return source.Do(adaptor.Adapt);
     }
@@ -75,15 +68,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (adaptor is null)
-        {
-            throw new ArgumentNullException(nameof(adaptor));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        adaptor.ThrowArgumentNullExceptionIfNull(nameof(adaptor));
 
         return source.Do(adaptor.Adapt);
     }
@@ -100,10 +86,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.AddOrUpdate(item));
     }
@@ -121,10 +104,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.AddOrUpdate(item, equalityComparer));
     }
@@ -143,10 +123,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.AddOrUpdate(items));
     }
@@ -166,10 +143,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.AddOrUpdate(items, equalityComparer));
     }
@@ -187,15 +161,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (item is null)
-        {
-            throw new ArgumentNullException(nameof(item));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        item.ThrowArgumentNullExceptionIfNull(nameof(item));
 
         source.Edit(updater => updater.AddOrUpdate(item, key));
     }
@@ -214,17 +181,11 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (others is null || others.Length == 0)
-        {
-            throw new ArgumentNullException(nameof(others));
-        }
-
-        return source.Combine(CombineOperator.And, others);
+        return others is null || others.Length == 0
+            ? throw new ArgumentNullException(nameof(others))
+            : source.Combine(CombineOperator.And, others);
     }
 
     /// <summary>
@@ -243,10 +204,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.And);
     }
@@ -263,10 +221,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.And);
     }
@@ -283,10 +238,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.And);
     }
@@ -303,10 +255,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.And);
     }
@@ -323,10 +272,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new AnonymousObservableCache<TObject, TKey>(source);
     }
@@ -344,10 +290,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (applyLocking)
         {
@@ -371,10 +314,7 @@ public static class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.AutoRefreshOnObservable(
             (t, _) =>
@@ -406,10 +346,7 @@ public static class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.AutoRefreshOnObservable(
             (t, _) =>
@@ -455,15 +392,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (reevaluator is null)
-        {
-            throw new ArgumentNullException(nameof(reevaluator));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        reevaluator.ThrowArgumentNullExceptionIfNull(nameof(reevaluator));
 
         return new AutoRefresh<TObject, TKey, TAny>(source, reevaluator, changeSetBuffer, scheduler).Run();
     }
@@ -484,10 +414,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Buffer(timeSpan, scheduler ?? Scheduler.Default).FlattenBufferResult();
     }
@@ -556,15 +483,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (pauseIfTrueSelector is null)
-        {
-            throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        pauseIfTrueSelector.ThrowArgumentNullExceptionIfNull(nameof(pauseIfTrueSelector));
 
         return new BatchIf<TObject, TKey>(source, pauseIfTrueSelector, timeOut, initialPauseState, scheduler: scheduler).Run();
     }
@@ -600,10 +520,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
+        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
@@ -630,10 +547,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
+        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
 
         return source?.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(options)) ?? throw new ArgumentNullException(nameof(source));
     }
@@ -652,20 +566,9 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
-
-        if (updater is null)
-        {
-            throw new ArgumentNullException(nameof(updater));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        updater.ThrowArgumentNullExceptionIfNull(nameof(updater));
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -694,10 +597,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         var target = new ObservableCollectionExtended<TObject>();
         readOnlyObservableCollection = new ReadOnlyObservableCollection<TObject>(target);
@@ -720,10 +620,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (adaptor is not null)
         {
@@ -756,15 +653,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
 
         return source.Bind(destination, DynamicDataOptions.Binding);
     }
@@ -783,15 +673,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
 
         var updater = new SortedObservableCollectionAdaptor<TObject, TKey>(options);
         return source.Bind(destination, updater);
@@ -811,20 +694,9 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
-
-        if (updater is null)
-        {
-            throw new ArgumentNullException(nameof(updater));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
+        updater.ThrowArgumentNullExceptionIfNull(nameof(updater));
 
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
@@ -853,10 +725,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         var target = new ObservableCollectionExtended<TObject>();
         var result = new ReadOnlyObservableCollection<TObject>(target);
@@ -881,10 +750,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
@@ -920,15 +786,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (bindingList is null)
-        {
-            throw new ArgumentNullException(nameof(bindingList));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        bindingList.ThrowArgumentNullExceptionIfNull(nameof(bindingList));
 
         return source.Adapt(new BindingListAdaptor<TObject, TKey>(bindingList, resetThreshold));
     }
@@ -951,15 +810,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (bindingList is null)
-        {
-            throw new ArgumentNullException(nameof(bindingList));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        bindingList.ThrowArgumentNullExceptionIfNull(nameof(bindingList));
 
         return source.Adapt(new SortedBindingListAdaptor<TObject, TKey>(bindingList, resetThreshold));
     }
@@ -1000,10 +852,7 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new Cast<TSource, TKey, TDestination>(source, converter).Run();
     }
@@ -1022,15 +871,8 @@ public static class ObservableCacheEx
         where TSourceKey : notnull
         where TDestinationKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return source.Select(
             updates =>
@@ -1055,15 +897,8 @@ public static class ObservableCacheEx
         where TSourceKey : notnull
         where TDestinationKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return source.Select(
             updates =>
@@ -1084,10 +919,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Clear());
     }
@@ -1103,10 +935,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Clear());
     }
@@ -1122,11 +951,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         source.Edit(updater => updater.Clear());
     }
 
@@ -1142,15 +967,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (target is null)
-        {
-            throw new ArgumentNullException(nameof(target));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        target.ThrowArgumentNullExceptionIfNull(nameof(target));
 
         return source.Do(
             changes =>
@@ -1198,15 +1016,8 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (conversionFactory is null)
-        {
-            throw new ArgumentNullException(nameof(conversionFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        conversionFactory.ThrowArgumentNullExceptionIfNull(nameof(conversionFactory));
 
         return source.Select(
             changes =>
@@ -1227,10 +1038,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new DeferUntilLoaded<TObject, TKey>(source).Run();
     }
@@ -1246,10 +1054,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new DeferUntilLoaded<TObject, TKey>(source).Run();
     }
@@ -1270,10 +1075,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new DisposeMany<TObject, TKey>(source).Run();
     }
@@ -1296,15 +1098,8 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TValue : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (valueSelector is null)
-        {
-            throw new ArgumentNullException(nameof(valueSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
 
         return Observable.Create<IDistinctChangeSet<TValue>>(observer => new DistinctCalculator<TObject, TKey, TValue>(source, valueSelector).Run().SubscribeSafe(observer));
     }
@@ -1323,20 +1118,9 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (allItems is null)
-        {
-            throw new ArgumentNullException(nameof(allItems));
-        }
-
-        if (equalityComparer is null)
-        {
-            throw new ArgumentNullException(nameof(equalityComparer));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        allItems.ThrowArgumentNullExceptionIfNull(nameof(allItems));
+        equalityComparer.ThrowArgumentNullExceptionIfNull(nameof(equalityComparer));
 
         source.EditDiff(allItems, equalityComparer.Equals);
     }
@@ -1355,20 +1139,9 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (allItems is null)
-        {
-            throw new ArgumentNullException(nameof(allItems));
-        }
-
-        if (areItemsEqual is null)
-        {
-            throw new ArgumentNullException(nameof(areItemsEqual));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        allItems.ThrowArgumentNullExceptionIfNull(nameof(allItems));
+        areItemsEqual.ThrowArgumentNullExceptionIfNull(nameof(areItemsEqual));
 
         var editDiff = new EditDiff<TObject, TKey>(source, areItemsEqual);
         editDiff.Edit(allItems);
@@ -1388,15 +1161,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return new EditDiffChangeSet<TObject, TKey>(source, keySelector, equalityComparer).Run();
     }
@@ -1415,15 +1181,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return new EditDiffChangeSetOptional<TObject, TKey>(source, keySelector, equalityComparer).Run();
     }
@@ -1441,10 +1200,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Refresh(item));
     }
@@ -1462,10 +1218,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Refresh(items));
     }
@@ -1482,10 +1235,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Refresh());
     }
@@ -1508,10 +1258,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (others is null || others.Length == 0)
         {
@@ -1538,10 +1285,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Except);
     }
@@ -1558,10 +1302,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Except);
     }
@@ -1578,10 +1319,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Except);
     }
@@ -1598,10 +1336,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Except);
     }
@@ -1643,15 +1378,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (timeSelector is null)
-        {
-            throw new ArgumentNullException(nameof(timeSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
 
         return source.ExpireAfter(timeSelector, null, scheduler);
     }
@@ -1695,15 +1423,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (timeSelector is null)
-        {
-            throw new ArgumentNullException(nameof(timeSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
 
         return new TimeExpirer<TObject, TKey>(source, timeSelector, pollingInterval, scheduler).ExpireAfter();
     }
@@ -1755,10 +1476,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new UniquenessEnforcer<TObject, TKey>(source).Run();
     }
@@ -1784,15 +1502,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (timeSelector is null)
-        {
-            throw new ArgumentNullException(nameof(timeSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
 
         scheduler ??= Scheduler.Default;
 
@@ -1832,10 +1543,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new StaticFilter<TObject, TKey>(source, filter, suppressEmptyChangeSets).Run();
     }
@@ -1853,15 +1561,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (predicateChanged is null)
-        {
-            throw new ArgumentNullException(nameof(predicateChanged));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        predicateChanged.ThrowArgumentNullExceptionIfNull(nameof(predicateChanged));
 
         return source.Filter(predicateChanged, Observable.Empty<Unit>(), suppressEmptyChangeSets);
     }
@@ -1879,15 +1580,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (reapplyFilter is null)
-        {
-            throw new ArgumentNullException(nameof(reapplyFilter));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
 
         return source.Filter(Observable.Empty<Func<TObject, bool>>(), reapplyFilter, suppressEmptyChangeSets);
     }
@@ -1906,20 +1600,9 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (predicateChanged is null)
-        {
-            throw new ArgumentNullException(nameof(predicateChanged));
-        }
-
-        if (reapplyFilter is null)
-        {
-            throw new ArgumentNullException(nameof(reapplyFilter));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        predicateChanged.ThrowArgumentNullExceptionIfNull(nameof(predicateChanged));
+        reapplyFilter.ThrowArgumentNullExceptionIfNull(nameof(reapplyFilter));
 
         return new DynamicFilter<TObject, TKey>(source, predicateChanged, reapplyFilter, suppressEmptyChangeSets).Run();
     }
@@ -1939,15 +1622,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (filterFactory is null)
-        {
-            throw new ArgumentNullException(nameof(filterFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        filterFactory.ThrowArgumentNullExceptionIfNull(nameof(filterFactory));
 
         return new FilterOnObservable<TObject, TKey>(source, filterFactory, buffer, scheduler).Run();
     }
@@ -1967,10 +1643,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (filterFactory is null)
-        {
-            throw new ArgumentNullException(nameof(filterFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        filterFactory.ThrowArgumentNullExceptionIfNull(nameof(filterFactory));
 
         return source.FilterOnObservable((obj, _) => filterFactory(obj), buffer, scheduler);
     }
@@ -1994,20 +1668,9 @@ public static class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (propertySelector is null)
-        {
-            throw new ArgumentNullException(nameof(propertySelector));
-        }
-
-        if (predicate is null)
-        {
-            throw new ArgumentNullException(nameof(predicate));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
+        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
 
         return new FilterOnProperty<TObject, TKey, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
     }
@@ -2023,15 +1686,8 @@ public static class ObservableCacheEx
     [Obsolete("This can cause unhandled exception issues so do not use")]
     public static IObservable<T> FinallySafe<T>(this IObservable<T> source, Action finallyAction)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (finallyAction is null)
-        {
-            throw new ArgumentNullException(nameof(finallyAction));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        finallyAction.ThrowArgumentNullExceptionIfNull(nameof(finallyAction));
 
         return new FinallySafe<T>(source, finallyAction).Run();
     }
@@ -2048,10 +1704,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.SelectMany(changes => changes);
     }
@@ -2067,10 +1720,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Where(x => x.Count != 0).Select(updates => new ChangeSet<TObject, TKey>(updates.SelectMany(u => u)));
     }
@@ -2087,15 +1737,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
 
         return source.Do(changes => changes.ForEach(action));
     }
@@ -2121,25 +1764,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return left.FullJoin(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -2165,25 +1793,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return new FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }
@@ -2209,25 +1822,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return left.FullJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -2253,25 +1851,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return new FullJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }
@@ -2297,16 +1880,9 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (groupSelector is null)
-        {
-            throw new ArgumentNullException(nameof(groupSelector));
-        }
-
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        groupSelector.ThrowArgumentNullExceptionIfNull(nameof(groupSelector));
+        resultGroupSource.ThrowArgumentNullExceptionIfNull(nameof(resultGroupSource));
         if (resultGroupSource is null)
         {
             throw new ArgumentNullException(nameof(resultGroupSource));
@@ -2329,15 +1905,8 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (groupSelectorKey is null)
-        {
-            throw new ArgumentNullException(nameof(groupSelectorKey));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
 
         return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, null).Run();
     }
@@ -2364,20 +1933,9 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (groupSelectorKey is null)
-        {
-            throw new ArgumentNullException(nameof(groupSelectorKey));
-        }
-
-        if (regrouper is null)
-        {
-            throw new ArgumentNullException(nameof(regrouper));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
+        regrouper.ThrowArgumentNullExceptionIfNull(nameof(regrouper));
 
         return new GroupOn<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
     }
@@ -2399,15 +1957,8 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (propertySelector is null)
-        {
-            throw new ArgumentNullException(nameof(propertySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
 
         return new GroupOnProperty<TObject, TKey, TGroupKey>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
     }
@@ -2429,15 +1980,8 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (propertySelector is null)
-        {
-            throw new ArgumentNullException(nameof(propertySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
 
         return new GroupOnPropertyWithImmutableState<TObject, TKey, TGroupKey>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
     }
@@ -2464,15 +2008,8 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TGroupKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (groupSelectorKey is null)
-        {
-            throw new ArgumentNullException(nameof(groupSelectorKey));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
 
         return new GroupOnImmutable<TObject, TKey, TGroupKey>(source, groupSelectorKey, regrouper).Run();
     }
@@ -2528,15 +2065,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (includeFunction is null)
-        {
-            throw new ArgumentNullException(nameof(includeFunction));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        includeFunction.ThrowArgumentNullExceptionIfNull(nameof(includeFunction));
 
         return source.Select(
             changes =>
@@ -2567,25 +2097,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return left.InnerJoin(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -2611,25 +2126,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return new InnerJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }
@@ -2655,25 +2155,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return left.InnerJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -2699,25 +2184,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return new InnerJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }
@@ -2753,25 +2223,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return left.LeftJoin(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -2796,25 +2251,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return new LeftJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }
@@ -2840,25 +2280,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return left.LeftJoinMany(right, rightKeySelector, (_, leftValue, rightValue) => resultSelector(leftValue, rightValue));
     }
@@ -2884,25 +2309,10 @@ public static class ObservableCacheEx
         where TRightKey : notnull
         where TDestination : notnull
     {
-        if (left is null)
-        {
-            throw new ArgumentNullException(nameof(left));
-        }
-
-        if (right is null)
-        {
-            throw new ArgumentNullException(nameof(right));
-        }
-
-        if (rightKeySelector is null)
-        {
-            throw new ArgumentNullException(nameof(rightKeySelector));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        left.ThrowArgumentNullExceptionIfNull(nameof(left));
+        right.ThrowArgumentNullExceptionIfNull(nameof(right));
+        rightKeySelector.ThrowArgumentNullExceptionIfNull(nameof(rightKeySelector));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return new LeftJoinMany<TLeft, TLeftKey, TRight, TRightKey, TDestination>(left, right, rightKeySelector, resultSelector).Run();
     }
@@ -2922,10 +2332,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (size <= 0)
         {
@@ -2951,10 +2358,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (sizeLimit <= 0)
         {
@@ -3000,15 +2404,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (observableSelector is null)
-        {
-            throw new ArgumentNullException(nameof(observableSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
         return new MergeMany<TObject, TKey, TDestination>(source, observableSelector).Run();
     }
@@ -3030,15 +2427,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (observableSelector is null)
-        {
-            throw new ArgumentNullException(nameof(observableSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
         return new MergeMany<TObject, TKey, TDestination>(source, observableSelector).Run();
     }
@@ -3055,10 +2445,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer: null).Run();
     }
@@ -3076,10 +2463,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (comparer == null)
         {
@@ -3102,10 +2486,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (equalityComparer == null)
         {
@@ -3129,10 +2510,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (equalityComparer == null)
         {
@@ -3162,10 +2540,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (other == null)
         {
@@ -3191,10 +2566,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (other == null)
         {
@@ -3225,10 +2597,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (other == null)
         {
@@ -3260,10 +2629,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (other == null)
         {
@@ -3298,10 +2664,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (others == null)
         {
@@ -3327,10 +2690,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (others == null)
         {
@@ -3361,10 +2721,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (others == null)
         {
@@ -3396,10 +2753,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (others == null)
         {
@@ -3433,10 +2787,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new MergeChangeSets<TObject, TKey>(source, equalityComparer: null, comparer: null, completable, scheduler).Run();
     }
@@ -3456,10 +2807,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (comparer == null)
         {
@@ -3484,10 +2832,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (equalityComparer == null)
         {
@@ -3513,10 +2858,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (equalityComparer == null)
         {
@@ -3575,10 +2917,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (observableSelector == null)
         {
@@ -3612,6 +2951,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         if (observableSelector == null)
         {
             throw new ArgumentNullException(nameof(observableSelector));
@@ -3639,10 +2979,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (observableSelector == null)
         {
@@ -3672,6 +3009,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         if (observableSelector == null)
         {
             throw new ArgumentNullException(nameof(observableSelector));
@@ -3721,6 +3059,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         if (observableSelector == null)
         {
             throw new ArgumentNullException(nameof(observableSelector));
@@ -3771,6 +3110,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         if (observableSelector == null)
         {
             throw new ArgumentNullException(nameof(observableSelector));
@@ -3822,6 +3162,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         if (observableSelector == null)
         {
             throw new ArgumentNullException(nameof(observableSelector));
@@ -3852,10 +3193,7 @@ public static class ObservableCacheEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (observableSelector == null)
         {
@@ -3887,10 +3225,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (observableSelector is null)
         {
@@ -3917,10 +3252,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (observableSelector is null)
         {
@@ -3951,10 +3283,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Where(changes => changes.Count != 0);
     }
@@ -3971,10 +3300,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (addAction is null)
         {
@@ -3997,10 +3323,7 @@ public static class ObservableCacheEx
         where TKey : notnull
     {
         var refreshAction2 = refreshAction;
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (refreshAction2 == null)
         {
@@ -4039,10 +3362,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (removeAction is null)
         {
@@ -4064,10 +3384,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (updateAction is null)
         {
@@ -4094,10 +3411,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (others is null || others.Length == 0)
         {
@@ -4123,10 +3437,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Or);
     }
@@ -4143,10 +3454,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Or);
     }
@@ -4163,10 +3471,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Or);
     }
@@ -4183,10 +3488,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Or);
     }
@@ -4203,10 +3505,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (pageRequests is null)
         {
@@ -4233,10 +3532,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return observable.Subscribe(source.AddOrUpdate);
     }
@@ -4258,10 +3554,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return observable.Subscribe(source.AddOrUpdate);
     }
@@ -4283,10 +3576,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (destination is null)
         {
@@ -4311,10 +3601,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (destination is null)
         {
@@ -4336,10 +3623,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (destination is null)
         {
@@ -4367,10 +3651,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (resultSelector is null)
         {
@@ -4392,10 +3673,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new QueryWhenChanged<TObject, TKey, Unit>(source).Run();
     }
@@ -4414,10 +3692,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (itemChangedTrigger is null)
         {
@@ -4438,10 +3713,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new RefCount<TObject, TKey>(source).Run();
     }
@@ -4458,10 +3730,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Refresh(item));
     }
@@ -4478,10 +3747,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Refresh(items));
     }
@@ -4497,10 +3763,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Refresh());
     }
@@ -4518,10 +3781,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Remove(item));
     }
@@ -4539,10 +3799,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Remove(key));
     }
@@ -4560,10 +3817,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Remove(items));
     }
@@ -4581,10 +3835,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Remove(keys));
     }
@@ -4602,10 +3853,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Remove(key));
     }
@@ -4623,10 +3871,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.Remove(keys));
     }
@@ -4645,10 +3890,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Select(
             changes =>
@@ -4671,10 +3913,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.RemoveKey(key));
     }
@@ -4692,10 +3931,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         source.Edit(updater => updater.RemoveKeys(keys));
     }
@@ -4886,10 +4122,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.DeferUntilLoaded().Skip(1);
     }
@@ -4915,10 +4148,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (comparer is null)
         {
@@ -4942,10 +4172,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (comparerObservable is null)
         {
@@ -4970,10 +4197,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (comparerObservable is null)
         {
@@ -4998,10 +4222,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (resorter is null)
         {
@@ -5134,10 +4355,7 @@ public static class ObservableCacheEx
         where TObject : IKey<TKey>
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.StartWithItem(item, item.Key);
     }
@@ -5155,10 +4373,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         var change = new Change<TObject, TKey>(ChangeReason.Add, key, item);
         return source.StartWith(new ChangeSet<TObject, TKey> { change });
@@ -5182,10 +4397,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (subscriptionFactory is null)
         {
@@ -5213,10 +4425,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (subscriptionFactory is null)
         {
@@ -5253,10 +4462,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Select(cache => cache.Connect()).Switch();
     }
@@ -5277,10 +4483,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return new Switch<TObject, TKey>(sources).Run();
     }
@@ -5315,10 +4518,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (keySelector is null)
         {
@@ -5347,10 +4547,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (keySelector is null)
         {
@@ -5374,10 +4571,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new ToObservableOptional<TObject, TKey>(source, key, equalityComparer).Run();
     }
@@ -5425,10 +4619,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (size <= 0)
         {
@@ -5453,10 +4644,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (comparer is null)
         {
@@ -5524,10 +4712,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5557,10 +4742,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5590,10 +4772,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5623,10 +4802,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5656,10 +4832,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5689,10 +4862,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5747,10 +4917,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5785,10 +4952,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5824,10 +4988,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5858,10 +5019,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5892,10 +5050,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -5995,10 +5150,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6035,10 +5187,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6075,10 +5224,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6142,10 +5288,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6182,10 +5325,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6222,10 +5362,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6262,10 +5399,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6302,10 +5436,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6333,10 +5464,7 @@ public static class ObservableCacheEx
         where TObject : class
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (pivotOn is null)
         {
@@ -6366,10 +5494,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6405,10 +5530,7 @@ public static class ObservableCacheEx
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (transformFactory is null)
         {
@@ -6439,10 +5561,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         static IEnumerable<Change<TObject, TKey>> ReplaceMoves(IChangeSet<TObject, TKey> items)
         {
@@ -6560,10 +5679,7 @@ public static class ObservableCacheEx
         where TKey : notnull
         where TValue : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (observableSelector is null)
         {
@@ -6602,10 +5718,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (virtualRequests is null)
         {
@@ -6627,10 +5740,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.SelectMany(updates => updates).Where(update => update.Key.Equals(key));
     }
@@ -6648,10 +5758,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Watch(key).Select(u => u.Current);
     }
@@ -6669,10 +5776,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Watch(key).Select(u => u.Current);
     }
@@ -6689,10 +5793,7 @@ public static class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.MergeMany(t => t.WhenAnyPropertyChanged(propertiesToMonitor));
     }
@@ -6711,10 +5812,7 @@ public static class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (propertyAccessor is null)
         {
@@ -6738,10 +5836,7 @@ public static class ObservableCacheEx
         where TObject : INotifyPropertyChanged
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (propertyAccessor is null)
         {
@@ -6765,6 +5860,8 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+
         if (reasons is null)
         {
             throw new ArgumentNullException(nameof(reasons));
@@ -6794,6 +5891,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
+        reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
         if (reasons is null)
         {
             throw new ArgumentNullException(nameof(reasons));
@@ -6827,10 +5925,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (others is null || others.Length == 0)
         {
@@ -6857,10 +5952,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Xor);
     }
@@ -6877,10 +5969,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Xor);
     }
@@ -6897,10 +5986,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Xor);
     }
@@ -6917,10 +6003,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Combine(CombineOperator.Xor);
     }
@@ -6949,10 +6032,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -6967,10 +6047,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -6985,10 +6062,7 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new DynamicCombiner<TObject, TKey>(source, type).Run();
     }

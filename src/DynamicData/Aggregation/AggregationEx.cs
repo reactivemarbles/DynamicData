@@ -23,11 +23,7 @@ public static class AggregationEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         return source.Select(changeSet => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject, TKey>(changeSet));
     }
 
@@ -40,11 +36,7 @@ public static class AggregationEx
     public static IObservable<IAggregateChangeSet<TObject>> ForAggregation<TObject>(this IObservable<IChangeSet<TObject>> source)
         where TObject : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
         return source.Select(changeSet => (IAggregateChangeSet<TObject>)new AggregateEnumerator<TObject>(changeSet));
     }
 
@@ -116,25 +108,10 @@ public static class AggregationEx
     /// <returns>An observable with the accumulated value.</returns>
     internal static IObservable<TResult> Accumulate<TObject, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, TResult seed, Func<TObject, TResult> accessor, Func<TResult, TResult, TResult> addAction, Func<TResult, TResult, TResult> removeAction)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (accessor is null)
-        {
-            throw new ArgumentNullException(nameof(accessor));
-        }
-
-        if (addAction is null)
-        {
-            throw new ArgumentNullException(nameof(addAction));
-        }
-
-        if (removeAction is null)
-        {
-            throw new ArgumentNullException(nameof(removeAction));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        accessor.ThrowArgumentNullExceptionIfNull(nameof(accessor));
+        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
+        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
 
         return source.Scan(seed, (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>

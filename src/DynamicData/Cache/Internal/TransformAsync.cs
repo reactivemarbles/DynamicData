@@ -70,7 +70,7 @@ internal class TransformAsync<TDestination, TSource, TKey>(IObservable<IChangeSe
         return ProcessUpdates(cache, transformed);
     }
 
-    private IChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TransformedItemContainer, TKey> cache, TransformResult[] transformedItems)
+    private ChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TransformedItemContainer, TKey> cache, TransformResult[] transformedItems)
     {
         // check for errors and callback if a handler has been specified
         var errors = transformedItems.Where(t => !t.Success).ToArray();

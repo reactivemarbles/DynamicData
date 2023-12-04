@@ -58,7 +58,7 @@ internal sealed class Virtualise<TObject, TKey>(IObservable<ISortedChangeSet<TOb
             return Virtualise();
         }
 
-        private IVirtualChangeSet<TObject, TKey>? Virtualise(ISortedChangeSet<TObject, TKey>? updates = null)
+        private VirtualChangeSet<TObject, TKey>? Virtualise(ISortedChangeSet<TObject, TKey>? updates = null)
         {
             if (!_isLoaded)
             {

@@ -48,8 +48,8 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
 
     private sealed class Grouper(Func<TObject, TGroupKey> groupSelectorKey)
     {
-        private readonly Dictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>> _groupCache = new();
-        private readonly Dictionary<TKey, ChangeWithGroup> _itemCache = new();
+        private readonly Dictionary<TGroupKey, ManagedGroup<TObject, TKey, TGroupKey>> _groupCache = [];
+        private readonly Dictionary<TKey, ChangeWithGroup> _itemCache = [];
 
         public IGroupChangeSet<TObject, TKey, TGroupKey> Regroup()
         {
@@ -192,11 +192,7 @@ internal sealed class GroupOn<TObject, TKey, TGroupKey>(IObservable<IChangeSet<T
 
                                                     groupUpdater.AddOrUpdate(current.Item, current.Key);
                                                 }).Else(
-                                                () =>
-                                                {
-                                                    // must be created due to addition
-                                                    groupUpdater.AddOrUpdate(current.Item, current.Key);
-                                                });
+                                                () => groupUpdater.AddOrUpdate(current.Item, current.Key));
 
                                             _itemCache[current.Key] = current;
 

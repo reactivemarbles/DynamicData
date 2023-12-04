@@ -57,7 +57,7 @@ internal static class ExpressionBuilder
 
         if (method is null)
         {
-            throw new ArgumentException("The property does not have a valid get method.", nameof(source));
+            throw new ArgumentException("The property does not have a valid get method.", nameof(method));
         }
 
         if (source.Expression is null)

@@ -32,10 +32,7 @@ public static class ObservableCollectionEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ObservableCollection<T> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return ToObservableChangeSet<ObservableCollection<T>, T>(source);
     }
@@ -56,15 +53,8 @@ public static class ObservableCollectionEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return ToObservableChangeSet<ObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
     }
@@ -80,10 +70,7 @@ public static class ObservableCollectionEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReadOnlyObservableCollection<T> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return ToObservableChangeSet<ReadOnlyObservableCollection<T>, T>(source);
     }
@@ -104,15 +91,8 @@ public static class ObservableCollectionEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return ToObservableChangeSet<ReadOnlyObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
     }
@@ -131,10 +111,7 @@ public static class ObservableCollectionEx
         where TCollection : INotifyCollectionChanged, IEnumerable<T>
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return Observable.Create<IChangeSet<T>>(
             observer =>

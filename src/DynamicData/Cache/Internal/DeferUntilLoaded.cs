@@ -16,10 +16,7 @@ internal class DeferUntilLoaded<TObject, TKey>
 
     public DeferUntilLoaded(IObservableCache<TObject, TKey> source)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         _result = source.CountChanged.Where(count => count != 0).Take(1).Select(_ => new ChangeSet<TObject, TKey>()).Concat(source.Connect()).NotEmpty();
     }

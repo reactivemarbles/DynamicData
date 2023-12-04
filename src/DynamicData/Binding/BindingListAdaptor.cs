@@ -28,10 +28,7 @@ namespace DynamicData.Binding
         /// <inheritdoc />
         public void Adapt(IChangeSet<T> changes)
         {
-            if (changes is null)
-            {
-                throw new ArgumentNullException(nameof(changes));
-            }
+            changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
             if (changes.TotalChanges - changes.Refreshes > refreshThreshold || !_loaded)
             {
@@ -71,6 +68,7 @@ namespace DynamicData.Binding
         /// <inheritdoc />
         public void Adapt(IChangeSet<TObject, TKey> changes)
         {
+            changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
             _cache.Clone(changes);
 
             if (changes.Count - changes.Refreshes > refreshThreshold || !_loaded)

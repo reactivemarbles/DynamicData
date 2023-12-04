@@ -13,32 +13,21 @@ namespace DynamicData.Binding
     /// </summary>
     /// <typeparam name="TObject">The type of object.</typeparam>
     /// <typeparam name="TKey">The type of key.</typeparam>
-    public class SortedBindingListAdaptor<TObject, TKey> : ISortedChangeSetAdaptor<TObject, TKey>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="SortedBindingListAdaptor{TObject, TKey}"/> class.
+    /// </remarks>
+    /// <param name="list">The source list.</param>
+    /// <param name="refreshThreshold">The threshold before a refresh is triggered.</param>
+    public class SortedBindingListAdaptor<TObject, TKey>(BindingList<TObject> list, int refreshThreshold = 25) : ISortedChangeSetAdaptor<TObject, TKey>
         where TObject : notnull
         where TKey : notnull
     {
-        private readonly BindingList<TObject> _list;
-
-        private readonly int _refreshThreshold;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SortedBindingListAdaptor{TObject, TKey}"/> class.
-        /// </summary>
-        /// <param name="list">The source list.</param>
-        /// <param name="refreshThreshold">The threshold before a refresh is triggered.</param>
-        public SortedBindingListAdaptor(BindingList<TObject> list, int refreshThreshold = 25)
-        {
-            _list = list ?? throw new ArgumentNullException(nameof(list));
-            _refreshThreshold = refreshThreshold;
-        }
+        private readonly BindingList<TObject> _list = list ?? throw new ArgumentNullException(nameof(list));
 
         /// <inheritdoc />
         public void Adapt(ISortedChangeSet<TObject, TKey> changes)
         {
-            if (changes is null)
-            {
-                throw new ArgumentNullException(nameof(changes));
-            }
+            changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
             switch (changes.SortedItems.SortReason)
             {
@@ -54,7 +43,7 @@ namespace DynamicData.Binding
                     break;
 
                 case SortReason.DataChanged:
-                    if (changes.Count - changes.Refreshes > _refreshThreshold)
+                    if (changes.Count - changes.Refreshes > refreshThreshold)
                     {
                         using (new BindingListEventsSuspender<TObject>(_list))
                         {

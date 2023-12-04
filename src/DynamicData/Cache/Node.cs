@@ -19,9 +19,9 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     where TKey : notnull
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly ISourceCache<Node<TObject, TKey>, TKey> _children = new SourceCache<Node<TObject, TKey>, TKey>(n => n.Key);
+    private readonly SourceCache<Node<TObject, TKey>, TKey> _children = new(n => n.Key);
 
-    private readonly IDisposable _cleanUp;
+    private readonly CompositeDisposable _cleanUp;
 
     private bool _isDisposed;
 
@@ -47,7 +47,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
         Key = key;
         Parent = parent;
         Children = _children.AsObservableCache();
-        _cleanUp = new CompositeDisposable(Children, _children);
+        _cleanUp = new(Children, _children);
     }
 
     /// <summary>
@@ -64,17 +64,11 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
         {
             var i = 0;
             var parent = Parent;
-            do
+            while (parent.HasValue)
             {
-                if (!parent.HasValue)
-                {
-                    break;
-                }
-
                 i++;
                 parent = parent.Value.Parent;
             }
-            while (true);
 
             return i;
         }

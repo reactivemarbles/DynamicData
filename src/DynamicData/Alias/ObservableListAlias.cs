@@ -26,15 +26,8 @@ public static class ObservableListAlias
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return source.Transform(transformFactory);
     }
@@ -52,15 +45,8 @@ public static class ObservableListAlias
         where TDestination : notnull
         where TSource : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (manySelector is null)
-        {
-            throw new ArgumentNullException(nameof(manySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
 
         return source.TransformMany(manySelector);
     }
@@ -76,15 +62,8 @@ public static class ObservableListAlias
     public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (predicate is null)
-        {
-            throw new ArgumentNullException(nameof(predicate));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
 
         return source.Filter(predicate);
     }
@@ -102,15 +81,8 @@ public static class ObservableListAlias
     public static IObservable<IChangeSet<T>> Where<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (predicate is null)
-        {
-            throw new ArgumentNullException(nameof(predicate));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
 
         return source.Filter(predicate);
     }

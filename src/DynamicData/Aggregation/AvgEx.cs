@@ -409,38 +409,11 @@ public static class AvgEx
 
     private static IObservable<TResult> AvgCalc<TObject, TValue, TResult>(this IObservable<IAggregateChangeSet<TObject>> source, Func<TObject, TValue> valueSelector, TResult fallbackValue, Func<Avg<TValue>, TValue, Avg<TValue>> addAction, Func<Avg<TValue>, TValue, Avg<TValue>> removeAction, Func<Avg<TValue>, TResult> resultAction)
     {
-#if NET6_0_OR_GREATER
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(valueSelector);
-        ArgumentNullException.ThrowIfNull(addAction);
-        ArgumentNullException.ThrowIfNull(removeAction);
-        ArgumentNullException.ThrowIfNull(resultAction);
-#else
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (valueSelector is null)
-        {
-            throw new ArgumentNullException(nameof(valueSelector));
-        }
-
-        if (addAction is null)
-        {
-            throw new ArgumentNullException(nameof(addAction));
-        }
-
-        if (removeAction is null)
-        {
-            throw new ArgumentNullException(nameof(removeAction));
-        }
-
-        if (resultAction is null)
-        {
-            throw new ArgumentNullException(nameof(resultAction));
-        }
-#endif
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
+        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
+        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
+        resultAction.ThrowArgumentNullExceptionIfNull(nameof(resultAction));
 
         return source.Scan(default(Avg<TValue>), (state, changes) =>
             changes.Aggregate(state, (current, aggregateItem) =>

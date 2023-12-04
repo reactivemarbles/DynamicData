@@ -24,10 +24,7 @@ namespace DynamicData.Binding
                     });
         }
 
-        public void Dispose()
-        {
-            _cleanUp.Dispose();
-        }
+        public void Dispose() => _cleanUp.Dispose();
     }
 }
 
