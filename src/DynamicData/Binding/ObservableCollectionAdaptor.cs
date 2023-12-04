@@ -43,8 +43,8 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// <summary>
     /// Initializes a new instance of the <see cref="ObservableCollectionAdaptor{TObject}"/> class.
     /// </summary>
-    /// <param name="options"> The binding options.</param>
     /// <param name="collection">The collection.</param>
+    /// <param name="options"> The binding options.</param>
     public ObservableCollectionAdaptor(IObservableCollection<T> collection, BindingOptions options)
         : this(collection, options.ResetThreshold, options.UseReplaceForUpdates, options.ResetOnFirstTimeLoad)
     {
@@ -53,19 +53,19 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// <summary>
     /// Maintains the specified collection from the changes.
     /// </summary>
-    /// <param name="change">The changes.</param>
-    public void Adapt(IChangeSet<T> change)
+    /// <param name="changes">The changes.</param>
+    public void Adapt(IChangeSet<T> changes)
     {
-        if (change is null)
+        if (changes is null)
         {
-            throw new ArgumentNullException(nameof(change));
+            throw new ArgumentNullException(nameof(changes));
         }
 
         if (changes.TotalChanges - changes.Refreshes > refreshThreshold || (!_loaded && resetOnFirstTimeLoad))
         {
             using (_collection.SuspendNotifications())
             {
-                _collection.Clone(change);
+                _collection.Clone(changes);
                 _loaded = true;
             }
         }

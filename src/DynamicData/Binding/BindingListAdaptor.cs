@@ -19,42 +19,31 @@ namespace DynamicData.Binding
     /// </remarks>
     /// <param name="list">The list of items to add to the adapter.</param>
     /// <param name="refreshThreshold">The threshold before a reset is issued.</param>
-    public class BindingListAdaptor<T>(BindingList<T> list, int refreshThreshold = 25) : IChangeSetAdaptor<T>
+    public class BindingListAdaptor<T>(BindingList<T> list, int refreshThreshold = BindingOptions.DefaultResetThreshold) : IChangeSetAdaptor<T>
         where T : notnull
     {
         private readonly BindingList<T> _list = list ?? throw new ArgumentNullException(nameof(list));
         private bool _loaded;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BindingListAdaptor{T}"/> class.
-        /// </summary>
-        /// <param name="list">The list of items to add to the adapter.</param>
-        /// <param name="refreshThreshold">The threshold before a reset is issued.</param>
-        public BindingListAdaptor(BindingList<T> list, int refreshThreshold = BindingOptions.DefaultResetThreshold)
-        {
-            _list = list ?? throw new ArgumentNullException(nameof(list));
-            _refreshThreshold = refreshThreshold;
-        }
-
         /// <inheritdoc />
-        public void Adapt(IChangeSet<T> change)
+        public void Adapt(IChangeSet<T> changes)
         {
-            if (change is null)
+            if (changes is null)
             {
-                throw new ArgumentNullException(nameof(change));
+                throw new ArgumentNullException(nameof(changes));
             }
 
-            if (change.TotalChanges - change.Refreshes > refreshThreshold || !_loaded)
+            if (changes.TotalChanges - changes.Refreshes > refreshThreshold || !_loaded)
             {
                 using (new BindingListEventsSuspender<T>(_list))
                 {
-                    _list.Clone(change);
+                    _list.Clone(changes);
                     _loaded = true;
                 }
             }
             else
             {
-                _list.Clone(change);
+                _list.Clone(changes);
             }
         }
     }
@@ -70,7 +59,7 @@ namespace DynamicData.Binding
     /// <param name="list">The list of items to adapt.</param>
     /// <param name="refreshThreshold">The threshold before the refresh is triggered.</param>
     [SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics")]
-    public class BindingListAdaptor<TObject, TKey>(BindingList<TObject> list, int refreshThreshold = 25) : IChangeSetAdaptor<TObject, TKey>
+    public class BindingListAdaptor<TObject, TKey>(BindingList<TObject> list, int refreshThreshold = BindingOptions.DefaultResetThreshold) : IChangeSetAdaptor<TObject, TKey>
         where TObject : notnull
         where TKey : notnull
     {
@@ -79,23 +68,12 @@ namespace DynamicData.Binding
         private readonly BindingList<TObject> _list = list ?? throw new ArgumentNullException(nameof(list));
         private bool _loaded;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BindingListAdaptor{TObject, TKey}"/> class.
-        /// </summary>
-        /// <param name="list">The list of items to adapt.</param>
-        /// <param name="refreshThreshold">The threshold before the refresh is triggered.</param>
-        public BindingListAdaptor(BindingList<TObject> list, int refreshThreshold = BindingOptions.DefaultResetThreshold)
-        {
-            _list = list ?? throw new ArgumentNullException(nameof(list));
-            _refreshThreshold = refreshThreshold;
-        }
-
         /// <inheritdoc />
-        public void Adapt(IChangeSet<TObject, TKey> change)
+        public void Adapt(IChangeSet<TObject, TKey> changes)
         {
-            _cache.Clone(change);
+            _cache.Clone(changes);
 
-            if (change.Count - change.Refreshes > refreshThreshold || !_loaded)
+            if (changes.Count - changes.Refreshes > refreshThreshold || !_loaded)
             {
                 using (new BindingListEventsSuspender<TObject>(_list))
                 {
@@ -106,7 +84,7 @@ namespace DynamicData.Binding
             }
             else
             {
-                DoUpdate(change, _list);
+                DoUpdate(changes, _list);
             }
         }
 

@@ -14,6 +14,6 @@ public interface IChangeSetAdaptor<T>
     /// <summary>
     /// Adapts the specified change.
     /// </summary>
-    /// <param name="change">The change.</param>
-    void Adapt(IChangeSet<T> change);
+    /// <param name="changes">The change.</param>
+    void Adapt(IChangeSet<T> changes);
 }

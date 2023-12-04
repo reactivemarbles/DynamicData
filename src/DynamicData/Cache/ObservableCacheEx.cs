@@ -600,8 +600,10 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (destination is null) throw new ArgumentNullException(nameof(destination));
+        if (destination is null)
+        {
+            throw new ArgumentNullException(nameof(destination));
+        }
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
@@ -611,7 +613,7 @@ public static class ObservableCacheEx
             ? defaults
             : defaults with { ResetThreshold = refreshThreshold };
 
-        return source.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(options));
+        return source?.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(options)) ?? throw new ArgumentNullException(nameof(source));
     }
 
     /// <summary>
@@ -628,10 +630,12 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (destination is null) throw new ArgumentNullException(nameof(destination));
+        if (destination is null)
+        {
+            throw new ArgumentNullException(nameof(destination));
+        }
 
-        return source.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(options));
+        return source?.Bind(destination, new ObservableCollectionAdaptor<TObject, TKey>(options)) ?? throw new ArgumentNullException(nameof(source));
     }
 
     /// <summary>
@@ -648,9 +652,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (destination is null) throw new ArgumentNullException(nameof(destination));
-        if (updater is null) throw new ArgumentNullException(nameof(updater));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (destination is null)
+        {
+            throw new ArgumentNullException(nameof(destination));
+        }
+
+        if (updater is null)
+        {
+            throw new ArgumentNullException(nameof(updater));
+        }
 
         return Observable.Create<IChangeSet<TObject, TKey>>(
             observer =>
@@ -741,8 +756,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (destination is null) throw new ArgumentNullException(nameof(destination));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (destination is null)
+        {
+            throw new ArgumentNullException(nameof(destination));
+        }
 
         return source.Bind(destination, DynamicDataOptions.Binding);
     }
@@ -761,8 +783,15 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (destination is null) throw new ArgumentNullException(nameof(destination));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (destination is null)
+        {
+            throw new ArgumentNullException(nameof(destination));
+        }
 
         var updater = new SortedObservableCollectionAdaptor<TObject, TKey>(options);
         return source.Bind(destination, updater);
@@ -782,9 +811,20 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
-        if (destination is null) throw new ArgumentNullException(nameof(destination));
-        if (updater is null) throw new ArgumentNullException(nameof(updater));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (destination is null)
+        {
+            throw new ArgumentNullException(nameof(destination));
+        }
+
+        if (updater is null)
+        {
+            throw new ArgumentNullException(nameof(updater));
+        }
 
         return Observable.Create<ISortedChangeSet<TObject, TKey>>(
             observer =>
@@ -841,7 +881,10 @@ public static class ObservableCacheEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null) throw new ArgumentNullException(nameof(source));
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
@@ -3968,7 +4011,10 @@ public static class ObservableCacheEx
         {
             foreach (var change in changes.ToConcreteType())
             {
-                if (change.Reason != ChangeReason.Refresh) continue;
+                if (change.Reason != ChangeReason.Refresh)
+                {
+                    continue;
+                }
 
                 refreshAction2(change.Current);
             }

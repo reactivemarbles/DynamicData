@@ -8,8 +8,8 @@ namespace DynamicData.Binding;
 /// System wide default values for binding operators.
 /// </summary>
 /// <param name="ResetThreshold">The reset threshold ie the number of changes before a reset is fired.</param>
-/// <param name="ResetOnFirstTimeLoad"> Should a reset be fired for a first time load.This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.</param>
 /// <param name="UseReplaceForUpdates"> When possible, should replace be used instead of remove and add.</param>
+/// <param name="ResetOnFirstTimeLoad"> Should a reset be fired for a first time load.This option is due to historic reasons where a reset would be fired for the first time load regardless of the number of changes.</param>
 public record struct BindingOptions(int ResetThreshold, bool UseReplaceForUpdates = BindingOptions.DefaultUseReplaceForUpdates, bool ResetOnFirstTimeLoad = BindingOptions.DefaultResetOnFirstTimeLoad)
 {
     /// <summary>
@@ -32,15 +32,13 @@ public record struct BindingOptions(int ResetThreshold, bool UseReplaceForUpdate
     /// </summary>
     /// <param name="useReplaceForUpdates"> When possible, should replace be used instead of remove and add.</param>
     /// <returns> The binding options.</returns>
-    public static BindingOptions NeverFireReset(bool useReplaceForUpdates = DefaultResetOnFirstTimeLoad)
-    {
-        return new BindingOptions(int.MaxValue, useReplaceForUpdates, false);
-    }
+    public static BindingOptions NeverFireReset(bool useReplaceForUpdates = DefaultResetOnFirstTimeLoad) => new(int.MaxValue, useReplaceForUpdates, false);
 }
 
 /// <summary>
 /// System wide default values for binding operators.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Related Files.")]
 public static class DynamicDataOptions
 {
     /// <summary>

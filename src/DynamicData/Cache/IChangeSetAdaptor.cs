@@ -17,6 +17,6 @@ public interface IChangeSetAdaptor<TObject, TKey>
     /// <summary>
     /// Adapts the specified change.
     /// </summary>
-    /// <param name="change">The change.</param>
-    void Adapt(IChangeSet<TObject, TKey> change);
+    /// <param name="changes">The change.</param>
+    void Adapt(IChangeSet<TObject, TKey> changes);
 }
