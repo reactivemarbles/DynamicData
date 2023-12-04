@@ -30,4 +30,8 @@ public class Animal(string name, string type, AnimalFamily family, bool include 
     public string Name { get; } = name;
 
     public string Type { get; } = type;
+
+    public string FormalName => $"{Name} the {Type}";
+
+    public override string ToString() => $"{FormalName} ({Family})";
 }

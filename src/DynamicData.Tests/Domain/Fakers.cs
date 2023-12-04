@@ -35,7 +35,7 @@ internal static class Fakers
             {
                 var family = faker.PickRandom<AnimalFamily>();
                 var type = faker.PickRandom(AnimalTypeNames[(int)family]);
-                var name = $"{faker.Commerce.ProductAdjective()} the {type}";
+                var name = faker.Commerce.ProductAdjective();
 
                 return new Animal(name, type, family);
             });
