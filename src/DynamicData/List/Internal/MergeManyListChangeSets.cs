@@ -28,7 +28,7 @@ internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChang
                 // This is manages all of the changes
                 var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
-                // Berge the items back together
+                // Merge the items back together
                 var allChanges = shared.MergeMany(mc => mc.Source.RemoveIndex())
                                                  .Synchronize(locker)
                                                  .Subscribe(
