@@ -22,11 +22,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 #endif
 
     private readonly ISourceList<AnimalOwner> _animalOwners = new SourceList<AnimalOwner>();
-    private readonly IObservableList<Animal> _animals;
     private readonly ChangeSetAggregator<AnimalOwner> _animalOwnerResults;
-    private readonly ChangeSetAggregator<Animal> _animalChangeSetResults;
     private readonly ChangeSetAggregator<Animal> _animalResults;
-    private readonly IDisposable _disposable;
     private readonly Randomizer _randomizer;
 
     public MergeManyChangeSetsListFixture()
@@ -35,12 +32,31 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _randomizer = new Randomizer();
         _animalOwners.AddRange(Fakers.AnimalOwner.Generate(InitialOwnerCount));
 
-        var sharedAnimalChanges = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect()).Publish();
         _animalOwnerResults = _animalOwners.Connect().AsAggregator();
-        _animalChangeSetResults = sharedAnimalChanges.AsAggregator();
-        _animals = sharedAnimalChanges.AsObservableList();
-        _animalResults = _animals.Connect().AsAggregator();
-        _disposable = sharedAnimalChanges.Connect();
+        _animalResults = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect()).AsAggregator();
+    }
+
+    [Fact]
+    public void NullChecks()
+    {
+        // Arrange
+        var emptyChangeSetObs = Observable.Empty<IChangeSet<int>>();
+        var nullChangeSetObs = (IObservable<IChangeSet<int>>)null!;
+        var emptySelector = new Func<int, IObservable<IChangeSet<string>>>(i => Observable.Empty<IChangeSet<string>>());
+        var nullSelector = (Func<int, IObservable<IChangeSet<string>>>)null!;
+
+        // Act
+        var checkParam1 = () => nullChangeSetObs.MergeManyChangeSets(emptySelector);
+        var checkParam2 = () => emptyChangeSetObs.MergeManyChangeSets(nullSelector);
+
+        // Assert
+        emptyChangeSetObs.Should().NotBeNull();
+        emptySelector.Should().NotBeNull();
+        nullChangeSetObs.Should().BeNull();
+        nullSelector.Should().BeNull();
+
+        checkParam1.Should().Throw<ArgumentNullException>();
+        checkParam2.Should().Throw<ArgumentNullException>();
     }
 
     [Fact]
@@ -52,7 +68,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount);
         CheckResultContents();
     }
 
@@ -67,8 +83,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + AddRangeSize);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + AddRangeSize);
-        addThese.SelectMany(added => added.Animals.Items).ForEach(added => _animals.Items.Should().Contain(added));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + AddRangeSize);
+        addThese.SelectMany(added => added.Animals.Items).ForEach(added => _animalResults.Data.Items.Should().Contain(added));
         CheckResultContents();
     }
 
@@ -83,8 +99,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + 1);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        addThis.Animals.Items.ForEach(added => _animals.Items.Should().Contain(added));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        addThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
         CheckResultContents();
     }
 
@@ -101,8 +117,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         // Assert
         _animalOwners.Items.ElementAt(insertIndex).Should().Be(insertThis);
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount + 1);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        insertThis.Animals.Items.ForEach(added => _animals.Items.Should().Contain(added));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        insertThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
         CheckResultContents();
     }
 
@@ -117,8 +133,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - 1);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        removeThis.Animals.Items.ForEach(removed => _animals.Items.Should().NotContain(removed));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        removeThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
         CheckResultContents();
         removeThis.Dispose();
     }
@@ -135,8 +151,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - 1);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        removeThis.Animals.Items.ForEach(removed => _animals.Items.Should().NotContain(removed));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        removeThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
         CheckResultContents();
         removeThis.Dispose();
     }
@@ -153,8 +169,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - RemoveRangeSize);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + RemoveRangeSize);
-        removeThese.SelectMany(owner => owner.Animals.Items).ForEach(removed => _animals.Items.Should().NotContain(removed));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + RemoveRangeSize);
+        removeThese.SelectMany(owner => owner.Animals.Items).ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
         CheckResultContents();
         removeThese.ForEach(owner => owner.Dispose());
     }
@@ -170,8 +186,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount - RemoveRangeSize);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + RemoveRangeSize);
-        removeThese.SelectMany(owner => owner.Animals.Items).ForEach(removed => _animals.Items.Should().NotContain(removed));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + RemoveRangeSize);
+        removeThese.SelectMany(owner => owner.Animals.Items).ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
         CheckResultContents();
         removeThese.ForEach(owner => owner.Dispose());
     }
@@ -188,9 +204,9 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount); // Owner Count should not change
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 2); // +2 = 1 Message removing animals from old value, +1 message adding from new value
-        replaceThis.Animals.Items.ForEach(removed => _animals.Items.Should().NotContain(removed));
-        withThis.Animals.Items.ForEach(added => _animals.Items.Should().Contain(added));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 2); // +2 = 1 Message removing animals from old value, +1 message adding from new value
+        replaceThis.Animals.Items.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
+        withThis.Animals.Items.ForEach(added => _animalResults.Data.Items.Should().Contain(added));
         CheckResultContents();
         replaceThis.Dispose();
     }
@@ -224,8 +240,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        addThese.ForEach(animal => _animals.Items.Should().Contain(animal));
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        addThese.ForEach(animal => _animalResults.Data.Items.Should().Contain(animal));
         _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + AddRangeSize);
         CheckResultContents();
     }
@@ -243,8 +259,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        _animals.Items.Should().Contain(addThis);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        _animalResults.Data.Items.Should().Contain(addThis);
         _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + 1);
         CheckResultContents();
     }
@@ -264,8 +280,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         // Assert
         randomOwner.Animals.Items.ElementAt(insertIndex).Should().Be(insertThis);
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        _animals.Items.Should().Contain(insertThis);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        _animalResults.Data.Items.Should().Contain(insertThis);
         _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount + 1);
         CheckResultContents();
     }
@@ -283,8 +299,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        _animals.Items.Should().NotContain(removeThis);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        _animalResults.Data.Items.Should().NotContain(removeThis);
         _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount - 1);
         CheckResultContents();
     }
@@ -303,8 +319,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
-        _animals.Items.Should().NotContain(removeThis);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        _animalResults.Data.Items.Should().NotContain(removeThis);
         _animalOwners.Items.Sum(owner => owner.Animals.Count).Should().Be(initialCount - 1);
         CheckResultContents();
     }
@@ -323,7 +339,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
         removeThese.ForEach(removed => randomOwner.Animals.Items.Should().NotContain(removed));
         CheckResultContents();
     }
@@ -341,7 +357,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
         removeThese.ForEach(removed => randomOwner.Animals.Items.Should().NotContain(removed));
         CheckResultContents();
     }
@@ -359,7 +375,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
         randomOwner.Animals.Items.Should().NotContain(replaceThis);
         randomOwner.Animals.Items.Should().Contain(withThis);
         CheckResultContents();
@@ -377,7 +393,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
-        _animalChangeSetResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
+        _animalResults.Messages.Count.Should().Be(InitialOwnerCount + 1);
         randomOwner.Animals.Count.Should().Be(0);
         removedAnimals.ForEach(removed => _animalResults.Data.Items.Should().NotContain(removed));
         CheckResultContents();
@@ -401,7 +417,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
         // Assert
         _animalOwnerResults.IsCompleted.Should().Be(completeSource);
-        _animalChangeSetResults.IsCompleted.Should().Be(completeSource && completeChildren);
+        _animalResults.IsCompleted.Should().Be(completeSource && completeChildren);
     }
 
     [Fact]
@@ -436,11 +452,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     public void Dispose()
     {
         _animalOwners.Items.ForEach(owner => owner.Dispose());
-        _animalOwners.Dispose();
-        _animals.Dispose();
         _animalOwnerResults.Dispose();
         _animalResults.Dispose();
-        _animalChangeSetResults.Dispose();
-        _disposable.Dispose();
+        _animalOwners.Dispose();
     }
 }
