@@ -415,36 +415,36 @@ internal class ToObservableChangeSet<TObject>
             _expirationState?.Queue.Clear();
         }
 
-        private struct EvictionState
+        private readonly struct EvictionState
         {
-            public int LimitSizeTo { get; set; }
+            public required int LimitSizeTo { get; init; }
 
-            public List<TObject> Queue { get; set; }
+            public required List<TObject> Queue { get; init; }
         }
 
         private struct Expiration
         {
-            public DateTimeOffset ExpireAt { get; set; }
+            public required DateTimeOffset ExpireAt { get; init; }
 
-            public int Index { get; set; }
+            public required int Index { get; set; }
 
-            public TObject Item { get; set; }
+            public required TObject Item { get; init; }
         }
 
-        private struct ExpirationState
+        private readonly struct ExpirationState
         {
-            public List<KeyValuePair<int, TObject>> RemovalsBuffer { get; set; }
+            public required List<KeyValuePair<int, TObject>> RemovalsBuffer { get; init; }
 
-            public Func<TObject, TimeSpan?> ExpireAfter { get; set; }
+            public required Func<TObject, TimeSpan?> ExpireAfter { get; init; }
 
-            public List<Expiration> Queue { get; set; }
+            public required List<Expiration> Queue { get; init; }
         }
 
-        private struct ScheduledExpiration
+        private readonly struct ScheduledExpiration
         {
-            public IDisposable Cancellation { get; set; }
+            public required IDisposable Cancellation { get; init; }
 
-            public DateTimeOffset DueTime { get; set; }
+            public required DateTimeOffset DueTime { get; init; }
         }
     }
 }

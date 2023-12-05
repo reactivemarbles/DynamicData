@@ -400,42 +400,42 @@ internal class ToObservableChangeSet<TObject, TKey>
             _expirationState?.Queue.Clear();
         }
 
-        private struct ItemState
+        private readonly struct ItemState
         {
-            public DateTimeOffset? ExpireAt { get; set; }
+            public required DateTimeOffset? ExpireAt { get; init; }
 
-            public TObject Item { get; set; }
+            public required TObject Item { get; init; }
         }
 
-        private struct EvictionState
+        private readonly struct EvictionState
         {
-            public int LimitSizeTo { get; set; }
+            public required int LimitSizeTo { get; init; }
 
-            public Queue<TKey> Queue { get; set; }
+            public required Queue<TKey> Queue { get; init; }
         }
 
-        private struct Expiration
+        private readonly struct Expiration
         {
-            public DateTimeOffset ExpireAt { get; set; }
+            public required DateTimeOffset ExpireAt { get; init; }
 
-            public TKey Key { get; set; }
+            public required TKey Key { get; init; }
         }
 
-        private struct ExpirationState
+        private readonly struct ExpirationState
         {
-            public List<Change<TObject, TKey>> ChangesBuffer;
+            public required List<Change<TObject, TKey>> ChangesBuffer { get; init; }
 
-            public Func<TObject, TimeSpan?> ExpireAfter { get; set; }
+            public required Func<TObject, TimeSpan?> ExpireAfter { get; init; }
 
             // Potential performance improvement: Instead of List<T>, use PriorityQueue<T> available in .NET 6+, or an equivalent.
-            public List<Expiration> Queue { get; set; }
+            public required List<Expiration> Queue { get; init; }
         }
 
-        private struct ScheduledExpiration
+        private readonly struct ScheduledExpiration
         {
-            public IDisposable Cancellation { get; set; }
+            public required IDisposable Cancellation { get; init; }
 
-            public DateTimeOffset DueTime { get; set; }
+            public required DateTimeOffset DueTime { get; init; }
         }
     }
 }
