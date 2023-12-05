@@ -699,6 +699,7 @@ csharp_style_namespace_declarations = block_scoped:silent
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_prefer_top_level_statements = true:silent
 csharp_style_prefer_primary_constructors = true:suggestion
+dotnet_diagnostic.RCS1194.severity = none
 
 # C++ Files
 [*.{cpp,h,in}]

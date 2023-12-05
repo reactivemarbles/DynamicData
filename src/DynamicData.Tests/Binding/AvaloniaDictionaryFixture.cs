@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+
 using  DynamicData.Binding;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
@@ -37,6 +38,30 @@ public class AvaloniaDictionaryFixture
         _results.Data.Items.First().Should().Be(person);
     }
 
+    [Fact]
+    public void Replace()
+    {
+        var person1 = new Person("Someone", 10, "M");
+        var person2 = new Person("Someone", 11, "M");
+
+        _collection.Add("Someone", person1);
+        _collection["Someone"] = person2;
+
+        _results.Data.Count.Should().Be(1);
+        _results.Data.Items.First().Should().Be(person2);
+    }
+
+
+    [Fact]
+    public void Remove()
+    {
+        var person = new Person("Someone", 10, "M");
+
+        _collection.Add("Someone", person);
+        _collection.Remove(person.Key);
+
+        _results.Data.Count.Should().Be(0);
+    }
 }
 
 
