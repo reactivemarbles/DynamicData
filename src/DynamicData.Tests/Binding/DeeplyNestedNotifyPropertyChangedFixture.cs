@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
@@ -33,6 +34,94 @@ public class DeeplyNestedNotifyPropertyChangedFixture
 
         instance.Name = "NotNull";
         result.Should().Be("NotNull");
+    }
+
+    // Covers https://github.com/reactivemarbles/DynamicData/issues/671
+    [Fact]
+    public void NonObservableChildWithInitialValue()
+    {
+        var source = new ClassC()
+        {
+            Child = new()
+            {
+                Value = 1
+            }
+        };
+
+        var notifications = new List<PropertyValue<ClassC, int>>();
+        var error = null as Exception;
+        var isCompleted = false;
+
+        using var subscription = source
+            .WhenPropertyChanged(x => x.Child!.Value, notifyOnInitialValue: true)
+            .Subscribe(
+                onNext: notifications.Add,
+                onError: e => error = e,
+                onCompleted: () => isCompleted = true);
+
+        error.Should().BeNull();
+        isCompleted.Should().BeFalse();
+        notifications.Count.Should().Be(1, "a notification was requested for the initial value");
+        notifications[0].Value.Should().Be(source.Child!.Value, "the child object's data value should have been published");
+
+        source.Child.Value = 2;
+
+        error.Should().BeNull();
+        isCompleted.Should().BeFalse();
+        notifications.Count.Should().Be(1, "the object that was changed does not publish notifications");
+
+        source.Child = new()
+        {
+            Value = 3
+        };
+
+        error.Should().BeNull();
+        isCompleted.Should().BeFalse();
+        notifications.Count.Should().Be(2, "the parent object should have published a notification for its child being changed");
+        notifications[1].Value.Should().Be(source.Child!.Value, "the child object's data value should have been published");
+    }
+
+    [Fact]
+    public void NonObservableChildWithoutInitialValue()
+    {
+        var source = new ClassC()
+        {
+            Child = new()
+            {
+                Value = 1
+            }
+        };
+
+        var notifications = new List<PropertyValue<ClassC, int>>();
+        var error = null as Exception;
+        var isCompleted = false;
+
+        using var subscription = source
+            .WhenPropertyChanged(x => x.Child!.Value, notifyOnInitialValue: false)
+            .Subscribe(
+                onNext: notifications.Add,
+                onError: e => error = e,
+                onCompleted: () => isCompleted = true);
+
+        error.Should().BeNull();
+        isCompleted.Should().BeFalse();
+        notifications.Should().BeEmpty("no changes have been made");
+
+        source.Child.Value = 2;
+
+        error.Should().BeNull();
+        isCompleted.Should().BeFalse();
+        notifications.Should().BeEmpty("the object that was changed does not publish notifications");
+
+        source.Child = new()
+        {
+            Value = 3
+        };
+
+        error.Should().BeNull();
+        isCompleted.Should().BeFalse();
+        notifications.Count.Should().Be(1, "the parent object should have published a notification for its child being changed");
+        notifications[0].Value.Should().Be(source.Child!.Value, "the child object's data value should have been published");
     }
 
     [Fact]
@@ -346,5 +435,27 @@ public class DeeplyNestedNotifyPropertyChangedFixture
         {
             return $"{nameof(Age)}: {Age}";
         }
+    }
+
+    public class ClassC : AbstractNotifyPropertyChanged
+    {
+        private ClassD? _classD;
+
+        public ClassD? Child
+        {
+            get => _classD;
+            set => SetAndRaise(ref _classD, value);
+        }
+
+        public override string ToString()
+            => $"ClassC: {nameof(Child)}={Child}";
+    }
+
+    public class ClassD
+    {
+        public int Value { get; set; }
+
+        public override string ToString()
+            => $"ClassD: {nameof(Value)}={Value}";
     }
 }

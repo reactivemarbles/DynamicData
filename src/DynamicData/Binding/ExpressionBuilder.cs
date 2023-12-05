@@ -5,6 +5,7 @@
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
 
@@ -33,20 +34,10 @@ internal static class ExpressionBuilder
 
         var notifyPropertyChanged = typeof(INotifyPropertyChanged).GetTypeInfo().IsAssignableFrom(property.DeclaringType.GetTypeInfo());
 
-        return t =>
-        {
-            if (t is null)
-            {
-                return Observable<Unit>.Never;
-            }
+        return t => ((t is null) || !notifyPropertyChanged)
+            ? Observable<Unit>.Never
 
-            if (!notifyPropertyChanged)
-            {
-                return Observable.Return(Unit.Default);
-            }
-
-            return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(handler => ((INotifyPropertyChanged)t).PropertyChanged += handler, handler => ((INotifyPropertyChanged)t).PropertyChanged -= handler).Where(args => args.EventArgs.PropertyName == property.Name).Select(_ => Unit.Default);
-        };
+            : Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(handler => ((INotifyPropertyChanged)t).PropertyChanged += handler, handler => ((INotifyPropertyChanged)t).PropertyChanged -= handler).Where(args => args.EventArgs.PropertyName == property.Name).Select(_ => Unit.Default);
     }
 
     internal static Func<object, object> CreateValueAccessor(this MemberExpression source)
