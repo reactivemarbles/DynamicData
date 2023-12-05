@@ -2127,6 +2127,9 @@ namespace DynamicData
             where TKey :  notnull { }
         public static System.IObservable<TDestination> MergeMany<T, TDestination>(this System.IObservable<DynamicData.IChangeSet<T>> source, System.Func<T, System.IObservable<TDestination>> observableSelector)
             where T :  notnull { }
+        public static System.IObservable<DynamicData.IChangeSet<TDestination>> MergeManyChangeSets<TObject, TDestination>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination>>> observableSelector)
+            where TObject :  notnull
+            where TDestination :  notnull { }
         public static System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>> MergeManyChangeSets<TObject, TDestination, TDestinationKey>(this System.IObservable<DynamicData.IChangeSet<TObject>> source, System.Func<TObject, System.IObservable<DynamicData.IChangeSet<TDestination, TDestinationKey>>> observableSelector, System.Collections.Generic.IComparer<TDestination> comparer)
             where TObject :  notnull
             where TDestination :  notnull

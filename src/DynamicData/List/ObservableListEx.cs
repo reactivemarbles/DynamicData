@@ -1044,8 +1044,15 @@ public static class ObservableListEx
         where TObject : notnull
         where TDestination : notnull
     {
-        if (source == null) throw new ArgumentNullException(nameof(source));
-        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+        if (source == null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        if (observableSelector == null)
+        {
+            throw new ArgumentNullException(nameof(observableSelector));
+        }
 
         return new MergeManyListChangeSets<TObject, TDestination>(source, observableSelector).Run();
     }

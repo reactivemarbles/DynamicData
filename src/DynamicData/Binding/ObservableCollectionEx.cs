@@ -195,10 +195,14 @@ public static class ObservableCollectionEx
                             case NotifyCollectionChangedAction.Move:
 
                                 if (changes.OldStartingIndex == -1)
+                                {
                                     throw new UnspecifiedIndexException("Move -> OldStartingIndex");
+                                }
 
                                 if (changes.NewStartingIndex == -1)
+                                {
                                     throw new UnspecifiedIndexException("Move -> NewStartingIndex");
+                                }
 
                                 list.Move(changes.OldStartingIndex, changes.NewStartingIndex);
                                 break;
