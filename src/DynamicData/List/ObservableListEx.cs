@@ -1032,7 +1032,26 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TDestination, TDestinationKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similiar to MergeMany except it is List ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TDestination}"/> and merges the result children together into a single stream of ChangeSets that correctly handles removal of the parent items and other changes to the source list.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <returns>The result from merging the children list changesets together.</returns>
+    /// <exception cref="ArgumentNullException">Parameter was null.</exception>
+    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector)
+        where TObject : notnull
+        where TDestination : notnull
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (observableSelector == null) throw new ArgumentNullException(nameof(observableSelector));
+
+        return new MergeManyListChangeSets<TObject, TDestination>(source, observableSelector).Run();
+    }
+
+    /// <summary>
+    /// Operator similiar to MergeMany except it is Cache ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TDestination, TDestinationKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
@@ -1055,7 +1074,7 @@ public static class ObservableListEx
     }
 
     /// <summary>
-    /// Operator similiar to MergeMany except it is ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TDestination, TDestinationKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
+    /// Operator similiar to MergeMany except it is Cache ChangeSet aware.  It uses <paramref name="observableSelector"/> to transform each item in the source into a child <see cref="IChangeSet{TDestination, TDestinationKey}"/> and merges the result children together into a single stream of ChangeSets that correctly handles multiple Keys and removal of the parent items.
     /// </summary>
     /// <typeparam name="TObject">The type of the object.</typeparam>
     /// <typeparam name="TDestination">The type of the destination.</typeparam>

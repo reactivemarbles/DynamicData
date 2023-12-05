@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Reactive;
 using System.Reactive.Linq;
+using DynamicData.Kernel;
 
 namespace DynamicData.Binding;
 
@@ -133,13 +134,17 @@ public static class ObservableCollectionEx
                         {
                             case NotifyCollectionChangedAction.Add when changes.NewItems is not null:
                                 {
+                                    var newIndex = changes.NewStartingIndex == -1
+                                        ? list.Count
+                                        : changes.NewStartingIndex;
+
                                     if (changes.NewItems.Count == 1 && changes.NewItems[0] is T item)
                                     {
-                                        list.Insert(changes.NewStartingIndex, item);
+                                        list.Insert(newIndex, item);
                                     }
                                     else
                                     {
-                                        list.InsertRange(changes.NewItems.Cast<T>(), changes.NewStartingIndex);
+                                        list.InsertRange(changes.NewItems.Cast<T>(), newIndex);
                                     }
 
                                     break;
@@ -147,7 +152,14 @@ public static class ObservableCollectionEx
 
                             case NotifyCollectionChangedAction.Remove when changes.OldItems is not null:
                                 {
-                                    if (changes.OldItems.Count == 1)
+                                    if (changes.OldStartingIndex == -1)
+                                    {
+                                        foreach (var item in changes.OldItems.Cast<T>())
+                                        {
+                                            list.Remove(item);
+                                        }
+                                    }
+                                    else if (changes.OldItems.Count == 1)
                                     {
                                         list.RemoveAt(changes.OldStartingIndex);
                                     }
@@ -159,14 +171,35 @@ public static class ObservableCollectionEx
                                     break;
                                 }
 
-                            case NotifyCollectionChangedAction.Replace when changes.NewItems is not null && changes.NewItems[0] is T replacedItem:
-                                list[changes.NewStartingIndex] = replacedItem;
+                            case NotifyCollectionChangedAction.Replace when changes.NewItems is not null &&
+                                                                            changes.NewItems[0] is T replacedItem:
+                                {
+                                    if (changes.NewStartingIndex == -1)
+                                    {
+                                        var original = changes.OldItems!.Cast<T>().SingleOrDefault();
+                                        var oldIndex = list.IndexOf(original!);
+
+                                        list[oldIndex] = replacedItem;
+                                    }
+                                    else
+                                    {
+                                        list[changes.NewStartingIndex] = replacedItem;
+                                    }
+                                }
+
                                 break;
                             case NotifyCollectionChangedAction.Reset:
                                 list.Clear();
                                 list.AddRange(source);
                                 break;
                             case NotifyCollectionChangedAction.Move:
+
+                                if (changes.OldStartingIndex == -1)
+                                    throw new UnspecifiedIndexException("Move -> OldStartingIndex");
+
+                                if (changes.NewStartingIndex == -1)
+                                    throw new UnspecifiedIndexException("Move -> NewStartingIndex");
+
                                 list.Move(changes.OldStartingIndex, changes.NewStartingIndex);
                                 break;
                         }

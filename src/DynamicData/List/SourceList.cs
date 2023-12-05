@@ -85,7 +85,7 @@ public sealed class SourceList<T> : ISourceList<T>
                         observer.OnNext(
                             new ChangeSet<T>
                             {
-                                new(ListChangeReason.AddRange, _readerWriter.Items)
+                                new(ListChangeReason.AddRange, _readerWriter.Items, 0)
                             });
                     }
 

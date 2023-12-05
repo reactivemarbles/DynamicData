@@ -11,7 +11,7 @@ using Xunit;
 
 namespace DynamicData.Tests.List;
 
-public sealed class MergeManyCacheChangeSetsFixture : IDisposable
+public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 {
 #if DEBUG
     const int MarketCount = 3;
@@ -745,18 +745,4 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
         _marketList.Dispose();
         _marketList.Clear();
     }
-}
-
-internal static class Extensions
-{
-    public static T With<T>(this T item, Action<T> action)
-    {
-        action(item);
-        return item;
-    }
-
-    public static IObservable<T> ForceFail<T>(this IObservable<T> source, int count, Exception? e) =>
-        (e is not null)
-            ? source.Take(count).Concat(Observable.Throw<T>(e))
-            : source;
 }

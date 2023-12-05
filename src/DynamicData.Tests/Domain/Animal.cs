@@ -15,9 +15,9 @@ public enum AnimalFamily
     Bird
 }
 
-public class Animal(string name, string type, AnimalFamily family) : AbstractNotifyPropertyChanged
+public class Animal(string name, string type, AnimalFamily family, bool include = true) : AbstractNotifyPropertyChanged
 {
-    private bool _includeInResults;
+    private bool _includeInResults = include;
 
     public AnimalFamily Family { get; } = family;
 
@@ -30,4 +30,8 @@ public class Animal(string name, string type, AnimalFamily family) : AbstractNot
     public string Name { get; } = name;
 
     public string Type { get; } = type;
+
+    public string FormalName => $"{Name} the {Type}";
+
+    public override string ToString() => $"{FormalName} ({Family})";
 }
