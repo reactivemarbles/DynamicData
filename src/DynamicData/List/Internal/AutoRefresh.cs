@@ -35,11 +35,8 @@ internal class AutoRefresh<TObject, TAny>(IObservable<IChangeSet<TObject>> sourc
                     itemHasChanged.Buffer(buffer.Value, scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
 
                 IObservable<IChangeSet<TObject>> requiresRefresh = itemsChanged.Synchronize(locker).Select(
-                    items =>
-                    {
-                        // catch all the indices of items which have been refreshed
-                        return allItems.IndexOfMany(items, (t, idx) => new Change<TObject>(ListChangeReason.Refresh, t, idx));
-                    }).Select(changes => new ChangeSet<TObject>(changes));
+                    items => // catch all the indices of items which have been refreshed
+                        allItems.IndexOfMany(items, (t, idx) => new Change<TObject>(ListChangeReason.Refresh, t, idx))).Select(changes => new ChangeSet<TObject>(changes));
 
                 // publish refreshes and underlying changes
                 var publisher = shared.Merge(requiresRefresh).SubscribeSafe(observer);

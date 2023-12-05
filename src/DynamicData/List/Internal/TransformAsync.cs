@@ -21,10 +21,7 @@ internal class TransformAsync<TSource, TDestination>
         Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory,
         bool transformOnRefresh)
     {
-        if (factory is null)
-        {
-            throw new ArgumentNullException(nameof(factory));
-        }
+        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
@@ -67,10 +64,7 @@ internal class TransformAsync<TSource, TDestination>
         ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformed,
         IChangeSet<TSource> changes)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
         foreach (var item in changes)
         {

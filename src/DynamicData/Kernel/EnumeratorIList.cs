@@ -8,14 +8,13 @@ using System.Diagnostics.CodeAnalysis;
 // Lifted from here https://github.com/benaadams/Ben.Enumerable. Many thanks to the genius of the man.
 namespace DynamicData.Kernel;
 
-[SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Same class name, different generics.")]
 internal struct EnumeratorIList<T>(IList<T> list) : IEnumerator<T>
 {
     private int _index = -1;
 
-    public T Current => list[_index];
+    public readonly T Current => list[_index];
 
-    object? IEnumerator.Current => Current;
+    readonly object? IEnumerator.Current => Current;
 
     public bool MoveNext()
     {

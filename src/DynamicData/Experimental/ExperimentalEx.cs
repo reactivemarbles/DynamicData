@@ -24,10 +24,7 @@ public static class ExperimentalEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new Watcher<TObject, TKey>(source, scheduler ?? Scheduler.Default);
     }

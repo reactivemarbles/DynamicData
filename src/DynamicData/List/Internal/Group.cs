@@ -11,7 +11,7 @@ internal class Group<TObject, TGroup>(TGroup groupKey) : IGroup<TObject, TGroup>
 
     public IObservableList<TObject> List => Source;
 
-    private ISourceList<TObject> Source { get; } = new SourceList<TObject>();
+    private SourceList<TObject> Source { get; } = new();
 
     public static bool operator ==(Group<TObject, TGroup> left, Group<TObject, TGroup> right) => Equals(left, right);
 

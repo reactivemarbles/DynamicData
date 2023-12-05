@@ -42,7 +42,7 @@ internal sealed class PageResponse(int pageSize, int totalSize, int page, int pa
             return false;
         }
 
-        if (!(obj is IPageResponse pageResponse))
+        if (obj is not IPageResponse pageResponse)
         {
             return false;
         }

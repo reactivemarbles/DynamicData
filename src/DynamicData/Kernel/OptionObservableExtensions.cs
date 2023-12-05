@@ -26,15 +26,8 @@ public static class OptionObservableExtensions
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (converter is null)
-        {
-            throw new ArgumentNullException(nameof(converter));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
 
         return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional.None<TDestination>());
     }
@@ -54,15 +47,8 @@ public static class OptionObservableExtensions
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (converter is null)
-        {
-            throw new ArgumentNullException(nameof(converter));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
 
         return source.Select(optional => optional.HasValue ? converter(optional.Value) : Optional.None<TDestination>());
     }
@@ -87,20 +73,9 @@ public static class OptionObservableExtensions
     public static IObservable<TDestination?> ConvertOr<TSource, TDestination>(this IObservable<Optional<TSource>> source, Func<TSource, TDestination?> converter, Func<TDestination?> fallbackConverter)
         where TSource : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (converter is null)
-        {
-            throw new ArgumentNullException(nameof(converter));
-        }
-
-        if (fallbackConverter is null)
-        {
-            throw new ArgumentNullException(nameof(fallbackConverter));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
+        fallbackConverter.ThrowArgumentNullExceptionIfNull(nameof(fallbackConverter));
 
         return source.Select(optional => optional.HasValue ? converter(optional.Value) : fallbackConverter());
     }
@@ -121,15 +96,8 @@ public static class OptionObservableExtensions
     public static IObservable<Optional<T>> OrElse<T>(this IObservable<Optional<T>> source, Func<Optional<T>> fallbackOperation)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (fallbackOperation is null)
-        {
-            throw new ArgumentNullException(nameof(fallbackOperation));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        fallbackOperation.ThrowArgumentNullExceptionIfNull(nameof(fallbackOperation));
 
         return source.Select(optional => optional.HasValue ? optional : fallbackOperation());
     }
@@ -146,15 +114,8 @@ public static class OptionObservableExtensions
     public static IObservable<Optional<T>> OnHasValue<T>(this IObservable<Optional<T>> source, Action<T> action, Action? elseAction = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
 
         return source.Do(optional => optional.IfHasValue(action).Else(() => elseAction?.Invoke()));
     }
@@ -170,15 +131,8 @@ public static class OptionObservableExtensions
     public static IObservable<Optional<T>> OnHasNoValue<T>(this IObservable<Optional<T>> source, Action action, Action<T>? elseAction = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
 
         return source.Do(optional => optional.IfHasValue(val => elseAction?.Invoke(val)).Else(action));
     }
@@ -207,10 +161,7 @@ public static class OptionObservableExtensions
     public static IObservable<T> ValueOr<T>(this IObservable<Optional<T>> source, Func<T> valueSelector)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Select(optional => optional.HasValue ? optional.Value : valueSelector());
     }
@@ -225,10 +176,7 @@ public static class OptionObservableExtensions
     public static IObservable<T?> ValueOrDefault<T>(this IObservable<Optional<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Select(optional => optional.ValueOrDefault());
     }
@@ -246,15 +194,9 @@ public static class OptionObservableExtensions
     public static IObservable<T> ValueOrThrow<T>(this IObservable<Optional<T>> source, Func<Exception> exceptionGenerator)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (exceptionGenerator is null)
-        {
-            throw new ArgumentNullException(nameof(exceptionGenerator));
-        }
+        exceptionGenerator.ThrowArgumentNullExceptionIfNull(nameof(exceptionGenerator));
 
         return Observable.Create<T>(observer =>
             source.Subscribe(

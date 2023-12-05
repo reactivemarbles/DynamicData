@@ -24,10 +24,7 @@ public static class OptionExtensions
         where TSource : notnull
         where TDestination : notnull
     {
-        if (converter is null)
-        {
-            throw new ArgumentNullException(nameof(converter));
-        }
+        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
 
         return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
     }
@@ -45,10 +42,7 @@ public static class OptionExtensions
         where TSource : notnull
         where TDestination : notnull
     {
-        if (converter is null)
-        {
-            throw new ArgumentNullException(nameof(converter));
-        }
+        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
 
         return source.HasValue ? converter(source.Value) : Optional.None<TDestination>();
     }
@@ -70,15 +64,8 @@ public static class OptionExtensions
     public static TDestination? ConvertOr<TSource, TDestination>(this in Optional<TSource> source, Func<TSource?, TDestination?> converter, Func<TDestination?> fallbackConverter)
         where TSource : notnull
     {
-        if (converter is null)
-        {
-            throw new ArgumentNullException(nameof(converter));
-        }
-
-        if (fallbackConverter is null)
-        {
-            throw new ArgumentNullException(nameof(fallbackConverter));
-        }
+        converter.ThrowArgumentNullExceptionIfNull(nameof(converter));
+        fallbackConverter.ThrowArgumentNullExceptionIfNull(nameof(fallbackConverter));
 
         return source.HasValue ? converter(source.Value) : fallbackConverter();
     }
@@ -98,10 +85,7 @@ public static class OptionExtensions
     public static Optional<T> OrElse<T>(this in Optional<T> source, Func<Optional<T>> fallbackOperation)
         where T : notnull
     {
-        if (fallbackOperation is null)
-        {
-            throw new ArgumentNullException(nameof(fallbackOperation));
-        }
+        fallbackOperation.ThrowArgumentNullExceptionIfNull(nameof(fallbackOperation));
 
         return source.HasValue ? source : fallbackOperation();
     }
@@ -118,15 +102,8 @@ public static class OptionExtensions
     public static Optional<T> FirstOrOptional<T>(this IEnumerable<T> source, Func<T, bool> selector)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (selector is null)
-        {
-            throw new ArgumentNullException(nameof(selector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        selector.ThrowArgumentNullExceptionIfNull(nameof(selector));
 
         foreach (var item in source.Where(item => selector(item)))
         {
@@ -151,10 +128,7 @@ public static class OptionExtensions
             return new OptionElse();
         }
 
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
 
         action(source.Value);
         return OptionElse.NoAction;
@@ -180,10 +154,7 @@ public static class OptionExtensions
             return new OptionElse();
         }
 
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
 
         action(source.Value.Value);
         return OptionElse.NoAction;
@@ -202,10 +173,7 @@ public static class OptionExtensions
     public static Optional<TValue> Lookup<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
         where TValue : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         var result = source.TryGetValue(key, out var contained);
         return result ? contained : Optional.None<TValue>();
@@ -221,10 +189,7 @@ public static class OptionExtensions
     /// <returns>If the item was removed.</returns>
     public static bool RemoveIfContained<TValue, TKey>(this IDictionary<TKey, TValue> source, TKey key)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.ContainsKey(key) && source.Remove(key);
     }
@@ -260,10 +225,7 @@ public static class OptionExtensions
     public static T ValueOr<T>(this in Optional<T> source, Func<T> valueSelector)
         where T : notnull
     {
-        if (valueSelector is null)
-        {
-            throw new ArgumentNullException(nameof(valueSelector));
-        }
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
 
         return source.HasValue ? source.Value : valueSelector();
     }
@@ -296,10 +258,7 @@ public static class OptionExtensions
     public static T ValueOrThrow<T>(this in Optional<T> source, Func<Exception> exceptionGenerator)
         where T : notnull
     {
-        if (exceptionGenerator is null)
-        {
-            throw new ArgumentNullException(nameof(exceptionGenerator));
-        }
+        exceptionGenerator.ThrowArgumentNullExceptionIfNull(nameof(exceptionGenerator));
 
         if (source.HasValue && source.Value is not null)
         {

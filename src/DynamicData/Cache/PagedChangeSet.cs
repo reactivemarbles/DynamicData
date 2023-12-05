@@ -12,7 +12,7 @@ internal sealed class PagedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, 
     where TObject : notnull
     where TKey : notnull
 {
-    public static readonly new IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();
+    public static new readonly IPagedChangeSet<TObject, TKey> Empty = new PagedChangeSet<TObject, TKey>();
 
     public PagedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates, IPageResponse response)
         : base(updates)

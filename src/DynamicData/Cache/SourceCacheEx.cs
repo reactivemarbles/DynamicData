@@ -23,13 +23,5 @@ public static class SourceCacheEx
     public static IObservable<IChangeSet<TDestination, TKey>> Cast<TSource, TKey, TDestination>(this IObservableCache<TSource, TKey> source, Func<TSource, TDestination> converter)
         where TSource : notnull
         where TKey : notnull
-        where TDestination : notnull
-    {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        return source.Connect().Cast(converter);
-    }
+        where TDestination : notnull => source is null ? throw new ArgumentNullException(nameof(source)) : source.Connect().Cast(converter);
 }

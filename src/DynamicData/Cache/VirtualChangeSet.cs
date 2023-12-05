@@ -11,7 +11,7 @@ internal sealed class VirtualChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>
     where TObject : notnull
     where TKey : notnull
 {
-    public static readonly new IVirtualChangeSet<TObject, TKey> Empty = new VirtualChangeSet<TObject, TKey>();
+    public static new readonly IVirtualChangeSet<TObject, TKey> Empty = new VirtualChangeSet<TObject, TKey>();
 
     public VirtualChangeSet(IEnumerable<Change<TObject, TKey>> items, IKeyValueCollection<TObject, TKey> sortedItems, IVirtualResponse response)
         : base(items)

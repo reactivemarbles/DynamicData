@@ -11,7 +11,7 @@ internal class SortedChangeSet<TObject, TKey> : ChangeSet<TObject, TKey>, ISorte
     where TObject : notnull
     where TKey : notnull
 {
-    public static readonly new ISortedChangeSet<TObject, TKey> Empty = new SortedChangeSet<TObject, TKey>();
+    public static new readonly ISortedChangeSet<TObject, TKey> Empty = new SortedChangeSet<TObject, TKey>();
 
     public SortedChangeSet(IKeyValueCollection<TObject, TKey> sortedItems, IEnumerable<Change<TObject, TKey>> updates)
         : base(updates) => SortedItems = sortedItems;

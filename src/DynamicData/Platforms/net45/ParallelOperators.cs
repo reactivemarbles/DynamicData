@@ -27,10 +27,7 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+            source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
             return new PFilter<TObject, TKey>(source, filter, parallelisationOptions).Run();
         }
@@ -54,20 +51,9 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (subscriptionFactory is null)
-            {
-                throw new ArgumentNullException(nameof(subscriptionFactory));
-            }
-
-            if (parallelisationOptions is null)
-            {
-                throw new ArgumentNullException(nameof(parallelisationOptions));
-            }
+            source.ThrowArgumentNullExceptionIfNull(nameof(source));
+            subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
+            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
 
             return new PSubscribeMany<TObject, TKey>(source, (t, _) => subscriptionFactory(t), parallelisationOptions).Run();
         }
@@ -91,20 +77,9 @@ namespace DynamicData.PLinq
             where TObject : notnull
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (subscriptionFactory is null)
-            {
-                throw new ArgumentNullException(nameof(subscriptionFactory));
-            }
-
-            if (parallelisationOptions is null)
-            {
-                throw new ArgumentNullException(nameof(parallelisationOptions));
-            }
+            source.ThrowArgumentNullExceptionIfNull(nameof(source));
+            subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
+            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
 
             return new PSubscribeMany<TObject, TKey>(source, subscriptionFactory, parallelisationOptions).Run();
         }
@@ -129,20 +104,9 @@ namespace DynamicData.PLinq
             where TSource : notnull
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (transformFactory is null)
-            {
-                throw new ArgumentNullException(nameof(transformFactory));
-            }
-
-            if (parallelisationOptions is null)
-            {
-                throw new ArgumentNullException(nameof(parallelisationOptions));
-            }
+            source.ThrowArgumentNullExceptionIfNull(nameof(source));
+            transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
 
             return new PTransform<TDestination, TSource, TKey>(source, (t, _, k) => transformFactory(t, k), parallelisationOptions).Run();
         }
@@ -165,10 +129,7 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TDestination, TKey>> Transform<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TDestination> transformFactory, ParallelisationOptions parallelisationOptions)
             where TDestination : notnull
             where TSource : notnull
-            where TKey : notnull
-        {
-            return new PTransform<TDestination, TSource, TKey>(source, (t, _, _) => transformFactory(t), parallelisationOptions).Run();
-        }
+            where TKey : notnull => new PTransform<TDestination, TSource, TKey>(source, (t, _, _) => transformFactory(t), parallelisationOptions).Run();
 
         /// <summary>
         /// Projects each update item to a new form using the specified transform function,
@@ -194,25 +155,10 @@ namespace DynamicData.PLinq
             where TSource : notnull
             where TKey : notnull
         {
-            if (source is null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
-
-            if (transformFactory is null)
-            {
-                throw new ArgumentNullException(nameof(transformFactory));
-            }
-
-            if (errorHandler is null)
-            {
-                throw new ArgumentNullException(nameof(errorHandler));
-            }
-
-            if (parallelisationOptions is null)
-            {
-                throw new ArgumentNullException(nameof(parallelisationOptions));
-            }
+            source.ThrowArgumentNullExceptionIfNull(nameof(source));
+            transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
+            errorHandler.ThrowArgumentNullExceptionIfNull(nameof(errorHandler));
+            parallelisationOptions.ThrowArgumentNullExceptionIfNull(nameof(parallelisationOptions));
 
             return new PTransform<TDestination, TSource, TKey>(source, (t, _, _) => transformFactory(t), parallelisationOptions, errorHandler).Run();
         }
@@ -239,10 +185,7 @@ namespace DynamicData.PLinq
         public static IObservable<IChangeSet<TDestination, TKey>> TransformSafe<TDestination, TSource, TKey>(this IObservable<IChangeSet<TSource, TKey>> source, Func<TSource, TKey, TDestination> transformFactory, Action<Error<TSource, TKey>> errorHandler, ParallelisationOptions parallelisationOptions)
             where TDestination : notnull
             where TSource : notnull
-            where TKey : notnull
-        {
-            return new PTransform<TDestination, TSource, TKey>(source, (t, _, k) => transformFactory(t, k), parallelisationOptions, errorHandler).Run();
-        }
+            where TKey : notnull => new PTransform<TDestination, TSource, TKey>(source, (t, _, k) => transformFactory(t, k), parallelisationOptions, errorHandler).Run();
     }
 }
 

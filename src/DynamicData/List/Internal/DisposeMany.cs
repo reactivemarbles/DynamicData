@@ -8,21 +8,16 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal sealed class DisposeMany<T>
+internal sealed class DisposeMany<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
-    private readonly IObservable<IChangeSet<T>> _source;
-
-    public DisposeMany(IObservable<IChangeSet<T>> source)
-        => _source = source;
-
     public IObservable<IChangeSet<T>> Run()
         => Observable.Create<IChangeSet<T>>(observer =>
         {
             // Will be locking on cachedItems directly, instead of using an anonymous gate object. This is acceptable, since it's a privately-held object, there's no risk of deadlock from other consumers locking on it.
             var cachedItems = new List<T>();
 
-            var sourceSubscription = _source
+            var sourceSubscription = source
                 .Synchronize(cachedItems)
                 .SubscribeSafe(Observer.Create<IChangeSet<T>>(
                     onNext: changeSet =>

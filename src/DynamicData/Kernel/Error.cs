@@ -2,8 +2,6 @@
 // Roland Pheasant licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
-#pragma warning disable 1591
-
 namespace DynamicData.Kernel;
 
 /// <summary>
@@ -17,6 +15,7 @@ namespace DynamicData.Kernel;
 /// <param name="exception">The exception that caused the error.</param>
 /// <param name="value">The value for the error.</param>
 /// <param name="key">The key for the error.</param>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "By Design.")]
 public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TKey key) : IKeyValue<TObject, TKey>, IEquatable<Error<TObject, TKey>>
     where TKey : notnull
 {
@@ -78,7 +77,7 @@ public sealed class Error<TObject, TKey>(Exception? exception, TObject value, TK
         {
             var hashCode = EqualityComparer<TKey>.Default.GetHashCode(Key);
             hashCode = (hashCode * 397) ^ (Value is null ? 0 : EqualityComparer<TObject>.Default.GetHashCode(Value));
-            hashCode = (hashCode * 397) ^ (Exception is not null ? Exception.GetHashCode() : 0);
+            hashCode = (hashCode * 397) ^ (Exception?.GetHashCode() ?? 0);
             return hashCode;
         }
     }

@@ -509,6 +509,8 @@ dotnet_diagnostic.RCS1190.severity=error
 dotnet_diagnostic.RCS1195.severity=error
 dotnet_diagnostic.RCS1214.severity=error
 
+dotnet_diagnostic.IDE1006.severity=none
+
 # C++ Files
 [*.{cpp,h,in}]
 curly_bracket_next_line = true

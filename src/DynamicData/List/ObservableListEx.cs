@@ -39,15 +39,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Adapt<T>(this IObservable<IChangeSet<T>> source, IChangeSetAdaptor<T> adaptor)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (adaptor is null)
-        {
-            throw new ArgumentNullException(nameof(adaptor));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        adaptor.ThrowArgumentNullExceptionIfNull(nameof(adaptor));
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -77,15 +70,8 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return source.Select(changes => new ChangeSet<TObject, TKey>(new AddKeyEnumerator<TObject, TKey>(changes, keySelector)));
     }
@@ -99,7 +85,12 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> And<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
-        where T : notnull => source.Combine(CombineOperator.And, others);
+        where T : notnull
+    {
+        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+
+        return source.Combine(CombineOperator.And, others);
+    }
 
     /// <summary>
     /// Apply a logical And operator between the collections.
@@ -151,10 +142,7 @@ public static class ObservableListEx
     public static IObservableList<T> AsObservableList<T>(this ISourceList<T> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new AnonymousObservableList<T>(source);
     }
@@ -169,10 +157,7 @@ public static class ObservableListEx
     public static IObservableList<T> AsObservableList<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new AnonymousObservableList<T>(source);
     }
@@ -189,10 +174,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject>(this IObservable<IChangeSet<TObject>> source, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.AutoRefreshOnObservable(
             t =>
@@ -222,15 +204,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> AutoRefresh<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertyAccessor, TimeSpan? changeSetBuffer = null, TimeSpan? propertyChangeThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (propertyAccessor is null)
-        {
-            throw new ArgumentNullException(nameof(propertyAccessor));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        propertyAccessor.ThrowArgumentNullExceptionIfNull(nameof(propertyAccessor));
 
         return source.AutoRefreshOnObservable(
             t =>
@@ -259,15 +234,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> AutoRefreshOnObservable<TObject, TAny>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<TAny>> reevaluator, TimeSpan? changeSetBuffer = null, IScheduler? scheduler = null)
         where TObject : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (reevaluator is null)
-        {
-            throw new ArgumentNullException(nameof(reevaluator));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        reevaluator.ThrowArgumentNullExceptionIfNull(nameof(reevaluator));
 
         return new AutoRefresh<TObject, TAny>(source, reevaluator, changeSetBuffer, scheduler).Run();
     }
@@ -288,15 +256,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, IObservableCollection<T> targetCollection, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (targetCollection is null)
-        {
-            throw new ArgumentNullException(nameof(targetCollection));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        targetCollection.ThrowArgumentNullExceptionIfNull(nameof(targetCollection));
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
@@ -325,15 +286,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, IObservableCollection<T> targetCollection, BindingOptions options)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (targetCollection is null)
-        {
-            throw new ArgumentNullException(nameof(targetCollection));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        targetCollection.ThrowArgumentNullExceptionIfNull(nameof(targetCollection));
 
         var adaptor = new ObservableCollectionAdaptor<T>(targetCollection, options);
         return source.Adapt(adaptor);
@@ -350,10 +304,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         // if user has not specified different defaults, use system wide defaults instead.
         // This is a hack to retro fit system wide defaults which override the hard coded defaults above
@@ -376,10 +327,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, out ReadOnlyObservableCollection<T> readOnlyObservableCollection, BindingOptions options)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         var target = new ObservableCollectionExtended<T>();
         var result = new ReadOnlyObservableCollection<T>(target);
@@ -406,15 +354,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Bind<T>(this IObservable<IChangeSet<T>> source, BindingList<T> bindingList, int resetThreshold = BindingOptions.DefaultResetThreshold)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (bindingList is null)
-        {
-            throw new ArgumentNullException(nameof(bindingList));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        bindingList.ThrowArgumentNullExceptionIfNull(nameof(bindingList));
 
         return source.Adapt(new BindingListAdaptor<T>(bindingList, resetThreshold));
     }
@@ -448,15 +389,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (pauseIfTrueSelector is null)
-        {
-            throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        pauseIfTrueSelector.ThrowArgumentNullExceptionIfNull(nameof(pauseIfTrueSelector));
 
         return BufferIf(source, pauseIfTrueSelector, initialPauseState, null, scheduler);
     }
@@ -490,15 +424,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> BufferIf<T>(this IObservable<IChangeSet<T>> source, IObservable<bool> pauseIfTrueSelector, bool initialPauseState, TimeSpan? timeOut, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (pauseIfTrueSelector is null)
-        {
-            throw new ArgumentNullException(nameof(pauseIfTrueSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        pauseIfTrueSelector.ThrowArgumentNullExceptionIfNull(nameof(pauseIfTrueSelector));
 
         return new BufferIf<T>(source, pauseIfTrueSelector, initialPauseState, timeOut, scheduler).Run();
     }
@@ -529,10 +456,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TDestination>> Cast<TDestination>(this IObservable<IChangeSet<object>> source)
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Select(changes => changes.Transform(t => (TDestination)t));
     }
@@ -550,15 +474,9 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (conversionFactory is null)
-        {
-            throw new ArgumentNullException(nameof(conversionFactory));
-        }
+        conversionFactory.ThrowArgumentNullExceptionIfNull(nameof(conversionFactory));
 
         return source.Select(changes => changes.Transform(conversionFactory));
     }
@@ -583,10 +501,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Clone<T>(this IObservable<IChangeSet<T>> source, IList<T> target)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Do(target.Clone);
     }
@@ -605,15 +520,9 @@ public static class ObservableListEx
         where TObject : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (conversionFactory is null)
-        {
-            throw new ArgumentNullException(nameof(conversionFactory));
-        }
+        conversionFactory.ThrowArgumentNullExceptionIfNull(nameof(conversionFactory));
 
         return source.Select(changes => changes.Transform(conversionFactory));
     }
@@ -627,10 +536,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new DeferUntilLoaded<T>(source).Run();
     }
@@ -644,10 +550,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> DeferUntilLoaded<T>(this IObservableList<T> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Connect().DeferUntilLoaded();
     }
@@ -666,10 +569,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> DisposeMany<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new DisposeMany<T>(source).Run();
     }
@@ -691,15 +591,9 @@ public static class ObservableListEx
         where TObject : notnull
         where TValue : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (valueSelector is null)
-        {
-            throw new ArgumentNullException(nameof(valueSelector));
-        }
+        valueSelector.ThrowArgumentNullExceptionIfNull(nameof(valueSelector));
 
         return new Distinct<TObject, TValue>(source, valueSelector).Run();
     }
@@ -713,7 +607,12 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Except<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
-        where T : notnull => source.Combine(CombineOperator.Except, others);
+        where T : notnull
+    {
+        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+
+        return source.Combine(CombineOperator.Except, others);
+    }
 
     /// <summary>
     /// Apply a logical Except operator between the collections.
@@ -775,15 +674,9 @@ public static class ObservableListEx
     public static IObservable<IEnumerable<T>> ExpireAfter<T>(this ISourceList<T> source, Func<T, TimeSpan?> timeSelector, TimeSpan? pollingInterval = null, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (timeSelector is null)
-        {
-            throw new ArgumentNullException(nameof(timeSelector));
-        }
+        timeSelector.ThrowArgumentNullExceptionIfNull(nameof(timeSelector));
 
         var locker = new object();
         var limiter = new ExpireAfter<T>(source, timeSelector, pollingInterval, scheduler ?? Scheduler.Default, locker);
@@ -802,15 +695,9 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, Func<T, bool> predicate)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (predicate is null)
-        {
-            throw new ArgumentNullException(nameof(predicate));
-        }
+        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
 
         return new Filter<T>(source, predicate).Run();
     }
@@ -829,15 +716,9 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Filter<T>(this IObservable<IChangeSet<T>> source, IObservable<Func<T, bool>> predicate, ListFilterPolicy filterPolicy = ListFilterPolicy.CalculateDiff)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (predicate is null)
-        {
-            throw new ArgumentNullException(nameof(predicate));
-        }
+        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
 
         return new Filter<T>(source, predicate, filterPolicy).Run();
     }
@@ -855,10 +736,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> FilterOnObservable<TObject>(this IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<bool>> objectFilterObservable, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
         where TObject : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new FilterOnObservable<TObject>(source, objectFilterObservable, propertyChangedThrottle, scheduler).Run();
     }
@@ -879,20 +757,11 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> FilterOnProperty<TObject, TProperty>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TProperty>> propertySelector, Func<TObject, bool> predicate, TimeSpan? propertyChangedThrottle = null, IScheduler? scheduler = null)
         where TObject : INotifyPropertyChanged
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (propertySelector is null)
-        {
-            throw new ArgumentNullException(nameof(propertySelector));
-        }
+        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
 
-        if (predicate is null)
-        {
-            throw new ArgumentNullException(nameof(predicate));
-        }
+        predicate.ThrowArgumentNullExceptionIfNull(nameof(predicate));
 
         return new FilterOnProperty<TObject, TProperty>(source, propertySelector, predicate, propertyChangedThrottle, scheduler).Run();
     }
@@ -916,15 +785,9 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> ForEachChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<Change<TObject>> action)
         where TObject : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
 
         return source.Do(changes => changes.ForEach(action));
     }
@@ -940,15 +803,9 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> ForEachItemChange<TObject>(this IObservable<IChangeSet<TObject>> source, Action<ItemChange<TObject>> action)
         where TObject : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
 
         return source.Do(changes => changes.Flatten().ForEach(action));
     }
@@ -972,15 +829,9 @@ public static class ObservableListEx
         where TObject : notnull
         where TGroup : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (groupSelector is null)
-        {
-            throw new ArgumentNullException(nameof(groupSelector));
-        }
+        groupSelector.ThrowArgumentNullExceptionIfNull(nameof(groupSelector));
 
         return new GroupOn<TObject, TGroup>(source, groupSelector, regrouper).Run();
     }
@@ -1001,15 +852,9 @@ public static class ObservableListEx
         where TObject : INotifyPropertyChanged
         where TGroup : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (propertySelector is null)
-        {
-            throw new ArgumentNullException(nameof(propertySelector));
-        }
+        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
 
         return new GroupOnProperty<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
     }
@@ -1030,15 +875,9 @@ public static class ObservableListEx
         where TObject : INotifyPropertyChanged
         where TGroup : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (propertySelector is null)
-        {
-            throw new ArgumentNullException(nameof(propertySelector));
-        }
+        propertySelector.ThrowArgumentNullExceptionIfNull(nameof(propertySelector));
 
         return new GroupOnPropertyWithImmutableState<TObject, TGroup>(source, propertySelector, propertyChangedThrottle, scheduler).Run();
     }
@@ -1062,15 +901,9 @@ public static class ObservableListEx
         where TObject : notnull
         where TGroupKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (groupSelectorKey is null)
-        {
-            throw new ArgumentNullException(nameof(groupSelectorKey));
-        }
+        groupSelectorKey.ThrowArgumentNullExceptionIfNull(nameof(groupSelectorKey));
 
         return new GroupOnImmutable<TObject, TGroupKey>(source, groupSelectorKey, regrouper).Run();
     }
@@ -1089,10 +922,7 @@ public static class ObservableListEx
     public static IObservable<IEnumerable<T>> LimitSizeTo<T>(this ISourceList<T> source, int sizeLimit, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (sizeLimit <= 0)
         {
@@ -1120,15 +950,9 @@ public static class ObservableListEx
     public static IObservable<TDestination> MergeMany<T, TDestination>(this IObservable<IChangeSet<T>> source, Func<T, IObservable<TDestination>> observableSelector)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (observableSelector is null)
-        {
-            throw new ArgumentNullException(nameof(observableSelector));
-        }
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
         return new MergeMany<T, TDestination>(source, observableSelector).Run();
     }
@@ -1146,10 +970,7 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Connect().MergeChangeSets(comparer: comparer);
     }
@@ -1168,10 +989,7 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Connect().MergeChangeSets(equalityComparer, comparer);
     }
@@ -1189,10 +1007,7 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (comparer == null)
-        {
-            throw new ArgumentNullException(nameof(comparer));
-        }
+        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
 
         return source.MergeChangeSets(comparer: comparer);
     }
@@ -1211,10 +1026,7 @@ public static class ObservableListEx
         where TObject : notnull
         where TKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.MergeManyChangeSets(static src => src, equalityComparer, comparer);
     }
@@ -1235,20 +1047,9 @@ public static class ObservableListEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (observableSelector == null)
-        {
-            throw new ArgumentNullException(nameof(observableSelector));
-        }
-
-        if (comparer == null)
-        {
-            throw new ArgumentNullException(nameof(comparer));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
 
         return source.MergeManyChangeSets(observableSelector, equalityComparer: null, comparer: comparer);
     }
@@ -1270,15 +1071,8 @@ public static class ObservableListEx
         where TDestination : notnull
         where TDestinationKey : notnull
     {
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (observableSelector == null)
-        {
-            throw new ArgumentNullException(nameof(observableSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
         return new MergeManyCacheChangeSets<TObject, TDestination, TDestinationKey>(source, observableSelector, equalityComparer, comparer).Run();
     }
@@ -1293,10 +1087,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> NotEmpty<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Where(s => s.Count != 0);
     }
@@ -1311,15 +1102,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> OnItemAdded<T>(this IObservable<IChangeSet<T>> source, Action<T> addAction)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (addAction is null)
-        {
-            throw new ArgumentNullException(nameof(addAction));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        addAction.ThrowArgumentNullExceptionIfNull(nameof(addAction));
 
         return new OnBeingAdded<T>(source, addAction).Run();
     }
@@ -1335,15 +1119,8 @@ public static class ObservableListEx
         where TObject : notnull
     {
         var refreshAction2 = refreshAction;
-        if (source == null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (refreshAction2 == null)
-        {
-            throw new ArgumentNullException(nameof(refreshAction));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        refreshAction2.ThrowArgumentNullExceptionIfNull(nameof(refreshAction));
 
         return source.Do((IChangeSet<TObject> changes) =>
             changes.Where((Change<TObject> c) =>
@@ -1366,15 +1143,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> OnItemRemoved<T>(this IObservable<IChangeSet<T>> source, Action<T> removeAction, bool invokeOnUnsubscribe = true)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (removeAction is null)
-        {
-            throw new ArgumentNullException(nameof(removeAction));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        removeAction.ThrowArgumentNullExceptionIfNull(nameof(removeAction));
 
         return new OnBeingRemoved<T>(source, removeAction, invokeOnUnsubscribe).Run();
     }
@@ -1398,7 +1168,12 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Or<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
-        where T : notnull => source.Combine(CombineOperator.Or, others);
+        where T : notnull
+    {
+        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+
+        return source.Combine(CombineOperator.Or, others);
+    }
 
     /// <summary>
     /// Dynamically apply a logical Or operator between the items in the outer observable list.
@@ -1440,15 +1215,8 @@ public static class ObservableListEx
     public static IObservable<IPageChangeSet<T>> Page<T>(this IObservable<IChangeSet<T>> source, IObservable<IPageRequest> requests)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (requests is null)
-        {
-            throw new ArgumentNullException(nameof(requests));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        requests.ThrowArgumentNullExceptionIfNull(nameof(requests));
 
         return new Pager<T>(source, requests).Run();
     }
@@ -1468,15 +1236,8 @@ public static class ObservableListEx
     public static IDisposable PopulateInto<T>(this IObservable<IChangeSet<T>> source, ISourceList<T> destination)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (destination is null)
-        {
-            throw new ArgumentNullException(nameof(destination));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        destination.ThrowArgumentNullExceptionIfNull(nameof(destination));
 
         return source.Subscribe(changes => destination.Edit(updater => updater.Clone(changes)));
     }
@@ -1497,15 +1258,8 @@ public static class ObservableListEx
     public static IObservable<TDestination> QueryWhenChanged<TObject, TDestination>(this IObservable<IChangeSet<TObject>> source, Func<IReadOnlyCollection<TObject>, TDestination> resultSelector)
         where TObject : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         return source.QueryWhenChanged().Select(resultSelector);
     }
@@ -1520,10 +1274,7 @@ public static class ObservableListEx
     public static IObservable<IReadOnlyCollection<T>> QueryWhenChanged<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new QueryWhenChanged<T>(source).Run();
     }
@@ -1537,10 +1288,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> RefCount<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new RefCount<T>(source).Run();
     }
@@ -1555,10 +1303,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> RemoveIndex<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Select(changes => new ChangeSet<T>(changes.YieldWithoutIndex()));
     }
@@ -1578,10 +1323,7 @@ public static class ObservableListEx
         where T : notnull
     {
         var reverser = new Reverser<T>();
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Select(changes => new ChangeSet<T>(reverser.Reverse(changes)));
     }
@@ -1596,10 +1338,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> SkipInitial<T>(this IObservable<IChangeSet<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.DeferUntilLoaded().Skip(1);
     }
@@ -1621,15 +1360,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IComparer<T> comparer, SortOptions options = SortOptions.None, IObservable<Unit>? resort = null, IObservable<IComparer<T>>? comparerChanged = null, int resetThreshold = 50)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (comparer is null)
-        {
-            throw new ArgumentNullException(nameof(comparer));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        comparer.ThrowArgumentNullExceptionIfNull(nameof(comparer));
 
         return new Sort<T>(source, comparer, options, resort, comparerChanged, resetThreshold).Run();
     }
@@ -1650,15 +1382,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Sort<T>(this IObservable<IChangeSet<T>> source, IObservable<IComparer<T>> comparerChanged, SortOptions options = SortOptions.None, IObservable<Unit>? resort = null, int resetThreshold = 50)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (comparerChanged is null)
-        {
-            throw new ArgumentNullException(nameof(comparerChanged));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        comparerChanged.ThrowArgumentNullExceptionIfNull(nameof(comparerChanged));
 
         return new Sort<T>(source, null, options, resort, comparerChanged, resetThreshold).Run();
     }
@@ -1688,15 +1413,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> SubscribeMany<T>(this IObservable<IChangeSet<T>> source, Func<T, IDisposable> subscriptionFactory)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (subscriptionFactory is null)
-        {
-            throw new ArgumentNullException(nameof(subscriptionFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
 
         return new SubscribeMany<T>(source, subscriptionFactory).Run();
     }
@@ -1725,10 +1443,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservableList<T>> sources)
         where T : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return sources.Select(cache => cache.Connect()).Switch();
     }
@@ -1748,10 +1463,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Switch<T>(this IObservable<IObservable<IChangeSet<T>>> sources)
         where T : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return new Switch<T>(sources).Run();
     }
@@ -1779,10 +1491,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return ToObservableChangeSet(source, null, -1, scheduler);
     }
@@ -1802,15 +1511,8 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (expireAfter is null)
-        {
-            throw new ArgumentNullException(nameof(expireAfter));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        expireAfter.ThrowArgumentNullExceptionIfNull(nameof(expireAfter));
 
         return ToObservableChangeSet(source, expireAfter, -1, scheduler);
     }
@@ -1830,10 +1532,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, int limitSizeTo, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return ToObservableChangeSet(source, null, limitSizeTo, scheduler);
     }
@@ -1854,10 +1553,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<T> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new ToObservableChangeSet<T>(source, expireAfter, limitSizeTo, scheduler).Run();
     }
@@ -1922,10 +1618,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?>? expireAfter, int limitSizeTo, IScheduler? scheduler = null)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new ToObservableChangeSet<T>(source, expireAfter, limitSizeTo, scheduler).Run();
     }
@@ -1940,10 +1633,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> Top<T>(this IObservable<IChangeSet<T>> source, int numberOfItems)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         if (numberOfItems <= 0)
         {
@@ -1999,15 +1689,9 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return source.Transform<TSource, TDestination>((t, _, _) => transformFactory(t), transformOnRefresh);
     }
@@ -2030,15 +1714,8 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return source.Transform<TSource, TDestination>((t, _, idx) => transformFactory(t, idx), transformOnRefresh);
     }
@@ -2062,15 +1739,8 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return source.Transform<TSource, TDestination>((t, previous, _) => transformFactory(t, previous), transformOnRefresh);
     }
@@ -2094,15 +1764,8 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return new Transformer<TSource, TDestination>(source, transformFactory, transformOnRefresh).Run();
     }
@@ -2129,15 +1792,8 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return source.TransformAsync<TSource, TDestination>((t, _, _) => transformFactory(t), transformOnRefresh);
     }
@@ -2164,15 +1820,8 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return source.TransformAsync<TSource, TDestination>((t, _, i) => transformFactory(t, i), transformOnRefresh);
     }
@@ -2199,15 +1848,8 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return source.TransformAsync<TSource, TDestination>((t, d, _) => transformFactory(t, d), transformOnRefresh);
     }
@@ -2234,15 +1876,8 @@ public static class ObservableListEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformFactory is null)
-        {
-            throw new ArgumentNullException(nameof(transformFactory));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformFactory.ThrowArgumentNullExceptionIfNull(nameof(transformFactory));
 
         return new TransformAsync<TSource, TDestination>(source, transformFactory, transformOnRefresh).Run();
     }
@@ -2265,15 +1900,8 @@ public static class ObservableListEx
         where TDestination : notnull
         where TSource : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (manySelector is null)
-        {
-            throw new ArgumentNullException(nameof(manySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        manySelector.ThrowArgumentNullExceptionIfNull(nameof(manySelector));
 
         return new TransformMany<TSource, TDestination>(source, manySelector, equalityComparer).Run();
     }
@@ -2327,15 +1955,9 @@ public static class ObservableListEx
     public static IObservable<IVirtualChangeSet<T>> Virtualise<T>(this IObservable<IChangeSet<T>> source, IObservable<IVirtualRequest> requests)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
-        if (requests is null)
-        {
-            throw new ArgumentNullException(nameof(requests));
-        }
+        requests.ThrowArgumentNullExceptionIfNull(nameof(requests));
 
         return new Virtualiser<T>(source, requests).Run();
     }
@@ -2350,10 +1972,7 @@ public static class ObservableListEx
     public static IObservable<TObject?> WhenAnyPropertyChanged<TObject>(this IObservable<IChangeSet<TObject>> source, params string[] propertiesToMonitor)
         where TObject : INotifyPropertyChanged
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.MergeMany(t => t.WhenAnyPropertyChanged(propertiesToMonitor));
     }
@@ -2370,15 +1989,8 @@ public static class ObservableListEx
     public static IObservable<PropertyValue<TObject, TValue>> WhenPropertyChanged<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (propertyAccessor is null)
-        {
-            throw new ArgumentNullException(nameof(propertyAccessor));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        propertyAccessor.ThrowArgumentNullExceptionIfNull(nameof(propertyAccessor));
 
         var factory = propertyAccessor.GetFactory();
         return source.MergeMany(t => factory(t, notifyOnInitialValue));
@@ -2396,15 +2008,8 @@ public static class ObservableListEx
     public static IObservable<TValue?> WhenValueChanged<TObject, TValue>(this IObservable<IChangeSet<TObject>> source, Expression<Func<TObject, TValue>> propertyAccessor, bool notifyOnInitialValue = true)
         where TObject : INotifyPropertyChanged
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (propertyAccessor is null)
-        {
-            throw new ArgumentNullException(nameof(propertyAccessor));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        propertyAccessor.ThrowArgumentNullExceptionIfNull(nameof(propertyAccessor));
 
         var factory = propertyAccessor.GetFactory();
         return source.MergeMany(t => factory(t, notifyOnInitialValue).Select(pv => pv.Value));
@@ -2421,10 +2026,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> WhereReasonsAre<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
-        if (reasons is null)
-        {
-            throw new ArgumentNullException(nameof(reasons));
-        }
+        reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
 
         if (reasons.Length == 0)
         {
@@ -2451,10 +2053,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<T>> WhereReasonsAreNot<T>(this IObservable<IChangeSet<T>> source, params ListChangeReason[] reasons)
         where T : notnull
     {
-        if (reasons is null)
-        {
-            throw new ArgumentNullException(nameof(reasons));
-        }
+        reasons.ThrowArgumentNullExceptionIfNull(nameof(reasons));
 
         if (reasons.Length == 0)
         {
@@ -2489,7 +2088,12 @@ public static class ObservableListEx
     /// <param name="others">The others.</param>
     /// <returns>An observable which emits the change set.</returns>
     public static IObservable<IChangeSet<T>> Xor<T>(this IObservable<IChangeSet<T>> source, params IObservable<IChangeSet<T>>[] others)
-        where T : notnull => source.Combine(CombineOperator.Xor, others);
+        where T : notnull
+    {
+        others.ThrowArgumentNullExceptionIfNull(nameof(others));
+
+        return source.Combine(CombineOperator.Xor, others);
+    }
 
     /// <summary>
     /// Apply a logical Xor operator between the collections.
@@ -2534,10 +2138,7 @@ public static class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this ICollection<IObservable<IChangeSet<T>>> sources, CombineOperator type)
         where T : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return new Combiner<T>(sources, type).Run();
     }
@@ -2545,15 +2146,8 @@ public static class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservable<IChangeSet<T>> source, CombineOperator type, params IObservable<IChangeSet<T>>[] others)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (others is null)
-        {
-            throw new ArgumentNullException(nameof(others));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        others.ThrowArgumentNullExceptionIfNull(nameof(others));
 
         if (others.Length == 0)
         {
@@ -2567,10 +2161,7 @@ public static class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<ISourceList<T>> sources, CombineOperator type)
         where T : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -2584,10 +2175,7 @@ public static class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<IObservableList<T>> sources, CombineOperator type)
         where T : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -2601,10 +2189,7 @@ public static class ObservableListEx
     private static IObservable<IChangeSet<T>> Combine<T>(this IObservableList<IObservable<IChangeSet<T>>> sources, CombineOperator type)
         where T : notnull
     {
-        if (sources is null)
-        {
-            throw new ArgumentNullException(nameof(sources));
-        }
+        sources.ThrowArgumentNullExceptionIfNull(nameof(sources));
 
         return new DynamicCombiner<T>(sources, type).Run();
     }

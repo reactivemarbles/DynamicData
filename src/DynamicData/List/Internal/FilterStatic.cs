@@ -13,16 +13,13 @@ internal class FilterStatic<T>(IObservable<IChangeSet<T>> source, Func<T, bool> 
 
     private readonly IObservable<IChangeSet<T>> _source = source ?? throw new ArgumentNullException(nameof(source));
 
-    public IObservable<IChangeSet<T>> Run() => Observable.Defer(() =>
-                                                    {
-                                                        return _source.Scan(
+    public IObservable<IChangeSet<T>> Run() => Observable.Defer(() => _source.Scan(
                                                             new ChangeAwareList<T>(),
                                                             (state, changes) =>
                                                             {
                                                                 Process(state, changes);
                                                                 return state;
-                                                            }).Select(filtered => filtered.CaptureChanges()).NotEmpty();
-                                                    });
+                                                            }).Select(filtered => filtered.CaptureChanges()).NotEmpty());
 
     private void Process(ChangeAwareList<T> filtered, IChangeSet<T> changes)
     {

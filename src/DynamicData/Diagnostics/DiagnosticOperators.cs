@@ -23,10 +23,7 @@ public static class DiagnosticOperators
         where TSource : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Scan(
             ChangeSummary.Empty,
@@ -56,10 +53,7 @@ public static class DiagnosticOperators
     public static IObservable<ChangeSummary> CollectUpdateStats<TSource>(this IObservable<IChangeSet<TSource>> source)
         where TSource : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return source.Scan(
             ChangeSummary.Empty,

@@ -55,7 +55,7 @@ internal sealed class BufferIf<T>(IObservable<IChangeSet<T>> source, IObservable
                         }
 
                         observer.OnNext(buffer);
-                        buffer = new ChangeSet<T>();
+                        buffer = [];
 
                         // kill off timeout if required
                         timeoutSubscriber.Disposable = Disposable.Empty;

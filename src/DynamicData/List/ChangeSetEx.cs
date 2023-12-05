@@ -24,10 +24,7 @@ public static class ChangeSetEx
     public static IEnumerable<ItemChange<T>> Flatten<T>(this IChangeSet<T> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new ItemChangeEnumerator<T>(source);
     }
@@ -61,15 +58,8 @@ public static class ChangeSetEx
         where TSource : notnull
         where TDestination : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (transformer is null)
-        {
-            throw new ArgumentNullException(nameof(transformer));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        transformer.ThrowArgumentNullExceptionIfNull(nameof(transformer));
 
         var changes = source.Select(
             change =>
@@ -94,10 +84,7 @@ public static class ChangeSetEx
     public static IEnumerable<Change<T>> YieldWithoutIndex<T>(this IEnumerable<Change<T>> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new WithoutIndexEnumerator<T>(source);
     }
@@ -112,10 +99,7 @@ public static class ChangeSetEx
     internal static IEnumerable<UnifiedChange<T>> Unified<T>(this IChangeSet<T> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return new UnifiedChangeEnumerator<T>(source);
     }

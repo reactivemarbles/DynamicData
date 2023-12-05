@@ -4,8 +4,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-#pragma warning disable 1591
-
 namespace DynamicData.Kernel;
 
 /// <summary>
@@ -177,6 +175,7 @@ public readonly struct Optional<T> : IEquatable<Optional<T>>
 /// <summary>
 /// Optional factory class.
 /// </summary>
+[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "By Design.")]
 public static class Optional
 {
     /// <summary>
