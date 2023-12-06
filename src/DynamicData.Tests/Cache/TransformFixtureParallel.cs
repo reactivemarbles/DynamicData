@@ -92,7 +92,7 @@ public class TransformFixtureParallel : IDisposable
         _results.Data.Count.Should().Be(0, "Should be nothing cached");
     }
 
-    [Fact(Skip = "The PR #771 introduced inconsistent results")]
+    [Fact]
     public void SameKeyChanges()
     {
         var people = Enumerable.Range(1, 10).Select(i => new Person("Name", i)).ToArray();
