@@ -35,6 +35,15 @@ public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ChangeSet{T}"/> class.
+    /// </summary>
+    /// <param name="capacity">The initial capacity of the change set.</param>
+    public ChangeSet(int capacity)
+        : base(capacity)
+    {
+    }
+
+    /// <summary>
     ///     Gets the number of additions.
     /// </summary>
     public int Adds

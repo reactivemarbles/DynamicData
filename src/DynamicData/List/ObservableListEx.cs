@@ -1142,10 +1142,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, IComparer<TObject> comparer)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.Connect().MergeChangeSets(comparer: comparer);
-    }
+        where TKey : notnull => source.Connect().MergeChangeSets(comparer: comparer);
 
     /// <summary>
     /// Merges all of the Cache Observable ChangeSets into a single ChangeSets while correctly handling multiple Keys and removal of the parent items.
@@ -1159,10 +1156,7 @@ public static class ObservableListEx
     /// <exception cref="ArgumentNullException">Parameter was null.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> MergeChangeSets<TObject, TKey>(this IObservableList<IObservable<IChangeSet<TObject, TKey>>> source, IEqualityComparer<TObject>? equalityComparer = null, IComparer<TObject>? comparer = null)
         where TObject : notnull
-        where TKey : notnull
-    {
-        return source.Connect().MergeChangeSets(equalityComparer, comparer);
-    }
+        where TKey : notnull => source.Connect().MergeChangeSets(equalityComparer, comparer);
 
     /// <summary>
     /// Merges all of the Cache Observable ChangeSets into a single ChangeSets while correctly handling multiple Keys and removal of the parent items.
@@ -1317,7 +1311,7 @@ public static class ObservableListEx
     public static IObservable<IChangeSet<TObject>> OnItemRefreshed<TObject>(this IObservable<IChangeSet<TObject>> source, Action<TObject> refreshAction)
         where TObject : notnull
     {
-        Action<TObject> refreshAction2 = refreshAction;
+        var refreshAction2 = refreshAction;
         if (source == null)
         {
             throw new ArgumentNullException(nameof(source));
@@ -1328,13 +1322,8 @@ public static class ObservableListEx
             throw new ArgumentNullException(nameof(refreshAction));
         }
 
-        return source.Do(delegate(IChangeSet<TObject> changes)
-        {
-            changes.Where((Change<TObject> c) => c.Reason == ListChangeReason.Refresh).ForEach(delegate(Change<TObject> c)
-            {
-                refreshAction2(c.Item.Current);
-            });
-        });
+        return source.Do((IChangeSet<TObject> changes) =>
+            changes.Where((Change<TObject> c) => c.Reason == ListChangeReason.Refresh).ForEach((Change<TObject> c) => refreshAction2(c.Item.Current)));
     }
 
     /// <summary>
@@ -1808,7 +1797,7 @@ public static class ObservableListEx
     /// </summary>
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
-    /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
+    /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit. Supply -1 to disable size limiting.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
     /// <exception cref="System.ArgumentNullException">source
@@ -1832,7 +1821,7 @@ public static class ObservableListEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <param name="expireAfter">Specify on a per object level the maximum time before an object expires from a cache.</param>
-    /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit.</param>
+    /// <param name="limitSizeTo">Remove the oldest items when the size has reached this limit. Supply -1 to disable size limiting.</param>
     /// <param name="scheduler">The scheduler (only used for time expiry).</param>
     /// <returns>An observable which emits a change set.</returns>
     /// <exception cref="System.ArgumentNullException">source
@@ -1891,7 +1880,7 @@ public static class ObservableListEx
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this IObservable<IEnumerable<T>> source, Func<T, TimeSpan?> expireAfter, IScheduler? scheduler = null)
-        where T : notnull => ToObservableChangeSet(source, expireAfter, 0, scheduler);
+        where T : notnull => ToObservableChangeSet(source, expireAfter, -1, scheduler);
 
     /// <summary>
     /// Converts the observable to an observable change set, allowing size and time limit to be specified.
