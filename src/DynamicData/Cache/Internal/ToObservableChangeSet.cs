@@ -154,16 +154,22 @@ internal class ToObservableChangeSet<TObject, TKey>
                             if (items is IReadOnlyList<TObject> itemsList)
                             {
                                 for (var i = 0; i < itemsList.Count; ++i)
+                                {
                                     HandleIncomingItem(itemsList[i], now, changeSet, ref hasExpirationQueueChanged);
+                                }
                             }
                             else
                             {
                                 foreach (var item in items)
+                                {
                                     HandleIncomingItem(item, now, changeSet, ref hasExpirationQueueChanged);
+                                }
                             }
 
                             if (hasExpirationQueueChanged)
+                            {
                                 OnExpirationQueueChanged();
+                            }
 
                             observer.OnNext(changeSet);
                         }
@@ -186,9 +192,15 @@ internal class ToObservableChangeSet<TObject, TKey>
 
                         // If there are pending expirations scheduled, wait to complete the stream until they're done
                         if (_expirationState is null or { Queue.Count: 0 })
+                        {
                             observer.OnCompleted();
+                        }
                     }));
         }
+
+        // Instead of using a dedicated _synchronizationGate object, we can save an allocation by using any object that is never exposed to consumers.
+        private object SynchronizationGate
+            => _itemStatesByKey;
 
         public void Dispose()
         {
@@ -202,10 +214,6 @@ internal class ToObservableChangeSet<TObject, TKey>
 
         private static int CompareExpireAtToExpiration(DateTimeOffset expireAt, Expiration expiration)
             => expireAt.CompareTo(expiration.ExpireAt);
-
-        // Instead of using a dedicated _synchronizationGate object, we can save an allocation by using any object that is never exposed to consumers.
-        private object SynchronizationGate
-            => _itemStatesByKey;
 
         private void HandleIncomingItem(
             TObject item,
@@ -223,7 +231,9 @@ internal class ToObservableChangeSet<TObject, TKey>
             {
                 // Backwards compatibility
                 if (evictionState.LimitSizeTo is 0)
+                {
                     return;
+                }
 
                 // Eviction is only applicable to adds, not replacements
                 if (previousItemState is null)
@@ -266,7 +276,9 @@ internal class ToObservableChangeSet<TObject, TKey>
                 {
                     var insertionIndex = expirationState.Queue.BinarySearch(expireAt.Value, CompareExpireAtToExpiration);
                     if (insertionIndex < 0)
+                    {
                         insertionIndex = ~insertionIndex;
+                    }
 
                     expirationState.Queue.Insert(
                         index: insertionIndex,
@@ -310,7 +322,9 @@ internal class ToObservableChangeSet<TObject, TKey>
             foreach (var expiration in expirationState.Queue)
             {
                 if (expiration.ExpireAt > now)
+                {
                     break;
+                }
 
                 ++processedExpirationCount;
 
@@ -350,7 +364,9 @@ internal class ToObservableChangeSet<TObject, TKey>
             if (expirationState.Queue.Count is 0)
             {
                 if (_hasSourceCompleted)
+                {
                     _observer.OnCompleted();
+                }
             }
             else
             {
