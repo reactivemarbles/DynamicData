@@ -24,7 +24,7 @@ namespace DynamicData.Benchmarks.Cache
     [MarkdownExporterAttribute.GitHub]
     public class SourceCache
     {
-        private SourceCache<BenchmarkItem, int> _cache;
+        private SourceCache<BenchmarkItem, int>? _cache;
         private BenchmarkItem[] _items = Enumerable.Range(1, 100).Select(i => new BenchmarkItem(i)).ToArray();
 
         [GlobalSetup]
@@ -39,18 +39,18 @@ namespace DynamicData.Benchmarks.Cache
         [IterationSetup]
         public void SetupIteration()
         {
-            _cache.Clear();
+            _cache?.Clear();
             _items = Enumerable.Range(1, N).Select(i => new BenchmarkItem(i)).ToArray();
         }
 
         [GlobalCleanup]
         public void Teardown()
         {
-            _cache.Dispose();
+            _cache?.Dispose();
             _cache = null;
         }
 
         [Benchmark]
-        public void Add() => _cache.AddOrUpdate(_items);
+        public void Add() => _cache?.AddOrUpdate(_items);
     }
 }

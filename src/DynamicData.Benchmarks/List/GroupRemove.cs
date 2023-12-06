@@ -15,8 +15,8 @@ namespace DynamicData.Benchmarks.List
     [MarkdownExporterAttribute.GitHub]
     public class GroupRemove
     {
-        private IDisposable _groupSubscription;
-        private SourceList<int> _sourceList;
+        private IDisposable? _groupSubscription;
+        private SourceList<int>? _sourceList;
 
         private static readonly int[] _items = Enumerable.Range(1, 100).ToArray();
 
@@ -30,27 +30,27 @@ namespace DynamicData.Benchmarks.List
         [IterationSetup]
         public void SetupIteration()
         {
-            _sourceList.AddRange(_items);
+            _sourceList?.AddRange(_items);
         }
 
         [GlobalCleanup]
         public void Teardown()
         {
-            _groupSubscription.Dispose();
-            _sourceList.Dispose();
+            _groupSubscription?.Dispose();
+            _sourceList?.Dispose();
             _sourceList = null;
         }
 
         [Benchmark]
-        public void RemoveAt() => _sourceList.RemoveAt(1);
+        public void RemoveAt() => _sourceList?.RemoveAt(1);
 
         [Benchmark]
-        public void Remove() => _sourceList.RemoveAt(_items[0]);
+        public void Remove() => _sourceList?.RemoveAt(_items[0]);
 
         [Benchmark]
-        public void RemoveRange() => _sourceList.RemoveRange(40, 20);
+        public void RemoveRange() => _sourceList?.RemoveRange(40, 20);
 
         [Benchmark]
-        public void Clear() => _sourceList.Clear();
+        public void Clear() => _sourceList?.Clear();
     }
 }

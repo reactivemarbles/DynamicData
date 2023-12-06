@@ -14,8 +14,8 @@ namespace DynamicData.Benchmarks.List
     [MarkdownExporterAttribute.GitHub]
     public class SourceList
     {
-        private SourceList<string> _sourceList;
-        private string[] _items;
+        private SourceList<string>? _sourceList;
+        private string[]? _items;
 
         [Params(1, 100, 1_000, 10_000, 100_000)]
         public int N;
@@ -26,7 +26,7 @@ namespace DynamicData.Benchmarks.List
         [IterationSetup]
         public void SetupIteration()
         {
-            _sourceList.Clear();
+            _sourceList?.Clear();
             _items = Enumerable.Range(1, N).Select(i => i.ToString()).ToArray();
         }
 
@@ -34,9 +34,9 @@ namespace DynamicData.Benchmarks.List
         public void Teardown() => _sourceList = null;
 
         [Benchmark]
-        public void AddRange() => _sourceList.AddRange(_items);
+        public void AddRange() => _sourceList?.AddRange(_items!);
 
         [Benchmark]
-        public void Insert() => _sourceList.InsertRange(_items, 0);
+        public void Insert() => _sourceList?.InsertRange(_items!, 0);
     }
 }
