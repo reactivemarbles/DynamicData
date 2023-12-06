@@ -77,7 +77,7 @@ internal class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Add:
                     {
                         var change = item.Item;
-                        if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
+                        if (change.CurrentIndex < 0 || change.CurrentIndex >= transformed.Count)
                         {
                             var container =
                                 await _containerFactory(item.Item.Current, Optional<TDestination>.None,
@@ -143,7 +143,7 @@ internal class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Remove:
                     {
                         var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
+                        var hasIndex = change.CurrentIndex >= 0;
 
                         if (hasIndex)
                         {
@@ -191,7 +191,7 @@ internal class TransformAsync<TSource, TDestination>
                 case ListChangeReason.Moved:
                     {
                         var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
+                        var hasIndex = change.CurrentIndex >= 0;
                         if (!hasIndex)
                         {
                             throw new UnspecifiedIndexException("Cannot move as an index was not specified");

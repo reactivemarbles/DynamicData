@@ -634,6 +634,7 @@ namespace DynamicData
         public static readonly DynamicData.IChangeSet<T> Empty;
         public ChangeSet() { }
         public ChangeSet(System.Collections.Generic.IEnumerable<DynamicData.Change<T>> items) { }
+        public ChangeSet(int capacity) { }
         public int Adds { get; }
         public int Moves { get; }
         public int Refreshes { get; }
