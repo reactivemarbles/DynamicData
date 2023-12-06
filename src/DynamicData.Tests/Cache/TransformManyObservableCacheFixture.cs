@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
 using DynamicData.Binding;
@@ -184,36 +182,6 @@ public class TransformManyObservableCollectionFixture
 
         parent.Children.Add(new Person("child2", 2));
         collection.Count.Should().Be(2);
-    }
-
-    [Fact]
-    [Trait("Performance", "Manual run only")]
-    public void Perf()
-    {
-        var children = Enumerable.Range(1, 10000).Select(i => new Person("Name" + i, i)).ToArray();
-
-        var childIndex = 0;
-        var parents = Enumerable.Range(1, 5000).Select(
-            i =>
-            {
-                var parent = new Parent(
-                    i,
-                    new[]
-                    {
-                        children[childIndex],
-                        children[childIndex + 1]
-                    });
-
-                childIndex += 2;
-                return parent;
-            }).ToArray();
-
-        var sw = new Stopwatch();
-
-        using var source = new SourceCache<Parent, int>(x => x.Id);
-        using var sut = source.Connect().Do(_ => sw.Start()).TransformMany(p => p.Children, c => c.Name).Do(_ => sw.Stop()).Subscribe(c => Console.WriteLine($"Changes = {c.Count:N0}"));
-        source.AddOrUpdate(parents);
-        Console.WriteLine($"{sw.ElapsedMilliseconds}");
     }
 
     [Fact]

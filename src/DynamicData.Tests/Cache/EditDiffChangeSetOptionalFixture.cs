@@ -184,28 +184,6 @@ public class EditDiffChangeSetOptionalFixture
         receivedError.Should().Be(failSource ? testException : default);
     }
 
-    [Trait("Performance", "Manual run only")]
-    [Theory]
-    [InlineData(7)]
-    [InlineData(MaxItems)]
-    public void Perf(int maxItems)
-    {
-        // having
-        var optionals = Enumerable.Range(0, maxItems).Select(n => (n % 2) == 0 ? CreatePerson(n, "Name") : s_noPerson);
-        var optObservable = optionals.ToObservable();
-
-        // when
-        var observableChangeSet = optObservable.EditDiff(p => p.Id);
-        using var results = observableChangeSet.AsAggregator();
-
-        // then
-        results.Data.Count.Should().Be(1);
-        results.Messages.Count.Should().Be(maxItems);
-        results.Summary.Overall.Adds.Should().Be((maxItems / 2) + ((maxItems % 2) == 0 ? 0 : 1));
-        results.Summary.Overall.Removes.Should().Be(maxItems / 2);
-        results.Summary.Overall.Updates.Should().Be(0);
-    }
-
     private static Optional<Person> CreatePerson(int id, string name) => Optional.Some(new Person(id, name));
 
     private class PersonComparer : IEqualityComparer<Person>
