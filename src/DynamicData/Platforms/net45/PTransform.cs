@@ -27,10 +27,11 @@ namespace DynamicData.PLinq
                 return transformer.NotEmpty().SubscribeSafe(observer);
             });
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "A collection initializer is not equivalent to a .ToArray() call for a ParallelQuery<T>. This change actually introduces a race-condition exception.")]
         private ChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
         {
             var transformed = changes.ShouldParallelise(parallelisationOptions)
-                ? [.. changes.Parallelise(parallelisationOptions).Select(ToDestination)]
+                ? changes.Parallelise(parallelisationOptions).Select(ToDestination).ToArray()
                 : changes.Select(ToDestination).ToArray();
 
             return ProcessUpdates(cache, transformed);
