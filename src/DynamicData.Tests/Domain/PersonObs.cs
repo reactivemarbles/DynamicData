@@ -4,21 +4,14 @@ using System.Reactive.Subjects;
 
 namespace DynamicData.Tests.Domain;
 
-public class PersonObs : IEquatable<PersonObs>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Acceptable in test.")]
+public class PersonObs(string name, int age, string gender = "F", string? parentName = null) : IEquatable<PersonObs>
 {
-    private readonly BehaviorSubject<int> _age;
+    private readonly BehaviorSubject<int> _age = new BehaviorSubject<int>(age);
 
     public PersonObs(string firstname, string lastname, int age, string gender = "F", string? parentName = null)
         : this(firstname + " " + lastname, age, gender, parentName)
     {
-    }
-
-    public PersonObs(string name, int age, string gender = "F", string? parentName = null)
-    {
-        Name = name;
-        _age = new BehaviorSubject<int>(age);
-        Gender = gender;
-        ParentName = parentName ?? string.Empty;
     }
 
     public static IEqualityComparer<PersonObs> AgeComparer { get; } = new AgeEqualityComparer();
@@ -27,27 +20,21 @@ public class PersonObs : IEquatable<PersonObs>
 
     public IObservable<int> Age => _age;
 
-    public string Gender { get; }
+    public string Gender { get; } = gender;
 
     public string Key => Name;
 
-    public string Name { get; }
+    public string Name { get; } = name;
 
-    public string ParentName { get; }
+    public string ParentName { get; } = parentName ?? string.Empty;
 
-    public static bool operator ==(PersonObs left, PersonObs right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(PersonObs left, PersonObs right) => Equals(left, right);
 
-    public static bool operator !=(PersonObs left, PersonObs right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(PersonObs left, PersonObs right) => !Equals(left, right);
 
     public bool Equals(PersonObs? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -62,7 +49,7 @@ public class PersonObs : IEquatable<PersonObs>
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -80,20 +67,11 @@ public class PersonObs : IEquatable<PersonObs>
         return Equals((PersonObs)obj);
     }
 
-    public override int GetHashCode()
-    {
-        return (Name is not null ? Name.GetHashCode() : 0);
-    }
+    public override int GetHashCode() => (Name is not null ? Name.GetHashCode() : 0);
 
-    public void SetAge(int age)
-    {
-        _age.OnNext(age);
-    }
+    public void SetAge(int age) => _age.OnNext(age);
 
-    public override string ToString()
-    {
-        return $"{Name}. {_age.Value}";
-    }
+    public override string ToString() => $"{Name}. {_age.Value}";
 
     private sealed class AgeEqualityComparer : IEqualityComparer<PersonObs>
     {
@@ -104,12 +82,12 @@ public class PersonObs : IEquatable<PersonObs>
                 return true;
             }
 
-            if (ReferenceEquals(x, null))
+            if (x is null)
             {
                 return false;
             }
 
-            if (ReferenceEquals(y, null))
+            if (y is null)
             {
                 return false;
             }
@@ -122,10 +100,7 @@ public class PersonObs : IEquatable<PersonObs>
             return x._age.Value == y._age.Value;
         }
 
-        public int GetHashCode(PersonObs obj)
-        {
-            return obj._age.Value;
-        }
+        public int GetHashCode(PersonObs obj) => obj._age.Value;
     }
 
     private sealed class NameAgeGenderEqualityComparer : IEqualityComparer<PersonObs>
@@ -137,12 +112,12 @@ public class PersonObs : IEquatable<PersonObs>
                 return true;
             }
 
-            if (ReferenceEquals(x, null))
+            if (x is null)
             {
                 return false;
             }
 
-            if (ReferenceEquals(y, null))
+            if (y is null)
             {
                 return false;
             }

@@ -153,20 +153,11 @@ public class TransformFixture
 
     private class TransformStub : IDisposable
     {
-        public TransformStub()
-        {
-            Results = new ChangeSetAggregator<PersonWithGender, string>(Source.Connect().Transform(TransformFactory));
-        }
+        public TransformStub() => Results = new ChangeSetAggregator<PersonWithGender, string>(Source.Connect().Transform(TransformFactory));
 
-        public TransformStub(IObservable<Unit> retransformer)
-        {
-            Results = new ChangeSetAggregator<PersonWithGender, string>(Source.Connect().Transform(TransformFactory, retransformer));
-        }
+        public TransformStub(IObservable<Unit> retransformer) => Results = new ChangeSetAggregator<PersonWithGender, string>(Source.Connect().Transform(TransformFactory, retransformer));
 
-        public TransformStub(IObservable<Func<Person, bool>> retransformer)
-        {
-            Results = new ChangeSetAggregator<PersonWithGender, string>(Source.Connect().Transform(TransformFactory, retransformer));
-        }
+        public TransformStub(IObservable<Func<Person, bool>> retransformer) => Results = new ChangeSetAggregator<PersonWithGender, string>(Source.Connect().Transform(TransformFactory, retransformer));
 
         public ChangeSetAggregator<PersonWithGender, string> Results { get; }
 

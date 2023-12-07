@@ -53,7 +53,7 @@ public class LeftJoinManyFixture : IDisposable
         _result.Data.Count.Should().Be(10);
         _result.Data.Items.Select(pac => pac.Parent).Should().BeEquivalentTo(people);
 
-        _result.Data.Items.ForEach(pac => { pac.Count.Should().Be(0); });
+        _result.Data.Items.ForEach(pac => pac.Count.Should().Be(0));
     }
 
     [Fact]
@@ -159,6 +159,7 @@ public class LeftJoinManyFixture : IDisposable
             });
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private int CalculateParent(int index, int totalPeople)
     {
         if (index < 5)

@@ -53,7 +53,9 @@ internal class Filter<T>
                 else
                 {
                     if (_predicates is null)
+                    {
                         throw new InvalidOperationException("The predicates is not set and the change is not a immutableFilter.");
+                    }
 
                     predicateChanged = _predicates.Synchronize(locker).Select(
                         newPredicate =>
@@ -70,17 +72,20 @@ internal class Filter<T>
                  */
 
                 // Need to get item by index and store it in the transform
-                var filteredResult = _source.Synchronize(locker).Transform<T, ItemWithMatch>((t, previous) =>
+                var filteredResult = _source.Synchronize(locker).Transform<T, ItemWithMatch>(
+                    (t, previous) =>
                         {
                             var wasMatch = previous.ConvertOr(p => p!.IsMatch, () => false);
                             return new ItemWithMatch(t, predicate(t), wasMatch);
                         },
-                        true)
+                    true)
                     .Select(changes =>
                     {
                         // keep track of all changes if filtering on an observable
                         if (!immutableFilter)
+                        {
                             all.Clone(changes);
+                        }
 
                         return Process(filtered, changes);
                     });
@@ -101,7 +106,9 @@ internal class Filter<T>
                     {
                         var change = item.Item;
                         if (change.Current.IsMatch)
+                        {
                             filtered.Add(change.Current);
+                        }
 
                         break;
                     }
@@ -133,10 +140,9 @@ internal class Filter<T>
                                 filtered.Add(change.Current);
                             }
                         }
-                        else
+                        else if (wasMatch)
                         {
-                            if (wasMatch)
-                                filtered.Remove(change.Previous.Value);
+                            filtered.Remove(change.Previous.Value);
                         }
 
                         break;
@@ -161,10 +167,9 @@ internal class Filter<T>
                                 filtered.Add(change.Current);
                             }
                         }
-                        else
+                        else if (wasMatch)
                         {
-                            if (wasMatch)
-                                filtered.Remove(change.Current);
+                            filtered.Remove(change.Current);
                         }
 
                         break;
@@ -202,7 +207,7 @@ internal class Filter<T>
 
         if (_policy == ListFilterPolicy.ClearAndReplace)
         {
-            var itemsWithMatch = all.Select(iwm => new ItemWithMatch(iwm.Item, predicate(iwm.Item), iwm.IsMatch)).ToList();
+            var itemsWithMatch = all.ConvertAll(iwm => new ItemWithMatch(iwm.Item, predicate(iwm.Item), iwm.IsMatch));
 
             // mark items as matched?
             filtered.Clear();
@@ -217,7 +222,7 @@ internal class Filter<T>
         var toAdd = new List<ItemWithMatch>(all.Count);
         var toRemove = new List<ItemWithMatch>(all.Count);
 
-        for (int i = 0; i < all.Count; i++)
+        for (var i = 0; i < all.Count; i++)
         {
             var original = all[i];
 
@@ -243,7 +248,7 @@ internal class Filter<T>
         return filtered.CaptureChanges();
     }
 
-    private class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
+    private sealed class ItemWithMatch(T item, bool isMatch, bool wasMatch = false) : IEquatable<ItemWithMatch>
     {
         public T Item { get; } = item;
 
@@ -251,32 +256,48 @@ internal class Filter<T>
 
         public bool WasMatch { get; set; } = wasMatch;
 
+        public static bool operator ==(ItemWithMatch? left, ItemWithMatch? right) =>
+            Equals(left, right);
+
+        public static bool operator !=(ItemWithMatch? left, ItemWithMatch? right) =>
+            !Equals(left, right);
+
         public bool Equals(ItemWithMatch? other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return EqualityComparer<T>.Default.Equals(Item, other.Item);
         }
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (obj is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
             return Equals((ItemWithMatch)obj);
         }
 
         public override int GetHashCode() => EqualityComparer<T>.Default.GetHashCode(Item!);
-
-        public static bool operator ==(ItemWithMatch? left, ItemWithMatch? right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(ItemWithMatch? left, ItemWithMatch? right)
-        {
-            return !Equals(left, right);
-        }
 
         public override string ToString() => $"{Item}, (was {IsMatch} is {WasMatch}";
     }

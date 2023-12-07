@@ -27,19 +27,13 @@ public class ParentAndChildren : IEquatable<ParentAndChildren>
 
     public string? ParentId { get; }
 
-    public static bool operator ==(ParentAndChildren left, ParentAndChildren right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(ParentAndChildren left, ParentAndChildren right) => Equals(left, right);
 
-    public static bool operator !=(ParentAndChildren left, ParentAndChildren right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(ParentAndChildren left, ParentAndChildren right) => !Equals(left, right);
 
     public bool Equals(ParentAndChildren? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -54,7 +48,7 @@ public class ParentAndChildren : IEquatable<ParentAndChildren>
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -72,13 +66,7 @@ public class ParentAndChildren : IEquatable<ParentAndChildren>
         return Equals((ParentAndChildren)obj);
     }
 
-    public override int GetHashCode()
-    {
-        return (ParentId is not null ? ParentId.GetHashCode() : 0);
-    }
+    public override int GetHashCode() => (ParentId is not null ? ParentId.GetHashCode() : 0);
 
-    public override string ToString()
-    {
-        return $"{nameof(Parent)}: {Parent}, ({Count} children)";
-    }
+    public override string ToString() => $"{nameof(Parent)}: {Parent}, ({Count} children)";
 }

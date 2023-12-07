@@ -68,20 +68,12 @@ public class WatchFixture : IDisposable
         _results.Messages[1].First().Previous.Value.IsDisposed.Should().Be(true, "Previous should be disposed");
     }
 
-    private class DisposableObject : IDisposable
+    private class DisposableObject(int id) : IDisposable
     {
-        public DisposableObject(int id)
-        {
-            Id = id;
-        }
-
-        public int Id { get; private set; }
+        public int Id { get; private set; } = id;
 
         public bool IsDisposed { get; private set; }
 
-        public void Dispose()
-        {
-            IsDisposed = true;
-        }
+        public void Dispose() => IsDisposed = true;
     }
 }

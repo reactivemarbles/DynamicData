@@ -16,10 +16,7 @@ namespace DynamicData.Tests.Cache;
 
 public class FromAsyncFixture
 {
-    public FromAsyncFixture()
-    {
-        Scheduler = new TestScheduler();
-    }
+    public FromAsyncFixture() => Scheduler = new TestScheduler();
 
     public TestScheduler Scheduler { get; }
 

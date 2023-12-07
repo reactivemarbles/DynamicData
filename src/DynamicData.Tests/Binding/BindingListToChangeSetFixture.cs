@@ -149,9 +149,6 @@ public class BindingListToChangeSetFixture : IDisposable
 
     private class TestBindingList<T> : BindingList<T>
     {
-        public void Reset()
-        {
-            OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
-        }
+        public void Reset() => OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
     }
 }

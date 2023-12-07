@@ -23,6 +23,7 @@ public class IncludeUpdateFixture : IDisposable
     public void Dispose()
     {
         _source.Dispose();
+        _results.Dispose();
     }
 
     [Fact]

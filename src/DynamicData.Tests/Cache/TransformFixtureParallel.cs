@@ -106,6 +106,7 @@ public class TransformFixtureParallel : IDisposable
         var lastTransformed = _transformFactory(people.Last());
         var onlyItemInCache = _results.Data.Items.First();
 
+        // TODO: This is not producing consitent results, the lastTransformed item should be equal to the onlyItemInCache
         onlyItemInCache.Should().Be(lastTransformed, "Incorrect transform result");
     }
 

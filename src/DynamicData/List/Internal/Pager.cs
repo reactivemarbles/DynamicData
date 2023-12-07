@@ -48,8 +48,8 @@ internal class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequ
             return 1;
         }
 
-        int pages = all.Count / request.Size;
-        int overlap = all.Count % request.Size;
+        var pages = all.Count / request.Size;
+        var overlap = all.Count % request.Size;
 
         if (overlap == 0)
         {
@@ -78,9 +78,9 @@ internal class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequ
 
         var previous = paged;
 
-        int pages = CalculatePages(all, request);
-        int page = request.Page > pages ? pages : request.Page;
-        int skip = request.Size * (page - 1);
+        var pages = CalculatePages(all, request);
+        var page = request.Page > pages ? pages : request.Page;
+        var skip = request.Size * (page - 1);
 
         var current = all.Distinct().Skip(skip)
             .Take(request.Size)
@@ -101,15 +101,15 @@ internal class Pager<T>(IObservable<IChangeSet<T>> source, IObservable<IPageRequ
 
         if (changeSet is not null && changeSet.Count != 0)
         {
-            var moves = changeSet
+            var changes = changeSet
                 .Where(change => change.Reason == ListChangeReason.Moved
-                                 && change.MovedWithinRange(startIndex, startIndex + request.Size));
+                                 && change.MovedWithinRange(startIndex, startIndex + request.Size)).Select(x => x.Item);
 
-            foreach (var change in moves)
+            foreach (var itemChange in changes)
             {
                 // check whether an item has moved within the same page
-                var currentIndex = change.Item.CurrentIndex - startIndex;
-                var previousIndex = change.Item.PreviousIndex - startIndex;
+                var currentIndex = itemChange.CurrentIndex - startIndex;
+                var previousIndex = itemChange.PreviousIndex - startIndex;
                 paged.Move(previousIndex, currentIndex);
             }
         }

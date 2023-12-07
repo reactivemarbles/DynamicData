@@ -849,10 +849,7 @@ public sealed partial class MergeChangeSetsFixture : IDisposable
         results.Completed.Should().Be(completeSource && completeChildren);
     }
 
-    public void Dispose()
-    {
-        _marketList.ForEach(m => (m as IDisposable)?.Dispose());
-    }
+    public void Dispose() => _marketList.ForEach(m => (m as IDisposable)?.Dispose());
 
     private Market Add(Market addThis)
     {

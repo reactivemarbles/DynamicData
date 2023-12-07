@@ -61,8 +61,8 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
 
             case CombineOperator.Except:
                 {
-                    bool first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
-                    bool others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
+                    var first = _sourceCaches.Take(1).Any(s => s.Lookup(key).HasValue);
+                    var others = _sourceCaches.Skip(1).Any(s => s.Lookup(key).HasValue);
                     return first && !others;
                 }
 
@@ -90,12 +90,12 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
         }
     }
 
-    private IChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
+    private ChangeSet<TObject, TKey> UpdateCombined(IChangeSet<TObject, TKey> updates)
     {
         // child caches have been updated before we reached this point.
         foreach (var update in updates.ToConcreteType())
         {
-            TKey key = update.Key;
+            var key = update.Key;
             switch (update.Reason)
             {
                 case ChangeReason.Add:
@@ -121,12 +121,9 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
                                 _combinedCache.AddOrUpdate(update.Current, key);
                             }
                         }
-                        else
+                        else if (contained)
                         {
-                            if (contained)
-                            {
-                                _combinedCache.Remove(key);
-                            }
+                            _combinedCache.Remove(key);
                         }
                     }
 
@@ -136,7 +133,7 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
                     {
                         var cached = _combinedCache.Lookup(key);
                         var contained = cached.HasValue;
-                        bool shouldBeIncluded = MatchesConstraint(key);
+                        var shouldBeIncluded = MatchesConstraint(key);
 
                         if (shouldBeIncluded)
                         {
@@ -151,12 +148,9 @@ internal sealed class Combiner<TObject, TKey>(CombineOperator type, Action<IChan
                                 _combinedCache.AddOrUpdate(firstOne, key);
                             }
                         }
-                        else
+                        else if (contained)
                         {
-                            if (contained)
-                            {
-                                _combinedCache.Remove(key);
-                            }
+                            _combinedCache.Remove(key);
                         }
                     }
 

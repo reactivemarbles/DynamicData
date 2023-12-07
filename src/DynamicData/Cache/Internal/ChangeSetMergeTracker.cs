@@ -126,7 +126,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCa
         }
     }
 
-    private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, Optional<TObject> prev)
+    private void OnItemUpdated(ChangeSetCache<TObject, TKey>[] sources, TObject item, TKey key, in Optional<TObject> prev)
     {
         var cached = _resultCache.Lookup(key);
 
@@ -139,7 +139,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCa
         }
 
         // If the Previous value is missing or is the same as the current value
-        bool isUpdatingCurrent = !prev.HasValue || CheckEquality(prev.Value, cached.Value);
+        var isUpdatingCurrent = !prev.HasValue || CheckEquality(prev.Value, cached.Value);
 
         if (comparer is null)
         {
@@ -204,7 +204,7 @@ internal class ChangeSetMergeTracker<TObject, TKey>(Func<IEnumerable<ChangeSetCa
         UpdateToBestValue(sources, key, cached);
     }
 
-    private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, Optional<TObject> current)
+    private bool UpdateToBestValue(ChangeSetCache<TObject, TKey>[] sources, TKey key, in Optional<TObject> current)
     {
         // Determine which value should be the one seen downstream
         var candidate = LookupBestValue(sources, key);

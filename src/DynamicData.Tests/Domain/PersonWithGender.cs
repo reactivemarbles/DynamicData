@@ -6,7 +6,7 @@ public class PersonWithGender : IEquatable<PersonWithGender>
 {
     public PersonWithGender(Person person, string gender)
     {
-        Name = person.Name;
+        Name = person?.Name!;
         Age = person.Age;
         Gender = gender;
     }
@@ -26,7 +26,7 @@ public class PersonWithGender : IEquatable<PersonWithGender>
 
     public bool Equals(PersonWithGender? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -41,7 +41,7 @@ public class PersonWithGender : IEquatable<PersonWithGender>
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -70,8 +70,5 @@ public class PersonWithGender : IEquatable<PersonWithGender>
         }
     }
 
-    public override string ToString()
-    {
-        return $"{this.Name}. {this.Age} ({Gender})";
-    }
+    public override string ToString() => $"{Name}. {Age} ({Gender})";
 }

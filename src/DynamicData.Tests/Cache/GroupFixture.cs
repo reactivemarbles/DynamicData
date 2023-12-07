@@ -18,20 +18,17 @@ public class GroupFixture : IDisposable
 
     private ReadOnlyObservableCollection<GroupViewModel>? _entries;
 
-    public GroupFixture()
-    {
-        _source = new SourceCache<Person, string>(p => p.Name);
-    }
+    public GroupFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
     [Fact]
     public void Kaboom()
     {
         SourceCache<Mytype, int> cache = new(x => x.Key);
-        List<Mytype> listWithDuplicates = new()
-        {
+        List<Mytype> listWithDuplicates =
+        [
             new(1, "G1"),
             new(1, "G2"),
-        };
+        ];
         cache
             .Connect()
             .Group(x => x.Grouping)
@@ -45,16 +42,10 @@ public class GroupFixture : IDisposable
         });
     }
 
-    class Mytype
+    class Mytype(int key, string grouping)
     {
-        public Mytype(int key, string grouping)
-        {
-            Key = key;
-            Grouping = grouping;
-        }
-
-        public int Key { get; set; }
-        public string Grouping { get; set; }
+        public int Key { get; set; } = key;
+        public string Grouping { get; set; } = grouping;
 
         public override string ToString() => $"{Key}, {Grouping}";
     }
@@ -81,7 +72,7 @@ public class GroupFixture : IDisposable
     {
         var subscriber = _source.Connect().Group(x => x.Name[0].ToString()).Transform(x => new GroupViewModel(x)).Bind(out _entries).Subscribe();
 
-        _source.Edit(x => { x.AddOrUpdate(new Person("Adam", 1)); });
+        _source.Edit(x => x.AddOrUpdate(new Person("Adam", 1)));
 
         var firstGroup = _entries.First();
         firstGroup.Entries.Count.Should().Be(1);
@@ -98,16 +89,13 @@ public class GroupFixture : IDisposable
         subscriber.Dispose();
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void FiresCompletedWhenDisposed()
     {
         var completed = false;
-        var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => { }, () => { completed = true; });
+        var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => { }, () => completed = true);
         _source.Dispose();
         subscriber.Dispose();
         completed.Should().BeTrue();
@@ -196,7 +184,7 @@ public class GroupFixture : IDisposable
     public void ReceivesUpdateWhenFeederIsInvoked()
     {
         var called = false;
-        var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => { called = true; });
+        var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => called = true);
         _source.AddOrUpdate(new Person("Person1", 20));
         subscriber.Dispose();
         called.Should().BeTrue();
@@ -223,7 +211,7 @@ public class GroupFixture : IDisposable
     public void UpdateAnItemWillChangedThegroup()
     {
         var called = false;
-        var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => { called = true; });
+        var subscriber = _source.Connect().Group(p => p.Age).Subscribe(updates => called = true);
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.AddOrUpdate(new Person("Person1", 21));
         subscriber.Dispose();
@@ -235,7 +223,7 @@ public class GroupFixture : IDisposable
     {
         var subscriber = _source.Connect().Group(x => x.Name[0].ToString()).Transform(x => new GroupViewModel(x)).Bind(out _entries).Subscribe();
 
-        _source.Edit(x => { x.AddOrUpdate(new Person("Adam", 1)); });
+        _source.Edit(x => x.AddOrUpdate(new Person("Adam", 1)));
 
         var firstGroup = _entries.First();
         firstGroup.Entries.Count.Should().Be(1);
@@ -256,31 +244,23 @@ public class GroupFixture : IDisposable
     public void UpdateNotPossible()
     {
         var called = false;
-        var subscriber = _source.Connect().Group(p => p.Age).Skip(1).Subscribe(updates => { called = true; });
+        var subscriber = _source.Connect().Group(p => p.Age).Skip(1).Subscribe(updates => called = true);
         _source.AddOrUpdate(new Person("Person1", 20));
         _source.AddOrUpdate(new Person("Person1", 20));
         subscriber.Dispose();
         called.Should().BeFalse();
     }
 
-    public class GroupEntryViewModel
+    public class GroupEntryViewModel(Person person)
     {
-        public GroupEntryViewModel(Person person)
-        {
-            Person = person;
-        }
-
-        public Person Person { get; }
+        public Person Person { get; } = person;
     }
 
     public class GroupViewModel
     {
         private readonly ReadOnlyObservableCollection<GroupEntryViewModel> _entries;
 
-        public GroupViewModel(IGroup<Person, string, string> person)
-        {
-            person.Cache.Connect().Transform(x => new GroupEntryViewModel(x)).Bind(out _entries).Subscribe();
-        }
+        public GroupViewModel(IGroup<Person, string, string> person) => person?.Cache.Connect().Transform(x => new GroupEntryViewModel(x)).Bind(out _entries).Subscribe();
 
         public ReadOnlyObservableCollection<GroupEntryViewModel> Entries => _entries;
     }

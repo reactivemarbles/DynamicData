@@ -88,6 +88,7 @@ public class TransformManyFixture : IDisposable
     public void Dispose()
     {
         _source.Dispose();
+        _results.Dispose();
     }
 
     [Fact]
@@ -195,19 +196,11 @@ public class TransformManyFixture : IDisposable
         _results.Data.Items.Should().BeEquivalentTo(new[] { child1, child2, frientofchild1, child4});
     }
 
-    public class Tour
+    public class Tour(string name)
     {
-        public Tour(string name)
-        {
-            Name = name;
-        }
+        public string Name { get; } = name;
 
-        public string Name { get; }
-
-        public override string ToString()
-        {
-            return $"{nameof(Name)}: {Name}";
-        }
+        public override string ToString() => $"{nameof(Name)}: {Name}";
     }
 
     public class TourProvider
@@ -224,6 +217,6 @@ public class TransformManyFixture : IDisposable
 
         public string Name { get; }
 
-        public ObservableCollection<Tour> Tours { get; } = new ObservableCollection<Tour>();
+        public ObservableCollection<Tour> Tours { get; } = [];
     }
 }

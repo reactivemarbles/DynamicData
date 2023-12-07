@@ -35,10 +35,7 @@ public class ObservableCollectionExtendedToChangeSetFixture : IDisposable
         _results.Data.Items.First().Should().Be(1);
     }
 
-    public void Dispose()
-    {
-        _results.Dispose();
-    }
+    public void Dispose() => _results.Dispose();
 
     [Fact]
     public void Duplicates()

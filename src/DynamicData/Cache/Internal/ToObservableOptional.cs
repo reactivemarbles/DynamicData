@@ -15,16 +15,19 @@ internal class ToObservableOptional<TObject, TKey>(IObservable<IChangeSet<TObjec
     private readonly TKey _key = key;
 
     public IObservable<Optional<TObject>> Run() => Observable.Create<Optional<TObject>>(observer =>
-                                                            _source.Subscribe(changes =>
+                                                            _source.Subscribe(
+                                                                changes =>
                                                                 changes.Where(ShouldEmitChange).ForEach(change => observer.OnNext(change switch
                                                                 {
                                                                     { Reason: ChangeReason.Remove } => Optional.None<TObject>(),
                                                                     _ => Optional.Some(change.Current),
-                                                                })), observer.OnError, observer.OnCompleted));
+                                                                })),
+                                                                observer.OnError,
+                                                                observer.OnCompleted));
 
     private bool ShouldEmitChange(Change<TObject, TKey> change) => change switch
     {
-        { Key: TKey key } when !key.Equals(_key) => false,
+        { Key: TKey thekey } when !thekey.Equals(_key) => false,
         { Reason: ChangeReason.Add } => true,
         { Reason: ChangeReason.Remove } => true,
         { Reason: ChangeReason.Update, Previous.HasValue: false } => true,

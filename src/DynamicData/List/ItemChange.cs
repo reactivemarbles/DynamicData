@@ -27,7 +27,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// <param name="previous">The previous.</param>
     /// <param name="currentIndex">Value of the current.</param>
     /// <param name="previousIndex">Value of the previous.</param>
-    public ItemChange(ListChangeReason reason, T current, Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
+    public ItemChange(ListChangeReason reason, T current, in Optional<T> previous, int currentIndex = -1, int previousIndex = -1)
         : this()
     {
         Reason = reason;
@@ -86,7 +86,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// <param name="left">The left hand side to compare.</param>
     /// <param name="right">The right hand side to compare.</param>
     /// <returns>If the two values are equal.</returns>
-    public static bool operator ==(ItemChange<T> left, ItemChange<T> right) => left.Equals(right);
+    public static bool operator ==(in ItemChange<T> left, in ItemChange<T> right) => left.Equals(right);
 
     /// <summary>
     ///  Determines whether the specified objects are not equal.
@@ -94,7 +94,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// <param name="left">The left hand side to compare.</param>
     /// <param name="right">The right hand side to compare.</param>
     /// <returns>If the two values are not equal.</returns>
-    public static bool operator !=(ItemChange<T> left, ItemChange<T> right) => !left.Equals(right);
+    public static bool operator !=(in ItemChange<T> left, in ItemChange<T> right) => !left.Equals(right);
 
     /// <summary>
     ///  Determines whether the specified object, is equal to this instance.
@@ -112,7 +112,7 @@ public readonly struct ItemChange<T> : IEquatable<ItemChange<T>>
     /// </returns>
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

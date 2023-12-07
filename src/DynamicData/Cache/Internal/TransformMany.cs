@@ -59,7 +59,8 @@ internal class TransformMany<TDestination, TDestinationKey, TSource, TSourceKey>
     }
 
     public TransformMany(IObservable<IChangeSet<TSource, TSourceKey>> source, Func<TSource, IObservableCache<TDestination, TDestinationKey>> manySelector, Func<TDestination, TDestinationKey> keySelector)
-        : this(source,
+        : this(
+            source,
             x => manySelector(x).Items,
             keySelector,
             t => Observable.Defer(

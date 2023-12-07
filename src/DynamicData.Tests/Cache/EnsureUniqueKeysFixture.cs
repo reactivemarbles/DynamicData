@@ -1,11 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using DynamicData.Tests.Domain;
 using FluentAssertions;
 using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-public class EnsureUniqueKeysFixture
+public class EnsureUniqueKeysFixture: IDisposable
 {
     private readonly ISourceCache<Person, string> _source;
     private readonly ChangeSetAggregator<Person, string> _results;
@@ -46,5 +47,11 @@ public class EnsureUniqueKeysFixture
         var message1 = _results.Messages[0];
         message1.Count.Should().Be(0);
 
+    }
+
+    public void Dispose()
+    {
+        _source.Dispose();
+        _results.Dispose();
     }
 }

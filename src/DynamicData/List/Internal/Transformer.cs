@@ -20,10 +20,7 @@ internal sealed class Transformer<TSource, TDestination>
 
     public Transformer(IObservable<IChangeSet<TSource>> source, Func<TSource, Optional<TDestination>, int, TDestination> factory, bool transformOnRefresh)
     {
-        if (factory is null)
-        {
-            throw new ArgumentNullException(nameof(factory));
-        }
+        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
@@ -45,10 +42,7 @@ internal sealed class Transformer<TSource, TDestination>
 
     private void Transform(ChangeAwareList<TransformedItemContainer> transformed, IChangeSet<TSource> changes)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
         foreach (var item in changes)
         {
@@ -57,7 +51,7 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Add:
                     {
                         var change = item.Item;
-                        if (change.CurrentIndex < 0 | change.CurrentIndex >= transformed.Count)
+                        if (change.CurrentIndex < 0 || change.CurrentIndex >= transformed.Count)
                         {
                             transformed.Add(_containerFactory(change.Current, Optional<TDestination>.None, transformed.Count));
                         }
@@ -143,7 +137,7 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Remove:
                     {
                         var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
+                        var hasIndex = change.CurrentIndex >= 0;
 
                         if (hasIndex)
                         {
@@ -189,7 +183,7 @@ internal sealed class Transformer<TSource, TDestination>
                 case ListChangeReason.Moved:
                     {
                         var change = item.Item;
-                        bool hasIndex = change.CurrentIndex >= 0;
+                        var hasIndex = change.CurrentIndex >= 0;
                         if (!hasIndex)
                         {
                             throw new UnspecifiedIndexException("Cannot move as an index was not specified");
@@ -214,7 +208,7 @@ internal sealed class Transformer<TSource, TDestination>
 
         public bool Equals(TransformedItemContainer? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -229,7 +223,7 @@ internal sealed class Transformer<TSource, TDestination>
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }

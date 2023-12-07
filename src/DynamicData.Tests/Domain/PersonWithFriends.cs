@@ -5,23 +5,15 @@ using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;
 
-public class PersonWithFriends : AbstractNotifyPropertyChanged, IKey<string>
+public class PersonWithFriends(string name, int age, IEnumerable<PersonWithFriends> friends) : AbstractNotifyPropertyChanged, IKey<string>
 {
-    private int _age;
+    private int _age = age;
 
-    private IEnumerable<PersonWithFriends> _friends;
+    private IEnumerable<PersonWithFriends> _friends = friends;
 
     public PersonWithFriends(string name, int age)
         : this(name, age, Enumerable.Empty<PersonWithFriends>())
     {
-    }
-
-    public PersonWithFriends(string name, int age, IEnumerable<PersonWithFriends> friends)
-    {
-        Name = name;
-        _age = age;
-        _friends = friends;
-        Key = name;
     }
 
     public int Age
@@ -39,12 +31,9 @@ public class PersonWithFriends : AbstractNotifyPropertyChanged, IKey<string>
     /// <summary>
     ///     The key
     /// </summary>
-    public string Key { get; }
+    public string Key { get; } = name;
 
-    public string Name { get; }
+    public string Name { get; } = name;
 
-    public override string ToString()
-    {
-        return $"{Name}. {Age}";
-    }
+    public override string ToString() => $"{Name}. {Age}";
 }

@@ -78,25 +78,14 @@ public class SubscribeManyFixture : IDisposable
         _results.Messages[1].First().Item.Current.IsSubscribed.Should().Be(false, "Should be be unsubscribed");
     }
 
-    private class SubscribeableObject
+    private class SubscribeableObject(int id)
     {
-        public SubscribeableObject(int id)
-        {
-            Id = id;
-        }
-
         public bool IsSubscribed { get; private set; }
 
-        private int Id { get; }
+        private int Id { get; } = id;
 
-        public void Subscribe()
-        {
-            IsSubscribed = true;
-        }
+        public void Subscribe() => IsSubscribed = true;
 
-        public void UnSubscribe()
-        {
-            IsSubscribed = false;
-        }
+        public void UnSubscribe() => IsSubscribed = false;
     }
 }

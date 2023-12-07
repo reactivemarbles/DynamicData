@@ -1,14 +1,8 @@
 ﻿namespace DynamicData.Tests.Domain;
 
-public class ParentChild
+public class ParentChild(Person child, Person parent)
 {
-    public ParentChild(Person child, Person parent)
-    {
-        Child = child;
-        Parent = parent;
-    }
+    public Person Child { get; } = child;
 
-    public Person Child { get; }
-
-    public Person Parent { get; }
+    public Person Parent { get; } = parent;
 }

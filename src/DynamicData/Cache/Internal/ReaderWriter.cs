@@ -14,7 +14,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
 
     private CacheUpdater<TObject, TKey>? _activeUpdater;
 
-    private Dictionary<TKey, TObject> _data = new(); // could do with priming this on first time load
+    private Dictionary<TKey, TObject> _data = []; // could do with priming this on first time load
 
     public int Count
     {
@@ -33,7 +33,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         {
             lock (_locker)
             {
-                TObject[] result = new TObject[_data.Count];
+                var result = new TObject[_data.Count];
                 _data.Values.CopyTo(result, 0);
                 return result;
             }
@@ -46,7 +46,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         {
             lock (_locker)
             {
-                TKey[] result = new TKey[_data.Count];
+                var result = new TKey[_data.Count];
                 _data.Keys.CopyTo(result, 0);
                 return result;
             }
@@ -59,8 +59,8 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
         {
             lock (_locker)
             {
-                KeyValuePair<TKey, TObject>[] result = new KeyValuePair<TKey, TObject>[_data.Count];
-                int i = 0;
+                var result = new KeyValuePair<TKey, TObject>[_data.Count];
+                var i = 0;
                 foreach (var kvp in _data)
                 {
                     result[i] = kvp;
@@ -80,10 +80,10 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
 
             if (dictionary.Count == 0)
             {
-                return ChangeSet<TObject, TKey>.Empty;
+                return [];
             }
 
-            var changes = filter is null ? new ChangeSet<TObject, TKey>(dictionary.Count) : new ChangeSet<TObject, TKey>();
+            var changes = filter is null ? new ChangeSet<TObject, TKey>(dictionary.Count) : [];
 
             foreach (var kvp in dictionary)
             {
@@ -107,30 +107,21 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
 
     public ChangeSet<TObject, TKey> Write(IChangeSet<TObject, TKey> changes, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
         return DoUpdate(updater => updater.Clone(changes), previewHandler, collectChanges);
     }
 
     public ChangeSet<TObject, TKey> Write(Action<ICacheUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
     {
-        if (updateAction is null)
-        {
-            throw new ArgumentNullException(nameof(updateAction));
-        }
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
         return DoUpdate(updateAction, previewHandler, collectChanges);
     }
 
     public ChangeSet<TObject, TKey> Write(Action<ISourceUpdater<TObject, TKey>> updateAction, Action<ChangeSet<TObject, TKey>>? previewHandler, bool collectChanges)
     {
-        if (updateAction is null)
-        {
-            throw new ArgumentNullException(nameof(updateAction));
-        }
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
         return DoUpdate(updateAction, previewHandler, collectChanges);
     }
@@ -185,7 +176,7 @@ internal sealed class ReaderWriter<TObject, TKey>(Func<TObject, TKey>? keySelect
             updateAction(_activeUpdater);
             _activeUpdater = null;
 
-            return ChangeSet<TObject, TKey>.Empty;
+            return [];
         }
     }
 }

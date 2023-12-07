@@ -11,15 +11,13 @@ namespace DynamicData.List.Internal;
 internal sealed class AnonymousObservableList<T> : IObservableList<T>
     where T : notnull
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed through _cleanUp")]
     private readonly ISourceList<T> _sourceList;
     private readonly IDisposable _cleanUp;
 
     public AnonymousObservableList(IObservable<IChangeSet<T>> source)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         _sourceList = new SourceList<T>(source);
         _cleanUp = _sourceList;

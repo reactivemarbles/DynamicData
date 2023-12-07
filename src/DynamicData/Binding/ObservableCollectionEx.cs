@@ -29,14 +29,11 @@ public static class ObservableCollectionEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ObservableCollection<T> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return ToObservableChangeSet<ObservableCollection<T>, T>(source);
     }
@@ -50,22 +47,15 @@ public static class ObservableCollectionEx
     /// <param name="source">The source.</param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return ToObservableChangeSet<ObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
     }
@@ -77,14 +67,11 @@ public static class ObservableCollectionEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<T>(this ReadOnlyObservableCollection<T> source)
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return ToObservableChangeSet<ReadOnlyObservableCollection<T>, T>(source);
     }
@@ -98,22 +85,15 @@ public static class ObservableCollectionEx
     /// <param name="source">The source.</param>
     /// <param name="keySelector">The key selector.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source
+    /// <exception cref="ArgumentNullException">source
     /// or
     /// keySelector.</exception>
     public static IObservable<IChangeSet<TObject, TKey>> ToObservableChangeSet<TObject, TKey>(this ReadOnlyObservableCollection<TObject> source, Func<TObject, TKey> keySelector)
         where TObject : notnull
         where TKey : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (keySelector is null)
-        {
-            throw new ArgumentNullException(nameof(keySelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        keySelector.ThrowArgumentNullExceptionIfNull(nameof(keySelector));
 
         return ToObservableChangeSet<ReadOnlyObservableCollection<TObject>, TObject>(source).AddKey(keySelector);
     }
@@ -126,16 +106,13 @@ public static class ObservableCollectionEx
     /// <typeparam name="T">The type of the object.</typeparam>
     /// <param name="source">The source.</param>
     /// <returns>An observable that emits the change set.</returns>
-    /// <exception cref="System.ArgumentNullException">source.</exception>
+    /// <exception cref="ArgumentNullException">source.</exception>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Roslynator", "RCS1146:Use conditional access.", Justification = "net 7.0 has error when conditional access is used.")]
     public static IObservable<IChangeSet<T>> ToObservableChangeSet<TCollection, T>(this TCollection source)
         where TCollection : INotifyCollectionChanged, IEnumerable<T>
         where T : notnull
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
 
         return Observable.Create<IChangeSet<T>>(
             observer =>
@@ -218,10 +195,14 @@ public static class ObservableCollectionEx
                             case NotifyCollectionChangedAction.Move:
 
                                 if (changes.OldStartingIndex == -1)
+                                {
                                     throw new UnspecifiedIndexException("Move -> OldStartingIndex");
+                                }
 
                                 if (changes.NewStartingIndex == -1)
+                                {
                                     throw new UnspecifiedIndexException("Move -> NewStartingIndex");
+                                }
 
                                 list.Move(changes.OldStartingIndex, changes.NewStartingIndex);
                                 break;

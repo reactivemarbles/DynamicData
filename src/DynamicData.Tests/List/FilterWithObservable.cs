@@ -170,6 +170,7 @@ public class FilterWithObservable : IDisposable
     {
         _source.Dispose();
         _results.Dispose();
+        _filter.Dispose();
     }
 
     [Fact]

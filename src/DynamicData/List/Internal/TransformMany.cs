@@ -158,6 +158,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
                 switch (change.Reason)
                 {
                     case ListChangeReason.Add:
+                    case ListChangeReason.Remove:
                         foreach (var destination in change.Item.Current.Destination)
                         {
                             yield return new Change<TDestination>(change.Reason, destination);
@@ -166,6 +167,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
                         break;
 
                     case ListChangeReason.AddRange:
+                    case ListChangeReason.Clear:
                         {
                             var items = change.Range.SelectMany(m => m.Destination);
                             yield return new Change<TDestination>(change.Reason, items);
@@ -196,14 +198,6 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
 
                         break;
 
-                    case ListChangeReason.Remove:
-                        foreach (var destination in change.Item.Current.Destination)
-                        {
-                            yield return new Change<TDestination>(change.Reason, destination);
-                        }
-
-                        break;
-
                     case ListChangeReason.RemoveRange:
                         {
                             foreach (var destination in change.Range.SelectMany(m => m.Destination))
@@ -216,14 +210,6 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
 
                     case ListChangeReason.Moved:
                         // do nothing as the original index has no bearing on the destination index
-                        break;
-
-                    case ListChangeReason.Clear:
-                        {
-                            var items = change.Range.SelectMany(m => m.Destination);
-                            yield return new Change<TDestination>(change.Reason, items);
-                        }
-
                         break;
 
                     default:
@@ -242,7 +228,7 @@ internal sealed class TransformMany<TSource, TDestination>(IObservable<IChangeSe
         public IEnumerable<TDestination> Destination { get; } = destination;
     }
 
-    private class ManySelectorFunc(TSource source, Func<TSource, IEnumerable<TDestination>> selector) : IEnumerable<TDestination>
+    private sealed class ManySelectorFunc(TSource source, Func<TSource, IEnumerable<TDestination>> selector) : IEnumerable<TDestination>
     {
         private readonly Func<TSource, IEnumerable<TDestination>> _selector = selector ?? throw new ArgumentNullException(nameof(selector));
 

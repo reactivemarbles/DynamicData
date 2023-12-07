@@ -33,7 +33,10 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
                             {
                                 case ChangeReason.Update:
                                     if (change.Previous.HasValue && !EqualityComparer<TObject>.Default.Equals(change.Current, change.Previous.Value))
+                                    {
                                         (change.Previous.Value as IDisposable)?.Dispose();
+                                    }
+
                                     break;
 
                                 case ChangeReason.Remove:
@@ -62,14 +65,18 @@ internal sealed class DisposeMany<TObject, TKey>(IObservable<IChangeSet<TObject,
                 sourceSubscription.Dispose();
 
                 lock (cachedItems)
+                {
                     ProcessFinalization(cachedItems);
+                }
             });
         });
 
     private static void ProcessFinalization(Dictionary<TKey, TObject> cachedItems)
     {
         foreach (var pair in cachedItems)
+        {
             (pair.Value as IDisposable)?.Dispose();
+        }
 
         cachedItems.Clear();
     }

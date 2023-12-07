@@ -10,42 +10,28 @@ using DynamicData.Kernel;
 // ReSharper disable once CheckNamespace
 namespace DynamicData.PLinq
 {
-    internal sealed class PTransform<TDestination, TSource, TKey>
+    internal sealed class PTransform<TDestination, TSource, TKey>(
+        IObservable<IChangeSet<TSource, TKey>> source,
+        Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
+        ParallelisationOptions parallelisationOptions,
+        Action<Error<TSource, TKey>>? exceptionCallback = null)
         where TDestination : notnull
         where TSource : notnull
         where TKey : notnull
     {
-        private readonly IObservable<IChangeSet<TSource, TKey>> _source;
-        private readonly Func<TSource, Optional<TSource>, TKey, TDestination> _transformFactory;
-        private readonly ParallelisationOptions _parallelisationOptions;
-        private readonly Action<Error<TSource, TKey>>? _exceptionCallback;
-
-        public PTransform(
-            IObservable<IChangeSet<TSource, TKey>> source,
-            Func<TSource, Optional<TSource>, TKey, TDestination> transformFactory,
-            ParallelisationOptions parallelisationOptions,
-            Action<Error<TSource, TKey>>? exceptionCallback = null)
-        {
-            _source = source;
-            _exceptionCallback = exceptionCallback;
-            _transformFactory = transformFactory;
-            _parallelisationOptions = parallelisationOptions;
-        }
-
-        public IObservable<IChangeSet<TDestination, TKey>> Run()
-        {
-            return Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
+        public IObservable<IChangeSet<TDestination, TKey>> Run() =>
+            Observable.Create<IChangeSet<TDestination, TKey>>(observer =>
             {
                 var cache = new ChangeAwareCache<TDestination, TKey>();
-                var transformer = _source.Select(changes => DoTransform(cache, changes));
+                var transformer = source.Select(changes => DoTransform(cache, changes));
                 return transformer.NotEmpty().SubscribeSafe(observer);
             });
-        }
 
-        private IChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "A collection initializer is not equivalent to a .ToArray() call for a ParallelQuery<T>. This change actually introduces a race-condition exception.")]
+        private ChangeSet<TDestination, TKey> DoTransform(ChangeAwareCache<TDestination, TKey> cache, IChangeSet<TSource, TKey> changes)
         {
-            var transformed = changes.ShouldParallelise(_parallelisationOptions)
-                ? changes.Parallelise(_parallelisationOptions).Select(ToDestination).ToArray()
+            var transformed = changes.ShouldParallelise(parallelisationOptions)
+                ? changes.Parallelise(parallelisationOptions).Select(ToDestination).ToArray()
                 : changes.Select(ToDestination).ToArray();
 
             return ProcessUpdates(cache, transformed);
@@ -57,7 +43,7 @@ namespace DynamicData.PLinq
             {
                 if (change.Reason == ChangeReason.Add || change.Reason == ChangeReason.Update)
                 {
-                    var destination = _transformFactory(change.Current, change.Previous, change.Key);
+                    var destination = transformFactory(change.Current, change.Previous, change.Key);
                     return new TransformResult(change, destination);
                 }
 
@@ -66,7 +52,7 @@ namespace DynamicData.PLinq
             catch (Exception ex)
             {
                 // only handle errors if a handler has been specified
-                if (_exceptionCallback != null)
+                if (exceptionCallback != null)
                 {
                     return new TransformResult(change, ex);
                 }
@@ -75,7 +61,7 @@ namespace DynamicData.PLinq
             }
         }
 
-        private IChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TDestination, TKey> cache, IEnumerable<TransformResult> transformedItems)
+        private ChangeSet<TDestination, TKey> ProcessUpdates(ChangeAwareCache<TDestination, TKey> cache, IEnumerable<TransformResult> transformedItems)
         {
             foreach (var result in transformedItems)
             {
@@ -101,7 +87,7 @@ namespace DynamicData.PLinq
                 }
                 else
                 {
-                    _exceptionCallback?.Invoke(new Error<TSource, TKey>(result.Error, result.Change.Current, result.Change.Key));
+                    exceptionCallback?.Invoke(new Error<TSource, TKey>(result.Error, result.Change.Current, result.Change.Key));
                 }
             }
 
@@ -110,7 +96,7 @@ namespace DynamicData.PLinq
 
         private readonly struct TransformResult
         {
-            public TransformResult(Change<TSource, TKey> change, TDestination destination)
+            public TransformResult(in Change<TSource, TKey> change, TDestination destination)
                 : this()
             {
                 Change = change;
@@ -119,7 +105,7 @@ namespace DynamicData.PLinq
                 Key = change.Key;
             }
 
-            public TransformResult(Change<TSource, TKey> change)
+            public TransformResult(in Change<TSource, TKey> change)
                 : this()
             {
                 Change = change;
@@ -128,7 +114,7 @@ namespace DynamicData.PLinq
                 Key = change.Key;
             }
 
-            public TransformResult(Change<TSource, TKey> change, Exception error)
+            public TransformResult(in Change<TSource, TKey> change, Exception error)
                 : this()
             {
                 Change = change;

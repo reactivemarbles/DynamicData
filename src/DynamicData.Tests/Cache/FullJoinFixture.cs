@@ -176,28 +176,17 @@ public class FullJoinFixture : IDisposable
         _result.Data.Items.All(dwm => dwm.MetaData != Optional<DeviceMetaData>.None).Should().BeTrue();
     }
 
-    public class Device : IEquatable<Device>
+    public class Device(string name) : IEquatable<Device>
     {
-        public Device(string name)
-        {
-            Name = name;
-        }
+        public string Name { get; } = name;
 
-        public string Name { get; }
+        public static bool operator ==(Device left, Device right) => Equals(left, right);
 
-        public static bool operator ==(Device left, Device right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(Device left, Device right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(Device left, Device right) => !Equals(left, right);
 
         public bool Equals(Device? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -212,7 +201,7 @@ public class FullJoinFixture : IDisposable
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -230,42 +219,24 @@ public class FullJoinFixture : IDisposable
             return Equals((Device)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return (Name is not null ? Name.GetHashCode() : 0);
-        }
+        public override int GetHashCode() => (Name is not null ? Name.GetHashCode() : 0);
 
-        public override string ToString()
-        {
-            return $"{Name}";
-        }
+        public override string ToString() => $"{Name}";
     }
 
-    public class DeviceMetaData : IEquatable<DeviceMetaData>
+    public class DeviceMetaData(string name, bool isAutoConnect = false) : IEquatable<DeviceMetaData>
     {
-        public DeviceMetaData(string name, bool isAutoConnect = false)
-        {
-            Name = name;
-            IsAutoConnect = isAutoConnect;
-        }
+        public bool IsAutoConnect { get; } = isAutoConnect;
 
-        public bool IsAutoConnect { get; }
+        public string Name { get; } = name;
 
-        public string Name { get; }
+        public static bool operator ==(DeviceMetaData left, DeviceMetaData right) => Equals(left, right);
 
-        public static bool operator ==(DeviceMetaData left, DeviceMetaData right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(DeviceMetaData left, DeviceMetaData right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(DeviceMetaData left, DeviceMetaData right) => !Equals(left, right);
 
         public bool Equals(DeviceMetaData? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -280,7 +251,7 @@ public class FullJoinFixture : IDisposable
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -306,40 +277,24 @@ public class FullJoinFixture : IDisposable
             }
         }
 
-        public override string ToString()
-        {
-            return $"Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
-        }
+        public override string ToString() => $"Metadata: {Name}. IsAutoConnect = {IsAutoConnect}";
     }
 
-    public class DeviceWithMetadata : IEquatable<DeviceWithMetadata>
+    public class DeviceWithMetadata(string key, Optional<Device> device, Optional<DeviceMetaData> metaData) : IEquatable<DeviceWithMetadata>
     {
-        public DeviceWithMetadata(string key, Optional<Device> device, Optional<DeviceMetaData> metaData)
-        {
-            Key = key;
-            Device = device;
-            MetaData = metaData;
-        }
+        public Optional<Device> Device { get; set; } = device;
 
-        public Optional<Device> Device { get; set; }
+        public string Key { get; } = key;
 
-        public string Key { get; }
+        public Optional<DeviceMetaData> MetaData { get; } = metaData;
 
-        public Optional<DeviceMetaData> MetaData { get; }
+        public static bool operator ==(DeviceWithMetadata left, DeviceWithMetadata right) => Equals(left, right);
 
-        public static bool operator ==(DeviceWithMetadata left, DeviceWithMetadata right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(DeviceWithMetadata left, DeviceWithMetadata right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(DeviceWithMetadata left, DeviceWithMetadata right) => !Equals(left, right);
 
         public bool Equals(DeviceWithMetadata? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -354,7 +309,7 @@ public class FullJoinFixture : IDisposable
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -372,15 +327,9 @@ public class FullJoinFixture : IDisposable
             return Equals((DeviceWithMetadata)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return (Key is not null ? Key.GetHashCode() : 0);
-        }
+        public override int GetHashCode() => (Key is not null ? Key.GetHashCode() : 0);
 
-        public override string ToString()
-        {
-            return $"{Key}: {Device} ({MetaData})";
-        }
+        public override string ToString() => $"{Key}: {Device} ({MetaData})";
     }
 
     private class Address

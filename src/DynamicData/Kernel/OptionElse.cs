@@ -13,22 +13,16 @@ public sealed class OptionElse
 
     private readonly bool _shouldRunAction;
 
-    internal OptionElse(bool shouldRunAction = true)
-    {
-        _shouldRunAction = shouldRunAction;
-    }
+    internal OptionElse(bool shouldRunAction = true) => _shouldRunAction = shouldRunAction;
 
     /// <summary>
     /// Invokes the specified action when an option has no value.
     /// </summary>
     /// <param name="action">The action.</param>
-    /// <exception cref="System.ArgumentNullException">action.</exception>
+    /// <exception cref="ArgumentNullException">action.</exception>
     public void Else(Action action)
     {
-        if (action is null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
+        action.ThrowArgumentNullExceptionIfNull(nameof(action));
 
         if (_shouldRunAction)
         {

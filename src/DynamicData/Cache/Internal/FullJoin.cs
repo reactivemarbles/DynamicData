@@ -40,19 +40,19 @@ internal class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObser
                 {
                     foreach (var change in changes.ToConcreteType())
                     {
-                        var left = change.Current;
-                        var right = rightCache.Lookup(change.Key);
+                        var leftCurrent = change.Current;
+                        var rightLookup = rightCache.Lookup(change.Key);
 
                         switch (change.Reason)
                         {
                             case ChangeReason.Add:
                             case ChangeReason.Update:
-                                joinedCache.AddOrUpdate(_resultSelector(change.Key, left, right), change.Key);
+                                joinedCache.AddOrUpdate(_resultSelector(change.Key, leftCurrent, rightLookup), change.Key);
                                 break;
 
                             case ChangeReason.Remove:
 
-                                if (!right.HasValue)
+                                if (!rightLookup.HasValue)
                                 {
                                     // remove from result because there is no left and no rights
                                     joinedCache.Remove(change.Key);
@@ -60,7 +60,7 @@ internal class FullJoin<TLeft, TLeftKey, TRight, TRightKey, TDestination>(IObser
                                 else
                                 {
                                     // update with no left value
-                                    joinedCache.AddOrUpdate(_resultSelector(change.Key, Optional<TLeft>.None, right), change.Key);
+                                    joinedCache.AddOrUpdate(_resultSelector(change.Key, Optional<TLeft>.None, rightLookup), change.Key);
                                 }
 
                                 break;

@@ -13,10 +13,10 @@ internal sealed class DistinctCalculator<TObject, TKey, TValue>(IObservable<ICha
     where TKey : notnull
     where TValue : notnull
 {
-    private readonly IDictionary<TKey, TValue> _itemCache = new Dictionary<TKey, TValue>();
+    private readonly Dictionary<TKey, TValue> _itemCache = [];
 
-    private readonly IDictionary<TKey, int> _keyCounters = new Dictionary<TKey, int>();
-    private readonly IDictionary<TValue, int> _valueCounters = new Dictionary<TValue, int>();
+    private readonly Dictionary<TKey, int> _keyCounters = [];
+    private readonly Dictionary<TValue, int> _valueCounters = [];
 
     private readonly Func<TObject, TValue> _valueSelector = valueSelector ?? throw new ArgumentNullException(nameof(valueSelector));
 

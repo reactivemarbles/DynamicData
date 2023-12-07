@@ -22,10 +22,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public CacheUpdater(Dictionary<TKey, TObject> data, Func<TObject, TKey>? keySelector = null)
     {
-        if (data is null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
+        data.ThrowArgumentNullExceptionIfNull(nameof(data));
 
         _cache = new Cache<TObject, TKey>(data);
         _keySelector = keySelector;
@@ -41,8 +38,12 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void AddOrUpdate(IEnumerable<TObject> items)
     {
-        if (items is null) throw new ArgumentNullException(nameof(items));
-        if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
+        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
+        }
 
         if (items is IList<TObject> list)
         {
@@ -63,9 +64,17 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void AddOrUpdate(IEnumerable<TObject> items, IEqualityComparer<TObject> comparer)
     {
-        if (items is null) throw new ArgumentNullException(nameof(items));
-        if (comparer is null) throw new ArgumentNullException(nameof(comparer));
-        if (_keySelector is null) throw new KeySelectorException("A key selector must be specified");
+        items.ThrowArgumentNullExceptionIfNull(nameof(items));
+
+        if (comparer is null)
+        {
+            throw new ArgumentNullException(nameof(comparer));
+        }
+
+        if (_keySelector is null)
+        {
+            throw new KeySelectorException("A key selector must be specified");
+        }
 
         void AddOrUpdateImpl(TObject item)
         {
@@ -74,7 +83,10 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
             if (oldItem.HasValue)
             {
-                if (comparer.Equals(oldItem.Value, item)) return;
+                if (comparer.Equals(oldItem.Value, item))
+                {
+                    return;
+                }
 
                 _cache.AddOrUpdate(item, key);
             }
@@ -88,12 +100,16 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
         {
             // zero allocation enumerator
             foreach (var item in EnumerableIList.Create(list))
+            {
                 AddOrUpdateImpl(item);
+            }
         }
         else
         {
             foreach (var item in items)
+            {
                 AddOrUpdateImpl(item);
+            }
         }
     }
 
@@ -195,10 +211,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void Load(IEnumerable<TObject> items)
     {
-        if (items is null)
-        {
-            throw new ArgumentNullException(nameof(items));
-        }
+        items.ThrowArgumentNullExceptionIfNull(nameof(items));
 
         Clear();
         AddOrUpdate(items);
@@ -225,10 +238,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void Refresh(IEnumerable<TObject> items)
     {
-        if (items is null)
-        {
-            throw new ArgumentNullException(nameof(items));
-        }
+        items.ThrowArgumentNullExceptionIfNull(nameof(items));
 
         if (items is IList<TObject> list)
         {
@@ -249,10 +259,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void Refresh(IEnumerable<TKey> keys)
     {
-        if (keys is null)
-        {
-            throw new ArgumentNullException(nameof(keys));
-        }
+        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
 
         if (keys is IList<TKey> list)
         {
@@ -286,10 +293,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void Remove(IEnumerable<TObject> items)
     {
-        if (items is null)
-        {
-            throw new ArgumentNullException(nameof(items));
-        }
+        items.ThrowArgumentNullExceptionIfNull(nameof(items));
 
         if (items is IList<TObject> list)
         {
@@ -310,10 +314,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void Remove(IEnumerable<TKey> keys)
     {
-        if (keys is null)
-        {
-            throw new ArgumentNullException(nameof(keys));
-        }
+        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
 
         if (keys is IList<TKey> list)
         {
@@ -347,10 +348,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void Remove(IEnumerable<KeyValuePair<TKey, TObject>> items)
     {
-        if (items is null)
-        {
-            throw new ArgumentNullException(nameof(items));
-        }
+        items.ThrowArgumentNullExceptionIfNull(nameof(items));
 
         if (items is IList<TObject> list)
         {
@@ -375,10 +373,7 @@ internal class CacheUpdater<TObject, TKey> : ISourceUpdater<TObject, TKey>
 
     public void RemoveKeys(IEnumerable<TKey> keys)
     {
-        if (keys is null)
-        {
-            throw new ArgumentNullException(nameof(keys));
-        }
+        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
 
         _cache.Remove(keys);
     }

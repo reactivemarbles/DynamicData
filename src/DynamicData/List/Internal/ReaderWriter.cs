@@ -41,10 +41,7 @@ internal sealed class ReaderWriter<T>
 
     public IChangeSet<T> Write(IChangeSet<T> changes)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
         IChangeSet<T> result;
 
@@ -59,10 +56,7 @@ internal sealed class ReaderWriter<T>
 
     public IChangeSet<T> Write(Action<IExtendedList<T>> updateAction)
     {
-        if (updateAction is null)
-        {
-            throw new ArgumentNullException(nameof(updateAction));
-        }
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
         IChangeSet<T> result;
 
@@ -86,10 +80,7 @@ internal sealed class ReaderWriter<T>
     /// <param name="updateAction">The action to perform on the list.</param>
     public void WriteNested(Action<IExtendedList<T>> updateAction)
     {
-        if (updateAction is null)
-        {
-            throw new ArgumentNullException(nameof(updateAction));
-        }
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
         lock (_locker)
         {
@@ -104,15 +95,8 @@ internal sealed class ReaderWriter<T>
 
     public IChangeSet<T> WriteWithPreview(Action<IExtendedList<T>> updateAction, Action<IChangeSet<T>> previewHandler)
     {
-        if (updateAction is null)
-        {
-            throw new ArgumentNullException(nameof(updateAction));
-        }
-
-        if (previewHandler is null)
-        {
-            throw new ArgumentNullException(nameof(previewHandler));
-        }
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
+        previewHandler.ThrowArgumentNullExceptionIfNull(nameof(previewHandler));
 
         IChangeSet<T> result;
 

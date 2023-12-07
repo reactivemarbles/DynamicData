@@ -18,9 +18,9 @@ public class IObservableListBindCacheSortedFixture : IDisposable
 
     private static readonly IComparer<Person> _comparerNameDesc = SortExpressionComparer<Person>.Descending(p => p.Name);
 
-    private readonly BehaviorSubject<IComparer<Person>> _comparer = new BehaviorSubject<IComparer<Person>>(_comparerAgeAscThanNameAsc);
+    private readonly BehaviorSubject<IComparer<Person>> _comparer = new(_comparerAgeAscThanNameAsc);
 
-    private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+    private readonly RandomPersonGenerator _generator = new();
 
     private readonly IObservableList<Person> _list;
 
@@ -82,6 +82,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         _sourceCacheNotifications.Dispose();
         _listNotifications.Dispose();
         _source.Dispose();
+        _comparer.Dispose();
     }
 
     [Fact]
@@ -100,7 +101,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         var listNotifications = list.Connect().AsAggregator();
 
         // Assert
-        listNotifications.Messages.Count().Should().Be(1);
+        listNotifications.Messages.Count.Should().Be(1);
         listNotifications.Messages.First().First().Reason.Should().Be(ListChangeReason.AddRange);
         list.Items.Should().Equal(person1, person2);
 
@@ -124,7 +125,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
         person3.Age = 1;
 
         // 1 ChangeSet with AddRange & 1 ChangeSet with Refresh & Move
-        _listNotifications.Messages.Count().Should().Be(2);
+        _listNotifications.Messages.Count.Should().Be(2);
 
         // Assert AddRange
         var addChangeSet = _listNotifications.Messages.First();
@@ -154,7 +155,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
 
         person.Age = 60;
 
-        _listNotifications.Messages.Count().Should().Be(2);
+        _listNotifications.Messages.Count.Should().Be(2);
         _listNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
     }
 
@@ -181,7 +182,7 @@ public class IObservableListBindCacheSortedFixture : IDisposable
 
         _list.Items.Should().Equal(sorted);
 
-        _listNotifications.Messages.Count().Should().Be(2); // Initial loading change set and a reset change due to a change over the reset threshold.
+        _listNotifications.Messages.Count.Should().Be(2); // Initial loading change set and a reset change due to a change over the reset threshold.
         _listNotifications.Messages[0].First().Reason.Should().Be(ListChangeReason.AddRange); // initial loading
         _listNotifications.Messages[1].Count.Should().Be(2); // Reset
         _listNotifications.Messages[1].First().Reason.Should().Be(ListChangeReason.Clear); // reset

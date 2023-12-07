@@ -128,9 +128,7 @@ public class SizeLimitFixture : IDisposable
     }
 
     [Fact]
-    public void ThrowsIfSizeLimitIsZero()
-    {
+    public void ThrowsIfSizeLimitIsZero() =>
         // Initialise();
         Assert.Throws<ArgumentException>(() => new SourceCache<Person, string>(p => p.Key).LimitSizeTo(0));
-    }
 }

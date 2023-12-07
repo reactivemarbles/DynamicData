@@ -12,10 +12,7 @@ public class RemoveManyFixture
 {
     private readonly List<int> _list;
 
-    public RemoveManyFixture()
-    {
-        _list = new List<int>();
-    }
+    public RemoveManyFixture() => _list = new List<int>();
 
     [Fact]
     public void DoesNotRemoveDuplicates()

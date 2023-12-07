@@ -279,9 +279,6 @@ public class TransformSafeAsyncFixture
             Results.Dispose();
         }
 
-        private void ErrorHandler(Error<Person, string> error)
-        {
-            HandledErrors.Add(error);
-        }
+        private void ErrorHandler(Error<Person, string> error) => HandledErrors.Add(error);
     }
 }

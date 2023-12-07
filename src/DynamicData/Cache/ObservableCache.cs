@@ -163,10 +163,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     internal void UpdateFromIntermediate(Action<ICacheUpdater<TObject, TKey>> updateAction)
     {
-        if (updateAction is null)
-        {
-            throw new ArgumentNullException(nameof(updateAction));
-        }
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
         lock (_locker)
         {
@@ -194,10 +191,7 @@ internal sealed class ObservableCache<TObject, TKey> : IObservableCache<TObject,
 
     internal void UpdateFromSource(Action<ISourceUpdater<TObject, TKey>> updateAction)
     {
-        if (updateAction is null)
-        {
-            throw new ArgumentNullException(nameof(updateAction));
-        }
+        updateAction.ThrowArgumentNullExceptionIfNull(nameof(updateAction));
 
         lock (_locker)
         {

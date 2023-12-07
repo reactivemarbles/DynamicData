@@ -29,7 +29,7 @@ public class ObservableCachePreviewFixture : IDisposable
             _ =>
             {
                 Assert.True(_source.Count == 0);
-                Assert.True(_source.Items.Count() == 0);
+                Assert.True(_source.Items.Any() == false);
             });
 
         // Trigger a change
@@ -71,7 +71,7 @@ public class ObservableCachePreviewFixture : IDisposable
     public void NoChangesAllowedDuringPreview()
     {
         // On preview, try adding an arbitrary item
-        var d = _source.Preview().Subscribe(_ => { Assert.Throws<InvalidOperationException>(() => _source.AddOrUpdate(new Person("A", 1))); });
+        var d = _source.Preview().Subscribe(_ => Assert.Throws<InvalidOperationException>(() => _source.AddOrUpdate(new Person("A", 1))));
 
         // Trigger a change
         _source.AddOrUpdate(new Person("B", 2));

@@ -67,7 +67,7 @@ public sealed class PropertyValue<TObject, TValue> : IEquatable<PropertyValue<TO
     /// <inheritdoc />
     public bool Equals(PropertyValue<TObject, TValue>? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }

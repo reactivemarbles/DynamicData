@@ -28,7 +28,7 @@ public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     /// Initializes a new instance of the <see cref="ChangeSet{T}" /> class.
     /// </summary>
     /// <param name="items">The items.</param>
-    /// <exception cref="System.ArgumentNullException">items.</exception>
+    /// <exception cref="ArgumentNullException">items.</exception>
     public ChangeSet(IEnumerable<Change<T>> items)
         : base(items)
     {
@@ -50,7 +50,7 @@ public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     {
         get
         {
-            int adds = 0;
+            var adds = 0;
             foreach (var item in this)
             {
                 switch (item.Reason)
@@ -86,7 +86,7 @@ public class ChangeSet<T> : List<Change<T>>, IChangeSet<T>
     {
         get
         {
-            int removes = 0;
+            var removes = 0;
             foreach (var item in this)
             {
                 switch (item.Reason)
