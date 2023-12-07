@@ -13,10 +13,7 @@ public class ChangeAwareListFixture
 {
     private readonly ChangeAwareList<int> _list;
 
-    public ChangeAwareListFixture()
-    {
-        _list = new ChangeAwareList<int>();
-    }
+    public ChangeAwareListFixture() => _list = new ChangeAwareList<int>();
 
     [Fact]
     public void Add()
@@ -244,16 +241,10 @@ public class ChangeAwareListFixture
     }
 
     [Fact]
-    public void ThrowWhenRemovingItemOutsideOfBoundaries()
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveAt(0));
-    }
+    public void ThrowWhenRemovingItemOutsideOfBoundaries() => Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveAt(0));
 
     [Fact]
-    public void ThrowWhenRemovingRangeThatBeginsOutsideOfBoundaries()
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveRange(0, 1));
-    }
+    public void ThrowWhenRemovingRangeThatBeginsOutsideOfBoundaries() => Assert.Throws<ArgumentOutOfRangeException>(() => _list.RemoveRange(0, 1));
 
     [Fact]
     public void ThrowWhenRemovingRangeThatFinishesOutsideOfBoundaries()

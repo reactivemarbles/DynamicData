@@ -53,6 +53,7 @@ public class TransformManyProjectionFixture : IDisposable
     public void Dispose()
     {
         _source.Dispose();
+        _results.Dispose();
     }
 
     [Fact]
@@ -111,43 +112,25 @@ public class TransformManyProjectionFixture : IDisposable
         _results.Items.Should().BeEquivalentTo(parents.Skip(1).SelectMany(p => p.Children.Select(c => new ProjectedNestedChild(p, c))));
     }
 
-    private class ClassWithNestedObservableCollection
+    private class ClassWithNestedObservableCollection(int id, IEnumerable<NestedChild> animals)
     {
-        public ClassWithNestedObservableCollection(int id, IEnumerable<NestedChild> animals)
-        {
-            Id = id;
-            Children = new ObservableCollection<NestedChild>(animals);
-        }
+        public ObservableCollection<NestedChild> Children { get; } = new(animals);
 
-        public ObservableCollection<NestedChild> Children { get; }
-
-        public int Id { get; }
+        public int Id { get; } = id;
     }
 
-    private class NestedChild
+    private class NestedChild(string name, string value)
     {
-        public NestedChild(string name, string value)
-        {
-            Name = name;
-            Value = value;
-        }
+        public string Name { get; } = name;
 
-        public string Name { get; }
-
-        public string Value { get; }
+        public string Value { get; } = value;
     }
 
-    private class ProjectedNestedChild
+    private class ProjectedNestedChild(ClassWithNestedObservableCollection parent, NestedChild child)
     {
-        public ProjectedNestedChild(ClassWithNestedObservableCollection parent, NestedChild child)
-        {
-            Parent = parent;
-            Child = child;
-        }
+        public NestedChild Child { get; } = child;
 
-        public NestedChild Child { get; }
-
-        public ClassWithNestedObservableCollection Parent { get; }
+        public ClassWithNestedObservableCollection Parent { get; } = parent;
     }
 
     private class ProjectNestedChildEqualityComparer : IEqualityComparer<ProjectedNestedChild>
@@ -160,9 +143,6 @@ public class TransformManyProjectionFixture : IDisposable
             return x.Child.Name == y.Child.Name;
         }
 
-        public int GetHashCode(ProjectedNestedChild obj)
-        {
-            return obj.Child.Name.GetHashCode();
-        }
+        public int GetHashCode(ProjectedNestedChild obj) => obj.Child.Name.GetHashCode();
     }
 }

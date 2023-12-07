@@ -6,13 +6,6 @@ namespace DynamicData.Cache.Internal;
 
 internal static class DictionaryExtensions
 {
-    internal static IEnumerable<T> GetOrEmpty<TDictKey, T>(this IDictionary<TDictKey, IEnumerable<T>> dict, TDictKey key)
-    {
-        if (dict.TryGetValue(key, out var value))
-        {
-            return value;
-        }
-
-        return Enumerable.Empty<T>();
-    }
+    internal static IEnumerable<T> GetOrEmpty<TDictKey, T>(this IDictionary<TDictKey, IEnumerable<T>> dict, TDictKey key) =>
+        dict.TryGetValue(key, out var value) ? value : Enumerable.Empty<T>();
 }

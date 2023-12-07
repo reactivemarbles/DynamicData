@@ -17,7 +17,7 @@ public class ChangeSet<TObject, TKey> : List<Change<TObject, TKey>>, IChangeSet<
     /// <summary>
     /// An empty change set.
     /// </summary>
-    public static readonly ChangeSet<TObject, TKey> Empty = new();
+    public static readonly ChangeSet<TObject, TKey> Empty = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChangeSet{TObject, TKey}"/> class.

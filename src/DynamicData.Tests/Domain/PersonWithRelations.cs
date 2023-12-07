@@ -35,8 +35,5 @@ public class PersonWithRelations : IKey<string>
 
     public IEnumerable<PersonWithRelations> Relations { get; }
 
-    public override string ToString()
-    {
-        return $"{Name}. {Age}";
-    }
+    public override string ToString() => $"{Name}. {Age}";
 }

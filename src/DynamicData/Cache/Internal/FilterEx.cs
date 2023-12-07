@@ -91,12 +91,9 @@ internal static class FilterEx
                     filtered.Add(kvp.Value, kvp.Key);
                 }
             }
-            else
+            else if (existing.HasValue)
             {
-                if (existing.HasValue)
-                {
-                    filtered.Remove(kvp.Key);
-                }
+                filtered.Remove(kvp.Key);
             }
         }
 

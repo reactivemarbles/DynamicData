@@ -10,10 +10,7 @@ namespace DynamicData.Tests.List;
 
 public class XOrFixture : XOrFixtureBase
 {
-    protected override IObservable<IChangeSet<int>> CreateObservable()
-    {
-        return _source1.Connect().Xor(_source2.Connect());
-    }
+    protected override IObservable<IChangeSet<int>> CreateObservable() => _source1.Connect().Xor(_source2.Connect());
 }
 
 public class XOrCollectionFixture : XOrFixtureBase
@@ -33,6 +30,7 @@ public abstract class XOrFixtureBase : IDisposable
 
     private readonly ChangeSetAggregator<int> _results;
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2214:Do not call overridable methods in constructors", Justification = "Accepted as part of a test.")]
     protected XOrFixtureBase()
     {
         _source1 = new SourceList<int>();

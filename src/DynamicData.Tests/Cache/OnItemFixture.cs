@@ -91,8 +91,8 @@ public class OnItemFixture
     {
         var source = new ObservableCollection<Item>
         {
-            new Item { Id = 1 },
-            new Item { Id = 2 }
+            new() { Id = 1 },
+            new() { Id = 2 }
         };
 
         var list = source.ToObservableChangeSet()
@@ -133,8 +133,8 @@ public class OnItemFixture
 
     public class ProxyEqualityComparer : IEqualityComparer<Proxy>
     {
-        public bool Equals(Proxy x, Proxy y) => x.Item.Id == y.Item.Id && x.Active == y.Active;
+        public bool Equals(Proxy x, Proxy y) => x?.Item.Id == y?.Item.Id && x.Active == y.Active;
 
-        public int GetHashCode(Proxy obj) => HashCode.Combine(obj.Active, obj.Item);
+        public int GetHashCode(Proxy obj) => HashCode.Combine(obj?.Active, obj.Item);
     }
 }

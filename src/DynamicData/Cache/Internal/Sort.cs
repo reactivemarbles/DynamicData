@@ -59,7 +59,7 @@ internal sealed class Sort<TObject, TKey>
                 return comparerChanged.Merge(dataChanged).Merge(sortAgain).Where(result => result is not null).Select(x => x!).SubscribeSafe(observer);
             });
 
-    private class Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)
+    private sealed class Sorter(SortOptimisations optimisations, IComparer<TObject>? comparer = null, int resetThreshold = -1)
     {
         private readonly ChangeAwareCache<TObject, TKey> _cache = new();
         private IndexCalculator<TObject, TKey>? _calculator;
@@ -102,7 +102,7 @@ internal sealed class Sort<TObject, TKey>
         /// <param name="sortReason">The sort reason.</param>
         /// <param name="changes">The changes.</param>
         /// <returns>The sorted change set.</returns>
-        private ISortedChangeSet<TObject, TKey>? DoSort(SortReason sortReason, IChangeSet<TObject, TKey>? changes = null)
+        private SortedChangeSet<TObject, TKey>? DoSort(SortReason sortReason, IChangeSet<TObject, TKey>? changes = null)
         {
             if (changes is not null)
             {

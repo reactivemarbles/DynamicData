@@ -35,10 +35,10 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
 
                         return changes.TotalChanges > resetThreshold ? Reset(original, target) : Process(target, changes);
                     });
-                var resort = _resort.Synchronize(locker).Select(_ => Reorder(target));
+                var resortSync = _resort.Synchronize(locker).Select(_ => Reorder(target));
                 var changeComparer = _comparerObservable.Synchronize(locker).Select(comparer => ChangeComparer(target, comparer));
 
-                return changeComparer.Merge(resort).Merge(dataChanged).Where(changes => changes.Count != 0).SubscribeSafe(observer);
+                return changeComparer.Merge(resortSync).Merge(dataChanged).Where(changes => changes.Count != 0).SubscribeSafe(observer);
             });
 
     private IChangeSet<T> ChangeComparer(ChangeAwareList<T> target, IComparer<T> comparer)
@@ -71,8 +71,8 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
 
     private int GetInsertPositionBinary(ChangeAwareList<T> target, T item)
     {
-        int index = target.BinarySearch(item, _comparer);
-        int insertIndex = ~index;
+        var index = target.BinarySearch(item, _comparer);
+        var insertIndex = ~index;
 
         // sort is not returning uniqueness
         if (insertIndex < 0)
@@ -199,7 +199,7 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
                 continue;
             }
 
-            int newPosition = GetInsertPositionLinear(target, item);
+            var newPosition = GetInsertPositionLinear(target, item);
             if (old < newPosition)
             {
                 newPosition--;
@@ -224,7 +224,7 @@ internal sealed class Sort<T>(IObservable<IChangeSet<T>> source, IComparer<T>? c
 
     private IChangeSet<T> Reorder(ChangeAwareList<T> target)
     {
-        int index = -1;
+        var index = -1;
         foreach (var item in target.OrderBy(t => t, _comparer).ToList())
         {
             index++;

@@ -11,7 +11,7 @@ internal sealed class ImmutableGroup<TObject, TKey, TGroupKey> : IGrouping<TObje
     where TKey : notnull
     where TGroupKey : notnull
 {
-    private readonly ICache<TObject, TKey> _cache;
+    private readonly Cache<TObject, TKey> _cache;
 
     internal ImmutableGroup(TGroupKey key, ICache<TObject, TKey> cache)
     {
@@ -30,15 +30,9 @@ internal sealed class ImmutableGroup<TObject, TKey, TGroupKey> : IGrouping<TObje
 
     public IEnumerable<KeyValuePair<TKey, TObject>> KeyValues => _cache.KeyValues;
 
-    public static bool operator ==(ImmutableGroup<TObject, TKey, TGroupKey> left, ImmutableGroup<TObject, TKey, TGroupKey> right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(ImmutableGroup<TObject, TKey, TGroupKey> left, ImmutableGroup<TObject, TKey, TGroupKey> right) => Equals(left, right);
 
-    public static bool operator !=(ImmutableGroup<TObject, TKey, TGroupKey> left, ImmutableGroup<TObject, TKey, TGroupKey> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(ImmutableGroup<TObject, TKey, TGroupKey> left, ImmutableGroup<TObject, TKey, TGroupKey> right) => !Equals(left, right);
 
     public bool Equals(ImmutableGroup<TObject, TKey, TGroupKey>? other)
     {

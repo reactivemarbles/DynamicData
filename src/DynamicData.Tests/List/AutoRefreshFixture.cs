@@ -368,16 +368,11 @@ public class AutoRefreshFixture
         }
     }
 
-    private class SelectableItem : AbstractNotifyPropertyChanged
+    private class SelectableItem(int id) : AbstractNotifyPropertyChanged
     {
         private bool _isSelected;
 
-        public SelectableItem(int id)
-        {
-            Id = id;
-        }
-
-        public int Id { get; }
+        public int Id { get; } = id;
 
         public bool IsSelected
         {
@@ -387,7 +382,7 @@ public class AutoRefreshFixture
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -405,28 +400,16 @@ public class AutoRefreshFixture
             return Equals((SelectableItem)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return Id;
-        }
+        public override int GetHashCode() => Id;
 
-        protected bool Equals(SelectableItem other)
-        {
-            return Id == other.Id;
-        }
+        protected bool Equals(SelectableItem other) => Id == other.Id;
     }
 
-    private class TransformedPerson
+    private class TransformedPerson(Person person, int index)
     {
-        public TransformedPerson(Person person, int index)
-        {
-            Person = person;
-            Index = index;
-        }
+        public int Index { get; } = index;
 
-        public int Index { get; }
-
-        public Person Person { get; }
+        public Person Person { get; } = person;
 
         public DateTime TimeStamp { get; } = DateTime.Now;
     }

@@ -37,10 +37,7 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
 
     private readonly ChangeSetAggregator<IMarket, Guid> _marketCacheResults;
 
-    public MergeManyCacheChangeSetsFixture()
-    {
-        _marketCacheResults = _marketCache.Connect().AsAggregator();
-    }
+    public MergeManyCacheChangeSetsFixture() => _marketCacheResults = _marketCache.Connect().AsAggregator();
 
     [Fact]
     public void NullChecks()

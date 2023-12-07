@@ -10,10 +10,7 @@ namespace DynamicData.Tests.List;
 
 public class AndFixture : AndFixtureBase
 {
-    protected override IObservable<IChangeSet<int>> CreateObservable()
-    {
-        return _source1.Connect().And(_source2.Connect());
-    }
+    protected override IObservable<IChangeSet<int>> CreateObservable() => _source1.Connect().And(_source2.Connect());
 }
 
 public class AndCollectionFixture : AndFixtureBase
@@ -33,6 +30,7 @@ public abstract class AndFixtureBase : IDisposable
 
     private readonly ChangeSetAggregator<int> _results;
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2214:Do not call overridable methods in constructors", Justification = "Accepted as part of a test.")]
     protected AndFixtureBase()
     {
         _source1 = new SourceList<int>();

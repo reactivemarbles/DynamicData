@@ -122,16 +122,10 @@ public class EditDiffChangeSetFixture
     private static IEnumerable<Person> CreatePeople(int baseId, int count, string baseName) =>
         Enumerable.Range(baseId, count).Select(i => CreatePerson(i, baseName + i));
 
-    private class Person
+    private class Person(int id, string name)
     {
-        public Person(int id, string name)
-        {
-            Id = id;
-            Name = name;
-        }
+        public int Id { get; } = id;
 
-        public int Id { get; }
-
-        public string Name { get; }
+        public string Name { get; } = name;
     }
 }

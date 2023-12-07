@@ -10,7 +10,7 @@ internal class KeyValueComparer<TObject, TKey>(IComparer<TObject>? comparer = nu
     {
         if (comparer is not null)
         {
-            int result = comparer.Compare(x.Value, y.Value);
+            var result = comparer.Compare(x.Value, y.Value);
 
             if (result != 0)
             {

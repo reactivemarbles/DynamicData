@@ -96,6 +96,7 @@ public class TransformTreeWithRefreshFixture : IDisposable
         node1.Value.IsRoot.Should().BeTrue();
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Accetable for test.")]
     private IEnumerable<EmployeeDto> CreateEmployees()
     {
         yield return new EmployeeDto(1)
@@ -147,16 +148,11 @@ public class TransformTreeWithRefreshFixture : IDisposable
         };
     }
 
-    private class EmployeeDto : AbstractNotifyPropertyChanged, IEquatable<EmployeeDto>
+    private class EmployeeDto(int id) : AbstractNotifyPropertyChanged, IEquatable<EmployeeDto>
     {
         private int _bossId;
 
         private string? _name;
-
-        public EmployeeDto(int id)
-        {
-            Id = id;
-        }
 
         public int BossId
         {
@@ -164,7 +160,7 @@ public class TransformTreeWithRefreshFixture : IDisposable
             set => SetAndRaise(ref _bossId, value);
         }
 
-        public int Id { get; }
+        public int Id { get; } = id;
 
         public string? Name
         {
@@ -172,19 +168,13 @@ public class TransformTreeWithRefreshFixture : IDisposable
             set => SetAndRaise(ref _name, value);
         }
 
-        public static bool operator ==(EmployeeDto left, EmployeeDto right)
-        {
-            return Equals(left, right);
-        }
+        public static bool operator ==(EmployeeDto left, EmployeeDto right) => Equals(left, right);
 
-        public static bool operator !=(EmployeeDto left, EmployeeDto right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(EmployeeDto left, EmployeeDto right) => !Equals(left, right);
 
         public bool Equals(EmployeeDto? other)
         {
-            if (ReferenceEquals(null, other))
+            if (other is null)
             {
                 return false;
             }
@@ -199,7 +189,7 @@ public class TransformTreeWithRefreshFixture : IDisposable
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
             {
                 return false;
             }
@@ -217,14 +207,8 @@ public class TransformTreeWithRefreshFixture : IDisposable
             return Equals((EmployeeDto)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return Id;
-        }
+        public override int GetHashCode() => Id;
 
-        public override string ToString()
-        {
-            return $"Name: {Name}, Id: {Id}, BossId: {BossId}";
-        }
+        public override string ToString() => $"Name: {Name}, Id: {Id}, BossId: {BossId}";
     }
 }

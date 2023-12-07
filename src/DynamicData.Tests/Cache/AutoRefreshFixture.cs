@@ -106,17 +106,11 @@ public class AutoRefreshFixture
         }
     }
 
-    public class IntHolder : AbstractNotifyPropertyChanged
+    public class IntHolder(int value, string description) : AbstractNotifyPropertyChanged
     {
-        public string _description_;
+        public string _description_ = description;
 
-        public int _value;
-
-        public IntHolder(int value, string description)
-        {
-            _value = value;
-            _description_ = description;
-        }
+        public int _value = value;
 
         public string Description
         {

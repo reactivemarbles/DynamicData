@@ -117,14 +117,8 @@ public class PageFixture : IDisposable
     }
 
     [Fact]
-    public void ThrowsForNegativePage()
-    {
-        Assert.Throws<ArgumentException>(() => _pager.OnNext(new PageRequest(-1, 1)));
-    }
+    public void ThrowsForNegativePage() => Assert.Throws<ArgumentException>(() => _pager.OnNext(new PageRequest(-1, 1)));
 
     [Fact]
-    public void ThrowsForNegativeSizeParameters()
-    {
-        Assert.Throws<ArgumentException>(() => _pager.OnNext(new PageRequest(1, -1)));
-    }
+    public void ThrowsForNegativeSizeParameters() => Assert.Throws<ArgumentException>(() => _pager.OnNext(new PageRequest(1, -1)));
 }

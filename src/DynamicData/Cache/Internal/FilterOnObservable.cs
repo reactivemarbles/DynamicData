@@ -19,7 +19,7 @@ internal class FilterOnObservable<TObject, TKey>(IObservable<IChangeSet<TObject,
                       .Filter(proxy => proxy.PassesFilter)
                       .Transform(proxy => proxy.Value);
 
-    private class FilterProxy
+    private sealed class FilterProxy
     {
         public FilterProxy(TObject obj, IObservable<bool> observable)
         {

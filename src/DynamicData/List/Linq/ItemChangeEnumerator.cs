@@ -33,9 +33,6 @@ internal class ItemChangeEnumerator<T>(IChangeSet<T> changeSet) : IEnumerable<It
                             break;
 
                         case ListChangeReason.RemoveRange:
-                            yield return new ItemChange<T>(ListChangeReason.Remove, item, index);
-                            break;
-
                         case ListChangeReason.Clear:
                             yield return new ItemChange<T>(ListChangeReason.Remove, item, index);
                             break;

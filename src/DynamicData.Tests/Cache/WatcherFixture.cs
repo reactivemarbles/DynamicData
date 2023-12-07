@@ -65,6 +65,9 @@ public class WatcherFixture : IDisposable
     public void Dispose()
     {
         _cleanUp.Dispose();
+        _results.Dispose();
+        _source.Dispose();
+        _watcher.Dispose();
     }
 
     [Fact]

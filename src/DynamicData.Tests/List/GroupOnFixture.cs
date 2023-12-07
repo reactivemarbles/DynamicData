@@ -47,6 +47,7 @@ public class GroupOnFixture : IDisposable
     public void Dispose()
     {
         _source.Dispose();
+        _results.Dispose();
     }
 
     [Fact]

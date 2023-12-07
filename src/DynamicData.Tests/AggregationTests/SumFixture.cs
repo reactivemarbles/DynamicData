@@ -13,10 +13,7 @@ public class SumFixture : IDisposable
 {
     private readonly SourceCache<Person, string> _source;
 
-    public SumFixture()
-    {
-        _source = new SourceCache<Person, string>(p => p.Name);
-    }
+    public SumFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
     [Fact]
     public void AddedItemsContributeToSum()
@@ -188,10 +185,7 @@ public class SumFixture : IDisposable
         accumulator.Dispose();
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void InlineChangeReEvaluatesTotals()

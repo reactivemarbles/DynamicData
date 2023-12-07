@@ -25,10 +25,7 @@ public class BatchIfWithTimeoutFixture : IDisposable
         _source = new SourceCache<Person, string>(p => p.Key);
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void InitialPause()

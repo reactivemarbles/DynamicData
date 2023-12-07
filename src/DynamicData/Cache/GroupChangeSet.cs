@@ -10,7 +10,7 @@ internal sealed class GroupChangeSet<TObject, TKey, TGroupKey> : ChangeSet<IGrou
     where TKey : notnull
     where TGroupKey : notnull
 {
-    public static readonly new IGroupChangeSet<TObject, TKey, TGroupKey> Empty = new GroupChangeSet<TObject, TKey, TGroupKey>();
+    public static new readonly IGroupChangeSet<TObject, TKey, TGroupKey> Empty = new GroupChangeSet<TObject, TKey, TGroupKey>();
 
     public GroupChangeSet(IEnumerable<Change<IGroup<TObject, TKey, TGroupKey>, TGroupKey>> items)
         : base(items)

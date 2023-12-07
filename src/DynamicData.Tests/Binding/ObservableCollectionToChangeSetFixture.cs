@@ -33,10 +33,7 @@ public class ObservableCollectionToChangeSetFixture : IDisposable
         _results.Data.Items.First().Should().Be(1);
     }
 
-    public void Dispose()
-    {
-        _results.Dispose();
-    }
+    public void Dispose() => _results.Dispose();
 
     [Fact]
     public void Duplicates()
@@ -96,9 +93,6 @@ public class ObservableCollectionToChangeSetFixture : IDisposable
 
     private class TestObservableCollection<T> : ObservableCollection<T>
     {
-        public void Reset()
-        {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-        }
+        public void Reset() => OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }
 }

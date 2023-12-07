@@ -37,11 +37,11 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
 
                 var grouper = shared.Select(changes => Process(groupings, groupCache, changes));
 
-                IObservable<IChangeSet<IGrouping<TObject, TGroupKey>>> reGrouper = _reGrouper is null ?
+                var reGroupFunc = _reGrouper is null ?
                     Observable.Never<IChangeSet<IGrouping<TObject, TGroupKey>>>() :
                     _reGrouper.Synchronize(locker).CombineLatest(shared.ToCollection(), (_, collection) => Regroup(groupings, groupCache, collection));
 
-                var publisher = grouper.Merge(reGrouper).NotEmpty().SubscribeSafe(observer);
+                var publisher = grouper.Merge(reGroupFunc).NotEmpty().SubscribeSafe(observer);
 
                 return new CompositeDisposable(publisher, shared.Connect());
             });
@@ -92,9 +92,9 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         return newcache;
     }
 
-    private static IGrouping<TObject, TGroupKey> GetGroupState(GroupContainer grouping) => new ImmutableGroup<TObject, TGroupKey>(grouping.Key, grouping.List);
+    private static ImmutableGroup<TObject, TGroupKey> GetGroupState(GroupContainer grouping) => new(grouping.Key, grouping.List);
 
-    private static IGrouping<TObject, TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list) => new ImmutableGroup<TObject, TGroupKey>(key, list);
+    private static ImmutableGroup<TObject, TGroupKey> GetGroupState(TGroupKey key, IList<TObject> list) => new(key, list);
 
     private static IChangeSet<IGrouping<TObject, TGroupKey>> Process(ChangeAwareList<IGrouping<TObject, TGroupKey>> result, IDictionary<TGroupKey, GroupContainer> allGroupings, IChangeSet<ItemWithGroupKey> changes)
     {
@@ -136,7 +136,7 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
                             var currentItem = change.Current.Item;
 
                             // check whether an item changing has resulted in a different group
-                            if (previousGroup.Equals(currentGroup) == false)
+                            if (!previousGroup.Equals(currentGroup))
                             {
                                 GetInitialState();
 
@@ -252,7 +252,7 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
         return CreateChangeSet(result, allGroupings, initialStateOfGroups);
     }
 
-    private class GroupContainer(TGroupKey key)
+    private sealed class GroupContainer(TGroupKey key)
     {
         public TGroupKey Key { get; } = key;
 
@@ -267,15 +267,9 @@ internal sealed class GroupOnImmutable<TObject, TGroupKey>(IObservable<IChangeSe
 
         public Optional<TGroupKey> PreviousGroup { get; } = previousGroup;
 
-        public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right)
-        {
-            return Equals(left, right);
-        }
+        public static bool operator ==(ItemWithGroupKey left, ItemWithGroupKey right) => Equals(left, right);
 
-        public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right)
-        {
-            return !Equals(left, right);
-        }
+        public static bool operator !=(ItemWithGroupKey left, ItemWithGroupKey right) => !Equals(left, right);
 
         public bool Equals(ItemWithGroupKey? other)
         {

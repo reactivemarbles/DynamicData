@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Collections;
-
 using DynamicData.Kernel;
 
 namespace DynamicData;
@@ -13,23 +12,20 @@ namespace DynamicData;
 /// <para>Used for creating custom operators.</para>
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
-/// <seealso cref="DynamicData.IExtendedList{T}" />
+/// <seealso cref="IExtendedList{T}" />
 public class ChangeAwareList<T> : IExtendedList<T>
     where T : notnull
 {
     private readonly List<T> _innerList;
-
-    private ChangeSet<T> _changes = new();
+    private ChangeSet<T> _changes = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChangeAwareList{T}"/> class.
     /// Create a change aware list with the specified capacity.
     /// </summary>
     /// <param name="capacity">The initial capacity of the internal lists.</param>
-    public ChangeAwareList(int capacity = -1)
-    {
-        _innerList = capacity > 0 ? new List<T>(capacity) : new List<T>();
-    }
+    public ChangeAwareList(int capacity = -1) =>
+        _innerList = capacity > 0 ? new List<T>(capacity) : [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ChangeAwareList{T}"/> class.
@@ -38,10 +34,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="items">The items to seed the change aware list with.</param>
     public ChangeAwareList(IEnumerable<T> items)
     {
-        if (items is null)
-        {
-            throw new ArgumentNullException(nameof(items));
-        }
+        items.ThrowArgumentNullExceptionIfNull(nameof(items));
 
         var list = items.ToList();
 
@@ -61,10 +54,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="copyChanges">Should the list of changes also be copied over?.</param>
     public ChangeAwareList(ChangeAwareList<T> list, bool copyChanges)
     {
-        if (list is null)
-        {
-            throw new ArgumentNullException(nameof(list));
-        }
+        list.ThrowArgumentNullExceptionIfNull(nameof(list));
 
         _innerList = new List<T>(list._innerList);
 
@@ -139,7 +129,9 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public IChangeSet<T> CaptureChanges()
     {
         if (_changes.Count == 0)
+        {
             return ChangeSet<T>.Empty;
+        }
 
         var returnValue = _changes;
 
@@ -147,7 +139,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
         if (_innerList.Count == 0 && returnValue.Removes == returnValue.TotalChanges && returnValue.TotalChanges > 1)
         {
             var removed = returnValue.Unified().Select(u => u.Current);
-            returnValue = new ChangeSet<T> { new(ListChangeReason.Clear, removed) };
+            returnValue = [new(ListChangeReason.Clear, removed)];
         }
 
         ClearChanges();
@@ -161,7 +153,9 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public virtual void Clear()
     {
         if (_innerList.Count == 0)
+        {
             return;
+        }
 
         var toRemove = _innerList.ToList();
 
@@ -214,7 +208,9 @@ public class ChangeAwareList<T> : IExtendedList<T>
         }
 
         if (index > _innerList.Count)
+        {
             throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+        }
 
         InsertItem(index, item);
     }
@@ -229,7 +225,10 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public void InsertRange(IEnumerable<T> collection, int index)
     {
         var args = new Change<T>(ListChangeReason.AddRange, collection, index);
-        if (args.Range.Count == 0) return;
+        if (args.Range.Count == 0)
+        {
+            return;
+        }
 
         _changes.Add(args);
         _innerList.InsertRange(index, args.Range);
@@ -245,14 +244,17 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public virtual void Move(T item, int destination)
     {
         if (destination < 0)
+        {
             throw new ArgumentException($"{nameof(destination)} cannot be negative");
+        }
 
         if (destination > _innerList.Count)
+        {
             throw new ArgumentException($"{nameof(destination)} cannot be greater than the size of the collection");
+        }
 
-        int index = _innerList.IndexOf(item);
+        var index = _innerList.IndexOf(item);
         Move(index, destination);
-
     }
 
     /// <summary>
@@ -263,16 +265,24 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public virtual void Move(int original, int destination)
     {
         if (original < 0)
+        {
             throw new ArgumentException($"{nameof(original)} cannot be negative");
+        }
 
         if (destination < 0)
+        {
             throw new ArgumentException($"{nameof(destination)} cannot be negative");
+        }
 
         if (original > _innerList.Count)
+        {
             throw new ArgumentException($"{nameof(original)} cannot be greater than the size of the collection");
+        }
 
         if (destination > _innerList.Count)
+        {
             throw new ArgumentException($"{nameof(destination)} cannot be greater than the size of the collection");
+        }
 
         var item = _innerList[original];
         _innerList.RemoveAt(original);
@@ -294,7 +304,9 @@ public class ChangeAwareList<T> : IExtendedList<T>
         }
 
         if (index > _innerList.Count)
+        {
             throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+        }
 
         var previous = _innerList[index];
         _innerList[index] = item;
@@ -312,7 +324,9 @@ public class ChangeAwareList<T> : IExtendedList<T>
     {
         var index = IndexOf(item);
         if (index < 0)
+        {
             return false;
+        }
 
         _changes.Add(new Change<T>(ListChangeReason.Refresh, item, index));
 
@@ -327,7 +341,9 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public void RefreshAt(int index)
     {
         if (index < 0)
+        {
             throw new ArgumentException($"{nameof(index)} cannot be negative");
+        }
 
         if (index > _innerList.Count)
         {
@@ -345,7 +361,10 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public bool Remove(T item)
     {
         var index = _innerList.IndexOf(item);
-        if (index < 0) return false;
+        if (index < 0)
+        {
+            return false;
+        }
 
         RemoveItem(index, item);
         return true;
@@ -358,10 +377,14 @@ public class ChangeAwareList<T> : IExtendedList<T>
     public void RemoveAt(int index)
     {
         if (index < 0)
+        {
             throw new ArgumentException($"{nameof(index)} cannot be negative");
+        }
 
         if (index > _innerList.Count)
+        {
             throw new ArgumentOutOfRangeException(nameof(index), $"{nameof(index)} cannot be greater than the size of the collection");
+        }
 
         RemoveItem(index);
     }
@@ -397,7 +420,7 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <summary>
     /// Clears the changes (for testing).
     /// </summary>
-    internal void ClearChanges() => _changes = new ChangeSet<T>();
+    internal void ClearChanges() => _changes = [];
 
     /// <summary>
     /// Inserts an item at the specified index.
@@ -532,7 +555,9 @@ public class ChangeAwareList<T> : IExtendedList<T>
         }
 
         if (index > _innerList.Count)
+        {
             throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+        }
 
         // attempt to batch updates as lists love to deal with ranges! (sorry if this code melts your mind)
         var last = Last;
@@ -596,8 +621,15 @@ public class ChangeAwareList<T> : IExtendedList<T>
     /// <param name="item">The item to set.</param>
     protected virtual void SetItem(int index, T item)
     {
-        if (index < 0) throw new ArgumentException($"{nameof(index)} cannot be negative");
-        if (index > _innerList.Count) throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+        if (index < 0)
+        {
+            throw new ArgumentException($"{nameof(index)} cannot be negative");
+        }
+
+        if (index > _innerList.Count)
+        {
+            throw new ArgumentException($"{nameof(index)} cannot be greater than the size of the collection");
+        }
 
         var previous = _innerList[index];
         _changes.Add(new Change<T>(ListChangeReason.Replace, item, previous, index, index));

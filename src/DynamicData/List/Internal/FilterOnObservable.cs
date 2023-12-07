@@ -34,11 +34,8 @@ internal class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject>> sour
                     itemHasChanged.Buffer(buffer.Value, scheduler ?? Scheduler.Default).Where(list => list.Count > 0);
 
                 var requiresRefresh = itemsChanged.Synchronize(locker).Select(
-                    items =>
-                    {
-                        // catch all the indices of items which have been refreshed
-                        return IndexOfMany(allItems, items, v => v.Obj, (t, idx) => new Change<ObjWithFilterValue>(ListChangeReason.Refresh, t, idx));
-                    }).Select(changes => new ChangeSet<ObjWithFilterValue>(changes));
+                    items => // catch all the indices of items which have been refreshed
+                        IndexOfMany(allItems, items, v => v.Obj, (t, idx) => new Change<ObjWithFilterValue>(ListChangeReason.Refresh, t, idx))).Select(changes => new ChangeSet<ObjWithFilterValue>(changes));
 
                 // publish refreshes and underlying changes
                 var publisher = shared.Merge(requiresRefresh).Filter(v => v.Filter)
@@ -52,20 +49,9 @@ internal class FilterOnObservable<TObject>(IObservable<IChangeSet<TObject>> sour
 
     private static IEnumerable<TResult> IndexOfMany<TObj, TObjectProp, TResult>(IEnumerable<TObj> source, IEnumerable<TObj> itemsToFind, Func<TObj, TObjectProp> objectPropertyFunc, Func<TObj, int, TResult> resultSelector)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-
-        if (itemsToFind is null)
-        {
-            throw new ArgumentNullException(nameof(itemsToFind));
-        }
-
-        if (resultSelector is null)
-        {
-            throw new ArgumentNullException(nameof(resultSelector));
-        }
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        itemsToFind.ThrowArgumentNullExceptionIfNull(nameof(itemsToFind));
+        resultSelector.ThrowArgumentNullExceptionIfNull(nameof(resultSelector));
 
         var indexed = source.Select((element, index) => new { Element = element, Index = index });
         return itemsToFind.Join(indexed, objectPropertyFunc, right => objectPropertyFunc(right.Element), (left, right) => resultSelector(left, right.Index));

@@ -157,12 +157,9 @@ public sealed class DisposeManyFixture : IDisposable
         items.All(item => item.IsDisposed).Should().BeTrue("Items remaining in the list should be disposed");
     }
 
-    private class DisposableObject : IDisposable
+    private class DisposableObject(int id) : IDisposable
     {
-        public DisposableObject(int id)
-            => Id = id;
-
-        public int Id { get; private set; }
+        public int Id { get; private set; } = id;
 
         public bool IsDisposed { get; private set; }
 

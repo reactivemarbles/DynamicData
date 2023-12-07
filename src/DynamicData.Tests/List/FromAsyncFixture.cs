@@ -18,10 +18,7 @@ public class FromAsyncFixture
 {
     private readonly TestScheduler _scheduler;
 
-    public FromAsyncFixture()
-    {
-        _scheduler = new TestScheduler();
-    }
+    public FromAsyncFixture() => _scheduler = new TestScheduler();
 
     [Fact]
     public void CanLoadFromTask()

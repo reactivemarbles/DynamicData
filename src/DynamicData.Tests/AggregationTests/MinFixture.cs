@@ -13,10 +13,7 @@ public class MinFixture : IDisposable
 {
     private readonly SourceCache<Person, string> _source;
 
-    public MinFixture()
-    {
-        _source = new SourceCache<Person, string>(p => p.Name);
-    }
+    public MinFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
     [Fact]
     public void AddedItemsContributeToSum()
@@ -34,10 +31,7 @@ public class MinFixture : IDisposable
         accumulator.Dispose();
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void InlineChangeReEvaluatesTotals()

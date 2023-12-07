@@ -14,7 +14,8 @@ internal class StaticFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>
                                                                 {
                                                                     ChangeAwareCache<TObject, TKey>? cache = null;
 
-                                                                    return source.Subscribe(changes =>
+                                                                    return source.Subscribe(
+                                                                        changes =>
                                                                     {
                                                                         cache ??= new ChangeAwareCache<TObject, TKey>(changes.Count);
 
@@ -22,8 +23,11 @@ internal class StaticFilter<TObject, TKey>(IObservable<IChangeSet<TObject, TKey>
                                                                         var filtered = cache.CaptureChanges();
 
                                                                         if (filtered.Count != 0 || !suppressEmptyChangeSets)
+                                                                        {
                                                                             observer.OnNext(filtered);
-
-                                                                    }, observer.OnError, observer.OnCompleted);
+                                                                        }
+                                                                    },
+                                                                        observer.OnError,
+                                                                        observer.OnCompleted);
                                                                 });
 }

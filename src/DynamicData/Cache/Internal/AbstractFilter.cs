@@ -37,12 +37,9 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
                     return new Change<TObject, TKey>(ChangeReason.Add, kv.Key, kv.Value);
                 }
             }
-            else
+            else if (existing.HasValue)
             {
-                if (existing.HasValue)
-                {
-                    return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, existing);
-                }
+                return new Change<TObject, TKey>(ChangeReason.Remove, kv.Key, kv.Value, existing);
             }
 
             return Optional.None<Change<TObject, TKey>>();
@@ -118,12 +115,9 @@ internal abstract class AbstractFilter<TObject, TKey> : IFilter<TObject, TKey>
                                 _cache.Refresh();
                             }
                         }
-                        else
+                        else if (existing.HasValue)
                         {
-                            if (existing.HasValue)
-                            {
-                                _cache.Remove(u.Key);
-                            }
+                            _cache.Remove(u.Key);
                         }
                     }
 

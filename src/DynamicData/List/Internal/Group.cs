@@ -11,17 +11,11 @@ internal class Group<TObject, TGroup>(TGroup groupKey) : IGroup<TObject, TGroup>
 
     public IObservableList<TObject> List => Source;
 
-    private ISourceList<TObject> Source { get; } = new SourceList<TObject>();
+    private SourceList<TObject> Source { get; } = new();
 
-    public static bool operator ==(Group<TObject, TGroup> left, Group<TObject, TGroup> right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(Group<TObject, TGroup> left, Group<TObject, TGroup> right) => Equals(left, right);
 
-    public static bool operator !=(Group<TObject, TGroup> left, Group<TObject, TGroup> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(Group<TObject, TGroup> left, Group<TObject, TGroup> right) => !Equals(left, right);
 
     public void Dispose() => Source.Dispose();
 
@@ -29,7 +23,7 @@ internal class Group<TObject, TGroup>(TGroup groupKey) : IGroup<TObject, TGroup>
 
     public bool Equals(Group<TObject, TGroup>? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }

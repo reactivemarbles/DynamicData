@@ -38,10 +38,7 @@ internal class Cache<TObject, TKey> : ICache<TObject, TKey>
 
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
         foreach (var item in changes.ToConcreteType())
         {

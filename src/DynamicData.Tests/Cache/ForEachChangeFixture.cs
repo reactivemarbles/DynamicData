@@ -13,15 +13,9 @@ public class ForEachChangeFixture : IDisposable
 {
     private readonly ISourceCache<Person, string> _source;
 
-    public ForEachChangeFixture()
-    {
-        _source = new SourceCache<Person, string>(p => p.Name);
-    }
+    public ForEachChangeFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void Test()

@@ -10,12 +10,11 @@ namespace DynamicData.List.Internal;
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
 internal class ReferenceCountTracker<T>
+    where T : notnull
 {
     public IEnumerable<T> Items => ReferenceCounts.Keys;
 
-#pragma warning disable CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
-    private Dictionary<T, int> ReferenceCounts { get; } = new();
-#pragma warning restore CS8714 // The type cannot be used as type parameter in the generic type or method. Nullability of type argument doesn't match 'notnull' constraint.
+    private Dictionary<T, int> ReferenceCounts { get; } = [];
 
     public int this[T item] => ReferenceCounts[item];
 
@@ -25,10 +24,7 @@ internal class ReferenceCountTracker<T>
     /// <param name="item">The item to add.</param>
     public bool Add(T item)
     {
-        if (item is null)
-        {
-            throw new ArgumentNullException(nameof(item));
-        }
+        item.ThrowArgumentNullExceptionIfNull(nameof(item));
 
         if (!ReferenceCounts.TryGetValue(item, out var currentCount))
         {
@@ -50,12 +46,9 @@ internal class ReferenceCountTracker<T>
     /// <param name="item">The item to remove.</param>
     public bool Remove(T item)
     {
-        if (item is null)
-        {
-            throw new ArgumentNullException(nameof(item));
-        }
+        item.ThrowArgumentNullExceptionIfNull(nameof(item));
 
-        int currentCount = ReferenceCounts[item];
+        var currentCount = ReferenceCounts[item];
 
         if (currentCount == 1)
         {

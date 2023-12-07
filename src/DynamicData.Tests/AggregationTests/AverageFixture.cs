@@ -13,10 +13,7 @@ public class AverageFixture : IDisposable
 {
     private readonly SourceCache<Person, string> _source;
 
-    public AverageFixture()
-    {
-        _source = new SourceCache<Person, string>(p => p.Name);
-    }
+    public AverageFixture() => _source = new SourceCache<Person, string>(p => p.Name);
 
     [Fact]
     public void AddedItemsContributeToSum()
@@ -178,10 +175,7 @@ public class AverageFixture : IDisposable
         accumulator.Dispose();
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void InlineChangeReEvaluatesTotals()

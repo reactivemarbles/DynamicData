@@ -16,6 +16,6 @@ public interface ISortedChangeSetAdaptor<TObject, TKey>
     /// <summary>
     /// Adapts the specified change.
     /// </summary>
-    /// <param name="change">The change.</param>
-    void Adapt(ISortedChangeSet<TObject, TKey> change);
+    /// <param name="changes">The change.</param>
+    void Adapt(ISortedChangeSet<TObject, TKey> changes);
 }

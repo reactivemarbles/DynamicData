@@ -71,8 +71,8 @@ internal class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, TKey>> 
                 return 1;
             }
 
-            int pages = _all.Count / _request.Size;
-            int overlap = _all.Count % _request.Size;
+            var pages = _all.Count / _request.Size;
+            var overlap = _all.Count % _request.Size;
 
             if (overlap == 0)
             {
@@ -82,18 +82,18 @@ internal class Page<TObject, TKey>(IObservable<ISortedChangeSet<TObject, TKey>> 
             return pages + 1;
         }
 
-        private IPagedChangeSet<TObject, TKey>? Paginate(ISortedChangeSet<TObject, TKey>? updates = null)
+        private PagedChangeSet<TObject, TKey>? Paginate(ISortedChangeSet<TObject, TKey>? updates = null)
         {
-            if (_isLoaded == false)
+            if (!_isLoaded)
             {
                 return null;
             }
 
             var previous = _current;
 
-            int pages = CalculatePages();
-            int page = _request.Page > pages ? pages : _request.Page;
-            int skip = _request.Size * (page - 1);
+            var pages = CalculatePages();
+            var page = _request.Page > pages ? pages : _request.Page;
+            var skip = _request.Size * (page - 1);
 
             var paged = _all.Skip(skip).Take(_request.Size).ToList();
 

@@ -31,7 +31,7 @@ internal static class FilteredIndexCalculator<TObject, TKey>
         var result = new List<Change<TObject, TKey>>();
         foreach (var remove in removes)
         {
-            int index = previousList.IndexOf(remove);
+            var index = previousList.IndexOf(remove);
 
             previousList.RemoveAt(index);
             result.Add(new Change<TObject, TKey>(ChangeReason.Remove, remove.Key, remove.Value, index));
@@ -40,8 +40,8 @@ internal static class FilteredIndexCalculator<TObject, TKey>
         foreach (var add in adds)
         {
             // find new insert position
-            int index = previousList.BinarySearch(add, currentItems.Comparer);
-            int insertIndex = ~index;
+            var index = previousList.BinarySearch(add, currentItems.Comparer);
+            var insertIndex = ~index;
             previousList.Insert(insertIndex, add);
             result.Add(new Change<TObject, TKey>(ChangeReason.Add, add.Key, add.Value, insertIndex));
         }
@@ -62,8 +62,8 @@ internal static class FilteredIndexCalculator<TObject, TKey>
                 previousList.RemoveAt(removeIndex);
 
                 // insert into the desired index
-                int desiredIndex = previousList.BinarySearch(current, currentItems.Comparer);
-                int insertIndex = ~desiredIndex;
+                var desiredIndex = previousList.BinarySearch(current, currentItems.Comparer);
+                var insertIndex = ~desiredIndex;
                 previousList.Insert(insertIndex, current);
 
                 result.Add(new Change<TObject, TKey>(ChangeReason.Update, current.Key, current.Value, previous.Value, insertIndex, removeIndex));
@@ -74,7 +74,7 @@ internal static class FilteredIndexCalculator<TObject, TKey>
                 var current = new KeyValuePair<TKey, TObject>(change.Key, change.Current);
 
                 var previousIndex = previousList.IndexOf(current);
-                int desiredIndex = currentItems.IndexOf(current);
+                var desiredIndex = currentItems.IndexOf(current);
 
                 if (previousIndex == desiredIndex)
                 {
@@ -112,7 +112,7 @@ internal static class FilteredIndexCalculator<TObject, TKey>
                 continue;
             }
 
-            int newPosition = GetInsertPositionLinear(previousList, current, currentItems.Comparer);
+            var newPosition = GetInsertPositionLinear(previousList, current, currentItems.Comparer);
 
             if (old < newPosition)
             {

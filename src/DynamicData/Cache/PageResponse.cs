@@ -42,7 +42,7 @@ internal sealed class PageResponse(int pageSize, int totalSize, int page, int pa
             return false;
         }
 
-        if (!(obj is IPageResponse pageResponse))
+        if (obj is not IPageResponse pageResponse)
         {
             return false;
         }
@@ -60,7 +60,7 @@ internal sealed class PageResponse(int pageSize, int totalSize, int page, int pa
     {
         unchecked
         {
-            int hashCode = Pages;
+            var hashCode = Pages;
             hashCode = (hashCode * 397) ^ Page;
             hashCode = (hashCode * 397) ^ TotalSize;
             hashCode = (hashCode * 397) ^ PageSize;
@@ -85,12 +85,12 @@ internal sealed class PageResponse(int pageSize, int totalSize, int page, int pa
                 return true;
             }
 
-            if (ReferenceEquals(x, null))
+            if (x is null)
             {
                 return false;
             }
 
-            if (ReferenceEquals(y, null))
+            if (y is null)
             {
                 return false;
             }
@@ -112,7 +112,7 @@ internal sealed class PageResponse(int pageSize, int totalSize, int page, int pa
 
             unchecked
             {
-                int hashCode = obj.PageSize;
+                var hashCode = obj.PageSize;
                 hashCode = (hashCode * 397) ^ obj.TotalSize;
                 hashCode = (hashCode * 397) ^ obj.Page;
                 hashCode = (hashCode * 397) ^ obj.Pages;

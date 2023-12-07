@@ -142,6 +142,7 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
         return resultingList.CaptureChanges();
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "By Design.")]
     private IChangeSet<T> UpdateResultList(MergeContainer[] sourceLists, ChangeAwareListWithRefCounts<T> resultList, IChangeSet<T> changes)
     {
         // child caches have been updated before we reached this point.
@@ -183,10 +184,7 @@ internal sealed class DynamicCombiner<T>(IObservableList<IObservable<IChangeSet<
 
     private sealed class MergeContainer
     {
-        public MergeContainer(IObservable<IChangeSet<T>> source)
-        {
-            Source = source.Do(Clone);
-        }
+        public MergeContainer(IObservable<IChangeSet<T>> source) => Source = source.Do(Clone);
 
         public IObservable<IChangeSet<T>> Source { get; }
 

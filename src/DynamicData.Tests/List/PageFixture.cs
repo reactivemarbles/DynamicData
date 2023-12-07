@@ -134,7 +134,7 @@ public class PageFixture : IDisposable
 public class PageFixtureWithNoInitialData
 {
     private readonly Animal[] _items =
-    {
+    [
         new("Holly", "Cat", AnimalFamily.Mammal),
         new("Rover", "Dog", AnimalFamily.Mammal),
         new("Rex", "Dog", AnimalFamily.Mammal),
@@ -145,7 +145,7 @@ public class PageFixtureWithNoInitialData
         new("Isaac", "Next", AnimalFamily.Amphibian),
         new("Sam", "Snake", AnimalFamily.Reptile),
         new("Sharon", "Red Backed Shrike", AnimalFamily.Bird),
-    };
+    ];
 
     [Fact]
     public void SimplePaging()
@@ -193,18 +193,15 @@ public class SimplePaging : AbstractNotifyPropertyChanged, IDisposable
 
     public SimplePaging(IObservableList<Animal> source, IObservable<IPageRequest> pager)
     {
-        Paged = source.Connect()
+        Paged = source?.Connect()
             .Page(pager)
             .Do(changes => Console.WriteLine(changes.TotalChanges)) //added as a quick and dirty way to debug
-            .AsObservableList();
+            .AsObservableList()!;
 
         _cleanUp = Paged;
     }
 
     public IObservableList<Animal> Paged { get; }
 
-    public void Dispose()
-    {
-        _cleanUp.Dispose();
-    }
+    public void Dispose() => _cleanUp.Dispose();
 }

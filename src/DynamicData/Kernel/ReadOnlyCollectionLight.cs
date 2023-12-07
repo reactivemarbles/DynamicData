@@ -16,10 +16,7 @@ internal sealed class ReadOnlyCollectionLight<T> : IReadOnlyCollection<T>
         Count = _items.Count;
     }
 
-    private ReadOnlyCollectionLight()
-    {
-        _items = new List<T>();
-    }
+    private ReadOnlyCollectionLight() => _items = new List<T>();
 
     public static IReadOnlyCollection<T> Empty { get; } = new ReadOnlyCollectionLight<T>();
 

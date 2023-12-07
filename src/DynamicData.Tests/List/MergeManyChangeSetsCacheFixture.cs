@@ -36,10 +36,7 @@ public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 
     private readonly ChangeSetAggregator<IMarket> _marketListResults;
 
-    public MergeManyChangeSetsCacheFixture()
-    {
-        _marketListResults = _marketList.Connect().AsAggregator();
-    }
+    public MergeManyChangeSetsCacheFixture() => _marketListResults = _marketList.Connect().AsAggregator();
 
     [Fact]
     public void NullChecks()

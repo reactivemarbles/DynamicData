@@ -168,7 +168,7 @@ public class IObservableListBindListFixture : IDisposable
 
         person.Age = 60;
 
-        _observableListNotifications.Messages.Count().Should().Be(2);
+        _observableListNotifications.Messages.Count.Should().Be(2);
         _observableListNotifications.Messages.Last().First().Reason.Should().Be(ListChangeReason.Refresh);
     }
 

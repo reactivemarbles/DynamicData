@@ -20,10 +20,7 @@ public class TrueForAnyFixture : IDisposable
         _observable = _source.Connect().TrueForAny(o => o.Observable.StartWith(o.Value), o => o == true);
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void InitialItemReturnsFalseWhenObservaleHasNoValue()
@@ -80,16 +77,11 @@ public class TrueForAnyFixture : IDisposable
         subscribed.Dispose();
     }
 
-    private class ObjectWithObservable
+    private class ObjectWithObservable(int id)
     {
         private readonly ISubject<bool> _changed = new Subject<bool>();
 
-        public ObjectWithObservable(int id)
-        {
-            Id = id;
-        }
-
-        public int Id { get; }
+        public int Id { get; } = id;
 
         public IObservable<bool> Observable => _changed;
 

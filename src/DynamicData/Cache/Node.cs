@@ -19,9 +19,9 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     where TKey : notnull
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2213:Disposable fields should be disposed", Justification = "Disposed with _cleanUp")]
-    private readonly ISourceCache<Node<TObject, TKey>, TKey> _children = new SourceCache<Node<TObject, TKey>, TKey>(n => n.Key);
+    private readonly SourceCache<Node<TObject, TKey>, TKey> _children = new(n => n.Key);
 
-    private readonly IDisposable _cleanUp;
+    private readonly CompositeDisposable _cleanUp;
 
     private bool _isDisposed;
 
@@ -41,13 +41,13 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="item">The item.</param>
     /// <param name="key">The key.</param>
     /// <param name="parent">The parent.</param>
-    public Node(TObject item, TKey key, Optional<Node<TObject, TKey>> parent)
+    public Node(TObject item, TKey key, in Optional<Node<TObject, TKey>> parent)
     {
         Item = item ?? throw new ArgumentNullException(nameof(item));
         Key = key;
         Parent = parent;
         Children = _children.AsObservableCache();
-        _cleanUp = new CompositeDisposable(Children, _children);
+        _cleanUp = new(Children, _children);
     }
 
     /// <summary>
@@ -64,17 +64,11 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
         {
             var i = 0;
             var parent = Parent;
-            do
+            while (parent.HasValue)
             {
-                if (!parent.HasValue)
-                {
-                    break;
-                }
-
                 i++;
                 parent = parent.Value.Parent;
             }
-            while (true);
 
             return i;
         }
@@ -109,10 +103,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="left">The left value to compare.</param>
     /// <param name="right">The right value to compare.</param>
     /// <returns>If the two values are equal.</returns>
-    public static bool operator ==(Node<TObject, TKey>? left, Node<TObject, TKey>? right)
-    {
-        return Equals(left, right);
-    }
+    public static bool operator ==(Node<TObject, TKey>? left, Node<TObject, TKey>? right) => Equals(left, right);
 
     /// <summary>
     ///  Determines whether the specified objects are not equal.
@@ -120,10 +111,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <param name="left">The left value to compare.</param>
     /// <param name="right">The right value to compare.</param>
     /// <returns>If the two values are not equal.</returns>
-    public static bool operator !=(Node<TObject, TKey> left, Node<TObject, TKey> right)
-    {
-        return !Equals(left, right);
-    }
+    public static bool operator !=(Node<TObject, TKey> left, Node<TObject, TKey> right) => !Equals(left, right);
 
     /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
     /// <filterpriority>2.</filterpriority>
@@ -139,7 +127,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <filterpriority>2.</filterpriority>
     public bool Equals(Node<TObject, TKey>? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -158,7 +146,7 @@ public class Node<TObject, TKey> : IDisposable, IEquatable<Node<TObject, TKey>>
     /// <filterpriority>2.</filterpriority>
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

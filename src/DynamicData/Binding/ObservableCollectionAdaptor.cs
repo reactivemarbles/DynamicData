@@ -43,8 +43,8 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// <summary>
     /// Initializes a new instance of the <see cref="ObservableCollectionAdaptor{TObject}"/> class.
     /// </summary>
-    /// <param name="options"> The binding options.</param>
     /// <param name="collection">The collection.</param>
+    /// <param name="options"> The binding options.</param>
     public ObservableCollectionAdaptor(IObservableCollection<T> collection, BindingOptions options)
         : this(collection, options.ResetThreshold, options.UseReplaceForUpdates, options.ResetOnFirstTimeLoad)
     {
@@ -56,10 +56,7 @@ public class ObservableCollectionAdaptor<T>(IObservableCollection<T> collection,
     /// <param name="changes">The changes.</param>
     public void Adapt(IChangeSet<T> changes)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
         if (changes.TotalChanges - changes.Refreshes > refreshThreshold || (!_loaded && resetOnFirstTimeLoad))
         {
@@ -113,15 +110,8 @@ public class ObservableCollectionAdaptor<TObject, TKey>(int refreshThreshold = 2
     /// <param name="collection">The collection.</param>
     public void Adapt(IChangeSet<TObject, TKey> changes, IObservableCollection<TObject> collection)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
-
-        if (collection is null)
-        {
-            throw new ArgumentNullException(nameof(collection));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
+        collection.ThrowArgumentNullExceptionIfNull(nameof(collection));
 
         _cache.Clone(changes);
 

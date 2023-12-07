@@ -14,15 +14,9 @@ public class ForEachChangeFixture : IDisposable
 {
     private readonly ISourceList<Person> _source;
 
-    public ForEachChangeFixture()
-    {
-        _source = new SourceList<Person>();
-    }
+    public ForEachChangeFixture() => _source = new SourceList<Person>();
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 
     [Fact]
     public void EachChangeInokesTheCallback()

@@ -55,7 +55,7 @@ internal sealed class VirtualResponse(int size, int startIndex, int totalSize) :
     {
         unchecked
         {
-            int hashCode = Size;
+            var hashCode = Size;
             hashCode = (hashCode * 397) ^ StartIndex;
             hashCode = (hashCode * 397) ^ TotalSize;
             return hashCode;
@@ -79,12 +79,12 @@ internal sealed class VirtualResponse(int size, int startIndex, int totalSize) :
                 return true;
             }
 
-            if (ReferenceEquals(x, null))
+            if (x is null)
             {
                 return false;
             }
 
-            if (ReferenceEquals(y, null))
+            if (y is null)
             {
                 return false;
             }
@@ -106,7 +106,7 @@ internal sealed class VirtualResponse(int size, int startIndex, int totalSize) :
 
             unchecked
             {
-                int hashCode = obj.TotalSize;
+                var hashCode = obj.TotalSize;
                 hashCode = (hashCode * 397) ^ obj.StartIndex;
                 hashCode = (hashCode * 397) ^ obj.Size;
                 return hashCode;

@@ -1,6 +1,9 @@
+using System;
+
 namespace DynamicData.Tests.Domain;
 
-public struct PersonEmpKey
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1066:Implement IEquatable when overriding Object.Equals", Justification = "Acceptable in a test.")]
+public readonly struct PersonEmpKey
 {
     private readonly string _name;
 
@@ -12,20 +15,18 @@ public struct PersonEmpKey
         _company = company;
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Acceptable in a test.")]
     public PersonEmpKey(PersonEmployment personEmployment)
     {
         _name = personEmployment.Name;
         _company = personEmployment.Company;
     }
 
-    public bool Equals(PersonEmpKey other)
-    {
-        return string.Equals(_name, other._name) && string.Equals(_company, other._company);
-    }
+    public bool Equals(PersonEmpKey other) => string.Equals(_name, other._name) && string.Equals(_company, other._company);
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -41,15 +42,9 @@ public struct PersonEmpKey
         }
     }
 
-    public static bool operator ==(PersonEmpKey left, PersonEmpKey right)
-    {
-        return left.Equals(right);
-    }
+    public static bool operator ==(PersonEmpKey left, PersonEmpKey right) => left.Equals(right);
 
-    public static bool operator !=(PersonEmpKey left, PersonEmpKey right)
-    {
-        return !(left == right);
-    }
+    public static bool operator !=(PersonEmpKey left, PersonEmpKey right) => !(left == right);
 }
 
 public class PersonEmployment : IKey<PersonEmpKey>
@@ -69,7 +64,7 @@ public class PersonEmployment : IKey<PersonEmpKey>
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -95,13 +90,8 @@ public class PersonEmployment : IKey<PersonEmpKey>
         }
     }
 
-    public override string ToString()
-    {
-        return string.Format("Name: {0}, Company: {1}", Name, Company);
-    }
+    public override string ToString() => string.Format("Name: {0}, Company: {1}", Name, Company);
 
-    protected bool Equals(PersonEmployment other)
-    {
-        return string.Equals(Name, other.Name) && string.Equals(Company, other.Company);
-    }
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Acceptable in a test.")]
+    protected bool Equals(PersonEmployment other) => string.Equals(Name, other.Name) && string.Equals(Company, other.Company);
 }

@@ -18,10 +18,7 @@ internal class SubscribeMany<TObject, TKey>
 
     public SubscribeMany(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IDisposable> subscriptionFactory)
     {
-        if (subscriptionFactory is null)
-        {
-            throw new ArgumentNullException(nameof(subscriptionFactory));
-        }
+        subscriptionFactory.ThrowArgumentNullExceptionIfNull(nameof(subscriptionFactory));
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _subscriptionFactory = (t, _) => subscriptionFactory(t);

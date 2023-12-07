@@ -22,7 +22,7 @@ public class SortFixtureWithReorder : IDisposable
 {
     private readonly IComparer<Person> _comparer;
 
-    private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+    private readonly RandomPersonGenerator _generator = new();
 
     private readonly SortedChangeSetAggregator<Person, string> _results;
 
@@ -481,69 +481,35 @@ public class SortFixtureWithReorder : IDisposable
         list.Should().BeEquivalentTo(sortedResult);
     }
 
-    public class Data
+    public class Data(int id, string value)
     {
-        public Data(int id, string value)
-        {
-            Id = id;
-            Value = value;
-        }
+        public int Id { get; } = id;
 
-        public int Id { get; }
-
-        public string Value { get; }
+        public string Value { get; } = value;
     }
 
-    public class TestString : IEquatable<TestString>
+    public class TestString(string name) : IEquatable<TestString>
     {
-        private readonly string _name;
+        private readonly string _name = name;
 
-        public TestString(string name)
-        {
-            _name = name;
-        }
+        public static implicit operator TestString(string source) => new(source);
 
-        public static implicit operator TestString(string source)
-        {
-            return new TestString(source);
-        }
+        public static implicit operator string(TestString source) => source?._name!;
 
-        public static implicit operator string(TestString source)
-        {
-            return source._name;
-        }
+        public bool Equals(TestString? other) => StringComparer.OrdinalIgnoreCase.Equals(_name, other?._name);
 
-        public bool Equals(TestString? other)
-        {
-            return StringComparer.OrdinalIgnoreCase.Equals(_name, other?._name);
-        }
+        public override bool Equals(object? obj) => obj is TestString value && Equals(value);
 
-        public override bool Equals(object? obj)
-        {
-            return obj is TestString value && Equals(value);
-        }
-
-        public override int GetHashCode()
-        {
-            return StringComparer.OrdinalIgnoreCase.GetHashCode(_name);
-        }
+        public override int GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode(_name);
     }
 
-    public class ViewModel
+    public class ViewModel(string name)
     {
-        public ViewModel(string name)
-        {
-            Name = name;
-        }
-
-        public string Name { get; }
+        public string Name { get; } = name;
 
         public class Comparer : IComparer<ViewModel>
         {
-            public int Compare(ViewModel? x, ViewModel? y)
-            {
-                return StringComparer.OrdinalIgnoreCase.Compare(x?.Name, y?.Name);
-            }
+            public int Compare(ViewModel? x, ViewModel? y) => StringComparer.OrdinalIgnoreCase.Compare(x?.Name, y?.Name);
         }
     }
 }
@@ -552,7 +518,7 @@ public class SortFixture : IDisposable
 {
     private readonly IComparer<Person> _comparer;
 
-    private readonly RandomPersonGenerator _generator = new RandomPersonGenerator();
+    private readonly RandomPersonGenerator _generator = new();
 
     private readonly SortedChangeSetAggregator<Person, string> _results;
 
@@ -1041,69 +1007,35 @@ public class SortFixture : IDisposable
         list.Should().BeEquivalentTo(sortedResult);
     }
 
-    public class Data
+    public class Data(int id, string value)
     {
-        public Data(int id, string value)
-        {
-            Id = id;
-            Value = value;
-        }
+        public int Id { get; } = id;
 
-        public int Id { get; }
-
-        public string Value { get; }
+        public string Value { get; } = value;
     }
 
-    public class TestString : IEquatable<TestString>
+    public class TestString(string name) : IEquatable<TestString>
     {
-        private readonly string _name;
+        private readonly string _name = name;
 
-        public TestString(string name)
-        {
-            _name = name;
-        }
+        public static implicit operator TestString(string source) => new(source);
 
-        public static implicit operator TestString(string source)
-        {
-            return new TestString(source);
-        }
+        public static implicit operator string(TestString source) => source?._name!;
 
-        public static implicit operator string(TestString source)
-        {
-            return source._name;
-        }
+        public bool Equals(TestString? other) => StringComparer.OrdinalIgnoreCase.Equals(_name, other?._name);
 
-        public bool Equals(TestString? other)
-        {
-            return StringComparer.OrdinalIgnoreCase.Equals(_name, other?._name);
-        }
+        public override bool Equals(object? obj) => obj is TestString testString && Equals(testString);
 
-        public override bool Equals(object? obj)
-        {
-            return obj is TestString testString && Equals(testString);
-        }
-
-        public override int GetHashCode()
-        {
-            return StringComparer.OrdinalIgnoreCase.GetHashCode(_name);
-        }
+        public override int GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode(_name);
     }
 
-    public class ViewModel
+    public class ViewModel(string name)
     {
-        public ViewModel(string name)
-        {
-            this.Name = name;
-        }
-
-        public string Name { get; set; }
+        public string Name { get; set; } = name;
 
         public class Comparer : IComparer<ViewModel>
         {
-            public int Compare(ViewModel? x, ViewModel? y)
-            {
-                return StringComparer.OrdinalIgnoreCase.Compare(x?.Name, y?.Name);
-            }
+            public int Compare(ViewModel? x, ViewModel? y) => StringComparer.OrdinalIgnoreCase.Compare(x?.Name, y?.Name);
         }
     }
 }

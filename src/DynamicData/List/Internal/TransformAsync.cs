@@ -16,13 +16,12 @@ internal class TransformAsync<TSource, TDestination>
     private readonly IObservable<IChangeSet<TSource>> _source;
     private readonly bool _transformOnRefresh;
 
-    public TransformAsync(IObservable<IChangeSet<TSource>> source,
-        Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory, bool transformOnRefresh)
+    public TransformAsync(
+        IObservable<IChangeSet<TSource>> source,
+        Func<TSource, Optional<TDestination>, int, Task<TDestination>> factory,
+        bool transformOnRefresh)
     {
-        if (factory is null)
-        {
-            throw new ArgumentNullException(nameof(factory));
-        }
+        factory.ThrowArgumentNullExceptionIfNull(nameof(factory));
 
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _transformOnRefresh = transformOnRefresh;
@@ -65,10 +64,7 @@ internal class TransformAsync<TSource, TDestination>
         ChangeAwareList<Transformer<TSource, TDestination>.TransformedItemContainer> transformed,
         IChangeSet<TSource> changes)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
         foreach (var item in changes)
         {
@@ -80,14 +76,18 @@ internal class TransformAsync<TSource, TDestination>
                         if (change.CurrentIndex < 0 || change.CurrentIndex >= transformed.Count)
                         {
                             var container =
-                                await _containerFactory(item.Item.Current, Optional<TDestination>.None,
+                                await _containerFactory(
+                                    item.Item.Current,
+                                    Optional<TDestination>.None,
                                     transformed.Count).ConfigureAwait(false);
                             transformed.Add(container);
                         }
                         else
                         {
                             var container =
-                                await _containerFactory(item.Item.Current, Optional<TDestination>.None,
+                                await _containerFactory(
+                                    item.Item.Current,
+                                    Optional<TDestination>.None,
                                     change.CurrentIndex).ConfigureAwait(false);
                             transformed.Insert(change.CurrentIndex, container);
                         }

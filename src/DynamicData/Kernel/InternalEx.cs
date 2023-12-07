@@ -33,7 +33,7 @@ public static class InternalEx
             source.Catch<TSource, TException>(
                 error =>
                 {
-                    TimeSpan? delay = backOffStrategy(error, failureCount);
+                    var delay = backOffStrategy(error, failureCount);
                     if (!delay.HasValue)
                     {
                         return Observable.Throw<TSource>(error);
@@ -78,10 +78,7 @@ public static class InternalEx
     /// <returns>A disposable that will stop the schedule.</returns>
     public static IDisposable ScheduleRecurringAction(this IScheduler scheduler, Func<TimeSpan> interval, Action action)
     {
-        if (interval is null)
-        {
-            throw new ArgumentNullException(nameof(interval));
-        }
+        interval.ThrowArgumentNullExceptionIfNull(nameof(interval));
 
         return scheduler.Schedule(
             interval(),
@@ -95,12 +92,7 @@ public static class InternalEx
 
     internal static void OnNext(this ISubject<Unit> source) => source.OnNext(Unit.Default);
 
-    internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2)
-    {
-        TSwap temp = t1;
-        t1 = t2;
-        t2 = temp;
-    }
+    internal static void Swap<TSwap>(ref TSwap t1, ref TSwap t2) => (t2, t1) = (t1, t2);
 
     internal static IObservable<Unit> ToUnit<T>(this IObservable<T> source) => source.Select(_ => Unit.Default);
 

@@ -131,6 +131,7 @@ internal sealed class Combiner<T>(ICollection<IObservable<IChangeSet<T>>> source
         }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2208:Instantiate argument exceptions correctly", Justification = "By Design.")]
     private IChangeSet<T> UpdateResultList(IChangeSet<T> changes, List<ReferenceCountTracker<T>> sourceLists, ChangeAwareListWithRefCounts<T> resultList)
     {
         // child caches have been updated before we reached this point.

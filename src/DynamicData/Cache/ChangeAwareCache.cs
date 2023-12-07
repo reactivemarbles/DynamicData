@@ -109,10 +109,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <inheritdoc />
     public void Clone(IChangeSet<TObject, TKey> changes)
     {
-        if (changes is null)
-        {
-            throw new ArgumentNullException(nameof(changes));
-        }
+        changes.ThrowArgumentNullExceptionIfNull(nameof(changes));
 
         foreach (var change in changes.ToConcreteType())
         {
@@ -147,10 +144,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <param name="keys">The keys to refresh.</param>
     public void Refresh(IEnumerable<TKey> keys)
     {
-        if (keys is null)
-        {
-            throw new ArgumentNullException(nameof(keys));
-        }
+        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
 
         if (keys is IList<TKey> list)
         {
@@ -191,10 +185,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     /// <param name="keys">The keys.</param>
     public void Remove(IEnumerable<TKey> keys)
     {
-        if (keys is null)
-        {
-            throw new ArgumentNullException(nameof(keys));
-        }
+        keys.ThrowArgumentNullExceptionIfNull(nameof(keys));
 
         if (keys is IList<TKey> list)
         {

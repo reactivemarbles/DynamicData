@@ -105,10 +105,7 @@ public class FilterOnObservableFixture
 
     private class FilterPropertyStub : IDisposable
     {
-        public FilterPropertyStub()
-        {
-            Results = new ChangeSetAggregator<PersonObs>(Source.Connect().FilterOnObservable(p => p.Age.Select(v => v > 18)));
-        }
+        public FilterPropertyStub() => Results = new ChangeSetAggregator<PersonObs>(Source.Connect().FilterOnObservable(p => p.Age.Select(v => v > 18)));
 
         public ChangeSetAggregator<PersonObs> Results { get; }
 

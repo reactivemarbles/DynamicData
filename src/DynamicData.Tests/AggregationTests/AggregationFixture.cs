@@ -89,8 +89,5 @@ public class AggregationFixture : IDisposable
         accumulator.Dispose();
     }
 
-    public void Dispose()
-    {
-        _source.Dispose();
-    }
+    public void Dispose() => _source.Dispose();
 }
