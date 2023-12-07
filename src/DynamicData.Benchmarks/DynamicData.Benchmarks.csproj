@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <NoWarn>;1591;1701;1702;1705;CA1822;CA1001</NoWarn>
   </PropertyGroup>
@@ -19,6 +20,6 @@
     <ProjectReference Include="..\DynamicData\DynamicData.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="BenchmarkDotNet.Artifacts\" />
+    <None Include="BenchmarkDotNet.Artifacts\**\*" />
   </ItemGroup>
 </Project>

@@ -15,8 +15,8 @@ namespace DynamicData.Benchmarks.List
     [MarkdownExporterAttribute.GitHub]
     public class GroupAdd
     {
-        private IDisposable _groupSubscription;
-        private SourceList<int> _sourceList;
+        private IDisposable? _groupSubscription;
+        private SourceList<int>? _sourceList;
         private int[] _items = Enumerable.Range(1, 100).ToArray();
 
         [Params(1, 100, 1_000, 10_000, 100_000)]
@@ -32,15 +32,15 @@ namespace DynamicData.Benchmarks.List
         [IterationSetup]
         public void SetupIteration()
         {
-            _sourceList.Clear();
+            _sourceList?.Clear();
             _items = Enumerable.Range(1, N).ToArray();
         }
 
         [GlobalCleanup]
         public void Teardown()
         {
-            _groupSubscription.Dispose();
-            _sourceList.Dispose();
+            _groupSubscription?.Dispose();
+            _sourceList?.Dispose();
             _sourceList = null;
         }
 
@@ -52,6 +52,6 @@ namespace DynamicData.Benchmarks.List
         //}
 
         [Benchmark]
-        public void AddRange() => _sourceList.AddRange(_items);
+        public void AddRange() => _sourceList?.AddRange(_items);
     }
 }
