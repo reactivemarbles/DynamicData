@@ -32,6 +32,25 @@ public class InnerJoinFixtureRaceCondition
         ids.InnerJoin(itemsCache.Connect(), x => x.Id, (_, thing) => thing).Subscribe((z) => { }, ex => { }, () => { });
     }
 
+    // See https://github.com/reactivemarbles/DynamicData/issues/787 
+    [Fact(Skip = "Heavyweight test so probably best run manually if this issue comes up again")]
+    public void LetsSeeWhetherWeCanRandomlyHitADifferentRaceCondition()
+    {
+        var leftCache = new SourceCache<Thing, long>(x => x.Id);
+        var rightCache = new SourceCache<Thing, long>(x => x.Id);
+        var joined = leftCache.Connect().InnerJoin(rightCache.Connect(), x => x.Id,
+            (keys, leftThing, rightThing) =>
+                new Thing { Id = keys.leftKey, Name = $"{leftThing.Name} x {rightThing.Name}" });
+
+        IDisposable StartUpdating(ISourceCache<Thing, long> sourceCache) =>
+            Observable.Range(1, 1_000_000, Scheduler.Default)
+                .Subscribe(x => sourceCache.AddOrUpdate(new Thing { Id = x, Name = $"{x}" }));
+
+        using var leftUpdater = StartUpdating(leftCache);
+        using var rightUpdater = StartUpdating(rightCache);
+        using var subscription = joined.Subscribe();
+    }
+
     public class Thing
     {
         public long Id { get; set; }
