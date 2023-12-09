@@ -3070,6 +3070,44 @@ public static class ObservableCacheEx
     }
 
     /// <summary>
+    /// Merges the List ChangeSets derived from items in a Cache ChangeSet into a single observable list changeset.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <returns>The result from merging the child changesets together.</returns>
+    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> observableSelector)
+        where TObject : notnull
+        where TKey : notnull
+        where TDestination : notnull
+    {
+        source.ThrowArgumentNullExceptionIfNull(nameof(source));
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+
+        return new MergeManyListChangeSets<TObject, TKey, TDestination>(source, observableSelector).Run();
+    }
+
+    /// <summary>
+    /// Merges the List ChangeSets derived from items in a Cache ChangeSet into a single observable list changeset.
+    /// </summary>
+    /// <typeparam name="TObject">The type of the object.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TDestination">The type of the destination.</typeparam>
+    /// <param name="source">The Source Observable ChangeSet.</param>
+    /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <returns>The result from merging the child changesets together.</returns>
+    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector)
+        where TObject : notnull
+        where TKey : notnull
+        where TDestination : notnull
+    {
+        observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
+        return source.MergeManyChangeSets((obj, _) => observableSelector(obj));
+    }
+
+    /// <summary>
     /// Dynamically merges the observable which is selected from each item in the stream, and un-merges the item
     /// when it is no longer part of the stream.
     /// </summary>

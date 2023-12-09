@@ -11,7 +11,7 @@ using Xunit;
 
 namespace DynamicData.Tests.Cache;
 
-public sealed class MergeManyCacheChangeSetsFixture : IDisposable
+public sealed class MergeManyChangeSetsCacheFixture : IDisposable
 {
 #if DEBUG
     const int MarketCount = 5;
@@ -37,7 +37,7 @@ public sealed class MergeManyCacheChangeSetsFixture : IDisposable
 
     private readonly ChangeSetAggregator<IMarket, Guid> _marketCacheResults;
 
-    public MergeManyCacheChangeSetsFixture() => _marketCacheResults = _marketCache.Connect().AsAggregator();
+    public MergeManyChangeSetsCacheFixture() => _marketCacheResults = _marketCache.Connect().AsAggregator();
 
     [Fact]
     public void NullChecks()
