@@ -77,26 +77,31 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     [InlineData(10_000, 10)]
     public void MultiThreadedStressTest(int ownerCount, int animalCount)
     {
-        IObservable<AnimalOwner> GenerateOwners() => Observable.Interval(TimeSpan.FromMilliseconds(1), DefaultScheduler.Instance).Select(_ => Fakers.AnimalOwner.Generate()).Take(ownerCount);
-        IObservable<Animal> GenerateAnimals() => Observable.Interval(TimeSpan.FromMilliseconds(1), DefaultScheduler.Instance).Select(_ => Fakers.Animal.Generate()).Take(animalCount);
-        IDisposable AddMoreAnimals(AnimalOwner owner) => GenerateAnimals().Do(animal => owner.Animals.Add(animal)).Subscribe();
-        bool done = false;
-
-        // Arrange
-        var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-        var merged = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect());
-        var populateOwners = GenerateOwners().Do(owner => _animalOwners.AddOrUpdate(owner), () => done = true);
-        var populateAnimals = _animalOwners.Connect().SubscribeMany(AddMoreAnimals);
-
-        // Act
-        using var subOwners = populateOwners.Subscribe();
-        using var subAnimals = populateAnimals.Subscribe();
-        using var subMerged = merged.Subscribe();
-
-        while (!done)
+        Action test = () =>
         {
-            Thread.Sleep(100);
-        }
+            IObservable<AnimalOwner> GenerateOwners() => Observable.Interval(TimeSpan.FromMilliseconds(1), DefaultScheduler.Instance).Select(_ => Fakers.AnimalOwner.Generate()).Take(ownerCount);
+            IObservable<Animal> GenerateAnimals() => Observable.Interval(TimeSpan.FromMilliseconds(1), DefaultScheduler.Instance).Select(_ => Fakers.Animal.Generate()).Take(animalCount);
+            IDisposable AddMoreAnimals(AnimalOwner owner) => GenerateAnimals().Do(animal => owner.Animals.Add(animal)).Subscribe();
+            bool done = false;
+
+            // Arrange
+            var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
+            var merged = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect());
+            var populateOwners = GenerateOwners().Do(owner => _animalOwners.AddOrUpdate(owner), () => done = true);
+            var populateAnimals = _animalOwners.Connect().SubscribeMany(AddMoreAnimals);
+
+            // Act
+            using var subOwners = populateOwners.Subscribe();
+            using var subAnimals = populateAnimals.Subscribe();
+            using var subMerged = merged.Subscribe();
+
+            while (!done)
+            {
+                Thread.Sleep(100);
+            }
+        };
+
+        test.Should().NotThrow();
     }
 
     [Fact]
