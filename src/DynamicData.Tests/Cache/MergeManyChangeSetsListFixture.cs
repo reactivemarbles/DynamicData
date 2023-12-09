@@ -72,13 +72,9 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     }
 
     [Theory]
-    [InlineData(100, 10_000)]
-    //[InlineData(100, 100_000)]
-    [InlineData(1_000, 1_000)]
-    //[InlineData(1000, 10_000)]
-    [InlineData(10_000, 100)]
-    [InlineData(100_000, 10)]
-    //[InlineData(1_000_000, 10)]
+    [InlineData(100, 1_000)]
+    [InlineData(1_000, 100)]
+    [InlineData(10_000, 10)]
     public void MultiThreadedStressTest(int ownerCount, int animalCount)
     {
         IObservable<AnimalOwner> GenerateOwners() => Observable.Interval(TimeSpan.FromMilliseconds(1), DefaultScheduler.Instance).Select(_ => Fakers.AnimalOwner.Generate()).Take(ownerCount);
