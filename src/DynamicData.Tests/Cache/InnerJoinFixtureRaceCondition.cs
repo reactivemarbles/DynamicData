@@ -33,22 +33,43 @@ public class InnerJoinFixtureRaceCondition
     }
 
     // See https://github.com/reactivemarbles/DynamicData/issues/787 
-    [Fact(Skip = "Heavyweight test so probably best run manually if this issue comes up again")]
+    [Fact]
     public void LetsSeeWhetherWeCanRandomlyHitADifferentRaceCondition()
     {
-        var leftCache = new SourceCache<Thing, long>(x => x.Id);
-        var rightCache = new SourceCache<Thing, long>(x => x.Id);
-        var joined = leftCache.Connect().InnerJoin(rightCache.Connect(), x => x.Id,
-            (keys, leftThing, rightThing) =>
-                new Thing { Id = keys.leftKey, Name = $"{leftThing.Name} x {rightThing.Name}" });
+        using var leftSource = new SourceCache<Thing, long>(thing => thing.Id);
+        using var rightSource = new SourceCache<Thing, long>(thing => thing.Id);
 
-        IDisposable StartUpdating(ISourceCache<Thing, long> sourceCache) =>
-            Observable.Range(1, 1_000_000, Scheduler.Default)
-                .Subscribe(x => sourceCache.AddOrUpdate(new Thing { Id = x, Name = $"{x}" }));
+        var resultStream = ObservableCacheEx.InnerJoin(
+            left: leftSource.Connect(),
+            right: rightSource.Connect(),
+            rightKeySelector: rightThing => rightThing.Id,
+            (keys, leftThing, rightThing) => new Thing()
+            {
+                Id = keys.leftKey,
+                Name = $"{leftThing.Name} x {rightThing.Name}"
+            });
 
-        using var leftUpdater = StartUpdating(leftCache);
-        using var rightUpdater = StartUpdating(rightCache);
-        using var subscription = joined.Subscribe();
+        using var leftThingGenerator = BeginGeneratingThings(leftSource, "Left");
+        using var rightThingGenerator = BeginGeneratingThings(rightSource, "Left");
+
+        for (var i = 0; i < 100; ++i)
+        {
+            using var subscription = resultStream.Subscribe();
+        }
+
+        IDisposable BeginGeneratingThings(SourceCache<Thing, long> source, string namePrefix)
+            // Generate items infinitely. The runtime of the test is limited by the .Subscribe() loop.
+            => Observable.Range(1, int.MaxValue, ThreadPoolScheduler.Instance)
+                .Subscribe(id =>
+                {
+                    source.AddOrUpdate(new Thing()
+                    {
+                        Id = id,
+                        Name = $"{namePrefix}Thing #{id}"
+                    });
+                    // Start removing items after the first 100, to keep the overhead of calling .Subscribe() down.
+                    source.RemoveKey(id - 100);
+                });
     }
 
     public class Thing
