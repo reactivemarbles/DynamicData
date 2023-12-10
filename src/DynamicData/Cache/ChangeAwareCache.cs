@@ -90,7 +90,7 @@ public sealed class ChangeAwareCache<TObject, TKey> : ICache<TObject, TKey>
     {
         if (_changes.Count == 0)
         {
-            return [];
+            return ChangeSet<TObject, TKey>.Empty;
         }
 
         var copy = _changes;
