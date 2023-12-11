@@ -9,8 +9,8 @@ namespace DynamicData.List.Internal;
 internal class ChangeSetCache<TObject>
     where TObject : notnull
 {
-    public ChangeSetCache(IObservable<IChangeSet<TObject>> source) =>
-        Source = source.Do(List.Clone);
+    public ChangeSetCache(IObservable<IChangeSet<TObject>> source, IEqualityComparer<TObject>? equalityComparer) =>
+        Source = source.Do(changeSet => List.Clone(changeSet, equalityComparer));
 
     public List<TObject> List { get; } = [];
 

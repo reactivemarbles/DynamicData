@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace DynamicData.Tests.Domain;
 
@@ -12,4 +11,6 @@ internal class AnimalOwner(string name, Guid? id = null) : IDisposable
     public ISourceList<Animal> Animals { get; } = new SourceList<Animal>();
 
     public void Dispose() => Animals.Dispose();
+
+    public override string ToString() => $"{Name} [{Animals.Count} Animals] ({Id:B})";
 }

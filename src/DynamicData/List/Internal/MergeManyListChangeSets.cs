@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> selector)
+internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer = null)
     where TObject : notnull
     where TDestination : notnull
 {
@@ -19,7 +19,7 @@ internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChang
 
                 // Transform to an observable list of cached lists
                 var sourceListofLists = source
-                                            .Transform(obj => new ChangeSetCache<TDestination>(selector(obj)))
+                                            .Transform(obj => new ChangeSetCache<TDestination>(selector(obj), equalityComparer))
                                             .Synchronize(locker)
                                             .AsObservableList();
 

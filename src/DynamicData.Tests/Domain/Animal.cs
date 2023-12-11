@@ -1,4 +1,7 @@
-﻿using DynamicData.Binding;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;
 
@@ -34,4 +37,18 @@ public class Animal(string name, string type, AnimalFamily family, bool include 
     public string FormalName => $"{Name} the {Type}";
 
     public override string ToString() => $"{FormalName} ({Family})";
+}
+
+public class AnimalEqualityComparer : IEqualityComparer<Animal>
+{
+    public static AnimalEqualityComparer Instance { get; } = new();
+
+    public bool Equals(Animal? x, Animal? y) => (x, y) switch
+    {
+        (null, null) => true,
+        (Animal a, Animal b) => (a.Type == b.Type) && (a.Family == b.Family) && (a.Name == b.Name),
+        _ => false,
+    };
+
+    public int GetHashCode([DisallowNull] Animal obj) => HashCode.Combine(obj?.Name ?? string.Empty, obj.Type, obj.Family);
 }

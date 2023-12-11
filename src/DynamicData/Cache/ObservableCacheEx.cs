@@ -3077,8 +3077,9 @@ public static class ObservableCacheEx
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
     /// <param name="source">The Source Observable ChangeSet.</param>
     /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
     /// <returns>The result from merging the child changesets together.</returns>
-    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> observableSelector)
+    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
@@ -3086,7 +3087,7 @@ public static class ObservableCacheEx
         source.ThrowArgumentNullExceptionIfNull(nameof(source));
         observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
 
-        return new MergeManyListChangeSets<TObject, TKey, TDestination>(source, observableSelector).Run();
+        return new MergeManyListChangeSets<TObject, TKey, TDestination>(source, observableSelector, equalityComparer).Run();
     }
 
     /// <summary>
@@ -3097,14 +3098,15 @@ public static class ObservableCacheEx
     /// <typeparam name="TDestination">The type of the destination.</typeparam>
     /// <param name="source">The Source Observable ChangeSet.</param>
     /// <param name="observableSelector">Factory Function used to create child changesets.</param>
+    /// <param name="equalityComparer">Optional <see cref="IEqualityComparer{T}"/> instance to determine if two elements are the same.</param>
     /// <returns>The result from merging the child changesets together.</returns>
-    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector)
+    public static IObservable<IChangeSet<TDestination>> MergeManyChangeSets<TObject, TKey, TDestination>(this IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> observableSelector, IEqualityComparer<TDestination>? equalityComparer = null)
         where TObject : notnull
         where TKey : notnull
         where TDestination : notnull
     {
         observableSelector.ThrowArgumentNullExceptionIfNull(nameof(observableSelector));
-        return source.MergeManyChangeSets((obj, _) => observableSelector(obj));
+        return source.MergeManyChangeSets((obj, _) => observableSelector(obj), equalityComparer);
     }
 
     /// <summary>

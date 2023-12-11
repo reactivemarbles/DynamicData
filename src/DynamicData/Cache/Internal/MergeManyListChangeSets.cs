@@ -11,7 +11,7 @@ namespace DynamicData.Cache.Internal;
 /// <summary>
 /// Operator that is similiar to MergeMany but intelligently handles List ChangeSets.
 /// </summary>
-internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> selector)
+internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObservable<IChangeSet<TObject, TKey>> source, Func<TObject, TKey, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer = null)
     where TObject : notnull
     where TKey : notnull
     where TDestination : notnull
@@ -23,7 +23,7 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
 
                 // Transform to an observable cache of Cached Lists.
                 var sourceCacheOfLists = source
-                                            .Transform((obj, key) => new ChangeSetCache<TDestination>(selector(obj, key)))
+                                            .Transform((obj, key) => new ChangeSetCache<TDestination>(selector(obj, key), equalityComparer))
                                             .AsObservableCache();
 
                 var shared = sourceCacheOfLists.Connect().Publish();
@@ -42,7 +42,7 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
                         .Synchronize(locker)
-                        .OnItemRemoved(mc => changeTracker.RemoveItems(mc.List, observer))
+                        .OnItemRemoved(mc => changeTracker.RemoveItems(mc.List, observer), invokeOnUnsubscribe: false)
                         .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.List, observer))
                         .Subscribe();
 
