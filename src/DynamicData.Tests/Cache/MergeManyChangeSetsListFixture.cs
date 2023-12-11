@@ -41,38 +41,77 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalResults = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect()).AsAggregator();
     }
 
-    [Fact]
-    public void NullChecks()
+#if false
+    [Theory]
+    [InlineData(10, 13)]
+    //[InlineData(100, 1_000)]
+    //[InlineData(1_000, 100)]
+    //[InlineData(10_000, 10)]
+    public void MultiThreadedStressTest(int ownerCount, int animalCount)
     {
-        // Arrange
-        var emptyChangeSetObs = Observable.Empty<IChangeSet<int, int>>();
-        var nullChangeSetObs = (IObservable<IChangeSet<int, int>>)null!;
-        var emptyKeySelector = new Func<int, int, IObservable<IChangeSet<string>>>((_, _) => Observable.Empty<IChangeSet<string>>());
-        var nullKeySelector = (Func<int, int, IObservable<IChangeSet<string>>>)null!;
-        var emptySelector = new Func<int, IObservable<IChangeSet<string>>>(i => Observable.Empty<IChangeSet<string>>());
-        var nullSelector = (Func<int, IObservable<IChangeSet<string>>>)null!;
+        IScheduler testingScheduler = TaskPoolScheduler.Default;
 
-        // Act
-        var checkParam1 = () => nullChangeSetObs.MergeManyChangeSets(emptyKeySelector);
-        var checkParam2 = () => emptyChangeSetObs.MergeManyChangeSets(nullKeySelector);
-        var checkParam3 = () => nullChangeSetObs.MergeManyChangeSets(emptySelector);
-        var checkParam4 = () => emptyChangeSetObs.MergeManyChangeSets(nullSelector);
+        Action test = () =>
+        {
+            var counter = 0;
+            IObservable<AnimalOwner> GenerateOwners() =>
+                Observable.Defer(() =>
+                    Observable.Interval(TimeSpan.FromMilliseconds(1), testingScheduler)
+                                    .Select(_ => Fakers.AnimalOwner.Generate())
+                                    .Take(ownerCount));
 
-        // Assert
-        emptyChangeSetObs.Should().NotBeNull();
-        emptyKeySelector.Should().NotBeNull();
-        emptySelector.Should().NotBeNull();
-        nullChangeSetObs.Should().BeNull();
-        nullKeySelector.Should().BeNull();
-        nullSelector.Should().BeNull();
+            IObservable<Animal> GenerateAnimals() => Observable.Interval(TimeSpan.FromMilliseconds(1), testingScheduler).Select(_ => Fakers.Animal.Generate()).Take(animalCount);
+            IObservable<long> RandomTimer() => Observable.Timer(TimeSpan.FromSeconds(_randomizer.Double(0, 0.25)), testingScheduler);
+            IObservable<Animal> AddMoreAnimals(AnimalOwner owner) =>
+                Observable.Defer(() =>
+                {
+                    Interlocked.Increment(ref counter);
 
-        checkParam1.Should().Throw<ArgumentNullException>();
-        checkParam2.Should().Throw<ArgumentNullException>();
-        checkParam3.Should().Throw<ArgumentNullException>();
-        checkParam4.Should().Throw<ArgumentNullException>();
+                    return GenerateAnimals().Do(animal => owner.Animals.Add(animal))
+                        .Delay(_ => RandomTimer())
+                        .Do(animal => animal.IncludeInResults = _randomizer.Bool())
+                        .Finally(() => Interlocked.Decrement(ref counter));
+                });
+
+            var ownerDone = false;
+
+            // Arrange
+            var owners = _animalOwners.Connect().AutoRefresh().Filter(owner => owner.IncludeInResults);
+            var merged = owners.MergeManyChangeSets(owner => owner.Animals.Connect().AutoRefresh().Filter(animal => animal.IncludeInResults));
+            var populateOwners = GenerateOwners()
+                                                .Do(owner => _animalOwners.AddOrUpdate(owner))
+                                                .Delay(_ => RandomTimer())
+                                                .Do(owner => owner.IncludeInResults = _randomizer.Bool(), () => ownerDone = true);
+            var populateAnimals = _animalOwners.Connect().MergeMany(AddMoreAnimals);
+
+            // Act
+            using var subOwners = populateOwners.Subscribe();
+            using var subAnimals = populateAnimals.Subscribe();
+            using var ownerResults = owners.DebugSpy("Owners").AsAggregator();
+            using var mergedResults = merged.DebugSpy("Merged").AsAggregator();
+
+            while (!ownerDone && (Volatile.Read(ref counter) != 0))
+            {
+                Thread.Sleep(100);
+            }
+
+
+            var expectedOwners = _animalOwners.Items.Where(owner => owner.IncludeInResults).ToList();
+            var expectedAnimals = expectedOwners.SelectMany(owner => owner.Animals.Items).Where(animal => animal.IncludeInResults).ToList();
+
+            // These should be subsets of each other, so check one subset and the size
+            expectedOwners.Should().BeSubsetOf(ownerResults.Data.Items);
+            ownerResults.Data.Items.Should().BeSubsetOf(expectedOwners);
+
+            // These should be subsets of each other, so check one subset and the size
+            expectedAnimals.Should().BeSubsetOf(mergedResults.Data.Items);
+            mergedResults.Data.Items.Should().BeSubsetOf(expectedAnimals);
+        };
+
+        test.Should().NotThrow();
+        CheckResultContents();
     }
 
-#if false
     class StressTest(int count, IObserver<IChangeSet<Animal>> obs)
     {
         private int _added;
@@ -127,39 +166,6 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     }
 
     [Theory]
-    [InlineData(100, 1_000)]
-    [InlineData(1_000, 100)]
-    [InlineData(10_000, 10)]
-    public void MultiThreadedStressTest(int ownerCount, int animalCount)
-    {
-        Action test = () =>
-        {
-            IObservable<AnimalOwner> GenerateOwners() => Observable.Interval(TimeSpan.FromMilliseconds(1), DefaultScheduler.Instance).Select(_ => Fakers.AnimalOwner.Generate()).Take(ownerCount);
-            IObservable<Animal> GenerateAnimals() => Observable.Interval(TimeSpan.FromMilliseconds(1), DefaultScheduler.Instance).Select(_ => Fakers.Animal.Generate()).Take(animalCount);
-            IDisposable AddMoreAnimals(AnimalOwner owner) => GenerateAnimals().Do(animal => owner.Animals.Add(animal)).Subscribe();
-            bool done = false;
-
-            // Arrange
-            var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-            var merged = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect());
-            var populateOwners = GenerateOwners().Do(owner => _animalOwners.AddOrUpdate(owner), () => done = true);
-            var populateAnimals = _animalOwners.Connect().SubscribeMany(AddMoreAnimals);
-
-            // Act
-            using var subOwners = populateOwners.Subscribe();
-            using var subAnimals = populateAnimals.Subscribe();
-            using var subMerged = merged.Subscribe();
-
-            while (!done)
-            {
-                Thread.Sleep(100);
-            }
-        };
-
-        test.Should().NotThrow();
-    }
-
-    [Theory]
     [InlineData(0, 1)]
     [InlineData(0, 10)]
     [InlineData(5, 7)]
@@ -203,6 +209,37 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         test.Should().NotThrow();
     }
 #endif
+
+    [Fact]
+    public void NullChecks()
+    {
+        // Arrange
+        var emptyChangeSetObs = Observable.Empty<IChangeSet<int, int>>();
+        var nullChangeSetObs = (IObservable<IChangeSet<int, int>>)null!;
+        var emptyKeySelector = new Func<int, int, IObservable<IChangeSet<string>>>((_, _) => Observable.Empty<IChangeSet<string>>());
+        var nullKeySelector = (Func<int, int, IObservable<IChangeSet<string>>>)null!;
+        var emptySelector = new Func<int, IObservable<IChangeSet<string>>>(i => Observable.Empty<IChangeSet<string>>());
+        var nullSelector = (Func<int, IObservable<IChangeSet<string>>>)null!;
+
+        // Act
+        var checkParam1 = () => nullChangeSetObs.MergeManyChangeSets(emptyKeySelector);
+        var checkParam2 = () => emptyChangeSetObs.MergeManyChangeSets(nullKeySelector);
+        var checkParam3 = () => nullChangeSetObs.MergeManyChangeSets(emptySelector);
+        var checkParam4 = () => emptyChangeSetObs.MergeManyChangeSets(nullSelector);
+
+        // Assert
+        emptyChangeSetObs.Should().NotBeNull();
+        emptyKeySelector.Should().NotBeNull();
+        emptySelector.Should().NotBeNull();
+        nullChangeSetObs.Should().BeNull();
+        nullKeySelector.Should().BeNull();
+        nullSelector.Should().BeNull();
+
+        checkParam1.Should().Throw<ArgumentNullException>();
+        checkParam2.Should().Throw<ArgumentNullException>();
+        checkParam3.Should().Throw<ArgumentNullException>();
+        checkParam4.Should().Throw<ArgumentNullException>();
+    }
 
     [Fact]
     public void ResultContainsAllInitialChildren()

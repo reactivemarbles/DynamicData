@@ -23,7 +23,7 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
 
                 // Transform to an observable cache of Cached Lists.
                 var sourceCacheOfLists = source
-                                            .Transform((obj, key) => new ChangeSetCache<TDestination>(selector(obj, key), equalityComparer))
+                                            .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key), equalityComparer, locker))
                                             .AsObservableCache();
 
                 var shared = sourceCacheOfLists.Connect().Publish();
@@ -32,8 +32,7 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                 var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
                 // Merge the items back together
-                var allChanges = shared.MergeMany(mc => mc.Source.RemoveIndex())
-                                                 .Synchronize(locker)
+                var allChanges = shared.MergeMany(clonedList => clonedList.Source.RemoveIndex())
                                                  .Subscribe(
                                                         changes => changeTracker.ProcessChangeSet(changes, observer),
                                                         observer.OnError,
@@ -42,7 +41,7 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
                         .Synchronize(locker)
-                        .OnItemRemoved(mc => changeTracker.RemoveItems(mc.List, observer), invokeOnUnsubscribe: false)
+                        .OnItemRemoved(clonedList => changeTracker.RemoveItems(clonedList.List, observer), invokeOnUnsubscribe: false)
                         .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.List, observer))
                         .Subscribe();
 

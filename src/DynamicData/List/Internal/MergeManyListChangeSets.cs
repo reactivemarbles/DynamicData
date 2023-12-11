@@ -19,8 +19,7 @@ internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChang
 
                 // Transform to an observable list of cached lists
                 var sourceListofLists = source
-                                            .Transform(obj => new ChangeSetCache<TDestination>(selector(obj), equalityComparer))
-                                            .Synchronize(locker)
+                                            .Transform(obj => new ClonedListChangeSet<TDestination>(selector(obj), equalityComparer, locker))
                                             .AsObservableList();
 
                 var shared = sourceListofLists.Connect().Publish();
@@ -29,8 +28,7 @@ internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChang
                 var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
                 // Merge the items back together
-                var allChanges = shared.MergeMany(mc => mc.Source.RemoveIndex())
-                                                 .Synchronize(locker)
+                var allChanges = shared.MergeMany(clonedList => clonedList.Source.RemoveIndex())
                                                  .Subscribe(
                                                         changes => changeTracker.ProcessChangeSet(changes, observer),
                                                         observer.OnError,
@@ -38,7 +36,8 @@ internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChang
 
                 // When a source item is removed, all of its sub-items need to be removed
                 var removedItems = shared
-                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.List, observer))
+                    .Synchronize(locker)
+                    .OnItemRemoved(mc => changeTracker.RemoveItems(mc.List, observer), invokeOnUnsubscribe: false)
                     .Subscribe();
 
                 return new CompositeDisposable(sourceListofLists, allChanges, removedItems, shared.Connect());

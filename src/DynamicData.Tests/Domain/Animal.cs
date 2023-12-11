@@ -22,19 +22,19 @@ public class Animal(string name, string type, AnimalFamily family, bool include 
 {
     private bool _includeInResults = include;
 
+    public string Name { get; } = name;
+
     public AnimalFamily Family { get; } = family;
+
+    public string Type { get; } = type;
+
+    public string FormalName => $"{Name} the {Type}";
 
     public bool IncludeInResults
     {
         get => _includeInResults;
         set => SetAndRaise(ref _includeInResults, value);
     }
-
-    public string Name { get; } = name;
-
-    public string Type { get; } = type;
-
-    public string FormalName => $"{Name} the {Type}";
 
     public override string ToString() => $"{FormalName} ({Family})";
 }
