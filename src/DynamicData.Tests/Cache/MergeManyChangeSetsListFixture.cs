@@ -57,29 +57,29 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         var counter = 0;
         var addingOwners = true;
 
+        var animalTester = AddRemoveStressTester.Create<Animal, AnimalOwner>(
+            o => Fakers.Animal.Generate().With(a => o.Animals.Add(a)),
+            (o, a) => _randomizer.CoinFlip(() => o.Animals.Remove(a)),
+            o => Interlocked.Decrement(ref counter).With(n => Debug.WriteLine($"Remaining after {o.Name}: {n}")),
+            _ => NextAddTime(),
+            _ => NextRemoveTime());
+
+        var ownerTester = AddRemoveStressTester.Create<AnimalOwner, ISourceCache<AnimalOwner, Guid>>(
+            cache => Fakers.AnimalOwner.Generate().With(owner => cache.AddOrUpdate(owner)),
+            (cache, owner) => _randomizer.CoinFlip(() => cache.Remove(owner)),
+            _ => addingOwners = false,
+            _ => NextAddTime(),
+            _ => NextRemoveTime());
+
         IDisposable AddAnimals(AnimalOwner owner)
         {
             Interlocked.Increment(ref counter);
 
-            return new AddRemoveStressTester<Animal, AnimalOwner>(
-                animalCount,
-                owner,
-                o => Fakers.Animal.Generate().With(a => o.Animals.Add(a)),
-                (o, a) => _randomizer.CoinFlip(() => o.Animals.Remove(a)),
-                o => Interlocked.Decrement(ref counter).With(n => Debug.WriteLine($"Remaining after {o.Name}: {n}")),
-                NextAddTime,
-                NextRemoveTime).Start(1, testingScheduler);
+            return animalTester.Start(testingScheduler, owner, animalCount); ;
         }
 
         IDisposable AddOwners(ISourceCache<AnimalOwner, Guid> owners, int addCount) =>
-            new AddRemoveStressTester<AnimalOwner, ISourceCache<AnimalOwner, Guid>>(
-                addCount,
-                owners,
-                cache => Fakers.AnimalOwner.Generate().With(owner => cache.AddOrUpdate(owner)),
-                (cache, owner) => _randomizer.CoinFlip(() => cache.Remove(owner)),
-                _ => addingOwners = false,
-                NextAddTime,
-                NextRemoveTime).Start(5, testingScheduler);
+            ownerTester.Start(testingScheduler, owners, addCount, 5);
 
         // Arrange
         Action test = () =>
@@ -120,18 +120,16 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     {
         IScheduler testingScheduler = TaskPoolScheduler.Default;
 
+        var addAnimalTester = AddRemoveStressTester.Create<Animal, IObserver<IChangeSet<Animal>>>(
+                    obs => Fakers.Animal.Generate().With(animal => obs.OnNext(new ChangeSet<Animal>(new[] { new Change<Animal>(ListChangeReason.Add, animal) }))),
+                    (obs, animal) => obs.OnNext(new ChangeSet<Animal>(new[] { new Change<Animal>(ListChangeReason.Remove, animal) })),
+                    obs => obs.OnCompleted(),
+                    _ => NextAddTime(),
+                    _ => NextRemoveTime());
+
         IObservable<IChangeSet<Animal>> AddMoreAnimals(AnimalOwner owner, int count, IScheduler scheduler) =>
             Observable.Create<IChangeSet<Animal>>(observer =>
-            {
-                var tester = new AddRemoveStressTester<Animal>(count,
-                    () => Fakers.Animal.Generate().With(animal => observer.OnNext(new ChangeSet<Animal>(new[] { new Change<Animal>(ListChangeReason.Add, animal) }))),
-                    animal => observer.OnNext(new ChangeSet<Animal>(new[] { new Change<Animal>(ListChangeReason.Remove, animal) })),
-                    () => observer.OnCompleted(),
-                    NextAddTime, 
-                    NextRemoveTime);
-
-                return new CompositeDisposable(owner.Animals.Connect().SubscribeSafe(observer), tester.Start(10, scheduler));
-            });
+                new CompositeDisposable(owner.Animals.Connect().SubscribeSafe(observer), addAnimalTester.Start(scheduler, observer, count, 10)));
 
         Action test = () =>
         {

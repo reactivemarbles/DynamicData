@@ -7,80 +7,105 @@ using System.Threading;
 
 namespace DynamicData.Tests.Utilities;
 
-
-internal class AddRemoveStressTester<TItem>(int testCount, Func<TItem> addEvent, Action<TItem>? removeEvent, Action? completeEvent, Func<TimeSpan>? addDelay, Func<TimeSpan>? removeDelay)
-    : AddRemoveStressTester<TItem, Unit>(testCount, Unit.Default, _ => addEvent(), (s, i) => removeEvent?.Invoke(i), _ => completeEvent?.Invoke(), addDelay, removeDelay)
-    where TItem : notnull
+internal static class AddRemoveStressTester
 {
+    public static AddRemoveStressTester<TItem, TState> Create<TItem, TState>(Func<TState, TItem> addEvent, Action<TState, TItem>? removeEvent, Action<TState>? completeEvent, Func<TState, TimeSpan>? addDelay, Func<TState, TimeSpan>? removeDelay)
+        where TItem : notnull
+        where TState : notnull =>
+        new AddRemoveStressTester<TItem, TState>(addEvent, removeEvent, completeEvent, addDelay, removeDelay);
+
+    public static AddRemoveStressTester<TItem> Create<TItem>(Func<TItem> addEvent, Action<TItem>? removeEvent, Action? completeEvent, Func<TimeSpan>? addDelay, Func<TimeSpan>? removeDelay)
+        where TItem : notnull =>
+        new AddRemoveStressTester<TItem>(addEvent, removeEvent, completeEvent, addDelay, removeDelay);
 }
 
-internal class AddRemoveStressTester<TItem, TState>(int testCount, TState state, Func<TState, TItem> addEvent, Action<TState, TItem>? removeEvent, Action<TState>? completeEvent, Func<TimeSpan>? addDelay, Func<TimeSpan>? removeDelay)
+internal class AddRemoveStressTester<TItem>(Func<TItem> addEvent, Action<TItem>? removeEvent, Action? completeEvent, Func<TimeSpan>? addDelay, Func<TimeSpan>? removeDelay)
+    : AddRemoveStressTester<TItem, Unit>(_ => addEvent(), (s, i) => removeEvent?.Invoke(i), _ => completeEvent?.Invoke(), (addDelay != null) ? _ => addDelay() : null, (removeDelay != null) ? _ => removeDelay() : null)
+    where TItem : notnull
+{
+    public IDisposable Start(IScheduler sch, int count, int parallel = 1) => Start(sch, Unit.Default, count, parallel);
+}
+
+internal class AddRemoveStressTester<TItem, TState>(Func<TState, TItem> addEvent, Action<TState, TItem>? removeEvent, Action<TState>? completeEvent, Func<TState, TimeSpan>? addDelay, Func<TState, TimeSpan>? removeDelay)
     where TItem : notnull
     where TState : notnull
 {
-    private int _added;
-    private int _removed;
-    private int _done;
-    private readonly int _count = testCount;
-    private readonly TState _state = state;
+    private class Tester(int count, TState state)
+    {
+        private int _added;
+        private int _removed;
+        private int _done;
+
+        public TState State => state;
+
+        public bool CheckCount()
+        {
+            var current = Volatile.Read(ref _added);
+            var expected = 0;
+
+            do
+            {
+                if (current >= count)
+                {
+                    return false;
+                }
+                expected = current;
+            }
+            while ((current = Interlocked.CompareExchange(ref _added, current + 1, current)) != expected);
+            return true;
+        }
+
+        public bool MarkRemoved() => Interlocked.Increment(ref _removed) == count;
+
+        public bool CheckComplete() => Interlocked.CompareExchange(ref _done, 1, 0) == 0;
+    }
+
     private readonly Func<TState, TItem> _addEvent = addEvent ?? throw new ArgumentNullException(nameof(addEvent));
     private readonly Action<TState, TItem>? _removeEvent = removeEvent;
     private readonly Action<TState>? _completeEvent = completeEvent;
 
-    public IDisposable Start(IScheduler sch) => new CompositeDisposable(ScheduleAdd(sch), Disposable.Create(InvokeComplete));
-
-    public IDisposable Start(int simultanenous, IScheduler sch) =>
-        new CompositeDisposable(Enumerable.Range(0, simultanenous).Select(_ => ScheduleAdd(sch))
-                                            .Append(Disposable.Create(InvokeComplete)));
-
-    private IDisposable ScheduleAdd(IScheduler sch)
-    {
-        var current = Volatile.Read(ref _added);
-        var expected = 0;
-
-        do
+    public IDisposable Start(IScheduler sch, TState state, int count, int parallel = 1) =>
+        new CompositeDisposable((parallel, new Tester(count, state)) switch
         {
-            if (current >= _count)
-            {
-                return Disposable.Empty;
-            }
-            expected = current;
-        }
-        while ((current = Interlocked.CompareExchange(ref _added, current + 1, current)) != expected);
+            (>1, Tester t) => Enumerable.Range(0, parallel).Select(_ => ScheduleAdd(sch, t)).Append(CreateCompleter(t)),
+            (_, Tester t) => new[] { ScheduleAdd(sch, t), CreateCompleter(t) },
+        });
 
-        return sch.Schedule(this, NextAddTime(), (sch, tester) => tester.Add(sch));
+    private IDisposable ScheduleAdd(IScheduler sch, Tester tester) =>
+        tester.CheckCount() ? sch.Schedule(tester, NextAddTime(tester.State), Add) : Disposable.Empty;
+
+    private IDisposable Add(IScheduler sch, Tester tester)
+    {
+        var item = _addEvent(tester.State);
+        var removeDisposable = sch.Schedule(NextRemoveTime(tester.State), () => Remove(tester, item));
+        return new CompositeDisposable(removeDisposable, ScheduleAdd(sch, tester));
     }
 
-    private IDisposable Add(IScheduler sch)
+    private void Remove(Tester tester, TItem item)
     {
-        var item = _addEvent(_state);
-        var removeDisposable = sch.Schedule(NextRemoveTime(), () => Remove(item));
-        return new CompositeDisposable(removeDisposable, ScheduleAdd(sch));
+        _removeEvent?.Invoke(tester.State, item);
+        CheckComplete(tester);
     }
 
-    private void Remove(TItem item)
-    {
-        _removeEvent?.Invoke(_state, item);
-        CheckComplete();
-    }
+    private IDisposable CreateCompleter(Tester tester) => Disposable.Create(() => InvokeComplete(tester));
 
-    private void CheckComplete()
+    private void InvokeComplete(Tester tester)
     {
-        if (Interlocked.Increment(ref _removed) == _count)
+        if (tester.CheckComplete())
         {
-            InvokeComplete();
+            _completeEvent?.Invoke(tester.State);
         }
     }
 
-    private void InvokeComplete()
+    private void CheckComplete(Tester tester)
     {
-        if (Interlocked.CompareExchange(ref _done, 1, 0) == 0)
+        if (tester.MarkRemoved())
         {
-            _completeEvent?.Invoke(_state);
+            InvokeComplete(tester);
         }
     }
 
-    private TimeSpan NextAddTime() => addDelay?.Invoke() ?? TimeSpan.Zero;
+    private TimeSpan NextAddTime(TState state) => addDelay?.Invoke(state) ?? TimeSpan.Zero;
 
-    private TimeSpan NextRemoveTime() => removeDelay?.Invoke() ?? NextAddTime();
+    private TimeSpan NextRemoveTime(TState state) => removeDelay?.Invoke(state) ?? NextAddTime(state);
 }
