@@ -9,10 +9,8 @@ namespace DynamicData.List.Internal;
 internal class ClonedListChangeSet<TObject>
     where TObject : notnull
 {
-    public ClonedListChangeSet(IObservable<IChangeSet<TObject>> source, IEqualityComparer<TObject>? equalityComparer, object synchronize) =>
-        Source = source
-                    .Synchronize(synchronize)
-                    .Do(changeSet => List.Clone(changeSet, equalityComparer));
+    public ClonedListChangeSet(IObservable<IChangeSet<TObject>> source, IEqualityComparer<TObject>? equalityComparer) =>
+        Source = source.Do(changeSet => List.Clone(changeSet, equalityComparer));
 
     public List<TObject> List { get; } = [];
 

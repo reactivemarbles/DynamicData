@@ -20,15 +20,13 @@ internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChang
             {
                 var locker = new object();
 
-                // Transform to an observable list of cached lists
-                var sourceListofLists = source
-                                            .Transform(obj => new ClonedListChangeSet<TDestination>(selector(obj), equalityComparer, locker))
-                                            .AsObservableList();
-
-                var shared = sourceListofLists.Connect().Publish();
-
                 // This is manages all of the changes
                 var changeTracker = new ChangeSetMergeTracker<TDestination>();
+
+                // Transform to a changeset of Cloned Child Lists and then Share
+                var shared = source
+                                            .Transform(obj => new ClonedListChangeSet<TDestination>(selector(obj).Synchronize(locker), equalityComparer))
+                                            .Publish();
 
                 // Merge the items back together
                 var allChanges = shared.MergeMany(clonedList => clonedList.Source.RemoveIndex())
@@ -43,6 +41,6 @@ internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChang
                     .OnItemRemoved(mc => changeTracker.RemoveItems(mc.List, observer), invokeOnUnsubscribe: false)
                     .Subscribe();
 
-                return new CompositeDisposable(sourceListofLists, allChanges, removedItems, shared.Connect());
+                return new CompositeDisposable(allChanges, removedItems, shared.Connect());
             });
 }

@@ -24,14 +24,12 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                 // This is manages all of the changes
                 var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
-                // Transform to an observable cache of Cached Lists.
-                var sourceCacheOfLists = source
-                                            .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key), equalityComparer, locker))
-                                            .AsObservableCache();
+                // Transform to a changeset of Cloned Child Lists and Share
+                var shared = source
+                                            .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key).Synchronize(locker), equalityComparer))
+                                            .Publish();
 
-                var shared = sourceCacheOfLists.Connect().Publish();
-
-                // Merge the items back together
+                // Merge all of the children changesets together and apply to the tracker
                 var allChanges = shared.MergeMany(clonedList => clonedList.Source.RemoveIndex())
                                                  .Subscribe(
                                                         changes => changeTracker.ProcessChangeSet(changes, observer),
@@ -45,6 +43,6 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
                         .OnItemUpdated((_, prev) => changeTracker.RemoveItems(prev.List, observer))
                         .Subscribe();
 
-                return new CompositeDisposable(sourceCacheOfLists, allChanges, removedItems, shared.Connect());
+                return new CompositeDisposable(allChanges, removedItems, shared.Connect());
             });
 }

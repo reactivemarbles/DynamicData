@@ -54,29 +54,23 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     public void MultiThreadedStressTest(int ownerCount, int animalCount)
     {
         IScheduler testingScheduler = TaskPoolScheduler.Default;
-        var counter = 0;
-        var addingOwners = true;
 
         var animalTester = AddRemoveStressTester.Create<Animal, AnimalOwner>(
             o => Fakers.Animal.Generate().With(a => o.Animals.Add(a)),
             (o, a) => _randomizer.CoinFlip(() => o.Animals.Remove(a)),
-            o => Interlocked.Decrement(ref counter).With(n => Debug.WriteLine($"Remaining after {o.Name}: {n}")),
+            o => o.Dispose(),
             _ => NextAddTime(),
             _ => NextRemoveTime());
 
         var ownerTester = AddRemoveStressTester.Create<AnimalOwner, ISourceCache<AnimalOwner, Guid>>(
             cache => Fakers.AnimalOwner.Generate().With(owner => cache.AddOrUpdate(owner)),
             (cache, owner) => _randomizer.CoinFlip(() => cache.Remove(owner)),
-            _ => addingOwners = false,
+            cache => cache.Dispose(),
             _ => NextAddTime(),
             _ => NextRemoveTime());
 
-        IDisposable AddAnimals(AnimalOwner owner)
-        {
-            Interlocked.Increment(ref counter);
-
-            return animalTester.Start(testingScheduler, owner, animalCount); ;
-        }
+        IDisposable AddAnimals(AnimalOwner owner) =>
+            animalTester.Start(testingScheduler, owner, animalCount); ;
 
         IDisposable AddOwners(ISourceCache<AnimalOwner, Guid> owners, int addCount) =>
             ownerTester.Start(testingScheduler, owners, addCount, 5);
@@ -94,7 +88,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
             // Ensure items are being added asynchronously before subscribing to the animal changes
             using var mergedResults = addAnimals.AsAggregator();
 
-            while (addingOwners || Volatile.Read(ref counter) > 0)
+            while (!mergedResults.IsCompleted)
             {
                 Thread.Sleep(100);
             }
