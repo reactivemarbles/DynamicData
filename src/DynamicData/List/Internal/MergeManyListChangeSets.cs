@@ -7,6 +7,9 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
+/// <summary>
+/// Operator that is similiar to MergeMany but intelligently handles List ChangeSets.
+/// </summary>
 internal class MergeManyListChangeSets<TObject, TDestination>(IObservable<IChangeSet<TObject>> source, Func<TObject, IObservable<IChangeSet<TDestination>>> selector, IEqualityComparer<TDestination>? equalityComparer = null)
     where TObject : notnull
     where TDestination : notnull

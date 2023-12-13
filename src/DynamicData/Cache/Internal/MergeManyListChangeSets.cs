@@ -21,15 +21,15 @@ internal sealed class MergeManyListChangeSets<TObject, TKey, TDestination>(IObse
             {
                 var locker = new object();
 
+                // This is manages all of the changes
+                var changeTracker = new ChangeSetMergeTracker<TDestination>();
+
                 // Transform to an observable cache of Cached Lists.
                 var sourceCacheOfLists = source
                                             .Transform((obj, key) => new ClonedListChangeSet<TDestination>(selector(obj, key), equalityComparer, locker))
                                             .AsObservableCache();
 
                 var shared = sourceCacheOfLists.Connect().Publish();
-
-                // This is manages all of the changes
-                var changeTracker = new ChangeSetMergeTracker<TDestination>();
 
                 // Merge the items back together
                 var allChanges = shared.MergeMany(clonedList => clonedList.Source.RemoveIndex())

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using DynamicData.Binding;
 
 namespace DynamicData.Tests.Domain;
@@ -18,9 +19,13 @@ public enum AnimalFamily
     Bird
 }
 
-public class Animal(string name, string type, AnimalFamily family, bool include = true) : AbstractNotifyPropertyChanged
+public class Animal(string name, string type, AnimalFamily family, bool include = true, int? id = null) : AbstractNotifyPropertyChanged
 {
+    private static int s_counter;
+
     private bool _includeInResults = include;
+
+    public int Id { get; } = id ?? Interlocked.Increment(ref s_counter);
 
     public string Name { get; } = name;
 
@@ -36,7 +41,9 @@ public class Animal(string name, string type, AnimalFamily family, bool include 
         set => SetAndRaise(ref _includeInResults, value);
     }
 
-    public override string ToString() => $"{FormalName} ({Family})";
+    public override string ToString() => $"{FormalName} ({Family}) [{Id:x4}]";
+
+    public override int GetHashCode() => HashCode.Combine(Id, Name, Family, Type);
 }
 
 public class AnimalEqualityComparer : IEqualityComparer<Animal>
