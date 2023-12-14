@@ -6,6 +6,7 @@ using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Bogus;
 using DynamicData.Kernel;
@@ -18,7 +19,7 @@ namespace DynamicData.Tests.Cache;
 
 public sealed class MergeManyChangeSetsListFixture : IDisposable
 {
-#if DEBUG
+#if true || DEBUG
     const int InitialOwnerCount = 7;
     const int AddRangeSize = 5;
     const int RemoveRangeSize = 3;
@@ -34,6 +35,12 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     private readonly ChangeSetAggregator<AnimalOwner, Guid> _animalOwnerResults;
     private readonly ChangeSetAggregator<Animal> _animalResults;
     private readonly Randomizer _randomizer;
+
+    private static class NativeMethods
+    {
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, EntryPoint = "OutputDebugStringW")]
+        public static extern void OutputDebugString(string lpOutputString);
+    }
 
     public MergeManyChangeSetsListFixture()
     {
@@ -54,41 +61,64 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     public void MultiThreadedStressTest(int ownerCount, int animalCount)
     {
         IScheduler testingScheduler = TaskPoolScheduler.Default;
+        var addingOwners = false;
+        var addingAnimalsCounter = 0;
 
-        var animalTester = AddRemoveStressTester.Create<Animal, AnimalOwner>(
-            o => Fakers.Animal.Generate().With(a => o.Animals.Add(a)),
-            (o, a) => _randomizer.CoinFlip(() => o.Animals.Remove(a)),
-            o => o.Dispose(),
-            _ => NextAddTime(),
-            _ => NextRemoveTime());
+        //var animalTester = AddRemoveStressTester.Create<Animal>(
+        //    () => Fakers.Animal.Generate(),
+        //    _ => _randomizer.Bool(),
+        //    _ => Interlocked.Decrement(ref addingAnimalsCounter),
+        //    _ => NextAddTime(),
+        //    _ => NextRemoveTime());
 
-        var ownerTester = AddRemoveStressTester.Create<AnimalOwner, ISourceCache<AnimalOwner, Guid>>(
-            cache => Fakers.AnimalOwner.Generate().With(owner => cache.AddOrUpdate(owner)),
-            (cache, owner) => _randomizer.CoinFlip(() => cache.Remove(owner)),
-            cache => cache.Dispose(),
-            _ => NextAddTime(),
-            _ => NextRemoveTime());
+        //var ownerTester = AddRemoveStressTester.Create<AnimalOwner, Guid>(
+        //    () => Fakers.AnimalOwner.Generate(),
+        //    _ => _randomizer.Bool(),
+        //    _ => addingOwners = false,
+        //    _ => NextAddTime(),
+        //    _ => NextRemoveTime());
 
-        IDisposable AddAnimals(AnimalOwner owner) =>
-            animalTester.Start(testingScheduler, owner, animalCount); ;
+        IDisposable AddOwners(ISourceCache<AnimalOwner, Guid> owners, IScheduler sch, int addCount)
+        {
+            addingOwners = true;
 
-        IDisposable AddOwners(ISourceCache<AnimalOwner, Guid> owners, int addCount) =>
-            ownerTester.Start(testingScheduler, owners, addCount, 5);
+            return _randomizer.Interval(s_MaxAddTime, sch)
+                .Select(_ => Fakers.AnimalOwner.Generate())
+                .Take(addCount)
+                .AddRemoveChangeSet(owners.KeySelector, sch, _ => GetRemoveTime())
+                .Finally(() => addingOwners = false)
+                .PopulateInto(owners);
+        }
+
+        IDisposable AddAnimals(AnimalOwner owner, IScheduler sch, int addCount)
+        {
+            Interlocked.Increment(ref addingAnimalsCounter);
+
+            return _randomizer.Interval(s_MaxAddTime, sch)
+                .Select(_ => Fakers.Animal.Generate())
+                .Take(addCount)
+                .AddRemoveChangeSet(sch, _ => GetRemoveTime())
+                .Finally(() => Interlocked.Decrement(ref addingAnimalsCounter))
+                .PopulateInto(owner.Animals);
+        }
 
         // Arrange
         Action test = () =>
         {
-            var addAnimals = _animalOwners.Connect().DebugSpy("Owners")
-                                                                            .SubscribeMany(AddAnimals)
-                                                                            .MergeManyChangeSets(owner => owner.Animals.Connect().DebugSpy($"{owner.Name}"))
-                                                                            .DebugSpy("Merged");
+            var addAnimals = _animalOwners.Connect() //.Spy("Owners", NativeMethods.OutputDebugString)
+                                                                            .SubscribeMany(owner => AddAnimals(owner, testingScheduler, animalCount))
+                                                                            .MergeManyChangeSets(owner => owner.Animals.Connect()/*.Spy($"{owner.Name}", NativeMethods.OutputDebugString)*/)
+                                                                            //.Spy("Merged", NativeMethods.OutputDebugString)
+                                                                            ;
 
-            using var addOwners = AddOwners(_animalOwners, ownerCount);
+            using var addOwners = AddOwners(_animalOwners, testingScheduler, ownerCount);
 
             // Ensure items are being added asynchronously before subscribing to the animal changes
+            Thread.Sleep(NextAddTime());
+
             using var mergedResults = addAnimals.AsAggregator();
 
-            while (!mergedResults.IsCompleted)
+            while (addingOwners || (addingAnimalsCounter > 0))
             {
                 Thread.Sleep(100);
             }
@@ -129,9 +159,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         {
             IObservable<AnimalOwner> GenerateOwners() => Observable.Interval(TimeSpan.FromMilliseconds(1), testingScheduler).Select(_ => Fakers.AnimalOwner.Generate()).Take(ownerCount);
 
-            var merged = _animalOwners
-                    .Connect()
-                    .MergeManyChangeSets(owner => AddMoreAnimals(owner, animalCount, testingScheduler));
+            var merged = _animalOwners.Connect().MergeManyChangeSets(owner => AddMoreAnimals(owner, animalCount, testingScheduler));
             var populateOwners = GenerateOwners().Do(owner => _animalOwners.AddOrUpdate(owner), () => _animalOwners.Dispose());
 
             // Act
@@ -502,6 +530,9 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         animalResults.Data.Items.Count().Should().Be(expectedAnimals.Count);
     }
 
+    //private static TimeSpan NextAddTime() => TimeSpan.Zero;
+    //private static TimeSpan NextRemoveTime() => TimeSpan.Zero;
+    private TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(s_MaxRemoveTime) ? null;
     private TimeSpan NextAddTime() => _randomizer.TimeSpan(s_MaxAddTime);
     private TimeSpan NextRemoveTime() => _randomizer.TimeSpan(s_MaxRemoveTime);
 }

@@ -1,14 +1,40 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Threading;
 
 namespace DynamicData.Tests.Utilities;
 
 internal static class AddRemoveStressTester
 {
+    public static IObservable<IChangeSet<TItem>> AddRemoveChangeSet<TItem>(this IObservable<TItem> items, IScheduler scheduler, Func<TItem, TimeSpan?> getRemoveTimeout)
+        where TItem : notnull =>
+        ObservableChangeSet.Create<TItem>(list =>
+                items.Do(list.Add)
+                    .SelectMany(item => getRemoveTimeout?.Invoke(item) is TimeSpan ts
+                        ? Observable.Timer(ts, scheduler).Do(_ => list.Remove(item))
+                        : Observable.Never<long>())
+                    .Do(_ => { }, () => list.Dispose())
+                    .Subscribe());
+
+    public static IObservable<IChangeSet<TItem, TKey>> AddRemoveChangeSet<TItem, TKey>(this IObservable<TItem> items, Func<TItem, TKey> keySelector, IScheduler scheduler, Func<TItem, TimeSpan?> getRemoveTimeout)
+        where TItem : notnull
+        where TKey : notnull =>
+        ObservableChangeSet.Create(cache =>
+            {
+                return items.Do(i => cache.AddOrUpdate(i))
+                    .SelectMany(item => getRemoveTimeout?.Invoke(item) is TimeSpan ts
+                        ? Observable.Timer(ts, scheduler).Do(_ => cache.Remove(item))
+                        : Observable.Empty<long>())
+                    .Do(_ => { }, () => cache.Dispose())
+                    .Subscribe();
+            },
+            keySelector);
+
     public static AddRemoveStressTester<TItem, TState> Create<TItem, TState>(Func<TState, TItem> addEvent, Action<TState, TItem>? removeEvent, Action<TState>? completeEvent, Func<TState, TimeSpan>? addDelay, Func<TState, TimeSpan>? removeDelay)
         where TItem : notnull
         where TState : notnull =>
@@ -17,6 +43,45 @@ internal static class AddRemoveStressTester
     public static AddRemoveStressTester<TItem> Create<TItem>(Func<TItem> addEvent, Action<TItem>? removeEvent, Action? completeEvent, Func<TimeSpan>? addDelay, Func<TimeSpan>? removeDelay)
         where TItem : notnull =>
         new AddRemoveStressTester<TItem>(addEvent, removeEvent, completeEvent, addDelay, removeDelay);
+
+    public static AddRemoveStressTester<TItem, ISourceList<TItem>> Create<TItem>(Func<TItem> createItem, Predicate<TItem>? shouldRemove, Action<ISourceList<TItem>>? completeEvent, Func<ISourceList<TItem>, TimeSpan>? addDelay, Func<ISourceList<TItem>, TimeSpan>? removeDelay)
+        where TItem : notnull =>
+        new (
+            list => createItem().With(list.Add),
+            GetListRemove(shouldRemove),
+            completeEvent,
+            addDelay,
+            removeDelay);
+
+    public static AddRemoveStressTester<TItem, ISourceCache<TItem, TKey>> Create<TItem, TKey>(Func<TItem> createItem, Predicate<TItem>? shouldRemove, Action<ISourceCache<TItem, TKey>>? completeEvent, Func<ISourceCache<TItem, TKey>, TimeSpan>? addDelay, Func<ISourceCache<TItem, TKey>, TimeSpan>? removeDelay)
+        where TItem : notnull
+        where TKey : notnull =>
+        new(
+            cache => createItem().With(cache.AddOrUpdate),
+            GetCacheRemove<TItem, TKey>(shouldRemove),
+            completeEvent,
+            addDelay,
+            removeDelay);
+
+    private static Action<ISourceCache<TItem, TKey>, TItem> GetCacheRemove<TItem, TKey>(Predicate<TItem>? pred)
+        where TItem : notnull
+        where TKey : notnull =>
+        (cache, item) =>
+        {
+            if (pred?.Invoke(item) ?? true)
+            {
+                cache.Remove(item);
+            }
+        };
+
+    private static Action<ISourceList<TItem>, TItem> GetListRemove<TItem>(Predicate<TItem>? pred) where TItem : notnull =>
+        (list, item) =>
+        {
+            if (pred?.Invoke(item) ?? true)
+            {
+                list.Remove(item);
+            }
+        };
 }
 
 internal class AddRemoveStressTester<TItem>(Func<TItem> addEvent, Action<TItem>? removeEvent, Action? completeEvent, Func<TimeSpan>? addDelay, Func<TimeSpan>? removeDelay)
