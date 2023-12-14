@@ -319,7 +319,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     {
         // Arrange
         var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-        List<Animal> totalAdded = new List<Animal>();
+        var totalAdded = new List<Animal>();
 
         // Act
         _animalOwners.Items.ForEach(owner => owner.Animals.AddRange(Fakers.Animal.Generate(AddRangeSize).With(added => totalAdded.AddRange(added))));
