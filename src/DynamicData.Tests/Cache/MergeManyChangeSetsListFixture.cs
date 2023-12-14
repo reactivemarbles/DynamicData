@@ -29,7 +29,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     const int RemoveRangeSize = 37;
 #endif
     private static readonly TimeSpan s_MaxAddTime = TimeSpan.FromSeconds(0.010);
-    private static readonly TimeSpan s_MaxRemoveTime = TimeSpan.FromSeconds(1.0);
+    private static readonly TimeSpan s_MaxRemoveTime = TimeSpan.FromSeconds(5.0);
 
     private readonly ISourceCache<AnimalOwner, Guid> _animalOwners = new SourceCache<AnimalOwner, Guid>(o => o.Id);
     private readonly ChangeSetAggregator<AnimalOwner, Guid> _animalOwnerResults;
@@ -65,22 +65,26 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         // Arrange
         Action test = () =>
         {
+            var addingOwners = true;
+            var addingAnimals = true;
+
             using var addOwners = Fakers.AnimalOwner.IntervalGenerate(_randomizer, s_MaxAddTime, testingScheduler)
                 .Take(ownerCount)
                 .StressAddRemove(_animalOwners, _ => GetRemoveTime(), testingScheduler)
-                .Finally(() => _animalOwners.Dispose())
+                .Finally(() => addingOwners = false)
                 .Subscribe();
 
             using var addAnimals = _animalOwners.Connect()
-                .MergeMany(owner => AddRemoveAnimals(owner, testingScheduler, animalCount).Spy($"{owner.Name}", NativeMethods.OutputDebugString).Finally(() => owner.Animals.Dispose()))
+                .MergeMany(owner => AddRemoveAnimals(owner, testingScheduler, animalCount))
+                .Finally(() => addingAnimals = false)
                 .Subscribe();
 
-            while (!_animalResults.IsCompleted)
+            while (addingOwners || addingAnimals)
             {
                 Thread.Sleep(100);
             }
 
-            // _animalResults.Data.Count.Should().Be(_animalOwners.Items.Sum(owner => owner.Animals.Count));
+            _animalResults.Data.Count.Should().Be(_animalOwners.Items.Sum(owner => owner.Animals.Count));
         };
 
         // Act
