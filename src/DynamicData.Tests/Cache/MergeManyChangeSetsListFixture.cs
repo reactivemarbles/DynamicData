@@ -313,7 +313,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     {
         // Arrange
         var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
-        List<Animal> totalAdded = new List<Animal>();
+        var totalAdded = new List<Animal>();
 
         // Act
         _animalOwners.Items.ForEach(owner => owner.Animals.AddRange(Fakers.Animal.Generate(AddRangeSize).With(added => totalAdded.AddRange(added))));
@@ -532,7 +532,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
     //private static TimeSpan NextAddTime() => TimeSpan.Zero;
     //private static TimeSpan NextRemoveTime() => TimeSpan.Zero;
-    private TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(s_MaxRemoveTime) ? null;
+    private TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(s_MaxRemoveTime) : null;
     private TimeSpan NextAddTime() => _randomizer.TimeSpan(s_MaxAddTime);
     private TimeSpan NextRemoveTime() => _randomizer.TimeSpan(s_MaxRemoveTime);
 }
