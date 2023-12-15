@@ -491,36 +491,31 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     }
 
     private IObservable<bool> AddRemoveAnimalsStress(int ownerCount, int animalCount, IScheduler scheduler) =>
-        Observable.Create<bool>(async observer =>
+        Observable.Create<bool>(observer =>
         {
-            var addAnimals = Disposable.Empty;
-            var addingAnimals = 0;
-            int inc() => Interlocked.Increment(ref addingAnimals);
-            int dec() => Interlocked.Decrement(ref addingAnimals);
+            var disposables = new CompositeDisposable();
             try
             {
-                _ = await GenerateOwners(scheduler)
+                disposables.Add(GenerateOwners(scheduler)
                             .Take(ownerCount)
-                            .StressAddRemove(_animalOwners, _ => GetRemoveTime(), scheduler);
+                            .StressAddRemove(_animalOwners, _ => GetRemoveTime(), scheduler)
+                            .Subscribe());
 
-                addAnimals = _animalOwners.Connect()
-                            .OnItemAdded(owner => inc())
-                            .MergeMany(owner => AddRemoveAnimals(owner, scheduler, animalCount).Finally(() => dec()))
-                            .Subscribe();
-                while (addingAnimals > 0)
-                {
-                    await Task.Delay(10);
-                }
-
-                observer.OnNext(true);
-                observer.OnCompleted();
+                disposables.Add(_animalOwners.Connect()
+                            .Take(ownerCount)
+                            .MergeMany(owner => AddRemoveAnimals(owner, scheduler, animalCount))
+                            .Subscribe(_ => { }, () =>
+                            {
+                                observer.OnNext(true);
+                                observer.OnCompleted();
+                            }));
             }
             catch (Exception ex)
             {
                 observer.OnError(ex);
             }
 
-            return addAnimals;
+            return disposables;
         });
 
     private IObservable<Animal> AddRemoveAnimals(AnimalOwner owner, IScheduler sch, int addCount) =>
