@@ -19,7 +19,7 @@ namespace DynamicData.Tests.Cache;
 
 public sealed class MergeManyChangeSetsListFixture : IDisposable
 {
-#if true || DEBUG
+#if DEBUG
     const int InitialOwnerCount = 7;
     const int AddRangeSize = 5;
     const int RemoveRangeSize = 3;
