@@ -9,7 +9,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal class ToObservableChangeSet<TObject>
+internal sealed class ToObservableChangeSet<TObject>
     where TObject : notnull
 {
     private readonly Func<TObject, TimeSpan?>? _expireAfter;
