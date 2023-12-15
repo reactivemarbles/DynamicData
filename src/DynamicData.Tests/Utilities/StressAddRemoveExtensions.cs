@@ -16,7 +16,7 @@ internal static class StressAddRemoveExtensions
                     ? Observable.Timer(ts, scheduler ?? DefaultScheduler.Instance)
                                 .Do(_ => onRemove(item, state))
                                 .Select(_ => item)
-                    : Observable.Empty(item));
+                    : Observable.Return(item));
 
     // This is the Cache Specific version
     public static IObservable<T> StressAddRemove<T, TKey>(this IObservable<T> items, ISourceCache<T, TKey> cache, Func<T, TimeSpan?> getRemoveTimeout, IScheduler scheduler)

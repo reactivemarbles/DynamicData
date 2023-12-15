@@ -1,4 +1,5 @@
-﻿using Bogus;
+﻿using System.Runtime.InteropServices;
+using Bogus;
 
 namespace DynamicData.Tests.Domain;
 
@@ -35,19 +36,26 @@ internal static class Fakers
             {
                 var family = faker.PickRandom<AnimalFamily>();
                 var type = faker.PickRandom(AnimalTypeNames[(int)family]);
-                var name = faker.Commerce.ProductAdjective();
+                var name = $"{faker.Commerce.ProductAdjective()} {faker.Person.FirstName}";
 
                 return new Animal(name, type, family);
             });
 
-    public static Faker<AnimalOwner> AnimalOwner { get; } =
-        new Faker<AnimalOwner>()
-            .CustomInstantiator(faker =>
-            {
-                var result = new AnimalOwner(faker.Person.FullName);
+    public static Faker<AnimalOwner> AnimalOwner { get; } = new Faker<AnimalOwner>().CustomInstantiator(faker => new AnimalOwner(faker.Person.FullName));
 
-                result.Animals.AddRange(Animal.Generate(faker.Random.Number(MinAnimals, MaxAnimals)));
+    public static Faker<AnimalOwner> AnimalOwnerWithAnimals { get; } = AnimalOwner.Clone().WithInitialAnimals(Animal);
 
-                return result;
-            });
+    public static Faker<AnimalOwner> WithInitialAnimals(this Faker<AnimalOwner> existing, Faker<Animal> animalFaker, int minCount, int maxCount) =>
+        existing.FinishWith((faker, owner) => owner.Animals.AddRange(animalFaker.GenerateLazy(faker.Random.Number(minCount, maxCount))));
+
+    public static Faker<AnimalOwner> WithInitialAnimals(this Faker<AnimalOwner> existing, Faker<Animal> animalFaker, int maxCount) =>
+        WithInitialAnimals(existing, animalFaker, 0, maxCount);
+
+    public static Faker<AnimalOwner> WithInitialAnimals(this Faker<AnimalOwner> existing, Faker<Animal> animalFaker) =>
+        WithInitialAnimals(existing, animalFaker, MinAnimals, MaxAnimals);
+}
+
+internal static class FakerExtensions
+{
+    public static Faker<T> WithSeed<T>(this Faker<T> faker, Randomizer randomizer) where T : class => faker.UseSeed(randomizer.Int());
 }

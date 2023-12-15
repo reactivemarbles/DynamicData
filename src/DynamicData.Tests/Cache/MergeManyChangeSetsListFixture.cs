@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,8 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     private readonly ISourceCache<AnimalOwner, Guid> _animalOwners = new SourceCache<AnimalOwner, Guid>(o => o.Id);
     private readonly ChangeSetAggregator<AnimalOwner, Guid> _animalOwnerResults;
     private readonly ChangeSetAggregator<Animal> _animalResults;
+    private readonly Faker<AnimalOwner> _animalOwnerFaker;
+    private readonly Faker<Animal> _animalFaker;
     private readonly Randomizer _randomizer;
 
     private static class NativeMethods
@@ -44,9 +47,10 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
 
     public MergeManyChangeSetsListFixture()
     {
-        Randomizer.Seed = new Random(0x01221948);
-        _randomizer = new Randomizer();
-        _animalOwners.AddOrUpdate(Fakers.AnimalOwner.Generate(InitialOwnerCount));
+        _randomizer = new Randomizer(0x01221948);
+        _animalFaker = Fakers.Animal.Clone().WithSeed(_randomizer);
+        _animalOwnerFaker = Fakers.AnimalOwner.Clone().WithSeed(_randomizer).WithInitialAnimals(_animalFaker);
+        _animalOwners.AddOrUpdate(_animalOwnerFaker.Generate(InitialOwnerCount));
 
         _animalOwnerResults = _animalOwners.Connect().AsAggregator();
         _animalResults = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect()).AsAggregator();
@@ -60,12 +64,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     [InlineData(1_000, 10)]
     public async Task MultiThreadedStressTest(int ownerCount, int animalCount) =>
         _ = await AddRemoveAnimalsStress(ownerCount, animalCount, TaskPoolScheduler.Default)
-            .Finally(() =>
-            {
-                // Assert
-                _animalResults.Data.Count.Should().Be(_animalOwners.Items.Sum(owner => owner.Animals.Count));
-                CheckResultContents();
-            });
+            .Finally(CheckResultContents);
 
     [Theory]
     [InlineData(5, 7)]
@@ -95,28 +94,23 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
                 return new CompositeDisposable(ownerSub, animalSub);
             });
 
-        Action test = () =>
+        // Arrange
+        var merged = _animalOwners.Connect().MergeManyChangeSets(owner => AddMoreAnimals(owner, animalCount, 5, testingScheduler));
+        var populateOwners = Observable.Interval(TimeSpan.FromMilliseconds(1), testingScheduler)
+                                                    .Select(_ => _animalOwnerFaker.Generate())
+                                                    .Take(ownerCount)
+                                                    .Do(owner => _animalOwners.AddOrUpdate(owner), () => _animalOwners.Dispose());
+
+        // Act
+        using var subOwners = populateOwners.Subscribe();
+        using var mergedResults = merged.AsAggregator();
+        while (!mergedResults.IsCompleted)
         {
-            var merged = _animalOwners.Connect().MergeManyChangeSets(owner => AddMoreAnimals(owner, animalCount, 5, testingScheduler));
-            var populateOwners = Observable.Interval(TimeSpan.FromMilliseconds(1), testingScheduler)
-                                                        .Select(_ => Fakers.AnimalOwner.Generate())
-                                                        .Take(ownerCount)
-                                                        .Do(owner => _animalOwners.AddOrUpdate(owner), () => _animalOwners.Dispose());
+            Thread.Sleep(100);
+        }
 
-            // Act
-            using var subOwners = populateOwners.Subscribe();
-            using var mergedResults = merged.AsAggregator();
-
-            while (!mergedResults.IsCompleted)
-            {
-                Thread.Sleep(100);
-            }
-
-            // Arrange
-            mergedResults.Data.Count.Should().Be(_animalOwners.Items.Sum(owner => owner.Animals.Count));
-        };
-
-        test.Should().NotThrow();
+        // Assert
+        mergedResults.Data.Count.Should().Be(_animalOwners.Items.Sum(owner => owner.Animals.Count));
         CheckResultContents();
     }
 
@@ -213,7 +207,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     public void ResultContainsChildrenFromAddedParents()
     {
         // Arrange
-        var addThis = Fakers.AnimalOwner.Generate();
+        var addThis = _animalOwnerFaker.Generate();
 
         // Act
         _animalOwners.AddOrUpdate(addThis);
@@ -302,7 +296,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         var totalAdded = new List<Animal>();
 
         // Act
-        _animalOwners.Items.ForEach(owner => owner.Animals.AddRange(Fakers.Animal.Generate(AddRangeSize).With(added => totalAdded.AddRange(added))));
+        _animalOwners.Items.ForEach(owner => owner.Animals.AddRange(_animalFaker.Generate(AddRangeSize).With(added => totalAdded.AddRange(added))));
 
         // Assert
         _animalOwnerResults.Data.Count.Should().Be(InitialOwnerCount);
@@ -318,7 +312,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
         var insertIndex = _randomizer.Number(randomOwner.Animals.Items.Count());
-        var insertThis = Fakers.Animal.Generate();
+        var insertThis = _animalFaker.Generate();
         var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
 
         // Act
@@ -415,7 +409,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
         var replaceThis = _randomizer.ListItem(randomOwner.Animals.Items.ToList());
-        var withThis = Fakers.Animal.Generate();
+        var withThis = _animalFaker.Generate();
 
         // Act
         randomOwner.Animals.Replace(replaceThis, withThis);
@@ -524,14 +518,14 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
             .StressAddRemove(owner.Animals, _ => GetRemoveTime(), sch);
 
     private IObservable<AnimalOwner> GenerateOwners(IScheduler scheduler) =>
-        _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => Fakers.AnimalOwner.Generate());
+        _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => _animalOwnerFaker.Generate());
 
     private IObservable<Animal> GenerateAnimals(IScheduler scheduler) =>
-        _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => Fakers.Animal.Generate());
+        _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => _animalFaker.Generate());
 
-    private static AnimalOwner CreateWithSameId(AnimalOwner original)
+    private AnimalOwner CreateWithSameId(AnimalOwner original)
     {
-        var newOwner = Fakers.AnimalOwner.Generate();
+        var newOwner = _animalOwnerFaker.Generate();
         var sameId = new AnimalOwner(newOwner.Name, original.Id);
         sameId.Animals.AddRange(newOwner.Animals.Items);
         return sameId;
@@ -544,12 +538,12 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         var expectedOwners = owners.ToList();
         var expectedAnimals = expectedOwners.SelectMany(owner => owner.Animals.Items).ToList();
 
-        // These should be subsets of each other, so check one subset and the size
+        // These should be subsets of each other
         expectedOwners.Should().BeSubsetOf(ownerResults.Data.Items);
         ownerResults.Data.Items.Should().BeSubsetOf(expectedOwners);
         ownerResults.Data.Items.Count().Should().Be(expectedOwners.Count);
 
-        // These should be subsets of each other, so check one subset and the size
+        // These should be subsets of each other
         expectedAnimals.Should().BeSubsetOf(animalResults.Data.Items);
         animalResults.Data.Items.Should().BeSubsetOf(expectedAnimals);
         animalResults.Data.Items.Count().Should().Be(expectedAnimals.Count);

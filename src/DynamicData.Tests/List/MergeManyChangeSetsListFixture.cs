@@ -24,13 +24,16 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     private readonly ISourceList<AnimalOwner> _animalOwners = new SourceList<AnimalOwner>();
     private readonly ChangeSetAggregator<AnimalOwner> _animalOwnerResults;
     private readonly ChangeSetAggregator<Animal> _animalResults;
+    private readonly Faker<AnimalOwner> _animalOwnerFaker;
+    private readonly Faker<Animal> _animalFaker;
     private readonly Randomizer _randomizer;
 
     public MergeManyChangeSetsListFixture()
     {
-        Randomizer.Seed = new Random(0x12291977);
-        _randomizer = new Randomizer();
-        _animalOwners.AddRange(Fakers.AnimalOwner.Generate(InitialOwnerCount));
+        _randomizer = new Randomizer(0x12291977);
+        _animalFaker = Fakers.Animal.Clone().WithSeed(_randomizer);
+        _animalOwnerFaker = Fakers.AnimalOwner.Clone().WithSeed(_randomizer).WithInitialAnimals(_animalFaker);
+        _animalOwners.AddRange(_animalOwnerFaker.Generate(InitialOwnerCount));
 
         _animalOwnerResults = _animalOwners.Connect().AsAggregator();
         _animalResults = _animalOwners.Connect().MergeManyChangeSets(owner => owner.Animals.Connect()).AsAggregator();
@@ -76,7 +79,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     public void ResultContainsChildrenFromParentsAddedWithAddRange()
     {
         // Arrange
-        var addThese = Fakers.AnimalOwner.Generate(AddRangeSize);
+        var addThese = _animalOwnerFaker.Generate(AddRangeSize);
 
         // Act
         _animalOwners.AddRange(addThese);
@@ -92,7 +95,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     public void ResultContainsChildrenFromParentsAddedWithAdd()
     {
         // Arrange
-        var addThis = Fakers.AnimalOwner.Generate();
+        var addThis = _animalOwnerFaker.Generate();
 
         // Act
         _animalOwners.Add(addThis);
@@ -109,7 +112,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     {
         // Arrange
         var insertIndex = _randomizer.Number(_animalOwners.Count);
-        var insertThis = Fakers.AnimalOwner.Generate();
+        var insertThis = _animalOwnerFaker.Generate();
 
         // Act
         _animalOwners.Insert(insertIndex, insertThis);
@@ -197,7 +200,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     {
         // Arrange
         var replaceThis = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var withThis = Fakers.AnimalOwner.Generate();
+        var withThis = _animalOwnerFaker.Generate();
 
         // Act
         _animalOwners.Replace(replaceThis, withThis);
@@ -232,7 +235,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var addThese = Fakers.Animal.Generate(AddRangeSize);
+        var addThese = _animalFaker.Generate(AddRangeSize);
         var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
 
         // Act
@@ -251,7 +254,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     {
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
-        var addThis = Fakers.Animal.Generate();
+        var addThis = _animalFaker.Generate();
         var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
 
         // Act
@@ -271,7 +274,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
         var insertIndex = _randomizer.Number(randomOwner.Animals.Items.Count());
-        var insertThis = Fakers.Animal.Generate();
+        var insertThis = _animalFaker.Generate();
         var initialCount = _animalOwners.Items.Sum(owner => owner.Animals.Count);
 
         // Act
@@ -368,7 +371,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         // Arrange
         var randomOwner = _randomizer.ListItem(_animalOwners.Items.ToList());
         var replaceThis = _randomizer.ListItem(randomOwner.Animals.Items.ToList());
-        var withThis = Fakers.Animal.Generate();
+        var withThis = _animalFaker.Generate();
 
         // Act
         randomOwner.Animals.Replace(replaceThis, withThis);
