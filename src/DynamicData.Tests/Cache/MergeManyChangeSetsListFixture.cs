@@ -66,24 +66,25 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         Action test = () =>
         {
             var addingOwners = true;
-            var addingAnimals = true;
+            var addingAnimals = 0;
 
-            using var addOwners = Fakers.AnimalOwner.IntervalGenerate(_randomizer, s_MaxAddTime, testingScheduler)
+            using var addOwners = GenerateOwners(testingScheduler)
                 .Take(ownerCount)
                 .StressAddRemove(_animalOwners, _ => GetRemoveTime(), testingScheduler)
                 .Finally(() => addingOwners = false)
                 .Subscribe();
 
             using var addAnimals = _animalOwners.Connect()
-                .MergeMany(owner => AddRemoveAnimals(owner, testingScheduler, animalCount))
-                .Finally(() => addingAnimals = false)
+                .OnItemAdded(owner => Interlocked.Increment(ref addingAnimals))
+                .MergeMany(owner => AddRemoveAnimals(owner, testingScheduler, animalCount).Finally(() => Interlocked.Decrement(ref addingAnimals)))
                 .Subscribe();
 
-            while (addingOwners || addingAnimals)
+            while (addingOwners || (addingAnimals > 0))
             {
                 Thread.Sleep(100);
             }
 
+            Thread.Sleep(1000);
             _animalResults.Data.Count.Should().Be(_animalOwners.Items.Sum(owner => owner.Animals.Count));
         };
 
@@ -107,14 +108,16 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         IObservable<IChangeSet<Animal>> AddMoreAnimals(AnimalOwner owner, int count, int parallel, IScheduler scheduler) =>
             Observable.Create<IChangeSet<Animal>>(observer =>
             {
+                var locker = new object();
+
                 // Forward OnNext only
-                var ownerSub = owner.Animals.Connect().Subscribe(observer.OnNext);
+                var ownerSub = owner.Animals.Connect().Synchronize(locker).Subscribe(observer.OnNext);
 
                 // Forward All Rx Events to Observer
-                var animalSub = Fakers.Animal
-                            .IntervalGenerate(_randomizer, s_MaxAddTime, scheduler)
+                var animalSub = GenerateAnimals(scheduler)
                             .Take(count / parallel)
                             .StressAddRemoveExplicit(parallel, _ => NextRemoveTime(), scheduler)
+                            .Synchronize(locker)
                             .Subscribe(observer);
 
                 return new CompositeDisposable(ownerSub, animalSub);
@@ -123,9 +126,10 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         Action test = () =>
         {
             var merged = _animalOwners.Connect().MergeManyChangeSets(owner => AddMoreAnimals(owner, animalCount, 5, testingScheduler));
-            var populateOwners = Fakers.AnimalOwner.IntervalGenerate(TimeSpan.FromMilliseconds(1), testingScheduler)
-                                                            .Take(ownerCount)
-                                                            .Do(owner => _animalOwners.AddOrUpdate(owner), () => _animalOwners.Dispose());
+            var populateOwners = Observable.Interval(TimeSpan.FromMilliseconds(1), testingScheduler)
+                                                        .Select(_ => Fakers.AnimalOwner.Generate())
+                                                        .Take(ownerCount)
+                                                        .Do(owner => _animalOwners.AddOrUpdate(owner), () => _animalOwners.Dispose());
 
             // Act
             using var subOwners = populateOwners.Subscribe();
@@ -160,7 +164,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
             var addingOwners = true;
             var addingAnimals = true;
 
-            using var addOwners = Fakers.AnimalOwner.IntervalGenerate(_randomizer, s_MaxAddTime, testingScheduler)
+            using var addOwners = GenerateOwners(testingScheduler)
                 .Take(100)
                 .StressAddRemove(_animalOwners, _ => GetRemoveTime(), testingScheduler)
                 .Finally(() => _animalOwners.Dispose())
@@ -515,9 +519,15 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     }
 
     private IObservable<Animal> AddRemoveAnimals(AnimalOwner owner, IScheduler sch, int addCount) =>
-        Fakers.Animal.IntervalGenerate(_randomizer, s_MaxAddTime, sch)
+        GenerateAnimals(sch)
             .Take(addCount)
             .StressAddRemove(owner.Animals, _ => GetRemoveTime(), sch);
+
+    private IObservable<AnimalOwner> GenerateOwners(IScheduler scheduler) =>
+        _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => Fakers.AnimalOwner.Generate());
+
+    private IObservable<Animal> GenerateAnimals(IScheduler scheduler) =>
+        _randomizer.Interval(s_MaxAddTime, scheduler).Select(_ => Fakers.Animal.Generate());
 
     private static AnimalOwner CreateWithSameId(AnimalOwner original)
     {
