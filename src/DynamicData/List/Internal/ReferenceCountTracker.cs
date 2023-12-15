@@ -9,7 +9,7 @@ namespace DynamicData.List.Internal;
 /// <para>Thanks dudes.</para>
 /// </summary>
 /// <typeparam name="T">The type of the item.</typeparam>
-internal class ReferenceCountTracker<T>
+internal sealed class ReferenceCountTracker<T>
     where T : notnull
 {
     public IEnumerable<T> Items => ReferenceCounts.Keys;

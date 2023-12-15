@@ -6,7 +6,7 @@ using DynamicData.Kernel;
 
 namespace DynamicData.List.Internal;
 
-internal class EditDiff<T>(ISourceList<T> source, IEqualityComparer<T>? equalityComparer)
+internal sealed class EditDiff<T>(ISourceList<T> source, IEqualityComparer<T>? equalityComparer)
     where T : notnull
 {
     private readonly IEqualityComparer<T> _equalityComparer = equalityComparer ?? EqualityComparer<T>.Default;

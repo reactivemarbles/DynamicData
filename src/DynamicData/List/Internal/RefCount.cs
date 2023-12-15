@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 
 namespace DynamicData.List.Internal;
 
-internal class RefCount<T>(IObservable<IChangeSet<T>> source)
+internal sealed class RefCount<T>(IObservable<IChangeSet<T>> source)
     where T : notnull
 {
     private readonly object _locker = new();
