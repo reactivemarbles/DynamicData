@@ -119,8 +119,7 @@ public class ToObservableChangeSetFixture
                 keySelector: null!))
             .Should().Throw<ArgumentNullException>();
 
-    [Fact(Skip = "Outstanding bug, error re-throws, instead of emitting on the stream")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1004:Test methods should not be skipped", Justification = "Bug to be fixed")]
+    [Fact]
     public void KeySelectorThrows_SubscriptionReceivesError()
     {
         using var source = new Subject<Item>();
@@ -142,8 +141,7 @@ public class ToObservableChangeSetFixture
         results.Data.Items.Should().BeEquivalentTo(new[] { item1 }, "1 item was emitted before an error occurred");
     }
 
-    [Fact(Skip = "Outstanding bug, completion is not forwarded")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1004:Test methods should not be skipped", Justification = "Bug to be fixed")]
+    [Fact]
     public void RemovalsArePending_CompletionWaitsForRemovals()
     {
         using var source = new Subject<IEnumerable<Item>>();
@@ -175,8 +173,7 @@ public class ToObservableChangeSetFixture
         results.Data.Items.Should().BeEquivalentTo(new[] { item2 }, "3 items were emitted, and 2 should have expired");
     }
 
-    [Fact(Skip = "Outstanding bug, https://github.com/reactivemarbles/DynamicData/issues/635")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "xUnit1004:Test methods should not be skipped", Justification = "Bug to be fixed")]
+    [Fact]
     public void SourceCompletesImmediately_SubscriptionCompletes()
     {
         var item = new Item() { Id = 1 };
