@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Bogus;
 using DynamicData.Kernel;
 using DynamicData.Tests.Domain;
@@ -39,6 +38,7 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     private static class NativeMethods
     {
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, EntryPoint = "OutputDebugStringW")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "SYSLIB1054:Use 'LibraryImportAttribute' instead of 'DllImportAttribute' to generate P/Invoke marshalling code at compile time", Justification = "Affects operation")]
         public static extern void OutputDebugString(string lpOutputString);
     }
 
@@ -58,42 +58,14 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     [InlineData(10, 1_000)]
     [InlineData(200, 500)]
     [InlineData(1_000, 10)]
-    public void MultiThreadedStressTest(int ownerCount, int animalCount)
-    {
-        IScheduler testingScheduler = TaskPoolScheduler.Default;
-
-        // Arrange
-        Action test = () =>
-        {
-            var addingOwners = true;
-            var addingAnimals = 0;
-
-            using var addOwners = GenerateOwners(testingScheduler)
-                .Take(ownerCount)
-                .StressAddRemove(_animalOwners, _ => GetRemoveTime(), testingScheduler)
-                .Finally(() => addingOwners = false)
-                .Subscribe();
-
-            using var addAnimals = _animalOwners.Connect()
-                .OnItemAdded(owner => Interlocked.Increment(ref addingAnimals))
-                .MergeMany(owner => AddRemoveAnimals(owner, testingScheduler, animalCount).Finally(() => Interlocked.Decrement(ref addingAnimals)))
-                .Subscribe();
-
-            while (addingOwners || (addingAnimals > 0))
+    public async Task MultiThreadedStressTest(int ownerCount, int animalCount) =>
+        _ = await AddRemoveAnimalsStress(ownerCount, animalCount, TaskPoolScheduler.Default)
+            .Finally(() =>
             {
-                Thread.Sleep(100);
-            }
-
-            Thread.Sleep(1000);
-            _animalResults.Data.Count.Should().Be(_animalOwners.Items.Sum(owner => owner.Animals.Count));
-        };
-
-        // Act
-        test.Should().NotThrow();
-
-        // Assert
-        CheckResultContents();
-    }
+                // Assert
+                _animalResults.Data.Count.Should().Be(_animalOwners.Items.Sum(owner => owner.Animals.Count));
+                CheckResultContents();
+            });
 
     [Theory]
     [InlineData(5, 7)]
@@ -518,6 +490,39 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         _animalOwners.Dispose();
     }
 
+    private IObservable<bool> AddRemoveAnimalsStress(int ownerCount, int animalCount, IScheduler scheduler) =>
+        Observable.Create<bool>(async observer =>
+        {
+            var addAnimals = Disposable.Empty;
+            var addingAnimals = 0;
+            int inc() => Interlocked.Increment(ref addingAnimals);
+            int dec() => Interlocked.Decrement(ref addingAnimals);
+            try
+            {
+                _ = await GenerateOwners(scheduler)
+                            .Take(ownerCount)
+                            .StressAddRemove(_animalOwners, _ => GetRemoveTime(), scheduler);
+
+                addAnimals = _animalOwners.Connect()
+                            .OnItemAdded(owner => inc())
+                            .MergeMany(owner => AddRemoveAnimals(owner, scheduler, animalCount).Finally(() => dec()))
+                            .Subscribe();
+                while (addingAnimals > 0)
+                {
+                    await Task.Delay(10);
+                }
+
+                observer.OnNext(true);
+                observer.OnCompleted();
+            }
+            catch (Exception ex)
+            {
+                observer.OnError(ex);
+            }
+
+            return addAnimals;
+        });
+
     private IObservable<Animal> AddRemoveAnimals(AnimalOwner owner, IScheduler sch, int addCount) =>
         GenerateAnimals(sch)
             .Take(addCount)
@@ -555,6 +560,6 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
         animalResults.Data.Items.Count().Should().Be(expectedAnimals.Count);
     }
 
-    private TimeSpan? GetRemoveTime() => _randomizer.Bool() ? _randomizer.TimeSpan(s_MaxRemoveTime) : null;
+    private TimeSpan? GetRemoveTime() => _randomizer.Bool() ? NextRemoveTime() : null;
     private TimeSpan NextRemoveTime() => _randomizer.TimeSpan(s_MaxRemoveTime);
 }
