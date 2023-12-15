@@ -485,32 +485,21 @@ public sealed class MergeManyChangeSetsListFixture : IDisposable
     }
 
     private IObservable<bool> AddRemoveAnimalsStress(int ownerCount, int animalCount, IScheduler scheduler) =>
-        Observable.Create<bool>(observer =>
-        {
-            var disposables = new CompositeDisposable();
-            try
+        Observable.Create<bool>(observer => new CompositeDisposable
             {
-                disposables.Add(GenerateOwners(scheduler)
-                            .Take(ownerCount)
-                            .StressAddRemove(_animalOwners, _ => GetRemoveTime(), scheduler)
-                            .Subscribe());
-
-                disposables.Add(_animalOwners.Connect()
-                            .Take(ownerCount)
-                            .MergeMany(owner => AddRemoveAnimals(owner, scheduler, animalCount))
-                            .Subscribe(_ => { }, () =>
-                            {
-                                observer.OnNext(true);
-                                observer.OnCompleted();
-                            }));
-            }
-            catch (Exception ex)
-            {
-                observer.OnError(ex);
-            }
-
-            return disposables;
-        });
+                GenerateOwners(scheduler)
+                        .Take(ownerCount)
+                        .StressAddRemove(_animalOwners, _ => GetRemoveTime(), scheduler)
+                        .Subscribe(_ => { }, ex => observer.OnError(ex)),
+                _animalOwners.Connect()
+                        .Take(ownerCount)
+                        .MergeMany(owner => AddRemoveAnimals(owner, scheduler, animalCount))
+                        .Subscribe(_ => { }, ex => observer.OnError(ex), () =>
+                        {
+                            observer.OnNext(true);
+                            observer.OnCompleted();
+                        })
+            });
 
     private IObservable<Animal> AddRemoveAnimals(AnimalOwner owner, IScheduler sch, int addCount) =>
         GenerateAnimals(sch)
